@@ -2,6 +2,9 @@
   "name": "aladdin-web",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=22.11.0"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -10,11 +13,14 @@
   },
   "dependencies": {
     "next": "16.1.6",
+    "papaparse": "^5.5.3",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "recharts": "^3.7.0"
   },
   "devDependencies": {
     "@types/node": "^20",
+    "@types/papaparse": "^5.5.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",

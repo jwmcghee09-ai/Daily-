@@ -1,0 +1,73 @@
+import { NextResponse } from "next/server";
+import { findAuthUserByEmail } from "@/lib/db";
+import {
+  applySessionCookie,
+  createAndPersistSession,
+  getClientAddress,
+  isLikelyEmail,
+  normalizeEmail,
+  verifyPassword,
+} from "@/lib/auth";
+import { consumeRateLimit } from "@/lib/rate-limit";
+
+export const runtime = "nodejs";
+
+const LOGIN_LIMIT_PER_IP = 20;
+const LOGIN_LIMIT_PER_EMAIL = 8;
+const LOGIN_WINDOW_MS = 15 * 60 * 1000;
+
+interface LoginPayload {
+  email?: string;
+  password?: string;
+}
+
+export async function POST(request: Request) {
+  try {
+    const ip = getClientAddress(request);
+    const ipRate = consumeRateLimit(`login:ip:${ip}`, LOGIN_LIMIT_PER_IP, LOGIN_WINDOW_MS);
+    if (!ipRate.allowed) {
+      return NextResponse.json(
+        { error: "Too many login attempts. Please try again later." },
+        { status: 429, headers: { "Retry-After": String(ipRate.retryAfterSec) } },
+      );
+    }
+
+    const payload = (await request.json()) as LoginPayload;
+
+    const email = normalizeEmail(payload.email || "");
+    const password = payload.password || "";
+
+    if (!isLikelyEmail(email) || password.length === 0) {
+      return NextResponse.json({ error: "Invalid email or password." }, { status: 400 });
+    }
+
+    const emailRate = consumeRateLimit(`login:email:${email}`, LOGIN_LIMIT_PER_EMAIL, LOGIN_WINDOW_MS);
+    if (!emailRate.allowed) {
+      return NextResponse.json(
+        { error: "Too many login attempts for this account. Please try again later." },
+        { status: 429, headers: { "Retry-After": String(emailRate.retryAfterSec) } },
+      );
+    }
+
+    const user = findAuthUserByEmail(email);
+    if (!user || !verifyPassword(password, user.passwordHash)) {
+      return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
+    }
+
+    const session = createAndPersistSession(user.id);
+
+    const response = NextResponse.json({
+      authenticated: true,
+      user: {
+        id: user.id,
+        email: user.email,
+        displayName: user.displayName,
+      },
+    });
+
+    applySessionCookie(response, session.token, session.expiresAt);
+    return response;
+  } catch {
+    return NextResponse.json({ error: "Login failed." }, { status: 500 });
+  }
+}

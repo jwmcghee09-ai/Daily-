@@ -1,66 +1,1419 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+"use client";
+
+import { CSSProperties, ChangeEvent, FormEvent, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Papa, { ParseError } from "papaparse";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Legend,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import {
+  CsvRow,
+  DataSource,
+  EMPTY_STATE,
+  PortfolioState,
+  computeMetrics,
+  extractCsvDataSection,
+  parseRowsToHoldings,
+} from "@/lib/portfolio";
+
+const ACCENT_COLOR = "#ff4b33";
+const PORTFOLIO_COLORS = ["#f8f8f8", "#d9d9d9", "#bababa", "#969696", "#707070", "#525252", "#3a3a3a", "#242424"];
+const EXPOSURE_COLORS = [ACCENT_COLOR, "#ff664f", "#ff7f6b", "#ff9988", "#ffb8ad", "#f1d5d0", "#b8b8b8", "#6f6f6f"];
+
+const TOOLTIP_CONTENT_STYLE = {
+  backgroundColor: "#f3f3f5",
+  border: "1px solid #8e8e96",
+  borderRadius: "10px",
+  color: "#111114",
+};
+
+const TOOLTIP_LABEL_STYLE = {
+  color: "#111114",
+  fontWeight: 700,
+};
+
+const TOOLTIP_ITEM_STYLE = {
+  color: "#111114",
+  fontWeight: 600,
+};
+
+const ACCOUNT_CHIP_STYLES = [
+  { bg: "#f8f8f8", fg: "#101012", border: "#ffffff" },
+  { bg: "#d9d9d9", fg: "#131317", border: "#efefef" },
+  { bg: "#b2b2b2", fg: "#121214", border: "#cfcfcf" },
+  { bg: "#7b7b7b", fg: "#f8f8f8", border: "#a1a1a1" },
+  { bg: "#4e4e4e", fg: "#f2f2f2", border: "#6a6a6a" },
+  { bg: "#2b2b2f", fg: "#f5f5f5", border: "#4a4a52" },
+];
+
+interface Banner {
+  type: "success" | "error" | "info";
+  message: string;
+}
+
+interface RiskFlag {
+  label: string;
+  value: string;
+  tone: "green" | "yellow" | "red";
+}
+
+interface StressScenarioResult {
+  name: string;
+  impactAmount: number;
+  impactPct: number;
+  projectedValue: number;
+}
+
+interface TodayMover {
+  ticker: string;
+  changeAmount: number;
+  changePct: number;
+  previousValue: number;
+  currentValue: number;
+}
+
+interface ApiError {
+  error?: string;
+}
+
+interface PriceRefreshPayload {
+  state: PortfolioState;
+  updatedTickers: string[];
+  failedTickers: string[];
+  fetchedAt: string;
+}
+
+interface HistoricalRiskEstimatePayload {
+  source: "yahoo_estimate";
+  lessAccurateThanSnapshots: true;
+  note: string;
+  pointsUsed: number;
+  returnsCount: number;
+  usedTickers: string[];
+  failedTickers: string[];
+  volatilityAnnualPct: number | null;
+  maxDrawdownPct: number | null;
+  var95Pct: number | null;
+  var95Amount: number | null;
+}
+
+interface SessionUser {
+  id: string;
+  email: string;
+  displayName: string;
+}
+
+interface AuthSessionPayload {
+  authenticated: boolean;
+  user?: SessionUser;
+}
+
+interface PasswordResetRequestResponse {
+  message?: string;
+  devResetToken?: string;
+}
 
 export default function Home() {
+  const [state, setState] = useState<PortfolioState>(EMPTY_STATE);
+  const [banner, setBanner] = useState<Banner | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [working, setWorking] = useState(false);
+  const [refreshingPrices, setRefreshingPrices] = useState(false);
+  const [historicalRiskEstimate, setHistoricalRiskEstimate] = useState<HistoricalRiskEstimatePayload | null>(null);
+  const [loadingHistoricalEstimate, setLoadingHistoricalEstimate] = useState(false);
+  const [sessionUser, setSessionUser] = useState<SessionUser | null>(null);
+  const [authMode, setAuthMode] = useState<"login" | "register">("login");
+  const [authEmail, setAuthEmail] = useState("");
+  const [authPassword, setAuthPassword] = useState("");
+  const [authDisplayName, setAuthDisplayName] = useState("");
+  const [authWorking, setAuthWorking] = useState(false);
+  const [authError, setAuthError] = useState("");
+  const refreshInFlight = useRef(false);
+
+  useEffect(() => {
+    const loadSessionAndState = async () => {
+      setLoading(true);
+
+      try {
+        const sessionResponse = await fetch("/api/auth/session", { cache: "no-store" });
+        if (!sessionResponse.ok) {
+          throw new Error("Failed to load account session.");
+        }
+
+        const sessionPayload = (await sessionResponse.json()) as AuthSessionPayload;
+
+        if (!sessionPayload.authenticated || !sessionPayload.user) {
+          setSessionUser(null);
+          setState(EMPTY_STATE);
+          setLoading(false);
+          return;
+        }
+
+        setSessionUser(sessionPayload.user);
+
+        const response = await fetch("/api/portfolio", { cache: "no-store" });
+        if (!response.ok) {
+          throw new Error(await parseApiError(response, "Failed to load portfolio state."));
+        }
+
+        const payload = (await response.json()) as PortfolioState;
+        setState(payload);
+      } catch (error) {
+        setBanner({ type: "error", message: error instanceof Error ? error.message : "Failed to load portfolio." });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void loadSessionAndState();
+  }, []);
+
+  const refreshPrices = useCallback(async (showBanner: boolean) => {
+    if (!sessionUser) {
+      return;
+    }
+
+    if (refreshInFlight.current) {
+      return;
+    }
+
+    refreshInFlight.current = true;
+    setRefreshingPrices(true);
+
+    try {
+      const response = await fetch("/api/prices/refresh", { method: "POST" });
+      if (!response.ok) {
+        throw new Error(await parseApiError(response, "Failed to refresh live prices."));
+      }
+
+      const payload = (await response.json()) as PriceRefreshPayload;
+      setState(payload.state);
+
+      if (showBanner) {
+        const message =
+          "Live prices updated: " +
+          payload.updatedTickers.length +
+          " tickers refreshed" +
+          (payload.failedTickers.length > 0 ? ", " + payload.failedTickers.length + " failed" : "") +
+          ".";
+        setBanner({ type: payload.failedTickers.length > 0 ? "info" : "success", message });
+      }
+    } catch (error) {
+      if (showBanner) {
+        setBanner({ type: "error", message: error instanceof Error ? error.message : "Live price refresh failed." });
+      }
+    } finally {
+      setRefreshingPrices(false);
+      refreshInFlight.current = false;
+    }
+  }, [sessionUser]);
+
+  useEffect(() => {
+    if (!sessionUser || loading) {
+      return;
+    }
+
+    void refreshPrices(false);
+
+    const timer = window.setInterval(() => {
+      void refreshPrices(false);
+    }, 5 * 60 * 1000);
+
+    return () => window.clearInterval(timer);
+  }, [loading, refreshPrices, sessionUser]);
+
+  const metrics = useMemo(() => computeMetrics(state.holdings, state.snapshots), [state.holdings, state.snapshots]);
+  const needsYahooEstimate = metrics.dailyReturns.length < 20 && state.holdings.length > 0;
+
+  useEffect(() => {
+    if (!sessionUser || loading) {
+      return;
+    }
+
+    if (!needsYahooEstimate) {
+      setHistoricalRiskEstimate(null);
+      setLoadingHistoricalEstimate(false);
+      return;
+    }
+
+    let ignore = false;
+
+    const loadHistoricalEstimate = async () => {
+      setLoadingHistoricalEstimate(true);
+      try {
+        const response = await fetch("/api/risk/estimate", { method: "POST" });
+        if (!response.ok) {
+          throw new Error(await parseApiError(response, "Failed to estimate historical risk from Yahoo."));
+        }
+
+        const payload = (await response.json()) as HistoricalRiskEstimatePayload;
+        if (!ignore) {
+          setHistoricalRiskEstimate(payload);
+        }
+      } catch {
+        if (!ignore) {
+          setHistoricalRiskEstimate(null);
+        }
+      } finally {
+        if (!ignore) {
+          setLoadingHistoricalEstimate(false);
+        }
+      }
+    };
+
+    void loadHistoricalEstimate();
+
+    return () => {
+      ignore = true;
+    };
+  }, [loading, needsYahooEstimate, sessionUser, state.updatedAt]);
+
+  const effectiveVar95Pct = metrics.var95Pct ?? historicalRiskEstimate?.var95Pct ?? null;
+  const effectiveVar95Amount = metrics.var95Amount ?? historicalRiskEstimate?.var95Amount ?? null;
+  const effectiveMaxDrawdownPct = metrics.maxDrawdownPct ?? historicalRiskEstimate?.maxDrawdownPct ?? null;
+  const usingYahooFallback = metrics.var95Amount == null && historicalRiskEstimate != null;
+
+  const todayMovers = useMemo<TodayMover[]>(() => {
+    const grouped = new Map<string, { changeAmount: number; previousValue: number; currentValue: number }>();
+
+    for (const holding of state.holdings) {
+      const quantity = resolveHoldingUnits(holding.units, holding.value, holding.price);
+      if (quantity <= 0 || !Number.isFinite(holding.price) || !Number.isFinite(holding.prevClose) || holding.price <= 0 || holding.prevClose <= 0) {
+        continue;
+      }
+
+      const previousValue = quantity * holding.prevClose;
+      const currentValue = quantity * holding.price;
+      const changeAmount = currentValue - previousValue;
+      const ticker = holding.ticker.toUpperCase();
+      const existing = grouped.get(ticker);
+
+      grouped.set(ticker, {
+        changeAmount: (existing?.changeAmount ?? 0) + changeAmount,
+        previousValue: (existing?.previousValue ?? 0) + previousValue,
+        currentValue: (existing?.currentValue ?? 0) + currentValue,
+      });
+    }
+
+    return Array.from(grouped.entries())
+      .map(([ticker, values]) => ({
+        ticker,
+        changeAmount: values.changeAmount,
+        previousValue: values.previousValue,
+        currentValue: values.currentValue,
+        changePct: values.previousValue > 0 ? (values.changeAmount / values.previousValue) * 100 : 0,
+      }))
+      .sort((a, b) => b.changePct - a.changePct);
+  }, [state.holdings]);
+
+  const todayPortfolioPreviousValue = useMemo(
+    () => todayMovers.reduce((total, mover) => total + mover.previousValue, 0),
+    [todayMovers],
+  );
+  const todayPortfolioChangeAmount = useMemo(
+    () => todayMovers.reduce((total, mover) => total + mover.changeAmount, 0),
+    [todayMovers],
+  );
+  const todayPortfolioChangePct = todayPortfolioPreviousValue > 0 ? (todayPortfolioChangeAmount / todayPortfolioPreviousValue) * 100 : null;
+  const todayTopGainer = todayMovers.length > 0 ? todayMovers[0] : null;
+  const todayTopLoser = todayMovers.length > 0 ? todayMovers[todayMovers.length - 1] : null;
+
+  const dataQualityRows = useMemo(() => {
+    const asxHoldings = state.holdings.filter((holding) => holding.source === "asx");
+    const asxTickers = new Set(asxHoldings.map((holding) => holding.ticker.toUpperCase()));
+    const pricedTickers = new Set(
+      asxHoldings
+        .filter((holding) => Number.isFinite(holding.price) && Number.isFinite(holding.prevClose) && holding.price > 0 && holding.prevClose > 0)
+        .map((holding) => holding.ticker.toUpperCase()),
+    );
+
+    const dailySnapshotDates = new Set(metrics.history.map((snapshot) => snapshot.date.slice(0, 10)));
+    const latestSnapshotAt = metrics.history.length > 0 ? metrics.history[metrics.history.length - 1].date : "";
+
+    return [
+      {
+        label: "Daily snapshots",
+        value: String(dailySnapshotDates.size),
+        status: dailySnapshotDates.size >= 20 ? "good" : "warn",
+      },
+      {
+        label: "Latest snapshot",
+        value: latestSnapshotAt ? formatSnapshotLabel(latestSnapshotAt) : "N/A",
+        status: latestSnapshotAt ? "good" : "warn",
+      },
+      {
+        label: "ASX tickers with live pricing",
+        value: String(pricedTickers.size) + "/" + String(asxTickers.size),
+        status: asxTickers.size === 0 || pricedTickers.size === asxTickers.size ? "good" : "warn",
+      },
+      {
+        label: "Risk model source",
+        value: usingYahooFallback ? "Yahoo estimate fallback" : "Your snapshots",
+        status: usingYahooFallback ? "warn" : "good",
+      },
+    ] as const;
+  }, [metrics.history, state.holdings, usingYahooFallback]);
+
+  const riskFlags = useMemo<RiskFlag[]>(() => {
+    return [
+      toRiskFlag("Top 3 concentration", metrics.top3ConcentrationPct, 40, 60, "%"),
+      toRiskFlag("Largest account share", metrics.largestAccountPct, 55, 75, "%"),
+      toRiskFlag("Portfolio concentration (HHI)", metrics.hhi, 1500, 2500, ""),
+      toRiskFlag("Max drawdown", effectiveMaxDrawdownPct, 10, 20, "%"),
+      toRiskFlag("1-day VaR 95", effectiveVar95Pct, 1.2, 2.5, "%"),
+    ].filter((flag) => flag.value !== "N/A");
+  }, [metrics, effectiveMaxDrawdownPct, effectiveVar95Pct]);
+
+  const latestReportDate = useMemo(() => {
+    if (state.holdings.length === 0) {
+      return "";
+    }
+
+    return [...state.holdings].sort((a, b) => b.reportDate.localeCompare(a.reportDate))[0].reportDate;
+  }, [state.holdings]);
+
+  const bullionHoldings = useMemo(() => state.holdings.filter((holding) => holding.source === "gold"), [state.holdings]);
+
+  const goldHoldings = useMemo(
+    () => bullionHoldings.filter((holding) => detectBullionMetal(holding) === "gold"),
+    [bullionHoldings],
+  );
+
+  const silverHoldings = useMemo(
+    () => bullionHoldings.filter((holding) => detectBullionMetal(holding) === "silver"),
+    [bullionHoldings],
+  );
+
+  const goldWeightOz = useMemo(
+    () => goldHoldings.reduce((total, holding) => total + (Number.isFinite(holding.units) ? holding.units : 0), 0),
+    [goldHoldings],
+  );
+
+  const silverWeightOz = useMemo(
+    () => silverHoldings.reduce((total, holding) => total + (Number.isFinite(holding.units) ? holding.units : 0), 0),
+    [silverHoldings],
+  );
+
+  const goldValue = useMemo(() => goldHoldings.reduce((total, holding) => total + holding.value, 0), [goldHoldings]);
+  const goldCostBase = useMemo(() => goldHoldings.reduce((total, holding) => total + holding.costBase, 0), [goldHoldings]);
+  const silverValue = useMemo(() => silverHoldings.reduce((total, holding) => total + holding.value, 0), [silverHoldings]);
+  const silverCostBase = useMemo(() => silverHoldings.reduce((total, holding) => total + holding.costBase, 0), [silverHoldings]);
+
+  const assetSplit = useMemo(() => {
+    const superValue = state.holdings.filter((holding) => holding.source === "super").reduce((acc, holding) => acc + holding.value, 0);
+    const asxValue = state.holdings.filter((holding) => holding.source === "asx").reduce((acc, holding) => acc + holding.value, 0);
+    const bullionValue = state.holdings.filter((holding) => holding.source === "gold").reduce((acc, holding) => acc + holding.value, 0);
+
+    const raw = [
+      { name: "Super", value: superValue },
+      { name: "ASX Shares", value: asxValue },
+      { name: "Bullion", value: bullionValue },
+    ];
+
+    const total = raw.reduce((acc, item) => acc + item.value, 0);
+
+    return raw
+      .filter((item) => item.value > 0)
+      .map((item) => ({
+        ...item,
+        pct: total > 0 ? (item.value / total) * 100 : 0,
+      }));
+  }, [state.holdings]);
+
+  const holdingPerformance = useMemo(() => {
+    return state.holdings
+      .map((holding) => {
+        const pnl = holding.value - holding.costBase;
+        const pnlPct = holding.costBase > 0 ? (pnl / holding.costBase) * 100 : Number.NaN;
+
+        return {
+          id: holding.id,
+          ticker: holding.ticker,
+          name: holding.name,
+          pnl,
+          pnlPct,
+        };
+      })
+      .filter((item) => Number.isFinite(item.pnlPct))
+      .sort((a, b) => b.pnlPct - a.pnlPct);
+  }, [state.holdings]);
+
+  const bestPerformer = holdingPerformance[0] ?? null;
+  const worstPerformer = holdingPerformance.length > 0 ? holdingPerformance[holdingPerformance.length - 1] : null;
+
+  const stressScenarios = useMemo<StressScenarioResult[]>(() => {
+    if (metrics.totalValue <= 0 || state.holdings.length === 0) {
+      return [];
+    }
+
+    const scenarios = [
+      {
+        name: "Equities -5%",
+        shock: (source: DataSource, metal: "gold" | "silver") => {
+          void metal;
+          return source === "asx" || source === "super" ? -0.05 : 0;
+        },
+      },
+      {
+        name: "Bullion Stress (Gold -4%, Silver -7%)",
+        shock: (source: DataSource, metal: "gold" | "silver") => (source === "gold" ? (metal === "gold" ? -0.04 : -0.07) : 0),
+      },
+      {
+        name: "Mixed Shock",
+        shock: (source: DataSource, metal: "gold" | "silver") => {
+          if (source === "asx") {
+            return -0.06;
+          }
+
+          if (source === "super") {
+            return -0.04;
+          }
+
+          if (source === "gold") {
+            return metal === "gold" ? 0.02 : -0.02;
+          }
+
+          return 0;
+        },
+      },
+    ];
+
+    return scenarios.map((scenario) => {
+      const impactAmount = state.holdings.reduce((acc, holding) => {
+        const metal = holding.source === "gold" ? detectBullionMetal(holding) : "gold";
+        return acc + holding.value * scenario.shock(holding.source, metal);
+      }, 0);
+
+      const impactPct = metrics.totalValue > 0 ? (impactAmount / metrics.totalValue) * 100 : 0;
+
+      return {
+        name: scenario.name,
+        impactAmount,
+        impactPct,
+        projectedValue: metrics.totalValue + impactAmount,
+      };
+    });
+  }, [metrics.totalValue, state.holdings]);
+
+  const onUpload = async (event: ChangeEvent<HTMLInputElement>, source: DataSource) => {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    setWorking(true);
+
+    try {
+      const csvText = await file.text();
+      const cleanCsvText = extractCsvDataSection(csvText);
+      const parsed = Papa.parse<CsvRow>(cleanCsvText, {
+        header: true,
+        skipEmptyLines: "greedy",
+        transformHeader: (header) => header.trim(),
+      });
+
+      const holdings = parseRowsToHoldings(parsed.data, source);
+
+      if (holdings.length === 0) {
+        setBanner({
+          type: "error",
+          message: "No valid holdings were found. Check that your CSV includes value/price/units (or weight) columns.",
+        });
+        event.target.value = "";
+        return;
+      }
+
+      const response = await fetch("/api/import", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ source, holdings }),
+      });
+
+      if (!response.ok) {
+        throw new Error(await parseApiError(response, "Failed to save imported report."));
+      }
+
+      const persistedState = (await response.json()) as PortfolioState;
+      setState(persistedState);
+
+      const warningText = getUserVisibleCsvWarning(parsed.errors);
+      setBanner({
+        type: "success",
+        message: `${holdings.length} ${source.toUpperCase()} holdings loaded from ${file.name} and saved to SQLite.${warningText}`,
+      });
+    } catch (error) {
+      setBanner({ type: "error", message: error instanceof Error ? error.message : "Upload failed." });
+    } finally {
+      event.target.value = "";
+      setWorking(false);
+    }
+  };
+
+  const clearData = async () => {
+    if (!window.confirm("Delete all imported holdings and snapshots?")) {
+      return;
+    }
+
+    setWorking(true);
+
+    try {
+      const response = await fetch("/api/portfolio", { method: "DELETE" });
+      if (!response.ok) {
+        throw new Error(await parseApiError(response, "Failed to clear stored portfolio data."));
+      }
+
+      const cleared = (await response.json()) as PortfolioState;
+      setState(cleared);
+      setBanner({ type: "info", message: "Portfolio data cleared from SQLite." });
+    } catch (error) {
+      setBanner({ type: "error", message: error instanceof Error ? error.message : "Failed to clear data." });
+    } finally {
+      setWorking(false);
+    }
+  };
+
+  const submitAuth = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setAuthWorking(true);
+    setAuthError("");
+
+    try {
+      const endpoint = authMode === "register" ? "/api/auth/register" : "/api/auth/login";
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: authEmail,
+          password: authPassword,
+          displayName: authDisplayName,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(await parseApiError(response, "Authentication failed."));
+      }
+
+      const payload = (await response.json()) as AuthSessionPayload;
+      if (!payload.authenticated || !payload.user) {
+        throw new Error("Authentication failed.");
+      }
+
+      setSessionUser(payload.user);
+      setAuthPassword("");
+      setAuthError("");
+      setBanner({ type: "success", message: "Signed in as " + payload.user.displayName + "." });
+
+      const portfolioResponse = await fetch("/api/portfolio", { cache: "no-store" });
+      if (portfolioResponse.ok) {
+        const payloadState = (await portfolioResponse.json()) as PortfolioState;
+        setState(payloadState);
+      }
+    } catch (error) {
+      setAuthError(error instanceof Error ? error.message : "Authentication failed.");
+    } finally {
+      setAuthWorking(false);
+    }
+  };
+
+  const requestPasswordReset = async () => {
+    const emailInput = window.prompt("Enter your account email for password reset:", authEmail);
+
+    if (!emailInput) {
+      return;
+    }
+
+    setAuthWorking(true);
+    setAuthError("");
+
+    try {
+      const response = await fetch("/api/auth/password/request", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: emailInput }),
+      });
+
+      if (!response.ok) {
+        throw new Error(await parseApiError(response, "Could not start password reset."));
+      }
+
+      const payload = (await response.json()) as PasswordResetRequestResponse;
+      setAuthEmail(emailInput);
+
+      let message = payload.message || "If an account exists, reset instructions were generated.";
+      if (payload.devResetToken) {
+        message += " DEV TOKEN: " + payload.devResetToken;
+      }
+
+      setBanner({ type: "info", message });
+    } catch (error) {
+      setAuthError(error instanceof Error ? error.message : "Could not start password reset.");
+    } finally {
+      setAuthWorking(false);
+    }
+  };
+
+  const completePasswordReset = async () => {
+    const token = window.prompt("Paste your reset token:", "");
+    if (!token) {
+      return;
+    }
+
+    const newPassword = window.prompt("Enter new password (min 8 chars):", "");
+    if (!newPassword) {
+      return;
+    }
+
+    setAuthWorking(true);
+    setAuthError("");
+
+    try {
+      const response = await fetch("/api/auth/password/reset", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ token, newPassword }),
+      });
+
+      if (!response.ok) {
+        throw new Error(await parseApiError(response, "Password reset failed."));
+      }
+
+      setAuthMode("login");
+      setAuthPassword("");
+      setBanner({ type: "success", message: "Password reset complete. Please sign in with your new password." });
+    } catch (error) {
+      setAuthError(error instanceof Error ? error.message : "Password reset failed.");
+    } finally {
+      setAuthWorking(false);
+    }
+  };
+
+  const logout = async () => {
+    setWorking(true);
+
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } finally {
+      setSessionUser(null);
+      setState(EMPTY_STATE);
+      setHistoricalRiskEstimate(null);
+      setBanner(null);
+      setWorking(false);
+    }
+  };
+
+  if (!sessionUser) {
+    return (
+      <div className="auth-shell">
+        <section className="auth-gate">
+          <article className="auth-brand">
+            <p className="auth-kicker">Portfolio Intelligence Platform</p>
+            <h1>SPECTRE</h1>
+            <p className="auth-subtext">System for Portfolio Exposure, Correlation, Threat & Risk Evaluation</p>
+            <div className="auth-points">
+              <p>Import super, ASX and bullion reports.</p>
+              <p>Track risk, allocation, drawdown and VaR in one dashboard.</p>
+              <p>Each account has isolated portfolio data and secure sessions.</p>
+            </div>
+          </article>
+
+          <article className="auth-login-card">
+            <h2>{authMode === "register" ? "Create Account" : "Sign In"}</h2>
+            <p>Access your private SPECTRE workspace.</p>
+
+            {banner ? <div className={"banner " + banner.type}>{banner.message}</div> : null}
+            {authError ? <div className="banner error">{authError}</div> : null}
+
+            <form onSubmit={submitAuth} className="auth-form-grid">
+              <label>
+                <span>Email</span>
+                <input
+                  type="email"
+                  placeholder="you@example.com"
+                  value={authEmail}
+                  onChange={(event) => setAuthEmail(event.target.value)}
+                  required
+                  autoComplete="email"
+                />
+              </label>
+
+              <label>
+                <span>Password</span>
+                <input
+                  type="password"
+                  placeholder="Minimum 8 characters"
+                  value={authPassword}
+                  onChange={(event) => setAuthPassword(event.target.value)}
+                  required
+                  minLength={8}
+                  autoComplete={authMode === "register" ? "new-password" : "current-password"}
+                />
+              </label>
+
+              {authMode === "register" ? (
+                <label>
+                  <span>Display Name</span>
+                  <input
+                    type="text"
+                    placeholder="How your account appears"
+                    value={authDisplayName}
+                    onChange={(event) => setAuthDisplayName(event.target.value)}
+                    autoComplete="name"
+                  />
+                </label>
+              ) : null}
+
+              <button type="submit" className="refresh-btn auth-submit" disabled={authWorking}>
+                {authWorking ? "Please wait..." : authMode === "register" ? "Create Account" : "Sign In"}
+              </button>
+            </form>
+
+            <div className="auth-actions">
+              <button
+                type="button"
+                className="template-btn"
+                onClick={() => {
+                  setAuthMode((current) => (current === "register" ? "login" : "register"));
+                  setAuthError("");
+                }}
+                disabled={authWorking}
+              >
+                {authMode === "register" ? "Use Sign In" : "Use Register"}
+              </button>
+              <button type="button" className="template-btn" onClick={() => void requestPasswordReset()} disabled={authWorking}>
+                Forgot Password
+              </button>
+              <button type="button" className="template-btn" onClick={() => void completePasswordReset()} disabled={authWorking}>
+                Reset With Token
+              </button>
+            </div>
+          </article>
+        </section>
+      </div>
+    );
+  }
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <div className="shell">
+      <header className="hero">
+        <div>
+          <h1>SPECTRE</h1>
+          <p className="hero-tagline">System for Portfolio Exposure, Correlation, Threat & Risk Evaluation</p>
+          <p>Upload super, ASX, and ABC Bullion gold/silver CSV reports to track your portfolio and risk in one place.</p>
+        </div>
+        <div className="meta">
+          <span>Account: {sessionUser.displayName} ({sessionUser.email})</span>
+          <span>Holdings: {state.holdings.length}</span>
+          <span>Latest report: {latestReportDate || "N/A"}</span>
+          <span>Last saved: {state.updatedAt ? new Date(state.updatedAt).toLocaleString("en-AU") : "N/A"}</span>
+          <span>Live prices: {state.lastPriceRefreshAt ? new Date(state.lastPriceRefreshAt).toLocaleString("en-AU") : "Not refreshed yet"}</span>
+          <div className="meta-actions">
+            <button type="button" onClick={() => void refreshPrices(true)} className="refresh-btn" disabled={loading || working || refreshingPrices}>
+              {refreshingPrices ? "Refreshing..." : "Refresh Prices"}
+            </button>
+            <button type="button" onClick={clearData} className="clear-btn" disabled={working || refreshingPrices}>
+              {working ? "Working..." : "Clear Data"}
+            </button>
+            <button type="button" onClick={logout} className="clear-btn" disabled={working || refreshingPrices}>
+              Sign Out
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {banner ? <div className={`banner ${banner.type}`}>{banner.message}</div> : null}
+
+
+      <section className="upload-grid">
+        <UploadCard
+          title="Super Report (CSV)"
+          description="Upload your superannuation holdings export."
+          onUpload={(event) => onUpload(event, "super")}
+          template={superTemplateCsv()}
+          templateName="super-template.csv"
+          disabled={working || loading}
         />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.tsx file.</h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
+        <UploadCard
+          title="ASX Report (CSV)"
+          description="Upload brokerage or watchlist holdings export."
+          onUpload={(event) => onUpload(event, "asx")}
+          template={asxTemplateCsv()}
+          templateName="asx-template.csv"
+          disabled={working || loading}
+        />
+        <UploadCard
+          title="ABC Bullion Report (Gold/Silver CSV)"
+          description="Upload ABC Bullion gold/silver holdings. Put metal weight in units/weight (oz or grams)."
+          onUpload={(event) => onUpload(event, "gold")}
+          template={goldTemplateCsv()}
+          templateName="bullion-template.csv"
+          disabled={working || loading}
+        />
+      </section>
+
+      <section className="kpi-grid">
+        <KpiCard label="Total Portfolio" value={formatCurrency(metrics.totalValue)} />
+        <KpiCard label="Cost Base" value={formatCurrency(metrics.totalCost)} />
+        <KpiCard
+          label="Unrealized P/L"
+          value={(metrics.pnl >= 0 ? "▲ " : "▼ ") + formatCurrency(Math.abs(metrics.pnl)) + " (" + formatPercent(metrics.pnlPct) + ")"}
+          tone={metrics.pnl >= 0 ? "positive" : "negative"}
+        />
+        <KpiCard
+          label="Today Change"
+          value={
+            todayPortfolioChangePct != null
+              ? (todayPortfolioChangeAmount >= 0 ? "▲ " : "▼ ") + formatCurrency(Math.abs(todayPortfolioChangeAmount)) + " (" + formatPercent(todayPortfolioChangePct) + ")"
+              : "Need live prices"
+          }
+          tone={todayPortfolioChangePct == null ? "neutral" : todayPortfolioChangeAmount >= 0 ? "positive" : "negative"}
+        />
+        <KpiCard
+          label="1-Day VaR (95%)"
+          value={
+            effectiveVar95Amount != null
+              ? `${formatCurrency(effectiveVar95Amount)} (${formatPercent(effectiveVar95Pct)})${metrics.var95Amount == null ? " • Yahoo estimate" : ""}`
+              : loadingHistoricalEstimate && metrics.var95Amount == null
+                ? "Estimating from Yahoo..."
+                : "Need 20+ daily snapshots"
+          }
+        />
+      </section>
+
+      <section className="insights-section">
+        <h2>Performance & Stress</h2>
+        <div className="insights-grid">
+          <article className="insight-card">
+            <h3>Asset Split</h3>
+            {assetSplit.length === 0 ? (
+              <div className="empty">Import holdings to view asset split.</div>
+            ) : (
+              <div className="asset-list">
+                {assetSplit.map((item) => (
+                  <div className="asset-row" key={item.name}>
+                    <span>{item.name}</span>
+                    <strong>{formatCurrency(item.value)} ({formatPercent(item.pct)})</strong>
+                  </div>
+                ))}
+              </div>
+            )}
+          </article>
+
+          <article className="insight-card">
+            <h3>Best / Worst Performer</h3>
+            {bestPerformer == null || worstPerformer == null ? (
+              <div className="empty">Need holdings with cost base to calculate performance.</div>
+            ) : (
+              <div className="performer-list">
+                <div className="performer-row">
+                  <p>Best: {bestPerformer.ticker}</p>
+                  <strong className={bestPerformer.pnl >= 0 ? "positive" : "negative"}>
+                    {formatSignedCurrency(bestPerformer.pnl)} ({formatPercent(bestPerformer.pnlPct)})
+                  </strong>
+                </div>
+                <div className="performer-row">
+                  <p>Worst: {worstPerformer.ticker}</p>
+                  <strong className={worstPerformer.pnl >= 0 ? "positive" : "negative"}>
+                    {formatSignedCurrency(worstPerformer.pnl)} ({formatPercent(worstPerformer.pnlPct)})
+                  </strong>
+                </div>
+              </div>
+            )}
+          </article>
+
+          <article className="insight-card">
+            <h3>Top Gainer / Loser Today</h3>
+            {todayTopGainer == null || todayTopLoser == null ? (
+              <div className="empty">Need live prices to calculate intraday movers.</div>
+            ) : (
+              <div className="performer-list">
+                <div className="performer-row">
+                  <p>Gainer: {todayTopGainer.ticker}</p>
+                  <strong className={todayTopGainer.changeAmount >= 0 ? "positive" : "negative"}>
+                    {formatSignedCurrency(todayTopGainer.changeAmount)} ({formatPercent(todayTopGainer.changePct)})
+                  </strong>
+                </div>
+                <div className="performer-row">
+                  <p>Loser: {todayTopLoser.ticker}</p>
+                  <strong className={todayTopLoser.changeAmount >= 0 ? "positive" : "negative"}>
+                    {formatSignedCurrency(todayTopLoser.changeAmount)} ({formatPercent(todayTopLoser.changePct)})
+                  </strong>
+                </div>
+              </div>
+            )}
+          </article>
+        </div>
+
+        <div className="stress-grid">
+          {stressScenarios.length === 0 ? (
+            <div className="empty">Import holdings to run stress scenarios.</div>
+          ) : (
+            stressScenarios.map((scenario) => (
+              <article key={scenario.name} className={"stress-card " + (scenario.impactAmount <= 0 ? "down" : "up")}>
+                <p>{scenario.name}</p>
+                <strong>{formatSignedCurrency(scenario.impactAmount)} ({formatPercent(scenario.impactPct)})</strong>
+                <span>Projected value: {formatCurrency(scenario.projectedValue)}</span>
+              </article>
+            ))
+          )}
+        </div>
+      </section>
+
+      <section className="gold-section">
+        <h2>Bullion Tracking (ABC Bullion)</h2>
+        {bullionHoldings.length === 0 ? (
+          <div className="empty">Upload an ABC Bullion CSV to track gold and silver weights and values.</div>
+        ) : (
+          <div className="gold-grid">
+            <article className="gold-card">
+              <p>Total gold weight (troy oz)</p>
+              <strong>{formatWeightOz(goldWeightOz)}</strong>
+            </article>
+            <article className="gold-card">
+              <p>Total gold value</p>
+              <strong>{formatCurrency(goldValue)}</strong>
+            </article>
+            <article className="gold-card">
+              <p>Gold unrealized P/L</p>
+              <strong className={goldValue - goldCostBase >= 0 ? "positive" : "negative"}>
+                {(goldValue - goldCostBase >= 0 ? "▲ " : "▼ ") + formatCurrency(Math.abs(goldValue - goldCostBase))}
+              </strong>
+            </article>
+            <article className="gold-card silver">
+              <p>Total silver weight (troy oz)</p>
+              <strong>{formatWeightOz(silverWeightOz)}</strong>
+            </article>
+            <article className="gold-card silver">
+              <p>Total silver value</p>
+              <strong>{formatCurrency(silverValue)}</strong>
+            </article>
+            <article className="gold-card silver">
+              <p>Silver unrealized P/L</p>
+              <strong className={silverValue - silverCostBase >= 0 ? "positive" : "negative"}>
+                {(silverValue - silverCostBase >= 0 ? "▲ " : "▼ ") + formatCurrency(Math.abs(silverValue - silverCostBase))}
+              </strong>
+            </article>
+          </div>
+        )}
+      </section>
+
+      <section className="quality-section">
+        <h2>Data Quality</h2>
+        <div className="quality-grid">
+          {dataQualityRows.map((row) => (
+            <article key={row.label} className={"quality-card " + row.status}>
+              <p>{row.label}</p>
+              <strong>{row.value}</strong>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="risk-section">
+        <h2>Risk Signals</h2>
+        {usingYahooFallback ? (
+          <p className="estimate-note">
+            {historicalRiskEstimate.note} ({historicalRiskEstimate.pointsUsed} points, {historicalRiskEstimate.usedTickers.length} tickers)
           </p>
+        ) : null}
+        <div className="risk-grid">
+          {riskFlags.length === 0 ? (
+            <div className="empty">Import reports over time to unlock drawdown/volatility/VaR metrics.</div>
+          ) : (
+            riskFlags.map((flag) => (
+              <article key={flag.label} className={`risk-card ${flag.tone}`}>
+                <p>{flag.label}</p>
+                <strong>{flag.value}</strong>
+              </article>
+            ))
+          )}
         </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      </section>
+
+      <section className="chart-grid">
+        <ChartCard title="Account Allocation" tone="portfolio">
+          <PieAllocation data={metrics.accountAllocation} palette={PORTFOLIO_COLORS} />
+        </ChartCard>
+        <ChartCard title="Sector Allocation" tone="exposure">
+          <PieAllocation data={metrics.sectorAllocation} palette={EXPOSURE_COLORS} />
+        </ChartCard>
+        <ChartCard title="Top Holdings" tone="exposure">
+          <ResponsiveContainer width="100%" height={280}>
+            <BarChart data={metrics.topHoldings.map((item) => ({ name: item.ticker, value: item.value }))}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#303036" />
+              <XAxis dataKey="name" />
+              <YAxis tickFormatter={(value) => `$${Math.round(Number(value) / 1000)}k`} />
+              <Tooltip formatter={tooltipFormatter} contentStyle={TOOLTIP_CONTENT_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} itemStyle={TOOLTIP_ITEM_STYLE} />
+              <Bar dataKey="value" radius={[6, 6, 0, 0]}>
+                {metrics.topHoldings.map((item, index) => (
+                  <Cell key={item.id} fill={item.ticker.toUpperCase() === "ABC2" ? "#000000" : EXPOSURE_COLORS[index % EXPOSURE_COLORS.length]} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
+        <ChartCard title="Portfolio Snapshot History" tone="history">
+          <ResponsiveContainer width="100%" height={420}>
+            <LineChart data={metrics.history}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#303036" />
+              <XAxis dataKey="date" tickFormatter={formatSnapshotTick} minTickGap={28} />
+              <YAxis tickFormatter={(value) => `$${Math.round(Number(value) / 1000)}k`} />
+              <Tooltip formatter={tooltipFormatter} labelFormatter={formatSnapshotLabel} contentStyle={TOOLTIP_CONTENT_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} itemStyle={TOOLTIP_ITEM_STYLE} />
+              <Line type="monotone" dataKey="value" stroke={ACCENT_COLOR} strokeWidth={2.5} dot={false} />
+            </LineChart>
+          </ResponsiveContainer>
+        </ChartCard>
+      </section>
+
+      <section className="table-section">
+        <h2>Current Holdings</h2>
+        {loading ? (
+          <div className="empty">Loading stored data...</div>
+        ) : state.holdings.length === 0 ? (
+          <div className="empty">Upload super, ASX, and/or bullion CSVs to populate this dashboard.</div>
+        ) : (
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Source</th>
+                  <th>Account</th>
+                  <th>Ticker</th>
+                  <th>Name</th>
+                  <th>Value</th>
+                  <th>Cost Base</th>
+                  <th>P/L</th>
+                  <th>Sector</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[...state.holdings]
+                  .sort((a, b) => b.value - a.value)
+                  .map((holding) => {
+                    const pnl = holding.value - holding.costBase;
+                    return (
+                      <tr key={holding.id}>
+                        <td><span className={"source-badge " + holding.source}>{holding.source.toUpperCase()}</span></td>
+                        <td><span className="account-chip" style={getAccountChipStyle(holding.account)}>{holding.account}</span></td>
+                        <td>{holding.ticker}</td>
+                        <td>{holding.name}</td>
+                        <td>{formatCurrency(holding.value)}</td>
+                        <td>{formatCurrency(holding.costBase)}</td>
+                        <td><span className={"pnl-chip " + (pnl >= 0 ? "up" : "down")}>{(pnl >= 0 ? "▲ " : "▼ ") + formatCurrency(Math.abs(pnl))}</span></td>
+                        <td>{holding.sector}</td>
+                        <td>{holding.reportDate}</td>
+                      </tr>
+                    );
+                  })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      <footer className="footer-note">
+        <p>SPECTRE stores data in local SQLite and auto-refreshes ASX prices every 5 minutes while this page is open. Upload a new CSV when you buy, sell, or change bullion holdings.</p>
+        <p className="footer-disclaimer">Disclaimer: SPECTRE provides informational analytics only. It is not financial, investment, tax, or legal advice, and no result is guaranteed to be complete, current, or accurate.</p>
+        <p className="footer-disclaimer">Use at your own risk. Always verify pricing, corporate actions, and holdings with official statements before making decisions. If this app is deployed online, database access and backups are your responsibility.</p>
+      </footer>
     </div>
   );
+}
+
+function UploadCard({
+  title,
+  description,
+  onUpload,
+  template,
+  templateName,
+  disabled,
+}: {
+  title: string;
+  description: string;
+  onUpload: (event: ChangeEvent<HTMLInputElement>) => void;
+  template: string;
+  templateName: string;
+  disabled: boolean;
+}) {
+  const downloadTemplate = () => {
+    const blob = new Blob([template], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", templateName);
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <article className="upload-card">
+      <h2>{title}</h2>
+      <p>{description}</p>
+      <label className="file-input">
+        <input type="file" accept=".csv,text/csv" onChange={onUpload} disabled={disabled} />
+        <span>{disabled ? "Please wait..." : "Select CSV"}</span>
+      </label>
+      <button type="button" onClick={downloadTemplate} className="template-btn" disabled={disabled}>
+        Download template
+      </button>
+    </article>
+  );
+}
+
+function KpiCard({
+  label,
+  value,
+  tone = "neutral",
+}: {
+  label: string;
+  value: string;
+  tone?: "neutral" | "positive" | "negative";
+}) {
+  return (
+    <article className={"kpi-card" + (tone !== "neutral" ? " kpi-" + tone : "")}>
+      <p>{label}</p>
+      <strong className={tone}>{value}</strong>
+    </article>
+  );
+}
+
+function PieAllocation({ data, palette }: { data: Array<{ name: string; value: number; pct: number }>; palette: string[] }) {
+  if (data.length === 0) {
+    return <div className="empty">No data yet</div>;
+  }
+
+  return (
+    <ResponsiveContainer width="100%" height={280}>
+      <PieChart>
+        <Pie data={data.slice(0, 7)} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90}>
+          {data.slice(0, 7).map((entry, index) => (
+            <Cell key={entry.name + "-" + entry.value} fill={palette[index % palette.length]} />
+          ))}
+        </Pie>
+        <Tooltip formatter={tooltipFormatter} contentStyle={TOOLTIP_CONTENT_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} itemStyle={TOOLTIP_ITEM_STYLE} />
+        <Legend formatter={(value) => String(value)} />
+      </PieChart>
+    </ResponsiveContainer>
+  );
+}
+
+function ChartCard({ title, children, tone = "default" }: { title: string; children: ReactNode; tone?: "default" | "portfolio" | "exposure" | "history" }) {
+  return (
+    <article className={"chart-card chart-" + tone}>
+      <h2>{title}</h2>
+      {children}
+    </article>
+  );
+}
+
+function toRiskFlag(
+  label: string,
+  value: number | null,
+  yellowThreshold: number,
+  redThreshold: number,
+  suffix: string,
+): RiskFlag {
+  if (value == null || !Number.isFinite(value)) {
+    return { label, value: "N/A", tone: "green" };
+  }
+
+  if (value >= redThreshold) {
+    return { label, value: `${value.toFixed(2)}${suffix}`, tone: "red" };
+  }
+
+  if (value >= yellowThreshold) {
+    return { label, value: `${value.toFixed(2)}${suffix}`, tone: "yellow" };
+  }
+
+  return { label, value: `${value.toFixed(2)}${suffix}`, tone: "green" };
+}
+
+function formatCurrency(value: number): string {
+  return new Intl.NumberFormat("en-AU", {
+    style: "currency",
+    currency: "AUD",
+    maximumFractionDigits: 2,
+  }).format(value);
+}
+
+function formatSignedCurrency(value: number): string {
+  const prefix = value >= 0 ? "+" : "-";
+  return prefix + formatCurrency(Math.abs(value));
+}
+
+function formatPercent(value: number | null): string {
+  if (value == null || !Number.isFinite(value)) {
+    return "N/A";
+  }
+
+  return `${value.toFixed(2)}%`;
+}
+
+function formatSnapshotTick(value: unknown): string {
+  if (typeof value !== "string" || value.length === 0) {
+    return "";
+  }
+
+  if (value.length <= 10) {
+    return value.slice(5);
+  }
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return value.slice(5, 16);
+  }
+
+  const day = String(parsed.getDate()).padStart(2, "0");
+  const month = String(parsed.getMonth() + 1).padStart(2, "0");
+  const hour = String(parsed.getHours()).padStart(2, "0");
+  const minute = String(parsed.getMinutes()).padStart(2, "0");
+
+  return `${day}/${month} ${hour}:${minute}`;
+}
+
+function formatSnapshotLabel(value: unknown): string {
+  if (typeof value !== "string" || value.length === 0) {
+    return "";
+  }
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return value;
+  }
+
+  return parsed.toLocaleString("en-AU", {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function formatWeightOz(value: number): string {
+  if (!Number.isFinite(value)) {
+    return "N/A";
+  }
+
+  return `${new Intl.NumberFormat("en-AU", { maximumFractionDigits: 3 }).format(value)} oz`;
+}
+
+function resolveHoldingUnits(units: number, value: number, price: number): number {
+  if (Number.isFinite(units) && units > 0) {
+    return units;
+  }
+
+  if (Number.isFinite(value) && Number.isFinite(price) && value > 0 && price > 0) {
+    return value / price;
+  }
+
+  return 0;
+}
+
+function detectBullionMetal(holding: { name: string; ticker: string; sector: string }): "gold" | "silver" {
+  const text = (holding.name + " " + holding.ticker + " " + holding.sector).toLowerCase();
+  if (text.includes("silver") || /(^|\W)ag(\W|$)/.test(text)) {
+    return "silver";
+  }
+
+  return "gold";
+}
+
+function tooltipFormatter(value: unknown): string {
+  const raw = Array.isArray(value) ? value[0] : value;
+  const numeric = Number(raw);
+
+  if (Number.isFinite(numeric)) {
+    return formatCurrency(numeric);
+  }
+
+  return String(raw ?? "");
+}
+
+
+function getUserVisibleCsvWarning(errors: ParseError[]): string {
+  const relevantWarnings = errors.filter((error) => {
+    if (error.type !== "FieldMismatch") {
+      return true;
+    }
+
+    const message = error.message.toLowerCase();
+    return !message.includes("too few fields") && !message.includes("too many fields");
+  });
+
+  if (relevantWarnings.length === 0) {
+    return "";
+  }
+
+  return " Parsed with warning: " + relevantWarnings[0].message;
+}
+
+function getAccountChipStyle(account: string): CSSProperties {
+  const hash = account
+    .split("")
+    .reduce((acc, char) => (acc * 31 + char.charCodeAt(0)) % 2147483647, 7);
+  const tone = ACCOUNT_CHIP_STYLES[hash % ACCOUNT_CHIP_STYLES.length];
+
+  return {
+    backgroundColor: tone.bg,
+    color: tone.fg,
+    borderColor: tone.border,
+  };
+}
+async function parseApiError(response: Response, fallback: string): Promise<string> {
+  try {
+    const payload = (await response.json()) as ApiError;
+    if (typeof payload.error === "string" && payload.error.length > 0) {
+      return payload.error;
+    }
+  } catch {
+    return fallback;
+  }
+
+  return fallback;
+}
+
+function superTemplateCsv(): string {
+  return [
+    "account,ticker,name,units,price,value,cost base,sector,date",
+    "Hostplus Super,CBA,Commonwealth Bank,80,146.2,11696,10200,Banks,2026-02-18",
+    "Hostplus Super,BHP,BHP Group,120,45.1,5412,4900,Materials,2026-02-18",
+  ].join("\n");
+}
+
+function asxTemplateCsv(): string {
+  return [
+    "account,ticker,name,units,price,value,cost base,sector,date",
+    "SelfWealth,IVV,ISHARES S&P 500 ETF,40,58.4,2336,2100,ETF,2026-02-18",
+    "SelfWealth,WOW,Woolworths Group,35,34.7,1214.5,1180,Consumer Staples,2026-02-18",
+  ].join("\n");
+}
+
+function goldTemplateCsv(): string {
+  return [
+    "account,ticker,name,units,price,value,cost base,sector,date",
+    "ABC Bullion,ABC1,1oz Gold Cast Bar,2,4980,9960,9400,Precious Metals,2026-02-18",
+    "ABC Bullion,ABC2,100g Gold Minted Bar,3.215,4980,16010.7,15050,Precious Metals,2026-02-18",
+    "ABC Bullion,ABC-AG,1kg Silver Cast Bar,32.151,58,1864.76,1715,Precious Metals,2026-02-18",
+  ].join("\n");
 }

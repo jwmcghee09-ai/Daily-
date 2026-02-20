@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: spectre-portfolio
+    runtime: node
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start
+    healthCheckPath: /api/auth/session
+    envVars:
+      - key: NODE_VERSION
+        value: 22.13.0
+      - key: NODE_ENV
+        value: production
+      - key: SQLITE_DB_PATH
+        value: /var/data/aladdin.sqlite
+    disk:
+      name: spectre-sqlite-data
+      mountPath: /var/data
+      sizeGB: 1
