@@ -55,7 +55,19 @@ export interface PortfolioMetrics {
   maxDrawdownPct: number | null;
   var95Pct: number | null;
   var95Amount: number | null;
+  riskWindow: RiskWindow;
+  riskPointsUsed: number;
+  riskStartDate: string | null;
+  riskEndDate: string | null;
 }
+
+export type RiskWindow = "1M" | "3M" | "1Y";
+
+const RISK_WINDOW_DAYS: Record<RiskWindow, number> = {
+  "1M": 31,
+  "3M": 92,
+  "1Y": 366,
+};
 
 const FIELD_ALIASES = {
   account: ["account", "accountname", "portfolio", "broker", "fund", "superaccount", "accountnumber"],
@@ -322,6 +334,7 @@ export function upsertSnapshot(
 export function computeMetrics(
   holdings: PortfolioHolding[],
   snapshots: PortfolioSnapshot[],
+  riskWindow: RiskWindow = "3M",
 ): PortfolioMetrics {
   const totalValue = sum(holdings.map((item) => item.value));
   const totalCost = sum(holdings.map((item) => item.costBase));
@@ -364,9 +377,10 @@ export function computeMetrics(
   }
 
   const dailyHistory = Array.from(latestSnapshotByDay.values()).sort((a, b) => a.date.localeCompare(b.date));
-  const dailyReturns = calculateReturns(dailyHistory.map((item) => item.value));
+  const riskHistory = applyRiskWindow(dailyHistory, riskWindow);
+  const dailyReturns = calculateReturns(riskHistory.map((item) => item.value));
   const volatilityAnnualPct = dailyReturns.length >= 2 ? stdDev(dailyReturns) * Math.sqrt(252) * 100 : null;
-  const maxDrawdownPct = dailyHistory.length >= 2 ? calcMaxDrawdown(dailyHistory.map((item) => item.value)) * 100 : null;
+  const maxDrawdownPct = riskHistory.length >= 2 ? calcMaxDrawdown(riskHistory.map((item) => item.value)) * 100 : null;
 
   const var95Raw = dailyReturns.length >= 20 ? percentile(dailyReturns, 0.05) : null;
   const var95Pct = var95Raw != null ? Math.max(0, -var95Raw * 100) : null;
@@ -389,7 +403,39 @@ export function computeMetrics(
     maxDrawdownPct,
     var95Pct,
     var95Amount,
+    riskWindow,
+    riskPointsUsed: riskHistory.length,
+    riskStartDate: riskHistory.length > 0 ? riskHistory[0].date : null,
+    riskEndDate: riskHistory.length > 0 ? riskHistory[riskHistory.length - 1].date : null,
   };
+}
+
+function applyRiskWindow(history: PortfolioSnapshot[], riskWindow: RiskWindow): PortfolioSnapshot[] {
+  if (history.length === 0) {
+    return [];
+  }
+
+  const latestDate = toDate(history[history.length - 1].date);
+  if (latestDate == null) {
+    return history;
+  }
+
+  const cutoff = new Date(latestDate.getTime());
+  cutoff.setUTCDate(cutoff.getUTCDate() - (RISK_WINDOW_DAYS[riskWindow] - 1));
+
+  return history.filter((item) => {
+    const date = toDate(item.date);
+    return date != null && date.getTime() >= cutoff.getTime();
+  });
+}
+
+function toDate(value: string): Date | null {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+
+  return parsed;
 }
 
 function buildAllocation(

@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
-import { DataSource, PortfolioHolding, PortfolioState } from "@/lib/portfolio";
+import { DataSource, PortfolioHolding, PortfolioState, RiskWindow } from "@/lib/portfolio";
 
 const DEFAULT_DB_FILE = path.join(process.cwd(), "data", "aladdin.sqlite");
 const DB_FILE = process.env.SQLITE_DB_PATH?.trim() || DEFAULT_DB_FILE;
@@ -84,6 +84,7 @@ interface UserRow {
   display_name: string;
   password_hash: string;
   created_at: string;
+  terms_accepted_at?: string;
 }
 
 interface SessionUserRow {
@@ -120,6 +121,8 @@ export interface HistoricalRiskEstimateResult {
   source: "yahoo_estimate";
   lessAccurateThanSnapshots: true;
   note: string;
+  riskWindow: RiskWindow;
+  pointsTarget: number;
   pointsUsed: number;
   returnsCount: number;
   usedTickers: string[];
@@ -129,6 +132,12 @@ export interface HistoricalRiskEstimateResult {
   var95Pct: number | null;
   var95Amount: number | null;
 }
+
+const RISK_WINDOW_SETTINGS: Record<RiskWindow, { label: string; yahooRange: string; maxPoints: number }> = {
+  "1M": { label: "1M", yahooRange: "3mo", maxPoints: 21 },
+  "3M": { label: "3M", yahooRange: "6mo", maxPoints: 63 },
+  "1Y": { label: "1Y", yahooRange: "2y", maxPoints: 252 },
+};
 
 function getDb(): DatabaseSync {
   if (!dbInstance) {
@@ -177,7 +186,8 @@ function initSchema(db: DatabaseSync): void {
       email TEXT NOT NULL UNIQUE,
       display_name TEXT NOT NULL,
       password_hash TEXT NOT NULL,
-      created_at TEXT NOT NULL
+      created_at TEXT NOT NULL,
+      terms_accepted_at TEXT NOT NULL DEFAULT ''
     );
 
     CREATE TABLE IF NOT EXISTS sessions (
@@ -198,6 +208,15 @@ function initSchema(db: DatabaseSync): void {
 
   if (!hasPrevCloseColumn) {
     db.exec("ALTER TABLE holdings ADD COLUMN prev_close REAL NOT NULL DEFAULT 0;");
+  }
+
+  const hasTermsAcceptedColumn = db
+    .prepare("SELECT 1 AS ok FROM pragma_table_info('users') WHERE name = 'terms_accepted_at'")
+    .get() as { ok: number } | undefined;
+
+  if (!hasTermsAcceptedColumn) {
+    db.exec("ALTER TABLE users ADD COLUMN terms_accepted_at TEXT NOT NULL DEFAULT '';");
+    db.exec("UPDATE users SET terms_accepted_at = created_at WHERE terms_accepted_at = '';");
   }
 }
 
@@ -708,9 +727,13 @@ export async function refreshAsxPrices(userId: string): Promise<PriceRefreshResu
   };
 }
 
-export async function estimateHistoricalRiskFromYahoo(userId: string): Promise<HistoricalRiskEstimateResult> {
+export async function estimateHistoricalRiskFromYahoo(
+  userId: string,
+  riskWindow: RiskWindow = "3M",
+): Promise<HistoricalRiskEstimateResult> {
   const db = getDb();
   const scopedPattern = userLikePattern(userId);
+  const windowSettings = RISK_WINDOW_SETTINGS[riskWindow];
 
   const rows = db
     .prepare(`
@@ -727,6 +750,8 @@ export async function estimateHistoricalRiskFromYahoo(userId: string): Promise<H
       source: "yahoo_estimate",
       lessAccurateThanSnapshots: true,
       note: "Estimated from Yahoo historical stock performance. This is less accurate than your own portfolio snapshot history. No holdings available yet.",
+      riskWindow,
+      pointsTarget: windowSettings.maxPoints,
       pointsUsed: 0,
       returnsCount: 0,
       usedTickers: [],
@@ -753,14 +778,14 @@ export async function estimateHistoricalRiskFromYahoo(userId: string): Promise<H
   const failedTickers: string[] = [];
 
   for (const ticker of Array.from(valueByTicker.keys())) {
-    const series = await fetchAsxSeriesFromYahoo(ticker, "6mo");
-    if (!series || series.length < 21) {
+    const series = await fetchAsxSeriesFromYahoo(ticker, windowSettings.yahooRange);
+    if (!series || series.length < 2) {
       failedTickers.push(ticker);
       continue;
     }
 
     const returns = calculateReturnsFromPrices(series);
-    if (returns.length >= 20) {
+    if (returns.length >= 1) {
       returnsByTicker.set(ticker, returns);
     } else {
       failedTickers.push(ticker);
@@ -772,6 +797,8 @@ export async function estimateHistoricalRiskFromYahoo(userId: string): Promise<H
       source: "yahoo_estimate",
       lessAccurateThanSnapshots: true,
       note: "Estimated from Yahoo historical stock performance. This is less accurate than your own portfolio snapshot history. Could not fetch enough history for current tickers.",
+      riskWindow,
+      pointsTarget: windowSettings.maxPoints,
       pointsUsed: 0,
       returnsCount: 0,
       usedTickers: [],
@@ -790,13 +817,15 @@ export async function estimateHistoricalRiskFromYahoo(userId: string): Promise<H
     .map((ticker) => returnsByTicker.get(ticker)?.length || 0)
     .reduce((min, len) => Math.min(min, len), Number.MAX_SAFE_INTEGER);
 
-  const pointsUsed = Math.min(pointsAvailable, 60);
+  const pointsUsed = Math.min(pointsAvailable, windowSettings.maxPoints);
 
-  if (!Number.isFinite(pointsUsed) || pointsUsed < 20) {
+  if (!Number.isFinite(pointsUsed) || pointsUsed < 2) {
     return {
       source: "yahoo_estimate",
       lessAccurateThanSnapshots: true,
-      note: "Estimated from Yahoo historical stock performance. This is less accurate than your own portfolio snapshot history. Fewer than 20 common return points available.",
+      note: "Estimated from Yahoo historical stock performance. This is less accurate than your own portfolio snapshot history. Not enough common return points available.",
+      riskWindow,
+      pointsTarget: windowSettings.maxPoints,
       pointsUsed: 0,
       returnsCount: 0,
       usedTickers,
@@ -827,19 +856,29 @@ export async function estimateHistoricalRiskFromYahoo(userId: string): Promise<H
   const volatilityAnnualPct = pointsUsed >= 2 ? stdDev(portfolioReturns) * Math.sqrt(252) * 100 : null;
   const maxDrawdownPct = pointsUsed >= 2 ? calcMaxDrawdownFromReturns(portfolioReturns) * 100 : null;
 
-  const var95Raw = pointsUsed >= 20 ? percentile(portfolioReturns, 0.05) : null;
+  const var95Raw = portfolioReturns.length >= 20 ? percentile(portfolioReturns, 0.05) : null;
   const var95Pct = var95Raw != null ? Math.max(0, -var95Raw * 100) : null;
   const var95Amount = var95Pct != null ? (var95Pct / 100) * usedValueTotal : null;
 
-  const note =
-    "Estimated from Yahoo historical stock performance and current portfolio weights. " +
-    "This is less accurate than your own portfolio snapshot history." +
-    (failedTickers.length > 0 ? ` Missing history for: ${failedTickers.join(", ")}.` : "");
+  const noteParts = [
+    `Estimated from Yahoo historical stock performance and current portfolio weights (${windowSettings.label} window).`,
+    "This is less accurate than your own portfolio snapshot history.",
+  ];
+
+  if (portfolioReturns.length < 20) {
+    noteParts.push("VaR needs at least 20 return points in the selected window.");
+  }
+
+  if (failedTickers.length > 0) {
+    noteParts.push(`Missing history for: ${failedTickers.join(", ")}` + ".");
+  }
 
   return {
     source: "yahoo_estimate",
     lessAccurateThanSnapshots: true,
-    note,
+    note: noteParts.join(" "),
+    riskWindow,
+    pointsTarget: windowSettings.maxPoints,
     pointsUsed,
     returnsCount: portfolioReturns.length,
     usedTickers,
@@ -875,10 +914,16 @@ export function clearPortfolioData(userId: string): PortfolioState {
   };
 }
 
-export function createAuthUser(email: string, passwordHash: string, displayName: string): AuthPublicUser {
+export function createAuthUser(
+  email: string,
+  passwordHash: string,
+  displayName: string,
+  termsAcceptedAt: string,
+): AuthPublicUser {
   const db = getDb();
   const nowIso = new Date().toISOString();
   const normalizedEmail = normalizeEmail(email);
+  const acceptedAt = sanitizeString(termsAcceptedAt, nowIso);
 
   const row = {
     id: crypto.randomUUID(),
@@ -886,12 +931,13 @@ export function createAuthUser(email: string, passwordHash: string, displayName:
     display_name: sanitizeString(displayName, normalizedEmail.split("@")[0] || "User"),
     password_hash: passwordHash,
     created_at: nowIso,
+    terms_accepted_at: acceptedAt,
   };
 
   db.prepare(`
-    INSERT INTO users (id, email, display_name, password_hash, created_at)
-    VALUES (?, ?, ?, ?, ?)
-  `).run(row.id, row.email, row.display_name, row.password_hash, row.created_at);
+    INSERT INTO users (id, email, display_name, password_hash, created_at, terms_accepted_at)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `).run(row.id, row.email, row.display_name, row.password_hash, row.created_at, row.terms_accepted_at);
 
   return toPublicUser(row as UserRow);
 }

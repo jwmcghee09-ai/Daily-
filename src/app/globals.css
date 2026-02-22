@@ -312,6 +312,31 @@ body {
   box-shadow: 0 0 0 1px rgba(255, 75, 51, 0.4);
 }
 
+.auth-terms {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid #45454f;
+  border-radius: 10px;
+  background: #0c0c11;
+}
+
+.auth-terms input {
+  margin-top: 2px;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+}
+
+.auth-terms span {
+  color: #d5d5dc;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
 .auth-submit {
   margin-top: 4px;
 }
@@ -479,6 +504,48 @@ body {
   color: #ffd8d1;
   font-size: 0.86rem;
   line-height: 1.4;
+}
+
+.risk-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.risk-window-controls {
+  display: inline-flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.risk-window-btn {
+  border: 1px solid #5a5a64;
+  background: #16161b;
+  color: #e5e5ea;
+  border-radius: 8px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.risk-window-btn:hover {
+  border-color: #84848f;
+}
+
+.risk-window-btn.active {
+  border-color: #ff9a89;
+  color: #fff;
+  background: linear-gradient(140deg, var(--accent) 0%, var(--accent-strong) 100%);
+}
+
+.risk-window-note {
+  margin-bottom: 10px;
+  color: #c9c9cf;
+  font-size: 0.84rem;
 }
 
 
@@ -650,6 +717,65 @@ body {
 .risk-card p {
   font-size: 0.82rem;
   color: #b2b2ba;
+}
+
+.risk-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.metric-help {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid #61616a;
+  color: #e7e7eb;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: help;
+}
+
+.metric-help:focus {
+  outline: none;
+  border-color: #ff9a89;
+  box-shadow: 0 0 0 1px rgba(255, 75, 51, 0.4);
+}
+
+.metric-help-popup {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  min-width: 240px;
+  max-width: 300px;
+  padding: 8px 10px;
+  background: #f4f4f6;
+  color: #121215;
+  border: 1px solid #8e8e96;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 600;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-3px);
+  transition: opacity 0.16s ease, transform 0.16s ease;
+  z-index: 6;
+  pointer-events: none;
+}
+
+.metric-help:hover .metric-help-popup,
+.metric-help:focus .metric-help-popup {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
 }
 
 .risk-card strong {

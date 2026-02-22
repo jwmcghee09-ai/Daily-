@@ -20,6 +20,7 @@ interface RegisterPayload {
   email?: string;
   password?: string;
   displayName?: string;
+  acceptsTerms?: boolean;
 }
 
 export async function POST(request: Request) {
@@ -38,6 +39,11 @@ export async function POST(request: Request) {
     const email = normalizeEmail(payload.email || "");
     const password = payload.password || "";
     const displayName = normalizeDisplayName(payload.displayName || "", email);
+    const acceptsTerms = payload.acceptsTerms === true;
+
+    if (!acceptsTerms) {
+      return NextResponse.json({ error: "You must agree to the Terms & Conditions to create an account." }, { status: 400 });
+    }
 
     if (!isLikelyEmail(email)) {
       return NextResponse.json({ error: "Please enter a valid email address." }, { status: 400 });
@@ -53,7 +59,8 @@ export async function POST(request: Request) {
     }
 
     const passwordHash = hashPassword(password);
-    const user = createAuthUser(email, passwordHash, displayName);
+    const termsAcceptedAt = new Date().toISOString();
+    const user = createAuthUser(email, passwordHash, displayName, termsAcceptedAt);
     const session = createAndPersistSession(user.id);
 
     const response = NextResponse.json({

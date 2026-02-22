@@ -22,6 +22,7 @@ import {
   DataSource,
   EMPTY_STATE,
   PortfolioState,
+  RiskWindow,
   computeMetrics,
   extractCsvDataSection,
   parseRowsToHoldings,
@@ -57,6 +58,8 @@ const ACCOUNT_CHIP_STYLES = [
   { bg: "#2b2b2f", fg: "#f5f5f5", border: "#4a4a52" },
 ];
 
+const RISK_WINDOW_OPTIONS: RiskWindow[] = ["1M", "3M", "1Y"];
+
 interface Banner {
   type: "success" | "error" | "info";
   message: string;
@@ -66,6 +69,7 @@ interface RiskFlag {
   label: string;
   value: string;
   tone: "green" | "yellow" | "red";
+  help: string;
 }
 
 interface StressScenarioResult {
@@ -98,6 +102,8 @@ interface HistoricalRiskEstimatePayload {
   source: "yahoo_estimate";
   lessAccurateThanSnapshots: true;
   note: string;
+  riskWindow: RiskWindow;
+  pointsTarget: number;
   pointsUsed: number;
   returnsCount: number;
   usedTickers: string[];
@@ -130,6 +136,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [working, setWorking] = useState(false);
   const [refreshingPrices, setRefreshingPrices] = useState(false);
+  const [riskWindow, setRiskWindow] = useState<RiskWindow>("3M");
   const [historicalRiskEstimate, setHistoricalRiskEstimate] = useState<HistoricalRiskEstimatePayload | null>(null);
   const [loadingHistoricalEstimate, setLoadingHistoricalEstimate] = useState(false);
   const [sessionUser, setSessionUser] = useState<SessionUser | null>(null);
@@ -137,6 +144,7 @@ export default function Home() {
   const [authEmail, setAuthEmail] = useState("");
   const [authPassword, setAuthPassword] = useState("");
   const [authDisplayName, setAuthDisplayName] = useState("");
+  const [authAcceptsTerms, setAuthAcceptsTerms] = useState(false);
   const [authWorking, setAuthWorking] = useState(false);
   const [authError, setAuthError] = useState("");
   const refreshInFlight = useRef(false);
@@ -233,7 +241,7 @@ export default function Home() {
     return () => window.clearInterval(timer);
   }, [loading, refreshPrices, sessionUser]);
 
-  const metrics = useMemo(() => computeMetrics(state.holdings, state.snapshots), [state.holdings, state.snapshots]);
+  const metrics = useMemo(() => computeMetrics(state.holdings, state.snapshots, riskWindow), [state.holdings, state.snapshots, riskWindow]);
   const needsYahooEstimate = metrics.dailyReturns.length < 20 && state.holdings.length > 0;
 
   useEffect(() => {
@@ -252,7 +260,7 @@ export default function Home() {
     const loadHistoricalEstimate = async () => {
       setLoadingHistoricalEstimate(true);
       try {
-        const response = await fetch("/api/risk/estimate", { method: "POST" });
+        const response = await fetch("/api/risk/estimate?window=" + encodeURIComponent(riskWindow), { method: "POST" });
         if (!response.ok) {
           throw new Error(await parseApiError(response, "Failed to estimate historical risk from Yahoo."));
         }
@@ -277,8 +285,9 @@ export default function Home() {
     return () => {
       ignore = true;
     };
-  }, [loading, needsYahooEstimate, sessionUser, state.updatedAt]);
+  }, [loading, needsYahooEstimate, riskWindow, sessionUser, state.updatedAt]);
 
+  const effectiveVolatilityAnnualPct = metrics.volatilityAnnualPct ?? historicalRiskEstimate?.volatilityAnnualPct ?? null;
   const effectiveVar95Pct = metrics.var95Pct ?? historicalRiskEstimate?.var95Pct ?? null;
   const effectiveVar95Amount = metrics.var95Amount ?? historicalRiskEstimate?.var95Amount ?? null;
   const effectiveMaxDrawdownPct = metrics.maxDrawdownPct ?? historicalRiskEstimate?.maxDrawdownPct ?? null;
@@ -367,13 +376,56 @@ export default function Home() {
 
   const riskFlags = useMemo<RiskFlag[]>(() => {
     return [
-      toRiskFlag("Top 3 concentration", metrics.top3ConcentrationPct, 40, 60, "%"),
-      toRiskFlag("Largest account share", metrics.largestAccountPct, 55, 75, "%"),
-      toRiskFlag("Portfolio concentration (HHI)", metrics.hhi, 1500, 2500, ""),
-      toRiskFlag("Max drawdown", effectiveMaxDrawdownPct, 10, 20, "%"),
-      toRiskFlag("1-day VaR 95", effectiveVar95Pct, 1.2, 2.5, "%"),
+      toRiskFlag(
+        "Annualized volatility",
+        effectiveVolatilityAnnualPct,
+        15,
+        25,
+        "%",
+        "Std dev of daily returns in selected window multiplied by sqrt(252).",
+      ),
+      toRiskFlag(
+        "Top 3 concentration",
+        metrics.top3ConcentrationPct,
+        40,
+        60,
+        "%",
+        "(Top 3 holding values / total portfolio value) x 100.",
+      ),
+      toRiskFlag(
+        "Largest account share",
+        metrics.largestAccountPct,
+        55,
+        75,
+        "%",
+        "(Largest account value / total portfolio value) x 100.",
+      ),
+      toRiskFlag(
+        "Portfolio concentration (HHI)",
+        metrics.hhi,
+        1500,
+        2500,
+        "",
+        "Sum of squared holding weights multiplied by 10,000.",
+      ),
+      toRiskFlag(
+        "Max drawdown",
+        effectiveMaxDrawdownPct,
+        10,
+        20,
+        "%",
+        "Largest peak-to-trough drop inside the selected risk window.",
+      ),
+      toRiskFlag(
+        "1-day VaR 95",
+        effectiveVar95Pct,
+        1.2,
+        2.5,
+        "%",
+        "95% historical VaR using the 5th percentile of daily returns in the selected window.",
+      ),
     ].filter((flag) => flag.value !== "N/A");
-  }, [metrics, effectiveMaxDrawdownPct, effectiveVar95Pct]);
+  }, [effectiveMaxDrawdownPct, effectiveVar95Pct, effectiveVolatilityAnnualPct, metrics.hhi, metrics.largestAccountPct, metrics.top3ConcentrationPct]);
 
   const latestReportDate = useMemo(() => {
     if (state.holdings.length === 0) {
@@ -588,6 +640,12 @@ export default function Home() {
 
   const submitAuth = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    if (authMode === "register" && !authAcceptsTerms) {
+      setAuthError("You must agree to the Terms & Conditions to create an account.");
+      return;
+    }
+
     setAuthWorking(true);
     setAuthError("");
 
@@ -602,6 +660,7 @@ export default function Home() {
           email: authEmail,
           password: authPassword,
           displayName: authDisplayName,
+          acceptsTerms: authMode === "register" ? authAcceptsTerms : undefined,
         }),
       });
 
@@ -616,6 +675,7 @@ export default function Home() {
 
       setSessionUser(payload.user);
       setAuthPassword("");
+      setAuthAcceptsTerms(false);
       setAuthError("");
       setBanner({ type: "success", message: "Signed in as " + payload.user.displayName + "." });
 
@@ -770,16 +830,30 @@ export default function Home() {
               </label>
 
               {authMode === "register" ? (
-                <label>
-                  <span>Display Name</span>
-                  <input
-                    type="text"
-                    placeholder="How your account appears"
-                    value={authDisplayName}
-                    onChange={(event) => setAuthDisplayName(event.target.value)}
-                    autoComplete="name"
-                  />
-                </label>
+                <>
+                  <label>
+                    <span>Display Name</span>
+                    <input
+                      type="text"
+                      placeholder="How your account appears"
+                      value={authDisplayName}
+                      onChange={(event) => setAuthDisplayName(event.target.value)}
+                      autoComplete="name"
+                    />
+                  </label>
+
+                  <label className="auth-terms">
+                    <input
+                      type="checkbox"
+                      checked={authAcceptsTerms}
+                      onChange={(event) => setAuthAcceptsTerms(event.target.checked)}
+                      required
+                    />
+                    <span>
+                      I agree to the Terms & Conditions and understand SPECTRE provides informational analytics only, not financial advice.
+                    </span>
+                  </label>
+                </>
               ) : null}
 
               <button type="submit" className="refresh-btn auth-submit" disabled={authWorking}>
@@ -793,6 +867,7 @@ export default function Home() {
                 className="template-btn"
                 onClick={() => {
                   setAuthMode((current) => (current === "register" ? "login" : "register"));
+                  setAuthAcceptsTerms(false);
                   setAuthError("");
                 }}
                 disabled={authWorking}
@@ -888,7 +963,7 @@ export default function Home() {
           tone={todayPortfolioChangePct == null ? "neutral" : todayPortfolioChangeAmount >= 0 ? "positive" : "negative"}
         />
         <KpiCard
-          label="1-Day VaR (95%)"
+          label={"1-Day VaR (95%, " + riskWindow + ")"}
           value={
             effectiveVar95Amount != null
               ? `${formatCurrency(effectiveVar95Amount)} (${formatPercent(effectiveVar95Pct)})${metrics.var95Amount == null ? " • Yahoo estimate" : ""}`
@@ -1029,10 +1104,30 @@ export default function Home() {
       </section>
 
       <section className="risk-section">
-        <h2>Risk Signals</h2>
+        <div className="risk-head">
+          <h2>Risk Signals</h2>
+          <div className="risk-window-controls" role="group" aria-label="Select risk window">
+            {RISK_WINDOW_OPTIONS.map((option) => (
+              <button
+                key={option}
+                type="button"
+                className={"risk-window-btn" + (riskWindow === option ? " active" : "")}
+                onClick={() => setRiskWindow(option)}
+              >
+                {option}
+              </button>
+            ))}
+          </div>
+        </div>
+        <p className="risk-window-note">
+          Window {riskWindow}: {metrics.riskPointsUsed} snapshot points
+          {metrics.riskStartDate ? " from " + formatRiskWindowDate(metrics.riskStartDate) : ""}
+          {metrics.riskEndDate ? " to " + formatRiskWindowDate(metrics.riskEndDate) : ""}
+          .
+        </p>
         {usingYahooFallback ? (
           <p className="estimate-note">
-            {historicalRiskEstimate.note} ({historicalRiskEstimate.pointsUsed} points, {historicalRiskEstimate.usedTickers.length} tickers)
+            {historicalRiskEstimate.note} ({historicalRiskEstimate.pointsUsed}/{historicalRiskEstimate.pointsTarget} points, {historicalRiskEstimate.usedTickers.length} tickers)
           </p>
         ) : null}
         <div className="risk-grid">
@@ -1041,7 +1136,13 @@ export default function Home() {
           ) : (
             riskFlags.map((flag) => (
               <article key={flag.label} className={`risk-card ${flag.tone}`}>
-                <p>{flag.label}</p>
+                <div className="risk-label-row">
+                  <p>{flag.label}</p>
+                  <span className="metric-help" tabIndex={0} aria-label={flag.help}>
+                    ?
+                    <span className="metric-help-popup">{flag.help}</span>
+                  </span>
+                </div>
                 <strong>{flag.value}</strong>
               </article>
             ))
@@ -1232,20 +1333,21 @@ function toRiskFlag(
   yellowThreshold: number,
   redThreshold: number,
   suffix: string,
+  help: string,
 ): RiskFlag {
   if (value == null || !Number.isFinite(value)) {
-    return { label, value: "N/A", tone: "green" };
+    return { label, value: "N/A", tone: "green", help };
   }
 
   if (value >= redThreshold) {
-    return { label, value: `${value.toFixed(2)}${suffix}`, tone: "red" };
+    return { label, value: `${value.toFixed(2)}${suffix}`, tone: "red", help };
   }
 
   if (value >= yellowThreshold) {
-    return { label, value: `${value.toFixed(2)}${suffix}`, tone: "yellow" };
+    return { label, value: `${value.toFixed(2)}${suffix}`, tone: "yellow", help };
   }
 
-  return { label, value: `${value.toFixed(2)}${suffix}`, tone: "green" };
+  return { label, value: `${value.toFixed(2)}${suffix}`, tone: "green", help };
 }
 
 function formatCurrency(value: number): string {
@@ -1307,6 +1409,19 @@ function formatSnapshotLabel(value: unknown): string {
     day: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
+  });
+}
+
+function formatRiskWindowDate(value: string): string {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return value;
+  }
+
+  return parsed.toLocaleDateString("en-AU", {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
   });
 }
 
