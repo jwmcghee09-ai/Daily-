@@ -8,6 +8,7 @@ import {
   isLikelyEmail,
   normalizeEmail,
 } from "@/lib/auth";
+import { isEmailDeliveryConfigured, sendPasswordResetEmail } from "@/lib/mailer";
 import { consumeRateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
@@ -46,6 +47,14 @@ export async function POST(request: Request) {
       );
     }
 
+    const emailConfigured = isEmailDeliveryConfigured();
+    if (process.env.NODE_ENV === "production" && !emailConfigured) {
+      return NextResponse.json(
+        { error: "Password reset email is not configured yet. Please contact support." },
+        { status: 503 },
+      );
+    }
+
     const user = findAuthUserByEmail(email);
 
     let devResetToken: string | undefined;
@@ -57,14 +66,24 @@ export async function POST(request: Request) {
 
       createPasswordResetRecord(user.id, resetTokenHash, expiresAt);
 
-      if (process.env.NODE_ENV !== "production") {
+      if (emailConfigured) {
+        try {
+          await sendPasswordResetEmail({
+            toEmail: user.email,
+            displayName: user.displayName,
+            resetToken,
+          });
+        } catch (error) {
+          console.error("Password reset email send failed", error);
+        }
+      } else {
         devResetToken = resetToken;
       }
     }
 
     return NextResponse.json({
       ok: true,
-      message: "If an account exists for that email, a reset token has been generated.",
+      message: "If an account exists for that email, reset instructions were sent.",
       devResetToken,
     });
   } catch {
