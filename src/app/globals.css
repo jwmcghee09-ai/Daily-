@@ -1291,3 +1291,203 @@ tr:hover td {
     min-height: 420px;
   }
 }
+
+/* === SPECTRE Visual Refresh V2 === */
+.hero-copy {
+  display: grid;
+  gap: 8px;
+  max-width: 760px;
+}
+
+.hero h1 {
+  animation: spectre-glow 6s ease-in-out infinite;
+}
+
+.hero-description {
+  margin-top: 12px;
+  font-size: 0.97rem;
+  line-height: 1.55;
+  color: #e2e2e7;
+}
+
+.meta {
+  gap: 10px;
+}
+
+.meta-item {
+  display: block;
+  padding: 7px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.02);
+  font-size: 0.84rem;
+  color: #ececf0;
+}
+
+.upload-grid {
+  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+}
+
+.upload-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.upload-card::after {
+  content: "";
+  position: absolute;
+  top: -52px;
+  right: -52px;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 75, 51, 0.26) 0%, transparent 72%);
+  pointer-events: none;
+}
+
+.upload-card h2 {
+  font-size: 1.08rem;
+}
+
+.kpi-card strong {
+  font-family: var(--font-geist-mono), "Azeret Mono", monospace;
+  letter-spacing: -0.01em;
+}
+
+.insights-section > h2,
+.gold-section > h2,
+.quality-section > h2,
+.risk-section > .risk-head > h2,
+.table-section > h2,
+.chart-card > h2 {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.insights-section > h2::before,
+.gold-section > h2::before,
+.quality-section > h2::before,
+.risk-section > .risk-head > h2::before,
+.table-section > h2::before,
+.chart-card > h2::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--accent);
+  box-shadow: 0 0 0 4px rgba(255, 75, 51, 0.18);
+}
+
+.insights-grid {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.asset-row,
+.performer-row {
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.stress-grid {
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+.stress-card {
+  border-left-width: 6px;
+}
+
+.stress-card.down {
+  background: linear-gradient(160deg, rgba(24, 14, 16, 0.95) 0%, rgba(12, 10, 14, 0.95) 100%);
+}
+
+.stress-card.up {
+  background: linear-gradient(160deg, rgba(22, 22, 26, 0.95) 0%, rgba(10, 10, 14, 0.95) 100%);
+}
+
+.stress-card strong {
+  font-family: var(--font-geist-mono), "Azeret Mono", monospace;
+}
+
+.gold-grid {
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+}
+
+.quality-grid {
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+}
+
+.risk-grid {
+  grid-template-columns: repeat(auto-fit, minmax(225px, 1fr));
+}
+
+.risk-card strong {
+  font-family: var(--font-geist-mono), "Azeret Mono", monospace;
+}
+
+.metric-help {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.chart-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.chart-card.chart-history {
+  grid-column: 1 / -1;
+}
+
+.chart-card {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-top-width: 3px;
+}
+
+.table-section {
+  position: relative;
+}
+
+.table-section::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 75, 51, 0.18);
+  pointer-events: none;
+}
+
+td {
+  color: #e8e8ed;
+}
+
+@keyframes spectre-glow {
+  0%,
+  100% {
+    text-shadow: 0 0 26px rgba(255, 75, 51, 0.26);
+  }
+  50% {
+    text-shadow: 0 0 38px rgba(255, 75, 51, 0.5);
+  }
+}
+
+@media (max-width: 1100px) {
+  .chart-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .meta-item {
+    font-size: 0.8rem;
+  }
+
+  .hero-description {
+    font-size: 0.9rem;
+  }
+
+  .asset-row,
+  .performer-row {
+    padding: 7px 8px;
+  }
+}
