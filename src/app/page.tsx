@@ -59,6 +59,13 @@ const ACCOUNT_CHIP_STYLES = [
 ];
 
 const RISK_WINDOW_OPTIONS: RiskWindow[] = ["1M", "3M", "1Y"];
+type WorkspacePage = "overview" | "markets" | "risk" | "holdings";
+const WORKSPACE_PAGE_TABS: Array<{ id: WorkspacePage; label: string; description: string }> = [
+  { id: "overview", label: "Overview", description: "Executive snapshot of performance, stress, and today's movement." },
+  { id: "markets", label: "Markets", description: "Import feeds, bullion monitoring, and data-quality controls." },
+  { id: "risk", label: "Risk Lab", description: "Concentration, drawdown, VaR, and windowed risk diagnostics." },
+  { id: "holdings", label: "Holdings", description: "Detailed holdings table and allocation charts across accounts." },
+];
 
 interface Banner {
   type: "success" | "error" | "info";
@@ -137,6 +144,7 @@ export default function Home() {
   const [working, setWorking] = useState(false);
   const [refreshingPrices, setRefreshingPrices] = useState(false);
   const [riskWindow, setRiskWindow] = useState<RiskWindow>("3M");
+  const [workspacePage, setWorkspacePage] = useState<WorkspacePage>("overview");
   const [historicalRiskEstimate, setHistoricalRiskEstimate] = useState<HistoricalRiskEstimatePayload | null>(null);
   const [loadingHistoricalEstimate, setLoadingHistoricalEstimate] = useState(false);
   const [sessionUser, setSessionUser] = useState<SessionUser | null>(null);
@@ -781,6 +789,16 @@ export default function Home() {
     }
   };
 
+  const activeWorkspace = WORKSPACE_PAGE_TABS.find((tab) => tab.id === workspacePage) || WORKSPACE_PAGE_TABS[0];
+  const showUpload = workspacePage === "markets";
+  const showKpis = workspacePage === "overview" || workspacePage === "risk";
+  const showInsights = workspacePage === "overview";
+  const showGold = workspacePage === "markets";
+  const showQuality = workspacePage === "markets" || workspacePage === "risk";
+  const showRisk = workspacePage === "risk";
+  const showCharts = workspacePage === "holdings";
+  const showTable = workspacePage === "holdings";
+
   if (!sessionUser) {
     return (
       <div className="auth-shell">
@@ -917,8 +935,24 @@ export default function Home() {
 
       {banner ? <div className={`banner ${banner.type}`}>{banner.message}</div> : null}
 
+      <section className="workspace-bar">
+        <nav className="workspace-nav" aria-label="Workspace pages">
+          {WORKSPACE_PAGE_TABS.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              className={"workspace-tab" + (workspacePage === tab.id ? " active" : "")}
+              onClick={() => setWorkspacePage(tab.id)}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </nav>
+        <p className="workspace-note">{activeWorkspace.description}</p>
+      </section>
 
-      <section className="upload-grid">
+      {showUpload ? (
+<section className="upload-grid">
         <UploadCard
           title="Super Report (CSV)"
           description="Upload your superannuation holdings export."
@@ -944,8 +978,10 @@ export default function Home() {
           disabled={working || loading}
         />
       </section>
+      ) : null}
 
-      <section className="kpi-grid">
+      {showKpis ? (
+<section className="kpi-grid">
         <KpiCard label="Total Portfolio" value={formatCurrency(metrics.totalValue)} />
         <KpiCard label="Cost Base" value={formatCurrency(metrics.totalCost)} />
         <KpiCard
@@ -973,8 +1009,10 @@ export default function Home() {
           }
         />
       </section>
+      ) : null}
 
-      <section className="insights-section">
+      {showInsights ? (
+<section className="insights-section">
         <h2>Performance & Stress</h2>
         <div className="insights-grid">
           <article className="insight-card">
@@ -1052,8 +1090,10 @@ export default function Home() {
           )}
         </div>
       </section>
+      ) : null}
 
-      <section className="gold-section">
+      {showGold ? (
+<section className="gold-section">
         <h2>Bullion Tracking (ABC Bullion)</h2>
         {bullionHoldings.length === 0 ? (
           <div className="empty">Upload an ABC Bullion CSV to track gold and silver weights and values.</div>
@@ -1090,8 +1130,10 @@ export default function Home() {
           </div>
         )}
       </section>
+      ) : null}
 
-      <section className="quality-section">
+      {showQuality ? (
+<section className="quality-section">
         <h2>Data Quality</h2>
         <div className="quality-grid">
           {dataQualityRows.map((row) => (
@@ -1102,8 +1144,10 @@ export default function Home() {
           ))}
         </div>
       </section>
+      ) : null}
 
-      <section className="risk-section">
+      {showRisk ? (
+<section className="risk-section">
         <div className="risk-head">
           <h2>Risk Signals</h2>
           <div className="risk-window-controls" role="group" aria-label="Select risk window">
@@ -1149,8 +1193,10 @@ export default function Home() {
           )}
         </div>
       </section>
+      ) : null}
 
-      <section className="chart-grid">
+      {showCharts ? (
+<section className="chart-grid">
         <ChartCard title="Account Allocation" tone="portfolio">
           <PieAllocation data={metrics.accountAllocation} palette={PORTFOLIO_COLORS} />
         </ChartCard>
@@ -1184,8 +1230,10 @@ export default function Home() {
           </ResponsiveContainer>
         </ChartCard>
       </section>
+      ) : null}
 
-      <section className="table-section">
+      {showTable ? (
+<section className="table-section">
         <h2>Current Holdings</h2>
         {loading ? (
           <div className="empty">Loading stored data...</div>
@@ -1231,6 +1279,7 @@ export default function Home() {
           </div>
         )}
       </section>
+      ) : null}
 
       <footer className="footer-note">
         <p>SPECTRE stores data in local SQLite and auto-refreshes ASX prices every 5 minutes while this page is open. Upload a new CSV when you buy, sell, or change bullion holdings.</p>
