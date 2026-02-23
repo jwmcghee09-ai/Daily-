@@ -890,27 +890,29 @@ export default function Home() {
   return (
     <div className="shell">
       <header className="hero">
-        <div className="hero-copy">
+        <div className="hero-brand">
           <h1>SPECTRE</h1>
           <p className="hero-tagline">System for Portfolio Exposure, Correlation, Threat & Risk Evaluation</p>
-          <p className="hero-description">Upload super, ASX, and ABC Bullion gold/silver CSV reports to track your portfolio and risk in one place.</p>
         </div>
-        <div className="meta">
-          <span className="meta-item">Account: {sessionUser.displayName} ({sessionUser.email})</span>
-          <span className="meta-item">Holdings: {state.holdings.length}</span>
-          <span className="meta-item">Latest report: {latestReportDate || "N/A"}</span>
-          <span className="meta-item">Last saved: {state.updatedAt ? new Date(state.updatedAt).toLocaleString("en-AU") : "N/A"}</span>
-          <span className="meta-item">Live prices: {state.lastPriceRefreshAt ? new Date(state.lastPriceRefreshAt).toLocaleString("en-AU") : "Not refreshed yet"}</span>
-          <div className="meta-actions">
-            <button type="button" onClick={() => void refreshPrices(true)} className="refresh-btn" disabled={loading || working || refreshingPrices}>
-              {refreshingPrices ? "Refreshing..." : "Refresh Prices"}
-            </button>
-            <button type="button" onClick={clearData} className="clear-btn" disabled={working || refreshingPrices}>
-              {working ? "Working..." : "Clear Data"}
-            </button>
-            <button type="button" onClick={logout} className="clear-btn" disabled={working || refreshingPrices}>
-              Sign Out
-            </button>
+        <div className="hero-grid">
+          <p className="hero-description">Upload super, ASX, and ABC Bullion gold/silver CSV reports to track your portfolio and risk in one place.</p>
+          <div className="meta">
+            <span className="meta-item">Account: {sessionUser.displayName} ({sessionUser.email})</span>
+            <span className="meta-item">Holdings: {state.holdings.length}</span>
+            <span className="meta-item">Latest report: {latestReportDate || "N/A"}</span>
+            <span className="meta-item">Last saved: {state.updatedAt ? new Date(state.updatedAt).toLocaleString("en-AU") : "N/A"}</span>
+            <span className="meta-item">Live prices: {state.lastPriceRefreshAt ? new Date(state.lastPriceRefreshAt).toLocaleString("en-AU") : "Not refreshed yet"}</span>
+            <div className="meta-actions">
+              <button type="button" onClick={() => void refreshPrices(true)} className="refresh-btn" disabled={loading || working || refreshingPrices}>
+                {refreshingPrices ? "Refreshing..." : "Refresh Prices"}
+              </button>
+              <button type="button" onClick={clearData} className="clear-btn" disabled={working || refreshingPrices}>
+                {working ? "Working..." : "Clear Data"}
+              </button>
+              <button type="button" onClick={logout} className="clear-btn" disabled={working || refreshingPrices}>
+                Sign Out
+              </button>
+            </div>
           </div>
         </div>
       </header>
