@@ -52,7 +52,25 @@ Set these environment variables in Render for production password reset:
 
 Without these in production, `/api/auth/password/request` returns a configuration error.
 
-### 5. Deploy
+### 5. Stripe Subscriptions
+
+Set these environment variables in Render for Stripe checkout and webhooks:
+- `STRIPE_SECRET_KEY=sk_live_...`
+- `STRIPE_PRICE_STARTER_MONTHLY=price_...`
+- `STRIPE_WEBHOOK_SECRET=whsec_...`
+
+In Stripe dashboard, add webhook endpoint:
+- `https://your-live-domain/api/webhooks/stripe`
+
+Listen for events:
+- `checkout.session.completed`
+- `customer.subscription.created`
+- `customer.subscription.updated`
+- `customer.subscription.deleted`
+
+The logged-in dashboard includes a `Starter Plan ($3/mo)` button that starts Stripe Checkout.
+
+### 6. Deploy
 
 After deploy, Render gives you a public URL like:
 - `https://spectre-portfolio.onrender.com`

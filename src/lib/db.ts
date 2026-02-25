@@ -95,6 +95,17 @@ interface SessionUserRow {
   expires_at: string;
 }
 
+interface BillingSubscriptionRow {
+  user_id: string;
+  stripe_customer_id: string | null;
+  stripe_subscription_id: string | null;
+  stripe_price_id: string | null;
+  stripe_status: string | null;
+  current_period_end: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface AuthPublicUser {
   id: string;
   email: string;
@@ -108,6 +119,17 @@ export interface AuthUserWithPassword extends AuthPublicUser {
 
 export interface AuthSessionUser extends AuthPublicUser {
   sessionExpiresAt: string;
+}
+
+export interface BillingSubscription {
+  userId: string;
+  stripeCustomerId: string | null;
+  stripeSubscriptionId: string | null;
+  stripePriceId: string | null;
+  status: string | null;
+  currentPeriodEnd: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface PriceRefreshResult {
@@ -200,6 +222,23 @@ function initSchema(db: DatabaseSync): void {
 
     CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions (user_id);
     CREATE INDEX IF NOT EXISTS idx_sessions_expires_at ON sessions (expires_at);
+
+    CREATE TABLE IF NOT EXISTS billing_subscriptions (
+      user_id TEXT PRIMARY KEY,
+      stripe_customer_id TEXT,
+      stripe_subscription_id TEXT,
+      stripe_price_id TEXT,
+      stripe_status TEXT,
+      current_period_end TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY(user_id) REFERENCES users(id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_billing_subscriptions_customer ON billing_subscriptions (stripe_customer_id);
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_billing_subscriptions_subscription
+      ON billing_subscriptions (stripe_subscription_id)
+      WHERE stripe_subscription_id IS NOT NULL;
   `);
 
   const hasPrevCloseColumn = db
@@ -1093,6 +1132,171 @@ export function updateAuthUserPasswordHash(userId: string, passwordHash: string)
   const db = getDb();
   db.prepare("UPDATE users SET password_hash = ? WHERE id = ?").run(passwordHash, userId);
 }
+
+interface BillingSubscriptionPatchInput {
+  stripeCustomerId?: string | null;
+  stripeSubscriptionId?: string | null;
+  stripePriceId?: string | null;
+  status?: string | null;
+  currentPeriodEnd?: string | null;
+}
+
+export interface BillingSubscriptionUpsertInput extends BillingSubscriptionPatchInput {
+  userId: string;
+}
+
+function toOptionalNullableString(value: string | null | undefined): string | null | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (value === null) {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function toBillingSubscription(row: BillingSubscriptionRow): BillingSubscription {
+  return {
+    userId: row.user_id,
+    stripeCustomerId: row.stripe_customer_id,
+    stripeSubscriptionId: row.stripe_subscription_id,
+    stripePriceId: row.stripe_price_id,
+    status: row.stripe_status,
+    currentPeriodEnd: row.current_period_end,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+export function readBillingSubscription(userId: string): BillingSubscription | null {
+  const db = getDb();
+
+  const row = db
+    .prepare(`
+      SELECT user_id, stripe_customer_id, stripe_subscription_id, stripe_price_id, stripe_status, current_period_end, created_at, updated_at
+      FROM billing_subscriptions
+      WHERE user_id = ?
+      LIMIT 1
+    `)
+    .get(userId) as BillingSubscriptionRow | undefined;
+
+  return row ? toBillingSubscription(row) : null;
+}
+
+export function upsertBillingSubscriptionForUser(input: BillingSubscriptionUpsertInput): void {
+  const db = getDb();
+
+  const userExists = db.prepare("SELECT 1 AS ok FROM users WHERE id = ? LIMIT 1").get(input.userId) as { ok: number } | undefined;
+  if (!userExists) {
+    return;
+  }
+
+  const existing = db
+    .prepare(`
+      SELECT user_id, stripe_customer_id, stripe_subscription_id, stripe_price_id, stripe_status, current_period_end, created_at, updated_at
+      FROM billing_subscriptions
+      WHERE user_id = ?
+      LIMIT 1
+    `)
+    .get(input.userId) as BillingSubscriptionRow | undefined;
+
+  const nextStripeCustomerId = toOptionalNullableString(input.stripeCustomerId);
+  const nextStripeSubscriptionId = toOptionalNullableString(input.stripeSubscriptionId);
+  const nextStripePriceId = toOptionalNullableString(input.stripePriceId);
+  const nextStatus = toOptionalNullableString(input.status);
+  const nextCurrentPeriodEnd = toOptionalNullableString(input.currentPeriodEnd);
+
+  const nowIso = new Date().toISOString();
+
+  const merged = {
+    userId: input.userId,
+    stripeCustomerId: nextStripeCustomerId !== undefined ? nextStripeCustomerId : (existing?.stripe_customer_id ?? null),
+    stripeSubscriptionId: nextStripeSubscriptionId !== undefined ? nextStripeSubscriptionId : (existing?.stripe_subscription_id ?? null),
+    stripePriceId: nextStripePriceId !== undefined ? nextStripePriceId : (existing?.stripe_price_id ?? null),
+    status: nextStatus !== undefined ? nextStatus : (existing?.stripe_status ?? null),
+    currentPeriodEnd: nextCurrentPeriodEnd !== undefined ? nextCurrentPeriodEnd : (existing?.current_period_end ?? null),
+    createdAt: existing?.created_at ?? nowIso,
+    updatedAt: nowIso,
+  };
+
+  db.prepare(`
+    INSERT INTO billing_subscriptions (
+      user_id,
+      stripe_customer_id,
+      stripe_subscription_id,
+      stripe_price_id,
+      stripe_status,
+      current_period_end,
+      created_at,
+      updated_at
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(user_id) DO UPDATE SET
+      stripe_customer_id = excluded.stripe_customer_id,
+      stripe_subscription_id = excluded.stripe_subscription_id,
+      stripe_price_id = excluded.stripe_price_id,
+      stripe_status = excluded.stripe_status,
+      current_period_end = excluded.current_period_end,
+      updated_at = excluded.updated_at
+  `).run(
+    merged.userId,
+    merged.stripeCustomerId,
+    merged.stripeSubscriptionId,
+    merged.stripePriceId,
+    merged.status,
+    merged.currentPeriodEnd,
+    merged.createdAt,
+    merged.updatedAt,
+  );
+}
+
+export function updateBillingSubscriptionByStripeCustomerId(stripeCustomerId: string, patch: BillingSubscriptionPatchInput): void {
+  const db = getDb();
+  const normalizedCustomerId = toOptionalNullableString(stripeCustomerId);
+
+  if (!normalizedCustomerId) {
+    return;
+  }
+
+  const row = db
+    .prepare("SELECT user_id FROM billing_subscriptions WHERE stripe_customer_id = ? LIMIT 1")
+    .get(normalizedCustomerId) as { user_id: string } | undefined;
+
+  if (!row) {
+    return;
+  }
+
+  upsertBillingSubscriptionForUser({
+    userId: row.user_id,
+    ...patch,
+  });
+}
+
+export function updateBillingSubscriptionByStripeSubscriptionId(stripeSubscriptionId: string, patch: BillingSubscriptionPatchInput): void {
+  const db = getDb();
+  const normalizedSubscriptionId = toOptionalNullableString(stripeSubscriptionId);
+
+  if (!normalizedSubscriptionId) {
+    return;
+  }
+
+  const row = db
+    .prepare("SELECT user_id FROM billing_subscriptions WHERE stripe_subscription_id = ? LIMIT 1")
+    .get(normalizedSubscriptionId) as { user_id: string } | undefined;
+
+  if (!row) {
+    return;
+  }
+
+  upsertBillingSubscriptionForUser({
+    userId: row.user_id,
+    ...patch,
+  });
+}
+
 export function getDatabaseFilePath(): string {
   return DB_FILE;
 }

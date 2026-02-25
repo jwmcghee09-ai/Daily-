@@ -172,6 +172,10 @@ interface PasswordResetRequestResponse {
   devResetToken?: string;
 }
 
+interface BillingCheckoutResponse {
+  url?: string;
+}
+
 export default function Home() {
   const [state, setState] = useState<PortfolioState>(EMPTY_STATE);
   const [banner, setBanner] = useState<Banner | null>(null);
@@ -189,6 +193,7 @@ export default function Home() {
   const [authAcceptsTerms, setAuthAcceptsTerms] = useState(false);
   const [authWorking, setAuthWorking] = useState(false);
   const [authError, setAuthError] = useState("");
+  const [checkoutWorking, setCheckoutWorking] = useState(false);
   const refreshInFlight = useRef(false);
 
   useEffect(() => {
@@ -227,6 +232,24 @@ export default function Home() {
     };
 
     void loadSessionAndState();
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const checkoutState = params.get("checkout");
+
+    if (checkoutState === "success") {
+      setBanner({ type: "success", message: "Starter plan checkout complete. Your subscription will activate shortly." });
+    } else if (checkoutState === "cancelled") {
+      setBanner({ type: "info", message: "Stripe checkout was cancelled." });
+    }
+
+    if (checkoutState) {
+      params.delete("checkout");
+      const query = params.toString();
+      const nextUrl = query.length > 0 ? `${window.location.pathname}?${query}` : window.location.pathname;
+      window.history.replaceState({}, "", nextUrl);
+    }
   }, []);
 
   const refreshPrices = useCallback(async (showBanner: boolean) => {
@@ -677,6 +700,32 @@ export default function Home() {
       setBanner({ type: "error", message: error instanceof Error ? error.message : "Failed to clear data." });
     } finally {
       setWorking(false);
+    }
+  };
+
+  const startStarterCheckout = async () => {
+    if (!sessionUser) {
+      setBanner({ type: "info", message: "Sign in first to start checkout." });
+      return;
+    }
+
+    setCheckoutWorking(true);
+
+    try {
+      const response = await fetch("/api/billing/checkout", { method: "POST" });
+      if (!response.ok) {
+        throw new Error(await parseApiError(response, "Unable to start Stripe checkout."));
+      }
+
+      const payload = (await response.json()) as BillingCheckoutResponse;
+      if (!payload.url) {
+        throw new Error("Stripe checkout URL was missing.");
+      }
+
+      window.location.assign(payload.url);
+    } catch (error) {
+      setBanner({ type: "error", message: error instanceof Error ? error.message : "Unable to start Stripe checkout." });
+      setCheckoutWorking(false);
     }
   };
 
@@ -1191,10 +1240,13 @@ export default function Home() {
             <button type="button" onClick={() => void refreshPrices(true)} className="refresh-btn" disabled={loading || working || refreshingPrices}>
               {refreshingPrices ? "Refreshing..." : "Refresh Prices"}
             </button>
-            <button type="button" onClick={clearData} className="clear-btn" disabled={working || refreshingPrices}>
+            <button type="button" onClick={clearData} className="clear-btn" disabled={working || refreshingPrices || checkoutWorking}>
               {working ? "Working..." : "Clear Data"}
             </button>
-            <button type="button" onClick={logout} className="clear-btn" disabled={working || refreshingPrices}>
+            <button type="button" onClick={() => void startStarterCheckout()} className="refresh-btn" disabled={loading || working || refreshingPrices || checkoutWorking}>
+              {checkoutWorking ? "Redirecting..." : "Starter Plan ($3/mo)"}
+            </button>
+            <button type="button" onClick={logout} className="clear-btn" disabled={working || refreshingPrices || checkoutWorking}>
               Sign Out
             </button>
           </div>
