@@ -1,3 +1,5 @@
+import { resolve4 } from "node:dns/promises";
+import net from "node:net";
 import nodemailer from "nodemailer";
 
 interface SmtpConfig {
@@ -13,6 +15,11 @@ interface PasswordResetEmailInput {
   toEmail: string;
   displayName: string;
   resetToken: string;
+}
+
+interface ResolvedSmtpTarget {
+  host: string;
+  tlsServername?: string;
 }
 
 function readSmtpConfig(): SmtpConfig | null {
@@ -48,6 +55,28 @@ function getAppBaseUrl(): string {
   return "http://localhost:3000";
 }
 
+function shouldForceSmtpIpv4(): boolean {
+  const value = (process.env.SMTP_FORCE_IPV4 || "").trim().toLowerCase();
+  return value === "1" || value === "true" || value === "yes";
+}
+
+async function resolveSmtpTarget(config: SmtpConfig): Promise<ResolvedSmtpTarget> {
+  if (!shouldForceSmtpIpv4() || net.isIP(config.host)) {
+    return { host: config.host };
+  }
+
+  try {
+    const ipv4 = await resolve4(config.host);
+    if (ipv4.length > 0) {
+      return { host: ipv4[0], tlsServername: config.host };
+    }
+  } catch (error) {
+    console.warn("SMTP IPv4 resolve failed, falling back to SMTP_HOST", error);
+  }
+
+  return { host: config.host };
+}
+
 export function isEmailDeliveryConfigured(): boolean {
   return readSmtpConfig() != null;
 }
@@ -58,14 +87,17 @@ export async function sendPasswordResetEmail(input: PasswordResetEmailInput): Pr
     throw new Error("Email delivery is not configured.");
   }
 
+  const target = await resolveSmtpTarget(config);
+
   const transporter = nodemailer.createTransport({
-    host: config.host,
+    host: target.host,
     port: config.port,
     secure: config.secure,
     auth: {
       user: config.user,
       pass: config.pass,
     },
+    tls: target.tlsServername ? { servername: target.tlsServername } : undefined,
   });
 
   const appUrl = getAppBaseUrl();

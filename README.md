@@ -48,6 +48,7 @@ Set these environment variables in Render for production password reset:
 - `SMTP_PASS=your-smtp-password`
 - `SMTP_FROM="SPECTRE <no-reply@your-domain>"`
 - optional: `SMTP_SECURE=true` (usually for port 465)
+- optional: `SMTP_FORCE_IPV4=true` (recommended on Render if SMTP tries IPv6 and fails)
 
 Without these in production, `/api/auth/password/request` returns a configuration error.
 
