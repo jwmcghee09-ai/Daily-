@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import {
+  findAuthUserByEmail,
   upsertBillingSubscriptionForUser,
   updateBillingSubscriptionByStripeCustomerId,
   updateBillingSubscriptionByStripeSubscriptionId,
@@ -49,7 +50,15 @@ function handleStripeEvent(event: Stripe.Event): void {
   switch (event.type) {
     case "checkout.session.completed": {
       const session = event.data.object as Stripe.Checkout.Session;
-      const userId = sanitizeMaybeString(session.metadata?.userId) || sanitizeMaybeString(session.client_reference_id);
+      const userId =
+        sanitizeMaybeString(session.metadata?.userId) ||
+        sanitizeMaybeString(session.client_reference_id) ||
+        findUserIdByEmail(
+          sanitizeMaybeString(session.metadata?.checkoutEmail) ||
+            sanitizeMaybeString(session.customer_email) ||
+            sanitizeMaybeString(session.customer_details?.email),
+        );
+
       if (!userId) {
         return;
       }
@@ -107,6 +116,15 @@ function handleStripeEvent(event: Stripe.Event): void {
     default:
       return;
   }
+}
+
+function findUserIdByEmail(email: string | null): string | null {
+  if (!email) {
+    return null;
+  }
+
+  const user = findAuthUserByEmail(email);
+  return user?.id || null;
 }
 
 function sanitizeMaybeString(value: unknown): string | null {

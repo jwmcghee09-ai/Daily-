@@ -703,16 +703,42 @@ export default function Home() {
     }
   };
 
-  const startStarterCheckout = async () => {
-    if (!sessionUser) {
-      setBanner({ type: "info", message: "Sign in first to start checkout." });
-      return;
+  const startStarterCheckout = async (guestEmail?: string) => {
+    let checkoutEmail = sessionUser?.email || "";
+
+    if (!checkoutEmail) {
+      const fromGuestEmail = (guestEmail || "").trim().toLowerCase();
+      const fromAuthEmail = authEmail.trim().toLowerCase();
+
+      checkoutEmail = fromGuestEmail || fromAuthEmail;
+
+      if (!checkoutEmail) {
+        const promptedEmail = window.prompt("Enter your email to start Starter checkout:", "");
+        if (!promptedEmail) {
+          return;
+        }
+        checkoutEmail = promptedEmail.trim().toLowerCase();
+      }
+
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(checkoutEmail)) {
+        setBanner({ type: "error", message: "Enter a valid email address to start checkout." });
+        return;
+      }
     }
 
     setCheckoutWorking(true);
 
     try {
-      const response = await fetch("/api/billing/checkout", { method: "POST" });
+      const requestInit: RequestInit = { method: "POST" };
+
+      if (!sessionUser) {
+        requestInit.headers = {
+          "Content-Type": "application/json",
+        };
+        requestInit.body = JSON.stringify({ email: checkoutEmail });
+      }
+
+      const response = await fetch("/api/billing/checkout", requestInit);
       if (!response.ok) {
         throw new Error(await parseApiError(response, "Unable to start Stripe checkout."));
       }
@@ -1094,7 +1120,14 @@ export default function Home() {
                   <li>Risk dashboard, charts, and snapshots</li>
                   <li>Account sign-in and password reset</li>
                 </ul>
-                <a href="#access" className="landing-btn landing-btn-primary">Get Starter</a>
+                <button
+                  type="button"
+                  onClick={() => void startStarterCheckout(authEmail)}
+                  className="landing-btn landing-btn-primary"
+                  disabled={checkoutWorking}
+                >
+                  {checkoutWorking ? "Redirecting..." : "Get Starter"}
+                </button>
               </article>
 
               <article className="landing-plan landing-plan-pro">
