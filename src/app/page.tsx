@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { CSSProperties, ChangeEvent, FormEvent, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Papa, { ParseError } from "papaparse";
 import {
@@ -828,7 +829,7 @@ export default function Home() {
         <div className="landing-gridlines" aria-hidden="true" />
         <header className="landing-nav">
           <a href="#top" className="landing-logo" aria-label="SPECTRE home">
-            <span className="landing-logo-wordmark">SPECTRE</span>
+            <Image src="/spectre-wordmark-banner.svg" alt="SPECTRE" width={344} height={82} className="landing-logo-image" priority />
           </a>
           <nav className="landing-nav-links">
             <a href="#features">Capabilities</a>
@@ -1176,7 +1177,7 @@ export default function Home() {
     <div className="shell">
       <header className="hero">
         <div className="hero-copy">
-          <h1>SPECTRE</h1>
+          <h1><Image src="/spectre-wordmark-plain.svg" alt="SPECTRE" width={344} height={82} className="hero-wordmark-image" priority /></h1>
           <p className="hero-tagline">System for Portfolio Exposure, Correlation, Threat & Risk Evaluation</p>
           <p className="hero-description">Upload super, ASX, and ABC Bullion gold/silver CSV reports to track your portfolio and risk in one place.</p>
         </div>
