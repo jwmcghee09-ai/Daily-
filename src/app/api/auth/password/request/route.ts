@@ -48,7 +48,7 @@ export async function POST(request: Request) {
     }
 
     const emailConfigured = isEmailDeliveryConfigured();
-    if (process.env.NODE_ENV === "production" && !emailConfigured) {
+    if (!emailConfigured) {
       return NextResponse.json(
         { error: "Password reset email is not configured yet. Please contact support." },
         { status: 503 },
@@ -57,8 +57,6 @@ export async function POST(request: Request) {
 
     const user = findAuthUserByEmail(email);
 
-    let devResetToken: string | undefined;
-
     if (user) {
       const resetToken = generatePasswordResetToken();
       const resetTokenHash = hashPasswordResetToken(resetToken);
@@ -66,25 +64,24 @@ export async function POST(request: Request) {
 
       createPasswordResetRecord(user.id, resetTokenHash, expiresAt);
 
-      if (emailConfigured) {
-        try {
-          await sendPasswordResetEmail({
-            toEmail: user.email,
-            displayName: user.displayName,
-            resetToken,
-          });
-        } catch (error) {
-          console.error("Password reset email send failed", error);
-        }
-      } else {
-        devResetToken = resetToken;
+      try {
+        await sendPasswordResetEmail({
+          toEmail: user.email,
+          displayName: user.displayName,
+          resetToken,
+        });
+      } catch (error) {
+        console.error("Password reset email send failed", error);
+        return NextResponse.json(
+          { error: "Could not send password reset email. Please try again in a minute." },
+          { status: 502 },
+        );
       }
     }
 
     return NextResponse.json({
       ok: true,
       message: "If an account exists for that email, reset instructions were sent.",
-      devResetToken,
     });
   } catch {
     return NextResponse.json({ error: "Failed to start password reset." }, { status: 500 });

@@ -169,7 +169,6 @@ interface AuthSessionPayload {
 
 interface PasswordResetRequestResponse {
   message?: string;
-  devResetToken?: string;
 }
 
 interface BillingCheckoutResponse {
@@ -834,11 +833,7 @@ export default function Home() {
       const payload = (await response.json()) as PasswordResetRequestResponse;
       setAuthEmail(emailInput);
 
-      let message = payload.message || "If an account exists, reset instructions were generated.";
-      if (payload.devResetToken) {
-        message += " DEV TOKEN: " + payload.devResetToken;
-      }
-
+      const message = payload.message || "If an account exists, reset instructions were generated.";
       setBanner({ type: "info", message });
     } catch (error) {
       setAuthError(error instanceof Error ? error.message : "Could not start password reset.");
