@@ -1,0 +1,23 @@
+<svg width="260" height="56" viewBox="0 0 260 56" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">SPECTRE Logo</title>
+  <desc id="desc">SPECTRE wordmark with angular red emblem.</desc>
+  <defs>
+    <linearGradient id="spectreGradient" x1="6" y1="6" x2="50" y2="50" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FF624B"/>
+      <stop offset="1" stop-color="#CF2E17"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="4" y="4" width="48" height="48" rx="14" fill="url(#spectreGradient)"/>
+  <path d="M17 18.5H38.5L31.8 25.2H23.6V31.6H35.5L28.8 38.3H17V18.5Z" fill="#FFF6F4"/>
+  <path d="M17 35.8L23.2 29.7H32.8L26.6 35.8H17Z" fill="#FFD8D1"/>
+
+  <g fill="#F8F8FB">
+    <path d="M68.9 36.7V18.8H82.5C86.8 18.8 89.5 21.1 89.5 24.9C89.5 28.7 86.8 31 82.5 31H74.2V36.7H68.9ZM74.2 26.8H81.2C82.9 26.8 84 26 84 24.9C84 23.7 82.9 22.9 81.2 22.9H74.2V26.8Z"/>
+    <path d="M92.8 36.7V18.8H111.8V22.9H98.1V25.7H110.9V29.5H98.1V32.6H112V36.7H92.8Z"/>
+    <path d="M122.6 37.2C116.5 37.2 112.3 33.3 112.3 27.8C112.3 22.2 116.6 18.3 122.8 18.3C127.4 18.3 131.3 20.4 133.1 23.8L128.4 26.1C127.3 24.2 125.3 23.1 122.9 23.1C119.7 23.1 117.7 25 117.7 27.8C117.7 30.5 119.7 32.5 122.9 32.5C125.4 32.5 127.5 31.3 128.5 29.3L133.2 31.4C131.4 34.9 127.4 37.2 122.6 37.2Z"/>
+    <path d="M139.6 36.7V23H132.1V18.8H152.5V23H145V36.7H139.6Z"/>
+    <path d="M153.9 36.7V18.8H172.9V22.9H159.2V25.7H172V29.5H159.2V32.6H173.1V36.7H153.9Z"/>
+    <path d="M175.7 36.7V18.8H189.2C193.6 18.8 196.2 20.9 196.2 24.4C196.2 26.9 194.8 28.7 192.4 29.5L196.8 36.7H190.8L187 30.5H181V36.7H175.7ZM181 26.5H188C189.8 26.5 190.8 25.8 190.8 24.6C190.8 23.4 189.8 22.8 188 22.8H181V26.5Z"/>
+  </g>
+</svg>
