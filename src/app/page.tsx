@@ -175,6 +175,17 @@ interface BillingCheckoutResponse {
   url?: string;
 }
 
+interface PendingRegistrationDraft {
+  email: string;
+  password: string;
+  displayName: string;
+  acceptsTerms: boolean;
+  createdAt: number;
+}
+
+const PENDING_REGISTRATION_KEY = "spectre.pending-registration.v1";
+const PENDING_REGISTRATION_MAX_AGE_MS = 30 * 60 * 1000;
+
 export default function Home() {
   const [state, setState] = useState<PortfolioState>(EMPTY_STATE);
   const [banner, setBanner] = useState<Banner | null>(null);
@@ -194,6 +205,66 @@ export default function Home() {
   const [authError, setAuthError] = useState("");
   const [checkoutWorking, setCheckoutWorking] = useState(false);
   const refreshInFlight = useRef(false);
+
+  const completePendingRegistrationAfterCheckout = useCallback(async () => {
+    const draft = readPendingRegistrationDraft();
+    if (!draft) {
+      return;
+    }
+
+    setAuthMode("register");
+    setAuthEmail(draft.email);
+    setAuthDisplayName(draft.displayName);
+    setAuthAcceptsTerms(draft.acceptsTerms);
+    setAuthWorking(true);
+    setAuthError("");
+
+    try {
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: draft.email,
+          password: draft.password,
+          displayName: draft.displayName,
+          acceptsTerms: draft.acceptsTerms,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorMessage = await parseApiError(response, "Failed to create account after checkout.");
+        if (response.status === 402) {
+          setAuthError("Payment is still syncing. Wait a few seconds, then click Create Account & Checkout again.");
+          return;
+        }
+        throw new Error(errorMessage);
+      }
+
+      const payload = (await response.json()) as AuthSessionPayload;
+      if (!payload.authenticated || !payload.user) {
+        throw new Error("Authentication failed.");
+      }
+
+      clearPendingRegistrationDraft();
+      setSessionUser(payload.user);
+      setAuthPassword("");
+      setAuthAcceptsTerms(false);
+      setAuthError("");
+      setBanner({ type: "success", message: "Subscription confirmed. Account created and signed in." });
+
+      const portfolioResponse = await fetch("/api/portfolio", { cache: "no-store" });
+      if (portfolioResponse.ok) {
+        const payloadState = (await portfolioResponse.json()) as PortfolioState;
+        setState(payloadState);
+      }
+    } catch (error) {
+      setAuthError(error instanceof Error ? error.message : "Failed to complete signup.");
+    } finally {
+      setAuthWorking(false);
+    }
+  }, []);
 
   useEffect(() => {
     const loadSessionAndState = async () => {
@@ -239,6 +310,7 @@ export default function Home() {
 
     if (checkoutState === "success") {
       setBanner({ type: "success", message: "Starter plan checkout complete. Your subscription will activate shortly." });
+      void completePendingRegistrationAfterCheckout();
     } else if (checkoutState === "cancelled") {
       setBanner({ type: "info", message: "Stripe checkout was cancelled." });
     }
@@ -249,7 +321,7 @@ export default function Home() {
       const nextUrl = query.length > 0 ? `${window.location.pathname}?${query}` : window.location.pathname;
       window.history.replaceState({}, "", nextUrl);
     }
-  }, []);
+  }, [completePendingRegistrationAfterCheckout]);
 
   const refreshPrices = useCallback(async (showBanner: boolean) => {
     if (!sessionUser) {
@@ -793,6 +865,20 @@ export default function Home() {
       });
 
       if (!response.ok) {
+        if (authMode === "register" && response.status === 402) {
+          writePendingRegistrationDraft({
+            email: authEmail.trim().toLowerCase(),
+            password: authPassword,
+            displayName: authDisplayName.trim(),
+            acceptsTerms: authAcceptsTerms,
+            createdAt: Date.now(),
+          });
+          setAuthError("");
+          setBanner({ type: "info", message: "Payment required. Redirecting to Stripe checkout..." });
+          await startStarterCheckout(authEmail);
+          return;
+        }
+
         throw new Error(await parseApiError(response, "Authentication failed."));
       }
 
@@ -1158,7 +1244,7 @@ export default function Home() {
               <p className="landing-kicker">Client Access</p>
               <h2>Enter your private SPECTRE workspace.</h2>
               <p>
-                Sign in to continue from your last snapshot, or register a new account to begin importing portfolio data. Starter plan is $3/month.
+                Sign in to continue from your last snapshot, or create your account with Stripe checkout in one flow. Starter plan is $3/month.
               </p>
               <div className="landing-proof">
                 <p>Designed for analyst teams and active portfolio operators.</p>
@@ -1227,7 +1313,7 @@ export default function Home() {
                 ) : null}
 
                 <button type="submit" className="refresh-btn auth-submit" disabled={authWorking}>
-                  {authWorking ? "Please wait..." : authMode === "register" ? "Create Account" : "Sign In"}
+                  {authWorking ? "Please wait..." : authMode === "register" ? "Create Account & Checkout" : "Sign In"}
                 </button>
               </form>
 
@@ -1907,6 +1993,58 @@ async function parseApiError(response: Response, fallback: string): Promise<stri
   }
 
   return fallback;
+}
+
+function writePendingRegistrationDraft(draft: PendingRegistrationDraft): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.sessionStorage.setItem(PENDING_REGISTRATION_KEY, JSON.stringify(draft));
+}
+
+function readPendingRegistrationDraft(): PendingRegistrationDraft | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const raw = window.sessionStorage.getItem(PENDING_REGISTRATION_KEY);
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as PendingRegistrationDraft;
+
+    if (
+      typeof parsed.email !== "string" ||
+      typeof parsed.password !== "string" ||
+      typeof parsed.displayName !== "string" ||
+      typeof parsed.acceptsTerms !== "boolean" ||
+      typeof parsed.createdAt !== "number"
+    ) {
+      clearPendingRegistrationDraft();
+      return null;
+    }
+
+    if (Date.now() - parsed.createdAt > PENDING_REGISTRATION_MAX_AGE_MS) {
+      clearPendingRegistrationDraft();
+      return null;
+    }
+
+    return parsed;
+  } catch {
+    clearPendingRegistrationDraft();
+    return null;
+  }
+}
+
+function clearPendingRegistrationDraft(): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.sessionStorage.removeItem(PENDING_REGISTRATION_KEY);
 }
 
 function superTemplateCsv(): string {
