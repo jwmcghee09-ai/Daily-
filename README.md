@@ -85,3 +85,71 @@ After deploy, Render gives you a public URL like:
 
 - SQLite uses Node's `node:sqlite` module.
 - For production hosting, use Node 22+.
+
+## Encrypted Backups + Restore Tests
+
+SPECTRE now includes encrypted SQLite backup scripts and restore validation scripts.
+
+### Required environment variable
+
+Set a strong backup passphrase (16+ chars):
+
+```bash
+export BACKUP_PASSPHRASE='replace-with-long-random-secret'
+```
+
+Optional:
+- `BACKUP_OUTPUT_DIR` (defaults to `./backups`)
+- `SQLITE_DB_PATH` (same behavior as app runtime)
+
+### Create encrypted backup
+
+```bash
+npm run backup:db
+```
+
+This will:
+- checkpoint WAL into the DB file
+- gzip compress database bytes
+- encrypt with AES-256-GCM using `BACKUP_PASSPHRASE`
+- write backup JSON file to `backups/` (or `BACKUP_OUTPUT_DIR`)
+
+### Run restore integrity test
+
+Test latest backup:
+
+```bash
+npm run restore:test
+```
+
+Test a specific backup file:
+
+```bash
+npm run restore:test -- backups/spectre-db-YYYYMMDDTHHMMSSZ.spectre-backup.json
+```
+
+This restore test decrypts backup into a temp DB, runs `PRAGMA integrity_check`, checks table access, then deletes temp data.
+
+### Manual restore (disaster recovery)
+
+```bash
+npm run restore:db -- backups/spectre-db-YYYYMMDDTHHMMSSZ.spectre-backup.json
+```
+
+Optional target path:
+
+```bash
+npm run restore:db -- backups/spectre-db-YYYYMMDDTHHMMSSZ.spectre-backup.json /var/data/aladdin.sqlite
+```
+
+The script will:
+- decrypt + validate backup
+- copy current DB to `*.pre-restore-*`
+- replace target DB with restored file
+- remove stale `-wal` and `-shm` sidecar files
+
+### Recommended ops routine
+
+- Nightly: `npm run backup:db`
+- Weekly or monthly: `npm run restore:test`
+- Store backup files off-server (S3/Backblaze/etc.)

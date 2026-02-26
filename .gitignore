@@ -50,3 +50,7 @@ node_modules
 .env
 .env.local
 aladdin.sqlite
+
+backups/
+
+*.spectre-backup.json

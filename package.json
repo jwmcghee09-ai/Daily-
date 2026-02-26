@@ -9,7 +9,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "backup:db": "node scripts/backup-db.mjs",
+    "restore:test": "node scripts/restore-test.mjs",
+    "restore:db": "node scripts/restore-db.mjs"
   },
   "dependencies": {
     "next": "16.1.6",
