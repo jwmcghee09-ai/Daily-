@@ -5,7 +5,31 @@ import { DatabaseSync } from "node:sqlite";
 import { DataSource, PortfolioHolding, PortfolioState, RiskWindow } from "@/lib/portfolio";
 
 const DEFAULT_DB_FILE = path.join(process.cwd(), "data", "aladdin.sqlite");
-const DB_FILE = process.env.SQLITE_DB_PATH?.trim() || DEFAULT_DB_FILE;
+const RENDER_DISK_DIR = "/var/data";
+
+function resolveDatabaseFilePath(): string {
+  const configured = (process.env.SQLITE_DB_PATH || "").trim();
+
+  if (configured.length === 0) {
+    if (fs.existsSync(RENDER_DISK_DIR)) {
+      return path.join(RENDER_DISK_DIR, "aladdin.sqlite");
+    }
+
+    return DEFAULT_DB_FILE;
+  }
+
+  if (path.isAbsolute(configured)) {
+    return configured;
+  }
+
+  if (fs.existsSync(RENDER_DISK_DIR)) {
+    return path.join(RENDER_DISK_DIR, configured);
+  }
+
+  return path.join(process.cwd(), configured);
+}
+
+const DB_FILE = resolveDatabaseFilePath();
 const DATA_DIR = path.dirname(DB_FILE);
 
 const UPDATED_AT_KEY = "updated_at";
