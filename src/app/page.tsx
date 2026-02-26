@@ -4,6 +4,8 @@ import Image from "next/image";
 import { CSSProperties, ChangeEvent, FormEvent, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Papa, { ParseError } from "papaparse";
 import {
+  Area,
+  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
@@ -407,6 +409,22 @@ export default function Home() {
   }, [loading, refreshPrices, sessionUser]);
 
   const metrics = useMemo(() => computeMetrics(state.holdings, state.snapshots, riskWindow), [state.holdings, state.snapshots, riskWindow]);
+
+  const portfolioHistorySeries = useMemo(() => {
+    const latestByDay = new Map<string, { date: string; value: number }>();
+
+    for (const snapshot of metrics.history) {
+      const dayKey = snapshot.date.slice(0, 10);
+      const existing = latestByDay.get(dayKey);
+
+      if (!existing || snapshot.date > existing.date) {
+        latestByDay.set(dayKey, snapshot);
+      }
+    }
+
+    const dailySeries = Array.from(latestByDay.values()).sort((a, b) => a.date.localeCompare(b.date));
+    return dailySeries.length > 1 ? dailySeries : metrics.history;
+  }, [metrics.history]);
   const needsYahooEstimate = metrics.dailyReturns.length < 20 && state.holdings.length > 0;
 
   useEffect(() => {
@@ -1604,7 +1622,7 @@ export default function Home() {
           <article className="insight-card">
             <h3>Top Gainer / Loser {moverPeriodLabel}</h3>
             {todayTopGainer == null || todayTopLoser == null ? (
-              <div className="empty">Need live prices to calculate movers.</div>
+              <div className="empty">Need live prices and snapshots to calculate movers.</div>
             ) : (
               <div className="performer-list">
                 <div className="performer-row">
@@ -1764,13 +1782,35 @@ export default function Home() {
         </ChartCard>
         <ChartCard title="Portfolio Snapshot History" tone="history">
           <ResponsiveContainer width="100%" height={420}>
-            <LineChart data={metrics.history}>
+            <AreaChart data={portfolioHistorySeries} margin={{ top: 14, right: 24, left: 24, bottom: 8 }}>
+              <defs>
+                <linearGradient id="portfolio-history-fill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={ACCENT_COLOR} stopOpacity={0.48} />
+                  <stop offset="70%" stopColor={ACCENT_COLOR} stopOpacity={0.14} />
+                  <stop offset="100%" stopColor={ACCENT_COLOR} stopOpacity={0.03} />
+                </linearGradient>
+              </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#303036" />
               <XAxis dataKey="date" tickFormatter={formatSnapshotTick} minTickGap={28} />
-              <YAxis tickFormatter={(value) => `$${Math.round(Number(value) / 1000)}k`} />
-              <Tooltip formatter={tooltipFormatter} labelFormatter={formatSnapshotLabel} contentStyle={TOOLTIP_CONTENT_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} itemStyle={TOOLTIP_ITEM_STYLE} />
-              <Line type="monotone" dataKey="value" stroke={ACCENT_COLOR} strokeWidth={2.5} dot={false} />
-            </LineChart>
+              <YAxis tickFormatter={formatAxisValue} width={82} />
+              <Tooltip
+                formatter={tooltipFormatter}
+                labelFormatter={formatSnapshotLabel}
+                contentStyle={TOOLTIP_CONTENT_STYLE}
+                labelStyle={TOOLTIP_LABEL_STYLE}
+                itemStyle={TOOLTIP_ITEM_STYLE}
+                cursor={{ stroke: "#7d8290", strokeDasharray: "4 4" }}
+              />
+              <Area
+                type="monotone"
+                dataKey="value"
+                stroke={ACCENT_COLOR}
+                strokeWidth={2.2}
+                fill="url(#portfolio-history-fill)"
+                dot={false}
+                activeDot={{ r: 4, stroke: "#ffffff", strokeWidth: 1, fill: ACCENT_COLOR }}
+              />
+            </AreaChart>
           </ResponsiveContainer>
         </ChartCard>
       </section>
@@ -1962,6 +2002,14 @@ function formatPercent(value: number | null): string {
   return `${value.toFixed(2)}%`;
 }
 
+function formatAxisValue(value: unknown): string {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return String(value ?? "");
+  }
+
+  return new Intl.NumberFormat("en-AU", { maximumFractionDigits: 0 }).format(numeric);
+}
 function formatSnapshotTick(value: unknown): string {
   if (typeof value !== "string" || value.length === 0) {
     return "";
