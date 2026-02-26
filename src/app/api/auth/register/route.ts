@@ -43,7 +43,6 @@ export async function POST(request: Request) {
     }
 
     const payload = (await request.json()) as RegisterPayload;
-    const appBaseUrl = new URL(request.url).origin;
 
     const email = normalizeEmail(payload.email || "");
     const password = payload.password || "";
@@ -96,7 +95,6 @@ export async function POST(request: Request) {
         toEmail: user.email,
         displayName: user.displayName,
         verificationToken,
-        appBaseUrl,
       });
     } catch (error) {
       console.error("Account verification email send failed", error);

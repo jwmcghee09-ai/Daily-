@@ -346,7 +346,8 @@ export default function Home() {
       params.delete("checkout");
       params.delete("verified");
       const query = params.toString();
-      const nextUrl = query.length > 0 ? `${window.location.pathname}?${query}` : window.location.pathname;
+      const hash = window.location.hash;
+      const nextUrl = query.length > 0 ? `${window.location.pathname}?${query}${hash}` : `${window.location.pathname}${hash}`;
       window.history.replaceState({}, "", nextUrl);
     }
   }, [completePendingRegistrationAfterCheckout]);
@@ -499,6 +500,8 @@ export default function Home() {
     [todayMovers],
   );
   const todayPortfolioChangePct = todayPortfolioPreviousValue > 0 ? (todayPortfolioChangeAmount / todayPortfolioPreviousValue) * 100 : null;
+  const portfolioChangeLabel = "Latest Session Change";
+  const moverPeriodLabel = "Latest Session";
   const todayTopGainer = todayMovers.length > 0 ? todayMovers[0] : null;
   const todayTopLoser = todayMovers.length > 0 ? todayMovers[todayMovers.length - 1] : null;
 
@@ -1075,6 +1078,7 @@ export default function Home() {
             <a href="#features">Capabilities</a>
             <a href="#insights">Preview</a>
             <a href="#workflow">Workflow</a>
+            <a href="#safety">Data Safety</a>
             <a href="#pricing">Pricing</a>
             <a href="#access">Client Access</a>
           </nav>
@@ -1104,7 +1108,7 @@ export default function Home() {
                 </article>
                 <article>
                   <strong>Account Security</strong>
-                  <span>User sessions with sign-in, registration, and password reset.</span>
+                  <span>Email verification, hashed passwords, and secure session cookies.</span>
                 </article>
               </div>
             </div>
@@ -1266,6 +1270,33 @@ export default function Home() {
                 </div>
               </article>
             </div>
+          </section>
+
+          <section id="safety" className="landing-safety">
+            <div className="landing-safety-head">
+              <p className="landing-kicker">Data Safety</p>
+              <h2>Controls designed to protect account access and portfolio records.</h2>
+              <p>These safeguards reflect features active in the current release.</p>
+            </div>
+            <div className="landing-safety-grid">
+              <article>
+                <h3>Verified account access</h3>
+                <p>New accounts must verify email before sign-in. Password reset and verification flows are available from the access panel.</p>
+              </article>
+              <article>
+                <h3>Password and session protections</h3>
+                <p>Passwords are stored as scrypt hashes, and session cookies are HttpOnly, SameSite, and secure in production.</p>
+              </article>
+              <article>
+                <h3>Stripe-hosted payments</h3>
+                <p>Checkout is handled by Stripe. SPECTRE stores subscription references for billing state and does not store card numbers.</p>
+              </article>
+              <article>
+                <h3>Encrypted backups and hardening</h3>
+                <p>Database backups use AES-256-GCM encryption with restore integrity checks, and production responses include CSP, HSTS, and anti-framing headers.</p>
+              </article>
+            </div>
+            <p className="landing-safety-note">No platform can guarantee zero risk. Use strong passwords and keep deployment secrets protected.</p>
           </section>
 
           <section id="pricing" className="landing-pricing">
@@ -1508,7 +1539,7 @@ export default function Home() {
           tone={metrics.pnl >= 0 ? "positive" : "negative"}
         />
         <KpiCard
-          label="Today Change"
+          label={portfolioChangeLabel}
           value={
             todayPortfolioChangePct != null
               ? (todayPortfolioChangeAmount >= 0 ? "▲ " : "▼ ") + formatCurrency(Math.abs(todayPortfolioChangeAmount)) + " (" + formatPercent(todayPortfolioChangePct) + ")"
@@ -1571,9 +1602,9 @@ export default function Home() {
           </article>
 
           <article className="insight-card">
-            <h3>Top Gainer / Loser Today</h3>
+            <h3>Top Gainer / Loser {moverPeriodLabel}</h3>
             {todayTopGainer == null || todayTopLoser == null ? (
-              <div className="empty">Need live prices to calculate intraday movers.</div>
+              <div className="empty">Need live prices to calculate movers.</div>
             ) : (
               <div className="performer-list">
                 <div className="performer-row">

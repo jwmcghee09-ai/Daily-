@@ -33,7 +33,6 @@ export async function POST(request: Request) {
     }
 
     const payload = (await request.json()) as PasswordResetRequestPayload;
-    const appBaseUrl = new URL(request.url).origin;
     const email = normalizeEmail(payload.email || "");
 
     if (!isLikelyEmail(email)) {
@@ -70,7 +69,6 @@ export async function POST(request: Request) {
           toEmail: user.email,
           displayName: user.displayName,
           resetToken,
-          appBaseUrl,
         });
       } catch (error) {
         console.error("Password reset email send failed", error);

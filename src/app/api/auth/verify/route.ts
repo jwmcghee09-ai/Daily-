@@ -8,6 +8,8 @@ export const runtime = "nodejs";
 const VERIFY_LIMIT_PER_IP = 30;
 const VERIFY_WINDOW_MS = 15 * 60 * 1000;
 
+type VerifyState = "success" | "invalid" | "rate_limited";
+
 interface VerifyPayload {
   token?: string;
 }
@@ -67,8 +69,34 @@ export async function POST(request: Request) {
   }
 }
 
-function buildRedirectUrl(request: Request, state: "success" | "invalid" | "rate_limited"): URL {
-  const url = new URL("/", request.url);
+function buildRedirectUrl(request: Request, state: VerifyState): URL {
+  const baseUrl = resolveAppBaseUrl(request);
+  const url = new URL("/", baseUrl);
   url.searchParams.set("verified", state);
+  url.hash = "access";
   return url;
+}
+
+function resolveAppBaseUrl(request: Request): string {
+  const configured = normalizeBaseUrl(process.env.APP_BASE_URL || "") || normalizeBaseUrl(process.env.RENDER_EXTERNAL_URL || "");
+  if (configured) {
+    return configured;
+  }
+
+  return new URL(request.url).origin;
+}
+
+function normalizeBaseUrl(value: string): string {
+  const trimmed = value.trim().replace(/\/$/, "");
+
+  try {
+    const parsed = new URL(trimmed);
+    if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+      return parsed.origin;
+    }
+  } catch {
+    return "";
+  }
+
+  return "";
 }

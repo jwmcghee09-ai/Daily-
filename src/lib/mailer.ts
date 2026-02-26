@@ -15,14 +15,12 @@ interface PasswordResetEmailInput {
   toEmail: string;
   displayName: string;
   resetToken: string;
-  appBaseUrl?: string;
 }
 
 interface AccountVerificationEmailInput {
   toEmail: string;
   displayName: string;
   verificationToken: string;
-  appBaseUrl?: string;
 }
 
 interface ResolvedSmtpTarget {
@@ -64,12 +62,8 @@ function normalizeBaseUrl(value: string): string {
   return "";
 }
 
-function getAppBaseUrl(preferred?: string): string {
-  const preferredNormalized = normalizeBaseUrl(preferred || "");
-  if (preferredNormalized) {
-    return preferredNormalized;
-  }
 
+function getAppBaseUrl(): string {
   const explicit = normalizeBaseUrl(process.env.APP_BASE_URL || "");
   if (explicit) {
     return explicit;
@@ -128,7 +122,7 @@ export async function sendPasswordResetEmail(input: PasswordResetEmailInput): Pr
     tls: target.tlsServername ? { servername: target.tlsServername } : undefined,
   });
 
-  const appUrl = getAppBaseUrl(input.appBaseUrl);
+  const appUrl = getAppBaseUrl();
   const token = input.resetToken;
   const tokenEntryUrl = `${appUrl}/`;
 
@@ -195,7 +189,7 @@ export async function sendAccountVerificationEmail(input: AccountVerificationEma
     tls: target.tlsServername ? { servername: target.tlsServername } : undefined,
   });
 
-  const appUrl = getAppBaseUrl(input.appBaseUrl);
+  const appUrl = getAppBaseUrl();
   const verifyUrl = `${appUrl}/api/auth/verify?token=${encodeURIComponent(input.verificationToken)}`;
 
   const subject = "Verify your SPECTRE email";
