@@ -8,6 +8,7 @@ import {
   AreaChart,
   Bar,
   BarChart,
+  Brush,
   CartesianGrid,
   Cell,
   Legend,
@@ -1684,7 +1685,7 @@ export default function Home() {
           <article className="insight-card">
             <h3>Top Gainer / Loser {moverPeriodLabel}</h3>
             {todayTopGainer == null || todayTopLoser == null ? (
-              <div className="empty">Need live prices and snapshots to calculate movers.</div>
+              <div className="empty">Need live prices to calculate movers.</div>
             ) : (
               <div className="performer-list">
                 <div className="performer-row">
@@ -1872,6 +1873,16 @@ export default function Home() {
                 dot={false}
                 activeDot={{ r: 4, stroke: "#ffffff", strokeWidth: 1, fill: ACCENT_COLOR }}
               />
+              {portfolioHistorySeries.length > 8 ? (
+                <Brush
+                  dataKey="date"
+                  height={30}
+                  stroke="#7d8290"
+                  travellerWidth={10}
+                  tickFormatter={formatSnapshotTick}
+                  fill="rgba(255, 255, 255, 0.04)"
+                />
+              ) : null}
             </AreaChart>
           </ResponsiveContainer>
         </ChartCard>
