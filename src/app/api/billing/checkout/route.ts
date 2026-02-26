@@ -68,6 +68,11 @@ export async function POST(request: Request) {
         metadata,
       },
       allow_promotion_codes: true,
+      branding_settings: {
+        background_color: "#07070b",
+        button_color: "#ff4b33",
+        border_style: "rounded",
+      },
       success_url: `${baseUrl}/?checkout=success`,
       cancel_url: `${baseUrl}/?checkout=cancelled`,
     });
