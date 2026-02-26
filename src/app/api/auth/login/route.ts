@@ -54,6 +54,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
     }
 
+    if (!user.emailVerifiedAt) {
+      return NextResponse.json({ error: "Verify your email before signing in." }, { status: 403 });
+    }
+
     const session = createAndPersistSession(user.id);
 
     const response = NextResponse.json({

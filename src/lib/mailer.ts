@@ -17,6 +17,12 @@ interface PasswordResetEmailInput {
   resetToken: string;
 }
 
+interface AccountVerificationEmailInput {
+  toEmail: string;
+  displayName: string;
+  verificationToken: string;
+}
+
 interface ResolvedSmtpTarget {
   host: string;
   tlsServername?: string;
@@ -136,6 +142,67 @@ export async function sendPasswordResetEmail(input: PasswordResetEmailInput): Pr
       </ol>
       <p><a href="${escapeAttribute(tokenEntryUrl)}">Open SPECTRE</a></p>
       <p style="color:#555;">If you did not request this, you can ignore this email.</p>
+    </div>
+  `;
+
+  await transporter.sendMail({
+    from: config.from,
+    to: input.toEmail,
+    subject,
+    text,
+    html,
+  });
+}
+
+export async function sendAccountVerificationEmail(input: AccountVerificationEmailInput): Promise<void> {
+  const config = readSmtpConfig();
+  if (!config) {
+    throw new Error("Email delivery is not configured.");
+  }
+
+  const target = await resolveSmtpTarget(config);
+
+  const transporter = nodemailer.createTransport({
+    host: target.host,
+    port: config.port,
+    secure: config.secure,
+    auth: {
+      user: config.user,
+      pass: config.pass,
+    },
+    tls: target.tlsServername ? { servername: target.tlsServername } : undefined,
+  });
+
+  const appUrl = getAppBaseUrl();
+  const verifyUrl = `${appUrl}/api/auth/verify?token=${encodeURIComponent(input.verificationToken)}`;
+
+  const subject = "Verify your SPECTRE email";
+  const text = [
+    `Hi ${input.displayName},`,
+    "",
+    "Welcome to SPECTRE.",
+    "",
+    "Please verify your email address by opening this link:",
+    verifyUrl,
+    "",
+    "If you did not create this account, you can ignore this email.",
+  ].join("\n");
+
+  const html = `
+    <div style="font-family:Arial,sans-serif;line-height:1.5;color:#111;max-width:560px;">
+      <h2 style="margin:0 0 12px 0;">Verify your SPECTRE email</h2>
+      <p>Hi ${escapeHtml(input.displayName)},</p>
+      <p>Welcome to SPECTRE. Please verify your email address to activate sign in.</p>
+      <p>
+        <a
+          href="${escapeAttribute(verifyUrl)}"
+          style="display:inline-block;background:#ff4b33;color:#fff;text-decoration:none;padding:10px 14px;border-radius:8px;"
+        >
+          Verify Email
+        </a>
+      </p>
+      <p style="font-size:13px;color:#555;word-break:break-all;">If the button does not work, use this link:<br />${escapeHtml(verifyUrl)}</p>
+      <p style="color:#555;">If you did not create this account, you can ignore this email.</p>
     </div>
   `;
 

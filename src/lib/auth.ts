@@ -6,6 +6,7 @@ import { AuthSessionUser, createAuthSession, deleteAuthSession, findAuthSessionU
 export const SESSION_COOKIE_NAME = "spectre_session";
 export const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 export const PASSWORD_RESET_TTL_MS = 60 * 60 * 1000;
+export const EMAIL_VERIFICATION_TTL_MS = 24 * 60 * 60 * 1000;
 
 export function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
@@ -56,11 +57,19 @@ export function generatePasswordResetToken(): string {
   return crypto.randomBytes(32).toString("hex");
 }
 
+export function generateEmailVerificationToken(): string {
+  return crypto.randomBytes(32).toString("hex");
+}
+
 export function hashSessionToken(token: string): string {
   return crypto.createHash("sha256").update(token).digest("hex");
 }
 
 export function hashPasswordResetToken(token: string): string {
+  return crypto.createHash("sha256").update(token).digest("hex");
+}
+
+export function hashEmailVerificationToken(token: string): string {
   return crypto.createHash("sha256").update(token).digest("hex");
 }
 

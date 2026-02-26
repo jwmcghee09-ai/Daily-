@@ -165,9 +165,15 @@ interface SessionUser {
 interface AuthSessionPayload {
   authenticated: boolean;
   user?: SessionUser;
+  verificationRequired?: boolean;
+  message?: string;
 }
 
 interface PasswordResetRequestResponse {
+  message?: string;
+}
+
+interface VerificationResendResponse {
   message?: string;
 }
 
@@ -243,6 +249,16 @@ export default function Home() {
       }
 
       const payload = (await response.json()) as AuthSessionPayload;
+      if (payload.verificationRequired && !payload.authenticated) {
+        clearPendingRegistrationDraft();
+        setAuthMode("login");
+        setAuthPassword("");
+        setAuthAcceptsTerms(false);
+        setAuthError("");
+        setBanner({ type: "info", message: payload.message || "Account created. Check your email to verify before signing in." });
+        return;
+      }
+
       if (!payload.authenticated || !payload.user) {
         throw new Error("Authentication failed.");
       }
@@ -307,6 +323,7 @@ export default function Home() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const checkoutState = params.get("checkout");
+    const verifiedState = params.get("verified");
 
     if (checkoutState === "success") {
       setBanner({ type: "success", message: "Starter plan checkout complete. Your subscription will activate shortly." });
@@ -315,8 +332,19 @@ export default function Home() {
       setBanner({ type: "info", message: "Stripe checkout was cancelled." });
     }
 
-    if (checkoutState) {
+    if (verifiedState === "success") {
+      setAuthMode("login");
+      setAuthError("");
+      setBanner({ type: "success", message: "Email verified. You can now sign in." });
+    } else if (verifiedState === "invalid") {
+      setBanner({ type: "error", message: "Verification link is invalid or expired. Click Resend Verification." });
+    } else if (verifiedState === "rate_limited") {
+      setBanner({ type: "error", message: "Too many verification attempts. Please wait and try again." });
+    }
+
+    if (checkoutState || verifiedState) {
       params.delete("checkout");
+      params.delete("verified");
       const query = params.toString();
       const nextUrl = query.length > 0 ? `${window.location.pathname}?${query}` : window.location.pathname;
       window.history.replaceState({}, "", nextUrl);
@@ -883,6 +911,17 @@ export default function Home() {
       }
 
       const payload = (await response.json()) as AuthSessionPayload;
+
+      if (authMode === "register" && payload.verificationRequired && !payload.authenticated) {
+        clearPendingRegistrationDraft();
+        setAuthMode("login");
+        setAuthPassword("");
+        setAuthAcceptsTerms(false);
+        setAuthError("");
+        setBanner({ type: "info", message: payload.message || "Account created. Check your email to verify before signing in." });
+        return;
+      }
+
       if (!payload.authenticated || !payload.user) {
         throw new Error("Authentication failed.");
       }
@@ -935,6 +974,39 @@ export default function Home() {
       setBanner({ type: "info", message });
     } catch (error) {
       setAuthError(error instanceof Error ? error.message : "Could not start password reset.");
+    } finally {
+      setAuthWorking(false);
+    }
+  };
+
+  const resendVerificationEmail = async () => {
+    const emailInput = authEmail.trim();
+
+    if (!emailInput) {
+      setAuthError("Enter your email, then click Resend Verification.");
+      return;
+    }
+
+    setAuthWorking(true);
+    setAuthError("");
+
+    try {
+      const response = await fetch("/api/auth/verify/resend", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: emailInput }),
+      });
+
+      if (!response.ok) {
+        throw new Error(await parseApiError(response, "Could not resend verification email."));
+      }
+
+      const payload = (await response.json()) as VerificationResendResponse;
+      setBanner({ type: "info", message: payload.message || "If the account exists, a verification email was sent." });
+    } catch (error) {
+      setAuthError(error instanceof Error ? error.message : "Could not resend verification email.");
     } finally {
       setAuthWorking(false);
     }
@@ -1329,6 +1401,9 @@ export default function Home() {
                   disabled={authWorking}
                 >
                   {authMode === "register" ? "Use Sign In" : "Use Register"}
+                </button>
+                <button type="button" className="template-btn" onClick={() => void resendVerificationEmail()} disabled={authWorking}>
+                  Resend Verification
                 </button>
                 <button type="button" className="template-btn" onClick={() => void requestPasswordReset()} disabled={authWorking}>
                   Forgot Password

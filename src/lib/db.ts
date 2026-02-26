@@ -109,6 +109,7 @@ interface UserRow {
   password_hash: string;
   created_at: string;
   terms_accepted_at?: string;
+  email_verified_at?: string | null;
 }
 
 interface SessionUserRow {
@@ -151,6 +152,7 @@ export interface AuthPublicUser {
 
 export interface AuthUserWithPassword extends AuthPublicUser {
   passwordHash: string;
+  emailVerifiedAt: string | null;
 }
 
 export interface AuthSessionUser extends AuthPublicUser {
@@ -253,7 +255,8 @@ function initSchema(db: DatabaseSync): void {
       display_name TEXT NOT NULL,
       password_hash TEXT NOT NULL,
       created_at TEXT NOT NULL,
-      terms_accepted_at TEXT NOT NULL DEFAULT ''
+      terms_accepted_at TEXT NOT NULL DEFAULT '',
+      email_verified_at TEXT
     );
 
     CREATE TABLE IF NOT EXISTS sessions (
@@ -300,6 +303,15 @@ function initSchema(db: DatabaseSync): void {
   if (!hasTermsAcceptedColumn) {
     db.exec("ALTER TABLE users ADD COLUMN terms_accepted_at TEXT NOT NULL DEFAULT '';");
     db.exec("UPDATE users SET terms_accepted_at = created_at WHERE terms_accepted_at = '';");
+  }
+
+  const hasEmailVerifiedAtColumn = db
+    .prepare("SELECT 1 AS ok FROM pragma_table_info('users') WHERE name = 'email_verified_at'")
+    .get() as { ok: number } | undefined;
+
+  if (!hasEmailVerifiedAtColumn) {
+    db.exec("ALTER TABLE users ADD COLUMN email_verified_at TEXT;");
+    db.exec("UPDATE users SET email_verified_at = created_at WHERE email_verified_at IS NULL;");
   }
 
   db.exec(`
@@ -1043,12 +1055,13 @@ export function createAuthUser(
     password_hash: passwordHash,
     created_at: nowIso,
     terms_accepted_at: acceptedAt,
+    email_verified_at: null,
   };
 
   db.prepare(`
-    INSERT INTO users (id, email, display_name, password_hash, created_at, terms_accepted_at)
-    VALUES (?, ?, ?, ?, ?, ?)
-  `).run(row.id, row.email, row.display_name, row.password_hash, row.created_at, row.terms_accepted_at);
+    INSERT INTO users (id, email, display_name, password_hash, created_at, terms_accepted_at, email_verified_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `).run(row.id, row.email, row.display_name, row.password_hash, row.created_at, row.terms_accepted_at, row.email_verified_at);
 
   return toPublicUser(row as UserRow);
 }
@@ -1059,7 +1072,7 @@ export function findAuthUserByEmail(email: string): AuthUserWithPassword | null 
 
   const row = db
     .prepare(`
-      SELECT id, email, display_name, password_hash, created_at
+      SELECT id, email, display_name, password_hash, created_at, email_verified_at
       FROM users
       WHERE email = ?
     `)
@@ -1075,6 +1088,7 @@ export function findAuthUserByEmail(email: string): AuthUserWithPassword | null 
     displayName: row.display_name,
     createdAt: row.created_at,
     passwordHash: row.password_hash,
+    emailVerifiedAt: row.email_verified_at ?? null,
   };
 }
 
@@ -1147,6 +1161,21 @@ function ensurePasswordResetSchema(db: DatabaseSync): void {
   );
 }
 
+function ensureEmailVerificationSchema(db: DatabaseSync): void {
+  db.exec(
+    "CREATE TABLE IF NOT EXISTS email_verifications (" +
+      "token_hash TEXT PRIMARY KEY," +
+      "user_id TEXT NOT NULL," +
+      "expires_at TEXT NOT NULL," +
+      "used_at TEXT," +
+      "created_at TEXT NOT NULL," +
+      "FOREIGN KEY(user_id) REFERENCES users(id)" +
+    ");" +
+    "CREATE INDEX IF NOT EXISTS idx_email_verifications_user_id ON email_verifications (user_id);" +
+    "CREATE INDEX IF NOT EXISTS idx_email_verifications_expires_at ON email_verifications (expires_at);"
+  );
+}
+
 export function deleteAuthSessionsByUserId(userId: string): void {
   const db = getDb();
   db.prepare("DELETE FROM sessions WHERE user_id = ?").run(userId);
@@ -1192,6 +1221,55 @@ export function consumePasswordResetRecord(tokenHash: string): { userId: string 
     }
 
     db.prepare("UPDATE password_resets SET used_at = ? WHERE token_hash = ? AND used_at IS NULL").run(nowIso, tokenHash);
+    db.exec("COMMIT");
+    return { userId: row.user_id };
+  } catch (error) {
+    db.exec("ROLLBACK");
+    throw error;
+  }
+}
+
+export function createEmailVerificationRecord(userId: string, tokenHash: string, expiresAt: string): void {
+  const db = getDb();
+  ensureEmailVerificationSchema(db);
+  const nowIso = new Date().toISOString();
+
+  db.exec("BEGIN IMMEDIATE");
+
+  try {
+    db.prepare("DELETE FROM email_verifications WHERE user_id = ? OR expires_at < ? OR used_at IS NOT NULL").run(userId, nowIso);
+    db.prepare("INSERT INTO email_verifications (token_hash, user_id, expires_at, used_at, created_at) VALUES (?, ?, ?, NULL, ?)").run(
+      tokenHash,
+      userId,
+      expiresAt,
+      nowIso,
+    );
+    db.exec("COMMIT");
+  } catch (error) {
+    db.exec("ROLLBACK");
+    throw error;
+  }
+}
+
+export function consumeEmailVerificationRecord(tokenHash: string): { userId: string } | null {
+  const db = getDb();
+  ensureEmailVerificationSchema(db);
+  const nowIso = new Date().toISOString();
+
+  db.exec("BEGIN IMMEDIATE");
+
+  try {
+    const row = db
+      .prepare("SELECT user_id, expires_at, used_at FROM email_verifications WHERE token_hash = ? LIMIT 1")
+      .get(tokenHash) as { user_id: string; expires_at: string; used_at: string | null } | undefined;
+
+    if (!row || row.used_at != null || row.expires_at < nowIso) {
+      db.exec("COMMIT");
+      return null;
+    }
+
+    db.prepare("UPDATE email_verifications SET used_at = ? WHERE token_hash = ? AND used_at IS NULL").run(nowIso, tokenHash);
+    db.prepare("UPDATE users SET email_verified_at = COALESCE(email_verified_at, ?) WHERE id = ?").run(nowIso, row.user_id);
     db.exec("COMMIT");
     return { userId: row.user_id };
   } catch (error) {
