@@ -1309,12 +1309,15 @@ tr:hover td {
   }
 
   .upload-grid {
-    grid-template-columns: 1fr;
-    max-width: 620px;
+    max-width: none;
+  }
+
+  .upload-grid .upload-card {
+    flex-basis: min(280px, 88vw);
   }
 
   .upload-grid .upload-card:last-child:nth-child(odd) {
-    width: 100%;
+    width: auto;
   }
 }
 
@@ -1359,13 +1362,18 @@ tr:hover td {
 }
 
 .upload-grid {
-  grid-template-columns: repeat(2, minmax(320px, 460px));
-  justify-content: center;
-  max-width: 980px;
-  margin-inline: auto;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 14px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  margin-inline: 0;
+  max-width: none;
+  justify-content: flex-start;
 }
 
 .upload-grid .upload-card {
+  flex: 0 0 260px;
   justify-items: center;
   text-align: center;
 }
@@ -1381,9 +1389,7 @@ tr:hover td {
 }
 
 .upload-grid .upload-card:last-child:nth-child(odd) {
-  grid-column: 1 / -1;
-  width: min(100%, 640px);
-  justify-self: center;
+  width: auto;
 }
 
 .upload-card {
