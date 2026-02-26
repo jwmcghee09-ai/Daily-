@@ -1370,9 +1370,6 @@ export default function Home() {
             <button type="button" onClick={clearData} className="clear-btn" disabled={working || refreshingPrices || checkoutWorking}>
               {working ? "Working..." : "Clear Data"}
             </button>
-            <button type="button" onClick={() => void startStarterCheckout()} className="refresh-btn" disabled={loading || working || refreshingPrices || checkoutWorking}>
-              {checkoutWorking ? "Redirecting..." : "Starter Plan ($3/mo)"}
-            </button>
             <button type="button" onClick={logout} className="clear-btn" disabled={working || refreshingPrices || checkoutWorking}>
               Sign Out
             </button>
