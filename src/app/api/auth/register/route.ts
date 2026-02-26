@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
-import { createAuthUser, findAuthUserByEmail } from "@/lib/db";
+import {
+  createAuthUser,
+  findAuthUserByEmail,
+  hasActivePreSignupBillingByEmail,
+  linkPreSignupBillingToUser,
+} from "@/lib/db";
 import {
   applySessionCookie,
   createAndPersistSession,
@@ -58,9 +63,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "An account with this email already exists." }, { status: 409 });
     }
 
+    if (!hasActivePreSignupBillingByEmail(email)) {
+      return NextResponse.json(
+        { error: "Complete Stripe checkout first, then sign up with the same email." },
+        { status: 402 },
+      );
+    }
+
     const passwordHash = hashPassword(password);
     const termsAcceptedAt = new Date().toISOString();
     const user = createAuthUser(email, passwordHash, displayName, termsAcceptedAt);
+    linkPreSignupBillingToUser(user.id, user.email);
     const session = createAndPersistSession(user.id);
 
     const response = NextResponse.json({

@@ -3,9 +3,12 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import {
   findAuthUserByEmail,
-  upsertBillingSubscriptionForUser,
   updateBillingSubscriptionByStripeCustomerId,
   updateBillingSubscriptionByStripeSubscriptionId,
+  updatePreSignupBillingByStripeCustomerId,
+  updatePreSignupBillingByStripeSubscriptionId,
+  upsertBillingSubscriptionForUser,
+  upsertPreSignupBillingByEmail,
 } from "@/lib/db";
 import { getStripeClient, getStripeWebhookSecret } from "@/lib/stripe";
 
@@ -50,14 +53,30 @@ function handleStripeEvent(event: Stripe.Event): void {
   switch (event.type) {
     case "checkout.session.completed": {
       const session = event.data.object as Stripe.Checkout.Session;
+      const checkoutEmail =
+        sanitizeMaybeString(session.metadata?.checkoutEmail) ||
+        sanitizeMaybeString(session.customer_email) ||
+        sanitizeMaybeString(session.customer_details?.email);
+      const customerId = extractStripeId(session.customer);
+      const subscriptionId = extractStripeId(session.subscription);
+      const stripePriceId = sanitizeMaybeString(session.metadata?.priceId);
+      const status = checkoutStatusToSubscriptionStatus(session.payment_status);
+
+      if (checkoutEmail) {
+        upsertPreSignupBillingByEmail({
+          email: checkoutEmail,
+          stripeCustomerId: customerId,
+          stripeSubscriptionId: subscriptionId,
+          stripePriceId,
+          status,
+          checkoutCompletedAt: new Date().toISOString(),
+        });
+      }
+
       const userId =
         sanitizeMaybeString(session.metadata?.userId) ||
         sanitizeMaybeString(session.client_reference_id) ||
-        findUserIdByEmail(
-          sanitizeMaybeString(session.metadata?.checkoutEmail) ||
-            sanitizeMaybeString(session.customer_email) ||
-            sanitizeMaybeString(session.customer_details?.email),
-        );
+        findUserIdByEmail(checkoutEmail);
 
       if (!userId) {
         return;
@@ -65,10 +84,10 @@ function handleStripeEvent(event: Stripe.Event): void {
 
       upsertBillingSubscriptionForUser({
         userId,
-        stripeCustomerId: extractStripeId(session.customer),
-        stripeSubscriptionId: extractStripeId(session.subscription),
-        stripePriceId: sanitizeMaybeString(session.metadata?.priceId),
-        status: session.payment_status === "paid" ? "active" : "incomplete",
+        stripeCustomerId: customerId,
+        stripeSubscriptionId: subscriptionId,
+        stripePriceId,
+        status,
       });
       return;
     }
@@ -82,34 +101,29 @@ function handleStripeEvent(event: Stripe.Event): void {
       const subscriptionId = sanitizeMaybeString(subscription.id);
       const stripePriceId = sanitizeMaybeString(subscription.items.data[0]?.price?.id) || sanitizeMaybeString(subscription.metadata?.priceId);
       const currentPeriodEnd = unixSecondsToIso(subscription.items.data[0]?.current_period_end);
+      const status = sanitizeMaybeString(subscription.status);
+      const patch = {
+        stripeCustomerId: customerId,
+        stripeSubscriptionId: subscriptionId,
+        stripePriceId,
+        status,
+        currentPeriodEnd,
+      };
 
       if (userId) {
-        upsertBillingSubscriptionForUser({
-          userId,
-          stripeCustomerId: customerId,
-          stripeSubscriptionId: subscriptionId,
-          stripePriceId,
-          status: sanitizeMaybeString(subscription.status),
-          currentPeriodEnd,
-        });
-        return;
+        upsertBillingSubscriptionForUser({ userId, ...patch });
       }
 
       if (subscriptionId) {
-        updateBillingSubscriptionByStripeSubscriptionId(subscriptionId, {
-          stripeCustomerId: customerId,
-          stripePriceId,
-          status: sanitizeMaybeString(subscription.status),
-          currentPeriodEnd,
-        });
-      } else if (customerId) {
-        updateBillingSubscriptionByStripeCustomerId(customerId, {
-          stripeSubscriptionId: subscriptionId,
-          stripePriceId,
-          status: sanitizeMaybeString(subscription.status),
-          currentPeriodEnd,
-        });
+        updateBillingSubscriptionByStripeSubscriptionId(subscriptionId, patch);
+        updatePreSignupBillingByStripeSubscriptionId(subscriptionId, patch);
       }
+
+      if (customerId) {
+        updateBillingSubscriptionByStripeCustomerId(customerId, patch);
+        updatePreSignupBillingByStripeCustomerId(customerId, patch);
+      }
+
       return;
     }
 
@@ -157,4 +171,12 @@ function unixSecondsToIso(value: unknown): string | null {
   }
 
   return new Date(value * 1000).toISOString();
+}
+
+function checkoutStatusToSubscriptionStatus(paymentStatus: Stripe.Checkout.Session.PaymentStatus | null): string {
+  if (paymentStatus === "paid" || paymentStatus === "no_payment_required") {
+    return "active";
+  }
+
+  return "incomplete";
 }

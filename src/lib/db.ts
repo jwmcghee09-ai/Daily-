@@ -130,6 +130,18 @@ interface BillingSubscriptionRow {
   updated_at: string;
 }
 
+interface PreSignupBillingRow {
+  email: string;
+  stripe_customer_id: string | null;
+  stripe_subscription_id: string | null;
+  stripe_price_id: string | null;
+  stripe_status: string | null;
+  current_period_end: string | null;
+  checkout_completed_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface AuthPublicUser {
   id: string;
   email: string;
@@ -153,6 +165,14 @@ export interface BillingSubscription {
   status: string | null;
   currentPeriodEnd: string | null;
   createdAt: string;
+  updatedAt: string;
+}
+
+export interface PreSignupBillingEligibility {
+  email: string;
+  status: string | null;
+  currentPeriodEnd: string | null;
+  checkoutCompletedAt: string | null;
   updatedAt: string;
 }
 
@@ -281,6 +301,26 @@ function initSchema(db: DatabaseSync): void {
     db.exec("ALTER TABLE users ADD COLUMN terms_accepted_at TEXT NOT NULL DEFAULT '';");
     db.exec("UPDATE users SET terms_accepted_at = created_at WHERE terms_accepted_at = '';");
   }
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS pre_signup_billing (
+      email TEXT PRIMARY KEY,
+      stripe_customer_id TEXT,
+      stripe_subscription_id TEXT,
+      stripe_price_id TEXT,
+      stripe_status TEXT,
+      current_period_end TEXT,
+      checkout_completed_at TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_pre_signup_billing_customer ON pre_signup_billing (stripe_customer_id);
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_pre_signup_billing_subscription
+      ON pre_signup_billing (stripe_subscription_id)
+      WHERE stripe_subscription_id IS NOT NULL;
+  `);
+
 }
 
 function normalizeSource(value: unknown): DataSource {
@@ -1173,9 +1213,24 @@ interface BillingSubscriptionPatchInput {
   currentPeriodEnd?: string | null;
 }
 
+interface PreSignupBillingPatchInput {
+  stripeCustomerId?: string | null;
+  stripeSubscriptionId?: string | null;
+  stripePriceId?: string | null;
+  status?: string | null;
+  currentPeriodEnd?: string | null;
+  checkoutCompletedAt?: string | null;
+}
+
 export interface BillingSubscriptionUpsertInput extends BillingSubscriptionPatchInput {
   userId: string;
 }
+
+export interface PreSignupBillingUpsertInput extends PreSignupBillingPatchInput {
+  email: string;
+}
+
+const ACTIVE_SUBSCRIPTION_STATUSES = new Set(["active", "trialing"]);
 
 function toOptionalNullableString(value: string | null | undefined): string | null | undefined {
   if (value === undefined) {
@@ -1203,16 +1258,24 @@ function toBillingSubscription(row: BillingSubscriptionRow): BillingSubscription
   };
 }
 
+function toPreSignupBillingEligibility(row: PreSignupBillingRow): PreSignupBillingEligibility {
+  return {
+    email: row.email,
+    status: row.stripe_status,
+    currentPeriodEnd: row.current_period_end,
+    checkoutCompletedAt: row.checkout_completed_at,
+    updatedAt: row.updated_at,
+  };
+}
+
 export function readBillingSubscription(userId: string): BillingSubscription | null {
   const db = getDb();
 
   const row = db
-    .prepare(`
-      SELECT user_id, stripe_customer_id, stripe_subscription_id, stripe_price_id, stripe_status, current_period_end, created_at, updated_at
-      FROM billing_subscriptions
-      WHERE user_id = ?
-      LIMIT 1
-    `)
+    .prepare(
+      "SELECT user_id, stripe_customer_id, stripe_subscription_id, stripe_price_id, stripe_status, current_period_end, created_at, updated_at " +
+        "FROM billing_subscriptions WHERE user_id = ? LIMIT 1",
+    )
     .get(userId) as BillingSubscriptionRow | undefined;
 
   return row ? toBillingSubscription(row) : null;
@@ -1227,12 +1290,10 @@ export function upsertBillingSubscriptionForUser(input: BillingSubscriptionUpser
   }
 
   const existing = db
-    .prepare(`
-      SELECT user_id, stripe_customer_id, stripe_subscription_id, stripe_price_id, stripe_status, current_period_end, created_at, updated_at
-      FROM billing_subscriptions
-      WHERE user_id = ?
-      LIMIT 1
-    `)
+    .prepare(
+      "SELECT user_id, stripe_customer_id, stripe_subscription_id, stripe_price_id, stripe_status, current_period_end, created_at, updated_at " +
+        "FROM billing_subscriptions WHERE user_id = ? LIMIT 1",
+    )
     .get(input.userId) as BillingSubscriptionRow | undefined;
 
   const nextStripeCustomerId = toOptionalNullableString(input.stripeCustomerId);
@@ -1254,26 +1315,18 @@ export function upsertBillingSubscriptionForUser(input: BillingSubscriptionUpser
     updatedAt: nowIso,
   };
 
-  db.prepare(`
-    INSERT INTO billing_subscriptions (
-      user_id,
-      stripe_customer_id,
-      stripe_subscription_id,
-      stripe_price_id,
-      stripe_status,
-      current_period_end,
-      created_at,
-      updated_at
-    )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    ON CONFLICT(user_id) DO UPDATE SET
-      stripe_customer_id = excluded.stripe_customer_id,
-      stripe_subscription_id = excluded.stripe_subscription_id,
-      stripe_price_id = excluded.stripe_price_id,
-      stripe_status = excluded.stripe_status,
-      current_period_end = excluded.current_period_end,
-      updated_at = excluded.updated_at
-  `).run(
+  db.prepare(
+    "INSERT INTO billing_subscriptions (" +
+      "user_id, stripe_customer_id, stripe_subscription_id, stripe_price_id, stripe_status, current_period_end, created_at, updated_at" +
+    ") VALUES (?, ?, ?, ?, ?, ?, ?, ?) " +
+    "ON CONFLICT(user_id) DO UPDATE SET " +
+      "stripe_customer_id = excluded.stripe_customer_id, " +
+      "stripe_subscription_id = excluded.stripe_subscription_id, " +
+      "stripe_price_id = excluded.stripe_price_id, " +
+      "stripe_status = excluded.stripe_status, " +
+      "current_period_end = excluded.current_period_end, " +
+      "updated_at = excluded.updated_at",
+  ).run(
     merged.userId,
     merged.stripeCustomerId,
     merged.stripeSubscriptionId,
@@ -1326,6 +1379,179 @@ export function updateBillingSubscriptionByStripeSubscriptionId(stripeSubscripti
   upsertBillingSubscriptionForUser({
     userId: row.user_id,
     ...patch,
+  });
+}
+
+export function upsertPreSignupBillingByEmail(input: PreSignupBillingUpsertInput): void {
+  const db = getDb();
+  const normalizedEmail = normalizeEmail(input.email);
+
+  if (!normalizedEmail) {
+    return;
+  }
+
+  const existing = db
+    .prepare(
+      "SELECT email, stripe_customer_id, stripe_subscription_id, stripe_price_id, stripe_status, current_period_end, checkout_completed_at, created_at, updated_at " +
+        "FROM pre_signup_billing WHERE email = ? LIMIT 1",
+    )
+    .get(normalizedEmail) as PreSignupBillingRow | undefined;
+
+  const nextStripeCustomerId = toOptionalNullableString(input.stripeCustomerId);
+  const nextStripeSubscriptionId = toOptionalNullableString(input.stripeSubscriptionId);
+  const nextStripePriceId = toOptionalNullableString(input.stripePriceId);
+  const nextStatus = toOptionalNullableString(input.status);
+  const nextCurrentPeriodEnd = toOptionalNullableString(input.currentPeriodEnd);
+  const nextCheckoutCompletedAt = toOptionalNullableString(input.checkoutCompletedAt);
+
+  const nowIso = new Date().toISOString();
+
+  const merged = {
+    email: normalizedEmail,
+    stripeCustomerId: nextStripeCustomerId !== undefined ? nextStripeCustomerId : (existing?.stripe_customer_id ?? null),
+    stripeSubscriptionId: nextStripeSubscriptionId !== undefined ? nextStripeSubscriptionId : (existing?.stripe_subscription_id ?? null),
+    stripePriceId: nextStripePriceId !== undefined ? nextStripePriceId : (existing?.stripe_price_id ?? null),
+    status: nextStatus !== undefined ? nextStatus : (existing?.stripe_status ?? null),
+    currentPeriodEnd: nextCurrentPeriodEnd !== undefined ? nextCurrentPeriodEnd : (existing?.current_period_end ?? null),
+    checkoutCompletedAt: nextCheckoutCompletedAt !== undefined ? nextCheckoutCompletedAt : (existing?.checkout_completed_at ?? null),
+    createdAt: existing?.created_at ?? nowIso,
+    updatedAt: nowIso,
+  };
+
+  db.prepare(
+    "INSERT INTO pre_signup_billing (" +
+      "email, stripe_customer_id, stripe_subscription_id, stripe_price_id, stripe_status, current_period_end, checkout_completed_at, created_at, updated_at" +
+    ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+    "ON CONFLICT(email) DO UPDATE SET " +
+      "stripe_customer_id = excluded.stripe_customer_id, " +
+      "stripe_subscription_id = excluded.stripe_subscription_id, " +
+      "stripe_price_id = excluded.stripe_price_id, " +
+      "stripe_status = excluded.stripe_status, " +
+      "current_period_end = excluded.current_period_end, " +
+      "checkout_completed_at = excluded.checkout_completed_at, " +
+      "updated_at = excluded.updated_at",
+  ).run(
+    merged.email,
+    merged.stripeCustomerId,
+    merged.stripeSubscriptionId,
+    merged.stripePriceId,
+    merged.status,
+    merged.currentPeriodEnd,
+    merged.checkoutCompletedAt,
+    merged.createdAt,
+    merged.updatedAt,
+  );
+}
+
+export function updatePreSignupBillingByStripeCustomerId(stripeCustomerId: string, patch: PreSignupBillingPatchInput): void {
+  const db = getDb();
+  const normalizedCustomerId = toOptionalNullableString(stripeCustomerId);
+
+  if (!normalizedCustomerId) {
+    return;
+  }
+
+  const row = db
+    .prepare("SELECT email FROM pre_signup_billing WHERE stripe_customer_id = ? LIMIT 1")
+    .get(normalizedCustomerId) as { email: string } | undefined;
+
+  if (!row) {
+    return;
+  }
+
+  upsertPreSignupBillingByEmail({
+    email: row.email,
+    ...patch,
+  });
+}
+
+export function updatePreSignupBillingByStripeSubscriptionId(stripeSubscriptionId: string, patch: PreSignupBillingPatchInput): void {
+  const db = getDb();
+  const normalizedSubscriptionId = toOptionalNullableString(stripeSubscriptionId);
+
+  if (!normalizedSubscriptionId) {
+    return;
+  }
+
+  const row = db
+    .prepare("SELECT email FROM pre_signup_billing WHERE stripe_subscription_id = ? LIMIT 1")
+    .get(normalizedSubscriptionId) as { email: string } | undefined;
+
+  if (!row) {
+    return;
+  }
+
+  upsertPreSignupBillingByEmail({
+    email: row.email,
+    ...patch,
+  });
+}
+
+export function readPreSignupBillingByEmail(email: string): PreSignupBillingEligibility | null {
+  const db = getDb();
+  const normalizedEmail = normalizeEmail(email);
+
+  if (!normalizedEmail) {
+    return null;
+  }
+
+  const row = db
+    .prepare(
+      "SELECT email, stripe_customer_id, stripe_subscription_id, stripe_price_id, stripe_status, current_period_end, checkout_completed_at, created_at, updated_at " +
+        "FROM pre_signup_billing WHERE email = ? LIMIT 1",
+    )
+    .get(normalizedEmail) as PreSignupBillingRow | undefined;
+
+  return row ? toPreSignupBillingEligibility(row) : null;
+}
+
+export function hasActivePreSignupBillingByEmail(email: string): boolean {
+  const record = readPreSignupBillingByEmail(email);
+  if (!record) {
+    return false;
+  }
+
+  const status = (record.status || "").toLowerCase();
+  if (!ACTIVE_SUBSCRIPTION_STATUSES.has(status)) {
+    return false;
+  }
+
+  if (record.currentPeriodEnd) {
+    const periodEnd = new Date(record.currentPeriodEnd);
+    if (!Number.isNaN(periodEnd.getTime()) && periodEnd.getTime() < Date.now()) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+export function linkPreSignupBillingToUser(userId: string, email: string): void {
+  const db = getDb();
+  const normalizedEmail = normalizeEmail(email);
+
+  if (!normalizedEmail) {
+    return;
+  }
+
+  const row = db
+    .prepare(
+      "SELECT email, stripe_customer_id, stripe_subscription_id, stripe_price_id, stripe_status, current_period_end, checkout_completed_at, created_at, updated_at " +
+        "FROM pre_signup_billing WHERE email = ? LIMIT 1",
+    )
+    .get(normalizedEmail) as PreSignupBillingRow | undefined;
+
+  if (!row) {
+    return;
+  }
+
+  upsertBillingSubscriptionForUser({
+    userId,
+    stripeCustomerId: row.stripe_customer_id,
+    stripeSubscriptionId: row.stripe_subscription_id,
+    stripePriceId: row.stripe_price_id,
+    status: row.stripe_status,
+    currentPeriodEnd: row.current_period_end,
   });
 }
 
