@@ -1310,6 +1310,7 @@ tr:hover td {
 
   .upload-grid {
     grid-template-columns: 1fr;
+    max-width: 620px;
   }
 
   .upload-grid .upload-card:last-child:nth-child(odd) {
@@ -1358,7 +1359,25 @@ tr:hover td {
 }
 
 .upload-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(320px, 460px));
+  justify-content: center;
+  max-width: 980px;
+  margin-inline: auto;
+}
+
+.upload-grid .upload-card {
+  justify-items: center;
+  text-align: center;
+}
+
+.upload-grid .upload-card p {
+  max-width: 42ch;
+  margin-inline: auto;
+}
+
+.upload-grid .file-input,
+.upload-grid .template-btn {
+  justify-self: center;
 }
 
 .upload-grid .upload-card:last-child:nth-child(odd) {
