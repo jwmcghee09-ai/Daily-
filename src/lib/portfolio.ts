@@ -72,13 +72,13 @@ const RISK_WINDOW_DAYS: Record<RiskWindow, number> = {
 const FIELD_ALIASES = {
   account: ["account", "accountname", "portfolio", "broker", "fund", "superaccount", "accountnumber"],
   ticker: ["ticker", "symbol", "asxcode", "code", "securitycode", "instrument", "stock", "metal", "bullion", "product", "isin", "cusip", "sedol", "ric", "fundcode", "identifier"],
-  name: ["name", "security", "holding", "description", "investment", "asset", "company"],
+  name: ["name", "fundname", "security", "securityname", "holding", "description", "investment", "asset", "company"],
   units: ["units", "quantity", "qty", "shares", "unitsheld", "availunits", "availableunits", "weight", "weightoz", "weightg", "gram", "grams", "ounce", "ounces", "oz", "troyounce", "troyounces"],
-  price: ["price", "unitprice", "lastprice", "marketprice", "currentprice", "close", "last"],
+  price: ["price", "unit", "unitprice", "lastprice", "marketprice", "currentprice", "close", "last"],
   value: ["value", "marketvalue", "currentvalue", "valuation", "balance", "amount", "mktvalue"],
   cost: ["costbase", "cost", "bookvalue", "purchasevalue", "avgcost", "averagecost", "purchase"],
   sector: ["sector", "industry", "assetclass", "class", "category"],
-  date: ["date", "valuationdate", "asat", "reportdate", "pricedate"],
+  date: ["date", "unitdate", "valuationdate", "asat", "reportdate", "pricedate"],
 };
 
 const NON_HOLDING_MARKERS = ["subtotal", "total", "grand total", "chess", "issuer sponsored holdings", "there are no"];
@@ -148,11 +148,13 @@ function toHolding(
             : "Brokerage");
 
   const tickerRaw = readFirst(row, FIELD_ALIASES.ticker);
-  if (isNonHoldingRow(tickerRaw)) {
+  const nameRaw = readFirst(row, FIELD_ALIASES.name);
+
+  if (isNonHoldingRow(tickerRaw, nameRaw)) {
     return null;
   }
 
-  const name = readFirst(row, FIELD_ALIASES.name) || tickerRaw || "Unnamed Holding";
+  const name = nameRaw || tickerRaw || "Unnamed Holding";
   const tickerCandidate =
     tickerRaw ||
     (source === "gold"
@@ -230,12 +232,13 @@ function toHolding(
   };
 }
 
-function isNonHoldingRow(rawTicker: string): boolean {
-  if (!rawTicker) {
+function isNonHoldingRow(rawTicker: string, rawName = ""): boolean {
+  const value = (rawTicker || rawName).trim().toLowerCase();
+
+  if (!value) {
     return true;
   }
 
-  const value = rawTicker.trim().toLowerCase();
   return NON_HOLDING_MARKERS.some((marker) => value.includes(marker));
 }
 
