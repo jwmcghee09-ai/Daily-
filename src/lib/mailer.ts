@@ -15,12 +15,14 @@ interface PasswordResetEmailInput {
   toEmail: string;
   displayName: string;
   resetToken: string;
+  appBaseUrl?: string;
 }
 
 interface AccountVerificationEmailInput {
   toEmail: string;
   displayName: string;
   verificationToken: string;
+  appBaseUrl?: string;
 }
 
 interface ResolvedSmtpTarget {
@@ -47,15 +49,35 @@ function readSmtpConfig(): SmtpConfig | null {
   return { host, port, user, pass, from, secure };
 }
 
-function getAppBaseUrl(): string {
-  const explicit = (process.env.APP_BASE_URL || "").trim();
-  if (explicit) {
-    return explicit.replace(/\/$/, "");
+function normalizeBaseUrl(value: string): string {
+  const trimmed = value.trim().replace(/\/$/, "");
+
+  try {
+    const parsed = new URL(trimmed);
+    if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+      return parsed.origin;
+    }
+  } catch {
+    return "";
   }
 
-  const renderUrl = (process.env.RENDER_EXTERNAL_URL || "").trim();
+  return "";
+}
+
+function getAppBaseUrl(preferred?: string): string {
+  const preferredNormalized = normalizeBaseUrl(preferred || "");
+  if (preferredNormalized) {
+    return preferredNormalized;
+  }
+
+  const explicit = normalizeBaseUrl(process.env.APP_BASE_URL || "");
+  if (explicit) {
+    return explicit;
+  }
+
+  const renderUrl = normalizeBaseUrl(process.env.RENDER_EXTERNAL_URL || "");
   if (renderUrl) {
-    return renderUrl.replace(/\/$/, "");
+    return renderUrl;
   }
 
   return "http://localhost:3000";
@@ -106,7 +128,7 @@ export async function sendPasswordResetEmail(input: PasswordResetEmailInput): Pr
     tls: target.tlsServername ? { servername: target.tlsServername } : undefined,
   });
 
-  const appUrl = getAppBaseUrl();
+  const appUrl = getAppBaseUrl(input.appBaseUrl);
   const token = input.resetToken;
   const tokenEntryUrl = `${appUrl}/`;
 
@@ -173,7 +195,7 @@ export async function sendAccountVerificationEmail(input: AccountVerificationEma
     tls: target.tlsServername ? { servername: target.tlsServername } : undefined,
   });
 
-  const appUrl = getAppBaseUrl();
+  const appUrl = getAppBaseUrl(input.appBaseUrl);
   const verifyUrl = `${appUrl}/api/auth/verify?token=${encodeURIComponent(input.verificationToken)}`;
 
   const subject = "Verify your SPECTRE email";

@@ -33,6 +33,7 @@ export async function POST(request: Request) {
     }
 
     const payload = (await request.json()) as ResendPayload;
+    const appBaseUrl = new URL(request.url).origin;
     const email = normalizeEmail(payload.email || "");
 
     if (!isLikelyEmail(email)) {
@@ -72,6 +73,7 @@ export async function POST(request: Request) {
         toEmail: user.email,
         displayName: user.displayName,
         verificationToken,
+        appBaseUrl,
       });
     } catch (error) {
       console.error("Verification resend email failed", error);
