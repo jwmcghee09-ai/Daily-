@@ -63,6 +63,9 @@ const ACCOUNT_CHIP_STYLES = [
 
 const RISK_WINDOW_OPTIONS: RiskWindow[] = ["1M", "3M", "1Y"];
 
+const AUTO_REFRESH_INTERVAL_MS = 5 * 60 * 1000;
+const AUTO_REFRESH_RESUME_GRACE_MS = 20 * 1000;
+
 const LANDING_PREVIEW_SERIES = [
   { month: "Jan", portfolio: 1180000, buffer: 1100000 },
   { month: "Feb", portfolio: 1165000, buffer: 1100000 },
@@ -213,6 +216,7 @@ export default function Home() {
   const [authError, setAuthError] = useState("");
   const [checkoutWorking, setCheckoutWorking] = useState(false);
   const refreshInFlight = useRef(false);
+  const lastAutoRefreshAttemptAtRef = useRef(0);
 
   const completePendingRegistrationAfterCheckout = useCallback(async () => {
     const draft = readPendingRegistrationDraft();
@@ -399,13 +403,71 @@ export default function Home() {
       return;
     }
 
-    void refreshPrices(false);
+    let cancelled = false;
+    let timerId: number | null = null;
 
-    const timer = window.setInterval(() => {
-      void refreshPrices(false);
-    }, 5 * 60 * 1000);
+    const runRefresh = async () => {
+      if (cancelled) {
+        return;
+      }
 
-    return () => window.clearInterval(timer);
+      lastAutoRefreshAttemptAtRef.current = Date.now();
+      await refreshPrices(false);
+    };
+
+    const scheduleNext = () => {
+      if (cancelled) {
+        return;
+      }
+
+      timerId = window.setTimeout(() => {
+        void runRefresh().finally(() => {
+          scheduleNext();
+        });
+      }, AUTO_REFRESH_INTERVAL_MS);
+    };
+
+    const refreshOnResume = () => {
+      if (cancelled) {
+        return;
+      }
+
+      if (typeof document !== "undefined" && document.visibilityState !== "visible") {
+        return;
+      }
+
+      const elapsed = Date.now() - lastAutoRefreshAttemptAtRef.current;
+      if (elapsed < AUTO_REFRESH_INTERVAL_MS - AUTO_REFRESH_RESUME_GRACE_MS) {
+        return;
+      }
+
+      void runRefresh();
+    };
+
+    void runRefresh();
+    scheduleNext();
+
+    if (typeof document !== "undefined") {
+      document.addEventListener("visibilitychange", refreshOnResume);
+    }
+
+    window.addEventListener("focus", refreshOnResume);
+    window.addEventListener("online", refreshOnResume);
+
+    return () => {
+      cancelled = true;
+
+      if (timerId != null) {
+        window.clearTimeout(timerId);
+      }
+
+      if (typeof document !== "undefined") {
+        document.removeEventListener("visibilitychange", refreshOnResume);
+      }
+
+      window.removeEventListener("focus", refreshOnResume);
+      window.removeEventListener("online", refreshOnResume);
+    };
   }, [loading, refreshPrices, sessionUser]);
 
   const metrics = useMemo(() => computeMetrics(state.holdings, state.snapshots, riskWindow), [state.holdings, state.snapshots, riskWindow]);
