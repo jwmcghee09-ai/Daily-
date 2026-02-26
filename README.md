@@ -153,3 +153,29 @@ The script will:
 - Nightly: `npm run backup:db`
 - Weekly or monthly: `npm run restore:test`
 - Store backup files off-server (S3/Backblaze/etc.)
+
+### Render Cron (recommended pattern)
+
+Because Render Cron runs separately from your web service disk, use Cron to call internal backup endpoints on your live app:
+
+1. Set env vars:
+   - On Web Service: `BACKUP_PASSPHRASE`, `BACKUP_OUTPUT_DIR=/var/data/backups`, `BACKUP_CRON_TOKEN`
+   - On Cron Job: `BACKUP_CRON_TOKEN` (same value)
+
+2. Cron job command for backup:
+
+```bash
+curl -fsS -X POST \
+  -H "Authorization: Bearer $BACKUP_CRON_TOKEN" \
+  https://your-domain/api/internal/ops/backup
+```
+
+3. Cron job command for restore test:
+
+```bash
+curl -fsS -X POST \
+  -H "Authorization: Bearer $BACKUP_CRON_TOKEN" \
+  https://your-domain/api/internal/ops/backup/restore-test
+```
+
+This ensures backups run inside the web service context that has access to `/var/data`.
