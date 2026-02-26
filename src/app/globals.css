@@ -964,6 +964,12 @@ tr:hover td {
   color: #cfa6a0;
 }
 
+.footer-note .footer-disclaimer,
+.footer-note .footer-legal {
+  max-width: 980px;
+  margin-inline: auto;
+}
+
 @keyframes rise-in {
   from {
     opacity: 0;
@@ -2214,14 +2220,18 @@ td {
 
 .landing-footer {
   padding: 18px 0 8px;
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  justify-items: center;
+  text-align: center;
   gap: 10px;
-  flex-wrap: wrap;
   color: #b8bac7;
   font-size: 0.78rem;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
+}
+
+.landing-footer .footer-disclaimer,
+.landing-footer .footer-legal {
+  max-width: 980px;
+  margin-inline: auto;
 }
 
 .landing-footer .footer-legal {
