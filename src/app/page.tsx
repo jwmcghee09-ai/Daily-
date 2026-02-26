@@ -1873,7 +1873,7 @@ export default function Home() {
                 dot={false}
                 activeDot={{ r: 4, stroke: "#ffffff", strokeWidth: 1, fill: ACCENT_COLOR }}
               />
-              {portfolioHistorySeries.length > 8 ? (
+              {portfolioHistorySeries.length > 1 ? (
                 <Brush
                   dataKey="date"
                   height={30}
