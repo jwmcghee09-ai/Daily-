@@ -956,6 +956,14 @@ tr:hover td {
   line-height: 1.45;
 }
 
+.footer-legal {
+  margin-top: 8px;
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #cfa6a0;
+}
+
 @keyframes rise-in {
   from {
     opacity: 0;
@@ -2214,6 +2222,10 @@ td {
   font-size: 0.78rem;
   letter-spacing: 0.07em;
   text-transform: uppercase;
+}
+
+.landing-footer .footer-legal {
+  color: #9ea3b8;
 }
 
 @keyframes landing-rise {

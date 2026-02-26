@@ -1258,6 +1258,7 @@ export default function Home() {
         <footer className="landing-footer">
           <p>System for Portfolio Exposure, Correlation, Threat & Risk Evaluation</p>
           <p>SPECTRE analytics are informational only and not financial advice.</p>
+          <p className="footer-legal">T&C apply. Copyright 2026 SPECTRE.</p>
         </footer>
       </div>
     );
@@ -1637,6 +1638,7 @@ export default function Home() {
         <p>SPECTRE stores data in local SQLite and auto-refreshes ASX prices every 5 minutes while this page is open. Upload a new CSV when you buy, sell, or change bullion holdings.</p>
         <p className="footer-disclaimer">Disclaimer: SPECTRE provides informational analytics only. It is not financial, investment, tax, or legal advice, and no result is guaranteed to be complete, current, or accurate.</p>
         <p className="footer-disclaimer">Use at your own risk. Always verify pricing, corporate actions, and holdings with official statements before making decisions. If this app is deployed online, database access and backups are your responsibility.</p>
+        <p className="footer-legal">T&C apply. Copyright 2026 SPECTRE.</p>
       </footer>
     </div>
   );
