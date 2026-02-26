@@ -529,11 +529,15 @@ export default function Home() {
   const assetSplit = useMemo(() => {
     const superValue = state.holdings.filter((holding) => holding.source === "super").reduce((acc, holding) => acc + holding.value, 0);
     const asxValue = state.holdings.filter((holding) => holding.source === "asx").reduce((acc, holding) => acc + holding.value, 0);
+    const indexValue = state.holdings.filter((holding) => holding.source === "index").reduce((acc, holding) => acc + holding.value, 0);
+    const fundValue = state.holdings.filter((holding) => holding.source === "fund").reduce((acc, holding) => acc + holding.value, 0);
     const bullionValue = state.holdings.filter((holding) => holding.source === "gold").reduce((acc, holding) => acc + holding.value, 0);
 
     const raw = [
       { name: "Super", value: superValue },
       { name: "ASX Shares", value: asxValue },
+      { name: "Indices", value: indexValue },
+      { name: "Mutual Funds", value: fundValue },
       { name: "Bullion", value: bullionValue },
     ];
 
@@ -578,7 +582,7 @@ export default function Home() {
         name: "Equities -5%",
         shock: (source: DataSource, metal: "gold" | "silver") => {
           void metal;
-          return source === "asx" || source === "super" ? -0.05 : 0;
+          return source === "asx" || source === "super" || source === "index" || source === "fund" ? -0.05 : 0;
         },
       },
       {
@@ -594,6 +598,14 @@ export default function Home() {
 
           if (source === "super") {
             return -0.04;
+          }
+
+          if (source === "index") {
+            return -0.05;
+          }
+
+          if (source === "fund") {
+            return -0.035;
           }
 
           if (source === "gold") {
@@ -1302,6 +1314,22 @@ export default function Home() {
           disabled={working || loading}
         />
         <UploadCard
+          title="Index Report (CSV)"
+          description="Upload index holdings or benchmark positions."
+          onUpload={(event) => onUpload(event, "index")}
+          template={indexTemplateCsv()}
+          templateName="index-template.csv"
+          disabled={working || loading}
+        />
+        <UploadCard
+          title="Mutual Fund Report (CSV)"
+          description="Upload managed fund or mutual fund holdings."
+          onUpload={(event) => onUpload(event, "fund")}
+          template={fundTemplateCsv()}
+          templateName="mutual-fund-template.csv"
+          disabled={working || loading}
+        />
+        <UploadCard
           title="ABC Bullion Report (Gold/Silver CSV)"
           description="Upload ABC Bullion gold/silver holdings. Put metal weight in units/weight (oz or grams)."
           onUpload={(event) => onUpload(event, "gold")}
@@ -1563,7 +1591,7 @@ export default function Home() {
         {loading ? (
           <div className="empty">Loading stored data...</div>
         ) : state.holdings.length === 0 ? (
-          <div className="empty">Upload super, ASX, and/or bullion CSVs to populate this dashboard.</div>
+          <div className="empty">Upload super, ASX, index, mutual fund, and/or bullion CSVs to populate this dashboard.</div>
         ) : (
           <div className="table-wrap">
             <table>
@@ -1893,6 +1921,22 @@ function asxTemplateCsv(): string {
     "account,ticker,name,units,price,value,cost base,sector,date",
     "SelfWealth,IVV,ISHARES S&P 500 ETF,40,58.4,2336,2100,ETF,2026-02-18",
     "SelfWealth,WOW,Woolworths Group,35,34.7,1214.5,1180,Consumer Staples,2026-02-18",
+  ].join("\n");
+}
+
+function indexTemplateCsv(): string {
+  return [
+    "account,ticker,name,units,price,value,cost base,sector,date",
+    "Benchmark Account,SPX,S&P 500 Index Proxy,10,620.4,6204,5900,Index,2026-02-18",
+    "Benchmark Account,NDQ,NASDAQ 100 Proxy,12,520.1,6241.2,6000,Index,2026-02-18",
+  ].join("\n");
+}
+
+function fundTemplateCsv(): string {
+  return [
+    "account,ticker,name,units,price,value,cost base,sector,date",
+    "Managed Funds,VTSAX,Vanguard Total Stock Market Index Fund,35,152.6,5341,5000,Mutual Fund,2026-02-18",
+    "Managed Funds,VBMFX,Vanguard Total Bond Market Index Fund,40,11.1,444,420,Mutual Fund,2026-02-18",
   ].join("\n");
 }
 

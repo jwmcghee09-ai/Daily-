@@ -1,4 +1,4 @@
-export type DataSource = "super" | "asx" | "gold";
+export type DataSource = "super" | "asx" | "gold" | "index" | "fund";
 
 export interface CsvRow {
   [key: string]: string | number | null | undefined;
@@ -71,7 +71,7 @@ const RISK_WINDOW_DAYS: Record<RiskWindow, number> = {
 
 const FIELD_ALIASES = {
   account: ["account", "accountname", "portfolio", "broker", "fund", "superaccount", "accountnumber"],
-  ticker: ["ticker", "symbol", "asxcode", "code", "securitycode", "instrument", "stock", "metal", "bullion", "product"],
+  ticker: ["ticker", "symbol", "asxcode", "code", "securitycode", "instrument", "stock", "metal", "bullion", "product", "isin", "cusip", "sedol", "ric", "fundcode", "identifier"],
   name: ["name", "security", "holding", "description", "investment", "asset", "company"],
   units: ["units", "quantity", "qty", "shares", "unitsheld", "availunits", "availableunits", "weight", "weightoz", "weightg", "gram", "grams", "ounce", "ounces", "oz", "troyounce", "troyounces"],
   price: ["price", "unitprice", "lastprice", "marketprice", "currentprice", "close", "last"],
@@ -81,7 +81,7 @@ const FIELD_ALIASES = {
   date: ["date", "valuationdate", "asat", "reportdate", "pricedate"],
 };
 
-const NON_HOLDING_MARKERS = ["subtotal", "total", "chess", "issuer sponsored holdings", "there are no"];
+const NON_HOLDING_MARKERS = ["subtotal", "total", "grand total", "chess", "issuer sponsored holdings", "there are no"];
 
 export const EMPTY_STATE: PortfolioState = {
   holdings: [],
@@ -137,7 +137,15 @@ function toHolding(
 
   const account =
     readFirst(row, FIELD_ALIASES.account) ||
-    (source === "super" ? "Superannuation" : source === "gold" ? "ABC Bullion" : "Brokerage");
+    (source === "super"
+      ? "Superannuation"
+      : source === "gold"
+        ? "ABC Bullion"
+        : source === "index"
+          ? "Index Holdings"
+          : source === "fund"
+            ? "Mutual Funds"
+            : "Brokerage");
 
   const tickerRaw = readFirst(row, FIELD_ALIASES.ticker);
   if (isNonHoldingRow(tickerRaw)) {
@@ -145,10 +153,19 @@ function toHolding(
   }
 
   const name = readFirst(row, FIELD_ALIASES.name) || tickerRaw || "Unnamed Holding";
-  const tickerCandidate = tickerRaw || (source === "gold" ? `GOLD-${index + 1}` : name);
+  const tickerCandidate =
+    tickerRaw ||
+    (source === "gold"
+      ? `GOLD-${index + 1}`
+      : source === "index"
+        ? `INDEX-${index + 1}`
+        : source === "fund"
+          ? `FUND-${index + 1}`
+          : name);
   const ticker = normalizeTicker(tickerCandidate);
+  const maxTickerLength = source === "asx" ? 8 : 16;
 
-  if (!ticker || (source !== "gold" && ticker.length > 8)) {
+  if (!ticker || ticker.length > maxTickerLength) {
     return null;
   }
 
@@ -183,7 +200,17 @@ function toHolding(
     return null;
   }
 
-  const sector = readFirst(row, FIELD_ALIASES.sector) || (source === "super" ? "Super" : source === "gold" ? "Precious Metals" : "Equity");
+  const sector =
+    readFirst(row, FIELD_ALIASES.sector) ||
+    (source === "super"
+      ? "Super"
+      : source === "gold"
+        ? "Precious Metals"
+        : source === "index"
+          ? "Index"
+          : source === "fund"
+            ? "Mutual Fund"
+            : "Equity");
   const reportDate = parseDate(readFirst(row, FIELD_ALIASES.date)) || todayDate();
 
   return {

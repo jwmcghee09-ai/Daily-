@@ -292,6 +292,14 @@ function normalizeSource(value: unknown): DataSource {
     return "gold";
   }
 
+  if (value === "index") {
+    return "index";
+  }
+
+  if (value === "fund") {
+    return "fund";
+  }
+
   return "asx";
 }
 
@@ -357,7 +365,7 @@ function sanitizeHolding(raw: PortfolioHolding, source: DataSource, index: numbe
   return {
     id: sanitizeString(raw.id, `${source}-${index}-${Date.now()}`),
     source,
-    account: sanitizeString(raw.account, source === "super" ? "Superannuation" : source === "gold" ? "ABC Bullion" : "Brokerage"),
+    account: sanitizeString(raw.account, source === "super" ? "Superannuation" : source === "gold" ? "ABC Bullion" : source === "index" ? "Index Holdings" : source === "fund" ? "Mutual Funds" : "Brokerage"),
     ticker: sanitizeString(raw.ticker, "UNKNOWN").toUpperCase(),
     name: sanitizeString(raw.name, "Unnamed Holding"),
     units: sanitizeNumber(raw.units, 0),
@@ -365,7 +373,7 @@ function sanitizeHolding(raw: PortfolioHolding, source: DataSource, index: numbe
     prevClose: sanitizeNumber(raw.prevClose, sanitizeNumber(raw.price, 0)),
     value,
     costBase: sanitizeNumber(raw.costBase, value),
-    sector: sanitizeString(raw.sector, source === "super" ? "Super" : source === "gold" ? "Precious Metals" : "Equity"),
+    sector: sanitizeString(raw.sector, source === "super" ? "Super" : source === "gold" ? "Precious Metals" : source === "index" ? "Index" : source === "fund" ? "Mutual Fund" : "Equity"),
     reportDate: sanitizeDate(raw.reportDate),
     importedAt: sanitizeString(raw.importedAt, new Date().toISOString()),
   };
@@ -620,7 +628,7 @@ export function readPortfolioState(userId = LOCAL_USER_ID): PortfolioState {
 
 export function saveImport(userId: string, source: DataSource, holdings: PortfolioHolding[]): PortfolioState {
   const db = getDb();
-  const normalizedSource: DataSource = source === "super" ? "super" : source === "gold" ? "gold" : "asx";
+  const normalizedSource: DataSource = normalizeSource(source);
   const scopedPattern = userLikePattern(userId);
 
   const cleanedHoldings = holdings

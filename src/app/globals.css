@@ -885,6 +885,18 @@ tr:hover td {
   border-color: #ffdba0;
 }
 
+.source-badge.index {
+  background: linear-gradient(135deg, #6f8cff 0%, #4860db 100%);
+  color: #f8f9ff;
+  border-color: #9baafc;
+}
+
+.source-badge.fund {
+  background: linear-gradient(135deg, #64d8b2 0%, #2f9d7b 100%);
+  color: #071a14;
+  border-color: #8be3c8;
+}
+
 .account-chip {
   display: inline-flex;
   align-items: center;
