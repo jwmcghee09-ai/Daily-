@@ -581,8 +581,9 @@ export default function Home() {
     [todayMovers],
   );
   const todayPortfolioChangePct = todayPortfolioPreviousValue > 0 ? (todayPortfolioChangeAmount / todayPortfolioPreviousValue) * 100 : null;
-  const portfolioChangeLabel = "Latest Session Change";
-  const moverPeriodLabel = "Latest Session";
+  const asxSessionOpenNow = isAsxRegularSessionOpenNow();
+  const portfolioChangeLabel = asxSessionOpenNow ? "Today Change" : "Latest Session Change";
+  const moverPeriodLabel = asxSessionOpenNow ? "Today" : "Latest Session";
   const todayTopGainer = todayMovers.length > 0 ? todayMovers[0] : null;
   const todayTopLoser = todayMovers.length > 0 ? todayMovers[todayMovers.length - 1] : null;
 
@@ -2052,6 +2053,34 @@ function toRiskFlag(
   }
 
   return { label, value: `${value.toFixed(2)}${suffix}`, tone: "green", help };
+}
+
+function isAsxRegularSessionOpenNow(date = new Date()): boolean {
+  const parts = new Intl.DateTimeFormat("en-AU", {
+    timeZone: "Australia/Sydney",
+    weekday: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(date);
+
+  const weekday = parts.find((part) => part.type === "weekday")?.value || "";
+  const hour = Number.parseInt(parts.find((part) => part.type === "hour")?.value || "", 10);
+  const minute = Number.parseInt(parts.find((part) => part.type === "minute")?.value || "", 10);
+
+  if (!Number.isFinite(hour) || !Number.isFinite(minute)) {
+    return false;
+  }
+
+  if (weekday === "Sat" || weekday === "Sun") {
+    return false;
+  }
+
+  const minutesSinceMidnight = hour * 60 + minute;
+  const openMinutes = 10 * 60;
+  const closeMinutes = 16 * 60 + 10;
+
+  return minutesSinceMidnight >= openMinutes && minutesSinceMidnight < closeMinutes;
 }
 
 function formatCurrency(value: number): string {
