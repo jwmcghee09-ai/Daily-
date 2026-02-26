@@ -1307,6 +1307,14 @@ tr:hover td {
   .chart-card.chart-history {
     min-height: 420px;
   }
+
+  .upload-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .upload-grid .upload-card:last-child:nth-child(odd) {
+    width: 100%;
+  }
 }
 
 /* === SPECTRE Visual Refresh V2 === */
@@ -1350,7 +1358,13 @@ tr:hover td {
 }
 
 .upload-grid {
-  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.upload-grid .upload-card:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+  width: min(100%, 640px);
+  justify-self: center;
 }
 
 .upload-card {
