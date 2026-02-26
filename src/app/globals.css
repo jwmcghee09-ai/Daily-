@@ -1323,15 +1323,13 @@ tr:hover td {
   }
 
   .upload-grid {
-    max-width: none;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
 
-  .upload-grid .upload-card {
-    flex-basis: min(280px, 88vw);
-  }
-
-  .upload-grid .upload-card:last-child:nth-child(odd) {
-    width: auto;
+@media (max-width: 640px) {
+  .upload-grid {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -1376,25 +1374,30 @@ tr:hover td {
 }
 
 .upload-grid {
-  display: flex;
-  flex-wrap: nowrap;
-  gap: 14px;
-  overflow-x: auto;
-  padding-bottom: 6px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
   margin-inline: 0;
-  max-width: none;
-  justify-content: flex-start;
 }
 
 .upload-grid .upload-card {
-  flex: 0 0 260px;
+  min-width: 0;
+  width: 100%;
   justify-items: center;
   text-align: center;
+  padding: 14px 12px;
+  gap: 10px;
+}
+
+.upload-grid .upload-card h2 {
+  font-size: 0.98rem;
+  line-height: 1.2;
 }
 
 .upload-grid .upload-card p {
-  max-width: 42ch;
+  max-width: 32ch;
   margin-inline: auto;
+  font-size: 0.84rem;
+  line-height: 1.35;
 }
 
 .upload-grid .file-input,
@@ -1402,8 +1405,10 @@ tr:hover td {
   justify-self: center;
 }
 
-.upload-grid .upload-card:last-child:nth-child(odd) {
-  width: auto;
+.upload-grid .file-input span,
+.upload-grid .template-btn {
+  font-size: 0.84rem;
+  padding: 8px 10px;
 }
 
 .upload-card {
