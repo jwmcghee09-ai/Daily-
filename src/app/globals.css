@@ -752,6 +752,22 @@ body {
   z-index: 4;
 }
 
+.card-help-toggle {
+  position: absolute;
+}
+
+.card-help-toggle > summary {
+  list-style: none;
+}
+
+.card-help-toggle > summary::-webkit-details-marker {
+  display: none;
+}
+
+.card-help-toggle > summary.metric-help {
+  cursor: pointer;
+}
+
 .kpi-card.card-with-help p,
 .upload-card.card-with-help h2,
 .chart-card.card-with-help h2 {
@@ -790,6 +806,14 @@ body {
 
 .metric-help:hover .metric-help-popup,
 .metric-help:focus .metric-help-popup {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.card-help-toggle[open] .metric-help-popup,
+.card-help-toggle:focus-within .metric-help-popup,
+.card-help-toggle:hover .metric-help-popup {
   opacity: 1;
   visibility: visible;
   transform: translateY(0);
@@ -2476,4 +2500,17 @@ td {
   .kpi-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+}
+
+/* System dashboard card centering (does not affect landing page) */
+.shell .upload-grid > .upload-card,
+.shell .kpi-grid > .kpi-card,
+.shell .insights-grid > .insight-card,
+.shell .stress-grid > .stress-card,
+.shell .gold-grid > .gold-card,
+.shell .quality-grid > .quality-card,
+.shell .risk-grid > .risk-card {
+  max-width: 420px;
+  margin-inline: auto;
+  width: 100%;
 }

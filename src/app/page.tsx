@@ -2140,9 +2140,12 @@ function ChartCard({
 
 function InfoKey({ text }: { text: string }) {
   return (
-    <span className="metric-help card-help-corner" tabIndex={0} aria-label={text} title={text}>
-      i
-    </span>
+    <details className="card-help-toggle card-help-corner">
+      <summary className="metric-help" aria-label={text}>
+        i
+      </summary>
+      <span className="metric-help-popup">{text}</span>
+    </details>
   );
 }
 
