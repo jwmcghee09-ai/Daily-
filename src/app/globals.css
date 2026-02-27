@@ -2508,17 +2508,24 @@ td {
 .shell .insights-grid > .insight-card,
 .shell .stress-grid > .stress-card,
 .shell .gold-grid > .gold-card,
-.shell .quality-grid > .quality-card,
 .shell .risk-grid > .risk-card {
   max-width: 420px;
   margin-inline: auto;
   width: 100%;
 }
 
-/* Keep Data Quality rows centered, including partial last rows */
+/* Data Quality should fill available row width */
 .shell .quality-grid {
-  grid-template-columns: repeat(auto-fit, minmax(280px, 360px));
-  justify-content: center;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  justify-content: stretch;
+}
+
+.shell .quality-grid > .quality-card {
+  max-width: none;
+  margin-inline: 0;
+  width: 100%;
+  text-align: center;
+  justify-items: center;
 }
 
 /* Keep Risk Signals rows centered, including partial last rows */
