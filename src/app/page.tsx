@@ -1608,7 +1608,7 @@ export default function Home() {
     );
   }
   return (
-    <div className="shell">
+    <div className="shell dashboard-shell">
       <header className="hero">
         <div className="hero-copy">
           <h1><Image src="/spectre-wordmark-plain.svg" alt="SPECTRE" width={344} height={82} className="hero-wordmark-image" priority /></h1>
