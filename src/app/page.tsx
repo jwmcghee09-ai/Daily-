@@ -1642,6 +1642,7 @@ export default function Home() {
         <UploadCard
           title="Super Report (CSV)"
           description="Upload your superannuation holdings export."
+          help="Imports super holdings into account, ticker, units, price, value, and cost base fields."
           onUpload={(event) => onUpload(event, "super")}
           template={superTemplateCsv()}
           templateName="super-template.csv"
@@ -1650,6 +1651,7 @@ export default function Home() {
         <UploadCard
           title="ASX Report (CSV)"
           description="Upload brokerage or watchlist holdings export."
+          help="Imports ASX holdings and enables live quote refresh for pricing and daily portfolio movement."
           onUpload={(event) => onUpload(event, "asx")}
           template={asxTemplateCsv()}
           templateName="asx-template.csv"
@@ -1658,6 +1660,7 @@ export default function Home() {
         <UploadCard
           title="Index Report (CSV)"
           description="Upload index holdings or benchmark positions."
+          help="Imports index or benchmark positions so they are included in value, allocation, and risk views."
           onUpload={(event) => onUpload(event, "index")}
           template={indexTemplateCsv()}
           templateName="index-template.csv"
@@ -1666,6 +1669,7 @@ export default function Home() {
         <UploadCard
           title="Mutual Fund Report (CSV)"
           description="Upload managed fund or mutual fund holdings."
+          help="Imports managed fund holdings and includes them in total value, cost base, and portfolio analytics."
           onUpload={(event) => onUpload(event, "fund")}
           template={fundTemplateCsv()}
           templateName="mutual-fund-template.csv"
@@ -1674,6 +1678,7 @@ export default function Home() {
         <UploadCard
           title="ABC Bullion Report (Gold/Silver CSV)"
           description="Upload ABC Bullion gold/silver holdings. Put metal weight in units/weight (oz or grams)."
+          help="Imports gold and silver holdings by metal weight and tracks bullion exposure alongside other assets."
           onUpload={(event) => onUpload(event, "gold")}
           template={goldTemplateCsv()}
           templateName="bullion-template.csv"
@@ -1683,11 +1688,12 @@ export default function Home() {
 
       
       <section className="kpi-grid">
-        <KpiCard label="Total Portfolio" value={formatCurrency(metrics.totalValue)} />
-        <KpiCard label="Cost Base" value={formatCurrency(metrics.totalCost)} />
+        <KpiCard label="Total Portfolio" value={formatCurrency(metrics.totalValue)} help="Current market value across all imported holdings." />
+        <KpiCard label="Cost Base" value={formatCurrency(metrics.totalCost)} help="Total invested amount from imported cost-base values." />
         <KpiCard
           label="Unrealized P/L"
           value={(metrics.pnl >= 0 ? "▲ " : "▼ ") + formatCurrency(Math.abs(metrics.pnl)) + " (" + formatPercent(metrics.pnlPct) + ")"}
+          help="Unrealized profit or loss equals current portfolio value minus cost base."
           tone={metrics.pnl >= 0 ? "positive" : "negative"}
         />
         <KpiCard
@@ -1697,6 +1703,7 @@ export default function Home() {
               ? (todayPortfolioChangeAmount >= 0 ? "▲ " : "▼ ") + formatCurrency(Math.abs(todayPortfolioChangeAmount)) + " (" + formatPercent(todayPortfolioChangePct) + ")"
               : "Need live prices"
           }
+          help="Change since the first Sydney-time snapshot today. Resets at midnight Sydney time."
           tone={todayPortfolioChangePct == null ? "neutral" : todayPortfolioChangeAmount >= 0 ? "positive" : "negative"}
         />
         <KpiCard
@@ -1708,6 +1715,7 @@ export default function Home() {
                 ? "Estimating from Yahoo..."
                 : "Need 20+ daily snapshots"
           }
+          help="Estimated one-day loss threshold at 95% confidence, based on the selected risk window."
         />
         <KpiCard
           label={"1-Day ES (95%, " + riskWindow + ")"}
@@ -1718,6 +1726,7 @@ export default function Home() {
                 ? "Estimating from Yahoo..."
                 : "Need 20+ daily snapshots"
           }
+          help="Expected Shortfall is the average loss on the worst 5% of days in the selected window."
         />
       </section>
 
@@ -1903,13 +1912,13 @@ export default function Home() {
 
       
       <section className="chart-grid">
-        <ChartCard title="Account Allocation" tone="portfolio">
+        <ChartCard title="Account Allocation" tone="portfolio" help="Value split by account. Percentages are based on total portfolio value.">
           <PieAllocation data={metrics.accountAllocation} palette={PORTFOLIO_COLORS} />
         </ChartCard>
-        <ChartCard title="Sector Allocation" tone="exposure">
+        <ChartCard title="Sector Allocation" tone="exposure" help="Value concentration by sector/category from your imported holdings.">
           <PieAllocation data={metrics.sectorAllocation} palette={EXPOSURE_COLORS} />
         </ChartCard>
-        <ChartCard title="Top Holdings" tone="holdings">
+        <ChartCard title="Top Holdings" tone="holdings" help="Largest positions ranked by current market value.">
           <ResponsiveContainer width="100%" height={420}>
             <BarChart data={metrics.topHoldings.map((item) => ({ name: item.ticker, value: item.value }))} margin={{ top: 14, right: 24, left: 24, bottom: 8 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#303036" />
@@ -1924,7 +1933,7 @@ export default function Home() {
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
-        <ChartCard title="Portfolio Snapshot History" tone="history">
+        <ChartCard title="Portfolio Snapshot History" tone="history" help="Total portfolio history from saved snapshots at import and live-price refresh times.">
           <ResponsiveContainer width="100%" height={420}>
             <AreaChart data={portfolioHistorySeries} margin={{ top: 14, right: 24, left: 24, bottom: 8 }}>
               <defs>
@@ -2029,6 +2038,7 @@ export default function Home() {
 function UploadCard({
   title,
   description,
+  help,
   onUpload,
   template,
   templateName,
@@ -2036,6 +2046,7 @@ function UploadCard({
 }: {
   title: string;
   description: string;
+  help?: string;
   onUpload: (event: ChangeEvent<HTMLInputElement>) => void;
   template: string;
   templateName: string;
@@ -2052,7 +2063,8 @@ function UploadCard({
   };
 
   return (
-    <article className="upload-card">
+    <article className="upload-card card-with-help">
+      {help ? <InfoKey text={help} /> : null}
       <h2>{title}</h2>
       <p>{description}</p>
       <label className="file-input">
@@ -2069,14 +2081,17 @@ function UploadCard({
 function KpiCard({
   label,
   value,
+  help,
   tone = "neutral",
 }: {
   label: string;
   value: string;
+  help?: string;
   tone?: "neutral" | "positive" | "negative";
 }) {
   return (
-    <article className={"kpi-card" + (tone !== "neutral" ? " kpi-" + tone : "")}>
+    <article className={"kpi-card card-with-help" + (tone !== "neutral" ? " kpi-" + tone : "")}>
+      {help ? <InfoKey text={help} /> : null}
       <p>{label}</p>
       <strong className={tone}>{value}</strong>
     </article>
@@ -2103,12 +2118,31 @@ function PieAllocation({ data, palette }: { data: Array<{ name: string; value: n
   );
 }
 
-function ChartCard({ title, children, tone = "default" }: { title: string; children: ReactNode; tone?: "default" | "portfolio" | "exposure" | "history" | "holdings" }) {
+function ChartCard({
+  title,
+  children,
+  tone = "default",
+  help,
+}: {
+  title: string;
+  children: ReactNode;
+  tone?: "default" | "portfolio" | "exposure" | "history" | "holdings";
+  help?: string;
+}) {
   return (
-    <article className={"chart-card chart-" + tone}>
+    <article className={"chart-card chart-" + tone + " card-with-help"}>
+      {help ? <InfoKey text={help} /> : null}
       <h2>{title}</h2>
       {children}
     </article>
+  );
+}
+
+function InfoKey({ text }: { text: string }) {
+  return (
+    <span className="metric-help card-help-corner" tabIndex={0} aria-label={text} title={text}>
+      i
+    </span>
   );
 }
 
