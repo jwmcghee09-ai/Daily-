@@ -150,16 +150,25 @@ interface HistoricalRiskEstimatePayload {
   source: "yahoo_estimate";
   lessAccurateThanSnapshots: true;
   note: string;
+  benchmarkSymbol: string;
+  benchmarkName: string;
   riskWindow: RiskWindow;
   pointsTarget: number;
   pointsUsed: number;
   returnsCount: number;
+  benchmarkPointsUsed: number;
   usedTickers: string[];
   failedTickers: string[];
   volatilityAnnualPct: number | null;
   maxDrawdownPct: number | null;
   var95Pct: number | null;
   var95Amount: number | null;
+  cvar95Pct: number | null;
+  cvar95Amount: number | null;
+  betaToBenchmark: number | null;
+  trackingErrorAnnualPct: number | null;
+  correlationToBenchmark: number | null;
+  outlierReturnsRemoved: number;
 }
 
 interface SessionUser {
@@ -536,7 +545,11 @@ export default function Home() {
   const effectiveVolatilityAnnualPct = metrics.volatilityAnnualPct ?? historicalRiskEstimate?.volatilityAnnualPct ?? null;
   const effectiveVar95Pct = metrics.var95Pct ?? historicalRiskEstimate?.var95Pct ?? null;
   const effectiveVar95Amount = metrics.var95Amount ?? historicalRiskEstimate?.var95Amount ?? null;
+  const effectiveCvar95Pct = metrics.cvar95Pct ?? historicalRiskEstimate?.cvar95Pct ?? null;
+  const effectiveCvar95Amount = metrics.cvar95Amount ?? historicalRiskEstimate?.cvar95Amount ?? null;
   const effectiveMaxDrawdownPct = metrics.maxDrawdownPct ?? historicalRiskEstimate?.maxDrawdownPct ?? null;
+  const benchmarkBeta = historicalRiskEstimate?.betaToBenchmark ?? null;
+  const benchmarkTrackingErrorAnnualPct = historicalRiskEstimate?.trackingErrorAnnualPct ?? null;
   const usingYahooFallback = metrics.var95Amount == null && historicalRiskEstimate != null;
 
   const todayMovers = useMemo<TodayMover[]>(() => {
@@ -598,6 +611,9 @@ export default function Home() {
 
     const dailySnapshotDates = new Set(metrics.history.map((snapshot) => snapshot.date.slice(0, 10)));
     const latestSnapshotAt = metrics.history.length > 0 ? metrics.history[metrics.history.length - 1].date : "";
+    const riskReturnsUsed = usingYahooFallback ? (historicalRiskEstimate?.returnsCount ?? 0) : metrics.dailyReturns.length;
+    const outliersFiltered = usingYahooFallback ? (historicalRiskEstimate?.outlierReturnsRemoved ?? 0) : metrics.returnOutliersRemoved;
+    const benchmarkOverlap = usingYahooFallback ? (historicalRiskEstimate?.benchmarkPointsUsed ?? 0) : null;
 
     return [
       {
@@ -620,8 +636,23 @@ export default function Home() {
         value: usingYahooFallback ? "Yahoo estimate fallback" : "Your snapshots",
         status: usingYahooFallback ? "warn" : "good",
       },
+      {
+        label: "Risk returns used",
+        value: String(riskReturnsUsed),
+        status: riskReturnsUsed >= 20 ? "good" : "warn",
+      },
+      {
+        label: "Outliers filtered",
+        value: String(outliersFiltered),
+        status: outliersFiltered <= 2 ? "good" : "warn",
+      },
+      {
+        label: "Benchmark overlap days",
+        value: benchmarkOverlap == null ? "N/A" : String(benchmarkOverlap),
+        status: benchmarkOverlap == null || benchmarkOverlap >= 20 ? "good" : "warn",
+      },
     ] as const;
-  }, [metrics.history, state.holdings, usingYahooFallback]);
+  }, [historicalRiskEstimate?.benchmarkPointsUsed, historicalRiskEstimate?.outlierReturnsRemoved, historicalRiskEstimate?.returnsCount, metrics.dailyReturns.length, metrics.history, metrics.returnOutliersRemoved, state.holdings, usingYahooFallback]);
 
   const riskFlags = useMemo<RiskFlag[]>(() => {
     return [
@@ -673,8 +704,32 @@ export default function Home() {
         "%",
         "95% historical VaR using the 5th percentile of daily returns in the selected window.",
       ),
+      toRiskFlag(
+        "1-day Expected Shortfall 95",
+        effectiveCvar95Pct,
+        1.8,
+        3.5,
+        "%",
+        "Average loss within the worst 5% of daily returns in the selected window.",
+      ),
+      toRiskFlag(
+        "Beta vs ASX 200",
+        benchmarkBeta,
+        1.1,
+        1.35,
+        "",
+        "Sensitivity of portfolio returns to ASX 200 returns using date-aligned daily data.",
+      ),
+      toRiskFlag(
+        "Tracking error (annualized)",
+        benchmarkTrackingErrorAnnualPct,
+        6,
+        12,
+        "%",
+        "Std dev of (portfolio return - ASX 200 return), annualized from daily data.",
+      ),
     ].filter((flag) => flag.value !== "N/A");
-  }, [effectiveMaxDrawdownPct, effectiveVar95Pct, effectiveVolatilityAnnualPct, metrics.hhi, metrics.largestAccountPct, metrics.top3ConcentrationPct]);
+  }, [benchmarkBeta, benchmarkTrackingErrorAnnualPct, effectiveCvar95Pct, effectiveMaxDrawdownPct, effectiveVar95Pct, effectiveVolatilityAnnualPct, metrics.hhi, metrics.largestAccountPct, metrics.top3ConcentrationPct]);
 
   const latestReportDate = useMemo(() => {
     if (state.holdings.length === 0) {
@@ -1639,6 +1694,16 @@ export default function Home() {
                 : "Need 20+ daily snapshots"
           }
         />
+        <KpiCard
+          label={"1-Day ES (95%, " + riskWindow + ")"}
+          value={
+            effectiveCvar95Amount != null
+              ? `${formatCurrency(effectiveCvar95Amount)} (${formatPercent(effectiveCvar95Pct)})${metrics.cvar95Amount == null ? " • Yahoo estimate" : ""}`
+              : loadingHistoricalEstimate && metrics.cvar95Amount == null
+                ? "Estimating from Yahoo..."
+                : "Need 20+ daily snapshots"
+          }
+        />
       </section>
 
       
@@ -1798,12 +1863,12 @@ export default function Home() {
         </p>
         {usingYahooFallback ? (
           <p className="estimate-note">
-            {historicalRiskEstimate.note} ({historicalRiskEstimate.pointsUsed}/{historicalRiskEstimate.pointsTarget} points, {historicalRiskEstimate.usedTickers.length} tickers)
+            {historicalRiskEstimate.note} ({historicalRiskEstimate.pointsUsed}/{historicalRiskEstimate.pointsTarget} points, {historicalRiskEstimate.usedTickers.length} tickers, {historicalRiskEstimate.benchmarkPointsUsed} benchmark overlap days)
           </p>
         ) : null}
         <div className="risk-grid">
           {riskFlags.length === 0 ? (
-            <div className="empty">Import reports over time to unlock drawdown/volatility/VaR metrics.</div>
+            <div className="empty">Import reports over time to unlock drawdown/volatility/VaR/ES metrics.</div>
           ) : (
             riskFlags.map((flag) => (
               <article key={flag.label} className={`risk-card ${flag.tone}`}>

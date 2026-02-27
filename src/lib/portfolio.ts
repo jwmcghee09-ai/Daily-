@@ -51,10 +51,14 @@ export interface PortfolioMetrics {
   sectorAllocation: AllocationItem[];
   history: PortfolioSnapshot[];
   dailyReturns: number[];
+  rawDailyReturnsCount: number;
+  returnOutliersRemoved: number;
   volatilityAnnualPct: number | null;
   maxDrawdownPct: number | null;
   var95Pct: number | null;
   var95Amount: number | null;
+  cvar95Pct: number | null;
+  cvar95Amount: number | null;
   riskWindow: RiskWindow;
   riskPointsUsed: number;
   riskStartDate: string | null;
@@ -408,13 +412,18 @@ export function computeMetrics(
 
   const dailyHistory = Array.from(latestSnapshotByDay.values()).sort((a, b) => a.date.localeCompare(b.date));
   const riskHistory = applyRiskWindow(dailyHistory, riskWindow);
-  const dailyReturns = calculateReturns(riskHistory.map((item) => item.value));
+  const rawDailyReturns = calculateReturns(riskHistory.map((item) => item.value));
+  const dailyReturns = cleanReturnsForRisk(rawDailyReturns);
+  const returnOutliersRemoved = Math.max(0, rawDailyReturns.length - dailyReturns.length);
   const volatilityAnnualPct = dailyReturns.length >= 2 ? stdDev(dailyReturns) * Math.sqrt(252) * 100 : null;
   const maxDrawdownPct = riskHistory.length >= 2 ? calcMaxDrawdown(riskHistory.map((item) => item.value)) * 100 : null;
 
   const var95Raw = dailyReturns.length >= 20 ? percentile(dailyReturns, 0.05) : null;
   const var95Pct = var95Raw != null ? Math.max(0, -var95Raw * 100) : null;
   const var95Amount = var95Pct != null ? (var95Pct / 100) * totalValue : null;
+  const cvar95Raw = dailyReturns.length >= 20 ? expectedShortfall95(dailyReturns) : null;
+  const cvar95Pct = cvar95Raw != null ? Math.max(0, -cvar95Raw * 100) : null;
+  const cvar95Amount = cvar95Pct != null ? (cvar95Pct / 100) * totalValue : null;
 
   return {
     totalValue,
@@ -429,10 +438,14 @@ export function computeMetrics(
     sectorAllocation,
     history,
     dailyReturns,
+    rawDailyReturnsCount: rawDailyReturns.length,
+    returnOutliersRemoved,
     volatilityAnnualPct,
     maxDrawdownPct,
     var95Pct,
     var95Amount,
+    cvar95Pct,
+    cvar95Amount,
     riskWindow,
     riskPointsUsed: riskHistory.length,
     riskStartDate: riskHistory.length > 0 ? riskHistory[0].date : null,
@@ -502,6 +515,26 @@ function calculateReturns(values: number[]): number[] {
   return returns;
 }
 
+function cleanReturnsForRisk(returns: number[]): number[] {
+  const finiteReturns = returns.filter((value) => Number.isFinite(value));
+  if (finiteReturns.length <= 2) {
+    return finiteReturns;
+  }
+
+  // Remove extreme one-day moves that are usually bad input data, not real market behavior.
+  const withoutSpikes = finiteReturns.filter((value) => Math.abs(value) <= 0.4);
+  if (withoutSpikes.length <= 2) {
+    return withoutSpikes;
+  }
+
+  // Winsorize long series to reduce sensitivity to tail outliers in small, noisy portfolios.
+  if (withoutSpikes.length >= 30) {
+    return winsorize(withoutSpikes, 0.01, 0.99);
+  }
+
+  return withoutSpikes;
+}
+
 function calcMaxDrawdown(values: number[]): number {
   let peak = values[0];
   let maxDrawdown = 0;
@@ -535,9 +568,42 @@ function percentile(values: number[], p: number): number {
 }
 
 function stdDev(values: number[]): number {
+  if (values.length < 2) {
+    return 0;
+  }
+
   const mean = sum(values) / values.length;
   const variance = sum(values.map((value) => (value - mean) ** 2)) / (values.length - 1);
   return Math.sqrt(variance);
+}
+
+function expectedShortfall95(returns: number[]): number | null {
+  if (returns.length < 20) {
+    return null;
+  }
+
+  const cutoff = percentile(returns, 0.05);
+  const tail = returns.filter((value) => value <= cutoff);
+  if (tail.length === 0) {
+    return null;
+  }
+
+  return sum(tail) / tail.length;
+}
+
+function winsorize(values: number[], lowerP: number, upperP: number): number[] {
+  const lower = percentile(values, lowerP);
+  const upper = percentile(values, upperP);
+
+  return values.map((value) => {
+    if (value < lower) {
+      return lower;
+    }
+    if (value > upper) {
+      return upper;
+    }
+    return value;
+  });
 }
 
 function sum(values: number[]): number {

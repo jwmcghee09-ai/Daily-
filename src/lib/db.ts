@@ -84,10 +84,16 @@ interface YahooChartIndicator {
   close?: Array<number | null>;
 }
 
+interface YahooAdjCloseIndicator {
+  adjclose?: Array<number | null>;
+}
+
 interface YahooChartResult {
   meta?: YahooChartMeta;
+  timestamp?: Array<number | null>;
   indicators?: {
     quote?: YahooChartIndicator[];
+    adjclose?: YahooAdjCloseIndicator[];
   };
 }
 
@@ -100,6 +106,16 @@ interface YahooChartResponse {
 interface AsxQuoteData {
   price: number | null;
   prevClose: number | null;
+}
+
+interface DatedPricePoint {
+  date: string;
+  close: number;
+}
+
+interface DatedReturnPoint {
+  date: string;
+  value: number;
 }
 
 interface UserRow {
@@ -189,16 +205,25 @@ export interface HistoricalRiskEstimateResult {
   source: "yahoo_estimate";
   lessAccurateThanSnapshots: true;
   note: string;
+  benchmarkSymbol: string;
+  benchmarkName: string;
   riskWindow: RiskWindow;
   pointsTarget: number;
   pointsUsed: number;
   returnsCount: number;
+  benchmarkPointsUsed: number;
   usedTickers: string[];
   failedTickers: string[];
   volatilityAnnualPct: number | null;
   maxDrawdownPct: number | null;
   var95Pct: number | null;
   var95Amount: number | null;
+  cvar95Pct: number | null;
+  cvar95Amount: number | null;
+  betaToBenchmark: number | null;
+  trackingErrorAnnualPct: number | null;
+  correlationToBenchmark: number | null;
+  outlierReturnsRemoved: number;
 }
 
 const RISK_WINDOW_SETTINGS: Record<RiskWindow, { label: string; yahooRange: string; maxPoints: number }> = {
@@ -503,11 +528,26 @@ function extractAsxQuote(result: YahooChartResult | undefined): AsxQuoteData {
   };
 }
 
-function extractCloseSeries(result: YahooChartResult | undefined): number[] {
+function extractDatedCloseSeries(result: YahooChartResult | undefined): DatedPricePoint[] {
+  const timestamps = result?.timestamp ?? [];
+  const adjustedCloses = result?.indicators?.adjclose?.[0]?.adjclose ?? [];
   const closes = result?.indicators?.quote?.[0]?.close ?? [];
-  return closes
-    .map((value) => sanitizeNumber(value, Number.NaN))
-    .filter((value) => Number.isFinite(value) && value > 0);
+  const preferredSeries = adjustedCloses.length > 0 ? adjustedCloses : closes;
+  const pointCount = Math.min(timestamps.length, preferredSeries.length);
+  const points: DatedPricePoint[] = [];
+
+  for (let i = 0; i < pointCount; i += 1) {
+    const timestamp = Number(timestamps[i]);
+    const close = sanitizeNumber(preferredSeries[i], Number.NaN);
+    if (!Number.isFinite(timestamp) || timestamp <= 0 || !Number.isFinite(close) || close <= 0) {
+      continue;
+    }
+
+    const date = new Date(timestamp * 1000).toISOString().slice(0, 10);
+    points.push({ date, close });
+  }
+
+  return points;
 }
 
 async function fetchAsxQuoteFromYahoo(ticker: string): Promise<AsxQuoteData | null> {
@@ -539,8 +579,7 @@ async function fetchAsxQuoteFromYahoo(ticker: string): Promise<AsxQuoteData | nu
   }
 }
 
-async function fetchAsxSeriesFromYahoo(ticker: string, range: string): Promise<number[] | null> {
-  const symbol = toYahooSymbol(ticker);
+async function fetchYahooSeriesBySymbol(symbol: string, range: string): Promise<DatedPricePoint[] | null> {
   if (!symbol) {
     return null;
   }
@@ -562,25 +601,59 @@ async function fetchAsxSeriesFromYahoo(ticker: string, range: string): Promise<n
     }
 
     const payload = (await response.json()) as YahooChartResponse;
-    const series = extractCloseSeries(payload.chart?.result?.[0]);
+    const series = extractDatedCloseSeries(payload.chart?.result?.[0]);
     return series.length >= 2 ? series : null;
   } catch {
     return null;
   }
 }
 
-function calculateReturnsFromPrices(prices: number[]): number[] {
-  const returns: number[] = [];
+async function fetchAsxSeriesFromYahoo(ticker: string, range: string): Promise<DatedPricePoint[] | null> {
+  const symbol = toYahooSymbol(ticker);
+  if (!symbol) {
+    return null;
+  }
+
+  return fetchYahooSeriesBySymbol(symbol, range);
+}
+
+async function fetchAsx200SeriesFromYahoo(range: string): Promise<DatedPricePoint[] | null> {
+  return fetchYahooSeriesBySymbol("^AXJO", range);
+}
+
+function calculateReturnsFromPrices(prices: DatedPricePoint[]): DatedReturnPoint[] {
+  const returns: DatedReturnPoint[] = [];
 
   for (let i = 1; i < prices.length; i += 1) {
-    const prev = prices[i - 1];
-    const current = prices[i];
-    if (prev > 0 && Number.isFinite(prev) && Number.isFinite(current)) {
-      returns.push(current / prev - 1);
+    const prev = prices[i - 1]?.close;
+    const current = prices[i]?.close;
+    const date = prices[i]?.date;
+
+    if (prev > 0 && Number.isFinite(prev) && Number.isFinite(current) && date) {
+      returns.push({ date, value: current / prev - 1 });
     }
   }
 
   return returns;
+}
+
+function cleanReturnsForRisk(returns: DatedReturnPoint[]): DatedReturnPoint[] {
+  const finiteReturns = returns.filter((point) => Number.isFinite(point.value));
+  if (finiteReturns.length <= 2) {
+    return finiteReturns;
+  }
+
+  const withoutSpikes = finiteReturns.filter((point) => Math.abs(point.value) <= 0.4);
+  if (withoutSpikes.length <= 2) {
+    return withoutSpikes;
+  }
+
+  if (withoutSpikes.length >= 30) {
+    const winsorized = winsorize(withoutSpikes.map((point) => point.value), 0.01, 0.99);
+    return withoutSpikes.map((point, index) => ({ date: point.date, value: winsorized[index] }));
+  }
+
+  return withoutSpikes;
 }
 
 function percentile(values: number[], p: number): number {
@@ -605,6 +678,71 @@ function stdDev(values: number[]): number {
   const mean = values.reduce((acc, value) => acc + value, 0) / values.length;
   const variance = values.reduce((acc, value) => acc + (value - mean) ** 2, 0) / (values.length - 1);
   return Math.sqrt(variance);
+}
+
+function expectedShortfall95(returns: number[]): number | null {
+  if (returns.length < 20) {
+    return null;
+  }
+
+  const cutoff = percentile(returns, 0.05);
+  const tail = returns.filter((value) => value <= cutoff);
+  if (tail.length === 0) {
+    return null;
+  }
+
+  return tail.reduce((acc, value) => acc + value, 0) / tail.length;
+}
+
+function winsorize(values: number[], lowerP: number, upperP: number): number[] {
+  const lower = percentile(values, lowerP);
+  const upper = percentile(values, upperP);
+
+  return values.map((value) => {
+    if (value < lower) {
+      return lower;
+    }
+    if (value > upper) {
+      return upper;
+    }
+    return value;
+  });
+}
+
+function intersectReturnDates(returnsByTicker: Map<string, Map<string, number>>): string[] {
+  let commonDates: Set<string> | null = null;
+
+  for (const returnMap of returnsByTicker.values()) {
+    const dateSet = new Set(returnMap.keys());
+    if (commonDates == null) {
+      commonDates = dateSet;
+      continue;
+    }
+
+    commonDates = new Set(Array.from(commonDates).filter((date) => dateSet.has(date)));
+  }
+
+  if (commonDates == null) {
+    return [];
+  }
+
+  return Array.from(commonDates).sort((a, b) => a.localeCompare(b));
+}
+
+function covariance(a: number[], b: number[]): number | null {
+  if (a.length < 2 || b.length < 2 || a.length !== b.length) {
+    return null;
+  }
+
+  const meanA = a.reduce((acc, value) => acc + value, 0) / a.length;
+  const meanB = b.reduce((acc, value) => acc + value, 0) / b.length;
+  let acc = 0;
+
+  for (let i = 0; i < a.length; i += 1) {
+    acc += (a[i] - meanA) * (b[i] - meanB);
+  }
+
+  return acc / (a.length - 1);
 }
 
 function calcMaxDrawdownFromReturns(returns: number[]): number {
@@ -857,6 +995,8 @@ export async function estimateHistoricalRiskFromYahoo(
   const db = getDb();
   const scopedPattern = userLikePattern(userId);
   const windowSettings = RISK_WINDOW_SETTINGS[riskWindow];
+  const benchmarkSymbol = "^AXJO";
+  const benchmarkName = "ASX 200";
 
   const rows = db
     .prepare(`
@@ -873,16 +1013,25 @@ export async function estimateHistoricalRiskFromYahoo(
       source: "yahoo_estimate",
       lessAccurateThanSnapshots: true,
       note: "Estimated from Yahoo historical stock performance. This is less accurate than your own portfolio snapshot history. No holdings available yet.",
+      benchmarkSymbol,
+      benchmarkName,
       riskWindow,
       pointsTarget: windowSettings.maxPoints,
       pointsUsed: 0,
       returnsCount: 0,
+      benchmarkPointsUsed: 0,
       usedTickers: [],
       failedTickers: [],
       volatilityAnnualPct: null,
       maxDrawdownPct: null,
       var95Pct: null,
       var95Amount: null,
+      cvar95Pct: null,
+      cvar95Amount: null,
+      betaToBenchmark: null,
+      trackingErrorAnnualPct: null,
+      correlationToBenchmark: null,
+      outlierReturnsRemoved: 0,
     };
   }
 
@@ -897,8 +1046,9 @@ export async function estimateHistoricalRiskFromYahoo(
     valueByTicker.set(ticker, (valueByTicker.get(ticker) || 0) + value);
   }
 
-  const returnsByTicker = new Map<string, number[]>();
+  const returnsByTicker = new Map<string, Map<string, number>>();
   const failedTickers: string[] = [];
+  let outlierReturnsRemoved = 0;
 
   for (const ticker of Array.from(valueByTicker.keys())) {
     const series = await fetchAsxSeriesFromYahoo(ticker, windowSettings.yahooRange);
@@ -907,9 +1057,18 @@ export async function estimateHistoricalRiskFromYahoo(
       continue;
     }
 
-    const returns = calculateReturnsFromPrices(series);
+    const rawReturns = calculateReturnsFromPrices(series);
+    const returns = cleanReturnsForRisk(rawReturns);
+    outlierReturnsRemoved += Math.max(0, rawReturns.length - returns.length);
     if (returns.length >= 1) {
-      returnsByTicker.set(ticker, returns);
+      returnsByTicker.set(
+        ticker,
+        new Map(
+          returns
+            .filter((point) => point.date.length > 0 && Number.isFinite(point.value))
+            .map((point) => [point.date, point.value]),
+        ),
+      );
     } else {
       failedTickers.push(ticker);
     }
@@ -920,55 +1079,73 @@ export async function estimateHistoricalRiskFromYahoo(
       source: "yahoo_estimate",
       lessAccurateThanSnapshots: true,
       note: "Estimated from Yahoo historical stock performance. This is less accurate than your own portfolio snapshot history. Could not fetch enough history for current tickers.",
+      benchmarkSymbol,
+      benchmarkName,
       riskWindow,
       pointsTarget: windowSettings.maxPoints,
       pointsUsed: 0,
       returnsCount: 0,
+      benchmarkPointsUsed: 0,
       usedTickers: [],
       failedTickers,
       volatilityAnnualPct: null,
       maxDrawdownPct: null,
       var95Pct: null,
       var95Amount: null,
+      cvar95Pct: null,
+      cvar95Amount: null,
+      betaToBenchmark: null,
+      trackingErrorAnnualPct: null,
+      correlationToBenchmark: null,
+      outlierReturnsRemoved,
     };
   }
 
   const usedTickers = Array.from(returnsByTicker.keys());
   const usedValueTotal = usedTickers.reduce((acc, ticker) => acc + (valueByTicker.get(ticker) || 0), 0);
 
-  const pointsAvailable = usedTickers
-    .map((ticker) => returnsByTicker.get(ticker)?.length || 0)
-    .reduce((min, len) => Math.min(min, len), Number.MAX_SAFE_INTEGER);
-
-  const pointsUsed = Math.min(pointsAvailable, windowSettings.maxPoints);
+  const commonDates = intersectReturnDates(returnsByTicker);
+  const selectedDates = commonDates.slice(-windowSettings.maxPoints);
+  const pointsUsed = selectedDates.length;
 
   if (!Number.isFinite(pointsUsed) || pointsUsed < 2) {
     return {
       source: "yahoo_estimate",
       lessAccurateThanSnapshots: true,
-      note: "Estimated from Yahoo historical stock performance. This is less accurate than your own portfolio snapshot history. Not enough common return points available.",
+      note: "Estimated from Yahoo historical stock performance. This is less accurate than your own portfolio snapshot history. Not enough date-aligned return points available.",
+      benchmarkSymbol,
+      benchmarkName,
       riskWindow,
       pointsTarget: windowSettings.maxPoints,
       pointsUsed: 0,
       returnsCount: 0,
+      benchmarkPointsUsed: 0,
       usedTickers,
       failedTickers,
       volatilityAnnualPct: null,
       maxDrawdownPct: null,
       var95Pct: null,
       var95Amount: null,
+      cvar95Pct: null,
+      cvar95Amount: null,
+      betaToBenchmark: null,
+      trackingErrorAnnualPct: null,
+      correlationToBenchmark: null,
+      outlierReturnsRemoved,
     };
   }
 
   const portfolioReturns: number[] = [];
 
-  for (let i = 0; i < pointsUsed; i += 1) {
+  for (const date of selectedDates) {
     let dayReturn = 0;
 
     for (const ticker of usedTickers) {
-      const tickerReturns = returnsByTicker.get(ticker) || [];
-      const pointIndex = tickerReturns.length - pointsUsed + i;
-      const r = tickerReturns[pointIndex];
+      const tickerReturns = returnsByTicker.get(ticker);
+      const r = tickerReturns?.get(date);
+      if (r == null || !Number.isFinite(r)) {
+        continue;
+      }
       const weight = usedValueTotal > 0 ? (valueByTicker.get(ticker) || 0) / usedValueTotal : 0;
       dayReturn += weight * r;
     }
@@ -982,9 +1159,63 @@ export async function estimateHistoricalRiskFromYahoo(
   const var95Raw = portfolioReturns.length >= 20 ? percentile(portfolioReturns, 0.05) : null;
   const var95Pct = var95Raw != null ? Math.max(0, -var95Raw * 100) : null;
   const var95Amount = var95Pct != null ? (var95Pct / 100) * usedValueTotal : null;
+  const cvar95Raw = portfolioReturns.length >= 20 ? expectedShortfall95(portfolioReturns) : null;
+  const cvar95Pct = cvar95Raw != null ? Math.max(0, -cvar95Raw * 100) : null;
+  const cvar95Amount = cvar95Pct != null ? (cvar95Pct / 100) * usedValueTotal : null;
+  let benchmarkPointsUsed = 0;
+  let betaToBenchmark: number | null = null;
+  let trackingErrorAnnualPct: number | null = null;
+  let correlationToBenchmark: number | null = null;
+
+  const benchmarkSeries = await fetchAsx200SeriesFromYahoo(windowSettings.yahooRange);
+  if (benchmarkSeries && benchmarkSeries.length >= 2) {
+    const rawBenchmarkReturns = calculateReturnsFromPrices(benchmarkSeries);
+    const cleanedBenchmarkReturns = cleanReturnsForRisk(rawBenchmarkReturns);
+    const benchmarkMap = new Map(cleanedBenchmarkReturns.map((point) => [point.date, point.value]));
+    const portfolioReturnByDate = new Map(selectedDates.map((date, index) => [date, portfolioReturns[index]]));
+    const benchmarkAlignedDates = selectedDates.filter((date) => benchmarkMap.has(date));
+    const portfolioAlignedReturns: number[] = [];
+    const benchmarkAlignedReturns: number[] = [];
+
+    for (const date of benchmarkAlignedDates) {
+      const benchmarkReturn = benchmarkMap.get(date);
+      const portfolioReturn = portfolioReturnByDate.get(date);
+
+      if (
+        benchmarkReturn == null ||
+        portfolioReturn == null ||
+        !Number.isFinite(benchmarkReturn) ||
+        !Number.isFinite(portfolioReturn)
+      ) {
+        continue;
+      }
+
+      portfolioAlignedReturns.push(portfolioReturn);
+      benchmarkAlignedReturns.push(benchmarkReturn);
+    }
+
+    benchmarkPointsUsed = portfolioAlignedReturns.length;
+
+    if (benchmarkPointsUsed >= 2) {
+      const cov = covariance(portfolioAlignedReturns, benchmarkAlignedReturns);
+      const benchmarkVar = stdDev(benchmarkAlignedReturns) ** 2;
+      const portfolioStd = stdDev(portfolioAlignedReturns);
+      const benchmarkStd = stdDev(benchmarkAlignedReturns);
+      const activeReturns = portfolioAlignedReturns.map(
+        (value, index) => value - benchmarkAlignedReturns[index],
+      );
+
+      betaToBenchmark = cov != null && benchmarkVar > 0 ? cov / benchmarkVar : null;
+      trackingErrorAnnualPct = activeReturns.length >= 2 ? stdDev(activeReturns) * Math.sqrt(252) * 100 : null;
+      correlationToBenchmark =
+        cov != null && portfolioStd > 0 && benchmarkStd > 0
+          ? cov / (portfolioStd * benchmarkStd)
+          : null;
+    }
+  }
 
   const noteParts = [
-    `Estimated from Yahoo historical stock performance and current portfolio weights (${windowSettings.label} window).`,
+    `Estimated from Yahoo adjusted-close history with date-aligned returns and current portfolio weights (${windowSettings.label} window).`,
     "This is less accurate than your own portfolio snapshot history.",
   ];
 
@@ -996,20 +1227,37 @@ export async function estimateHistoricalRiskFromYahoo(
     noteParts.push(`Missing history for: ${failedTickers.join(", ")}` + ".");
   }
 
+  if (outlierReturnsRemoved > 0) {
+    noteParts.push(`Filtered ${outlierReturnsRemoved} extreme daily return outlier(s).`);
+  }
+
+  if (benchmarkPointsUsed < 2) {
+    noteParts.push("Not enough benchmark overlap to estimate beta/tracking error.");
+  }
+
   return {
     source: "yahoo_estimate",
     lessAccurateThanSnapshots: true,
     note: noteParts.join(" "),
+    benchmarkSymbol,
+    benchmarkName,
     riskWindow,
     pointsTarget: windowSettings.maxPoints,
     pointsUsed,
     returnsCount: portfolioReturns.length,
+    benchmarkPointsUsed,
     usedTickers,
     failedTickers,
     volatilityAnnualPct,
     maxDrawdownPct,
     var95Pct,
     var95Amount,
+    cvar95Pct,
+    cvar95Amount,
+    betaToBenchmark,
+    trackingErrorAnnualPct,
+    correlationToBenchmark,
+    outlierReturnsRemoved,
   };
 }
 
