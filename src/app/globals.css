@@ -2514,3 +2514,15 @@ td {
   margin-inline: auto;
   width: 100%;
 }
+
+/* Keep Data Quality rows centered, including partial last rows */
+.shell .quality-grid {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 360px));
+  justify-content: center;
+}
+
+@media (max-width: 700px) {
+  .shell .quality-grid {
+    grid-template-columns: 1fr;
+  }
+}
