@@ -556,6 +556,10 @@ export default function Home() {
     const grouped = new Map<string, { changeAmount: number; previousValue: number; currentValue: number }>();
 
     for (const holding of state.holdings) {
+      if (holding.source !== "asx") {
+        continue;
+      }
+
       const quantity = resolveHoldingUnits(holding.units, holding.value, holding.price);
       if (quantity <= 0 || !Number.isFinite(holding.price) || !Number.isFinite(holding.prevClose) || holding.price <= 0 || holding.prevClose <= 0) {
         continue;
@@ -595,8 +599,10 @@ export default function Home() {
   );
   const todayPortfolioChangePct = todayPortfolioPreviousValue > 0 ? (todayPortfolioChangeAmount / todayPortfolioPreviousValue) * 100 : null;
   const asxSessionOpenNow = isAsxRegularSessionOpenNow();
-  const portfolioChangeLabel = asxSessionOpenNow ? "Today Change" : "Latest Session Change";
-  const moverPeriodLabel = asxSessionOpenNow ? "Today" : "Latest Session";
+  const asxSessionDataFreshNow = isAsxSessionDataFreshNow(state.lastPriceRefreshAt);
+  const showTodaySessionChange = asxSessionOpenNow && asxSessionDataFreshNow;
+  const portfolioChangeLabel = showTodaySessionChange ? "Today Change" : "Latest Session Change";
+  const moverPeriodLabel = showTodaySessionChange ? "Today" : "Latest Session";
   const todayTopGainer = todayMovers.length > 0 ? todayMovers[0] : null;
   const todayTopLoser = todayMovers.length > 0 ? todayMovers[todayMovers.length - 1] : null;
 
@@ -2120,7 +2126,7 @@ function toRiskFlag(
   return { label, value: `${value.toFixed(2)}${suffix}`, tone: "green", help };
 }
 
-function isAsxRegularSessionOpenNow(date = new Date()): boolean {
+function getSydneyClockParts(date: Date): { weekday: string; hour: number; minute: number } | null {
   const parts = new Intl.DateTimeFormat("en-AU", {
     timeZone: "Australia/Sydney",
     weekday: "short",
@@ -2134,18 +2140,64 @@ function isAsxRegularSessionOpenNow(date = new Date()): boolean {
   const minute = Number.parseInt(parts.find((part) => part.type === "minute")?.value || "", 10);
 
   if (!Number.isFinite(hour) || !Number.isFinite(minute)) {
+    return null;
+  }
+
+  return { weekday, hour, minute };
+}
+
+function toSydneyDateKey(date: Date): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Australia/Sydney",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+}
+
+function isAsxRegularSessionOpenNow(date = new Date()): boolean {
+  const clock = getSydneyClockParts(date);
+  if (!clock) {
     return false;
   }
 
-  if (weekday === "Sat" || weekday === "Sun") {
+  if (clock.weekday === "Sat" || clock.weekday === "Sun") {
     return false;
   }
 
-  const minutesSinceMidnight = hour * 60 + minute;
+  const minutesSinceMidnight = clock.hour * 60 + clock.minute;
   const openMinutes = 10 * 60;
   const closeMinutes = 16 * 60 + 10;
 
   return minutesSinceMidnight >= openMinutes && minutesSinceMidnight < closeMinutes;
+}
+
+function isAsxSessionDataFreshNow(lastPriceRefreshAt: string, now = new Date()): boolean {
+  if (!lastPriceRefreshAt) {
+    return false;
+  }
+
+  const refreshedAt = new Date(lastPriceRefreshAt);
+  if (Number.isNaN(refreshedAt.getTime())) {
+    return false;
+  }
+
+  if (toSydneyDateKey(refreshedAt) !== toSydneyDateKey(now)) {
+    return false;
+  }
+
+  if (!isAsxRegularSessionOpenNow(now)) {
+    return true;
+  }
+
+  const refreshClock = getSydneyClockParts(refreshedAt);
+  if (!refreshClock) {
+    return false;
+  }
+
+  const openMinutes = 10 * 60;
+  const refreshMinutesSinceMidnight = refreshClock.hour * 60 + refreshClock.minute;
+  return refreshMinutesSinceMidnight >= openMinutes;
 }
 
 function formatCurrency(value: number): string {
