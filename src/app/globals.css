@@ -2563,9 +2563,6 @@ td {
 
 .shell .quality-grid > .quality-card {
   grid-column: span 2;
-  max-width: none;
-  margin-inline: 0;
-  width: 100%;
   text-align: center;
   justify-items: center;
 }
