@@ -2448,3 +2448,15 @@ td {
     grid-template-columns: 1fr;
   }
 }
+
+@media (min-width: 1420px) {
+  .kpi-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 960px) and (max-width: 1419px) {
+  .kpi-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

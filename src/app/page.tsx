@@ -1709,6 +1709,16 @@ export default function Home() {
                 : "Need 20+ daily snapshots"
           }
         />
+        <KpiCard
+          label={"1-Day ES (95%, " + riskWindow + ")"}
+          value={
+            effectiveCvar95Amount != null
+              ? `${formatCurrency(effectiveCvar95Amount)} (${formatPercent(effectiveCvar95Pct)})${metrics.cvar95Amount == null ? " • Yahoo estimate" : ""}`
+              : loadingHistoricalEstimate && metrics.cvar95Amount == null
+                ? "Estimating from Yahoo..."
+                : "Need 20+ daily snapshots"
+          }
+        />
       </section>
 
       
