@@ -70,6 +70,22 @@ Listen for events:
 
 The logged-in dashboard includes a `Starter Plan ($3/mo)` button that starts Stripe Checkout.
 
+### Monitoring + Alerts
+
+Set these environment variables in Render to enable monitoring:
+- `SENTRY_DSN=https://...@o....ingest.sentry.io/...`
+- `NEXT_PUBLIC_SENTRY_DSN=https://...@o....ingest.sentry.io/...`
+- `ALERT_EMAIL_TO=ops@your-domain.com` (comma-separated allowed)
+
+What this enables:
+- Sentry captures server/client runtime errors.
+- `GET /api/health` returns service health for uptime checks.
+- Stripe webhook processing failures trigger ops alert emails.
+
+Recommended uptime monitor target:
+- `https://your-live-domain/api/health`
+- Alert when status is not `200` or JSON `ok` is not true.
+
 ### 6. Deploy
 
 After deploy, Render gives you a public URL like:

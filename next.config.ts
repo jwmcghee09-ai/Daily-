@@ -13,7 +13,7 @@ const contentSecurityPolicy = [
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
   isProd
-    ? "connect-src 'self' https://api.stripe.com https://checkout.stripe.com"
+    ? "connect-src 'self' https://api.stripe.com https://checkout.stripe.com https://*.ingest.sentry.io https://*.sentry.io"
     : "connect-src 'self' http: https: ws: wss:",
   "frame-src https://checkout.stripe.com",
   "upgrade-insecure-requests",

@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
+import { notifyWebhookFailure } from "@/lib/alerts";
 import {
   findAuthUserByEmail,
   updateBillingSubscriptionByStripeCustomerId,
@@ -10,6 +11,7 @@ import {
   upsertBillingSubscriptionForUser,
   upsertPreSignupBillingByEmail,
 } from "@/lib/db";
+import { captureMonitoringException } from "@/lib/monitoring";
 import { getStripeClient, getStripeWebhookSecret } from "@/lib/stripe";
 
 export const runtime = "nodejs";
@@ -22,7 +24,21 @@ export async function POST(request: Request) {
     stripe = getStripeClient();
     webhookSecret = getStripeWebhookSecret();
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Stripe webhook is not configured." }, { status: 503 });
+    const message = toErrorMessage(error, "Stripe webhook is not configured.");
+
+    captureMonitoringException(error, {
+      area: "stripe_webhook",
+      stage: "bootstrap",
+      metadata: { message },
+    });
+
+    await notifyWebhookFailure({
+      provider: "stripe",
+      stage: "bootstrap",
+      message,
+    });
+
+    return NextResponse.json({ error: message }, { status: 503 });
   }
 
   const signature = (await headers()).get("stripe-signature") || "";
@@ -36,7 +52,12 @@ export async function POST(request: Request) {
   try {
     event = stripe.webhooks.constructEvent(payload, signature, webhookSecret);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Invalid Stripe signature.";
+    captureMonitoringException(error, {
+      area: "stripe_webhook",
+      stage: "signature_validation",
+    });
+
+    const message = toErrorMessage(error, "Invalid Stripe signature.");
     return NextResponse.json({ error: message }, { status: 400 });
   }
 
@@ -44,7 +65,26 @@ export async function POST(request: Request) {
     handleStripeEvent(event);
     return NextResponse.json({ received: true });
   } catch (error) {
+    const message = toErrorMessage(error, "Webhook processing failed.");
     console.error("Stripe webhook processing failed", error);
+
+    captureMonitoringException(error, {
+      area: "stripe_webhook",
+      stage: "event_processing",
+      metadata: {
+        eventId: event.id,
+        eventType: event.type,
+      },
+    });
+
+    await notifyWebhookFailure({
+      provider: "stripe",
+      stage: "event_processing",
+      message,
+      eventId: event.id,
+      eventType: event.type,
+    });
+
     return NextResponse.json({ error: "Webhook processing failed." }, { status: 500 });
   }
 }
@@ -179,4 +219,12 @@ function checkoutStatusToSubscriptionStatus(paymentStatus: Stripe.Checkout.Sessi
   }
 
   return "incomplete";
+}
+
+function toErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error && error.message.trim().length > 0) {
+    return error.message;
+  }
+
+  return fallback;
 }

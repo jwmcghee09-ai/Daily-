@@ -23,6 +23,11 @@ interface AccountVerificationEmailInput {
   verificationToken: string;
 }
 
+interface OperationalAlertEmailInput {
+  subject: string;
+  lines: string[];
+}
+
 interface ResolvedSmtpTarget {
   host: string;
   tlsServername?: string;
@@ -62,7 +67,6 @@ function normalizeBaseUrl(value: string): string {
   return "";
 }
 
-
 function getAppBaseUrl(): string {
   const explicit = normalizeBaseUrl(process.env.APP_BASE_URL || "");
   if (explicit) {
@@ -99,19 +103,10 @@ async function resolveSmtpTarget(config: SmtpConfig): Promise<ResolvedSmtpTarget
   return { host: config.host };
 }
 
-export function isEmailDeliveryConfigured(): boolean {
-  return readSmtpConfig() != null;
-}
-
-export async function sendPasswordResetEmail(input: PasswordResetEmailInput): Promise<void> {
-  const config = readSmtpConfig();
-  if (!config) {
-    throw new Error("Email delivery is not configured.");
-  }
-
+async function createSmtpTransporter(config: SmtpConfig) {
   const target = await resolveSmtpTarget(config);
 
-  const transporter = nodemailer.createTransport({
+  return nodemailer.createTransport({
     host: target.host,
     port: config.port,
     secure: config.secure,
@@ -121,6 +116,35 @@ export async function sendPasswordResetEmail(input: PasswordResetEmailInput): Pr
     },
     tls: target.tlsServername ? { servername: target.tlsServername } : undefined,
   });
+}
+
+function readOperationalAlertRecipients(): string[] {
+  const raw = (process.env.ALERT_EMAIL_TO || "").trim();
+  if (!raw) {
+    return [];
+  }
+
+  return raw
+    .split(",")
+    .map((value) => value.trim())
+    .filter((value) => value.length > 0);
+}
+
+export function isEmailDeliveryConfigured(): boolean {
+  return readSmtpConfig() != null;
+}
+
+export function isOperationalAlertConfigured(): boolean {
+  return readSmtpConfig() != null && readOperationalAlertRecipients().length > 0;
+}
+
+export async function sendPasswordResetEmail(input: PasswordResetEmailInput): Promise<void> {
+  const config = readSmtpConfig();
+  if (!config) {
+    throw new Error("Email delivery is not configured.");
+  }
+
+  const transporter = await createSmtpTransporter(config);
 
   const appUrl = getAppBaseUrl();
   const token = input.resetToken;
@@ -176,18 +200,7 @@ export async function sendAccountVerificationEmail(input: AccountVerificationEma
     throw new Error("Email delivery is not configured.");
   }
 
-  const target = await resolveSmtpTarget(config);
-
-  const transporter = nodemailer.createTransport({
-    host: target.host,
-    port: config.port,
-    secure: config.secure,
-    auth: {
-      user: config.user,
-      pass: config.pass,
-    },
-    tls: target.tlsServername ? { servername: target.tlsServername } : undefined,
-  });
+  const transporter = await createSmtpTransporter(config);
 
   const appUrl = getAppBaseUrl();
   const verifyUrl = `${appUrl}/api/auth/verify?token=${encodeURIComponent(input.verificationToken)}`;
@@ -225,6 +238,44 @@ export async function sendAccountVerificationEmail(input: AccountVerificationEma
   await transporter.sendMail({
     from: config.from,
     to: input.toEmail,
+    subject,
+    text,
+    html,
+  });
+}
+
+export async function sendOperationalAlertEmail(input: OperationalAlertEmailInput): Promise<void> {
+  const config = readSmtpConfig();
+  if (!config) {
+    throw new Error("Email delivery is not configured.");
+  }
+
+  const recipients = readOperationalAlertRecipients();
+  if (recipients.length === 0) {
+    throw new Error("Operational alert delivery is not configured.");
+  }
+
+  const transporter = await createSmtpTransporter(config);
+  const appUrl = getAppBaseUrl();
+
+  const subject = input.subject;
+  const text = [...input.lines, "", `App URL: ${appUrl}`].join("\n");
+
+  const htmlLines = input.lines
+    .map((line) => `<li>${escapeHtml(line)}</li>`)
+    .join("");
+
+  const html = `
+    <div style="font-family:Arial,sans-serif;line-height:1.5;color:#111;max-width:640px;">
+      <h2 style="margin:0 0 12px 0;">${escapeHtml(subject)}</h2>
+      <ul style="padding-left:18px;">${htmlLines}</ul>
+      <p><a href="${escapeAttribute(appUrl)}">Open SPECTRE</a></p>
+    </div>
+  `;
+
+  await transporter.sendMail({
+    from: config.from,
+    to: recipients.join(","),
     subject,
     text,
     html,
