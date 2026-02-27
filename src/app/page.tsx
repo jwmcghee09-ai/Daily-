@@ -589,19 +589,28 @@ export default function Home() {
       .sort((a, b) => b.changePct - a.changePct);
   }, [state.holdings]);
 
-  const todayPortfolioPreviousValue = useMemo(
-    () => todayMovers.reduce((total, mover) => total + mover.previousValue, 0),
-    [todayMovers],
-  );
-  const todayPortfolioChangeAmount = useMemo(
-    () => todayMovers.reduce((total, mover) => total + mover.changeAmount, 0),
-    [todayMovers],
-  );
-  const todayPortfolioChangePct = todayPortfolioPreviousValue > 0 ? (todayPortfolioChangeAmount / todayPortfolioPreviousValue) * 100 : null;
+  const todaySnapshotSeries = useMemo(() => {
+    const todaySydney = toSydneyDateKey(new Date());
+
+    return state.snapshots
+      .map((snapshot) => ({ date: new Date(snapshot.date), value: snapshot.value }))
+      .filter(
+        (snapshot) =>
+          !Number.isNaN(snapshot.date.getTime()) &&
+          Number.isFinite(snapshot.value) &&
+          snapshot.value >= 0 &&
+          toSydneyDateKey(snapshot.date) === todaySydney,
+      )
+      .sort((a, b) => a.date.getTime() - b.date.getTime());
+  }, [state.snapshots]);
+
+  const todayBaselineValue = todaySnapshotSeries.length > 0 ? todaySnapshotSeries[0].value : metrics.totalValue;
+  const todayPortfolioChangeAmount = metrics.totalValue - todayBaselineValue;
+  const todayPortfolioChangePct = todayBaselineValue > 0 ? (todayPortfolioChangeAmount / todayBaselineValue) * 100 : null;
   const asxSessionOpenNow = isAsxRegularSessionOpenNow();
   const asxSessionDataFreshNow = isAsxSessionDataFreshNow(state.lastPriceRefreshAt);
   const showTodaySessionChange = asxSessionOpenNow && asxSessionDataFreshNow;
-  const portfolioChangeLabel = showTodaySessionChange ? "Today Change" : "Latest Session Change";
+  const portfolioChangeLabel = "Today Change";
   const moverPeriodLabel = showTodaySessionChange ? "Today" : "Latest Session";
   const todayTopGainer = todayMovers.length > 0 ? todayMovers[0] : null;
   const todayTopLoser = todayMovers.length > 0 ? todayMovers[todayMovers.length - 1] : null;
