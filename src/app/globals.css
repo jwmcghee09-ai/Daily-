@@ -2568,15 +2568,15 @@ td {
 }
 
 .shell .quality-grid > .quality-card:nth-child(5) {
-  grid-column-start: 2;
+  grid-column: 2 / span 2;
 }
 
 .shell .quality-grid > .quality-card:nth-child(6) {
-  grid-column-start: 4;
+  grid-column: 4 / span 2;
 }
 
 .shell .quality-grid > .quality-card:nth-child(7) {
-  grid-column-start: 6;
+  grid-column: 6 / span 2;
 }
 
 /* Keep Risk Signals rows centered, including partial last rows */
