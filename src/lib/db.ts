@@ -147,6 +147,17 @@ interface BillingSubscriptionRow {
   updated_at: string;
 }
 
+interface PriceDipAlertRow {
+  id: string;
+  user_id: string;
+  ticker: string;
+  drop_pct_threshold: number;
+  enabled: number;
+  last_triggered_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 interface PreSignupBillingRow {
   email: string;
   stripe_customer_id: string | null;
@@ -224,6 +235,16 @@ export interface HistoricalRiskEstimateResult {
   trackingErrorAnnualPct: number | null;
   correlationToBenchmark: number | null;
   outlierReturnsRemoved: number;
+}
+
+export interface PriceDipAlertSetting {
+  id: string;
+  ticker: string;
+  dropPctThreshold: number;
+  enabled: boolean;
+  lastTriggeredAt: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 const RISK_WINDOW_SETTINGS: Record<RiskWindow, { label: string; yahooRange: string; maxPoints: number }> = {
