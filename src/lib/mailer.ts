@@ -11,6 +11,12 @@ interface SmtpConfig {
   secure: boolean;
 }
 
+interface PostmarkConfig {
+  serverToken: string;
+  from: string;
+  messageStream: string;
+}
+
 interface PasswordResetEmailInput {
   toEmail: string;
   displayName: string;
@@ -33,6 +39,13 @@ interface ResolvedSmtpTarget {
   tlsServername?: string;
 }
 
+interface EmailContent {
+  to: string;
+  subject: string;
+  text: string;
+  html: string;
+}
+
 function readSmtpConfig(): SmtpConfig | null {
   const host = (process.env.SMTP_HOST || "").trim();
   const user = (process.env.SMTP_USER || "").trim();
@@ -50,6 +63,29 @@ function readSmtpConfig(): SmtpConfig | null {
   const secure = secureEnv === "true" || secureEnv === "1" || port === 465;
 
   return { host, port, user, pass, from, secure };
+}
+
+function readPostmarkConfig(): PostmarkConfig | null {
+  const from = (process.env.SMTP_FROM || "").trim();
+  const explicitToken = (process.env.POSTMARK_SERVER_TOKEN || "").trim();
+  const host = (process.env.SMTP_HOST || "").trim().toLowerCase();
+  const smtpUser = (process.env.SMTP_USER || "").trim();
+  const smtpPass = (process.env.SMTP_PASS || "").trim();
+
+  // If explicit token is not set, infer it from SMTP values when Postmark SMTP is configured.
+  const inferredToken = host.includes("postmarkapp.com") && smtpUser && smtpUser === smtpPass ? smtpUser : "";
+  const serverToken = explicitToken || inferredToken;
+  const messageStream = (process.env.POSTMARK_MESSAGE_STREAM || "outbound").trim() || "outbound";
+
+  if (!serverToken || !from) {
+    return null;
+  }
+
+  return {
+    serverToken,
+    from,
+    messageStream,
+  };
 }
 
 function normalizeBaseUrl(value: string): string {
@@ -131,21 +167,63 @@ function readOperationalAlertRecipients(): string[] {
 }
 
 export function isEmailDeliveryConfigured(): boolean {
-  return readSmtpConfig() != null;
+  return readPostmarkConfig() != null || readSmtpConfig() != null;
 }
 
 export function isOperationalAlertConfigured(): boolean {
-  return readSmtpConfig() != null && readOperationalAlertRecipients().length > 0;
+  return isEmailDeliveryConfigured() && readOperationalAlertRecipients().length > 0;
 }
 
-export async function sendPasswordResetEmail(input: PasswordResetEmailInput): Promise<void> {
-  const config = readSmtpConfig();
-  if (!config) {
+async function sendViaPostmark(config: PostmarkConfig, content: EmailContent): Promise<void> {
+  const response = await fetch("https://api.postmarkapp.com/email", {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+      "X-Postmark-Server-Token": config.serverToken,
+    },
+    body: JSON.stringify({
+      From: config.from,
+      To: content.to,
+      Subject: content.subject,
+      TextBody: content.text,
+      HtmlBody: content.html,
+      MessageStream: config.messageStream,
+    }),
+  });
+
+  const payload = await response.json().catch(() => null) as { ErrorCode?: number; Message?: string } | null;
+  const errorCode = payload?.ErrorCode ?? -1;
+
+  if (!response.ok || errorCode !== 0) {
+    const message = payload?.Message || `HTTP ${response.status}`;
+    throw new Error(`Postmark send failed (code ${errorCode}): ${message}`);
+  }
+}
+
+async function sendEmail(content: EmailContent): Promise<void> {
+  const postmarkConfig = readPostmarkConfig();
+  if (postmarkConfig) {
+    await sendViaPostmark(postmarkConfig, content);
+    return;
+  }
+
+  const smtpConfig = readSmtpConfig();
+  if (!smtpConfig) {
     throw new Error("Email delivery is not configured.");
   }
 
-  const transporter = await createSmtpTransporter(config);
+  const transporter = await createSmtpTransporter(smtpConfig);
+  await transporter.sendMail({
+    from: smtpConfig.from,
+    to: content.to,
+    subject: content.subject,
+    text: content.text,
+    html: content.html,
+  });
+}
 
+export async function sendPasswordResetEmail(input: PasswordResetEmailInput): Promise<void> {
   const appUrl = getAppBaseUrl();
   const token = input.resetToken;
   const tokenEntryUrl = `${appUrl}/`;
@@ -185,8 +263,7 @@ export async function sendPasswordResetEmail(input: PasswordResetEmailInput): Pr
     </div>
   `;
 
-  await transporter.sendMail({
-    from: config.from,
+  await sendEmail({
     to: input.toEmail,
     subject,
     text,
@@ -195,13 +272,6 @@ export async function sendPasswordResetEmail(input: PasswordResetEmailInput): Pr
 }
 
 export async function sendAccountVerificationEmail(input: AccountVerificationEmailInput): Promise<void> {
-  const config = readSmtpConfig();
-  if (!config) {
-    throw new Error("Email delivery is not configured.");
-  }
-
-  const transporter = await createSmtpTransporter(config);
-
   const appUrl = getAppBaseUrl();
   const verifyUrl = `${appUrl}/api/auth/verify?token=${encodeURIComponent(input.verificationToken)}`;
 
@@ -235,8 +305,7 @@ export async function sendAccountVerificationEmail(input: AccountVerificationEma
     </div>
   `;
 
-  await transporter.sendMail({
-    from: config.from,
+  await sendEmail({
     to: input.toEmail,
     subject,
     text,
@@ -245,8 +314,7 @@ export async function sendAccountVerificationEmail(input: AccountVerificationEma
 }
 
 export async function sendOperationalAlertEmail(input: OperationalAlertEmailInput): Promise<void> {
-  const config = readSmtpConfig();
-  if (!config) {
+  if (!isEmailDeliveryConfigured()) {
     throw new Error("Email delivery is not configured.");
   }
 
@@ -254,8 +322,6 @@ export async function sendOperationalAlertEmail(input: OperationalAlertEmailInpu
   if (recipients.length === 0) {
     throw new Error("Operational alert delivery is not configured.");
   }
-
-  const transporter = await createSmtpTransporter(config);
   const appUrl = getAppBaseUrl();
 
   const subject = input.subject;
@@ -273,8 +339,7 @@ export async function sendOperationalAlertEmail(input: OperationalAlertEmailInpu
     </div>
   `;
 
-  await transporter.sendMail({
-    from: config.from,
+  await sendEmail({
     to: recipients.join(","),
     subject,
     text,
