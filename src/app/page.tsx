@@ -1693,7 +1693,13 @@ export default function Home() {
         </div>
         <div className="meta">
           <span className="meta-item">Account: {sessionUser.displayName} ({sessionUser.email})</span>
-          <span className="meta-item">Plan: {sessionUser.planTier.toUpperCase()}</span>
+          <span className="meta-item">
+            Plan:
+            {" "}
+            <span className={`plan-chip ${sessionUser.proEnabled ? "pro" : "starter"}`}>
+              {sessionUser.proEnabled ? "PRO ACTIVE" : sessionUser.planTier.toUpperCase()}
+            </span>
+          </span>
           <span className="meta-item">Holdings: {state.holdings.length}</span>
           <span className="meta-item">Latest report: {latestReportDate || "N/A"}</span>
           <span className="meta-item">Last saved: {state.updatedAt ? new Date(state.updatedAt).toLocaleString("en-AU") : "N/A"}</span>
@@ -1807,6 +1813,43 @@ export default function Home() {
           }
           help="Expected Shortfall is the average loss on the worst 5% of days in the selected window."
         />
+      </section>
+
+      <section className={`pro-analytics-section ${proAnalyticsEnabled ? "unlocked" : "locked"}`}>
+        <div className="pro-analytics-head">
+          <h2>Pro Analytics Console</h2>
+          <span className="pro-analytics-status">{proAnalyticsEnabled ? "UNLOCKED" : "LOCKED • $15/MONTH"}</span>
+        </div>
+        <p className="pro-analytics-note">
+          {proAnalyticsEnabled
+            ? "Advanced quant analytics are active for this account."
+            : "Upgrade to Pro to unlock Expected Shortfall, benchmark beta, and tracking error analytics."}
+        </p>
+        <div className="pro-analytics-grid">
+          <article className="pro-analytics-card">
+            <p>Expected Shortfall (ES 95)</p>
+            <strong>
+              {proAnalyticsEnabled && effectiveCvar95Amount != null
+                ? `${formatCurrency(effectiveCvar95Amount)} (${formatPercent(effectiveCvar95Pct)})`
+                : "LOCKED"}
+            </strong>
+          </article>
+          <article className="pro-analytics-card">
+            <p>Beta vs ASX 200</p>
+            <strong>{proAnalyticsEnabled && benchmarkBeta != null ? benchmarkBeta.toFixed(2) : "LOCKED"}</strong>
+          </article>
+          <article className="pro-analytics-card">
+            <p>Tracking Error (Annualized)</p>
+            <strong>{proAnalyticsEnabled && benchmarkTrackingErrorAnnualPct != null ? formatPercent(benchmarkTrackingErrorAnnualPct) : "LOCKED"}</strong>
+          </article>
+        </div>
+        {!proAnalyticsEnabled ? (
+          <div className="pro-analytics-cta">
+            <button type="button" onClick={() => void startProCheckout(authEmail)} className="refresh-btn" disabled={checkoutWorking}>
+              {checkoutWorking ? "Redirecting..." : "Unlock Pro Analytics"}
+            </button>
+          </div>
+        ) : null}
       </section>
 
       
