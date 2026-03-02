@@ -67,6 +67,7 @@ const RISK_WINDOW_OPTIONS: RiskWindow[] = ["1M", "3M", "1Y"];
 const AUTO_REFRESH_INTERVAL_MS = 5 * 60 * 1000;
 const AUTO_REFRESH_RESUME_GRACE_MS = 20 * 1000;
 const ADMIN_CONTACT_EMAIL = "admin@spectre-assets.com";
+const LANDING_SAMPLE_RISK_SCORE = 72;
 
 const LANDING_PREVIEW_SERIES = [
   { month: "Jan", portfolio: 1180000, buffer: 1100000 },
@@ -561,6 +562,40 @@ export default function Home() {
   const benchmarkTrackingErrorAnnualPct = historicalRiskEstimate?.trackingErrorAnnualPct ?? null;
   const proAnalyticsEnabled = sessionUser?.proEnabled === true;
   const usingYahooFallback = metrics.var95Amount == null && historicalRiskEstimate != null;
+  const riskReturnsUsed = usingYahooFallback ? (historicalRiskEstimate?.returnsCount ?? 0) : metrics.dailyReturns.length;
+
+  const portfolioRiskScore = useMemo(() => {
+    if (state.holdings.length === 0 || metrics.totalValue <= 0) {
+      return null;
+    }
+
+    const volatilityPenalty = normalizePenalty(effectiveVolatilityAnnualPct, 8, 30) * 30;
+    const varPenalty = normalizePenalty(effectiveVar95Pct, 0.7, 3.2) * 22;
+    const drawdownPenalty = normalizePenalty(effectiveMaxDrawdownPct, 6, 25) * 20;
+    const concentrationPenalty = normalizePenalty(metrics.top3ConcentrationPct, 30, 75) * 16;
+    const accountPenalty = normalizePenalty(metrics.largestAccountPct, 45, 85) * 12;
+    const confidencePenalty = (1 - clamp(riskReturnsUsed / 63, 0, 1)) * 12;
+    const totalPenalty = volatilityPenalty + varPenalty + drawdownPenalty + concentrationPenalty + accountPenalty + confidencePenalty;
+    const score = Math.round(clamp(100 - totalPenalty, 1, 99));
+
+    const label = score >= 75 ? "Controlled" : score >= 55 ? "Moderate" : "Elevated";
+    const confidence = riskReturnsUsed >= 63 ? "High" : riskReturnsUsed >= 20 ? "Medium" : "Low";
+
+    return {
+      score,
+      label,
+      confidence,
+      returnsUsed: riskReturnsUsed,
+    };
+  }, [effectiveMaxDrawdownPct, effectiveVar95Pct, effectiveVolatilityAnnualPct, metrics.largestAccountPct, metrics.top3ConcentrationPct, metrics.totalValue, riskReturnsUsed, state.holdings.length]);
+
+  const portfolioRiskScoreTone = portfolioRiskScore == null
+    ? "neutral"
+    : portfolioRiskScore.score >= 75
+      ? "positive"
+      : portfolioRiskScore.score >= 55
+        ? "neutral"
+        : "negative";
 
   const todayMovers = useMemo<TodayMover[]>(() => {
     const grouped = new Map<string, { changeAmount: number; previousValue: number; currentValue: number }>();
@@ -636,7 +671,6 @@ export default function Home() {
 
     const dailySnapshotDates = new Set(metrics.history.map((snapshot) => snapshot.date.slice(0, 10)));
     const latestSnapshotAt = metrics.history.length > 0 ? metrics.history[metrics.history.length - 1].date : "";
-    const riskReturnsUsed = usingYahooFallback ? (historicalRiskEstimate?.returnsCount ?? 0) : metrics.dailyReturns.length;
     const outliersFiltered = usingYahooFallback ? (historicalRiskEstimate?.outlierReturnsRemoved ?? 0) : metrics.returnOutliersRemoved;
     const benchmarkOverlap = usingYahooFallback ? (historicalRiskEstimate?.benchmarkPointsUsed ?? 0) : null;
 
@@ -682,7 +716,7 @@ export default function Home() {
         status: sessionUser?.proEnabled ? "good" : "warn",
       },
     ] as const;
-  }, [historicalRiskEstimate?.benchmarkPointsUsed, historicalRiskEstimate?.outlierReturnsRemoved, historicalRiskEstimate?.returnsCount, metrics.dailyReturns.length, metrics.history, metrics.returnOutliersRemoved, sessionUser, state.holdings, usingYahooFallback]);
+  }, [historicalRiskEstimate?.benchmarkPointsUsed, historicalRiskEstimate?.outlierReturnsRemoved, metrics.history, metrics.returnOutliersRemoved, riskReturnsUsed, sessionUser, state.holdings, usingYahooFallback]);
 
   const riskFlags = useMemo<RiskFlag[]>(() => {
     const flags: RiskFlag[] = [
@@ -1296,46 +1330,46 @@ export default function Home() {
         <main className="landing-main">
           <section id="top" className="landing-hero">
             <div className="landing-hero-copy">
-              <p className="landing-kicker">Portfolio Intelligence Platform</p>
-              <h1>Monitor exposure and risk in one private workspace.</h1>
+              <p className="landing-kicker">ASX / Super / SMSF Risk Platform</p>
+              <h1>See the real risk hiding in your portfolio in minutes.</h1>
               <p className="landing-hero-text">
-                SPECTRE combines super, ASX, and bullion holdings in one view so you can upload reports, track risk signals, and review portfolio snapshots without switching tools.
+                SPECTRE turns CSV exports from super, ASX, index funds, mutual funds, and bullion into one clear risk view so you can act with confidence.
               </p>
               <div className="landing-hero-actions">
-                <a href="#access" className="landing-btn landing-btn-primary">Open Workspace</a>
-                <a href="#insights" className="landing-btn landing-btn-ghost">View Feature Preview</a>
+                <a href="#access" className="landing-btn landing-btn-primary">Start For $3/Month</a>
+                <a href="#insights" className="landing-btn landing-btn-ghost">See Live Dashboard Preview</a>
               </div>
               <div className="landing-hero-stats">
                 <article>
-                  <strong>Data Inputs</strong>
-                  <span>CSV uploads for super, ASX holdings, and bullion reports.</span>
+                  <strong>3-Step Workflow</strong>
+                  <span>Upload CSV, normalize holdings, then review risk score and exposure metrics.</span>
                 </article>
                 <article>
-                  <strong>Risk Signals</strong>
-                  <span>VaR95, drawdown, volatility, concentration, and stress scenarios.</span>
+                  <strong>ASX-Focused Analytics</strong>
+                  <span>Built for ASX investors with live price refresh and session-aware movers.</span>
                 </article>
                 <article>
-                  <strong>Account Security</strong>
-                  <span>Email verification, hashed passwords, and secure session cookies.</span>
+                  <strong>Security Controls</strong>
+                  <span>Email verification, hashed passwords, encrypted backups, and hardened headers.</span>
                 </article>
               </div>
             </div>
 
             <aside className="landing-hero-panel" aria-label="Platform highlights">
               <p className="landing-panel-kicker">SPECTRE OPS</p>
-              <h2>What teams can do</h2>
+              <h2>From CSV to risk clarity</h2>
               <ul>
                 <li>
                   <span>01</span>
-                  <p>Import holdings and normalize them by source, account, and sector.</p>
+                  <p>Import super, ASX, index, mutual fund, and bullion CSV exports.</p>
                 </li>
                 <li>
                   <span>02</span>
-                  <p>Refresh live ASX prices while the dashboard is open.</p>
+                  <p>SPECTRE normalizes holdings by account, source, and sector in one workspace.</p>
                 </li>
                 <li>
                   <span>03</span>
-                  <p>Review historical snapshots, metrics, and stress-test outcomes.</p>
+                  <p>Review risk score, concentration, VaR, drawdown, and scenario stress outcomes.</p>
                 </li>
               </ul>
             </aside>
@@ -1343,49 +1377,55 @@ export default function Home() {
 
           <section className="landing-proof-strip" aria-label="Current product capabilities">
             <article>
-              <strong>SQLite Storage</strong>
-              <span>Portfolio data persists in local SQLite for each account.</span>
+              <strong>Example Risk Score: {LANDING_SAMPLE_RISK_SCORE}/100</strong>
+              <span>Sample portfolio score after CSV import and risk normalization.</span>
             </article>
             <article>
-              <strong>Auto Refresh</strong>
-              <span>ASX prices refresh every 5 minutes while the page is active.</span>
+              <strong>Before: &quot;Looks diversified&quot;</strong>
+              <span>Investor sees many line items across multiple statements.</span>
             </article>
             <article>
-              <strong>Risk Windowing</strong>
-              <span>Switch between 1M, 3M, and 1Y risk windows.</span>
+              <strong>After: Top-3 = 42% Exposure</strong>
+              <span>SPECTRE surfaces hidden concentration and downside sensitivity.</span>
             </article>
             <article>
-              <strong>Bullion Tracking</strong>
-              <span>Gold and silver weights, value, and unrealized P/L monitoring.</span>
+              <strong>Built for ASX + Super + Bullion</strong>
+              <span>Designed for Australian investors and SMSF-style reporting workflows.</span>
             </article>
           </section>
 
           <section id="features" className="landing-feature-grid">
             <article>
-              <p>Unified Imports</p>
-              <h3>Ingest super, brokerage, and bullion exports in one workflow.</h3>
+              <p>ASX + Super Imports</p>
+              <h3>Ingest brokerage, superannuation, index, fund, and bullion exports in one workflow.</h3>
             </article>
             <article>
-              <p>Risk Dashboard</p>
-              <h3>Track VaR95, drawdown, volatility, and concentration in one place.</h3>
+              <p>Risk Score + Dashboard</p>
+              <h3>Track one clear risk score alongside VaR95, drawdown, volatility, and concentration.</h3>
             </article>
             <article>
-              <p>Live Movers</p>
-              <h3>Surface top gainers and losers using refreshed market prices.</h3>
+              <p>Session Movers</p>
+              <h3>Surface ASX top gainers and losers using refreshed market prices.</h3>
             </article>
             <article>
-              <p>Snapshot History</p>
-              <h3>Review portfolio trends and quality signals across time.</h3>
+              <p>Snapshot Audit Trail</p>
+              <h3>Review portfolio trend history and data quality signals over time.</h3>
             </article>
           </section>
 
           <section id="insights" className="landing-analytics">
             <div className="landing-analytics-head">
               <p className="landing-kicker">Feature Preview</p>
-              <h2>Example chart layouts used in the dashboard.</h2>
-              <p>These are illustrative demo values showing the chart experience. Your actual charts populate from imported portfolio data.</p>
+              <h2>Concrete dashboard visuals, not abstract promises.</h2>
+              <p>These demo values show the exact dashboard style. Your real data loads from your own imported portfolio exports.</p>
             </div>
             <div className="landing-analytics-grid">
+              <article className="landing-chart-card landing-score-preview">
+                <h3>Example Portfolio Risk Score</h3>
+                <p className="landing-score-value">{LANDING_SAMPLE_RISK_SCORE}<span>/100</span></p>
+                <p className="landing-score-caption">Moderate risk profile based on concentration, VaR, drawdown, volatility, and data quality confidence.</p>
+              </article>
+
               <article className="landing-chart-card">
                 <h3>Example Portfolio Snapshot Trend</h3>
                 <ResponsiveContainer width="100%" height={260}>
@@ -1450,9 +1490,9 @@ export default function Home() {
           <section id="workflow" className="landing-workflow">
             <div className="landing-workflow-copy">
               <p className="landing-kicker">How It Works</p>
-              <h2>Built for disciplined portfolio operations.</h2>
+              <h2>One clear 3-step path from files to risk decisions.</h2>
               <p>
-                Start with existing CSV exports, centralize holdings in SPECTRE, and monitor exposure changes with risk indicators and stress scenarios.
+                Start with existing statements, centralize exposure in SPECTRE, then monitor risk signals from one private dashboard.
               </p>
             </div>
             <div className="landing-steps">
@@ -1460,21 +1500,21 @@ export default function Home() {
                 <span>01</span>
                 <div>
                   <h3>Import Reports</h3>
-                  <p>Upload super, ASX, and bullion files directly into SPECTRE.</p>
+                  <p>Upload super, ASX, index, mutual fund, and bullion files directly into SPECTRE.</p>
                 </div>
               </article>
               <article>
                 <span>02</span>
                 <div>
                   <h3>Normalize Exposure</h3>
-                  <p>Aggregate positions by source, account, sector, and instrument.</p>
+                  <p>Aggregate positions by source, account, sector, and instrument in one structure.</p>
                 </div>
               </article>
               <article>
                 <span>03</span>
                 <div>
-                  <h3>Review Risk Signals</h3>
-                  <p>Use drawdown, VaR, and concentration metrics to monitor risk posture.</p>
+                  <h3>Act On Risk Signals</h3>
+                  <p>Use risk score, drawdown, VaR, and concentration metrics to monitor risk posture.</p>
                 </div>
               </article>
             </div>
@@ -1483,25 +1523,25 @@ export default function Home() {
           <section id="safety" className="landing-safety">
             <div className="landing-safety-head">
               <p className="landing-kicker">Data Safety</p>
-              <h2>Controls designed to protect account access and portfolio records.</h2>
-              <p>These safeguards reflect features active in the current release.</p>
+              <h2>Plain-English security and privacy controls.</h2>
+              <p>These safeguards reflect controls active in the current release.</p>
             </div>
             <div className="landing-safety-grid">
               <article>
-                <h3>Verified account access</h3>
-                <p>New accounts must verify email before sign-in. Password reset and verification flows are available from the access panel.</p>
+                <h3>Privacy promise</h3>
+                <p><strong>We do not sell your data.</strong> Portfolio uploads are used only to generate your analytics workspace.</p>
               </article>
               <article>
-                <h3>Password and session protections</h3>
-                <p>Passwords are stored as scrypt hashes, and session cookies are HttpOnly, SameSite, and secure in production.</p>
+                <h3>Data control and deletion</h3>
+                <p>You can clear imported holdings and snapshots anytime from the dashboard using Clear Data.</p>
               </article>
               <article>
-                <h3>Stripe-hosted payments</h3>
-                <p>Checkout is handled by Stripe. SPECTRE stores subscription references for billing state and does not store card numbers.</p>
+                <h3>Account and payment security</h3>
+                <p>Email verification, scrypt password hashing, secure cookies, and Stripe-hosted checkout are enabled in production.</p>
               </article>
               <article>
-                <h3>Encrypted backups and hardening</h3>
-                <p>Database backups use AES-256-GCM encryption with restore integrity checks, and production responses include CSP, HSTS, and anti-framing headers.</p>
+                <h3>Hosting and hardening</h3>
+                <p>Production runs over HTTPS with CSP/HSTS/anti-framing headers, plus encrypted backups and restore checks.</p>
               </article>
             </div>
             <p className="landing-safety-note">No platform can guarantee zero risk. Use strong passwords and keep deployment secrets protected.</p>
@@ -1510,8 +1550,8 @@ export default function Home() {
           <section id="pricing" className="landing-pricing">
             <div className="landing-pricing-head">
               <p className="landing-kicker">Pricing</p>
-              <h2>Starter and Pro plans.</h2>
-              <p>Starter is available now at $3/month. Pro adds advanced quant analytics for serious risk monitoring.</p>
+              <h2>Simple pricing, low barrier to start.</h2>
+              <p>Starter stays at $3/month to keep access affordable while covering core platform costs.</p>
             </div>
             <div className="landing-pricing-grid landing-pricing-centered">
               <article className="landing-plan landing-plan-starter landing-plan-highlight">
@@ -1519,10 +1559,10 @@ export default function Home() {
                 <h3>$3<span>/month</span></h3>
                 <p className="landing-plan-subtitle">Live now</p>
                 <ul>
-                  <li>One private account workspace</li>
-                  <li>CSV import for super, ASX, and bullion</li>
-                  <li>Risk dashboard, charts, and snapshots</li>
-                  <li>Account sign-in and password reset</li>
+                  <li>One private investor workspace</li>
+                  <li>CSV import for super, ASX, index, funds, and bullion</li>
+                  <li>Risk score, dashboard charts, and snapshots</li>
+                  <li>Email verification and password reset</li>
                 </ul>
                 <button
                   type="button"
@@ -1563,11 +1603,11 @@ export default function Home() {
               <p className="landing-kicker">Client Access</p>
               <h2>Enter your private SPECTRE workspace.</h2>
               <p>
-                Sign in to continue from your last snapshot, or create your account with Stripe checkout in one flow. Starter is $3/month and Pro is $15/month.
+                Sign in to continue from your last snapshot, or create your account with Stripe checkout in one flow. Built for ASX-focused investors and SMSF-style reporting workflows.
               </p>
               <div className="landing-proof">
-                <p>Designed for analyst teams and active portfolio operators.</p>
-                <p>Single interface for holdings, allocation, and risk posture.</p>
+                <p>Designed for active DIY investors who want pro-style risk visibility.</p>
+                <p>Single interface for holdings, exposure, and risk posture.</p>
               </div>
             </article>
 
@@ -1688,8 +1728,8 @@ export default function Home() {
       <header className="hero">
         <div className="hero-copy">
           <h1><Image src="/spectre-wordmark-plain.svg" alt="SPECTRE" width={344} height={82} className="hero-wordmark-image" priority /></h1>
-          <p className="hero-tagline">System for Portfolio Exposure, Correlation, Threat & Risk Evaluation</p>
-          <p className="hero-description">Upload super, ASX, and ABC Bullion gold/silver CSV reports to track your portfolio and risk in one place.</p>
+          <p className="hero-tagline">Built for ASX, super, and SMSF-style risk visibility</p>
+          <p className="hero-description">Upload super, ASX, index, mutual fund, and ABC Bullion CSV reports to track exposure, concentration, and downside risk in one private workspace.</p>
         </div>
         <div className="meta">
           <span className="meta-item">Account: {sessionUser.displayName} ({sessionUser.email})</span>
@@ -1773,6 +1813,16 @@ export default function Home() {
       <section className="kpi-grid">
         <KpiCard label="Total Portfolio" value={formatCurrency(metrics.totalValue)} help="Current market value across all imported holdings." />
         <KpiCard label="Cost Base" value={formatCurrency(metrics.totalCost)} help="Total invested amount from imported cost-base values." />
+        <KpiCard
+          label="Risk Score"
+          value={portfolioRiskScore ? `${portfolioRiskScore.score}/100 (${portfolioRiskScore.label})` : "Need holdings"}
+          help={
+            portfolioRiskScore
+              ? `Composite score from volatility, VaR, drawdown, concentration, and sample confidence. Confidence: ${portfolioRiskScore.confidence} (${portfolioRiskScore.returnsUsed} daily returns).`
+              : "Composite score appears after holdings are imported."
+          }
+          tone={portfolioRiskScoreTone}
+        />
         <KpiCard
           label="Unrealized P/L"
           value={(metrics.pnl >= 0 ? "▲ " : "▼ ") + formatCurrency(Math.abs(metrics.pnl)) + " (" + formatPercent(metrics.pnlPct) + ")"}
@@ -2273,6 +2323,26 @@ function InfoKey({ text }: { text: string }) {
       <span className="metric-help-popup">{text}</span>
     </details>
   );
+}
+
+function clamp(value: number, min: number, max: number): number {
+  if (!Number.isFinite(value)) {
+    return min;
+  }
+
+  return Math.min(max, Math.max(min, value));
+}
+
+function normalizePenalty(value: number | null, low: number, high: number): number {
+  if (value == null || !Number.isFinite(value)) {
+    return 0.5;
+  }
+
+  if (high <= low) {
+    return 0;
+  }
+
+  return clamp((value - low) / (high - low), 0, 1);
 }
 
 function toRiskFlag(

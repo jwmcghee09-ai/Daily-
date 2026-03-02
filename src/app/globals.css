@@ -2205,6 +2205,34 @@ td {
   letter-spacing: 0.01em;
 }
 
+.landing-score-preview {
+  display: grid;
+  align-content: center;
+  gap: 10px;
+  border: 1px solid rgba(255, 75, 51, 0.44);
+  background: linear-gradient(167deg, rgba(26, 15, 18, 0.96) 0%, rgba(12, 11, 16, 0.97) 100%);
+}
+
+.landing-score-value {
+  font-family: var(--font-sora), var(--font-geist-sans), sans-serif;
+  font-size: clamp(2.3rem, 5vw, 3.4rem);
+  font-weight: 700;
+  color: #ffeae6;
+  line-height: 1;
+}
+
+.landing-score-value span {
+  margin-left: 6px;
+  font-size: 1.1rem;
+  color: #ffc9c0;
+}
+
+.landing-score-caption {
+  color: #cfcad9;
+  font-size: 0.83rem;
+  line-height: 1.48;
+}
+
 .landing-chart-card .recharts-cartesian-axis-tick-value,
 .landing-chart-card .recharts-legend-item-text {
   fill: #d0d2df !important;
