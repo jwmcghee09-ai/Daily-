@@ -1560,7 +1560,6 @@ export default function Home() {
             <div className="landing-pricing-head">
               <p className="landing-kicker">Pricing</p>
               <h2>Simple pricing, low barrier to start.</h2>
-              <p>Starter stays at $3/month to keep access affordable while covering core platform costs.</p>
             </div>
             <div className="landing-pricing-grid landing-pricing-centered">
               <article className="landing-plan landing-plan-starter landing-plan-highlight">
