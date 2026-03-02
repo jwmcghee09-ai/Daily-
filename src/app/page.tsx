@@ -66,6 +66,7 @@ const RISK_WINDOW_OPTIONS: RiskWindow[] = ["1M", "3M", "1Y"];
 
 const AUTO_REFRESH_INTERVAL_MS = 5 * 60 * 1000;
 const AUTO_REFRESH_RESUME_GRACE_MS = 20 * 1000;
+const ADMIN_CONTACT_EMAIL = "admin@spectre-assets.com";
 
 const LANDING_PREVIEW_SERIES = [
   { month: "Jan", portfolio: 1180000, buffer: 1100000 },
@@ -175,6 +176,9 @@ interface SessionUser {
   id: string;
   email: string;
   displayName: string;
+  planTier: "none" | "starter" | "pro";
+  proEnabled: boolean;
+  subscriptionStatus: string | null;
 }
 
 interface AuthSessionPayload {
@@ -280,7 +284,7 @@ export default function Home() {
       }
 
       clearPendingRegistrationDraft();
-      setSessionUser(payload.user);
+      setSessionUser(normalizeSessionUser(payload.user));
       setAuthPassword("");
       setAuthAcceptsTerms(false);
       setAuthError("");
@@ -317,7 +321,7 @@ export default function Home() {
           return;
         }
 
-        setSessionUser(sessionPayload.user);
+        setSessionUser(normalizeSessionUser(sessionPayload.user));
 
         const response = await fetch("/api/portfolio", { cache: "no-store" });
         if (!response.ok) {
@@ -550,6 +554,7 @@ export default function Home() {
   const effectiveMaxDrawdownPct = metrics.maxDrawdownPct ?? historicalRiskEstimate?.maxDrawdownPct ?? null;
   const benchmarkBeta = historicalRiskEstimate?.betaToBenchmark ?? null;
   const benchmarkTrackingErrorAnnualPct = historicalRiskEstimate?.trackingErrorAnnualPct ?? null;
+  const proAnalyticsEnabled = sessionUser?.proEnabled === true;
   const usingYahooFallback = metrics.var95Amount == null && historicalRiskEstimate != null;
 
   const todayMovers = useMemo<TodayMover[]>(() => {
@@ -666,11 +671,16 @@ export default function Home() {
         value: benchmarkOverlap == null ? "N/A" : String(benchmarkOverlap),
         status: benchmarkOverlap == null || benchmarkOverlap >= 20 ? "good" : "warn",
       },
+      {
+        label: "Plan tier",
+        value: sessionUser ? sessionUser.planTier.toUpperCase() : "N/A",
+        status: sessionUser?.proEnabled ? "good" : "warn",
+      },
     ] as const;
-  }, [historicalRiskEstimate?.benchmarkPointsUsed, historicalRiskEstimate?.outlierReturnsRemoved, historicalRiskEstimate?.returnsCount, metrics.dailyReturns.length, metrics.history, metrics.returnOutliersRemoved, state.holdings, usingYahooFallback]);
+  }, [historicalRiskEstimate?.benchmarkPointsUsed, historicalRiskEstimate?.outlierReturnsRemoved, historicalRiskEstimate?.returnsCount, metrics.dailyReturns.length, metrics.history, metrics.returnOutliersRemoved, sessionUser, state.holdings, usingYahooFallback]);
 
   const riskFlags = useMemo<RiskFlag[]>(() => {
-    return [
+    const flags: RiskFlag[] = [
       toRiskFlag(
         "Annualized volatility",
         effectiveVolatilityAnnualPct,
@@ -719,32 +729,62 @@ export default function Home() {
         "%",
         "95% historical VaR using the 5th percentile of daily returns in the selected window.",
       ),
-      toRiskFlag(
-        "1-day Expected Shortfall 95",
-        effectiveCvar95Pct,
-        1.8,
-        3.5,
-        "%",
-        "Average loss within the worst 5% of daily returns in the selected window.",
-      ),
-      toRiskFlag(
-        "Beta vs ASX 200",
-        benchmarkBeta,
-        1.1,
-        1.35,
-        "",
-        "Sensitivity of portfolio returns to ASX 200 returns using date-aligned daily data.",
-      ),
-      toRiskFlag(
-        "Tracking error (annualized)",
-        benchmarkTrackingErrorAnnualPct,
-        6,
-        12,
-        "%",
-        "Std dev of (portfolio return - ASX 200 return), annualized from daily data.",
-      ),
-    ].filter((flag) => flag.value !== "N/A");
-  }, [benchmarkBeta, benchmarkTrackingErrorAnnualPct, effectiveCvar95Pct, effectiveMaxDrawdownPct, effectiveVar95Pct, effectiveVolatilityAnnualPct, metrics.hhi, metrics.largestAccountPct, metrics.top3ConcentrationPct]);
+    ];
+
+    if (proAnalyticsEnabled) {
+      flags.push(
+        toRiskFlag(
+          "1-day Expected Shortfall 95",
+          effectiveCvar95Pct,
+          1.8,
+          3.5,
+          "%",
+          "Average loss within the worst 5% of daily returns in the selected window.",
+        ),
+      );
+      flags.push(
+        toRiskFlag(
+          "Beta vs ASX 200",
+          benchmarkBeta,
+          1.1,
+          1.35,
+          "",
+          "Sensitivity of portfolio returns to ASX 200 returns using date-aligned daily data.",
+        ),
+      );
+      flags.push(
+        toRiskFlag(
+          "Tracking error (annualized)",
+          benchmarkTrackingErrorAnnualPct,
+          6,
+          12,
+          "%",
+          "Std dev of (portfolio return - ASX 200 return), annualized from daily data.",
+        ),
+      );
+    } else {
+      flags.push(
+        toLockedRiskFlag(
+          "1-day Expected Shortfall 95",
+          "Pro analytics only. Unlock Pro to access tail-risk expected shortfall estimates.",
+        ),
+      );
+      flags.push(
+        toLockedRiskFlag(
+          "Beta vs ASX 200",
+          "Pro analytics only. Unlock Pro to estimate benchmark beta from date-aligned return history.",
+        ),
+      );
+      flags.push(
+        toLockedRiskFlag(
+          "Tracking error (annualized)",
+          "Pro analytics only. Unlock Pro to estimate annualized active risk versus ASX 200.",
+        ),
+      );
+    }
+
+    return flags.filter((flag) => flag.value !== "N/A");
+  }, [benchmarkBeta, benchmarkTrackingErrorAnnualPct, effectiveCvar95Pct, effectiveMaxDrawdownPct, effectiveVar95Pct, effectiveVolatilityAnnualPct, metrics.hhi, metrics.largestAccountPct, metrics.top3ConcentrationPct, proAnalyticsEnabled]);
 
   const latestReportDate = useMemo(() => {
     if (state.holdings.length === 0) {
@@ -1081,7 +1121,7 @@ export default function Home() {
         throw new Error("Authentication failed.");
       }
 
-      setSessionUser(payload.user);
+      setSessionUser(normalizeSessionUser(payload.user));
       setAuthPassword("");
       setAuthAcceptsTerms(false);
       setAuthError("");
@@ -1455,7 +1495,7 @@ export default function Home() {
             <div className="landing-pricing-head">
               <p className="landing-kicker">Pricing</p>
               <h2>Starter and Pro plans.</h2>
-              <p>Starter is available now at $3/month. Pro is listed as planned for teams.</p>
+              <p>Starter is available now at $3/month. Pro adds advanced quant analytics for serious risk monitoring.</p>
             </div>
             <div className="landing-pricing-grid landing-pricing-centered">
               <article className="landing-plan landing-plan-starter landing-plan-highlight">
@@ -1481,17 +1521,18 @@ export default function Home() {
               <article className="landing-plan landing-plan-pro">
                 <p className="landing-plan-tier">Pro</p>
                 <h3>Coming<span> soon</span></h3>
-                <p className="landing-plan-subtitle">Planned for team workflows</p>
+                <p className="landing-plan-subtitle">Advanced quant analytics</p>
                 <ul>
                   <li>Everything in Starter</li>
-                  <li>Multi-user collaboration (planned)</li>
-                  <li>Advanced reporting controls (planned)</li>
-                  <li>Extended billing controls (planned)</li>
+                  <li>Expected Shortfall (ES 95) tail risk</li>
+                  <li>Beta and tracking error vs ASX 200</li>
+                  <li>Date-aligned benchmark analytics</li>
+                  <li>Advanced reporting and team workflows</li>
                 </ul>
                 <a href="#access" className="landing-btn landing-btn-ghost">Join Pro Waitlist</a>
               </article>
             </div>
-            <p className="landing-pricing-note">Features labeled “planned” are not in the current release.</p>
+            <p className="landing-pricing-note">Pro analytics are shown as locked until a Pro entitlement is active.</p>
           </section>
 
           <section id="access" className="landing-access">
@@ -1602,6 +1643,7 @@ export default function Home() {
         <footer className="landing-footer">
           <p className="footer-disclaimer">Disclaimer: SPECTRE provides informational analytics only. It is not financial, investment, tax, or legal advice, and no result is guaranteed to be complete, current, or accurate.</p>
           <p className="footer-disclaimer">Use at your own risk. Always verify pricing, corporate actions, and holdings with official statements before making decisions. If this app is deployed online, database access and backups are your responsibility.</p>
+          <p className="footer-contact">Contact us: <a href={`mailto:${ADMIN_CONTACT_EMAIL}`}>{ADMIN_CONTACT_EMAIL}</a></p>
           <p className="footer-legal">T&C apply. Copyright 2026 SPECTRE.</p>
         </footer>
       </div>
@@ -1617,6 +1659,7 @@ export default function Home() {
         </div>
         <div className="meta">
           <span className="meta-item">Account: {sessionUser.displayName} ({sessionUser.email})</span>
+          <span className="meta-item">Plan: {sessionUser.planTier.toUpperCase()}</span>
           <span className="meta-item">Holdings: {state.holdings.length}</span>
           <span className="meta-item">Latest report: {latestReportDate || "N/A"}</span>
           <span className="meta-item">Last saved: {state.updatedAt ? new Date(state.updatedAt).toLocaleString("en-AU") : "N/A"}</span>
@@ -1720,7 +1763,9 @@ export default function Home() {
         <KpiCard
           label={"1-Day ES (95%, " + riskWindow + ")"}
           value={
-            effectiveCvar95Amount != null
+            !proAnalyticsEnabled
+              ? "Pro analytics"
+              : effectiveCvar95Amount != null
               ? `${formatCurrency(effectiveCvar95Amount)} (${formatPercent(effectiveCvar95Pct)})${metrics.cvar95Amount == null ? " • Yahoo estimate" : ""}`
               : loadingHistoricalEstimate && metrics.cvar95Amount == null
                 ? "Estimating from Yahoo..."
@@ -1885,9 +1930,12 @@ export default function Home() {
           {metrics.riskEndDate ? " to " + formatRiskWindowDate(metrics.riskEndDate) : ""}
           .
         </p>
+        {!proAnalyticsEnabled ? (
+          <p className="estimate-note">Pro analytics locked: Expected Shortfall, beta, and tracking error are available on Pro.</p>
+        ) : null}
         {usingYahooFallback ? (
           <p className="estimate-note">
-            {historicalRiskEstimate.note} ({historicalRiskEstimate.pointsUsed}/{historicalRiskEstimate.pointsTarget} points, {historicalRiskEstimate.usedTickers.length} tickers, {historicalRiskEstimate.benchmarkPointsUsed} benchmark overlap days)
+            {historicalRiskEstimate.note} ({historicalRiskEstimate.pointsUsed}/{historicalRiskEstimate.pointsTarget} points, {historicalRiskEstimate.usedTickers.length} tickers{proAnalyticsEnabled ? `, ${historicalRiskEstimate.benchmarkPointsUsed} benchmark overlap days` : ""})
           </p>
         ) : null}
         <div className="risk-grid">
@@ -2029,6 +2077,7 @@ export default function Home() {
       <footer className="footer-note">
         <p className="footer-disclaimer">Disclaimer: SPECTRE provides informational analytics only. It is not financial, investment, tax, or legal advice, and no result is guaranteed to be complete, current, or accurate.</p>
         <p className="footer-disclaimer">Use at your own risk. Always verify pricing, corporate actions, and holdings with official statements before making decisions. If this app is deployed online, database access and backups are your responsibility.</p>
+        <p className="footer-contact">Contact us: <a href={`mailto:${ADMIN_CONTACT_EMAIL}`}>{ADMIN_CONTACT_EMAIL}</a></p>
         <p className="footer-legal">T&C apply. Copyright 2026 SPECTRE.</p>
       </footer>
     </div>
@@ -2170,6 +2219,15 @@ function toRiskFlag(
   }
 
   return { label, value: `${value.toFixed(2)}${suffix}`, tone: "green", help };
+}
+
+function toLockedRiskFlag(label: string, help: string): RiskFlag {
+  return {
+    label,
+    value: "PRO",
+    tone: "yellow",
+    help,
+  };
 }
 
 function getSydneyClockParts(date: Date): { weekday: string; hour: number; minute: number } | null {
@@ -2398,6 +2456,20 @@ function getAccountChipStyle(account: string): CSSProperties {
     borderColor: tone.border,
   };
 }
+
+function normalizeSessionUser(user: SessionUser): SessionUser {
+  const planTier = user.planTier === "pro" ? "pro" : user.planTier === "starter" ? "starter" : "none";
+  const proEnabled = user.proEnabled === true || planTier === "pro";
+  const subscriptionStatus = typeof user.subscriptionStatus === "string" && user.subscriptionStatus.length > 0 ? user.subscriptionStatus : null;
+
+  return {
+    ...user,
+    planTier,
+    proEnabled,
+    subscriptionStatus,
+  };
+}
+
 async function parseApiError(response: Response, fallback: string): Promise<string> {
   try {
     const payload = (await response.json()) as ApiError;

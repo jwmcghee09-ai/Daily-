@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { findAuthUserByEmail } from "@/lib/db";
+import { findAuthUserByEmail, readUserEntitlements } from "@/lib/db";
 import {
   applySessionCookie,
   createAndPersistSession,
@@ -59,6 +59,7 @@ export async function POST(request: Request) {
     }
 
     const session = createAndPersistSession(user.id);
+    const entitlements = readUserEntitlements(user.id);
 
     const response = NextResponse.json({
       authenticated: true,
@@ -66,6 +67,9 @@ export async function POST(request: Request) {
         id: user.id,
         email: user.email,
         displayName: user.displayName,
+        planTier: entitlements.planTier,
+        proEnabled: entitlements.proEnabled,
+        subscriptionStatus: entitlements.subscriptionStatus,
       },
     });
 

@@ -1556,6 +1556,14 @@ export interface PreSignupBillingUpsertInput extends PreSignupBillingPatchInput 
   email: string;
 }
 
+export type PlanTier = "none" | "starter" | "pro";
+
+export interface UserEntitlements {
+  planTier: PlanTier;
+  proEnabled: boolean;
+  subscriptionStatus: string | null;
+}
+
 const ACTIVE_SUBSCRIPTION_STATUSES = new Set(["active", "trialing"]);
 
 function toOptionalNullableString(value: string | null | undefined): string | null | undefined {
@@ -1605,6 +1613,48 @@ export function readBillingSubscription(userId: string): BillingSubscription | n
     .get(userId) as BillingSubscriptionRow | undefined;
 
   return row ? toBillingSubscription(row) : null;
+}
+
+function hasActiveSubscription(record: { status: string | null; currentPeriodEnd: string | null }): boolean {
+  const status = (record.status || "").toLowerCase();
+  if (!ACTIVE_SUBSCRIPTION_STATUSES.has(status)) {
+    return false;
+  }
+
+  if (record.currentPeriodEnd) {
+    const periodEnd = new Date(record.currentPeriodEnd);
+    if (!Number.isNaN(periodEnd.getTime()) && periodEnd.getTime() < Date.now()) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function isTruthyEnvFlag(value: string | undefined): boolean {
+  if (!value) {
+    return false;
+  }
+
+  const normalized = value.trim().toLowerCase();
+  return normalized === "1" || normalized === "true" || normalized === "yes" || normalized === "on";
+}
+
+export function readUserEntitlements(userId: string): UserEntitlements {
+  const subscription = readBillingSubscription(userId);
+  if (!subscription || !hasActiveSubscription({ status: subscription.status, currentPeriodEnd: subscription.currentPeriodEnd })) {
+    return { planTier: "none", proEnabled: false, subscriptionStatus: subscription?.status || null };
+  }
+
+  const configuredProPriceId = (process.env.STRIPE_PRO_PRICE_ID || "").trim();
+  const isProByPrice = configuredProPriceId.length > 0 && subscription.stripePriceId === configuredProPriceId;
+  const allowProForStarter = isTruthyEnvFlag(process.env.PRO_ANALYTICS_FOR_STARTER);
+
+  if (isProByPrice || allowProForStarter) {
+    return { planTier: "pro", proEnabled: true, subscriptionStatus: subscription.status };
+  }
+
+  return { planTier: "starter", proEnabled: false, subscriptionStatus: subscription.status };
 }
 
 export function upsertBillingSubscriptionForUser(input: BillingSubscriptionUpsertInput): void {
