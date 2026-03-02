@@ -561,6 +561,7 @@ export default function Home() {
   const benchmarkBeta = historicalRiskEstimate?.betaToBenchmark ?? null;
   const benchmarkTrackingErrorAnnualPct = historicalRiskEstimate?.trackingErrorAnnualPct ?? null;
   const proAnalyticsEnabled = sessionUser?.proEnabled === true;
+  const starterPlan = !proAnalyticsEnabled;
   const usingYahooFallback = metrics.var95Amount == null && historicalRiskEstimate != null;
   const riskReturnsUsed = usingYahooFallback ? (historicalRiskEstimate?.returnsCount ?? 0) : metrics.dailyReturns.length;
 
@@ -674,7 +675,7 @@ export default function Home() {
     const outliersFiltered = usingYahooFallback ? (historicalRiskEstimate?.outlierReturnsRemoved ?? 0) : metrics.returnOutliersRemoved;
     const benchmarkOverlap = usingYahooFallback ? (historicalRiskEstimate?.benchmarkPointsUsed ?? 0) : null;
 
-    return [
+    const starterRows = [
       {
         label: "Daily snapshots",
         value: String(dailySnapshotDates.size),
@@ -696,6 +697,19 @@ export default function Home() {
         status: usingYahooFallback ? "warn" : "good",
       },
       {
+        label: "Plan tier",
+        value: sessionUser ? sessionUser.planTier.toUpperCase() : "N/A",
+        status: sessionUser?.proEnabled ? "good" : "warn",
+      },
+    ] as const;
+
+    if (starterPlan) {
+      return starterRows;
+    }
+
+    return [
+      ...starterRows,
+      {
         label: "Risk returns used",
         value: String(riskReturnsUsed),
         status: riskReturnsUsed >= 20 ? "good" : "warn",
@@ -710,15 +724,31 @@ export default function Home() {
         value: benchmarkOverlap == null ? "N/A" : String(benchmarkOverlap),
         status: benchmarkOverlap == null || benchmarkOverlap >= 20 ? "good" : "warn",
       },
-      {
-        label: "Plan tier",
-        value: sessionUser ? sessionUser.planTier.toUpperCase() : "N/A",
-        status: sessionUser?.proEnabled ? "good" : "warn",
-      },
     ] as const;
-  }, [historicalRiskEstimate?.benchmarkPointsUsed, historicalRiskEstimate?.outlierReturnsRemoved, metrics.history, metrics.returnOutliersRemoved, riskReturnsUsed, sessionUser, state.holdings, usingYahooFallback]);
+  }, [historicalRiskEstimate?.benchmarkPointsUsed, historicalRiskEstimate?.outlierReturnsRemoved, metrics.history, metrics.returnOutliersRemoved, riskReturnsUsed, sessionUser, starterPlan, state.holdings, usingYahooFallback]);
 
   const riskFlags = useMemo<RiskFlag[]>(() => {
+    if (starterPlan) {
+      return [
+        toRiskFlag(
+          "Top 3 concentration",
+          metrics.top3ConcentrationPct,
+          40,
+          60,
+          "%",
+          "(Top 3 holding values / total portfolio value) x 100.",
+        ),
+        toRiskFlag(
+          "Largest account share",
+          metrics.largestAccountPct,
+          55,
+          75,
+          "%",
+          "(Largest account value / total portfolio value) x 100.",
+        ),
+      ].filter((flag) => flag.value !== "N/A");
+    }
+
     const flags: RiskFlag[] = [
       toRiskFlag(
         "Annualized volatility",
@@ -770,60 +800,39 @@ export default function Home() {
       ),
     ];
 
-    if (proAnalyticsEnabled) {
-      flags.push(
-        toRiskFlag(
-          "1-day Expected Shortfall 95",
-          effectiveCvar95Pct,
-          1.8,
-          3.5,
-          "%",
-          "Average loss within the worst 5% of daily returns in the selected window.",
-        ),
-      );
-      flags.push(
-        toRiskFlag(
-          "Beta vs ASX 200",
-          benchmarkBeta,
-          1.1,
-          1.35,
-          "",
-          "Sensitivity of portfolio returns to ASX 200 returns using date-aligned daily data.",
-        ),
-      );
-      flags.push(
-        toRiskFlag(
-          "Tracking error (annualized)",
-          benchmarkTrackingErrorAnnualPct,
-          6,
-          12,
-          "%",
-          "Std dev of (portfolio return - ASX 200 return), annualized from daily data.",
-        ),
-      );
-    } else {
-      flags.push(
-        toLockedRiskFlag(
-          "1-day Expected Shortfall 95",
-          "Pro analytics only. Unlock Pro to access tail-risk expected shortfall estimates.",
-        ),
-      );
-      flags.push(
-        toLockedRiskFlag(
-          "Beta vs ASX 200",
-          "Pro analytics only. Unlock Pro to estimate benchmark beta from date-aligned return history.",
-        ),
-      );
-      flags.push(
-        toLockedRiskFlag(
-          "Tracking error (annualized)",
-          "Pro analytics only. Unlock Pro to estimate annualized active risk versus ASX 200.",
-        ),
-      );
-    }
+    flags.push(
+      toRiskFlag(
+        "1-day Expected Shortfall 95",
+        effectiveCvar95Pct,
+        1.8,
+        3.5,
+        "%",
+        "Average loss within the worst 5% of daily returns in the selected window.",
+      ),
+    );
+    flags.push(
+      toRiskFlag(
+        "Beta vs ASX 200",
+        benchmarkBeta,
+        1.1,
+        1.35,
+        "",
+        "Sensitivity of portfolio returns to ASX 200 returns using date-aligned daily data.",
+      ),
+    );
+    flags.push(
+      toRiskFlag(
+        "Tracking error (annualized)",
+        benchmarkTrackingErrorAnnualPct,
+        6,
+        12,
+        "%",
+        "Std dev of (portfolio return - ASX 200 return), annualized from daily data.",
+      ),
+    );
 
     return flags.filter((flag) => flag.value !== "N/A");
-  }, [benchmarkBeta, benchmarkTrackingErrorAnnualPct, effectiveCvar95Pct, effectiveMaxDrawdownPct, effectiveVar95Pct, effectiveVolatilityAnnualPct, metrics.hhi, metrics.largestAccountPct, metrics.top3ConcentrationPct, proAnalyticsEnabled]);
+  }, [benchmarkBeta, benchmarkTrackingErrorAnnualPct, effectiveCvar95Pct, effectiveMaxDrawdownPct, effectiveVar95Pct, effectiveVolatilityAnnualPct, metrics.hhi, metrics.largestAccountPct, metrics.top3ConcentrationPct, starterPlan]);
 
   const latestReportDate = useMemo(() => {
     if (state.holdings.length === 0) {
@@ -1331,7 +1340,7 @@ export default function Home() {
           <section id="top" className="landing-hero">
             <div className="landing-hero-copy">
               <p className="landing-kicker">ASX / Super / SMSF Risk Platform</p>
-              <h1>See the real risk hiding in your portfolio in minutes.</h1>
+              <h1>Monitor exposure and risk in one private workspace.</h1>
               <p className="landing-hero-text">
                 SPECTRE turns CSV exports from super, ASX, index funds, mutual funds, and bullion into one clear risk view so you can act with confidence.
               </p>
@@ -1839,41 +1848,49 @@ export default function Home() {
           help="Change since the first Sydney-time snapshot today. Resets at midnight Sydney time."
           tone={todayPortfolioChangePct == null ? "neutral" : todayPortfolioChangeAmount >= 0 ? "positive" : "negative"}
         />
-        <KpiCard
-          label={"1-Day VaR (95%, " + riskWindow + ")"}
-          value={
-            effectiveVar95Amount != null
-              ? `${formatCurrency(effectiveVar95Amount)} (${formatPercent(effectiveVar95Pct)})${metrics.var95Amount == null ? " • Yahoo estimate" : ""}`
-              : loadingHistoricalEstimate && metrics.var95Amount == null
-                ? "Estimating from Yahoo..."
-                : "Need 20+ daily snapshots"
-          }
-          help="Estimated one-day loss threshold at 95% confidence, based on the selected risk window."
-        />
-        <KpiCard
-          label={"1-Day ES (95%, " + riskWindow + ")"}
-          value={
-            !proAnalyticsEnabled
-              ? "Pro analytics"
-              : effectiveCvar95Amount != null
-              ? `${formatCurrency(effectiveCvar95Amount)} (${formatPercent(effectiveCvar95Pct)})${metrics.cvar95Amount == null ? " • Yahoo estimate" : ""}`
-              : loadingHistoricalEstimate && metrics.cvar95Amount == null
-                ? "Estimating from Yahoo..."
-                : "Need 20+ daily snapshots"
-          }
-          help="Expected Shortfall is the average loss on the worst 5% of days in the selected window."
-        />
+        {proAnalyticsEnabled ? (
+          <>
+            <KpiCard
+              label={"1-Day VaR (95%, " + riskWindow + ")"}
+              value={
+                effectiveVar95Amount != null
+                  ? `${formatCurrency(effectiveVar95Amount)} (${formatPercent(effectiveVar95Pct)})${metrics.var95Amount == null ? " • Yahoo estimate" : ""}`
+                  : loadingHistoricalEstimate && metrics.var95Amount == null
+                    ? "Estimating from Yahoo..."
+                    : "Need 20+ daily snapshots"
+              }
+              help="Estimated one-day loss threshold at 95% confidence, based on the selected risk window."
+            />
+            <KpiCard
+              label={"1-Day ES (95%, " + riskWindow + ")"}
+              value={
+                effectiveCvar95Amount != null
+                  ? `${formatCurrency(effectiveCvar95Amount)} (${formatPercent(effectiveCvar95Pct)})${metrics.cvar95Amount == null ? " • Yahoo estimate" : ""}`
+                  : loadingHistoricalEstimate && metrics.cvar95Amount == null
+                    ? "Estimating from Yahoo..."
+                    : "Need 20+ daily snapshots"
+              }
+              help="Expected Shortfall is the average loss on the worst 5% of days in the selected window."
+            />
+          </>
+        ) : (
+          <KpiCard
+            label="Pro Quant Pack"
+            value="VaR, ES, beta, stress tests"
+            help="Starter keeps the dashboard simple. Upgrade to Pro for deeper quant risk analytics."
+          />
+        )}
       </section>
 
       <section className={`pro-analytics-section ${proAnalyticsEnabled ? "unlocked" : "locked"}`}>
         <div className="pro-analytics-head">
-          <h2>Pro Analytics Console</h2>
+          <h2>Pro Quant Console</h2>
           <span className="pro-analytics-status">{proAnalyticsEnabled ? "UNLOCKED" : "LOCKED • $15/MONTH"}</span>
         </div>
         <p className="pro-analytics-note">
           {proAnalyticsEnabled
             ? "Advanced quant analytics are active for this account."
-            : "Upgrade to Pro to unlock Expected Shortfall, benchmark beta, and tracking error analytics."}
+            : "Starter stays streamlined. Upgrade to Pro to unlock VaR, Expected Shortfall, benchmark beta, tracking error, and stress scenarios."}
         </p>
         <div className="pro-analytics-grid">
           <article className="pro-analytics-card">
@@ -1904,7 +1921,7 @@ export default function Home() {
 
       
       <section className="insights-section">
-        <h2>Performance & Stress</h2>
+        <h2>{proAnalyticsEnabled ? "Performance & Stress" : "Performance"}</h2>
         <div className="insights-grid">
           <article className="insight-card">
             <h3>Asset Split</h3>
@@ -1967,19 +1984,23 @@ export default function Home() {
           </article>
         </div>
 
-        <div className="stress-grid">
-          {stressScenarios.length === 0 ? (
-            <div className="empty">Import holdings to run stress scenarios.</div>
-          ) : (
-            stressScenarios.map((scenario) => (
-              <article key={scenario.name} className={"stress-card " + (scenario.impactAmount <= 0 ? "down" : "up")}>
-                <p>{scenario.name}</p>
-                <strong>{formatSignedCurrency(scenario.impactAmount)} ({formatPercent(scenario.impactPct)})</strong>
-                <span>Projected value: {formatCurrency(scenario.projectedValue)}</span>
-              </article>
-            ))
-          )}
-        </div>
+        {proAnalyticsEnabled ? (
+          <div className="stress-grid">
+            {stressScenarios.length === 0 ? (
+              <div className="empty">Import holdings to run stress scenarios.</div>
+            ) : (
+              stressScenarios.map((scenario) => (
+                <article key={scenario.name} className={"stress-card " + (scenario.impactAmount <= 0 ? "down" : "up")}>
+                  <p>{scenario.name}</p>
+                  <strong>{formatSignedCurrency(scenario.impactAmount)} ({formatPercent(scenario.impactPct)})</strong>
+                  <span>Projected value: {formatCurrency(scenario.projectedValue)}</span>
+                </article>
+              ))
+            )}
+          </div>
+        ) : (
+          <div className="empty">Starter keeps this simple. Stress scenarios are available on Pro.</div>
+        )}
       </section>
 
       
@@ -2037,29 +2058,32 @@ export default function Home() {
       
       <section className="risk-section">
         <div className="risk-head">
-          <h2>Risk Signals</h2>
-          <div className="risk-window-controls" role="group" aria-label="Select risk window">
-            {RISK_WINDOW_OPTIONS.map((option) => (
-              <button
-                key={option}
-                type="button"
-                className={"risk-window-btn" + (riskWindow === option ? " active" : "")}
-                onClick={() => setRiskWindow(option)}
-              >
-                {option}
-              </button>
-            ))}
-          </div>
+          <h2>{proAnalyticsEnabled ? "Risk Signals" : "Risk Snapshot"}</h2>
+          {proAnalyticsEnabled ? (
+            <div className="risk-window-controls" role="group" aria-label="Select risk window">
+              {RISK_WINDOW_OPTIONS.map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  className={"risk-window-btn" + (riskWindow === option ? " active" : "")}
+                  onClick={() => setRiskWindow(option)}
+                >
+                  {option}
+                </button>
+              ))}
+            </div>
+          ) : null}
         </div>
-        <p className="risk-window-note">
-          Window {riskWindow}: {metrics.riskPointsUsed} snapshot points
-          {metrics.riskStartDate ? " from " + formatRiskWindowDate(metrics.riskStartDate) : ""}
-          {metrics.riskEndDate ? " to " + formatRiskWindowDate(metrics.riskEndDate) : ""}
-          .
-        </p>
-        {!proAnalyticsEnabled ? (
-          <p className="estimate-note">Pro analytics locked: Expected Shortfall, beta, and tracking error are available on Pro.</p>
-        ) : null}
+        {proAnalyticsEnabled ? (
+          <p className="risk-window-note">
+            Window {riskWindow}: {metrics.riskPointsUsed} snapshot points
+            {metrics.riskStartDate ? " from " + formatRiskWindowDate(metrics.riskStartDate) : ""}
+            {metrics.riskEndDate ? " to " + formatRiskWindowDate(metrics.riskEndDate) : ""}
+            .
+          </p>
+        ) : (
+          <p className="risk-window-note">Starter focuses on core risk visibility (risk score + concentration). Upgrade to Pro for full quant risk windows.</p>
+        )}
         {usingYahooFallback ? (
           <p className="estimate-note">
             {historicalRiskEstimate.note} ({historicalRiskEstimate.pointsUsed}/{historicalRiskEstimate.pointsTarget} points, {historicalRiskEstimate.usedTickers.length} tickers{proAnalyticsEnabled ? `, ${historicalRiskEstimate.benchmarkPointsUsed} benchmark overlap days` : ""})
@@ -2366,15 +2390,6 @@ function toRiskFlag(
   }
 
   return { label, value: `${value.toFixed(2)}${suffix}`, tone: "green", help };
-}
-
-function toLockedRiskFlag(label: string, help: string): RiskFlag {
-  return {
-    label,
-    value: "PRO",
-    tone: "yellow",
-    help,
-  };
 }
 
 function getSydneyClockParts(date: Date): { weekday: string; hour: number; minute: number } | null {
