@@ -1640,8 +1640,35 @@ function isTruthyEnvFlag(value: string | undefined): boolean {
   return normalized === "1" || normalized === "true" || normalized === "yes" || normalized === "on";
 }
 
+function parseEmailList(value: string | undefined): Set<string> {
+  if (!value) {
+    return new Set();
+  }
+
+  return new Set(
+    value
+      .split(",")
+      .map((item) => normalizeEmail(item))
+      .filter((item) => item.length > 0),
+  );
+}
+
+function readUserEmailById(userId: string): string | null {
+  const db = getDb();
+  const row = db.prepare("SELECT email FROM users WHERE id = ? LIMIT 1").get(userId) as { email: string } | undefined;
+  return row?.email ? normalizeEmail(row.email) : null;
+}
+
 export function readUserEntitlements(userId: string): UserEntitlements {
   const subscription = readBillingSubscription(userId);
+  const userEmail = readUserEmailById(userId);
+  const proAccessEmails = parseEmailList(process.env.PRO_ACCESS_EMAILS);
+  const isAllowlistedForPro = userEmail ? proAccessEmails.has(userEmail) : false;
+
+  if (isAllowlistedForPro) {
+    return { planTier: "pro", proEnabled: true, subscriptionStatus: subscription?.status || null };
+  }
+
   if (!subscription || !hasActiveSubscription({ status: subscription.status, currentPeriodEnd: subscription.currentPeriodEnd })) {
     return { planTier: "none", proEnabled: false, subscriptionStatus: subscription?.status || null };
   }
