@@ -2190,7 +2190,7 @@ td {
 .landing-analytics-grid {
   margin-top: 14px;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
 
@@ -2658,15 +2658,18 @@ td {
   }
 }
 
-@media (min-width: 1420px) {
-  .kpi-grid {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+@media (min-width: 960px) {
+  .shell .kpi-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
   }
-}
 
-@media (min-width: 960px) and (max-width: 1419px) {
-  .kpi-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+  .shell .kpi-grid > .kpi-card {
+    flex: 1 1 220px;
+    max-width: 250px;
+    margin-inline: 0;
   }
 }
 
