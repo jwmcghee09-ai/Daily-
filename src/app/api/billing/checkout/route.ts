@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser, isLikelyEmail, normalizeEmail } from "@/lib/auth";
-import { getAppBaseUrl, getStarterPriceId, getStripeClient } from "@/lib/stripe";
+import { BillingPlan, getAppBaseUrl, getPriceIdForPlan, getStripeClient } from "@/lib/stripe";
 
 export const runtime = "nodejs";
 
 interface CheckoutRequestBody {
   email?: unknown;
+  plan?: unknown;
 }
 
 function toGuestEmail(input: unknown): string | null {
@@ -29,16 +30,17 @@ export async function POST(request: Request) {
     }
 
     const guestEmail = toGuestEmail(body.email);
+    const plan = toBillingPlan(body.plan);
     if (!user && !guestEmail) {
       return NextResponse.json({ error: "A valid email is required to start checkout." }, { status: 400 });
     }
 
     let stripe;
-    let starterPriceId;
+    let priceId;
 
     try {
       stripe = getStripeClient();
-      starterPriceId = getStarterPriceId();
+      priceId = getPriceIdForPlan(plan);
     } catch (error) {
       return NextResponse.json({ error: error instanceof Error ? error.message : "Stripe is not configured." }, { status: 503 });
     }
@@ -50,7 +52,8 @@ export async function POST(request: Request) {
     }
 
     const metadata: Record<string, string> = {
-      priceId: starterPriceId,
+      plan,
+      priceId,
       checkoutEmail,
     };
 
@@ -60,7 +63,7 @@ export async function POST(request: Request) {
 
     const checkoutSession = await stripe.checkout.sessions.create({
       mode: "subscription",
-      line_items: [{ price: starterPriceId, quantity: 1 }],
+      line_items: [{ price: priceId, quantity: 1 }],
       customer_email: checkoutEmail,
       client_reference_id: user?.id,
       metadata,
@@ -73,7 +76,7 @@ export async function POST(request: Request) {
         button_color: "#ff4b33",
         border_style: "rounded",
       },
-      success_url: `${baseUrl}/?checkout=success`,
+      success_url: `${baseUrl}/?checkout=success&plan=${encodeURIComponent(plan)}`,
       cancel_url: `${baseUrl}/?checkout=cancelled`,
     });
 
@@ -86,4 +89,12 @@ export async function POST(request: Request) {
     console.error("Stripe checkout session creation failed", error);
     return NextResponse.json({ error: "Unable to create checkout session." }, { status: 500 });
   }
+}
+
+function toBillingPlan(value: unknown): BillingPlan {
+  if (value === "pro") {
+    return "pro";
+  }
+
+  return "starter";
 }

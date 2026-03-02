@@ -57,9 +57,10 @@ Without these in production, `/api/auth/password/request` returns a configuratio
 Set these environment variables in Render for Stripe checkout and webhooks:
 - `STRIPE_SECRET_KEY=sk_live_...`
 - `STRIPE_PRICE_STARTER_MONTHLY=price_...`
-- `STRIPE_PRO_PRICE_ID=price_...` (optional, enables Pro entitlement detection)
+- `STRIPE_PRO_PRICE_ID=price_...` (required for Pro checkout and Pro entitlement detection)
 - `STRIPE_WEBHOOK_SECRET=whsec_...`
 - `PRO_ANALYTICS_FOR_STARTER=false` (optional; set true only if you want Starter users to temporarily access Pro analytics)
+- `PRO_ACCESS_EMAILS=you@example.com,second@example.com` (optional; specific accounts that should always get Pro analytics)
 
 In Stripe dashboard, add webhook endpoint:
 - `https://your-live-domain/api/webhooks/stripe`
@@ -70,7 +71,7 @@ Listen for events:
 - `customer.subscription.updated`
 - `customer.subscription.deleted`
 
-The logged-in dashboard includes a `Starter Plan ($3/mo)` button that starts Stripe Checkout.
+The landing page includes both `Starter ($3/mo)` and `Pro ($15/mo)` Stripe Checkout buttons.
 Pro analytics (Expected Shortfall, beta, tracking error) are gated by entitlement and unlock when a user's active subscription has `STRIPE_PRO_PRICE_ID`.
 
 ### Monitoring + Alerts

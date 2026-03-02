@@ -1,6 +1,7 @@
 import Stripe from "stripe";
 
 let stripeClient: Stripe | null = null;
+export type BillingPlan = "starter" | "pro";
 
 function readValue(name: string): string {
   return (process.env[name] || "").trim();
@@ -28,6 +29,22 @@ export function getStarterPriceId(): string {
     throw new Error("Stripe is not configured: STRIPE_PRICE_STARTER_MONTHLY is missing.");
   }
   return value;
+}
+
+export function getProPriceId(): string {
+  const value = readValue("STRIPE_PRO_PRICE_ID");
+  if (!value) {
+    throw new Error("Stripe is not configured: STRIPE_PRO_PRICE_ID is missing.");
+  }
+  return value;
+}
+
+export function getPriceIdForPlan(plan: BillingPlan): string {
+  if (plan === "pro") {
+    return getProPriceId();
+  }
+
+  return getStarterPriceId();
 }
 
 export function getStripeClient(): Stripe {

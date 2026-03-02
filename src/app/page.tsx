@@ -200,6 +200,8 @@ interface BillingCheckoutResponse {
   url?: string;
 }
 
+type CheckoutPlan = "starter" | "pro";
+
 interface PendingRegistrationDraft {
   email: string;
   password: string;
@@ -343,10 +345,12 @@ export default function Home() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const checkoutState = params.get("checkout");
+    const checkoutPlan = toCheckoutPlan(params.get("plan"));
     const verifiedState = params.get("verified");
 
     if (checkoutState === "success") {
-      setBanner({ type: "success", message: "Starter plan checkout complete. Your subscription will activate shortly." });
+      const planLabel = checkoutPlan === "pro" ? "Pro" : "Starter";
+      setBanner({ type: "success", message: `${planLabel} plan checkout complete. Your subscription will activate shortly.` });
       void completePendingRegistrationAfterCheckout();
     } else if (checkoutState === "cancelled") {
       setBanner({ type: "info", message: "Stripe checkout was cancelled." });
@@ -364,6 +368,7 @@ export default function Home() {
 
     if (checkoutState || verifiedState) {
       params.delete("checkout");
+      params.delete("plan");
       params.delete("verified");
       const query = params.toString();
       const hash = window.location.hash;
@@ -1009,8 +1014,9 @@ export default function Home() {
     }
   };
 
-  const startStarterCheckout = async (guestEmail?: string) => {
+  const startCheckout = async (plan: CheckoutPlan, guestEmail?: string) => {
     let checkoutEmail = sessionUser?.email || "";
+    const planLabel = plan === "pro" ? "Pro" : "Starter";
 
     if (!checkoutEmail) {
       const fromGuestEmail = (guestEmail || "").trim().toLowerCase();
@@ -1019,7 +1025,7 @@ export default function Home() {
       checkoutEmail = fromGuestEmail || fromAuthEmail;
 
       if (!checkoutEmail) {
-        const promptedEmail = window.prompt("Enter your email to start Starter checkout:", "");
+        const promptedEmail = window.prompt(`Enter your email to start ${planLabel} checkout:`, "");
         if (!promptedEmail) {
           return;
         }
@@ -1035,14 +1041,16 @@ export default function Home() {
     setCheckoutWorking(true);
 
     try {
-      const requestInit: RequestInit = { method: "POST" };
-
-      if (!sessionUser) {
-        requestInit.headers = {
+      const requestInit: RequestInit = {
+        method: "POST",
+        headers: {
           "Content-Type": "application/json",
-        };
-        requestInit.body = JSON.stringify({ email: checkoutEmail });
-      }
+        },
+        body: JSON.stringify({
+          email: !sessionUser ? checkoutEmail : undefined,
+          plan,
+        }),
+      };
 
       const response = await fetch("/api/billing/checkout", requestInit);
       if (!response.ok) {
@@ -1059,6 +1067,14 @@ export default function Home() {
       setBanner({ type: "error", message: error instanceof Error ? error.message : "Unable to start Stripe checkout." });
       setCheckoutWorking(false);
     }
+  };
+
+  const startStarterCheckout = async (guestEmail?: string) => {
+    await startCheckout("starter", guestEmail);
+  };
+
+  const startProCheckout = async (guestEmail?: string) => {
+    await startCheckout("pro", guestEmail);
   };
 
   const submitAuth = async (event: FormEvent<HTMLFormElement>) => {
@@ -1520,7 +1536,7 @@ export default function Home() {
 
               <article className="landing-plan landing-plan-pro">
                 <p className="landing-plan-tier">Pro</p>
-                <h3>Coming<span> soon</span></h3>
+                <h3>$15<span>/month</span></h3>
                 <p className="landing-plan-subtitle">Advanced quant analytics</p>
                 <ul>
                   <li>Everything in Starter</li>
@@ -1529,10 +1545,17 @@ export default function Home() {
                   <li>Date-aligned benchmark analytics</li>
                   <li>Advanced reporting and team workflows</li>
                 </ul>
-                <a href="#access" className="landing-btn landing-btn-ghost">Join Pro Waitlist</a>
+                <button
+                  type="button"
+                  onClick={() => void startProCheckout(authEmail)}
+                  className="landing-btn landing-btn-ghost"
+                  disabled={checkoutWorking}
+                >
+                  {checkoutWorking ? "Redirecting..." : "Get Pro"}
+                </button>
               </article>
             </div>
-            <p className="landing-pricing-note">Pro analytics are shown as locked until a Pro entitlement is active.</p>
+            <p className="landing-pricing-note">Pro analytics unlock automatically when your subscription uses the Pro Stripe price.</p>
           </section>
 
           <section id="access" className="landing-access">
@@ -1540,7 +1563,7 @@ export default function Home() {
               <p className="landing-kicker">Client Access</p>
               <h2>Enter your private SPECTRE workspace.</h2>
               <p>
-                Sign in to continue from your last snapshot, or create your account with Stripe checkout in one flow. Starter plan is $3/month.
+                Sign in to continue from your last snapshot, or create your account with Stripe checkout in one flow. Starter is $3/month and Pro is $15/month.
               </p>
               <div className="landing-proof">
                 <p>Designed for analyst teams and active portfolio operators.</p>
@@ -1553,6 +1576,17 @@ export default function Home() {
               <p>Access your private SPECTRE workspace.</p>
 
               {banner ? <div className={"banner " + banner.type}>{banner.message}</div> : null}
+              <div className="auth-actions">
+                <button
+                  type="button"
+                  className="template-btn"
+                  onClick={() => void startProCheckout(authEmail)}
+                  disabled={authWorking || checkoutWorking}
+                >
+                  {checkoutWorking ? "Redirecting..." : "Start Pro Checkout ($15/mo)"}
+                </button>
+              </div>
+
               {authError ? <div className="banner error">{authError}</div> : null}
 
               <form onSubmit={submitAuth} className="auth-form-grid">
@@ -2468,6 +2502,14 @@ function normalizeSessionUser(user: SessionUser): SessionUser {
     proEnabled,
     subscriptionStatus,
   };
+}
+
+function toCheckoutPlan(value: string | null): CheckoutPlan {
+  if (value === "pro") {
+    return "pro";
+  }
+
+  return "starter";
 }
 
 async function parseApiError(response: Response, fallback: string): Promise<string> {
