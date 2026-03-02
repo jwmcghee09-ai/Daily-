@@ -1404,7 +1404,7 @@ tr:hover td {
 }
 
 .hero-wordmark-image {
-  width: min(360px, 100%);
+  width: min(560px, 100%);
   height: auto;
   display: block;
   filter: drop-shadow(0 0 16px rgba(255, 75, 51, 0.2));
@@ -2753,7 +2753,7 @@ td {
   }
 
   .hero-wordmark-image {
-    width: min(280px, 86vw);
+    width: min(340px, 92vw);
   }
 
   .hero-tagline {

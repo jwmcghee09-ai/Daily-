@@ -1339,7 +1339,7 @@ export default function Home() {
         <main className="landing-main">
           <section id="top" className="landing-hero">
             <div className="landing-hero-copy">
-              <p className="landing-kicker">ASX / Super / SMSF Risk Platform</p>
+              <p className="landing-kicker">System for Portfolio Exposure, Correlation, Threat &amp; Risk Evaluation</p>
               <h1>Monitor exposure and risk in one private workspace.</h1>
               <p className="landing-hero-text">
                 SPECTRE turns CSV exports from super, ASX, index funds, mutual funds, and bullion into one clear risk view so you can act with confidence.
@@ -1354,8 +1354,8 @@ export default function Home() {
                   <span>Upload CSV, normalize holdings, then review risk score and exposure metrics.</span>
                 </article>
                 <article>
-                  <strong>ASX-Focused Analytics</strong>
-                  <span>Built for ASX investors with live price refresh and session-aware movers.</span>
+                  <strong>SPECTRE Framework</strong>
+                  <span>System for Portfolio Exposure, Correlation, Threat & Risk Evaluation.</span>
                 </article>
                 <article>
                   <strong>Security Controls</strong>
@@ -1398,7 +1398,7 @@ export default function Home() {
               <span>SPECTRE surfaces hidden concentration and downside sensitivity.</span>
             </article>
             <article>
-              <strong>Built for ASX + Super + Bullion</strong>
+              <strong>System for Portfolio Exposure, Correlation, Threat & Risk Evaluation</strong>
               <span>Designed for Australian investors and SMSF-style reporting workflows.</span>
             </article>
           </section>
@@ -1611,7 +1611,7 @@ export default function Home() {
               <p className="landing-kicker">Client Access</p>
               <h2>Enter your private SPECTRE workspace.</h2>
               <p>
-                Sign in to continue from your last snapshot, or create your account with Stripe checkout in one flow. Built for ASX-focused investors and SMSF-style reporting workflows.
+                Sign in to continue from your last snapshot, or create your account with Stripe checkout in one flow. System for Portfolio Exposure, Correlation, Threat & Risk Evaluation.
               </p>
               <div className="landing-proof">
                 <p>Designed for active DIY investors who want pro-style risk visibility.</p>
@@ -1735,8 +1735,8 @@ export default function Home() {
     <div className="shell">
       <header className="hero">
         <div className="hero-copy">
-          <h1><Image src="/spectre-wordmark-plain.svg" alt="SPECTRE" width={344} height={82} className="hero-wordmark-image" priority /></h1>
-          <p className="hero-tagline">Built for ASX, super, and SMSF-style risk visibility</p>
+          <h1><Image src="/spectre-wordmark-plain.svg" alt="SPECTRE" width={620} height={148} className="hero-wordmark-image" priority /></h1>
+          <p className="hero-tagline">System for Portfolio Exposure, Correlation, Threat & Risk Evaluation</p>
           <p className="hero-description">Upload super, ASX, index, mutual fund, and ABC Bullion CSV reports to track exposure, concentration, and downside risk in one private workspace.</p>
         </div>
         <div className="meta">
