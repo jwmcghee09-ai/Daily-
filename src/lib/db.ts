@@ -70,6 +70,7 @@ interface HoldingTickerRow {
 }
 
 interface HoldingRiskRow {
+  source: string;
   ticker: string;
   value: number;
 }
@@ -419,6 +420,10 @@ function normalizeSource(value: unknown): DataSource {
     return "fund";
   }
 
+  if (value === "crypto") {
+    return "crypto";
+  }
+
   return "asx";
 }
 
@@ -484,7 +489,20 @@ function sanitizeHolding(raw: PortfolioHolding, source: DataSource, index: numbe
   return {
     id: sanitizeString(raw.id, `${source}-${index}-${Date.now()}`),
     source,
-    account: sanitizeString(raw.account, source === "super" ? "Superannuation" : source === "gold" ? "ABC Bullion" : source === "index" ? "Index Holdings" : source === "fund" ? "Mutual Funds" : "Brokerage"),
+    account: sanitizeString(
+      raw.account,
+      source === "super"
+        ? "Superannuation"
+        : source === "gold"
+          ? "ABC Bullion"
+          : source === "index"
+            ? "Index Holdings"
+            : source === "fund"
+              ? "Mutual Funds"
+              : source === "crypto"
+                ? "Crypto Wallet"
+                : "Brokerage",
+    ),
     ticker: sanitizeString(raw.ticker, "UNKNOWN").toUpperCase(),
     name: sanitizeString(raw.name, "Unnamed Holding"),
     units: sanitizeNumber(raw.units, 0),
@@ -492,7 +510,20 @@ function sanitizeHolding(raw: PortfolioHolding, source: DataSource, index: numbe
     prevClose: sanitizeNumber(raw.prevClose, sanitizeNumber(raw.price, 0)),
     value,
     costBase: sanitizeNumber(raw.costBase, value),
-    sector: sanitizeString(raw.sector, source === "super" ? "Super" : source === "gold" ? "Precious Metals" : source === "index" ? "Index" : source === "fund" ? "Mutual Fund" : "Equity"),
+    sector: sanitizeString(
+      raw.sector,
+      source === "super"
+        ? "Super"
+        : source === "gold"
+          ? "Precious Metals"
+          : source === "index"
+            ? "Index"
+            : source === "fund"
+              ? "Mutual Fund"
+              : source === "crypto"
+                ? "Crypto"
+                : "Equity",
+    ),
     reportDate: sanitizeDate(raw.reportDate),
     importedAt: sanitizeString(raw.importedAt, new Date().toISOString()),
   };
@@ -550,6 +581,23 @@ function toYahooSymbol(ticker: string): string {
   }
 
   return `${clean}.AX`;
+}
+
+function toCryptoYahooSymbol(ticker: string): string {
+  const clean = ticker.trim().toUpperCase();
+  if (clean.length === 0) {
+    return clean;
+  }
+
+  if (clean.includes("-")) {
+    return clean;
+  }
+
+  if (clean.endsWith("USD") && clean.length > 3) {
+    return `${clean.slice(0, -3)}-USD`;
+  }
+
+  return `${clean}-USD`;
 }
 
 function extractAsxQuote(result: YahooChartResult | undefined): AsxQuoteData {
@@ -628,6 +676,35 @@ async function fetchAsxQuoteFromYahoo(ticker: string): Promise<AsxQuoteData | nu
   }
 }
 
+async function fetchCryptoQuoteFromYahoo(ticker: string): Promise<AsxQuoteData | null> {
+  const symbol = toCryptoYahooSymbol(ticker);
+  if (!symbol) {
+    return null;
+  }
+
+  const url = `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=5d`;
+
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+      cache: "no-store",
+      headers: {
+        "User-Agent": "Mozilla/5.0 (compatible; SPECTRE/1.0)",
+        Accept: "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const payload = (await response.json()) as YahooChartResponse;
+    return extractAsxQuote(payload.chart?.result?.[0]);
+  } catch {
+    return null;
+  }
+}
+
 async function fetchYahooSeriesBySymbol(symbol: string, range: string): Promise<DatedPricePoint[] | null> {
   if (!symbol) {
     return null;
@@ -659,6 +736,15 @@ async function fetchYahooSeriesBySymbol(symbol: string, range: string): Promise<
 
 async function fetchAsxSeriesFromYahoo(ticker: string, range: string): Promise<DatedPricePoint[] | null> {
   const symbol = toYahooSymbol(ticker);
+  if (!symbol) {
+    return null;
+  }
+
+  return fetchYahooSeriesBySymbol(symbol, range);
+}
+
+async function fetchCryptoSeriesFromYahoo(ticker: string, range: string): Promise<DatedPricePoint[] | null> {
+  const symbol = toCryptoYahooSymbol(ticker);
   if (!symbol) {
     return null;
   }
@@ -945,7 +1031,15 @@ export async function refreshAsxPrices(userId: string): Promise<PriceRefreshResu
     `)
     .all(scopedPattern) as HoldingTickerRow[];
 
-  const uniqueTickers = Array.from(
+  const cryptoRows = db
+    .prepare(`
+      SELECT ticker, units
+      FROM holdings
+      WHERE source = 'crypto' AND id LIKE ?
+    `)
+    .all(scopedPattern) as HoldingTickerRow[];
+
+  const uniqueAsxTickers = Array.from(
     new Set(
       asxRows
         .map((row) => sanitizeString(row.ticker, "").toUpperCase())
@@ -953,9 +1047,17 @@ export async function refreshAsxPrices(userId: string): Promise<PriceRefreshResu
     ),
   );
 
+  const uniqueCryptoTickers = Array.from(
+    new Set(
+      cryptoRows
+        .map((row) => sanitizeString(row.ticker, "").toUpperCase())
+        .filter((ticker) => ticker.length > 0),
+    ),
+  );
+
   const nowIso = new Date().toISOString();
 
-  if (uniqueTickers.length === 0) {
+  if (uniqueAsxTickers.length === 0 && uniqueCryptoTickers.length === 0) {
     setScopedMetaValue(db, userId, LAST_PRICE_REFRESH_KEY, nowIso);
     return {
       state: readPortfolioState(userId),
@@ -965,17 +1067,19 @@ export async function refreshAsxPrices(userId: string): Promise<PriceRefreshResu
     };
   }
 
-  const quoteByTicker = new Map<string, { price: number; prevClose: number }>();
+  const quoteUpdates: Array<{ source: "asx" | "crypto"; ticker: string; price: number; prevClose: number }> = [];
   const failedTickers: string[] = [];
 
   // Sequential fetch reduces the chance of upstream rate limiting.
-  for (const ticker of uniqueTickers) {
+  for (const ticker of uniqueAsxTickers) {
     const quote = await fetchAsxQuoteFromYahoo(ticker);
     const price = sanitizeNumber(quote?.price, Number.NaN);
     const prevClose = sanitizeNumber(quote?.prevClose, price);
 
     if (Number.isFinite(price) && price > 0) {
-      quoteByTicker.set(ticker, {
+      quoteUpdates.push({
+        source: "asx",
+        ticker,
         price,
         prevClose: Number.isFinite(prevClose) && prevClose > 0 ? prevClose : price,
       });
@@ -984,7 +1088,24 @@ export async function refreshAsxPrices(userId: string): Promise<PriceRefreshResu
     }
   }
 
-  if (quoteByTicker.size === 0) {
+  for (const ticker of uniqueCryptoTickers) {
+    const quote = await fetchCryptoQuoteFromYahoo(ticker);
+    const price = sanitizeNumber(quote?.price, Number.NaN);
+    const prevClose = sanitizeNumber(quote?.prevClose, price);
+
+    if (Number.isFinite(price) && price > 0) {
+      quoteUpdates.push({
+        source: "crypto",
+        ticker,
+        price,
+        prevClose: Number.isFinite(prevClose) && prevClose > 0 ? prevClose : price,
+      });
+    } else {
+      failedTickers.push(`${ticker} (crypto)`);
+    }
+  }
+
+  if (quoteUpdates.length === 0) {
     setScopedMetaValue(db, userId, LAST_PRICE_REFRESH_KEY, nowIso);
     return {
       state: readPortfolioState(userId),
@@ -1003,11 +1124,11 @@ export async function refreshAsxPrices(userId: string): Promise<PriceRefreshResu
         prev_close = ?,
         price = ?,
         value = CASE WHEN units > 0 THEN units * ? ELSE value END
-      WHERE source = 'asx' AND ticker = ? AND id LIKE ?
+      WHERE source = ? AND ticker = ? AND id LIKE ?
     `);
 
-    for (const [ticker, quote] of quoteByTicker.entries()) {
-      updateStmt.run(quote.prevClose, quote.price, quote.price, ticker, scopedPattern);
+    for (const quote of quoteUpdates) {
+      updateStmt.run(quote.prevClose, quote.price, quote.price, quote.source, quote.ticker, scopedPattern);
     }
 
     const totalRow = db
@@ -1031,7 +1152,7 @@ export async function refreshAsxPrices(userId: string): Promise<PriceRefreshResu
 
   return {
     state: readPortfolioState(userId),
-    updatedTickers: Array.from(quoteByTicker.keys()),
+    updatedTickers: quoteUpdates.map((quote) => (quote.source === "crypto" ? `${quote.ticker} (crypto)` : quote.ticker)),
     failedTickers,
     fetchedAt: nowIso,
   };
@@ -1049,7 +1170,7 @@ export async function estimateHistoricalRiskFromYahoo(
 
   const rows = db
     .prepare(`
-      SELECT ticker, value
+      SELECT source, ticker, value
       FROM holdings
       WHERE value > 0 AND id LIKE ?
     `)
@@ -1061,7 +1182,7 @@ export async function estimateHistoricalRiskFromYahoo(
     return {
       source: "yahoo_estimate",
       lessAccurateThanSnapshots: true,
-      note: "Estimated from Yahoo historical stock performance. This is less accurate than your own portfolio snapshot history. No holdings available yet.",
+      note: "Estimated from Yahoo historical market performance. This is less accurate than your own portfolio snapshot history. No holdings available yet.",
       benchmarkSymbol,
       benchmarkName,
       riskWindow,
@@ -1084,25 +1205,36 @@ export async function estimateHistoricalRiskFromYahoo(
     };
   }
 
-  const valueByTicker = new Map<string, number>();
+  const valueByTicker = new Map<string, { ticker: string; source: DataSource; value: number; label: string }>();
   for (const row of rows) {
+    const source = normalizeSource(row.source);
     const ticker = sanitizeString(row.ticker, "").toUpperCase();
     const value = sanitizeNumber(row.value, 0);
     if (!ticker || value <= 0) {
       continue;
     }
 
-    valueByTicker.set(ticker, (valueByTicker.get(ticker) || 0) + value);
+    const key = `${source}:${ticker}`;
+    const existing = valueByTicker.get(key);
+    valueByTicker.set(key, {
+      ticker,
+      source,
+      value: (existing?.value || 0) + value,
+      label: source === "crypto" ? `${ticker} (crypto)` : ticker,
+    });
   }
 
   const returnsByTicker = new Map<string, Map<string, number>>();
   const failedTickers: string[] = [];
   let outlierReturnsRemoved = 0;
 
-  for (const ticker of Array.from(valueByTicker.keys())) {
-    const series = await fetchAsxSeriesFromYahoo(ticker, windowSettings.yahooRange);
+  for (const [key, holding] of valueByTicker.entries()) {
+    const series = holding.source === "crypto"
+      ? await fetchCryptoSeriesFromYahoo(holding.ticker, windowSettings.yahooRange)
+      : await fetchAsxSeriesFromYahoo(holding.ticker, windowSettings.yahooRange);
+
     if (!series || series.length < 2) {
-      failedTickers.push(ticker);
+      failedTickers.push(holding.label);
       continue;
     }
 
@@ -1111,7 +1243,7 @@ export async function estimateHistoricalRiskFromYahoo(
     outlierReturnsRemoved += Math.max(0, rawReturns.length - returns.length);
     if (returns.length >= 1) {
       returnsByTicker.set(
-        ticker,
+        key,
         new Map(
           returns
             .filter((point) => point.date.length > 0 && Number.isFinite(point.value))
@@ -1119,7 +1251,7 @@ export async function estimateHistoricalRiskFromYahoo(
         ),
       );
     } else {
-      failedTickers.push(ticker);
+      failedTickers.push(holding.label);
     }
   }
 
@@ -1127,7 +1259,7 @@ export async function estimateHistoricalRiskFromYahoo(
     return {
       source: "yahoo_estimate",
       lessAccurateThanSnapshots: true,
-      note: "Estimated from Yahoo historical stock performance. This is less accurate than your own portfolio snapshot history. Could not fetch enough history for current tickers.",
+      note: "Estimated from Yahoo historical market performance. This is less accurate than your own portfolio snapshot history. Could not fetch enough history for current tickers.",
       benchmarkSymbol,
       benchmarkName,
       riskWindow,
@@ -1150,8 +1282,9 @@ export async function estimateHistoricalRiskFromYahoo(
     };
   }
 
-  const usedTickers = Array.from(returnsByTicker.keys());
-  const usedValueTotal = usedTickers.reduce((acc, ticker) => acc + (valueByTicker.get(ticker) || 0), 0);
+  const usedKeys = Array.from(returnsByTicker.keys());
+  const usedTickers = usedKeys.map((key) => valueByTicker.get(key)?.label || key);
+  const usedValueTotal = usedKeys.reduce((acc, key) => acc + (valueByTicker.get(key)?.value || 0), 0);
 
   const commonDates = intersectReturnDates(returnsByTicker);
   const selectedDates = commonDates.slice(-windowSettings.maxPoints);
@@ -1161,7 +1294,7 @@ export async function estimateHistoricalRiskFromYahoo(
     return {
       source: "yahoo_estimate",
       lessAccurateThanSnapshots: true,
-      note: "Estimated from Yahoo historical stock performance. This is less accurate than your own portfolio snapshot history. Not enough date-aligned return points available.",
+      note: "Estimated from Yahoo historical market performance. This is less accurate than your own portfolio snapshot history. Not enough date-aligned return points available.",
       benchmarkSymbol,
       benchmarkName,
       riskWindow,
@@ -1189,13 +1322,13 @@ export async function estimateHistoricalRiskFromYahoo(
   for (const date of selectedDates) {
     let dayReturn = 0;
 
-    for (const ticker of usedTickers) {
-      const tickerReturns = returnsByTicker.get(ticker);
+    for (const key of usedKeys) {
+      const tickerReturns = returnsByTicker.get(key);
       const r = tickerReturns?.get(date);
       if (r == null || !Number.isFinite(r)) {
         continue;
       }
-      const weight = usedValueTotal > 0 ? (valueByTicker.get(ticker) || 0) / usedValueTotal : 0;
+      const weight = usedValueTotal > 0 ? (valueByTicker.get(key)?.value || 0) / usedValueTotal : 0;
       dayReturn += weight * r;
     }
 

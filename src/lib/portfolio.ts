@@ -1,4 +1,4 @@
-export type DataSource = "super" | "asx" | "gold" | "index" | "fund";
+export type DataSource = "super" | "asx" | "gold" | "index" | "fund" | "crypto";
 
 export interface CsvRow {
   [key: string]: string | number | null | undefined;
@@ -149,7 +149,9 @@ function toHolding(
           ? "Index Holdings"
           : source === "fund"
             ? "Mutual Funds"
-            : "Brokerage");
+            : source === "crypto"
+              ? "Crypto Wallet"
+              : "Brokerage");
 
   const tickerRaw = readFirst(row, FIELD_ALIASES.ticker);
   const nameRaw = readFirst(row, FIELD_ALIASES.name);
@@ -167,9 +169,11 @@ function toHolding(
         ? `INDEX-${index + 1}`
         : source === "fund"
           ? `FUND-${index + 1}`
+          : source === "crypto"
+            ? `CRYPTO-${index + 1}`
           : name);
   const ticker = normalizeTicker(tickerCandidate);
-  const maxTickerLength = source === "asx" ? 8 : 16;
+  const maxTickerLength = source === "asx" ? 8 : source === "crypto" ? 20 : 16;
 
   if (!ticker || ticker.length > maxTickerLength) {
     return null;
@@ -216,7 +220,9 @@ function toHolding(
           ? "Index"
           : source === "fund"
             ? "Mutual Fund"
-            : "Equity");
+            : source === "crypto"
+              ? "Crypto"
+              : "Equity");
   const reportDate = parseDate(readFirst(row, FIELD_ALIASES.date)) || todayDate();
 
   return {
@@ -308,8 +314,8 @@ function normalizeTicker(value: string): string {
     .toUpperCase()
     .trim()
     .replace(/\s+/g, "")
-    .replace(/[^A-Z0-9.]/g, "")
-    .slice(0, 16);
+    .replace(/[^A-Z0-9.-]/g, "")
+    .slice(0, 20);
 }
 
 function parseDate(value: string): string | null {

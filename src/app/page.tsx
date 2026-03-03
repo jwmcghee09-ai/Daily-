@@ -849,10 +849,10 @@ export default function Home() {
   const todayTopLoser = todayMovers.length > 0 ? todayMovers[todayMovers.length - 1] : null;
 
   const dataQualityRows = useMemo(() => {
-    const asxHoldings = state.holdings.filter((holding) => holding.source === "asx");
-    const asxTickers = new Set(asxHoldings.map((holding) => holding.ticker.toUpperCase()));
+    const marketHoldings = state.holdings.filter((holding) => holding.source === "asx" || holding.source === "crypto");
+    const marketTickers = new Set(marketHoldings.map((holding) => holding.ticker.toUpperCase()));
     const pricedTickers = new Set(
-      asxHoldings
+      marketHoldings
         .filter((holding) => Number.isFinite(holding.price) && Number.isFinite(holding.prevClose) && holding.price > 0 && holding.prevClose > 0)
         .map((holding) => holding.ticker.toUpperCase()),
     );
@@ -874,9 +874,9 @@ export default function Home() {
         status: latestSnapshotAt ? "good" : "warn",
       },
       {
-        label: "ASX tickers with live pricing",
-        value: String(pricedTickers.size) + "/" + String(asxTickers.size),
-        status: asxTickers.size === 0 || pricedTickers.size === asxTickers.size ? "good" : "warn",
+        label: "Market tickers with live pricing",
+        value: String(pricedTickers.size) + "/" + String(marketTickers.size),
+        status: marketTickers.size === 0 || pricedTickers.size === marketTickers.size ? "good" : "warn",
       },
       {
         label: "Risk model source",
@@ -1059,6 +1059,7 @@ export default function Home() {
   const assetSplit = useMemo(() => {
     const superValue = state.holdings.filter((holding) => holding.source === "super").reduce((acc, holding) => acc + holding.value, 0);
     const asxValue = state.holdings.filter((holding) => holding.source === "asx").reduce((acc, holding) => acc + holding.value, 0);
+    const cryptoValue = state.holdings.filter((holding) => holding.source === "crypto").reduce((acc, holding) => acc + holding.value, 0);
     const indexValue = state.holdings.filter((holding) => holding.source === "index").reduce((acc, holding) => acc + holding.value, 0);
     const fundValue = state.holdings.filter((holding) => holding.source === "fund").reduce((acc, holding) => acc + holding.value, 0);
     const bullionValue = state.holdings.filter((holding) => holding.source === "gold").reduce((acc, holding) => acc + holding.value, 0);
@@ -1066,6 +1067,7 @@ export default function Home() {
     const raw = [
       { name: "Super", value: superValue },
       { name: "ASX Shares", value: asxValue },
+      { name: "Crypto", value: cryptoValue },
       { name: "Indices", value: indexValue },
       { name: "Mutual Funds", value: fundValue },
       { name: "Bullion", value: bullionValue },
@@ -1112,6 +1114,9 @@ export default function Home() {
         name: "Equities -5%",
         shock: (source: DataSource, metal: "gold" | "silver") => {
           void metal;
+          if (source === "crypto") {
+            return -0.08;
+          }
           return source === "asx" || source === "super" || source === "index" || source === "fund" ? -0.05 : 0;
         },
       },
@@ -1136,6 +1141,10 @@ export default function Home() {
 
           if (source === "fund") {
             return -0.035;
+          }
+
+          if (source === "crypto") {
+            return -0.12;
           }
 
           if (source === "gold") {
@@ -1529,7 +1538,7 @@ export default function Home() {
               <p className="landing-kicker">System for Portfolio Exposure, Correlation, Threat &amp; Risk Evaluation</p>
               <h1>Monitor exposure and risk in one private workspace.</h1>
               <p className="landing-hero-text">
-                SPECTRE turns CSV exports from super, ASX, index funds, mutual funds, and bullion into one clear risk view so you can act with confidence.
+                SPECTRE turns CSV exports from super, ASX, crypto, index funds, mutual funds, and bullion into one clear risk view so you can act with confidence.
               </p>
               <div className="landing-hero-actions">
                 <a href="#access" className="landing-btn landing-btn-primary">Start For $3/Month</a>
@@ -1557,7 +1566,7 @@ export default function Home() {
               <ul>
                 <li>
                   <span>01</span>
-                  <p>Import super, ASX, index, mutual fund, and bullion CSV exports.</p>
+                  <p>Import super, ASX, crypto, index, mutual fund, and bullion CSV exports.</p>
                 </li>
                 <li>
                   <span>02</span>
@@ -1596,8 +1605,8 @@ export default function Home() {
 
           <section id="features" className="landing-feature-grid">
             <article>
-              <p>ASX + Super Imports</p>
-              <h3>Ingest brokerage, superannuation, index, fund, and bullion exports in one workflow.</h3>
+              <p>ASX + Crypto + Super Imports</p>
+              <h3>Ingest brokerage, crypto wallet, superannuation, index, fund, and bullion exports in one workflow.</h3>
             </article>
             <article>
               <p>Risk Score + Dashboard</p>
@@ -1700,7 +1709,7 @@ export default function Home() {
                 <span>01</span>
                 <div>
                   <h3>Import Reports</h3>
-                  <p>Upload super, ASX, index, mutual fund, and bullion files directly into SPECTRE.</p>
+                  <p>Upload super, ASX, crypto, index, mutual fund, and bullion files directly into SPECTRE.</p>
                 </div>
               </article>
               <article>
@@ -1759,7 +1768,7 @@ export default function Home() {
                 <p className="landing-plan-subtitle">Live now</p>
                 <ul>
                   <li>One private investor workspace</li>
-                  <li>CSV import for super, ASX, index, funds, and bullion</li>
+                  <li>CSV import for super, ASX, crypto, index, funds, and bullion</li>
                   <li>Risk score, dashboard charts, and snapshots</li>
                   <li>Email verification and password reset</li>
                 </ul>
@@ -1928,7 +1937,7 @@ export default function Home() {
         <div className="hero-copy">
           <h1><Image src="/spectre-wordmark-plain.svg" alt="SPECTRE" width={620} height={148} className="hero-wordmark-image" priority /></h1>
           <p className="hero-tagline">System for Portfolio Exposure, Correlation, Threat & Risk Evaluation</p>
-          <p className="hero-description">Upload super, ASX, index, mutual fund, and ABC Bullion CSV reports to track exposure, concentration, and downside risk in one private workspace.</p>
+          <p className="hero-description">Upload super, ASX, crypto, index, mutual fund, and ABC Bullion CSV reports to track exposure, concentration, and downside risk in one private workspace.</p>
         </div>
         <div className="meta">
           <span className="meta-item">Account: {sessionUser.displayName} ({sessionUser.email})</span>
@@ -1998,6 +2007,15 @@ export default function Home() {
           disabled={working || loading}
         />
         <UploadCard
+          title="Crypto Report (CSV)"
+          description="Upload crypto wallet or exchange holdings."
+          help="Imports crypto holdings and refreshes live prices using Yahoo crypto pairs (for example BTC-USD)."
+          onUpload={(event) => onUpload(event, "crypto")}
+          template={cryptoTemplateCsv()}
+          templateName="crypto-template.csv"
+          disabled={working || loading}
+        />
+        <UploadCard
           title="ABC Bullion Report (Gold/Silver CSV)"
           description="Upload ABC Bullion gold/silver holdings. Put metal weight in units/weight (oz or grams)."
           help="Imports gold and silver holdings by metal weight and tracks bullion exposure alongside other assets."
@@ -2011,7 +2029,7 @@ export default function Home() {
       <section className="dip-alerts-section">
         <div className="dip-alerts-head">
           <h2>Email Dip Alerts</h2>
-          <p>Send an email when a selected ASX holding drops past your threshold versus previous close.</p>
+          <p>Send an email when a selected ASX or crypto holding drops past your threshold versus previous close.</p>
           <p className="dip-alerts-plan-note">{dipAlertPlanMessage}</p>
         </div>
 
@@ -2023,7 +2041,7 @@ export default function Home() {
               list="dip-alert-tickers"
               value={dipAlertTicker}
               onChange={(event) => setDipAlertTicker(event.target.value.toUpperCase())}
-              placeholder={availableDipTickers[0] || "e.g. CBA"}
+              placeholder={availableDipTickers[0] || "e.g. CBA or BTC"}
               maxLength={20}
               disabled={dipAlertSaving}
             />
@@ -2475,7 +2493,7 @@ export default function Home() {
         {loading ? (
           <div className="empty">Loading stored data...</div>
         ) : state.holdings.length === 0 ? (
-          <div className="empty">Upload super, ASX, index, mutual fund, and/or bullion CSVs to populate this dashboard.</div>
+          <div className="empty">Upload super, ASX, crypto, index, mutual fund, and/or bullion CSVs to populate this dashboard.</div>
         ) : (
           <div className="table-wrap">
             <table>
@@ -3026,6 +3044,14 @@ function fundTemplateCsv(): string {
     "account,ticker,name,units,price,value,cost base,sector,date",
     "Managed Funds,VTSAX,Vanguard Total Stock Market Index Fund,35,152.6,5341,5000,Mutual Fund,2026-02-18",
     "Managed Funds,VBMFX,Vanguard Total Bond Market Index Fund,40,11.1,444,420,Mutual Fund,2026-02-18",
+  ].join("\n");
+}
+
+function cryptoTemplateCsv(): string {
+  return [
+    "account,ticker,name,units,price,value,cost base,sector,date",
+    "Binance Wallet,BTC,Bitcoin,0.1500,97250,14587.5,13200,Crypto,2026-02-18",
+    "Coinbase,ETH,Ethereum,1.8000,5320,9576,8400,Crypto,2026-02-18",
   ].join("\n");
 }
 
