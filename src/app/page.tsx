@@ -1998,8 +1998,21 @@ export default function Home() {
     );
   }
   return (
-    <div className="shell">
-      <header className="hero">
+    <div className="shell spectre-app">
+      <nav className="spectre-app-nav">
+        <div className="spectre-app-nav-inner">
+          <a href="#dashboard-top" className="spectre-app-nav-logo">SPECTRE</a>
+          <div className="spectre-app-nav-links">
+            <a href="#uploads">Uploads</a>
+            <a href="#alerts">Alerts</a>
+            <a href="#metrics">Metrics</a>
+            <a href="#risk">Risk</a>
+            <a href="#charts">Charts</a>
+            <a href="#holdings">Holdings</a>
+          </div>
+        </div>
+      </nav>
+      <header id="dashboard-top" className="hero">
         <div className="hero-copy">
           <h1><Image src="/spectre-wordmark-plain.svg" alt="SPECTRE" width={620} height={148} className="hero-wordmark-image" priority /></h1>
           <p className="hero-tagline">System for Portfolio Exposure, Correlation, Threat & Risk Evaluation</p>
@@ -2035,7 +2048,7 @@ export default function Home() {
       {banner ? <div className={`banner ${banner.type}`}>{banner.message}</div> : null}
 
       
-      <section className="upload-grid">
+      <section id="uploads" className="upload-grid">
         <UploadCard
           title="Super Report (CSV)"
           description="Upload your superannuation holdings export."
@@ -2092,7 +2105,7 @@ export default function Home() {
         />
       </section>
 
-      <section className="dip-alerts-section">
+      <section id="alerts" className="dip-alerts-section">
         <div className="dip-alerts-head">
           <h2>Email Dip Alerts</h2>
           <p>Send an email when a selected ASX or crypto holding drops past your threshold versus previous close.</p>
@@ -2195,7 +2208,7 @@ export default function Home() {
       </section>
 
       
-      <section className="kpi-grid">
+      <section id="metrics" className="kpi-grid">
         <KpiCard label="Total Portfolio" value={formatCurrency(metrics.totalValue)} help="Current market value across all imported holdings." />
         <KpiCard label="Cost Base" value={formatCurrency(metrics.totalCost)} help="Total invested amount from imported cost-base values." />
         <KpiCard
@@ -2296,7 +2309,7 @@ export default function Home() {
       </section>
 
       
-      <section className="insights-section">
+      <section id="insights" className="insights-section">
         <h2>{proAnalyticsEnabled ? "Performance & Stress" : "Performance"}</h2>
         <div className="insights-grid">
           <article className="insight-card">
@@ -2419,7 +2432,7 @@ export default function Home() {
       </section>
 
       
-      <section className="quality-section">
+      <section id="quality" className="quality-section">
         <h2>Data Quality</h2>
         <div className="quality-grid">
           {dataQualityRows.map((row) => (
@@ -2432,7 +2445,7 @@ export default function Home() {
       </section>
 
       
-      <section className="risk-section">
+      <section id="risk" className="risk-section">
         <div className="risk-head">
           <h2>{proAnalyticsEnabled ? "Risk Signals" : "Risk Snapshot"}</h2>
           {proAnalyticsEnabled ? (
@@ -2486,7 +2499,7 @@ export default function Home() {
       </section>
 
       
-      <section className="chart-grid">
+      <section id="charts" className="chart-grid">
         <ChartCard title="Account Allocation" tone="portfolio" help="Value split by account. Percentages are based on total portfolio value.">
           <PieAllocation data={metrics.accountAllocation} palette={PORTFOLIO_COLORS} />
         </ChartCard>
@@ -2554,7 +2567,7 @@ export default function Home() {
       </section>
 
       
-      <section className="table-section">
+      <section id="holdings" className="table-section">
         <h2>Current Holdings</h2>
         {loading ? (
           <div className="empty">Loading stored data...</div>

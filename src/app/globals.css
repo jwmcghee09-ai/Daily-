@@ -4516,3 +4516,426 @@ td {
   .spectre-safety-grid { grid-template-columns: 1fr; }
   .spectre-ops-grid article + article { border-left: 0; border-top: 1px solid var(--sl-border); }
 }
+
+/* === Logged-In Dashboard Theme Alignment === */
+.spectre-app.shell {
+  --app-bg: #0c0817;
+  --app-card: rgba(18, 12, 32, 0.92);
+  --app-card-2: rgba(22, 15, 40, 0.95);
+  --app-border: rgba(255, 255, 255, 0.08);
+  --app-border-2: rgba(255, 255, 255, 0.13);
+  --app-text: #f2eeff;
+  --app-muted: #8a86a8;
+  --app-muted-2: #b4b0cc;
+  --app-purple: #9b5de5;
+  --app-purple-hi: #c084fc;
+  --app-orange: #ff4d1a;
+  --app-orange-dk: #e03800;
+  color: var(--app-text);
+  background: var(--app-bg);
+  padding-top: 80px;
+}
+
+.spectre-app.shell::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 70% 110% at -5% 50%, #2d1150 0%, #1c0c35 28%, transparent 60%),
+    radial-gradient(ellipse 60% 110% at 108% 50%, #3f0d0d 0%, #2b0808 26%, transparent 56%),
+    linear-gradient(140deg, #180b2c 0%, #12071c 38%, #1a0a11 65%, #2c0c0c 100%);
+}
+
+.spectre-app.shell::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.03) 0.6px, transparent 0.6px);
+  background-size: 3px 3px;
+  opacity: 0.38;
+}
+
+.spectre-app .hero,
+.spectre-app .upload-card,
+.spectre-app .kpi-card,
+.spectre-app .dip-alerts-section,
+.spectre-app .insights-section,
+.spectre-app .pro-analytics-section,
+.spectre-app .gold-section,
+.spectre-app .quality-section,
+.spectre-app .risk-section,
+.spectre-app .chart-card,
+.spectre-app .table-section {
+  background: var(--app-card);
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
+  box-shadow: 0 22px 48px -30px rgba(0, 0, 0, 0.85);
+}
+
+.spectre-app .hero {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 1.25rem;
+  margin-top: 0;
+  padding: 1.2rem;
+  background: linear-gradient(145deg, rgba(10, 10, 16, 0.94) 0%, rgba(17, 12, 24, 0.94) 54%, rgba(13, 10, 16, 0.95) 100%);
+}
+
+.spectre-app-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 950;
+  height: 60px;
+  border-bottom: 1px solid var(--app-border);
+  background: rgba(10, 6, 20, 0.9);
+  backdrop-filter: blur(22px);
+}
+
+.spectre-app-nav-inner {
+  max-width: 1320px;
+  margin: 0 auto;
+  height: 100%;
+  padding: 0 1.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.spectre-app-nav-logo {
+  text-decoration: none;
+  font-family: "Bebas Neue", "Avenir Next Condensed", var(--font-geist-sans), sans-serif;
+  font-size: 1.45rem;
+  letter-spacing: 0.14em;
+  background: linear-gradient(120deg, var(--app-purple-hi), var(--app-orange));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.spectre-app-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 1.45rem;
+}
+
+.spectre-app-nav-links a {
+  text-decoration: none;
+  font-family: "DM Mono", "Azeret Mono", var(--font-geist-mono), monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--app-muted-2);
+}
+
+.spectre-app-nav-links a:hover {
+  color: var(--app-text);
+}
+
+.spectre-app section[id] {
+  scroll-margin-top: 86px;
+}
+
+.spectre-app .hero-copy {
+  gap: 0.65rem;
+}
+
+.spectre-app .hero-tagline {
+  color: var(--app-purple-hi);
+  letter-spacing: 0.19em;
+  font-size: 0.62rem;
+  text-transform: uppercase;
+}
+
+.spectre-app .hero-description {
+  color: var(--app-muted-2);
+  max-width: 70ch;
+}
+
+.spectre-app .meta {
+  background: var(--app-card-2);
+  border: 1px solid var(--app-border);
+  border-radius: 10px;
+  gap: 0.55rem;
+}
+
+.spectre-app .meta-item {
+  background: rgba(7, 5, 14, 0.65);
+  border: 1px solid var(--app-border);
+  color: #e3def9;
+}
+
+.spectre-app .plan-chip.starter {
+  background: rgba(255, 77, 26, 0.12);
+  border-color: rgba(255, 77, 26, 0.35);
+  color: #ffb7a0;
+}
+
+.spectre-app .plan-chip.pro {
+  background: rgba(155, 93, 229, 0.14);
+  border-color: rgba(192, 132, 252, 0.36);
+  color: #d3b4ff;
+}
+
+.spectre-app .upload-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.spectre-app .upload-card {
+  padding: 1rem;
+}
+
+.spectre-app .upload-card h2,
+.spectre-app .kpi-card p,
+.spectre-app .risk-card p,
+.spectre-app .insight-card h3,
+.spectre-app .gold-card p,
+.spectre-app .quality-card p {
+  color: #d3cce6;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.62rem;
+}
+
+.spectre-app .upload-card p,
+.spectre-app .risk-window-note,
+.spectre-app .dip-alerts-head p,
+.spectre-app .empty {
+  color: var(--app-muted-2);
+}
+
+.spectre-app .dip-alerts-section,
+.spectre-app .insights-section,
+.spectre-app .gold-section,
+.spectre-app .quality-section,
+.spectre-app .risk-section,
+.spectre-app .table-section {
+  padding: 1rem;
+}
+
+.spectre-app .kpi-grid {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.spectre-app .kpi-card {
+  background: linear-gradient(160deg, rgba(7, 5, 14, 0.95) 0%, rgba(13, 8, 24, 0.95) 100%);
+  border: 1px solid var(--app-border);
+  min-height: 138px;
+}
+
+.spectre-app .kpi-card.positive,
+.spectre-app .kpi-card.kpi-positive {
+  border-color: rgba(255, 77, 26, 0.42);
+  background: linear-gradient(145deg, rgba(35, 16, 22, 0.95), rgba(59, 21, 21, 0.92));
+}
+
+.spectre-app .kpi-card.negative,
+.spectre-app .kpi-card.kpi-negative {
+  border-color: rgba(255, 77, 26, 0.42);
+  background: linear-gradient(145deg, rgba(35, 16, 22, 0.95), rgba(59, 21, 21, 0.92));
+}
+
+.spectre-app .kpi-card strong {
+  color: #f5f3ff;
+}
+
+.spectre-app .pro-analytics-section.locked {
+  border-color: rgba(255, 77, 26, 0.36);
+}
+
+.spectre-app .pro-analytics-status {
+  border: 1px solid var(--app-border);
+  background: rgba(10, 7, 18, 0.8);
+  color: var(--app-muted-2);
+}
+
+.spectre-app .insights-grid,
+.spectre-app .stress-grid,
+.spectre-app .gold-grid,
+.spectre-app .risk-grid,
+.spectre-app .quality-grid,
+.spectre-app .chart-grid {
+  gap: 0.85rem;
+}
+
+.spectre-app .insight-card,
+.spectre-app .stress-card,
+.spectre-app .gold-card,
+.spectre-app .risk-card,
+.spectre-app .quality-card {
+  background: linear-gradient(160deg, rgba(7, 5, 14, 0.95), rgba(13, 8, 24, 0.95));
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
+}
+
+.spectre-app .quality-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.spectre-app .quality-card {
+  min-height: 116px;
+}
+
+.spectre-app .quality-card strong,
+.spectre-app .risk-card strong {
+  color: #efeaff;
+}
+
+.spectre-app .risk-head {
+  align-items: center;
+}
+
+.spectre-app .risk-window-btn {
+  border: 1px solid var(--app-border);
+  background: rgba(9, 7, 16, 0.8);
+  color: var(--app-muted-2);
+}
+
+.spectre-app .risk-window-btn.active,
+.spectre-app .risk-window-btn:hover {
+  border-color: rgba(255, 77, 26, 0.4);
+  color: #fff;
+}
+
+.spectre-app .chart-grid {
+  grid-template-columns: 1fr 1fr;
+}
+
+.spectre-app .chart-card {
+  padding: 1rem;
+  background: var(--app-card-2);
+}
+
+.spectre-app .chart-card h2,
+.spectre-app .risk-section h2,
+.spectre-app .table-section h2,
+.spectre-app .dip-alerts-head h2,
+.spectre-app .quality-section h2,
+.spectre-app .insights-section h2,
+.spectre-app .gold-section h2,
+.spectre-app .pro-analytics-head h2 {
+  font-family: "Bebas Neue", "Avenir Next Condensed", var(--font-geist-sans), sans-serif;
+  font-size: 1.45rem;
+  letter-spacing: 0.08em;
+  color: #fff;
+}
+
+.spectre-app .table-wrap table {
+  border-collapse: collapse;
+}
+
+.spectre-app .table-wrap th,
+.spectre-app .table-wrap td {
+  border-color: var(--app-border);
+  color: #f1ecff;
+  background: rgba(10, 8, 18, 0.72);
+}
+
+.spectre-app .table-wrap th {
+  background: rgba(19, 13, 34, 0.88);
+  color: #d7cffe;
+}
+
+.spectre-app .file-input span,
+.spectre-app .template-btn,
+.spectre-app .refresh-btn,
+.spectre-app .clear-btn {
+  border-radius: 10px;
+  border: 1px solid var(--app-border);
+  font-family: "DM Mono", "Azeret Mono", var(--font-geist-mono), monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.spectre-app .refresh-btn {
+  background: linear-gradient(135deg, var(--app-orange), var(--app-orange-dk));
+  border-color: rgba(255, 77, 26, 0.5);
+}
+
+.spectre-app .template-btn,
+.spectre-app .clear-btn,
+.spectre-app .file-input span {
+  background: rgba(11, 8, 20, 0.86);
+  color: #d7d0ee;
+}
+
+.spectre-app .template-btn:hover,
+.spectre-app .clear-btn:hover,
+.spectre-app .file-input:hover span {
+  border-color: var(--app-border-2);
+  color: #fff;
+}
+
+.spectre-app .dip-alert-card {
+  background: linear-gradient(160deg, rgba(7, 5, 14, 0.95), rgba(13, 8, 24, 0.95));
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
+}
+
+.spectre-app .footer-note {
+  background: rgba(8, 5, 15, 0.9);
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
+}
+
+.spectre-app .footer-disclaimer,
+.spectre-app .footer-contact,
+.spectre-app .footer-legal {
+  color: var(--app-muted-2);
+}
+
+@media (max-width: 1200px) {
+  .spectre-app .upload-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .spectre-app .kpi-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .spectre-app .quality-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 980px) {
+  .spectre-app .hero {
+    grid-template-columns: 1fr;
+  }
+
+  .spectre-app .chart-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .spectre-app-nav-links {
+    gap: 0.85rem;
+  }
+
+  .spectre-app-nav-links a {
+    font-size: 0.56rem;
+    letter-spacing: 0.12em;
+  }
+}
+
+@media (max-width: 760px) {
+  .spectre-app.shell {
+    padding-top: 70px;
+  }
+
+  .spectre-app-nav-links {
+    display: none;
+  }
+
+  .spectre-app .upload-grid,
+  .spectre-app .kpi-grid,
+  .spectre-app .quality-grid {
+    grid-template-columns: 1fr;
+  }
+}
