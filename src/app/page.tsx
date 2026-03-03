@@ -2004,14 +2004,48 @@ export default function Home() {
           <a href="#dashboard-top" className="spectre-app-nav-logo">SPECTRE</a>
           <div className="spectre-app-nav-links">
             <a href="#uploads">Uploads</a>
-            <a href="#alerts">Alerts</a>
             <a href="#metrics">Metrics</a>
             <a href="#risk">Risk</a>
             <a href="#charts">Charts</a>
             <a href="#holdings">Holdings</a>
+            <a href="#alerts">Alerts</a>
+          </div>
+          <div className="nav-right">
+            <span className="nav-user">{sessionUser.email}</span>
+            <button type="button" className="nav-signout" onClick={logout} disabled={working || refreshingPrices || checkoutWorking}>
+              Sign Out
+            </button>
           </div>
         </div>
       </nav>
+      <div className="ticker">
+        <div className="ticker-track">
+          <span className="ti"><span className="ti-sym">BHP</span>45.82<span className="ti-up">+1.2%</span></span>
+          <span className="ti"><span className="ti-sym">CBA</span>131.44<span className="ti-dn">-0.4%</span></span>
+          <span className="ti"><span className="ti-sym">CSL</span>288.10<span className="ti-up">+0.7%</span></span>
+          <span className="ti"><span className="ti-sym">WES</span>77.30<span className="ti-dn">-1.1%</span></span>
+          <span className="ti"><span className="ti-sym">ANZ</span>29.55<span className="ti-up">+0.3%</span></span>
+          <span className="ti"><span className="ti-sym">NAB</span>38.20<span className="ti-up">+0.5%</span></span>
+          <span className="ti"><span className="ti-sym">FMG</span>18.44<span className="ti-dn">-2.1%</span></span>
+          <span className="ti"><span className="ti-sym">RIO</span>112.60<span className="ti-up">+0.9%</span></span>
+          <span className="ti"><span className="ti-sym">BTC</span>84,200<span className="ti-dn">-1.8%</span></span>
+          <span className="ti"><span className="ti-sym">ETH</span>3,140<span className="ti-up">+0.6%</span></span>
+          <span className="ti"><span className="ti-sym">MQG</span>218.75<span className="ti-up">+1.4%</span></span>
+          <span className="ti"><span className="ti-sym">WBC</span>32.10<span className="ti-dn">-0.2%</span></span>
+          <span className="ti"><span className="ti-sym">BHP</span>45.82<span className="ti-up">+1.2%</span></span>
+          <span className="ti"><span className="ti-sym">CBA</span>131.44<span className="ti-dn">-0.4%</span></span>
+          <span className="ti"><span className="ti-sym">CSL</span>288.10<span className="ti-up">+0.7%</span></span>
+          <span className="ti"><span className="ti-sym">WES</span>77.30<span className="ti-dn">-1.1%</span></span>
+          <span className="ti"><span className="ti-sym">ANZ</span>29.55<span className="ti-up">+0.3%</span></span>
+          <span className="ti"><span className="ti-sym">NAB</span>38.20<span className="ti-up">+0.5%</span></span>
+          <span className="ti"><span className="ti-sym">FMG</span>18.44<span className="ti-dn">-2.1%</span></span>
+          <span className="ti"><span className="ti-sym">RIO</span>112.60<span className="ti-up">+0.9%</span></span>
+          <span className="ti"><span className="ti-sym">BTC</span>84,200<span className="ti-dn">-1.8%</span></span>
+          <span className="ti"><span className="ti-sym">ETH</span>3,140<span className="ti-up">+0.6%</span></span>
+          <span className="ti"><span className="ti-sym">MQG</span>218.75<span className="ti-up">+1.4%</span></span>
+          <span className="ti"><span className="ti-sym">WBC</span>32.10<span className="ti-dn">-0.2%</span></span>
+        </div>
+      </div>
       <header id="dashboard-top" className="hero">
         <div className="hero-copy">
           <h1><Image src="/spectre-wordmark-plain.svg" alt="SPECTRE" width={620} height={148} className="hero-wordmark-image" priority /></h1>
@@ -2037,9 +2071,6 @@ export default function Home() {
             </button>
             <button type="button" onClick={clearData} className="clear-btn" disabled={working || refreshingPrices || checkoutWorking}>
               {working ? "Working..." : "Clear Data"}
-            </button>
-            <button type="button" onClick={logout} className="clear-btn" disabled={working || refreshingPrices || checkoutWorking}>
-              Sign Out
             </button>
           </div>
         </div>
