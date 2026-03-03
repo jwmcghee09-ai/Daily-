@@ -5040,3 +5040,783 @@ td {
     grid-template-columns: 1fr;
   }
 }
+
+/* === Dashboard Theme (Applied from provided code) === */
+.spectre-app.shell {
+  --dash-bg: #0c0817;
+  --dash-card: rgba(16, 11, 28, 0.92);
+  --dash-card2: rgba(20, 14, 36, 0.96);
+  --dash-border: rgba(255, 255, 255, 0.07);
+  --dash-border2: rgba(255, 255, 255, 0.13);
+  --dash-text: #f2eeff;
+  --dash-muted: #9490b0;
+  --dash-muted2: #b8b4d0;
+  --dash-purple: #9b5de5;
+  --dash-purple-hi: #c084fc;
+  --dash-orange: #ff4d1a;
+  --dash-orange-dk: #e03800;
+  --dash-shadow: 0 22px 48px -30px rgba(0, 0, 0, 0.85);
+  max-width: 1300px;
+  color: var(--dash-text);
+  background: var(--dash-bg);
+  padding-top: 88px;
+  gap: 1.1rem;
+}
+
+.spectre-app.shell::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 90% 140% at -12% 50%, #3d1468 0%, #260a4e 18%, #160630 38%, transparent 62%),
+    radial-gradient(ellipse 80% 140% at 114% 50%, #520f0f 0%, #3c0a0a 18%, #220606 38%, transparent 62%),
+    linear-gradient(148deg, #130924 0%, #0e0516 28%, #0f0616 52%, #1c0707 76%, #240909 100%);
+}
+
+.spectre-app.shell::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.02) 0.6px, transparent 0.6px);
+  background-size: 3px 3px;
+}
+
+.spectre-app-nav {
+  display: flex;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 900;
+  height: 60px;
+  border-bottom: 1px solid var(--dash-border);
+  background: rgba(10, 6, 20, 0.92);
+  backdrop-filter: blur(22px);
+  align-items: center;
+}
+
+.spectre-app-nav-inner {
+  width: 100%;
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.spectre-app-nav-logo {
+  text-decoration: none;
+  font-family: "Bebas Neue", "Avenir Next Condensed", var(--font-geist-sans), sans-serif;
+  font-size: 1.45rem;
+  letter-spacing: 0.14em;
+  background: linear-gradient(120deg, var(--dash-purple-hi), var(--dash-orange));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.spectre-app-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 1.8rem;
+}
+
+.spectre-app-nav-links a {
+  text-decoration: none;
+  font-family: "DM Mono", "Azeret Mono", var(--font-geist-mono), monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--dash-muted2);
+}
+
+.spectre-app-nav-links a:hover {
+  color: var(--dash-text);
+}
+
+.spectre-app .hero,
+.spectre-app .dip-alerts-section,
+.spectre-app .pro-analytics-section,
+.spectre-app .insights-section,
+.spectre-app .gold-section,
+.spectre-app .quality-section,
+.spectre-app .risk-section,
+.spectre-app .table-section,
+.spectre-app .chart-card,
+.spectre-app .upload-card,
+.spectre-app .kpi-card {
+  border-radius: 14px;
+  border: 1px solid var(--dash-border);
+  box-shadow: var(--dash-shadow);
+}
+
+.spectre-app .hero {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(145deg, rgba(10, 7, 20, 0.95) 0%, rgba(18, 12, 28, 0.95) 55%, rgba(14, 10, 18, 0.96) 100%);
+}
+
+.spectre-app .hero::before {
+  content: "";
+  position: absolute;
+  top: -60px;
+  left: -60px;
+  width: 340px;
+  height: 300px;
+  pointer-events: none;
+  background: radial-gradient(ellipse, rgba(100, 40, 180, 0.14) 0%, transparent 70%);
+}
+
+.spectre-app .hero-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  position: relative;
+  z-index: 1;
+}
+
+.spectre-app .hero-wordmark-image {
+  width: min(560px, 100%);
+  filter: drop-shadow(0 0 30px rgba(255, 58, 20, 0.3));
+}
+
+.spectre-app .hero-tagline {
+  font-family: "DM Mono", "Azeret Mono", var(--font-geist-mono), monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--dash-purple-hi);
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.spectre-app .hero-tagline::before {
+  content: "";
+  width: 24px;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--dash-orange), var(--dash-purple-hi));
+}
+
+.spectre-app .hero-description {
+  max-width: 60ch;
+  color: var(--dash-muted2);
+  font-size: 0.9rem;
+  line-height: 1.72;
+}
+
+.spectre-app .meta {
+  background: var(--dash-card2);
+  border: 1px solid var(--dash-border);
+  border-radius: 10px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.spectre-app .meta-item {
+  font-family: "DM Mono", "Azeret Mono", var(--font-geist-mono), monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  color: #e3def9;
+  border: 1px solid var(--dash-border);
+  border-radius: 6px;
+  background: rgba(7, 5, 14, 0.65);
+  padding: 0.45rem 0.7rem;
+}
+
+.spectre-app .plan-chip.starter {
+  background: rgba(255, 77, 26, 0.1);
+  border: 1px solid rgba(255, 77, 26, 0.3);
+  color: #ffb7a0;
+}
+
+.spectre-app .plan-chip.pro {
+  background: rgba(155, 93, 229, 0.14);
+  border: 1px solid rgba(192, 132, 252, 0.36);
+  color: var(--dash-purple-hi);
+}
+
+.spectre-app .meta-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+}
+
+.spectre-app .upload-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.spectre-app .upload-card {
+  background: var(--dash-card);
+  border-top: 2px solid rgba(255, 77, 26, 0.7);
+  padding: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.spectre-app .upload-card::after {
+  content: "";
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(255, 77, 26, 0.18) 0%, transparent 72%);
+}
+
+.spectre-app .upload-card h2,
+.spectre-app .upload-card h3 {
+  font-family: "DM Mono", "Azeret Mono", var(--font-geist-mono), monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--dash-muted2);
+}
+
+.spectre-app .upload-card p {
+  color: var(--dash-muted);
+  font-size: 0.78rem;
+  line-height: 1.55;
+  flex: 1;
+}
+
+.spectre-app .kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.spectre-app .kpi-card {
+  min-height: 110px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border-top: 2px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(160deg, rgba(7, 5, 14, 0.95) 0%, rgba(13, 8, 24, 0.95) 100%);
+}
+
+.spectre-app .kpi-card p {
+  font-family: "DM Mono", "Azeret Mono", var(--font-geist-mono), monospace;
+  font-size: 0.57rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--dash-muted);
+}
+
+.spectre-app .kpi-card strong {
+  font-family: "Bebas Neue", "Avenir Next Condensed", var(--font-geist-sans), sans-serif;
+  font-size: 1.55rem;
+  letter-spacing: 0.03em;
+  color: var(--dash-text);
+  margin-top: 0.4rem;
+}
+
+.spectre-app .kpi-card.kpi-negative,
+.spectre-app .kpi-card.negative {
+  border-top-color: rgba(255, 77, 26, 0.7);
+}
+
+.spectre-app .kpi-card.kpi-negative strong,
+.spectre-app .kpi-card.negative strong {
+  color: var(--dash-orange);
+}
+
+.spectre-app .kpi-card.kpi-positive,
+.spectre-app .kpi-card.positive {
+  border-top-color: rgba(255, 255, 255, 0.32);
+}
+
+.spectre-app .pro-analytics-section {
+  background: var(--dash-card);
+  padding: 1.25rem;
+}
+
+.spectre-app .pro-analytics-section.unlocked {
+  border-color: rgba(255, 77, 26, 0.35);
+  box-shadow: var(--dash-shadow), 0 0 0 1px rgba(255, 77, 26, 0.1) inset;
+}
+
+.spectre-app .pro-analytics-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+
+.spectre-app .pro-analytics-status {
+  font-family: "DM Mono", "Azeret Mono", var(--font-geist-mono), monospace;
+  font-size: 0.55rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 0.25rem 0.7rem;
+  border-radius: 20px;
+  border: 1px solid var(--dash-border);
+  background: rgba(10, 7, 18, 0.8);
+  color: var(--dash-muted2);
+}
+
+.spectre-app .pro-analytics-section.unlocked .pro-analytics-status {
+  border-color: rgba(255, 77, 26, 0.4);
+  background: rgba(255, 77, 26, 0.1);
+  color: var(--dash-orange);
+}
+
+.spectre-app .pro-analytics-note {
+  color: var(--dash-muted2);
+  font-size: 0.86rem;
+  line-height: 1.65;
+  margin-bottom: 1rem;
+}
+
+.spectre-app .pro-analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.85rem;
+}
+
+.spectre-app .pro-analytics-card {
+  background: rgba(7, 5, 14, 0.8);
+  border: 1px solid var(--dash-border);
+  border-radius: 10px;
+  padding: 0.9rem;
+}
+
+.spectre-app .pro-analytics-card p {
+  font-family: "DM Mono", "Azeret Mono", var(--font-geist-mono), monospace;
+  font-size: 0.57rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--dash-muted);
+  margin-bottom: 0.4rem;
+}
+
+.spectre-app .pro-analytics-card strong {
+  font-family: "Bebas Neue", "Avenir Next Condensed", var(--font-geist-sans), sans-serif;
+  font-size: 1.4rem;
+  letter-spacing: 0.04em;
+  color: var(--dash-text);
+}
+
+.spectre-app .insights-section,
+.spectre-app .gold-section,
+.spectre-app .quality-section,
+.spectre-app .risk-section,
+.spectre-app .dip-alerts-section,
+.spectre-app .table-section {
+  background: var(--dash-card);
+  padding: 1.4rem;
+}
+
+.spectre-app .insights-section h2,
+.spectre-app .gold-section h2,
+.spectre-app .quality-section h2,
+.spectre-app .risk-section h2,
+.spectre-app .dip-alerts-head h2,
+.spectre-app .table-section h2,
+.spectre-app .chart-card h2 {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: "Bebas Neue", "Avenir Next Condensed", var(--font-geist-sans), sans-serif;
+  font-size: 1.5rem;
+  letter-spacing: 0.08em;
+  color: var(--dash-text);
+}
+
+.spectre-app .insights-section h2::before,
+.spectre-app .gold-section h2::before,
+.spectre-app .quality-section h2::before,
+.spectre-app .risk-section h2::before,
+.spectre-app .dip-alerts-head h2::before,
+.spectre-app .table-section h2::before,
+.spectre-app .chart-card h2::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--dash-orange);
+  box-shadow: 0 0 0 4px rgba(255, 77, 26, 0.18);
+}
+
+.spectre-app .insights-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.spectre-app .insight-card,
+.spectre-app .stress-card,
+.spectre-app .gold-card,
+.spectre-app .quality-card,
+.spectre-app .risk-card,
+.spectre-app .dip-alert-card {
+  background: linear-gradient(160deg, rgba(7, 5, 14, 0.95), rgba(13, 8, 24, 0.95));
+  border: 1px solid var(--dash-border);
+  border-radius: 10px;
+}
+
+.spectre-app .insight-card {
+  padding: 1.1rem;
+}
+
+.spectre-app .insight-card h3 {
+  font-family: "DM Mono", "Azeret Mono", var(--font-geist-mono), monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--dash-muted);
+  margin-bottom: 0.85rem;
+}
+
+.spectre-app .asset-row,
+.spectre-app .performer-row {
+  padding: 0.45rem 0.65rem;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.02);
+  margin-bottom: 0.35rem;
+  font-size: 0.84rem;
+}
+
+.spectre-app .gold-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.85rem;
+  margin-top: 0.75rem;
+}
+
+.spectre-app .gold-card {
+  padding: 1rem;
+}
+
+.spectre-app .gold-card p {
+  font-family: "DM Mono", "Azeret Mono", var(--font-geist-mono), monospace;
+  font-size: 0.57rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--dash-muted);
+  margin-bottom: 0.4rem;
+}
+
+.spectre-app .gold-card strong {
+  font-family: "Bebas Neue", "Avenir Next Condensed", var(--font-geist-sans), sans-serif;
+  font-size: 1.6rem;
+  letter-spacing: 0.04em;
+}
+
+.spectre-app .quality-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.85rem;
+  margin-top: 0.75rem;
+}
+
+.spectre-app .quality-card {
+  min-height: 100px;
+  padding: 1rem;
+}
+
+.spectre-app .quality-card p {
+  font-family: "DM Mono", "Azeret Mono", var(--font-geist-mono), monospace;
+  font-size: 0.57rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--dash-muted);
+  margin-bottom: 0.5rem;
+}
+
+.spectre-app .quality-card strong {
+  font-family: "Bebas Neue", "Avenir Next Condensed", var(--font-geist-sans), sans-serif;
+  font-size: 1.4rem;
+  letter-spacing: 0.04em;
+}
+
+.spectre-app .risk-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.spectre-app .risk-window-note {
+  font-family: "DM Mono", "Azeret Mono", var(--font-geist-mono), monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  color: var(--dash-muted);
+  margin-bottom: 1rem;
+  line-height: 1.65;
+}
+
+.spectre-app .risk-window-btn {
+  font-family: "DM Mono", "Azeret Mono", var(--font-geist-mono), monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.38rem 0.7rem;
+  border-radius: 5px;
+  border: 1px solid var(--dash-border);
+  background: rgba(9, 7, 16, 0.8);
+  color: var(--dash-muted2);
+}
+
+.spectre-app .risk-window-btn.active,
+.spectre-app .risk-window-btn:hover {
+  border-color: rgba(255, 77, 26, 0.4);
+  color: #fff;
+  background: rgba(255, 77, 26, 0.1);
+}
+
+.spectre-app .risk-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.85rem;
+}
+
+.spectre-app .risk-card {
+  padding: 1rem;
+}
+
+.spectre-app .risk-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.spectre-app .risk-card p {
+  font-family: "DM Mono", "Azeret Mono", var(--font-geist-mono), monospace;
+  font-size: 0.57rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--dash-muted);
+}
+
+.spectre-app .risk-card strong {
+  font-family: "Bebas Neue", "Avenir Next Condensed", var(--font-geist-sans), sans-serif;
+  font-size: 1.6rem;
+  letter-spacing: 0.04em;
+}
+
+.spectre-app .chart-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem;
+}
+
+.spectre-app .chart-card {
+  background: var(--dash-card2);
+  border-top: 2px solid rgba(255, 77, 26, 0.5);
+  padding: 1.25rem;
+}
+
+.spectre-app .chart-card.chart-history,
+.spectre-app .chart-card.chart-holdings {
+  grid-column: 1 / -1;
+}
+
+.spectre-app .dip-alerts-head p {
+  color: var(--dash-muted2);
+  font-size: 0.88rem;
+}
+
+.spectre-app .dip-alerts-form {
+  background: rgba(7, 5, 14, 0.6);
+  border: 1px solid var(--dash-border);
+  border-radius: 10px;
+  padding: 1rem;
+  gap: 0.85rem;
+}
+
+.spectre-app .dip-alerts-form label span {
+  font-family: "DM Mono", "Azeret Mono", var(--font-geist-mono), monospace;
+  font-size: 0.57rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--dash-muted);
+}
+
+.spectre-app .dip-alerts-form input {
+  background: rgba(6, 3, 14, 0.8);
+  border: 1px solid var(--dash-border);
+  border-radius: 5px;
+  color: var(--dash-text);
+}
+
+.spectre-app .table-wrap {
+  border: 1px solid var(--dash-border);
+  border-radius: 10px;
+  overflow: auto;
+  margin-top: 0.75rem;
+}
+
+.spectre-app table {
+  border-collapse: collapse;
+  min-width: 900px;
+  width: 100%;
+}
+
+.spectre-app th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  font-family: "DM Mono", "Azeret Mono", var(--font-geist-mono), monospace;
+  font-size: 0.57rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--dash-muted2);
+  background: rgba(10, 7, 20, 0.97);
+  border-bottom: 1px solid var(--dash-border);
+}
+
+.spectre-app td {
+  color: var(--dash-muted2);
+  background: rgba(8, 5, 16, 0.7);
+  border-bottom: 1px solid var(--dash-border);
+}
+
+.spectre-app tr:hover td {
+  background: rgba(255, 77, 26, 0.05);
+  color: var(--dash-text);
+}
+
+.spectre-app .source-badge,
+.spectre-app .account-chip,
+.spectre-app .pnl-chip {
+  font-family: "DM Mono", "Azeret Mono", var(--font-geist-mono), monospace;
+}
+
+.spectre-app .source-badge.asx,
+.spectre-app .source-badge.crypto,
+.spectre-app .source-badge.gold {
+  background: rgba(255, 77, 26, 0.12);
+  color: #ff9070;
+  border: 1px solid rgba(255, 77, 26, 0.25);
+}
+
+.spectre-app .source-badge.super {
+  background: rgba(155, 93, 229, 0.12);
+  color: var(--dash-purple-hi);
+  border: 1px solid rgba(155, 93, 229, 0.25);
+}
+
+.spectre-app .source-badge.fund,
+.spectre-app .source-badge.index {
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.spectre-app .footer-note {
+  background: var(--dash-card);
+  border: 1px solid var(--dash-border);
+  border-radius: 14px;
+  padding: 1.5rem;
+}
+
+.spectre-app .footer-disclaimer,
+.spectre-app .footer-contact,
+.spectre-app .footer-legal {
+  font-family: "DM Mono", "Azeret Mono", var(--font-geist-mono), monospace;
+  font-size: 0.59rem;
+  letter-spacing: 0.08em;
+  color: rgba(138, 134, 168, 0.72);
+  line-height: 1.7;
+}
+
+.spectre-app .refresh-btn,
+.spectre-app .template-btn,
+.spectre-app .file-input span {
+  background: linear-gradient(135deg, var(--dash-orange), var(--dash-orange-dk));
+  border: 1px solid rgba(255, 120, 80, 0.55);
+  color: #fff;
+  border-radius: 6px;
+  box-shadow: 0 4px 18px -8px rgba(255, 77, 26, 0.7);
+}
+
+.spectre-app .clear-btn {
+  background: rgba(10, 7, 20, 0.8);
+  border: 1px solid var(--dash-border2);
+  color: var(--dash-muted2);
+  border-radius: 6px;
+}
+
+.spectre-app .refresh-btn:hover,
+.spectre-app .template-btn:hover,
+.spectre-app .file-input:hover span,
+.spectre-app .clear-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.08);
+}
+
+@media (max-width: 1200px) {
+  .spectre-app .upload-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .spectre-app .kpi-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .spectre-app .quality-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 980px) {
+  .spectre-app .hero {
+    grid-template-columns: 1fr;
+  }
+
+  .spectre-app .chart-grid,
+  .spectre-app .insights-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .spectre-app-nav-links {
+    display: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .spectre-app.shell {
+    padding-top: 60px;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    padding-bottom: 2rem;
+  }
+
+  .spectre-app-nav-inner {
+    padding: 0 1rem;
+  }
+
+  .spectre-app .upload-grid,
+  .spectre-app .kpi-grid,
+  .spectre-app .quality-grid {
+    grid-template-columns: 1fr;
+  }
+}
