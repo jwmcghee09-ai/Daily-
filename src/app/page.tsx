@@ -256,6 +256,7 @@ export default function Home() {
   const [authWorking, setAuthWorking] = useState(false);
   const [authError, setAuthError] = useState("");
   const [checkoutWorking, setCheckoutWorking] = useState(false);
+  const [landingMenuOpen, setLandingMenuOpen] = useState(false);
   const [dipAlerts, setDipAlerts] = useState<PriceDipAlertSetting[]>([]);
   const [availableDipTickers, setAvailableDipTickers] = useState<string[]>([]);
   const [dipAlertMax, setDipAlertMax] = useState(0);
@@ -1514,419 +1515,446 @@ export default function Home() {
   };
 
   if (!sessionUser) {
+    const landingTicker = [
+      { symbol: "BHP", price: "45.82", delta: "+1.2%", tone: "up" },
+      { symbol: "CBA", price: "131.44", delta: "-0.4%", tone: "down" },
+      { symbol: "CSL", price: "288.10", delta: "+0.7%", tone: "up" },
+      { symbol: "WES", price: "77.30", delta: "-1.1%", tone: "down" },
+      { symbol: "ANZ", price: "29.55", delta: "+0.3%", tone: "up" },
+      { symbol: "NAB", price: "38.20", delta: "+0.5%", tone: "up" },
+      { symbol: "FMG", price: "18.44", delta: "-2.1%", tone: "down" },
+      { symbol: "RIO", price: "112.60", delta: "+0.9%", tone: "up" },
+      { symbol: "WBC", price: "32.10", delta: "-0.2%", tone: "down" },
+      { symbol: "MQG", price: "218.75", delta: "+1.4%", tone: "up" },
+    ];
+
     return (
-      <div className="landing-shell">
-        <div className="landing-gridlines" aria-hidden="true" />
-        <header className="landing-nav">
-          <a href="#top" className="landing-logo" aria-label="SPECTRE home">
-            <Image src="/spectre-wordmark-banner.svg" alt="SPECTRE" width={344} height={82} className="landing-logo-image" priority />
-          </a>
-          <nav className="landing-nav-links">
-            <a href="#features">Capabilities</a>
-            <a href="#insights">Preview</a>
-            <a href="#workflow">Workflow</a>
-            <a href="#safety">Data Safety</a>
-            <a href="#pricing">Pricing</a>
-            <a href="#access">Client Access</a>
-          </nav>
-          <a href="#access" className="landing-nav-button">Sign In</a>
+      <div className="spectre-landing">
+        <header className="spectre-nav">
+          <div className="spectre-wrap spectre-nav-inner">
+            <a href="#top" className="spectre-nav-logo">SPECTRE</a>
+            <nav className="spectre-nav-links">
+              <a href="#features">Capabilities</a>
+              <a href="#insights">Preview</a>
+              <a href="#workflow">Workflow</a>
+              <a href="#safety">Data Safety</a>
+              <a href="#pricing">Pricing</a>
+              <a href="#access" className="spectre-nav-cta">Sign In</a>
+            </nav>
+            <button
+              type="button"
+              className={"spectre-nav-hamburger" + (landingMenuOpen ? " open" : "")}
+              onClick={() => setLandingMenuOpen((current) => !current)}
+              aria-label="Toggle menu"
+            >
+              <span />
+              <span />
+              <span />
+            </button>
+          </div>
+          <div className={"spectre-nav-mobile" + (landingMenuOpen ? " open" : "")}>
+            {["features", "insights", "workflow", "safety", "pricing", "access"].map((section) => (
+              <a key={section} href={`#${section}`} onClick={() => setLandingMenuOpen(false)}>
+                {section === "insights" ? "Preview" : section === "safety" ? "Data Safety" : section === "access" ? "Sign In" : section.charAt(0).toUpperCase() + section.slice(1)}
+              </a>
+            ))}
+          </div>
         </header>
 
-        <main className="landing-main">
-          <section id="top" className="landing-hero">
-            <div className="landing-hero-copy">
-              <p className="landing-kicker">System for Portfolio Exposure, Correlation, Threat &amp; Risk Evaluation</p>
-              <h1>Monitor exposure and risk in one private workspace.</h1>
-              <p className="landing-hero-text">
+        <section id="top" className="spectre-hero">
+          <div className="spectre-hero-gridlines" aria-hidden="true" />
+          <div className="spectre-hero-glow" aria-hidden="true" />
+          <div className="spectre-wrap spectre-hero-layout">
+            <div className="spectre-hero-left">
+              <p className="spectre-hero-eye">System for Portfolio Exposure, Correlation, Threat &amp; Risk Evaluation</p>
+              <h1 className="spectre-hero-title">Monitor exposure &amp; risk in one <span>private workspace.</span></h1>
+              <p className="spectre-hero-desc">
                 SPECTRE turns CSV exports from super, ASX, crypto, index funds, mutual funds, and bullion into one clear risk view so you can act with confidence.
               </p>
-              <div className="landing-hero-actions">
-                <a href="#access" className="landing-btn landing-btn-primary">Start For $3/Month</a>
-                <a href="#insights" className="landing-btn landing-btn-ghost">See Live Dashboard Preview</a>
+              <div className="spectre-hero-pills">
+                <span className="spectre-pill spectre-pill-purple">3-Step Workflow</span>
+                <span className="spectre-pill spectre-pill-orange">SPECTRE Framework</span>
+                <span className="spectre-pill">Security Controls</span>
               </div>
-              <div className="landing-hero-stats">
+              <div className="spectre-hero-actions">
+                <a href="#access" className="spectre-btn spectre-btn-primary">Start For $3 / Month</a>
+                <a href="#insights" className="spectre-btn spectre-btn-ghost">See Dashboard Preview</a>
+              </div>
+              <div className="spectre-hero-stats">
                 <article>
-                  <strong>3-Step Workflow</strong>
-                  <span>Upload CSV, normalize holdings, then review risk score and exposure metrics.</span>
+                  <strong>72<span>/100</span></strong>
+                  <p>Risk Score</p>
                 </article>
                 <article>
-                  <strong>SPECTRE Framework</strong>
-                  <span>System for Portfolio Exposure, Correlation, Threat & Risk Evaluation.</span>
+                  <strong>42%</strong>
+                  <p>Top-3 Concentration</p>
                 </article>
                 <article>
-                  <strong>Security Controls</strong>
-                  <span>Email verification, hashed passwords, encrypted backups, and hardened headers.</span>
+                  <strong>-8.4%</strong>
+                  <p>VaR 95 Daily</p>
+                </article>
+                <article>
+                  <strong>5 min</strong>
+                  <p>ASX Refresh</p>
                 </article>
               </div>
             </div>
 
-            <aside className="landing-hero-panel" aria-label="Platform highlights">
-              <p className="landing-panel-kicker">SPECTRE OPS</p>
-              <h2>From CSV to risk clarity</h2>
-              <ul>
-                <li>
-                  <span>01</span>
-                  <p>Import super, ASX, crypto, index, mutual fund, and bullion CSV exports.</p>
-                </li>
-                <li>
-                  <span>02</span>
-                  <p>SPECTRE normalizes holdings by account, source, and sector in one workspace.</p>
-                </li>
-                <li>
-                  <span>03</span>
-                  <p>Review risk score, concentration, VaR, drawdown, and scenario stress outcomes.</p>
-                </li>
-              </ul>
-            </aside>
-          </section>
-
-          <section className="landing-proof-strip" aria-label="Current product capabilities">
-            <article>
-              <strong>Example Risk Score: {LANDING_SAMPLE_RISK_SCORE}/100</strong>
-              <span>Sample portfolio score after CSV import and risk normalization.</span>
-            </article>
-            <article>
-              <strong>Before: &quot;Looks diversified&quot;</strong>
-              <span>Investor sees many line items across multiple statements.</span>
-            </article>
-            <article>
-              <strong>After: Top-3 = 42% Exposure</strong>
-              <span>SPECTRE surfaces hidden concentration and downside sensitivity.</span>
-            </article>
-            <article>
-              <strong>Email Dip Alert Automation</strong>
-              <span>Get notified when tracked holdings fall past your chosen percentage threshold.</span>
-            </article>
-            <article>
-              <strong>Built for ASX + SMSF workflows</strong>
-              <span>Purpose-built for Australian investors managing multi-source portfolios.</span>
-            </article>
-          </section>
-
-          <section id="features" className="landing-feature-grid">
-            <article>
-              <p>ASX + Crypto + Super Imports</p>
-              <h3>Ingest brokerage, crypto wallet, superannuation, index, fund, and bullion exports in one workflow.</h3>
-            </article>
-            <article>
-              <p>Risk Score + Dashboard</p>
-              <h3>Track one clear risk score alongside VaR95, drawdown, volatility, and concentration.</h3>
-            </article>
-            <article>
-              <p>Session Movers</p>
-              <h3>Surface ASX top movers and trigger dip alert emails using refreshed market prices.</h3>
-            </article>
-            <article>
-              <p>Snapshot Audit Trail</p>
-              <h3>Review portfolio trend history and data quality signals over time.</h3>
-            </article>
-          </section>
-
-          <section id="insights" className="landing-analytics">
-            <div className="landing-analytics-head">
-              <p className="landing-kicker">Feature Preview</p>
-              <h2>Concrete dashboard visuals, not abstract promises.</h2>
-              <p>These demo values show the exact dashboard style. Your real data loads from your own imported portfolio exports.</p>
+            <div className="spectre-hero-right">
+              <div className="spectre-hero-dashboard">
+                <p className="spectre-dash-title">Live Portfolio Dashboard</p>
+                <div className="spectre-gauge-row">
+                  <div className="spectre-gauge" role="img" aria-label="Portfolio risk score 72 out of 100">
+                    <span>72</span>
+                  </div>
+                  <div>
+                    <p className="spectre-gauge-label">Portfolio Risk Score</p>
+                    <p className="spectre-gauge-value">72<span>/100</span></p>
+                    <p className="spectre-gauge-sub">Moderate risk profile</p>
+                  </div>
+                </div>
+                <div className="spectre-hero-metrics">
+                  <article><p>VaR 95</p><strong className="danger">-8.4%</strong></article>
+                  <article><p>Concentration</p><strong className="danger">42%</strong></article>
+                  <article><p>Drawdown</p><strong className="warn">-12.1%</strong></article>
+                  <article><p>Data Quality</p><strong className="ok">Good</strong></article>
+                </div>
+                <div className="spectre-sparkline">
+                  <span />
+                  <span />
+                  <span />
+                  <span />
+                  <span />
+                  <span />
+                  <span />
+                  <span />
+                  <span />
+                  <span />
+                </div>
+              </div>
             </div>
-            <div className="landing-analytics-grid">
-              <article className="landing-chart-card landing-score-preview">
-                <h3>Example Portfolio Risk Score</h3>
-                <p className="landing-score-value">{LANDING_SAMPLE_RISK_SCORE}<span>/100</span></p>
-                <p className="landing-score-caption">Moderate risk profile based on concentration, VaR, drawdown, volatility, and data quality confidence.</p>
+          </div>
+        </section>
+
+        <div className="spectre-ticker">
+          <div className="spectre-ticker-track">
+            {landingTicker.concat(landingTicker).map((item, index) => (
+              <span key={item.symbol + "-" + index} className="spectre-ticker-item">
+                <strong>{item.symbol}</strong>
+                {item.price}
+                <em className={item.tone === "up" ? "up" : "down"}>{item.delta}</em>
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <main className="spectre-main">
+          <section id="features" className="spectre-section spectre-alt">
+            <div className="spectre-wrap">
+              <p className="spectre-section-label orange">SPECTRE OPS</p>
+              <h2 className="spectre-section-title">From CSV to <span>risk clarity.</span></h2>
+              <p className="spectre-section-sub">Upload CSV, normalize holdings, then review risk score and exposure metrics. Purpose-built for Australian investors managing multi-source portfolios.</p>
+
+              <div className="spectre-ops-grid">
+                <article><p>01</p><h3>Import</h3><span>Import super, ASX, crypto, index, mutual fund, and bullion CSV exports.</span></article>
+                <article><p>02</p><h3>Normalize</h3><span>SPECTRE normalizes holdings by account, source, and sector in one workspace.</span></article>
+                <article><p>03</p><h3>Review</h3><span>Review risk score, concentration, VaR, drawdown, and scenario stress outcomes.</span></article>
+              </div>
+
+              <div className="spectre-callouts">
+                <article>
+                  <p>Before: "Looks diversified"</p>
+                  <h3>Many line items</h3>
+                  <span>Investor sees many line items across multiple statements with no unified risk view.</span>
+                </article>
+                <article className="after">
+                  <p>After: Top-3 = 42% Exposure</p>
+                  <h3>Hidden concentration</h3>
+                  <span>SPECTRE surfaces hidden concentration and downside sensitivity in a single risk score.</span>
+                </article>
+              </div>
+
+              <div className="spectre-feature-grid">
+                <article><h3>ASX + Crypto + Super Imports</h3><p>Ingest brokerage, crypto wallet, superannuation, index, fund, and bullion exports in one workflow.</p></article>
+                <article><h3>Risk Score + Dashboard</h3><p>Track one clear risk score alongside VaR95, drawdown, volatility, and concentration.</p></article>
+                <article><h3>Session Movers</h3><p>Surface ASX top movers and trigger dip alert emails using refreshed market prices.</p></article>
+                <article><h3>Snapshot Audit Trail</h3><p>Review portfolio trend history and data quality signals over time.</p></article>
+              </div>
+            </div>
+          </section>
+
+          <section id="insights" className="spectre-section">
+            <div className="spectre-wrap">
+              <p className="spectre-section-label">Feature Preview</p>
+              <h2 className="spectre-section-title">Concrete dashboard visuals, not abstract promises.</h2>
+              <p className="spectre-section-sub">These demo values show the exact dashboard style. Your real data loads from your own imported portfolio exports.</p>
+              <div className="spectre-db-frame">
+                <div className="spectre-db-top">
+                  <span />
+                  <span />
+                  <span />
+                  <p>spectre-assets.com / dashboard</p>
+                </div>
+                <div className="spectre-db-grid">
+                  <article className="spectre-db-card">
+                    <p>Example Portfolio Risk Score</p>
+                    <h3>{LANDING_SAMPLE_RISK_SCORE}<span>/100</span></h3>
+                    <span>Moderate risk profile based on concentration, VaR, drawdown, volatility, and data quality confidence.</span>
+                  </article>
+
+                  <article className="spectre-db-card">
+                    <p>Example Portfolio Snapshot Trend</p>
+                    <ResponsiveContainer width="100%" height={220}>
+                      <LineChart data={LANDING_PREVIEW_SERIES}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#2b2438" />
+                        <XAxis dataKey="month" stroke="#8f88a9" />
+                        <YAxis tickFormatter={(value) => `$${Math.round(Number(value) / 1000)}k`} stroke="#8f88a9" />
+                        <Tooltip formatter={tooltipFormatter} contentStyle={LANDING_TOOLTIP_CONTENT_STYLE} labelStyle={LANDING_TOOLTIP_LABEL_STYLE} itemStyle={LANDING_TOOLTIP_ITEM_STYLE} />
+                        <Line type="monotone" dataKey="portfolio" stroke="#ff4d1a" strokeWidth={2.4} dot={false} />
+                        <Line type="monotone" dataKey="buffer" stroke="#9085a8" strokeWidth={1.6} dot={false} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </article>
+
+                  <article className="spectre-db-card">
+                    <p>Example Risk Signal Levels</p>
+                    <ResponsiveContainer width="100%" height={220}>
+                      <BarChart data={LANDING_METRIC_SERIES}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#2b2438" />
+                        <XAxis dataKey="metric" stroke="#8f88a9" />
+                        <YAxis tickFormatter={(value) => `${value}%`} stroke="#8f88a9" />
+                        <Tooltip
+                          formatter={(value) => {
+                            const numeric = Number(Array.isArray(value) ? value[0] : value);
+                            return Number.isFinite(numeric) ? `${numeric.toFixed(1)}%` : String(value ?? "");
+                          }}
+                          contentStyle={LANDING_TOOLTIP_CONTENT_STYLE}
+                          labelStyle={LANDING_TOOLTIP_LABEL_STYLE}
+                          itemStyle={LANDING_TOOLTIP_ITEM_STYLE}
+                        />
+                        <Bar dataKey="value" fill="#ff4d1a" radius={[6, 6, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </article>
+
+                  <article className="spectre-db-card">
+                    <p>Example Allocation Breakdown</p>
+                    <ResponsiveContainer width="100%" height={220}>
+                      <PieChart>
+                        <Pie data={LANDING_ALLOCATION_SERIES} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={52} outerRadius={86}>
+                          {LANDING_ALLOCATION_SERIES.map((segment, index) => (
+                            <Cell key={segment.name} fill={LANDING_ALLOCATION_COLORS[index % LANDING_ALLOCATION_COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          formatter={(value) => {
+                            const numeric = Number(Array.isArray(value) ? value[0] : value);
+                            return Number.isFinite(numeric) ? `${numeric.toFixed(0)}%` : String(value ?? "");
+                          }}
+                          contentStyle={LANDING_TOOLTIP_CONTENT_STYLE}
+                          labelStyle={LANDING_TOOLTIP_LABEL_STYLE}
+                          itemStyle={LANDING_TOOLTIP_ITEM_STYLE}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </article>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section id="workflow" className="spectre-section spectre-alt">
+            <div className="spectre-wrap">
+              <p className="spectre-section-label">How It Works</p>
+              <h2 className="spectre-section-title">One clear 3-step path from files to risk decisions.</h2>
+              <p className="spectre-section-sub">Start with existing statements, centralize exposure in SPECTRE, then monitor risk signals from one private dashboard.</p>
+              <div className="spectre-steps-grid">
+                <article><p>01</p><h3>Import Reports</h3><span>Upload super, ASX, crypto, index, mutual fund, and bullion files directly into SPECTRE.</span></article>
+                <article><p>02</p><h3>Normalize Exposure</h3><span>Aggregate positions by source, account, sector, and instrument in one structure.</span></article>
+                <article><p>03</p><h3>Act On Risk Signals</h3><span>Use risk score, drawdown, VaR, concentration metrics, and dip alert emails to monitor risk posture.</span></article>
+              </div>
+            </div>
+          </section>
+
+          <section id="safety" className="spectre-section">
+            <div className="spectre-wrap">
+              <p className="spectre-section-label orange">Data Safety</p>
+              <h2 className="spectre-section-title">Plain-English security and privacy controls.</h2>
+              <p className="spectre-section-sub">These safeguards reflect controls active in the current release.</p>
+              <div className="spectre-safety-grid">
+                <article><h3>Privacy Promise</h3><p><strong>We do not sell your data.</strong> Portfolio uploads are used only to generate your analytics workspace.</p></article>
+                <article><h3>Data Control and Deletion</h3><p>You can clear imported holdings and snapshots anytime from the dashboard using Clear Data.</p></article>
+                <article><h3>Account and Payment Security</h3><p>Email verification, scrypt password hashing, secure cookies, and Stripe-hosted checkout are enabled in production.</p></article>
+                <article><h3>Hosting and Hardening</h3><p>Production runs over HTTPS with CSP/HSTS/anti-framing headers, plus encrypted backups and restore checks.</p></article>
+              </div>
+              <p className="spectre-safety-note">No platform can guarantee zero risk. Use strong passwords and keep deployment secrets protected.</p>
+            </div>
+          </section>
+
+          <section id="pricing" className="spectre-section spectre-alt">
+            <div className="spectre-wrap">
+              <p className="spectre-section-label">Pricing</p>
+              <h2 className="spectre-section-title">Simple pricing, low barrier to start.</h2>
+              <p className="spectre-section-sub">One private workspace per account. Cancel anytime through Stripe.</p>
+              <div className="spectre-pricing-grid">
+                <article className="spectre-plan">
+                  <p className="tier">Starter</p>
+                  <h3>$3<span>/month</span></h3>
+                  <p className="sub">Live now</p>
+                  <ul>
+                    <li>One private investor workspace</li>
+                    <li>CSV import for super, ASX, crypto, index, funds, and bullion</li>
+                    <li>Risk score, dashboard charts, and snapshots</li>
+                    <li>Email verification and password reset</li>
+                  </ul>
+                  <button type="button" className="spectre-btn spectre-btn-primary" onClick={() => void startStarterCheckout(authEmail)} disabled={checkoutWorking}>
+                    {checkoutWorking ? "Redirecting..." : "Get Starter"}
+                  </button>
+                </article>
+
+                <article className="spectre-plan featured">
+                  <p className="badge">Most Popular</p>
+                  <p className="tier">Pro</p>
+                  <h3>$15<span>/month</span></h3>
+                  <p className="sub">Advanced quant analytics</p>
+                  <ul>
+                    <li>Everything in Starter</li>
+                    <li>Expected Shortfall (ES 95) tail risk</li>
+                    <li>Beta and tracking error vs ASX 200</li>
+                    <li>Date-aligned benchmark analytics</li>
+                    <li>Advanced reporting and team workflows</li>
+                  </ul>
+                  <button type="button" className="spectre-btn spectre-btn-pro" onClick={() => void startProCheckout(authEmail)} disabled={checkoutWorking}>
+                    {checkoutWorking ? "Redirecting..." : "Get Pro"}
+                  </button>
+                  <span className="spectre-plan-note">Pro analytics unlock automatically when your subscription uses the Pro Stripe price.</span>
+                </article>
+              </div>
+            </div>
+          </section>
+
+          <section id="access" className="spectre-section">
+            <div className="spectre-wrap spectre-access-layout">
+              <article className="spectre-access-copy">
+                <p className="spectre-section-label">Client Access</p>
+                <h2 className="spectre-section-title">Enter your private SPECTRE workspace.</h2>
+                <p className="spectre-section-sub">Sign in to continue from your last snapshot, or create your account with Stripe checkout in one flow.</p>
+                <div className="spectre-access-points">
+                  <p>System for Portfolio Exposure, Correlation, Threat &amp; Risk Evaluation.</p>
+                  <p>Designed for active DIY investors who want pro-style risk visibility.</p>
+                  <p>Single interface for holdings, exposure, and risk posture.</p>
+                </div>
               </article>
 
-              <article className="landing-chart-card">
-                <h3>Example Portfolio Snapshot Trend</h3>
-                <ResponsiveContainer width="100%" height={260}>
-                  <LineChart data={LANDING_PREVIEW_SERIES}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#292b35" />
-                    <XAxis dataKey="month" stroke="#9fa3b2" />
-                    <YAxis tickFormatter={(value) => `$${Math.round(Number(value) / 1000)}k`} stroke="#9fa3b2" />
-                    <Tooltip formatter={tooltipFormatter} contentStyle={LANDING_TOOLTIP_CONTENT_STYLE} labelStyle={LANDING_TOOLTIP_LABEL_STYLE} itemStyle={LANDING_TOOLTIP_ITEM_STYLE} />
-                    <Legend />
-                    <Line type="monotone" dataKey="portfolio" name="Portfolio value" stroke="#ff4b33" strokeWidth={2.6} dot={false} />
-                    <Line type="monotone" dataKey="buffer" name="Risk buffer reference" stroke="#7a7f90" strokeWidth={2} dot={false} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </article>
+              <article className="spectre-signin-box">
+                <h2 className="spectre-signin-heading">{authMode === "register" ? "Create Account" : "Sign In"}</h2>
+                <p className="spectre-signin-sub">Access your private SPECTRE workspace</p>
 
-              <article className="landing-chart-card">
-                <h3>Example Risk Signal Levels</h3>
-                <ResponsiveContainer width="100%" height={260}>
-                  <BarChart data={LANDING_METRIC_SERIES}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#292b35" />
-                    <XAxis dataKey="metric" stroke="#9fa3b2" />
-                    <YAxis tickFormatter={(value) => `${value}%`} stroke="#9fa3b2" />
-                    <Tooltip
-                      formatter={(value) => {
-                        const numeric = Number(Array.isArray(value) ? value[0] : value);
-                        return Number.isFinite(numeric) ? `${numeric.toFixed(1)}%` : String(value ?? "");
-                      }}
-                      contentStyle={LANDING_TOOLTIP_CONTENT_STYLE}
-                      labelStyle={LANDING_TOOLTIP_LABEL_STYLE}
-                      itemStyle={LANDING_TOOLTIP_ITEM_STYLE}
+                {banner ? <div className={"banner " + banner.type}>{banner.message}</div> : null}
+                {authError ? <div className="banner error">{authError}</div> : null}
+
+                <form onSubmit={submitAuth} className="auth-form-grid">
+                  <label>
+                    <span>Email</span>
+                    <input
+                      type="email"
+                      placeholder="you@example.com"
+                      value={authEmail}
+                      onChange={(event) => setAuthEmail(event.target.value)}
+                      required
+                      autoComplete="email"
                     />
-                    <Bar dataKey="value" name="Metric level" fill="#ff4b33" radius={[6, 6, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </article>
+                  </label>
 
-              <article className="landing-chart-card">
-                <h3>Example Allocation Breakdown</h3>
-                <ResponsiveContainer width="100%" height={260}>
-                  <PieChart>
-                    <Pie data={LANDING_ALLOCATION_SERIES} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={58} outerRadius={96}>
-                      {LANDING_ALLOCATION_SERIES.map((segment, index) => (
-                        <Cell key={segment.name} fill={LANDING_ALLOCATION_COLORS[index % LANDING_ALLOCATION_COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      formatter={(value) => {
-                        const numeric = Number(Array.isArray(value) ? value[0] : value);
-                        return Number.isFinite(numeric) ? `${numeric.toFixed(0)}%` : String(value ?? "");
-                      }}
-                      contentStyle={LANDING_TOOLTIP_CONTENT_STYLE}
-                      labelStyle={LANDING_TOOLTIP_LABEL_STYLE}
-                      itemStyle={LANDING_TOOLTIP_ITEM_STYLE}
+                  <label>
+                    <span>Password</span>
+                    <input
+                      type="password"
+                      placeholder="Minimum 8 characters"
+                      value={authPassword}
+                      onChange={(event) => setAuthPassword(event.target.value)}
+                      required
+                      minLength={8}
+                      autoComplete={authMode === "register" ? "new-password" : "current-password"}
                     />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              </article>
-            </div>
-          </section>
+                  </label>
 
-          <section id="workflow" className="landing-workflow">
-            <div className="landing-workflow-copy">
-              <p className="landing-kicker">How It Works</p>
-              <h2>One clear 3-step path from files to risk decisions.</h2>
-              <p>
-                Start with existing statements, centralize exposure in SPECTRE, then monitor risk signals from one private dashboard.
-              </p>
-            </div>
-            <div className="landing-steps">
-              <article>
-                <span>01</span>
-                <div>
-                  <h3>Import Reports</h3>
-                  <p>Upload super, ASX, crypto, index, mutual fund, and bullion files directly into SPECTRE.</p>
+                  {authMode === "register" ? (
+                    <>
+                      <label>
+                        <span>Display Name</span>
+                        <input
+                          type="text"
+                          placeholder="How your account appears"
+                          value={authDisplayName}
+                          onChange={(event) => setAuthDisplayName(event.target.value)}
+                          autoComplete="name"
+                        />
+                      </label>
+
+                      <label className="auth-terms">
+                        <input
+                          type="checkbox"
+                          checked={authAcceptsTerms}
+                          onChange={(event) => setAuthAcceptsTerms(event.target.checked)}
+                          required
+                        />
+                        <span>
+                          I agree to the Terms & Conditions and understand SPECTRE provides informational analytics only, not financial advice.
+                        </span>
+                      </label>
+                    </>
+                  ) : null}
+
+                  <button type="submit" className="spectre-signin-btn" disabled={authWorking}>
+                    {authWorking ? "Please wait..." : authMode === "register" ? "Create Account & Checkout" : "Sign In"}
+                  </button>
+                </form>
+
+                <div className="spectre-auth-links">
+                  <button
+                    type="button"
+                    className="template-btn"
+                    onClick={() => {
+                      setAuthMode((current) => (current === "register" ? "login" : "register"));
+                      setAuthAcceptsTerms(false);
+                      setAuthError("");
+                    }}
+                    disabled={authWorking}
+                  >
+                    {authMode === "register" ? "Use Sign In" : "Use Register"}
+                  </button>
+                  <button type="button" className="template-btn" onClick={() => void resendVerificationEmail()} disabled={authWorking}>Resend Verification</button>
+                  <button type="button" className="template-btn" onClick={() => void requestPasswordReset()} disabled={authWorking}>Forgot Password</button>
+                  <button type="button" className="template-btn" onClick={() => void completePasswordReset()} disabled={authWorking}>Reset With Token</button>
+                </div>
+
+                <div className="spectre-signin-divider" />
+
+                <div className="spectre-checkout-actions">
+                  <button type="button" className="spectre-checkout-btn" onClick={() => void startProCheckout(authEmail)} disabled={authWorking || checkoutWorking}>
+                    <span>Start Pro Checkout</span>
+                    <strong>$15/mo</strong>
+                  </button>
+                  <button type="button" className="spectre-checkout-btn" onClick={() => void startStarterCheckout(authEmail)} disabled={authWorking || checkoutWorking}>
+                    <span>Start Starter Checkout</span>
+                    <strong>$3/mo</strong>
+                  </button>
                 </div>
               </article>
-              <article>
-                <span>02</span>
-                <div>
-                  <h3>Normalize Exposure</h3>
-                  <p>Aggregate positions by source, account, sector, and instrument in one structure.</p>
-                </div>
-              </article>
-              <article>
-                <span>03</span>
-                <div>
-                  <h3>Act On Risk Signals</h3>
-                  <p>Use risk score, drawdown, VaR, concentration metrics, and dip alert emails to monitor risk posture.</p>
-                </div>
-              </article>
             </div>
-          </section>
-
-          <section id="safety" className="landing-safety">
-            <div className="landing-safety-head">
-              <p className="landing-kicker">Data Safety</p>
-              <h2>Plain-English security and privacy controls.</h2>
-              <p>These safeguards reflect controls active in the current release.</p>
-            </div>
-            <div className="landing-safety-grid">
-              <article>
-                <h3>Privacy promise</h3>
-                <p><strong>We do not sell your data.</strong> Portfolio uploads are used only to generate your analytics workspace.</p>
-              </article>
-              <article>
-                <h3>Data control and deletion</h3>
-                <p>You can clear imported holdings and snapshots anytime from the dashboard using Clear Data.</p>
-              </article>
-              <article>
-                <h3>Account and payment security</h3>
-                <p>Email verification, scrypt password hashing, secure cookies, and Stripe-hosted checkout are enabled in production.</p>
-              </article>
-              <article>
-                <h3>Hosting and hardening</h3>
-                <p>Production runs over HTTPS with CSP/HSTS/anti-framing headers, plus encrypted backups and restore checks.</p>
-              </article>
-            </div>
-            <p className="landing-safety-note">No platform can guarantee zero risk. Use strong passwords and keep deployment secrets protected.</p>
-          </section>
-
-          <section id="pricing" className="landing-pricing">
-            <div className="landing-pricing-head">
-              <p className="landing-kicker">Pricing</p>
-              <h2>Simple pricing, low barrier to start.</h2>
-            </div>
-            <div className="landing-pricing-grid landing-pricing-centered">
-              <article className="landing-plan landing-plan-starter landing-plan-highlight">
-                <p className="landing-plan-tier">Starter</p>
-                <h3>$3<span>/month</span></h3>
-                <p className="landing-plan-subtitle">Live now</p>
-                <ul>
-                  <li>One private investor workspace</li>
-                  <li>CSV import for super, ASX, crypto, index, funds, and bullion</li>
-                  <li>Risk score, dashboard charts, and snapshots</li>
-                  <li>Email verification and password reset</li>
-                </ul>
-                <button
-                  type="button"
-                  onClick={() => void startStarterCheckout(authEmail)}
-                  className="landing-btn landing-btn-primary"
-                  disabled={checkoutWorking}
-                >
-                  {checkoutWorking ? "Redirecting..." : "Get Starter"}
-                </button>
-              </article>
-
-              <article className="landing-plan landing-plan-pro">
-                <p className="landing-plan-tier">Pro</p>
-                <h3>$15<span>/month</span></h3>
-                <p className="landing-plan-subtitle">Advanced quant analytics</p>
-                <ul>
-                  <li>Everything in Starter</li>
-                  <li>Expected Shortfall (ES 95) tail risk</li>
-                  <li>Beta and tracking error vs ASX 200</li>
-                  <li>Date-aligned benchmark analytics</li>
-                  <li>Advanced reporting and team workflows</li>
-                </ul>
-                <button
-                  type="button"
-                  onClick={() => void startProCheckout(authEmail)}
-                  className="landing-btn landing-btn-ghost"
-                  disabled={checkoutWorking}
-                >
-                  {checkoutWorking ? "Redirecting..." : "Get Pro"}
-                </button>
-              </article>
-            </div>
-            <p className="landing-pricing-note">Pro analytics unlock automatically when your subscription uses the Pro Stripe price.</p>
-          </section>
-
-          <section id="access" className="landing-access">
-            <article className="landing-access-copy">
-              <p className="landing-kicker">Client Access</p>
-              <h2>Enter your private SPECTRE workspace.</h2>
-              <p>
-                Sign in to continue from your last snapshot, or create your account with Stripe checkout in one flow. System for Portfolio Exposure, Correlation, Threat & Risk Evaluation.
-              </p>
-              <div className="landing-proof">
-                <p>Designed for active DIY investors who want pro-style risk visibility.</p>
-                <p>Single interface for holdings, exposure, and risk posture.</p>
-              </div>
-            </article>
-
-            <article className="auth-login-card landing-auth-card">
-              <h2>{authMode === "register" ? "Create Account" : "Sign In"}</h2>
-              <p>Access your private SPECTRE workspace.</p>
-
-              {banner ? <div className={"banner " + banner.type}>{banner.message}</div> : null}
-              <div className="auth-actions">
-                <button
-                  type="button"
-                  className="template-btn"
-                  onClick={() => void startProCheckout(authEmail)}
-                  disabled={authWorking || checkoutWorking}
-                >
-                  {checkoutWorking ? "Redirecting..." : "Start Pro Checkout ($15/mo)"}
-                </button>
-              </div>
-
-              {authError ? <div className="banner error">{authError}</div> : null}
-
-              <form onSubmit={submitAuth} className="auth-form-grid">
-                <label>
-                  <span>Email</span>
-                  <input
-                    type="email"
-                    placeholder="you@example.com"
-                    value={authEmail}
-                    onChange={(event) => setAuthEmail(event.target.value)}
-                    required
-                    autoComplete="email"
-                  />
-                </label>
-
-                <label>
-                  <span>Password</span>
-                  <input
-                    type="password"
-                    placeholder="Minimum 8 characters"
-                    value={authPassword}
-                    onChange={(event) => setAuthPassword(event.target.value)}
-                    required
-                    minLength={8}
-                    autoComplete={authMode === "register" ? "new-password" : "current-password"}
-                  />
-                </label>
-
-                {authMode === "register" ? (
-                  <>
-                    <label>
-                      <span>Display Name</span>
-                      <input
-                        type="text"
-                        placeholder="How your account appears"
-                        value={authDisplayName}
-                        onChange={(event) => setAuthDisplayName(event.target.value)}
-                        autoComplete="name"
-                      />
-                    </label>
-
-                    <label className="auth-terms">
-                      <input
-                        type="checkbox"
-                        checked={authAcceptsTerms}
-                        onChange={(event) => setAuthAcceptsTerms(event.target.checked)}
-                        required
-                      />
-                      <span>
-                        I agree to the Terms & Conditions and understand SPECTRE provides informational analytics only, not financial advice.
-                      </span>
-                    </label>
-                  </>
-                ) : null}
-
-                <button type="submit" className="refresh-btn auth-submit" disabled={authWorking}>
-                  {authWorking ? "Please wait..." : authMode === "register" ? "Create Account & Checkout" : "Sign In"}
-                </button>
-              </form>
-
-              <div className="auth-actions">
-                <button
-                  type="button"
-                  className="template-btn"
-                  onClick={() => {
-                    setAuthMode((current) => (current === "register" ? "login" : "register"));
-                    setAuthAcceptsTerms(false);
-                    setAuthError("");
-                  }}
-                  disabled={authWorking}
-                >
-                  {authMode === "register" ? "Use Sign In" : "Use Register"}
-                </button>
-                <button type="button" className="template-btn" onClick={() => void resendVerificationEmail()} disabled={authWorking}>
-                  Resend Verification
-                </button>
-                <button type="button" className="template-btn" onClick={() => void requestPasswordReset()} disabled={authWorking}>
-                  Forgot Password
-                </button>
-                <button type="button" className="template-btn" onClick={() => void completePasswordReset()} disabled={authWorking}>
-                  Reset With Token
-                </button>
-              </div>
-            </article>
           </section>
         </main>
 
-        <footer className="landing-footer">
-          <p className="footer-disclaimer">Disclaimer: SPECTRE provides informational analytics only. It is not financial, investment, tax, or legal advice, and no result is guaranteed to be complete, current, or accurate.</p>
-          <p className="footer-disclaimer">Use at your own risk. Always verify pricing, corporate actions, and holdings with official statements before making decisions. If this app is deployed online, database access and backups are your responsibility.</p>
-          <p className="footer-contact">Contact us: <a href={`mailto:${ADMIN_CONTACT_EMAIL}`}>{ADMIN_CONTACT_EMAIL}</a></p>
-          <p className="footer-legal">T&C apply. Copyright 2026 SPECTRE.</p>
+        <footer className="spectre-footer">
+          <div className="spectre-wrap spectre-footer-inner">
+            <p className="spectre-footer-logo">SPECTRE</p>
+            <p className="spectre-footer-copy">
+              Disclaimer: SPECTRE provides informational analytics only. It is not financial, investment, tax, or legal advice, and no result is guaranteed to be complete, current, or accurate.
+              Use at your own risk. Always verify pricing, corporate actions, and holdings with official statements before making decisions. If this app is deployed online, database access and backups are your responsibility. T&amp;C apply. Copyright 2026 SPECTRE.
+            </p>
+            <p className="spectre-footer-contact">Contact us: <a href={`mailto:${ADMIN_CONTACT_EMAIL}`}>{ADMIN_CONTACT_EMAIL}</a></p>
+          </div>
         </footer>
       </div>
     );
