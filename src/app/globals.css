@@ -2250,30 +2250,35 @@ td {
 .landing-proof-strip {
   padding: 12px;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+  align-items: stretch;
 }
 
 .landing-proof-strip article {
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.02);
-  padding: 12px;
+  border-top: 2px solid rgba(255, 75, 51, 0.35);
+  background: linear-gradient(165deg, rgba(17, 18, 25, 0.82) 0%, rgba(12, 12, 17, 0.9) 100%);
+  padding: 13px;
   display: grid;
-  gap: 6px;
+  gap: 7px;
+  min-height: 152px;
+  align-content: start;
 }
 
 .landing-proof-strip strong {
   color: #fff;
   font-family: var(--font-sora), var(--font-geist-sans), sans-serif;
   letter-spacing: -0.01em;
-  font-size: clamp(1rem, 2.4vw, 1.26rem);
+  line-height: 1.1;
+  font-size: clamp(0.95rem, 1.3vw, 1.18rem);
 }
 
 .landing-proof-strip span {
-  color: #c8c9d5;
-  font-size: 0.78rem;
-  line-height: 1.45;
+  color: #cbccda;
+  font-size: 0.82rem;
+  line-height: 1.42;
 }
 
 .landing-feature-grid {
@@ -2660,7 +2665,7 @@ td {
   }
 
   .landing-proof-strip {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .landing-analytics-grid {
@@ -2695,6 +2700,10 @@ td {
 
   .landing-hero-stats {
     grid-template-columns: 1fr;
+  }
+
+  .landing-proof-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .landing-plan-highlight {

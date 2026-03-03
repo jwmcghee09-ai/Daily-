@@ -1589,8 +1589,8 @@ export default function Home() {
               <span>Get notified when tracked holdings fall past your chosen percentage threshold.</span>
             </article>
             <article>
-              <strong>System for Portfolio Exposure, Correlation, Threat & Risk Evaluation</strong>
-              <span>Designed for Australian investors and SMSF-style reporting workflows.</span>
+              <strong>Built for ASX + SMSF workflows</strong>
+              <span>Purpose-built for Australian investors managing multi-source portfolios.</span>
             </article>
           </section>
 
