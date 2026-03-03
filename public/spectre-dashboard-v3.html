@@ -261,6 +261,31 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 .foot-link{font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-decoration:none}
 .foot-link:hover{color:var(--text)}
 
+.system-toast{
+  position:fixed;
+  right:18px;
+  bottom:18px;
+  z-index:1200;
+  max-width:420px;
+  padding:.7rem .9rem;
+  border-radius:10px;
+  border:1px solid var(--border2);
+  background:rgba(10,7,18,.92);
+  color:var(--text);
+  font-family:var(--mono);
+  font-size:.62rem;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  box-shadow:var(--shadow);
+  opacity:0;
+  transform:translateY(6px);
+  pointer-events:none;
+  transition:opacity .2s ease,transform .2s ease;
+}
+.system-toast.show{opacity:1;transform:translateY(0)}
+.system-toast.success{border-color:rgba(255,255,255,.2)}
+.system-toast.error{border-color:rgba(255,77,26,.45);color:#ffd9d2}
+
 /* PRO CONSOLE */
 .console-wrap{background:linear-gradient(165deg,rgba(16,11,28,.96) 0%,rgba(10,7,18,.95) 100%);border:1px solid rgba(192,132,252,.15);border-radius:16px;padding:1.8rem 2rem;box-shadow:var(--shadow),0 0 30px rgba(155,93,229,.04) inset}
 .console-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.4rem}
@@ -288,8 +313,8 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       <li><a href="#holdings">Holdings</a></li>
     </ul>
     <div class="nav-right">
-      <span class="nav-user">j.smith@email.com</span>
-      <a href="#" class="nav-btn">Sign Out</a>
+      <span class="nav-user" id="nav-user-email">j.smith@email.com</span>
+      <a href="#" class="nav-btn" id="sign-out-btn">Sign Out</a>
     </div>
   </div>
 </nav>
@@ -303,29 +328,29 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       <h1 class="hero-title">SPECTRE</h1>
       <p class="hero-sub">Upload super, ASX, crypto, index, mutual fund, and ABC Bullion CSV reports to track exposure, concentration, and downside risk in one private workspace.</p>
       <div class="hero-actions">
-        <button class="btn-primary">Refresh Prices</button>
-        <button class="btn-ghost">Clear Data</button>
+        <button class="btn-primary" id="refresh-prices-btn">Refresh Prices</button>
+        <button class="btn-ghost" id="clear-data-btn">Clear Data</button>
       </div>
       <div class="hero-meta">
         <div class="meta-row">
           <span class="meta-lbl">Account</span>
-          <span class="meta-val">James Smith</span>
+          <span class="meta-val" id="meta-account-name">James Smith</span>
         </div>
         <div class="meta-row">
           <span class="meta-lbl">Plan</span>
-          <span class="plan-chip pro">Pro Active</span>
+          <span class="plan-chip pro" id="meta-plan-chip">Pro Active</span>
         </div>
         <div class="meta-row">
           <span class="meta-lbl">Holdings</span>
-          <span class="meta-val">24 positions</span>
+          <span class="meta-val" id="meta-holdings-count">24 positions</span>
         </div>
         <div class="meta-row">
           <span class="meta-lbl">Latest Report</span>
-          <span class="meta-val">2026-03-01</span>
+          <span class="meta-val" id="meta-latest-report">2026-03-01</span>
         </div>
         <div class="meta-row">
           <span class="meta-lbl">Prices Updated</span>
-          <span class="meta-val">04/03/2026, 9:41 AM</span>
+          <span class="meta-val" id="meta-prices-updated">04/03/2026, 9:41 AM</span>
         </div>
       </div>
     </div>
@@ -334,27 +359,27 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       <div class="kpi-grid-mini">
         <div class="kpi-mini">
           <div class="kpi-mini-lbl">Total Value</div>
-          <div class="kpi-mini-val">$284k</div>
+          <div class="kpi-mini-val" id="mini-total-value">$284k</div>
         </div>
         <div class="kpi-mini">
           <div class="kpi-mini-lbl">Unrealised P/L</div>
-          <div class="kpi-mini-val accent">+$21.4k</div>
+          <div class="kpi-mini-val accent" id="mini-unrealised-pnl">+$21.4k</div>
         </div>
         <div class="kpi-mini">
           <div class="kpi-mini-lbl">Today's Change</div>
-          <div class="kpi-mini-val">−$1,240</div>
+          <div class="kpi-mini-val" id="mini-day-change">−$1,240</div>
         </div>
         <div class="kpi-mini">
           <div class="kpi-mini-lbl">1-Day VaR 95%</div>
-          <div class="kpi-mini-val accent">−8.4%</div>
+          <div class="kpi-mini-val accent" id="mini-var95">−8.4%</div>
         </div>
       </div>
       <div class="risk-bar-wrap">
         <div class="risk-bar-top">
           <span class="risk-bar-lbl">Risk Score</span>
-          <span class="risk-bar-val">72 / 100</span>
+          <span class="risk-bar-val" id="risk-bar-value">72 / 100</span>
         </div>
-        <div class="risk-track"><div class="risk-fill"></div></div>
+        <div class="risk-track"><div class="risk-fill" id="risk-bar-fill"></div></div>
       </div>
     </div>
   </section>
@@ -368,40 +393,41 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     <div class="sec-head">
       <h2 class="sec-title">Data Uploads</h2>
       <div class="sec-line"></div>
-      <span class="sec-label">6 sources</span>
+      <span class="sec-label" id="uploads-source-count">6 sources</span>
     </div>
+    <input id="upload-file-input" type="file" accept=".csv,text/csv" style="display:none" />
     <div class="upload-grid">
-      <div class="upload-card">
+      <div class="upload-card" data-source="super">
         <div class="upload-num">01 — Super</div>
         <div class="upload-title">Super Report</div>
         <div class="upload-desc">Upload your superannuation holdings export CSV.</div>
         <div class="upload-action">Upload CSV</div>
       </div>
-      <div class="upload-card">
+      <div class="upload-card" data-source="asx">
         <div class="upload-num">02 — ASX</div>
         <div class="upload-title">ASX Holdings</div>
         <div class="upload-desc">Upload brokerage or watchlist holdings export.</div>
         <div class="upload-action">Upload CSV</div>
       </div>
-      <div class="upload-card">
+      <div class="upload-card" data-source="index">
         <div class="upload-num">03 — Index</div>
         <div class="upload-title">Index Report</div>
         <div class="upload-desc">Upload index or benchmark positions CSV.</div>
         <div class="upload-action">Upload CSV</div>
       </div>
-      <div class="upload-card">
+      <div class="upload-card" data-source="fund">
         <div class="upload-num">04 — Funds</div>
         <div class="upload-title">Mutual Fund</div>
         <div class="upload-desc">Upload managed fund or ETF holdings export.</div>
         <div class="upload-action">Upload CSV</div>
       </div>
-      <div class="upload-card">
+      <div class="upload-card" data-source="crypto">
         <div class="upload-num">05 — Crypto</div>
         <div class="upload-title">Crypto Report</div>
         <div class="upload-desc">Upload crypto holdings or exchange export CSV.</div>
         <div class="upload-action">Upload CSV</div>
       </div>
-      <div class="upload-card">
+      <div class="upload-card" data-source="gold">
         <div class="upload-num">06 — Bullion</div>
         <div class="upload-title">ABC Bullion</div>
         <div class="upload-desc">Upload ABC Bullion gold and silver holdings CSV.</div>
@@ -424,55 +450,55 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     <div class="kpi-row">
       <div class="kpi-card">
         <div class="kpi-lbl">Total Portfolio</div>
-        <div class="kpi-val">$284,420</div>
+        <div class="kpi-val" id="kpi-total-value">$284,420</div>
         <div class="kpi-sub">All accounts combined</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-lbl">Cost Base</div>
-        <div class="kpi-val">$263,018</div>
+        <div class="kpi-val" id="kpi-total-cost">$263,018</div>
         <div class="kpi-sub">Avg acquisition cost</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-lbl">Unrealised P/L</div>
-        <div class="kpi-val accent">+$21,402</div>
-        <div class="kpi-sub">+8.1% since entry</div>
+        <div class="kpi-val accent" id="kpi-total-pnl">+$21,402</div>
+        <div class="kpi-sub" id="kpi-total-pnl-sub">+8.1% since entry</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-lbl">Today's Change</div>
-        <div class="kpi-val accent">−$1,240</div>
-        <div class="kpi-sub">−0.44% on day</div>
+        <div class="kpi-val accent" id="kpi-day-change">−$1,240</div>
+        <div class="kpi-sub" id="kpi-day-change-sub">−0.44% on day</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-lbl">Risk Score</div>
-        <div class="kpi-val accent">72 / 100</div>
-        <div class="kpi-sub">Elevated exposure</div>
+        <div class="kpi-val accent" id="kpi-risk-score">72 / 100</div>
+        <div class="kpi-sub" id="kpi-risk-score-sub">Elevated exposure</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-lbl">1-Day VaR 95%</div>
-        <div class="kpi-val accent">−8.4%</div>
+        <div class="kpi-val accent" id="kpi-var95">−8.4%</div>
         <div class="kpi-sub">Max expected loss</div>
       </div>
     </div>
 
     <!-- Pro Console -->
     <div style="margin-top:1px">
-      <div class="console-wrap" style="border-radius:0 0 16px 16px;border-top:1px solid rgba(192,132,252,.12)">
+      <div class="console-wrap" id="pro-console" style="border-radius:0 0 16px 16px;border-top:1px solid rgba(192,132,252,.12)">
         <div class="console-header">
           <div class="console-title">Pro Quant Console</div>
-          <div class="console-badge">Pro Active</div>
+          <div class="console-badge" id="pro-console-badge">Pro Active</div>
         </div>
         <div class="console-grid">
           <div class="console-stat">
             <div class="console-lbl">Expected Shortfall</div>
-            <div class="console-val">−9.9%</div>
+            <div class="console-val" id="pro-expected-shortfall">−9.9%</div>
           </div>
           <div class="console-stat">
             <div class="console-lbl">Beta vs ASX 200</div>
-            <div class="console-val">1.18</div>
+            <div class="console-val" id="pro-beta">1.18</div>
           </div>
           <div class="console-stat">
             <div class="console-lbl">Tracking Error</div>
-            <div class="console-val">14.2%</div>
+            <div class="console-val" id="pro-tracking-error">14.2%</div>
           </div>
         </div>
       </div>
@@ -637,54 +663,54 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
           <h2 class="sec-title">Risk Signals</h2>
           <div class="sec-line"></div>
         </div>
-        <div class="risk-window">Window <span>6M</span> — 42 snapshot points from 2025-09-03 to 2026-03-03</div>
+        <div class="risk-window" id="risk-window-label">Window <span>6M</span> — 42 snapshot points from 2025-09-03 to 2026-03-03</div>
       </div>
       <div class="window-tabs">
-        <button class="wtab">3M</button>
-        <button class="wtab active">6M</button>
-        <button class="wtab">1Y</button>
-        <button class="wtab">ALL</button>
+        <button class="wtab" data-window="3M">3M</button>
+        <button class="wtab active" data-window="6M">6M</button>
+        <button class="wtab" data-window="1Y">1Y</button>
+        <button class="wtab" data-window="ALL">ALL</button>
       </div>
     </div>
     <div class="risk-grid">
       <div class="risk-card">
         <div class="risk-lbl">Risk Score <span class="risk-help">?</span></div>
-        <div class="risk-val danger">72 / 100</div>
-        <div class="risk-sub">Elevated</div>
+        <div class="risk-val danger" id="risk-score">72 / 100</div>
+        <div class="risk-sub" id="risk-score-sub">Elevated</div>
       </div>
       <div class="risk-card">
         <div class="risk-lbl">Concentration (Top 3) <span class="risk-help">?</span></div>
-        <div class="risk-val danger">42%</div>
-        <div class="risk-sub">High concentration</div>
+        <div class="risk-val danger" id="risk-top3">42%</div>
+        <div class="risk-sub" id="risk-top3-sub">High concentration</div>
       </div>
       <div class="risk-card">
         <div class="risk-lbl">1-Day VaR 95% <span class="risk-help">?</span></div>
-        <div class="risk-val danger">−8.4%</div>
+        <div class="risk-val danger" id="risk-var95">−8.4%</div>
         <div class="risk-sub">Max expected loss</div>
       </div>
       <div class="risk-card">
         <div class="risk-lbl">Expected Shortfall <span class="risk-help">?</span></div>
-        <div class="risk-val danger">−9.9%</div>
+        <div class="risk-val danger" id="risk-cvar95">−9.9%</div>
         <div class="risk-sub">CVaR beyond VaR</div>
       </div>
       <div class="risk-card">
         <div class="risk-lbl">Max Drawdown <span class="risk-help">?</span></div>
-        <div class="risk-val danger">−12.1%</div>
+        <div class="risk-val danger" id="risk-max-drawdown">−12.1%</div>
         <div class="risk-sub">Worst peak to trough</div>
       </div>
       <div class="risk-card">
         <div class="risk-lbl">Volatility (Ann.) <span class="risk-help">?</span></div>
-        <div class="risk-val">18.4%</div>
+        <div class="risk-val" id="risk-volatility">18.4%</div>
         <div class="risk-sub">Annualised std dev</div>
       </div>
       <div class="risk-card">
         <div class="risk-lbl">Beta vs ASX 200 <span class="risk-help">?</span></div>
-        <div class="risk-val purple">1.18</div>
+        <div class="risk-val purple" id="risk-beta">1.18</div>
         <div class="risk-sub">Market sensitivity</div>
       </div>
       <div class="risk-card">
         <div class="risk-lbl">Tracking Error <span class="risk-help">?</span></div>
-        <div class="risk-val">14.2%</div>
+        <div class="risk-val" id="risk-tracking-error">14.2%</div>
         <div class="risk-sub">vs benchmark</div>
       </div>
     </div>
@@ -749,20 +775,20 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     <div class="sec-head">
       <h2 class="sec-title">Dip Alerts</h2>
       <div class="sec-line"></div>
-      <span class="sec-label">2 active</span>
+      <span class="sec-label" id="alerts-active-count">2 active</span>
     </div>
     <div class="alert-form" style="margin-bottom:1rem">
       <div>
         <div class="field-lbl">Ticker</div>
-        <input class="field-input" placeholder="e.g. CBA.AX" />
+        <input class="field-input" id="alert-ticker-input" placeholder="e.g. CBA.AX" />
       </div>
       <div>
         <div class="field-lbl">Threshold %</div>
-        <input class="field-input" placeholder="e.g. −5" />
+        <input class="field-input" id="alert-threshold-input" placeholder="e.g. 5" />
       </div>
-      <button class="btn-primary" style="white-space:nowrap">Add Alert</button>
+      <button class="btn-primary" id="add-alert-btn" style="white-space:nowrap">Add Alert</button>
     </div>
-    <div class="alert-row">
+    <div class="alert-row" id="alerts-list">
       <div class="alert-card">
         <div class="alert-info">
           <div class="alert-ticker">CBA.AX</div>
@@ -789,7 +815,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     <div class="sec-head">
       <h2 class="sec-title">Holdings</h2>
       <div class="sec-line"></div>
-      <span class="sec-label">24 positions</span>
+      <span class="sec-label" id="holdings-count-label">24 positions</span>
     </div>
     <div class="table-wrap">
       <table>
@@ -806,7 +832,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
             <th>P/L</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody id="holdings-tbody">
           <tr>
             <td class="ticker">CBA</td>
             <td>Commonwealth Bank</td>
@@ -912,207 +938,949 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   </footer>
 </div>
 
+<div id="system-toast" class="system-toast" role="status" aria-live="polite"></div>
+
 <script>
-// ── WINDOW TABS ──
-document.querySelectorAll('.wtab').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.wtab').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-  });
-});
+(() => {
+  const O = "#ff4d1a";
+  const P = "#9b5de5";
+  const M = "rgba(255,255,255,.055)";
+  const TEXT = "rgba(180,176,204,.65)";
+  const MONO = "'DM Mono', monospace";
+  const SOURCE_LABEL = { super: "SUPER", asx: "ASX", gold: "GOLD", index: "INDEX", fund: "FUND", crypto: "CRYPTO" };
+  const SOURCE_BADGE = { super: "super", asx: "asx", gold: "gold", index: "fund", fund: "fund", crypto: "crypto" };
+  const RISK_WINDOW_DAYS = { "1M": 31, "3M": 92, "6M": 183, "1Y": 366 };
 
-// ── CHART HELPERS ──
-const O = '#ff4d1a', P = '#9b5de5', PH = '#c084fc';
-const M = 'rgba(255,255,255,.055)', TEXT = 'rgba(180,176,204,.65)';
-const MONO = "'DM Mono', monospace";
+  const state = {
+    sessionUser: null,
+    portfolio: { holdings: [], snapshots: [], updatedAt: "", lastPriceRefreshAt: "" },
+    alerts: [],
+    historicalRiskEstimate: null,
+    riskWindow: "6M",
+    uploadSource: null,
+  };
 
-function dpr(canvas) {
-  const r = window.devicePixelRatio || 1;
-  const rect = canvas.getBoundingClientRect();
-  canvas.width = rect.width * r;
-  canvas.height = rect.height * r;
-  const ctx = canvas.getContext('2d');
-  ctx.scale(r, r);
-  return { ctx, w: rect.width, h: rect.height };
-}
+  const toastEl = document.getElementById("system-toast");
+  const uploadInput = document.getElementById("upload-file-input");
+  const uploads = Array.from(document.querySelectorAll(".upload-card[data-source]"));
 
-// DONUT
-function drawDonut(id, data) {
-  const canvas = document.getElementById(id);
-  if (!canvas) return;
-  const { ctx, w, h } = dpr(canvas);
-  const cx = w / 2, cy = h / 2, R = Math.min(w, h) * 0.38, r = R * 0.58;
-  let angle = -Math.PI / 2;
-  data.forEach(d => {
-    const sweep = (d.pct / 100) * Math.PI * 2;
+  function showToast(message, tone = "success") {
+    if (!toastEl) return;
+    toastEl.textContent = message;
+    toastEl.className = `system-toast ${tone} show`;
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(() => {
+      toastEl.className = "system-toast";
+    }, 2600);
+  }
+
+  function setText(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
+  }
+
+  function setClass(id, className) {
+    const el = document.getElementById(id);
+    if (el) el.className = className;
+  }
+
+  function escapeHtml(value) {
+    return String(value || "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#39;");
+  }
+
+  function sum(values) {
+    return values.reduce((acc, value) => acc + value, 0);
+  }
+
+  function clamp(value, min, max) {
+    return Math.max(min, Math.min(max, value));
+  }
+
+  function normalizePenalty(value, low, high) {
+    if (!Number.isFinite(value)) return 1;
+    return clamp((value - low) / (high - low), 0, 1);
+  }
+
+  function formatDateTime(value) {
+    if (!value) return "—";
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return "—";
+    return d.toLocaleString("en-AU", { dateStyle: "medium", timeStyle: "short" });
+  }
+
+  function formatDate(value) {
+    if (!value) return "—";
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return value;
+    return d.toISOString().slice(0, 10);
+  }
+
+  function formatCurrency(value, opts = {}) {
+    if (!Number.isFinite(value)) return "—";
+    return new Intl.NumberFormat("en-AU", {
+      style: "currency",
+      currency: "AUD",
+      minimumFractionDigits: opts.decimals ?? 0,
+      maximumFractionDigits: opts.decimals ?? 0,
+      notation: opts.compact ? "compact" : "standard",
+      compactDisplay: opts.compact ? "short" : undefined,
+    }).format(value);
+  }
+
+  function formatSignedCurrency(value, opts = {}) {
+    if (!Number.isFinite(value)) return "—";
+    if (value === 0) return formatCurrency(0, opts);
+    const sign = value > 0 ? "+" : "−";
+    return `${sign}${formatCurrency(Math.abs(value), opts)}`;
+  }
+
+  function formatPercent(value, opts = {}) {
+    if (!Number.isFinite(value)) return "—";
+    const absValue = Math.abs(value);
+    const rendered = `${absValue.toFixed(opts.decimals ?? 1)}%`;
+    if (opts.signed) {
+      return `${value >= 0 ? "+" : "−"}${rendered}`;
+    }
+    return opts.negative ? `−${rendered}` : rendered;
+  }
+
+  function toDate(value) {
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  function applyRiskWindow(history, riskWindow) {
+    if (riskWindow === "ALL" || history.length === 0) return history;
+    const latest = toDate(history[history.length - 1].date);
+    if (!latest) return history;
+    const cutoff = new Date(latest.getTime());
+    const days = RISK_WINDOW_DAYS[riskWindow] || RISK_WINDOW_DAYS["3M"];
+    cutoff.setUTCDate(cutoff.getUTCDate() - (days - 1));
+    return history.filter((item) => {
+      const d = toDate(item.date);
+      return d && d.getTime() >= cutoff.getTime();
+    });
+  }
+
+  function calculateReturns(values) {
+    const returns = [];
+    for (let i = 1; i < values.length; i += 1) {
+      const prev = values[i - 1];
+      const current = values[i];
+      if (prev > 0 && Number.isFinite(prev) && Number.isFinite(current)) {
+        returns.push(current / prev - 1);
+      }
+    }
+    return returns;
+  }
+
+  function percentile(values, p) {
+    const sorted = [...values].sort((a, b) => a - b);
+    const index = (sorted.length - 1) * p;
+    const lower = Math.floor(index);
+    const upper = Math.ceil(index);
+    if (lower === upper) return sorted[lower];
+    const weight = index - lower;
+    return sorted[lower] * (1 - weight) + sorted[upper] * weight;
+  }
+
+  function winsorize(values, lowerP, upperP) {
+    const lower = percentile(values, lowerP);
+    const upper = percentile(values, upperP);
+    return values.map((value) => (value < lower ? lower : value > upper ? upper : value));
+  }
+
+  function cleanReturnsForRisk(returns) {
+    const finiteReturns = returns.filter(Number.isFinite);
+    if (finiteReturns.length <= 2) return finiteReturns;
+    const withoutSpikes = finiteReturns.filter((value) => Math.abs(value) <= 0.4);
+    if (withoutSpikes.length <= 2) return withoutSpikes;
+    if (withoutSpikes.length >= 30) return winsorize(withoutSpikes, 0.01, 0.99);
+    return withoutSpikes;
+  }
+
+  function stdDev(values) {
+    if (values.length < 2) return 0;
+    const mean = sum(values) / values.length;
+    const variance = sum(values.map((value) => (value - mean) ** 2)) / (values.length - 1);
+    return Math.sqrt(variance);
+  }
+
+  function calcMaxDrawdown(values) {
+    let peak = values[0];
+    let maxDrawdown = 0;
+    for (const value of values) {
+      if (value > peak) peak = value;
+      const drawdown = peak > 0 ? (peak - value) / peak : 0;
+      if (drawdown > maxDrawdown) maxDrawdown = drawdown;
+    }
+    return maxDrawdown;
+  }
+
+  function expectedShortfall95(returns) {
+    if (returns.length < 20) return null;
+    const cutoff = percentile(returns, 0.05);
+    const tail = returns.filter((value) => value <= cutoff);
+    if (tail.length === 0) return null;
+    return sum(tail) / tail.length;
+  }
+
+  function resolveHoldingUnits(units, value, price) {
+    if (Number.isFinite(units) && units > 0) return units;
+    if (Number.isFinite(value) && Number.isFinite(price) && value > 0 && price > 0) return value / price;
+    return 0;
+  }
+
+  function computeMetrics(holdings, snapshots, riskWindow) {
+    const totalValue = sum(holdings.map((item) => Number(item.value) || 0));
+    const totalCost = sum(holdings.map((item) => Number(item.costBase) || 0));
+    const pnl = totalValue - totalCost;
+    const pnlPct = totalCost > 0 ? (pnl / totalCost) * 100 : 0;
+    const sortedHoldings = [...holdings].sort((a, b) => (b.value || 0) - (a.value || 0));
+    const topHoldings = sortedHoldings.slice(0, 8).map((holding) => ({
+      ...holding,
+      weightPct: totalValue > 0 ? ((holding.value || 0) / totalValue) * 100 : 0,
+      pnl: (holding.value || 0) - (holding.costBase || 0),
+    }));
+    const top3ConcentrationPct = totalValue > 0 ? (sum(sortedHoldings.slice(0, 3).map((item) => item.value || 0)) / totalValue) * 100 : 0;
+    const accountAllocation = buildAllocation(holdings, "account", totalValue);
+    const sectorAllocation = buildAllocation(holdings, "sector", totalValue);
+    const largestAccountPct = accountAllocation.length > 0 ? accountAllocation[0].pct : 0;
+
+    const latestSnapshotByDay = new Map();
+    for (const item of snapshots || []) {
+      if (!Number.isFinite(item.value) || item.value <= 0) continue;
+      const dayKey = String(item.date || "").slice(0, 10);
+      const existing = latestSnapshotByDay.get(dayKey);
+      if (!existing || item.date > existing.date) {
+        latestSnapshotByDay.set(dayKey, { date: item.date, value: item.value });
+      }
+    }
+
+    const history = Array.from(latestSnapshotByDay.values()).sort((a, b) => String(a.date).localeCompare(String(b.date)));
+    const riskHistory = applyRiskWindow(history, riskWindow);
+    const rawDailyReturns = calculateReturns(riskHistory.map((item) => item.value));
+    const dailyReturns = cleanReturnsForRisk(rawDailyReturns);
+    const returnOutliersRemoved = Math.max(0, rawDailyReturns.length - dailyReturns.length);
+    const volatilityAnnualPct = dailyReturns.length >= 2 ? stdDev(dailyReturns) * Math.sqrt(252) * 100 : null;
+    const maxDrawdownPct = riskHistory.length >= 2 ? calcMaxDrawdown(riskHistory.map((item) => item.value)) * 100 : null;
+    const var95Raw = dailyReturns.length >= 20 ? percentile(dailyReturns, 0.05) : null;
+    const var95Pct = var95Raw != null ? Math.max(0, -var95Raw * 100) : null;
+    const cvar95Raw = dailyReturns.length >= 20 ? expectedShortfall95(dailyReturns) : null;
+    const cvar95Pct = cvar95Raw != null ? Math.max(0, -cvar95Raw * 100) : null;
+
+    return {
+      totalValue,
+      totalCost,
+      pnl,
+      pnlPct,
+      top3ConcentrationPct,
+      largestAccountPct,
+      topHoldings,
+      accountAllocation,
+      sectorAllocation,
+      history,
+      riskHistory,
+      dailyReturns,
+      rawDailyReturnsCount: rawDailyReturns.length,
+      returnOutliersRemoved,
+      volatilityAnnualPct,
+      maxDrawdownPct,
+      var95Pct,
+      cvar95Pct,
+      riskPointsUsed: riskHistory.length,
+      riskStartDate: riskHistory.length > 0 ? riskHistory[0].date : null,
+      riskEndDate: riskHistory.length > 0 ? riskHistory[riskHistory.length - 1].date : null,
+    };
+  }
+
+  function buildAllocation(holdings, key, totalValue) {
+    const grouped = new Map();
+    for (const item of holdings) {
+      const k = item[key] || "Uncategorized";
+      grouped.set(k, (grouped.get(k) || 0) + (item.value || 0));
+    }
+    return Array.from(grouped.entries())
+      .map(([name, value]) => ({ name, value, pct: totalValue > 0 ? (value / totalValue) * 100 : 0 }))
+      .sort((a, b) => b.value - a.value);
+  }
+
+  function computeTodayChange(holdings) {
+    const totals = holdings.reduce(
+      (acc, holding) => {
+        const units = resolveHoldingUnits(holding.units, holding.value, holding.price);
+        if (units <= 0 || !Number.isFinite(holding.price) || !Number.isFinite(holding.prevClose) || holding.prevClose <= 0) {
+          return acc;
+        }
+        const prevValue = units * holding.prevClose;
+        const currentValue = units * holding.price;
+        acc.prev += prevValue;
+        acc.current += currentValue;
+        return acc;
+      },
+      { prev: 0, current: 0 },
+    );
+    const change = totals.current - totals.prev;
+    return {
+      amount: change,
+      pct: totals.prev > 0 ? (change / totals.prev) * 100 : 0,
+    };
+  }
+
+  function computeRiskScore(metrics, riskReturnsUsed) {
+    if (metrics.totalValue <= 0) return null;
+    const volatilityPenalty = normalizePenalty(metrics.volatilityAnnualPct, 8, 30) * 30;
+    const varPenalty = normalizePenalty(metrics.var95Pct, 0.7, 3.2) * 22;
+    const drawdownPenalty = normalizePenalty(metrics.maxDrawdownPct, 6, 25) * 20;
+    const concentrationPenalty = normalizePenalty(metrics.top3ConcentrationPct, 30, 75) * 16;
+    const accountPenalty = normalizePenalty(metrics.largestAccountPct, 45, 85) * 12;
+    const confidencePenalty = (1 - clamp(riskReturnsUsed / 63, 0, 1)) * 12;
+    const totalPenalty = volatilityPenalty + varPenalty + drawdownPenalty + concentrationPenalty + accountPenalty + confidencePenalty;
+    const score = Math.round(clamp(100 - totalPenalty, 1, 99));
+    const label = score >= 75 ? "Controlled" : score >= 55 ? "Moderate" : "Elevated";
+    return { score, label };
+  }
+
+  function dpr(canvas) {
+    const r = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * r;
+    canvas.height = rect.height * r;
+    const ctx = canvas.getContext("2d");
+    ctx.scale(r, r);
+    return { ctx, w: rect.width, h: rect.height };
+  }
+
+  function drawDonut(id, data) {
+    const canvas = document.getElementById(id);
+    if (!canvas) return;
+    const { ctx, w, h } = dpr(canvas);
+    ctx.clearRect(0, 0, w, h);
+    const cx = w / 2;
+    const cy = h / 2;
+    const R = Math.min(w, h) * 0.38;
+    const r = R * 0.58;
+    let angle = -Math.PI / 2;
+    data.forEach((d) => {
+      const sweep = (d.pct / 100) * Math.PI * 2;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.arc(cx, cy, R, angle, angle + sweep);
+      ctx.closePath();
+      ctx.fillStyle = d.color;
+      ctx.fill();
+      angle += sweep;
+    });
     ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.arc(cx, cy, R, angle, angle + sweep);
-    ctx.closePath();
-    ctx.fillStyle = d.color;
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(10,7,18,.97)";
     ctx.fill();
-    angle += sweep;
-  });
-  // Cutout
-  ctx.beginPath();
-  ctx.arc(cx, cy, r, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(10,7,18,.97)';
-  ctx.fill();
-  // Gaps
-  angle = -Math.PI / 2;
-  data.forEach(d => {
-    const sweep = (d.pct / 100) * Math.PI * 2;
-    ctx.save();
+    angle = -Math.PI / 2;
+    data.forEach((d) => {
+      const sweep = (d.pct / 100) * Math.PI * 2;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.arc(cx, cy, R + 2, angle - 0.012, angle + 0.012);
+      ctx.closePath();
+      ctx.fillStyle = "rgba(10,7,18,1)";
+      ctx.fill();
+      angle += sweep;
+    });
+  }
+
+  function drawHoldingsBars(data) {
+    const canvas = document.getElementById("c-holdings");
+    if (!canvas) return;
+    const { ctx, w, h } = dpr(canvas);
+    ctx.clearRect(0, 0, w, h);
+    const safeData = data.length > 0 ? data : [{ label: "—", val: 1 }];
+    const pad = { t: 14, r: 10, b: 32, l: 10 };
+    const cw = w - pad.l - pad.r;
+    const ch = h - pad.t - pad.b;
+    const bw = cw / safeData.length;
+    const max = Math.max(...safeData.map((item) => item.val), 1);
+
+    ctx.strokeStyle = M;
+    ctx.lineWidth = 1;
+    [0.25, 0.5, 0.75, 1].forEach((f) => {
+      const y = pad.t + ch * (1 - f);
+      ctx.beginPath();
+      ctx.moveTo(pad.l, y);
+      ctx.lineTo(pad.l + cw, y);
+      ctx.stroke();
+    });
+
+    safeData.forEach((d, i) => {
+      const bh = (d.val / max) * ch;
+      const x = pad.l + i * bw + bw * 0.14;
+      const bwi = bw * 0.72;
+      const y = pad.t + ch - bh;
+      const grad = ctx.createLinearGradient(0, y, 0, pad.t + ch);
+      grad.addColorStop(0, "rgba(255,77,26,.88)");
+      grad.addColorStop(1, "rgba(200,38,0,.42)");
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.roundRect(x, y, bwi, bh, [3, 3, 0, 0]);
+      ctx.fill();
+      ctx.font = `400 9px ${MONO}`;
+      ctx.fillStyle = TEXT;
+      ctx.textAlign = "center";
+      ctx.fillText(d.label, x + bwi / 2, pad.t + ch + 18);
+    });
+  }
+
+  function drawHistoryLine(historyValues, costBaseValue) {
+    const canvas = document.getElementById("c-history");
+    if (!canvas) return;
+    const { ctx, w, h } = dpr(canvas);
+    ctx.clearRect(0, 0, w, h);
+    const rawVals = historyValues.length >= 2 ? historyValues : [1, 1];
+    const costBase = rawVals.map(() => (Number.isFinite(costBaseValue) && costBaseValue > 0 ? costBaseValue : rawVals[0]));
+    const pad = { t: 18, r: 14, b: 30, l: 14 };
+    const cw = w - pad.l - pad.r;
+    const ch = h - pad.t - pad.b;
+    const n = rawVals.length;
+    const min = Math.min(...rawVals, ...costBase) * 0.99;
+    const max = Math.max(...rawVals, ...costBase) * 1.01;
+    const px = (i) => pad.l + (i / (n - 1)) * cw;
+    const py = (v) => pad.t + ch - ((v - min) / (max - min || 1)) * ch;
+
+    ctx.strokeStyle = M;
+    ctx.lineWidth = 1;
+    [0, 0.33, 0.67, 1].forEach((f) => {
+      const y = pad.t + ch * (1 - f);
+      ctx.beginPath();
+      ctx.moveTo(pad.l, y);
+      ctx.lineTo(pad.l + cw, y);
+      ctx.stroke();
+    });
+
+    ctx.strokeStyle = "rgba(155,93,229,.45)";
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 4]);
     ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.arc(cx, cy, R + 2, angle - 0.012, angle + 0.012);
-    ctx.closePath();
-    ctx.fillStyle = 'rgba(10,7,18,1)';
-    ctx.fill();
-    ctx.restore();
-    angle += sweep;
-  });
-}
-
-drawDonut('c-account', [
-  { pct: 50, color: O },
-  { pct: 28, color: P },
-  { pct: 14, color: 'rgba(255,255,255,.32)' },
-  { pct: 8, color: 'rgba(255,255,255,.14)' }
-]);
-drawDonut('c-sector', [
-  { pct: 32, color: O },
-  { pct: 26, color: P },
-  { pct: 22, color: 'rgba(255,255,255,.28)' },
-  { pct: 20, color: 'rgba(255,255,255,.13)' }
-]);
-
-// BAR CHART — Top Holdings
-(function() {
-  const canvas = document.getElementById('c-holdings');
-  if (!canvas) return;
-  const { ctx, w, h } = dpr(canvas);
-  const data = [
-    { label: 'HOST', val: 84200 },
-    { label: 'VAS',  val: 38600 },
-    { label: 'BTC',  val: 35364 },
-    { label: 'CBA',  val: 18288 },
-    { label: 'ETH',  val: 16128 },
-    { label: 'AUC',  val: 14840 },
-    { label: 'BHP',  val: 12090 },
-    { label: 'QAN',  val: 4272 }
-  ];
-  const pad = { t: 14, r: 10, b: 32, l: 10 };
-  const cw = w - pad.l - pad.r, ch = h - pad.t - pad.b;
-  const bw = cw / data.length;
-  const max = data[0].val;
-
-  // Grid
-  ctx.strokeStyle = M;
-  ctx.lineWidth = 1;
-  [0.25, 0.5, 0.75, 1].forEach(f => {
-    const y = pad.t + ch * (1 - f);
-    ctx.beginPath();
-    ctx.moveTo(pad.l, y);
-    ctx.lineTo(pad.l + cw, y);
+    costBase.forEach((v, i) => (i === 0 ? ctx.moveTo(px(i), py(v)) : ctx.lineTo(px(i), py(v))));
     ctx.stroke();
-  });
+    ctx.setLineDash([]);
 
-  // Bars
-  data.forEach((d, i) => {
-    const bh = (d.val / max) * ch;
-    const x = pad.l + i * bw + bw * 0.14;
-    const bwi = bw * 0.72;
-    const y = pad.t + ch - bh;
-    const grad = ctx.createLinearGradient(0, y, 0, pad.t + ch);
-    grad.addColorStop(0, 'rgba(255,77,26,.88)');
-    grad.addColorStop(1, 'rgba(200,38,0,.42)');
-    ctx.fillStyle = grad;
+    const areaGrad = ctx.createLinearGradient(0, pad.t, 0, pad.t + ch);
+    areaGrad.addColorStop(0, "rgba(255,77,26,.18)");
+    areaGrad.addColorStop(1, "rgba(255,77,26,0)");
+    ctx.fillStyle = areaGrad;
     ctx.beginPath();
-    ctx.roundRect(x, y, bwi, bh, [3, 3, 0, 0]);
+    rawVals.forEach((v, i) => (i === 0 ? ctx.moveTo(px(i), py(v)) : ctx.lineTo(px(i), py(v))));
+    ctx.lineTo(px(n - 1), pad.t + ch);
+    ctx.lineTo(px(0), pad.t + ch);
+    ctx.closePath();
     ctx.fill();
-    // Label
+
+    ctx.strokeStyle = O;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    rawVals.forEach((v, i) => (i === 0 ? ctx.moveTo(px(i), py(v)) : ctx.lineTo(px(i), py(v))));
+    ctx.stroke();
+
+    const ex = px(n - 1);
+    const ey = py(rawVals[n - 1]);
+    ctx.beginPath();
+    ctx.arc(ex, ey, 4, 0, Math.PI * 2);
+    ctx.fillStyle = "#fff";
+    ctx.fill();
+    ctx.strokeStyle = O;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    const labels = ["Start", "", "", "", "", "", "Now"];
     ctx.font = `400 9px ${MONO}`;
     ctx.fillStyle = TEXT;
-    ctx.textAlign = 'center';
-    ctx.fillText(d.label, x + bwi / 2, pad.t + ch + 18);
-  });
-})();
+    ctx.textAlign = "center";
+    labels.forEach((label, i) => {
+      if (!label) return;
+      ctx.fillText(label, pad.l + (i / (labels.length - 1)) * cw, pad.t + ch + 18);
+    });
+  }
 
-// LINE CHART — Portfolio History
-(function() {
-  const canvas = document.getElementById('c-history');
-  if (!canvas) return;
-  const { ctx, w, h } = dpr(canvas);
+  function renderLegend(container, items) {
+    if (!container) return;
+    container.innerHTML = items
+      .map(
+        (item) =>
+          `<div class="leg"><span class="leg-dot" style="background:${item.color}"></span>${escapeHtml(item.label)} ${formatPercent(item.pct, { decimals: 1 })}</div>`,
+      )
+      .join("");
+  }
 
-  const rawVals  = [241000,245000,249000,244000,251000,258000,262000,255000,259000,268000,272000,275000,271000,278000,282000,284420];
-  const costBase = [242000,243000,244000,245000,246000,247000,248000,250000,252000,254000,258000,261000,262000,262500,263000,263018];
-  const pad = { t: 18, r: 14, b: 30, l: 14 };
-  const cw = w - pad.l - pad.r, ch = h - pad.t - pad.b;
-  const n = rawVals.length;
-  const min = Math.min(...rawVals, ...costBase) * 0.99;
-  const max = Math.max(...rawVals, ...costBase) * 1.01;
+  async function apiJson(url, options = {}) {
+    const response = await fetch(url, options);
+    let payload = null;
+    try {
+      payload = await response.json();
+    } catch {
+      payload = null;
+    }
 
-  const px = i => pad.l + (i / (n - 1)) * cw;
-  const py = v => pad.t + ch - ((v - min) / (max - min)) * ch;
+    if (response.status === 401) {
+      window.location.href = "/classic";
+      throw new Error("Please sign in first.");
+    }
 
-  // Grid lines
-  ctx.strokeStyle = M;
-  ctx.lineWidth = 1;
-  [0, 0.33, 0.67, 1].forEach(f => {
-    const y = pad.t + ch * (1 - f);
-    ctx.beginPath();
-    ctx.moveTo(pad.l, y);
-    ctx.lineTo(pad.l + cw, y);
-    ctx.stroke();
-  });
+    if (!response.ok) {
+      const message = payload && payload.error ? payload.error : `Request failed (${response.status}).`;
+      throw new Error(message);
+    }
 
-  // Cost base line
-  ctx.strokeStyle = 'rgba(155,93,229,.45)';
-  ctx.lineWidth = 1.5;
-  ctx.setLineDash([4, 4]);
-  ctx.beginPath();
-  costBase.forEach((v, i) => i === 0 ? ctx.moveTo(px(i), py(v)) : ctx.lineTo(px(i), py(v)));
-  ctx.stroke();
-  ctx.setLineDash([]);
+    return payload;
+  }
 
-  // Area fill
-  const areaGrad = ctx.createLinearGradient(0, pad.t, 0, pad.t + ch);
-  areaGrad.addColorStop(0, 'rgba(255,77,26,.18)');
-  areaGrad.addColorStop(1, 'rgba(255,77,26,0)');
-  ctx.fillStyle = areaGrad;
-  ctx.beginPath();
-  rawVals.forEach((v, i) => i === 0 ? ctx.moveTo(px(i), py(v)) : ctx.lineTo(px(i), py(v)));
-  ctx.lineTo(px(n - 1), pad.t + ch);
-  ctx.lineTo(px(0), pad.t + ch);
-  ctx.closePath();
-  ctx.fill();
+  async function loadSession() {
+    const payload = await apiJson("/api/auth/session", { cache: "no-store" });
+    if (!payload.authenticated || !payload.user) {
+      window.location.href = "/classic";
+      return;
+    }
+    state.sessionUser = payload.user;
+    setText("nav-user-email", payload.user.email);
+    setText("meta-account-name", payload.user.displayName || payload.user.email);
+    const chipClass = payload.user.proEnabled ? "plan-chip pro" : "plan-chip starter";
+    const chipLabel = payload.user.proEnabled ? "Pro Active" : "Starter";
+    setClass("meta-plan-chip", chipClass);
+    setText("meta-plan-chip", chipLabel);
+    setText("pro-console-badge", chipLabel);
+    const proConsole = document.getElementById("pro-console");
+    if (proConsole) {
+      proConsole.style.display = payload.user.proEnabled ? "" : "none";
+    }
+  }
 
-  // Main line
-  ctx.strokeStyle = O;
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  rawVals.forEach((v, i) => i === 0 ? ctx.moveTo(px(i), py(v)) : ctx.lineTo(px(i), py(v)));
-  ctx.stroke();
+  async function loadPortfolio() {
+    state.portfolio = await apiJson("/api/portfolio", { cache: "no-store" });
+  }
 
-  // End dot
-  const ex = px(n - 1), ey = py(rawVals[n - 1]);
-  ctx.beginPath();
-  ctx.arc(ex, ey, 4, 0, Math.PI * 2);
-  ctx.fillStyle = '#fff';
-  ctx.fill();
-  ctx.strokeStyle = O;
-  ctx.lineWidth = 2;
-  ctx.stroke();
+  async function loadAlerts() {
+    const payload = await apiJson("/api/alerts/price-dip", { cache: "no-store" });
+    state.alerts = payload.alerts || [];
+    renderAlerts();
+  }
 
-  // Labels
-  const labels = ['Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'];
-  ctx.font = `400 9px ${MONO}`;
-  ctx.fillStyle = TEXT;
-  ctx.textAlign = 'center';
-  labels.forEach((l, i) => {
-    ctx.fillText(l, pad.l + (i / (labels.length - 1)) * cw, pad.t + ch + 18);
-  });
+  async function loadHistoricalRisk() {
+    const apiWindow = state.riskWindow === "1Y" ? "1Y" : "3M";
+    try {
+      state.historicalRiskEstimate = await apiJson(`/api/risk/estimate?window=${apiWindow}`, { method: "POST" });
+    } catch {
+      state.historicalRiskEstimate = null;
+    }
+  }
+
+  function renderAlerts() {
+    const alertsList = document.getElementById("alerts-list");
+    const activeCount = state.alerts.filter((alert) => alert.enabled).length;
+    setText("alerts-active-count", `${activeCount} active`);
+    if (!alertsList) return;
+
+    if (state.alerts.length === 0) {
+      alertsList.innerHTML = `
+        <div class="alert-card" style="grid-column:1 / -1;justify-content:center">
+          <div class="alert-info">
+            <div class="alert-ticker">No Alerts</div>
+            <div class="alert-detail">Add your first dip alert above.</div>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    alertsList.innerHTML = state.alerts
+      .slice(0, 6)
+      .map((alert) => {
+        const statusClass = alert.enabled ? "on" : "off";
+        const statusLabel = alert.enabled ? "Active" : "Paused";
+        const lastTriggered = alert.lastTriggeredAt ? formatDateTime(alert.lastTriggeredAt) : "Never triggered";
+        return `
+          <div class="alert-card">
+            <div class="alert-info">
+              <div class="alert-ticker">${escapeHtml(alert.ticker)}</div>
+              <div class="alert-detail">Alert at −${Number(alert.dropPctThreshold).toFixed(1)}% · ${escapeHtml(lastTriggered)}</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:.5rem">
+              <div class="alert-badge ${statusClass}">${statusLabel}</div>
+              <button class="nav-btn" data-alert-delete="${escapeHtml(alert.ticker)}">Delete</button>
+            </div>
+          </div>
+        `;
+      })
+      .join("");
+  }
+
+  function renderPortfolio() {
+    const holdings = state.portfolio.holdings || [];
+    const snapshots = state.portfolio.snapshots || [];
+    const metrics = computeMetrics(holdings, snapshots, state.riskWindow);
+    const today = computeTodayChange(holdings);
+    const effectiveVar95Pct = metrics.var95Pct ?? state.historicalRiskEstimate?.var95Pct ?? null;
+    const effectiveCvar95Pct = metrics.cvar95Pct ?? state.historicalRiskEstimate?.cvar95Pct ?? null;
+    const effectiveMaxDrawdownPct = metrics.maxDrawdownPct ?? state.historicalRiskEstimate?.maxDrawdownPct ?? null;
+    const effectiveVolatilityPct = metrics.volatilityAnnualPct ?? state.historicalRiskEstimate?.volatilityAnnualPct ?? null;
+    const effectiveBeta = state.historicalRiskEstimate?.betaToBenchmark ?? null;
+    const effectiveTrackingError = state.historicalRiskEstimate?.trackingErrorAnnualPct ?? null;
+    const riskScore = computeRiskScore(metrics, metrics.dailyReturns.length);
+
+    const latestReportDate = holdings.reduce((max, item) => (String(item.reportDate || "") > String(max) ? item.reportDate : max), "");
+    const latestPriceTime = state.portfolio.lastPriceRefreshAt || state.portfolio.updatedAt || "";
+
+    setText("meta-holdings-count", `${holdings.length} positions`);
+    setText("meta-latest-report", latestReportDate ? formatDate(latestReportDate) : "—");
+    setText("meta-prices-updated", latestPriceTime ? formatDateTime(latestPriceTime) : "—");
+    setText("holdings-count-label", `${holdings.length} positions`);
+
+    setText("mini-total-value", formatCurrency(metrics.totalValue, { compact: true }));
+    setText("mini-unrealised-pnl", formatSignedCurrency(metrics.pnl, { compact: true }));
+    setText("mini-day-change", formatSignedCurrency(today.amount));
+    setText("mini-var95", effectiveVar95Pct != null ? formatPercent(effectiveVar95Pct, { negative: true, decimals: 1 }) : "—");
+    setClass("mini-unrealised-pnl", `kpi-mini-val ${metrics.pnl >= 0 ? "accent" : ""}`.trim());
+    setClass("mini-day-change", `kpi-mini-val ${today.amount < 0 ? "accent" : ""}`.trim());
+
+    setText("kpi-total-value", formatCurrency(metrics.totalValue));
+    setText("kpi-total-cost", formatCurrency(metrics.totalCost));
+    setText("kpi-total-pnl", formatSignedCurrency(metrics.pnl));
+    setText("kpi-total-pnl-sub", `${formatPercent(metrics.pnlPct, { signed: true, decimals: 1 })} since entry`);
+    setText("kpi-day-change", formatSignedCurrency(today.amount));
+    setText("kpi-day-change-sub", `${formatPercent(today.pct, { signed: true, decimals: 2 })} on day`);
+    setText("kpi-risk-score", riskScore ? `${riskScore.score} / 100` : "—");
+    setText("kpi-risk-score-sub", riskScore ? `${riskScore.label} exposure` : "Waiting for risk data");
+    setText("kpi-var95", effectiveVar95Pct != null ? formatPercent(effectiveVar95Pct, { negative: true, decimals: 1 }) : "—");
+
+    setText("risk-bar-value", riskScore ? `${riskScore.score} / 100` : "—");
+    const fill = document.getElementById("risk-bar-fill");
+    if (fill) fill.style.width = `${riskScore ? riskScore.score : 0}%`;
+
+    setText("risk-score", riskScore ? `${riskScore.score} / 100` : "—");
+    setText("risk-score-sub", riskScore ? riskScore.label : "Insufficient history");
+    setText("risk-top3", formatPercent(metrics.top3ConcentrationPct, { decimals: 1 }));
+    setText("risk-top3-sub", metrics.top3ConcentrationPct >= 40 ? "High concentration" : "Balanced concentration");
+    setText("risk-var95", effectiveVar95Pct != null ? formatPercent(effectiveVar95Pct, { negative: true, decimals: 1 }) : "—");
+    setText("risk-cvar95", effectiveCvar95Pct != null ? formatPercent(effectiveCvar95Pct, { negative: true, decimals: 1 }) : "—");
+    setText("risk-max-drawdown", effectiveMaxDrawdownPct != null ? formatPercent(effectiveMaxDrawdownPct, { negative: true, decimals: 1 }) : "—");
+    setText("risk-volatility", effectiveVolatilityPct != null ? formatPercent(effectiveVolatilityPct, { decimals: 1 }) : "—");
+    setText("risk-beta", Number.isFinite(effectiveBeta) ? Number(effectiveBeta).toFixed(2) : "—");
+    setText("risk-tracking-error", Number.isFinite(effectiveTrackingError) ? formatPercent(effectiveTrackingError, { decimals: 1 }) : "—");
+
+    setText("pro-expected-shortfall", effectiveCvar95Pct != null ? formatPercent(effectiveCvar95Pct, { negative: true, decimals: 1 }) : "—");
+    setText("pro-beta", Number.isFinite(effectiveBeta) ? Number(effectiveBeta).toFixed(2) : "—");
+    setText("pro-tracking-error", Number.isFinite(effectiveTrackingError) ? formatPercent(effectiveTrackingError, { decimals: 1 }) : "—");
+
+    const riskWindowText = state.riskWindow;
+    const points = metrics.riskPointsUsed;
+    const startDate = metrics.riskStartDate ? formatDate(metrics.riskStartDate) : "—";
+    const endDate = metrics.riskEndDate ? formatDate(metrics.riskEndDate) : "—";
+    const riskLabel = document.getElementById("risk-window-label");
+    if (riskLabel) {
+      riskLabel.innerHTML = `Window <span>${escapeHtml(riskWindowText)}</span> — ${points} snapshot points from ${escapeHtml(startDate)} to ${escapeHtml(endDate)}`;
+    }
+
+    const qualityValues = Array.from(document.querySelectorAll(".quality-card .quality-val"));
+    if (qualityValues.length >= 8) {
+      const withPrice = holdings.filter((holding) => Number.isFinite(holding.price) && holding.price > 0).length;
+      const withCost = holdings.filter((holding) => Number.isFinite(holding.costBase) && holding.costBase > 0).length;
+      const stale = holdings.filter((holding) => !Number.isFinite(holding.price) || holding.price <= 0).length;
+      const confidence = metrics.dailyReturns.length >= 63 ? "High" : metrics.dailyReturns.length >= 20 ? "Medium" : "Low";
+      qualityValues[0].textContent = `${holdings.length} Rows`;
+      qualityValues[1].textContent = holdings.length > 0 ? formatPercent((withPrice / holdings.length) * 100, { decimals: 0 }) : "0%";
+      qualityValues[2].textContent = holdings.length > 0 ? formatPercent((withCost / holdings.length) * 100, { decimals: 0 }) : "0%";
+      qualityValues[3].textContent = `${snapshots.length} Points`;
+      qualityValues[4].textContent = confidence;
+      qualityValues[5].textContent = Number.isFinite(state.historicalRiskEstimate?.benchmarkPointsUsed)
+        ? `${state.historicalRiskEstimate.benchmarkPointsUsed} Days`
+        : "—";
+      qualityValues[6].textContent = latestReportDate ? formatDate(latestReportDate) : "—";
+      qualityValues[7].textContent = `${stale} Found`;
+    }
+
+    const perfList = document.querySelector(".perf-list");
+    if (perfList) {
+      const topPnl = [...holdings]
+        .map((holding) => ({ ticker: holding.ticker || "—", name: holding.name || "Unnamed", pnl: (holding.value || 0) - (holding.costBase || 0) }))
+        .sort((a, b) => b.pnl - a.pnl)
+        .slice(0, 5);
+      perfList.innerHTML = topPnl
+        .map((item) => {
+          const tone = item.pnl >= 0 ? "pos" : "neg";
+          return `
+            <div class="perf-row">
+              <div><div class="perf-ticker">${escapeHtml(item.ticker)}</div><div class="perf-name">${escapeHtml(item.name)}</div></div>
+              <div class="perf-val ${tone}">${formatSignedCurrency(item.pnl)}</div>
+            </div>
+          `;
+        })
+        .join("");
+    }
+
+    const stressCards = Array.from(document.querySelectorAll(".stress-card"));
+    if (stressCards.length >= 4) {
+      const scenarios = [-0.4, -0.08, -0.05, 0.145];
+      stressCards.forEach((card, index) => {
+        const impact = metrics.totalValue * scenarios[index];
+        const projected = metrics.totalValue + impact;
+        const valueNode = card.querySelector(".stress-val");
+        const projNode = card.querySelector(".stress-proj");
+        if (valueNode) valueNode.textContent = formatSignedCurrency(impact);
+        if (projNode) projNode.textContent = `Projected: ${formatCurrency(projected)}`;
+      });
+    }
+
+    renderHoldingsTable(holdings);
+
+    const accountSlices = metrics.accountAllocation.slice(0, 4).map((item, index) => ({
+      pct: item.pct,
+      label: item.name,
+      color: [O, P, "rgba(255,255,255,.32)", "rgba(255,255,255,.14)"][index] || "rgba(255,255,255,.14)",
+    }));
+    const sectorSlices = metrics.sectorAllocation.slice(0, 4).map((item, index) => ({
+      pct: item.pct,
+      label: item.name,
+      color: [O, P, "rgba(255,255,255,.28)", "rgba(255,255,255,.13)"][index] || "rgba(255,255,255,.13)",
+    }));
+    const normalizedAccount = normalizeSlices(accountSlices);
+    const normalizedSector = normalizeSlices(sectorSlices);
+    drawDonut("c-account", normalizedAccount);
+    drawDonut("c-sector", normalizedSector);
+
+    const legends = document.querySelectorAll("#charts .chart-card .legend");
+    renderLegend(legends[0], normalizedAccount);
+    renderLegend(legends[1], normalizedSector);
+
+    drawHoldingsBars(metrics.topHoldings.map((item) => ({ label: String(item.ticker || "—").slice(0, 6), val: item.value || 0 })));
+    drawHistoryLine(metrics.history.map((item) => item.value), metrics.totalCost);
+  }
+
+  function normalizeSlices(slices) {
+    if (slices.length === 0) return [{ pct: 100, label: "No data", color: "rgba(255,255,255,.2)" }];
+    const total = sum(slices.map((slice) => slice.pct)) || 1;
+    return slices.map((slice) => ({ ...slice, pct: (slice.pct / total) * 100 }));
+  }
+
+  function renderHoldingsTable(holdings) {
+    const tbody = document.getElementById("holdings-tbody");
+    if (!tbody) return;
+    const sorted = [...holdings].sort((a, b) => (b.value || 0) - (a.value || 0));
+
+    if (sorted.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td class="ticker">—</td>
+          <td colspan="8">No holdings loaded. Upload a CSV report to begin.</td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = sorted
+      .slice(0, 80)
+      .map((holding) => {
+        const pnl = (holding.value || 0) - (holding.costBase || 0);
+        const source = String(holding.source || "").toLowerCase();
+        const badgeClass = SOURCE_BADGE[source] || "fund";
+        const sourceLabel = SOURCE_LABEL[source] || source.toUpperCase();
+        const chipTone = pnl >= 0 ? "pos" : "neg";
+        return `
+          <tr>
+            <td class="ticker">${escapeHtml(holding.ticker || "—")}</td>
+            <td>${escapeHtml(holding.name || "Unnamed")}</td>
+            <td><span class="badge ${badgeClass}">${sourceLabel}</span></td>
+            <td><span class="chip ${chipTone}">${escapeHtml(holding.account || "Account")}</span></td>
+            <td>${Number.isFinite(holding.units) && holding.units > 0 ? Number(holding.units).toLocaleString("en-AU", { maximumFractionDigits: 4 }) : "—"}</td>
+            <td class="val">${Number.isFinite(holding.price) && holding.price > 0 ? formatCurrency(holding.price, { decimals: 2 }) : "—"}</td>
+            <td class="val">${formatCurrency(holding.value || 0)}</td>
+            <td>${Number.isFinite(holding.costBase) ? formatCurrency(holding.costBase) : "—"}</td>
+            <td class="accent">${formatSignedCurrency(pnl)}</td>
+          </tr>
+        `;
+      })
+      .join("");
+  }
+
+  async function refreshPrices() {
+    const button = document.getElementById("refresh-prices-btn");
+    const original = button ? button.textContent : "Refresh Prices";
+    if (button) {
+      button.textContent = "Refreshing...";
+      button.disabled = true;
+    }
+    try {
+      const payload = await apiJson("/api/prices/refresh", { method: "POST" });
+      state.portfolio = payload.state;
+      await loadHistoricalRisk();
+      renderPortfolio();
+      showToast(`Prices refreshed (${payload.updatedTickers.length} tickers).`);
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : "Price refresh failed.", "error");
+    } finally {
+      if (button) {
+        button.textContent = original;
+        button.disabled = false;
+      }
+    }
+  }
+
+  async function clearData() {
+    const confirmed = window.confirm("Clear all imported holdings and snapshots?");
+    if (!confirmed) return;
+    const button = document.getElementById("clear-data-btn");
+    const original = button ? button.textContent : "Clear Data";
+    if (button) {
+      button.textContent = "Clearing...";
+      button.disabled = true;
+    }
+    try {
+      state.portfolio = await apiJson("/api/portfolio", { method: "DELETE" });
+      await loadHistoricalRisk();
+      renderPortfolio();
+      showToast("Portfolio data cleared.");
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : "Failed to clear data.", "error");
+    } finally {
+      if (button) {
+        button.textContent = original;
+        button.disabled = false;
+      }
+    }
+  }
+
+  async function signOut(event) {
+    event.preventDefault();
+    try {
+      await apiJson("/api/auth/logout", { method: "POST" });
+    } catch {
+      // best effort
+    }
+    window.location.href = "/classic";
+  }
+
+  async function addAlert() {
+    const tickerInput = document.getElementById("alert-ticker-input");
+    const thresholdInput = document.getElementById("alert-threshold-input");
+    if (!tickerInput || !thresholdInput) return;
+    const ticker = String(tickerInput.value || "").trim().toUpperCase();
+    const threshold = Number(thresholdInput.value || "");
+    if (!ticker) {
+      showToast("Enter a ticker symbol.", "error");
+      return;
+    }
+    if (!Number.isFinite(threshold) || threshold <= 0) {
+      showToast("Enter a valid threshold percent.", "error");
+      return;
+    }
+    try {
+      await apiJson("/api/alerts/price-dip", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ticker, dropPctThreshold: threshold, enabled: true }),
+      });
+      tickerInput.value = "";
+      thresholdInput.value = "";
+      await loadAlerts();
+      showToast(`Alert saved for ${ticker}.`);
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : "Failed to save alert.", "error");
+    }
+  }
+
+  async function deleteAlert(ticker) {
+    try {
+      await apiJson(`/api/alerts/price-dip?ticker=${encodeURIComponent(ticker)}`, { method: "DELETE" });
+      await loadAlerts();
+      showToast(`Alert removed for ${ticker}.`);
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : "Failed to remove alert.", "error");
+    }
+  }
+
+  async function uploadCsvFile(file) {
+    if (!file || !state.uploadSource) return;
+    const text = await file.text();
+    if (!text.trim()) {
+      showToast("CSV file is empty.", "error");
+      return;
+    }
+    showToast("Uploading CSV...");
+    try {
+      state.portfolio = await apiJson("/api/import/csv", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ source: state.uploadSource, csvText: text }),
+      });
+      await loadHistoricalRisk();
+      renderPortfolio();
+      showToast(`${state.uploadSource.toUpperCase()} report imported.`);
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : "Upload failed.", "error");
+    } finally {
+      state.uploadSource = null;
+      uploadInput.value = "";
+    }
+  }
+
+  function bindEvents() {
+    document.querySelectorAll(".wtab[data-window]").forEach((button) => {
+      button.addEventListener("click", async () => {
+        document.querySelectorAll(".wtab[data-window]").forEach((tab) => tab.classList.remove("active"));
+        button.classList.add("active");
+        state.riskWindow = button.dataset.window || "6M";
+        await loadHistoricalRisk();
+        renderPortfolio();
+      });
+    });
+
+    document.getElementById("refresh-prices-btn")?.addEventListener("click", refreshPrices);
+    document.getElementById("clear-data-btn")?.addEventListener("click", clearData);
+    document.getElementById("sign-out-btn")?.addEventListener("click", signOut);
+    document.getElementById("add-alert-btn")?.addEventListener("click", addAlert);
+
+    document.getElementById("alerts-list")?.addEventListener("click", (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) return;
+      const ticker = target.getAttribute("data-alert-delete");
+      if (ticker) {
+        deleteAlert(ticker);
+      }
+    });
+
+    uploads.forEach((card) => {
+      card.addEventListener("click", () => {
+        const source = card.getAttribute("data-source");
+        if (!source) return;
+        state.uploadSource = source;
+        uploadInput.click();
+      });
+    });
+
+    uploadInput?.addEventListener("change", async (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLInputElement)) return;
+      const file = target.files && target.files[0];
+      if (file) {
+        await uploadCsvFile(file);
+      }
+    });
+  }
+
+  async function boot() {
+    bindEvents();
+    try {
+      await loadSession();
+      if (!state.sessionUser) return;
+      await Promise.all([loadPortfolio(), loadAlerts(), loadHistoricalRisk()]);
+      renderPortfolio();
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : "Failed to load dashboard.", "error");
+    }
+  }
+
+  void boot();
 })();
 </script>
 </body>
