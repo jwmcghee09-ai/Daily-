@@ -4939,3 +4939,104 @@ td {
     grid-template-columns: 1fr;
   }
 }
+
+/* === Logged-In Original Blend (Requested) === */
+.spectre-app-nav {
+  display: none;
+}
+
+.spectre-app.shell {
+  padding-top: 24px;
+}
+
+.spectre-app .hero,
+.spectre-app .upload-card,
+.spectre-app .kpi-card,
+.spectre-app .dip-alerts-section,
+.spectre-app .insights-section,
+.spectre-app .pro-analytics-section,
+.spectre-app .gold-section,
+.spectre-app .quality-section,
+.spectre-app .risk-section,
+.spectre-app .chart-card,
+.spectre-app .table-section {
+  background: linear-gradient(160deg, rgba(16, 16, 22, 0.95) 0%, rgba(10, 10, 16, 0.95) 100%);
+  border-color: rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+}
+
+.spectre-app .hero {
+  grid-template-columns: 1.1fr 1fr;
+}
+
+.spectre-app .upload-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.spectre-app .kpi-grid {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.spectre-app .chart-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.spectre-app .quality-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.spectre-app .refresh-btn,
+.spectre-app .template-btn,
+.spectre-app .file-input span {
+  background: linear-gradient(135deg, #ff4b33 0%, #ff2f14 100%);
+  border-color: rgba(255, 132, 113, 0.64);
+  color: #fff;
+  box-shadow: 0 10px 22px -14px rgba(255, 75, 51, 0.9);
+}
+
+.spectre-app .clear-btn {
+  border-color: rgba(255, 118, 96, 0.62);
+  color: #ffd7cf;
+  background: rgba(35, 16, 22, 0.9);
+}
+
+.spectre-app .refresh-btn:hover,
+.spectre-app .template-btn:hover,
+.spectre-app .file-input:hover span,
+.spectre-app .clear-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+}
+
+@media (max-width: 1200px) {
+  .spectre-app .upload-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .spectre-app .kpi-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 980px) {
+  .spectre-app .hero {
+    grid-template-columns: 1fr;
+  }
+
+  .spectre-app .upload-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .spectre-app.shell {
+    padding-top: 18px;
+  }
+
+  .spectre-app .upload-grid,
+  .spectre-app .kpi-grid,
+  .spectre-app .quality-grid,
+  .spectre-app .chart-grid {
+    grid-template-columns: 1fr;
+  }
+}
