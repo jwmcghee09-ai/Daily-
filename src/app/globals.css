@@ -368,7 +368,8 @@ body {
 .kpi-card,
 .chart-card,
 .risk-section,
-.table-section {
+.table-section,
+.dip-alerts-section {
   background: linear-gradient(165deg, #131318 0%, #0f0f13 100%);
   border: 1px solid var(--border);
   border-radius: 14px;
@@ -478,7 +479,8 @@ body {
 .table-section,
 .gold-section,
 .insights-section,
-.quality-section {
+.quality-section,
+.dip-alerts-section {
   padding: 16px;
 }
 
@@ -487,12 +489,141 @@ body {
 .chart-card h2,
 .gold-section h2,
 .insights-section h2,
-.quality-section h2 {
+.quality-section h2,
+.dip-alerts-section h2 {
   margin-bottom: 12px;
   font-size: 1.02rem;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: #f3f3f4;
+}
+
+.dip-alerts-head p {
+  color: #cdd0dc;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.dip-alerts-plan-note {
+  margin-top: 6px;
+  color: #f4c7bf;
+  font-size: 0.82rem;
+}
+
+.dip-alerts-form {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(150px, 220px) auto;
+  gap: 10px;
+  align-items: end;
+}
+
+.dip-alerts-form label {
+  display: grid;
+  gap: 6px;
+}
+
+.dip-alerts-form span {
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #d0d2de;
+}
+
+.dip-alerts-form input {
+  background: #0d0d12;
+  border: 1px solid #414149;
+  color: #f3f3f6;
+  border-radius: 10px;
+  padding: 9px 10px;
+}
+
+.dip-alerts-form input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px rgba(255, 75, 51, 0.35);
+}
+
+.dip-alerts-slots {
+  margin-top: 10px;
+  color: #c7cad6;
+  font-size: 0.82rem;
+}
+
+.dip-alerts-grid {
+  margin-top: 12px;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.dip-alert-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  background: #0f0f12;
+  display: grid;
+  gap: 8px;
+}
+
+.dip-alert-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.dip-alert-card h3 {
+  color: #f7f7fa;
+  font-size: 1rem;
+  letter-spacing: 0.03em;
+}
+
+.dip-alert-card p {
+  color: #ccced9;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.dip-alert-card strong {
+  color: #ffe8e4;
+}
+
+.dip-alert-status {
+  border-radius: 999px;
+  border: 1px solid #5a5a64;
+  padding: 3px 8px;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.dip-alert-status.enabled {
+  border-color: rgba(255, 75, 51, 0.72);
+  color: #fff;
+  background: rgba(255, 75, 51, 0.18);
+}
+
+.dip-alert-status.disabled {
+  border-color: #6d6d78;
+  color: #d2d4df;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.dip-alert-last {
+  color: #afb2c1;
+  font-size: 0.79rem;
+}
+
+.dip-alert-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.dip-alert-upgrade {
+  margin-top: 12px;
 }
 
 .estimate-note {
@@ -1206,7 +1337,8 @@ body::after {
 .table-section,
 .gold-section,
 .insights-section,
-.quality-section {
+.quality-section,
+.dip-alerts-section {
   background: var(--panel-bg);
   border: 1px solid var(--panel-border);
   border-radius: 16px;
@@ -1231,7 +1363,8 @@ body::after {
 .stress-card:hover,
 .quality-card:hover,
 .risk-card:hover,
-.gold-card:hover {
+.gold-card:hover,
+.dip-alert-card:hover {
   transform: translateY(-2px);
   border-color: rgba(255, 75, 51, 0.5);
   box-shadow: 0 24px 38px -30px rgba(0, 0, 0, 0.88), 0 0 0 1px rgba(255, 75, 51, 0.14) inset;
@@ -1620,6 +1753,7 @@ tr:hover td {
 .insights-section > h2,
 .gold-section > h2,
 .quality-section > h2,
+.dip-alerts-head h2,
 .risk-section > .risk-head > h2,
 .table-section > h2,
 .chart-card > h2 {
@@ -1631,6 +1765,7 @@ tr:hover td {
 .insights-section > h2::before,
 .gold-section > h2::before,
 .quality-section > h2::before,
+.dip-alerts-head h2::before,
 .risk-section > .risk-head > h2::before,
 .table-section > h2::before,
 .chart-card > h2::before {
@@ -2676,6 +2811,7 @@ td {
 /* System dashboard card centering (does not affect landing page) */
 .shell .upload-grid > .upload-card,
 .shell .kpi-grid > .kpi-card,
+.shell .dip-alerts-grid > .dip-alert-card,
 .shell .insights-grid > .insight-card,
 .shell .stress-grid > .stress-card,
 .shell .gold-grid > .gold-card,
@@ -2826,6 +2962,7 @@ td {
   }
 
   .insights-grid,
+  .dip-alerts-grid,
   .stress-grid,
   .gold-grid,
   .risk-grid,
@@ -2837,6 +2974,7 @@ td {
 
   .shell .upload-grid > .upload-card,
   .shell .kpi-grid > .kpi-card,
+  .shell .dip-alerts-grid > .dip-alert-card,
   .shell .insights-grid > .insight-card,
   .shell .stress-grid > .stress-card,
   .shell .gold-grid > .gold-card,
@@ -2851,6 +2989,10 @@ td {
 
   .risk-head {
     align-items: flex-start;
+  }
+
+  .dip-alerts-form {
+    grid-template-columns: 1fr;
   }
 
   .risk-window-controls {

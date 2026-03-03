@@ -247,6 +247,12 @@ export interface PriceDipAlertSetting {
   updatedAt: string;
 }
 
+export interface PriceDipAlertUpsertInput {
+  ticker: string;
+  dropPctThreshold: number;
+  enabled: boolean;
+}
+
 const RISK_WINDOW_SETTINGS: Record<RiskWindow, { label: string; yahooRange: string; maxPoints: number }> = {
   "1M": { label: "1M", yahooRange: "3mo", maxPoints: 21 },
   "3M": { label: "3M", yahooRange: "6mo", maxPoints: 63 },
@@ -332,6 +338,21 @@ function initSchema(db: DatabaseSync): void {
     CREATE UNIQUE INDEX IF NOT EXISTS idx_billing_subscriptions_subscription
       ON billing_subscriptions (stripe_subscription_id)
       WHERE stripe_subscription_id IS NOT NULL;
+
+    CREATE TABLE IF NOT EXISTS price_dip_alerts (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      ticker TEXT NOT NULL,
+      drop_pct_threshold REAL NOT NULL,
+      enabled INTEGER NOT NULL DEFAULT 1,
+      last_triggered_at TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY(user_id) REFERENCES users(id),
+      UNIQUE(user_id, ticker)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_price_dip_alerts_user_id ON price_dip_alerts (user_id);
   `);
 
   const hasPrevCloseColumn = db
@@ -500,6 +521,13 @@ function setScopedMetaValue(db: DatabaseSync, userId: string, key: string, value
 
 function normalizeEmail(email: string): string {
   return sanitizeString(email, "").toLowerCase();
+}
+
+function normalizeTicker(value: string): string {
+  return sanitizeString(value, "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9._-]/g, "")
+    .slice(0, 20);
 }
 
 function toPublicUser(row: UserRow): AuthPublicUser {
@@ -1680,6 +1708,119 @@ function readUserEmailById(userId: string): string | null {
   return row?.email ? normalizeEmail(row.email) : null;
 }
 
+function toPriceDipAlertSetting(row: PriceDipAlertRow): PriceDipAlertSetting {
+  return {
+    id: row.id,
+    ticker: row.ticker,
+    dropPctThreshold: sanitizeNumber(row.drop_pct_threshold, 0),
+    enabled: sanitizeNumber(row.enabled, 0) === 1,
+    lastTriggeredAt: row.last_triggered_at,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+export function readPriceDipAlerts(userId: string): PriceDipAlertSetting[] {
+  const db = getDb();
+
+  const rows = db
+    .prepare(`
+      SELECT id, user_id, ticker, drop_pct_threshold, enabled, last_triggered_at, created_at, updated_at
+      FROM price_dip_alerts
+      WHERE user_id = ?
+      ORDER BY ticker ASC
+    `)
+    .all(userId) as PriceDipAlertRow[];
+
+  return rows.map(toPriceDipAlertSetting);
+}
+
+export function upsertPriceDipAlert(userId: string, input: PriceDipAlertUpsertInput): PriceDipAlertSetting {
+  const db = getDb();
+  const ticker = normalizeTicker(input.ticker);
+
+  if (!ticker) {
+    throw new Error("Ticker is required.");
+  }
+
+  const threshold = clampNumber(sanitizeNumber(input.dropPctThreshold, Number.NaN), 0.1, 90);
+  if (!Number.isFinite(threshold)) {
+    throw new Error("Drop threshold must be a valid number.");
+  }
+
+  const nowIso = new Date().toISOString();
+
+  const existing = db
+    .prepare(`
+      SELECT id, user_id, ticker, drop_pct_threshold, enabled, last_triggered_at, created_at, updated_at
+      FROM price_dip_alerts
+      WHERE user_id = ? AND ticker = ?
+      LIMIT 1
+    `)
+    .get(userId, ticker) as PriceDipAlertRow | undefined;
+
+  const id = existing?.id ?? crypto.randomUUID();
+  const createdAt = existing?.created_at ?? nowIso;
+
+  db.prepare(`
+    INSERT INTO price_dip_alerts (
+      id, user_id, ticker, drop_pct_threshold, enabled, last_triggered_at, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(user_id, ticker) DO UPDATE SET
+      drop_pct_threshold = excluded.drop_pct_threshold,
+      enabled = excluded.enabled,
+      updated_at = excluded.updated_at
+  `).run(
+    id,
+    userId,
+    ticker,
+    threshold,
+    input.enabled ? 1 : 0,
+    existing?.last_triggered_at ?? null,
+    createdAt,
+    nowIso,
+  );
+
+  const row = db
+    .prepare(`
+      SELECT id, user_id, ticker, drop_pct_threshold, enabled, last_triggered_at, created_at, updated_at
+      FROM price_dip_alerts
+      WHERE user_id = ? AND ticker = ?
+      LIMIT 1
+    `)
+    .get(userId, ticker) as PriceDipAlertRow | undefined;
+
+  if (!row) {
+    throw new Error("Failed to save dip alert.");
+  }
+
+  return toPriceDipAlertSetting(row);
+}
+
+export function deletePriceDipAlert(userId: string, ticker: string): void {
+  const db = getDb();
+  const normalizedTicker = normalizeTicker(ticker);
+  if (!normalizedTicker) {
+    return;
+  }
+
+  db.prepare("DELETE FROM price_dip_alerts WHERE user_id = ? AND ticker = ?").run(userId, normalizedTicker);
+}
+
+export function markPriceDipAlertTriggered(userId: string, ticker: string, triggeredAtIso: string): void {
+  const db = getDb();
+  const normalizedTicker = normalizeTicker(ticker);
+  if (!normalizedTicker) {
+    return;
+  }
+
+  db.prepare(`
+    UPDATE price_dip_alerts
+    SET last_triggered_at = ?, updated_at = ?
+    WHERE user_id = ? AND ticker = ?
+  `).run(triggeredAtIso, new Date().toISOString(), userId, normalizedTicker);
+}
+
 export function readUserEntitlements(userId: string): UserEntitlements {
   const subscription = readBillingSubscription(userId);
   const userEmail = readUserEmailById(userId);
@@ -1981,4 +2122,12 @@ export function linkPreSignupBillingToUser(userId: string, email: string): void 
 
 export function getDatabaseFilePath(): string {
   return DB_FILE;
+}
+
+function clampNumber(value: number, min: number, max: number): number {
+  if (!Number.isFinite(value)) {
+    return Number.NaN;
+  }
+
+  return Math.min(max, Math.max(min, value));
 }

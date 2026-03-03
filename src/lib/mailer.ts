@@ -34,6 +34,16 @@ interface OperationalAlertEmailInput {
   lines: string[];
 }
 
+interface PriceDipAlertEmailInput {
+  toEmail: string;
+  displayName: string;
+  ticker: string;
+  currentPrice: number;
+  prevClose: number;
+  dropPct: number;
+  thresholdPct: number;
+}
+
 interface ResolvedSmtpTarget {
   host: string;
   tlsServername?: string;
@@ -341,6 +351,56 @@ export async function sendOperationalAlertEmail(input: OperationalAlertEmailInpu
 
   await sendEmail({
     to: recipients.join(","),
+    subject,
+    text,
+    html,
+  });
+}
+
+export async function sendPriceDipAlertEmail(input: PriceDipAlertEmailInput): Promise<void> {
+  const appUrl = getAppBaseUrl();
+  const subject = `SPECTRE alert: ${input.ticker} down ${input.dropPct.toFixed(2)}%`;
+  const text = [
+    `Hi ${input.displayName},`,
+    "",
+    "Your SPECTRE price dip alert was triggered.",
+    "",
+    `Ticker: ${input.ticker}`,
+    `Drop: ${input.dropPct.toFixed(2)}%`,
+    `Threshold: ${input.thresholdPct.toFixed(2)}%`,
+    `Current price: ${input.currentPrice.toFixed(4)}`,
+    `Previous close: ${input.prevClose.toFixed(4)}`,
+    "",
+    `Open SPECTRE: ${appUrl}`,
+    "",
+    "Informational analytics only. Verify with official market data before making decisions.",
+  ].join("\n");
+
+  const html = `
+    <div style="font-family:Arial,sans-serif;line-height:1.5;color:#111;max-width:620px;">
+      <h2 style="margin:0 0 12px 0;">SPECTRE Price Dip Alert</h2>
+      <p>Hi ${escapeHtml(input.displayName)},</p>
+      <p>Your SPECTRE alert was triggered for <strong>${escapeHtml(input.ticker)}</strong>.</p>
+      <table style="border-collapse:collapse;margin:10px 0;">
+        <tr><td style="padding:4px 10px 4px 0;"><strong>Drop</strong></td><td>${escapeHtml(input.dropPct.toFixed(2))}%</td></tr>
+        <tr><td style="padding:4px 10px 4px 0;"><strong>Threshold</strong></td><td>${escapeHtml(input.thresholdPct.toFixed(2))}%</td></tr>
+        <tr><td style="padding:4px 10px 4px 0;"><strong>Current price</strong></td><td>${escapeHtml(input.currentPrice.toFixed(4))}</td></tr>
+        <tr><td style="padding:4px 10px 4px 0;"><strong>Previous close</strong></td><td>${escapeHtml(input.prevClose.toFixed(4))}</td></tr>
+      </table>
+      <p>
+        <a
+          href="${escapeAttribute(appUrl)}"
+          style="display:inline-block;background:#ff4b33;color:#fff;text-decoration:none;padding:10px 14px;border-radius:8px;"
+        >
+          Open SPECTRE
+        </a>
+      </p>
+      <p style="font-size:12px;color:#555;">Informational analytics only. Verify with official market data before making decisions.</p>
+    </div>
+  `;
+
+  await sendEmail({
+    to: input.toEmail,
     subject,
     text,
     html,

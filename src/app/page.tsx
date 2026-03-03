@@ -146,6 +146,12 @@ interface PriceRefreshPayload {
   updatedTickers: string[];
   failedTickers: string[];
   fetchedAt: string;
+  triggeredAlerts?: Array<{
+    ticker: string;
+    dropPct: number;
+    thresholdPct: number;
+  }>;
+  failedAlertTickers?: string[];
 }
 
 interface HistoricalRiskEstimatePayload {
@@ -201,6 +207,24 @@ interface BillingCheckoutResponse {
   url?: string;
 }
 
+interface PriceDipAlertSetting {
+  id: string;
+  ticker: string;
+  dropPctThreshold: number;
+  enabled: boolean;
+  lastTriggeredAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface PriceDipAlertsPayload {
+  alerts: PriceDipAlertSetting[];
+  maxAlerts: number;
+  planTier: "none" | "starter" | "pro";
+  proEnabled: boolean;
+  availableTickers: string[];
+}
+
 type CheckoutPlan = "starter" | "pro";
 
 interface PendingRegistrationDraft {
@@ -232,6 +256,12 @@ export default function Home() {
   const [authWorking, setAuthWorking] = useState(false);
   const [authError, setAuthError] = useState("");
   const [checkoutWorking, setCheckoutWorking] = useState(false);
+  const [dipAlerts, setDipAlerts] = useState<PriceDipAlertSetting[]>([]);
+  const [availableDipTickers, setAvailableDipTickers] = useState<string[]>([]);
+  const [dipAlertMax, setDipAlertMax] = useState(0);
+  const [dipAlertTicker, setDipAlertTicker] = useState("");
+  const [dipAlertThreshold, setDipAlertThreshold] = useState("3");
+  const [dipAlertSaving, setDipAlertSaving] = useState(false);
   const refreshInFlight = useRef(false);
   const lastAutoRefreshAttemptAtRef = useRef(0);
 
@@ -400,13 +430,17 @@ export default function Home() {
       setState(payload.state);
 
       if (showBanner) {
+        const triggeredCount = payload.triggeredAlerts?.length ?? 0;
+        const failedAlertCount = payload.failedAlertTickers?.length ?? 0;
         const message =
           "Live prices updated: " +
           payload.updatedTickers.length +
           " tickers refreshed" +
           (payload.failedTickers.length > 0 ? ", " + payload.failedTickers.length + " failed" : "") +
+          (triggeredCount > 0 ? ", " + triggeredCount + " dip alert" + (triggeredCount === 1 ? "" : "s") + " sent" : "") +
+          (failedAlertCount > 0 ? ", " + failedAlertCount + " alert email" + (failedAlertCount === 1 ? "" : "s") + " failed" : "") +
           ".";
-        setBanner({ type: payload.failedTickers.length > 0 ? "info" : "success", message });
+        setBanner({ type: payload.failedTickers.length > 0 || failedAlertCount > 0 ? "info" : "success", message });
       }
     } catch (error) {
       if (showBanner) {
@@ -417,6 +451,128 @@ export default function Home() {
       refreshInFlight.current = false;
     }
   }, [sessionUser]);
+
+  const loadDipAlerts = useCallback(async () => {
+    if (!sessionUser) {
+      setDipAlerts([]);
+      setAvailableDipTickers([]);
+      setDipAlertMax(0);
+      return;
+    }
+
+    const response = await fetch("/api/alerts/price-dip", { cache: "no-store" });
+    if (!response.ok) {
+      throw new Error(await parseApiError(response, "Failed to load dip alert settings."));
+    }
+
+    const payload = (await response.json()) as PriceDipAlertsPayload;
+    const nextTickers = payload.availableTickers || [];
+
+    setDipAlerts(payload.alerts || []);
+    setAvailableDipTickers(nextTickers);
+    setDipAlertMax(Number.isFinite(payload.maxAlerts) ? Math.max(0, payload.maxAlerts) : 0);
+    setDipAlertTicker((current) => {
+      const normalizedCurrent = current.trim().toUpperCase();
+      if (normalizedCurrent.length > 0) {
+        return normalizedCurrent;
+      }
+      return nextTickers[0] || "";
+    });
+  }, [sessionUser]);
+
+  const saveDipAlert = useCallback(async (event?: FormEvent) => {
+    event?.preventDefault();
+
+    if (!sessionUser) {
+      return;
+    }
+
+    const ticker = dipAlertTicker.trim().toUpperCase();
+    const threshold = Number(dipAlertThreshold);
+
+    if (!ticker) {
+      setBanner({ type: "error", message: "Pick an ASX ticker for the dip alert." });
+      return;
+    }
+
+    if (!Number.isFinite(threshold) || threshold < 0.1 || threshold > 90) {
+      setBanner({ type: "error", message: "Dip threshold must be between 0.1% and 90%." });
+      return;
+    }
+
+    setDipAlertSaving(true);
+    try {
+      const response = await fetch("/api/alerts/price-dip", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ticker,
+          dropPctThreshold: threshold,
+          enabled: true,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(await parseApiError(response, "Failed to save dip alert."));
+      }
+
+      await loadDipAlerts();
+      setBanner({ type: "success", message: `Dip alert saved for ${ticker} at ${threshold.toFixed(2)}%.` });
+    } catch (error) {
+      setBanner({ type: "error", message: error instanceof Error ? error.message : "Failed to save dip alert." });
+    } finally {
+      setDipAlertSaving(false);
+    }
+  }, [dipAlertThreshold, dipAlertTicker, loadDipAlerts, sessionUser]);
+
+  const toggleDipAlert = useCallback(async (alert: PriceDipAlertSetting, enabled: boolean) => {
+    setDipAlertSaving(true);
+    try {
+      const response = await fetch("/api/alerts/price-dip", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ticker: alert.ticker,
+          dropPctThreshold: alert.dropPctThreshold,
+          enabled,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(await parseApiError(response, "Failed to update dip alert."));
+      }
+
+      await loadDipAlerts();
+    } catch (error) {
+      setBanner({ type: "error", message: error instanceof Error ? error.message : "Failed to update dip alert." });
+    } finally {
+      setDipAlertSaving(false);
+    }
+  }, [loadDipAlerts]);
+
+  const deleteDipAlert = useCallback(async (ticker: string) => {
+    setDipAlertSaving(true);
+    try {
+      const response = await fetch(`/api/alerts/price-dip?ticker=${encodeURIComponent(ticker)}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error(await parseApiError(response, "Failed to delete dip alert."));
+      }
+
+      await loadDipAlerts();
+      setBanner({ type: "info", message: `Dip alert removed for ${ticker}.` });
+    } catch (error) {
+      setBanner({ type: "error", message: error instanceof Error ? error.message : "Failed to delete dip alert." });
+    } finally {
+      setDipAlertSaving(false);
+    }
+  }, [loadDipAlerts]);
 
   useEffect(() => {
     if (!sessionUser || loading) {
@@ -490,6 +646,33 @@ export default function Home() {
     };
   }, [loading, refreshPrices, sessionUser]);
 
+  useEffect(() => {
+    if (!sessionUser) {
+      setDipAlerts([]);
+      setAvailableDipTickers([]);
+      setDipAlertMax(0);
+      return;
+    }
+
+    let cancelled = false;
+
+    const run = async () => {
+      try {
+        await loadDipAlerts();
+      } catch {
+        if (!cancelled) {
+          setDipAlerts([]);
+        }
+      }
+    };
+
+    void run();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [loadDipAlerts, sessionUser, state.updatedAt]);
+
   const metrics = useMemo(() => computeMetrics(state.holdings, state.snapshots, riskWindow), [state.holdings, state.snapshots, riskWindow]);
 
   const portfolioHistorySeries = useMemo(() => {
@@ -562,6 +745,10 @@ export default function Home() {
   const benchmarkTrackingErrorAnnualPct = historicalRiskEstimate?.trackingErrorAnnualPct ?? null;
   const proAnalyticsEnabled = sessionUser?.proEnabled === true;
   const starterPlan = !proAnalyticsEnabled;
+  const dipAlertSlotsRemaining = Math.max(0, dipAlertMax - dipAlerts.length);
+  const dipAlertPlanMessage = proAnalyticsEnabled
+    ? `Pro plan: up to ${dipAlertMax} active dip alerts.`
+    : `Starter plan: up to ${dipAlertMax} active dip alerts. Upgrade to Pro for more coverage.`;
   const usingYahooFallback = metrics.var95Amount == null && historicalRiskEstimate != null;
   const riskReturnsUsed = usingYahooFallback ? (historicalRiskEstimate?.returnsCount ?? 0) : metrics.dailyReturns.length;
 
@@ -1398,6 +1585,10 @@ export default function Home() {
               <span>SPECTRE surfaces hidden concentration and downside sensitivity.</span>
             </article>
             <article>
+              <strong>Email Dip Alert Automation</strong>
+              <span>Get notified when tracked holdings fall past your chosen percentage threshold.</span>
+            </article>
+            <article>
               <strong>System for Portfolio Exposure, Correlation, Threat & Risk Evaluation</strong>
               <span>Designed for Australian investors and SMSF-style reporting workflows.</span>
             </article>
@@ -1414,7 +1605,7 @@ export default function Home() {
             </article>
             <article>
               <p>Session Movers</p>
-              <h3>Surface ASX top gainers and losers using refreshed market prices.</h3>
+              <h3>Surface ASX top movers and trigger dip alert emails using refreshed market prices.</h3>
             </article>
             <article>
               <p>Snapshot Audit Trail</p>
@@ -1523,7 +1714,7 @@ export default function Home() {
                 <span>03</span>
                 <div>
                   <h3>Act On Risk Signals</h3>
-                  <p>Use risk score, drawdown, VaR, and concentration metrics to monitor risk posture.</p>
+                  <p>Use risk score, drawdown, VaR, concentration metrics, and dip alert emails to monitor risk posture.</p>
                 </div>
               </article>
             </div>
@@ -1815,6 +2006,108 @@ export default function Home() {
           templateName="bullion-template.csv"
           disabled={working || loading}
         />
+      </section>
+
+      <section className="dip-alerts-section">
+        <div className="dip-alerts-head">
+          <h2>Email Dip Alerts</h2>
+          <p>Send an email when a selected ASX holding drops past your threshold versus previous close.</p>
+          <p className="dip-alerts-plan-note">{dipAlertPlanMessage}</p>
+        </div>
+
+        <form className="dip-alerts-form" onSubmit={(event) => void saveDipAlert(event)}>
+          <label>
+            <span>Ticker</span>
+            <input
+              type="text"
+              list="dip-alert-tickers"
+              value={dipAlertTicker}
+              onChange={(event) => setDipAlertTicker(event.target.value.toUpperCase())}
+              placeholder={availableDipTickers[0] || "e.g. CBA"}
+              maxLength={20}
+              disabled={dipAlertSaving}
+            />
+            <datalist id="dip-alert-tickers">
+              {availableDipTickers.map((ticker) => (
+                <option key={ticker} value={ticker} />
+              ))}
+            </datalist>
+          </label>
+
+          <label>
+            <span>Drop threshold (%)</span>
+            <input
+              type="number"
+              min={0.1}
+              max={90}
+              step={0.1}
+              value={dipAlertThreshold}
+              onChange={(event) => setDipAlertThreshold(event.target.value)}
+              disabled={dipAlertSaving}
+            />
+          </label>
+
+          <button
+            type="submit"
+            className="refresh-btn"
+            disabled={dipAlertSaving || dipAlertMax <= 0 || (dipAlerts.length >= dipAlertMax && !dipAlerts.some((alert) => alert.ticker === dipAlertTicker.trim().toUpperCase()))}
+          >
+            {dipAlertSaving ? "Saving..." : "Save Alert"}
+          </button>
+        </form>
+
+        {dipAlertMax > 0 ? (
+          <p className="dip-alerts-slots">
+            {dipAlerts.length}/{dipAlertMax} alert slots in use ({dipAlertSlotsRemaining} remaining).
+          </p>
+        ) : (
+          <p className="dip-alerts-slots">Enable a paid plan to use dip alerts.</p>
+        )}
+
+        <div className="dip-alerts-grid">
+          {dipAlerts.length === 0 ? (
+            <div className="empty">No dip alerts yet. Add your first alert above.</div>
+          ) : (
+            dipAlerts.map((alert) => (
+              <article key={alert.id} className="dip-alert-card">
+                <div className="dip-alert-card-head">
+                  <h3>{alert.ticker}</h3>
+                  <span className={"dip-alert-status " + (alert.enabled ? "enabled" : "disabled")}>{alert.enabled ? "Enabled" : "Paused"}</span>
+                </div>
+                <p>Trigger when drop is at least <strong>{alert.dropPctThreshold.toFixed(2)}%</strong>.</p>
+                <p className="dip-alert-last">
+                  Last sent: {alert.lastTriggeredAt ? new Date(alert.lastTriggeredAt).toLocaleString("en-AU") : "Never"}
+                </p>
+                <div className="dip-alert-actions">
+                  <button
+                    type="button"
+                    className="template-btn"
+                    onClick={() => void toggleDipAlert(alert, !alert.enabled)}
+                    disabled={dipAlertSaving}
+                  >
+                    {alert.enabled ? "Pause" : "Resume"}
+                  </button>
+                  <button
+                    type="button"
+                    className="clear-btn"
+                    onClick={() => void deleteDipAlert(alert.ticker)}
+                    disabled={dipAlertSaving}
+                  >
+                    Remove
+                  </button>
+                </div>
+              </article>
+            ))
+          )}
+        </div>
+
+        {!proAnalyticsEnabled ? (
+          <div className="dip-alert-upgrade">
+            <button type="button" onClick={() => void startProCheckout(authEmail)} className="template-btn" disabled={checkoutWorking}>
+              {checkoutWorking ? "Redirecting..." : "Upgrade for More Alerts"}
+            </button>
+          </div>
+        ) : null}
       </section>
 
       
