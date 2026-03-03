@@ -1580,46 +1580,41 @@ export default function Home() {
             </aside>
           </section>
 
-          <section className="landing-proof-strip" aria-label="Current product capabilities">
-            <article>
-              <strong>Example Risk Score: {LANDING_SAMPLE_RISK_SCORE}/100</strong>
-              <span>Sample portfolio score after CSV import and risk normalization.</span>
+          <section id="features" className="landing-impact-grid" aria-label="Current product capabilities">
+            <article className="landing-impact-primary">
+              <p className="landing-kicker">Risk Visibility</p>
+              <h2>From &quot;looks diversified&quot; to measurable exposure in one screen.</h2>
+              <p>
+                Example score: <strong>{LANDING_SAMPLE_RISK_SCORE}/100</strong>. SPECTRE highlights concentration, downside sensitivity, and daily movement so risk decisions are faster.
+              </p>
+              <div className="landing-impact-primary-meta">
+                <span>Before: scattered statements</span>
+                <span>After: top-3 = 42% exposure</span>
+              </div>
             </article>
-            <article>
-              <strong>Before: &quot;Looks diversified&quot;</strong>
-              <span>Investor sees many line items across multiple statements.</span>
-            </article>
-            <article>
-              <strong>After: Top-3 = 42% Exposure</strong>
-              <span>SPECTRE surfaces hidden concentration and downside sensitivity.</span>
-            </article>
-            <article>
-              <strong>Email Dip Alert Automation</strong>
-              <span>Get notified when tracked holdings fall past your chosen percentage threshold.</span>
-            </article>
-            <article>
-              <strong>Built for ASX + SMSF workflows</strong>
-              <span>Purpose-built for Australian investors managing multi-source portfolios.</span>
-            </article>
-          </section>
 
-          <section id="features" className="landing-feature-grid">
-            <article>
-              <p>ASX + Crypto + Super Imports</p>
-              <h3>Ingest brokerage, crypto wallet, superannuation, index, fund, and bullion exports in one workflow.</h3>
-            </article>
-            <article>
-              <p>Risk Score + Dashboard</p>
-              <h3>Track one clear risk score alongside VaR95, drawdown, volatility, and concentration.</h3>
-            </article>
-            <article>
-              <p>Session Movers</p>
-              <h3>Surface ASX top movers and trigger dip alert emails using refreshed market prices.</h3>
-            </article>
-            <article>
-              <p>Snapshot Audit Trail</p>
-              <h3>Review portfolio trend history and data quality signals over time.</h3>
-            </article>
+            <div className="landing-impact-stack">
+              <article>
+                <p>Market Coverage</p>
+                <h3>ASX + Crypto + Super</h3>
+                <span>Import brokerage, crypto wallet, superannuation, index, fund, and bullion CSV exports.</span>
+              </article>
+              <article>
+                <p>Live Monitoring</p>
+                <h3>Session Movers + Dip Alerts</h3>
+                <span>Refresh live market prices and trigger dip alert emails at your configured thresholds.</span>
+              </article>
+              <article>
+                <p>Audit Trail</p>
+                <h3>Snapshot History</h3>
+                <span>Track saved snapshots over time for risk windows, drawdown context, and review.</span>
+              </article>
+              <article>
+                <p>Built for AU</p>
+                <h3>ASX + SMSF Workflows</h3>
+                <span>Purpose-built for Australian investors managing multi-source portfolios in one private workspace.</span>
+              </article>
+            </div>
           </section>
 
           <section id="insights" className="landing-analytics">
@@ -1968,7 +1963,8 @@ export default function Home() {
 
       {banner ? <div className={`banner ${banner.type}`}>{banner.message}</div> : null}
 
-      
+      <main className="dashboard-main-layout">
+        <section className="dashboard-top-grid">
       <section className="upload-grid">
         <UploadCard
           title="Super Report (CSV)"
@@ -2127,8 +2123,9 @@ export default function Home() {
           </div>
         ) : null}
       </section>
+        </section>
 
-      
+        <section className="dashboard-risk-grid">
       <section className="kpi-grid">
         <KpiCard label="Total Portfolio" value={formatCurrency(metrics.totalValue)} help="Current market value across all imported holdings." />
         <KpiCard label="Cost Base" value={formatCurrency(metrics.totalCost)} help="Total invested amount from imported cost-base values." />
@@ -2418,8 +2415,9 @@ export default function Home() {
           )}
         </div>
       </section>
+        </section>
 
-      
+        <section className="dashboard-data-grid">
       <section className="chart-grid">
         <ChartCard title="Account Allocation" tone="portfolio" help="Value split by account. Percentages are based on total portfolio value.">
           <PieAllocation data={metrics.accountAllocation} palette={PORTFOLIO_COLORS} />
@@ -2534,6 +2532,8 @@ export default function Home() {
           </div>
         )}
       </section>
+        </section>
+      </main>
 
       <footer className="footer-note">
         <p className="footer-disclaimer">Disclaimer: SPECTRE provides informational analytics only. It is not financial, investment, tax, or legal advice, and no result is guaranteed to be complete, current, or accurate.</p>
