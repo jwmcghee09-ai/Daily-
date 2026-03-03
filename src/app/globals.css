@@ -4313,6 +4313,69 @@ td {
   font-size: 0.82rem;
 }
 
+.spectre-password-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.spectre-password-toggle {
+  border: 1px solid var(--sl-border);
+  border-radius: 4px;
+  background: rgba(12, 7, 22, 0.9);
+  color: var(--sl-muted-2);
+  font-family: var(--sl-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.64rem 0.78rem;
+  cursor: pointer;
+}
+
+.spectre-password-toggle:hover {
+  color: var(--sl-text);
+  border-color: var(--sl-border-2);
+}
+
+.spectre-register-plan-picker {
+  margin-top: 0.15rem;
+  border: 1px solid var(--sl-border);
+  border-radius: 6px;
+  padding: 0.65rem 0.75rem;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.spectre-register-plan-picker legend {
+  padding-inline: 0.2rem;
+  font-family: var(--sl-mono);
+  font-size: 0.56rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sl-muted);
+}
+
+.spectre-register-plan-picker label {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  cursor: pointer;
+}
+
+.spectre-register-plan-picker input[type="radio"] {
+  width: 14px;
+  height: 14px;
+}
+
+.spectre-register-plan-picker label span {
+  font-family: var(--sl-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  color: var(--sl-muted-2);
+  text-transform: uppercase;
+}
+
 .spectre-signin-btn {
   width: 100%;
   margin-top: 0.35rem;

@@ -251,8 +251,10 @@ export default function Home() {
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
   const [authEmail, setAuthEmail] = useState("");
   const [authPassword, setAuthPassword] = useState("");
+  const [showAuthPassword, setShowAuthPassword] = useState(false);
   const [authDisplayName, setAuthDisplayName] = useState("");
   const [authAcceptsTerms, setAuthAcceptsTerms] = useState(false);
+  const [registerCheckoutPlan, setRegisterCheckoutPlan] = useState<CheckoutPlan>("starter");
   const [authWorking, setAuthWorking] = useState(false);
   const [authError, setAuthError] = useState("");
   const [checkoutWorking, setCheckoutWorking] = useState(false);
@@ -1345,6 +1347,7 @@ export default function Home() {
 
       if (!response.ok) {
         if (authMode === "register" && response.status === 402) {
+          const selectedPlanLabel = registerCheckoutPlan === "pro" ? "Pro" : "Starter";
           writePendingRegistrationDraft({
             email: authEmail.trim().toLowerCase(),
             password: authPassword,
@@ -1353,8 +1356,8 @@ export default function Home() {
             createdAt: Date.now(),
           });
           setAuthError("");
-          setBanner({ type: "info", message: "Payment required. Redirecting to Stripe checkout..." });
-          await startStarterCheckout(authEmail);
+          setBanner({ type: "info", message: `Payment required. Redirecting to ${selectedPlanLabel} checkout...` });
+          await startCheckout(registerCheckoutPlan, authEmail);
           return;
         }
 
@@ -1868,15 +1871,25 @@ export default function Home() {
 
                   <label>
                     <span>Password</span>
-                    <input
-                      type="password"
-                      placeholder="Minimum 8 characters"
-                      value={authPassword}
-                      onChange={(event) => setAuthPassword(event.target.value)}
-                      required
-                      minLength={8}
-                      autoComplete={authMode === "register" ? "new-password" : "current-password"}
-                    />
+                    <div className="spectre-password-row">
+                      <input
+                        type={showAuthPassword ? "text" : "password"}
+                        placeholder="Minimum 8 characters"
+                        value={authPassword}
+                        onChange={(event) => setAuthPassword(event.target.value)}
+                        required
+                        minLength={8}
+                        autoComplete={authMode === "register" ? "new-password" : "current-password"}
+                      />
+                      <button
+                        type="button"
+                        className="spectre-password-toggle"
+                        onClick={() => setShowAuthPassword((current) => !current)}
+                        aria-label={showAuthPassword ? "Hide password" : "Show password"}
+                      >
+                        {showAuthPassword ? "Hide" : "Show"}
+                      </button>
+                    </div>
                   </label>
 
                   {authMode === "register" ? (
@@ -1903,11 +1916,35 @@ export default function Home() {
                           I agree to the Terms & Conditions and understand SPECTRE provides informational analytics only, not financial advice.
                         </span>
                       </label>
+
+                      <fieldset className="spectre-register-plan-picker">
+                        <legend>Checkout Plan</legend>
+                        <label>
+                          <input
+                            type="radio"
+                            name="register-checkout-plan"
+                            value="starter"
+                            checked={registerCheckoutPlan === "starter"}
+                            onChange={() => setRegisterCheckoutPlan("starter")}
+                          />
+                          <span>Starter ($3/mo)</span>
+                        </label>
+                        <label>
+                          <input
+                            type="radio"
+                            name="register-checkout-plan"
+                            value="pro"
+                            checked={registerCheckoutPlan === "pro"}
+                            onChange={() => setRegisterCheckoutPlan("pro")}
+                          />
+                          <span>Pro ($15/mo)</span>
+                        </label>
+                      </fieldset>
                     </>
                   ) : null}
 
                   <button type="submit" className="spectre-signin-btn" disabled={authWorking}>
-                    {authWorking ? "Please wait..." : authMode === "register" ? "Create Account & Checkout" : "Sign In"}
+                    {authWorking ? "Please wait..." : authMode === "register" ? `Create Account & ${registerCheckoutPlan === "pro" ? "Pro" : "Starter"} Checkout` : "Sign In"}
                   </button>
                 </form>
 
@@ -1918,6 +1955,7 @@ export default function Home() {
                     onClick={() => {
                       setAuthMode((current) => (current === "register" ? "login" : "register"));
                       setAuthAcceptsTerms(false);
+                      setShowAuthPassword(false);
                       setAuthError("");
                     }}
                     disabled={authWorking}
