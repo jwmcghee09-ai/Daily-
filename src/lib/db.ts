@@ -1760,6 +1760,20 @@ export function createEmailVerificationRecord(userId: string, tokenHash: string,
   }
 }
 
+export function hasActiveEmailVerificationForUser(userId: string): boolean {
+  const db = getDb();
+  ensureEmailVerificationSchema(db);
+  const nowIso = new Date().toISOString();
+
+  const row = db
+    .prepare(
+      "SELECT 1 AS ok FROM email_verifications WHERE user_id = ? AND used_at IS NULL AND expires_at >= ? LIMIT 1",
+    )
+    .get(userId, nowIso) as { ok: number } | undefined;
+
+  return Boolean(row?.ok);
+}
+
 export function consumeEmailVerificationRecord(tokenHash: string): { userId: string } | null {
   const db = getDb();
   ensureEmailVerificationSchema(db);

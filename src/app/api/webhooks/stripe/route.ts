@@ -3,7 +3,9 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { notifyWebhookFailure } from "@/lib/alerts";
 import {
+  createEmailVerificationRecord,
   findAuthUserByEmail,
+  hasActiveEmailVerificationForUser,
   updateBillingSubscriptionByStripeCustomerId,
   updateBillingSubscriptionByStripeSubscriptionId,
   updatePreSignupBillingByStripeCustomerId,
@@ -12,7 +14,16 @@ import {
   upsertPreSignupBillingByEmail,
 } from "@/lib/db";
 import { captureMonitoringException } from "@/lib/monitoring";
+import {
+  isEmailDeliveryConfigured,
+  sendAccountVerificationEmail,
+} from "@/lib/mailer";
 import { getStripeClient, getStripeWebhookSecret } from "@/lib/stripe";
+import {
+  EMAIL_VERIFICATION_TTL_MS,
+  generateEmailVerificationToken,
+  hashEmailVerificationToken,
+} from "@/lib/auth";
 
 export const runtime = "nodejs";
 
@@ -62,7 +73,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    handleStripeEvent(event);
+    await handleStripeEvent(event);
     return NextResponse.json({ received: true });
   } catch (error) {
     const message = toErrorMessage(error, "Webhook processing failed.");
@@ -89,7 +100,7 @@ export async function POST(request: Request) {
   }
 }
 
-function handleStripeEvent(event: Stripe.Event): void {
+async function handleStripeEvent(event: Stripe.Event): Promise<void> {
   switch (event.type) {
     case "checkout.session.completed": {
       const session = event.data.object as Stripe.Checkout.Session;
@@ -112,6 +123,8 @@ function handleStripeEvent(event: Stripe.Event): void {
           checkoutCompletedAt: new Date().toISOString(),
         });
       }
+
+      await sendVerificationAfterCheckout(checkoutEmail);
 
       const userId =
         sanitizeMaybeString(session.metadata?.userId) ||
@@ -170,6 +183,32 @@ function handleStripeEvent(event: Stripe.Event): void {
     default:
       return;
   }
+}
+
+async function sendVerificationAfterCheckout(email: string | null): Promise<void> {
+  if (!email || !isEmailDeliveryConfigured()) {
+    return;
+  }
+
+  const user = findAuthUserByEmail(email);
+  if (!user || user.emailVerifiedAt) {
+    return;
+  }
+
+  // Stripe can retry the same event; keep one active token to avoid duplicate emails.
+  if (hasActiveEmailVerificationForUser(user.id)) {
+    return;
+  }
+
+  const verificationToken = generateEmailVerificationToken();
+  const verificationTokenHash = hashEmailVerificationToken(verificationToken);
+  const expiresAt = new Date(Date.now() + EMAIL_VERIFICATION_TTL_MS).toISOString();
+  createEmailVerificationRecord(user.id, verificationTokenHash, expiresAt);
+  await sendAccountVerificationEmail({
+    toEmail: user.email,
+    displayName: user.displayName,
+    verificationToken,
+  });
 }
 
 function findUserIdByEmail(email: string | null): string | null {
