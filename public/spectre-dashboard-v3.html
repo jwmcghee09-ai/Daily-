@@ -574,32 +574,32 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     <div class="bullion-grid">
       <div class="bullion-card">
         <div class="bullion-lbl">Total Gold Weight</div>
-        <div class="bullion-val">14.2 oz</div>
+        <div class="bullion-val" id="bullion-gold-weight">14.2 oz</div>
         <div class="bullion-sub">Troy oz</div>
       </div>
       <div class="bullion-card">
         <div class="bullion-lbl">Total Gold Value</div>
-        <div class="bullion-val">$24,840</div>
+        <div class="bullion-val" id="bullion-gold-value">$24,840</div>
         <div class="bullion-sub">AUD at spot</div>
       </div>
       <div class="bullion-card">
         <div class="bullion-lbl">Gold Unrealised P/L</div>
-        <div class="bullion-val accent">+$4,120</div>
+        <div class="bullion-val accent" id="bullion-gold-pnl">+$4,120</div>
         <div class="bullion-sub">Since acquisition</div>
       </div>
       <div class="bullion-card">
         <div class="bullion-lbl">Total Silver Weight</div>
-        <div class="bullion-val">88.5 oz</div>
+        <div class="bullion-val" id="bullion-silver-weight">88.5 oz</div>
         <div class="bullion-sub">Troy oz</div>
       </div>
       <div class="bullion-card">
         <div class="bullion-lbl">Total Silver Value</div>
-        <div class="bullion-val">$6,446</div>
+        <div class="bullion-val" id="bullion-silver-value">$6,446</div>
         <div class="bullion-sub">AUD at spot</div>
       </div>
       <div class="bullion-card">
         <div class="bullion-lbl">Silver Unrealised P/L</div>
-        <div class="bullion-val accent">−$214</div>
+        <div class="bullion-val accent" id="bullion-silver-pnl">−$214</div>
         <div class="bullion-sub">Since acquisition</div>
       </div>
     </div>
@@ -955,6 +955,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     sessionUser: null,
     portfolio: { holdings: [], snapshots: [], updatedAt: "", lastPriceRefreshAt: "" },
     alerts: [],
+    availableAlertTickers: [],
     historicalRiskEstimate: null,
     riskWindow: "6M",
     uploadSource: null,
@@ -1018,6 +1019,14 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     const d = new Date(value);
     if (Number.isNaN(d.getTime())) return value;
     return d.toISOString().slice(0, 10);
+  }
+
+  function detectBullionMetal(holding) {
+    const text = `${holding.name || ""} ${holding.ticker || ""} ${holding.sector || ""}`.toLowerCase();
+    if (text.includes("silver") || /(^|\\W)ag(\\W|$)/.test(text)) {
+      return "silver";
+    }
+    return "gold";
   }
 
   function formatCurrency(value, opts = {}) {
@@ -1464,6 +1473,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   async function loadAlerts() {
     const payload = await apiJson("/api/alerts/price-dip", { cache: "no-store" });
     state.alerts = payload.alerts || [];
+    state.availableAlertTickers = payload.availableTickers || [];
     renderAlerts();
   }
 
@@ -1531,6 +1541,15 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 
     const latestReportDate = holdings.reduce((max, item) => (String(item.reportDate || "") > String(max) ? item.reportDate : max), "");
     const latestPriceTime = state.portfolio.lastPriceRefreshAt || state.portfolio.updatedAt || "";
+    const bullionHoldings = holdings.filter((holding) => holding.source === "gold");
+    const goldHoldings = bullionHoldings.filter((holding) => detectBullionMetal(holding) === "gold");
+    const silverHoldings = bullionHoldings.filter((holding) => detectBullionMetal(holding) === "silver");
+    const goldWeightOz = sum(goldHoldings.map((holding) => (Number.isFinite(holding.units) ? Number(holding.units) : 0)));
+    const silverWeightOz = sum(silverHoldings.map((holding) => (Number.isFinite(holding.units) ? Number(holding.units) : 0)));
+    const goldValue = sum(goldHoldings.map((holding) => Number(holding.value) || 0));
+    const goldCost = sum(goldHoldings.map((holding) => Number(holding.costBase) || 0));
+    const silverValue = sum(silverHoldings.map((holding) => Number(holding.value) || 0));
+    const silverCost = sum(silverHoldings.map((holding) => Number(holding.costBase) || 0));
 
     setText("meta-holdings-count", `${holdings.length} positions`);
     setText("meta-latest-report", latestReportDate ? formatDate(latestReportDate) : "—");
@@ -1572,6 +1591,15 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     setText("pro-expected-shortfall", effectiveCvar95Pct != null ? formatPercent(effectiveCvar95Pct, { negative: true, decimals: 1 }) : "—");
     setText("pro-beta", Number.isFinite(effectiveBeta) ? Number(effectiveBeta).toFixed(2) : "—");
     setText("pro-tracking-error", Number.isFinite(effectiveTrackingError) ? formatPercent(effectiveTrackingError, { decimals: 1 }) : "—");
+
+    setText("bullion-gold-weight", `${goldWeightOz.toLocaleString("en-AU", { maximumFractionDigits: 2 })} oz`);
+    setText("bullion-gold-value", formatCurrency(goldValue));
+    setText("bullion-gold-pnl", formatSignedCurrency(goldValue - goldCost));
+    setText("bullion-silver-weight", `${silverWeightOz.toLocaleString("en-AU", { maximumFractionDigits: 2 })} oz`);
+    setText("bullion-silver-value", formatCurrency(silverValue));
+    setText("bullion-silver-pnl", formatSignedCurrency(silverValue - silverCost));
+    setClass("bullion-gold-pnl", `bullion-val ${(goldValue - goldCost) >= 0 ? "accent" : ""}`.trim());
+    setClass("bullion-silver-pnl", `bullion-val ${(silverValue - silverCost) >= 0 ? "accent" : ""}`.trim());
 
     const riskWindowText = state.riskWindow;
     const points = metrics.riskPointsUsed;
@@ -1715,7 +1743,16 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       state.portfolio = payload.state;
       await loadHistoricalRisk();
       renderPortfolio();
-      showToast(`Prices refreshed (${payload.updatedTickers.length} tickers).`);
+      const triggered = Array.isArray(payload.triggeredAlerts) ? payload.triggeredAlerts.length : 0;
+      const failedEmails = Array.isArray(payload.failedAlertTickers) ? payload.failedAlertTickers.length : 0;
+      if (triggered > 0 || failedEmails > 0) {
+        showToast(
+          `Prices refreshed (${payload.updatedTickers.length}). Alerts sent: ${triggered}${failedEmails > 0 ? `, failed: ${failedEmails}` : ""}.`,
+          failedEmails > 0 ? "error" : "success",
+        );
+      } else {
+        showToast(`Prices refreshed (${payload.updatedTickers.length} tickers).`);
+      }
     } catch (error) {
       showToast(error instanceof Error ? error.message : "Price refresh failed.", "error");
     } finally {
@@ -1772,6 +1809,10 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     }
     if (!Number.isFinite(threshold) || threshold <= 0) {
       showToast("Enter a valid threshold percent.", "error");
+      return;
+    }
+    if (state.availableAlertTickers.length > 0 && !state.availableAlertTickers.includes(ticker)) {
+      showToast("Dip alerts currently support your ASX, crypto, and bullion holdings only.", "error");
       return;
     }
     try {

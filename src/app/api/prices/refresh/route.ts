@@ -33,7 +33,7 @@ export async function POST() {
 
     const asxQuoteByTicker = new Map<string, { price: number; prevClose: number }>();
     for (const holding of result.state.holdings) {
-      if (holding.source !== "asx" && holding.source !== "crypto") {
+      if (holding.source !== "asx" && holding.source !== "crypto" && holding.source !== "gold") {
         continue;
       }
 

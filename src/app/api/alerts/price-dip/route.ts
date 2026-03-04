@@ -63,7 +63,7 @@ export async function GET() {
     const availableTickers = Array.from(
       new Set(
         portfolio.holdings
-          .filter((holding) => holding.source === "asx" || holding.source === "crypto")
+          .filter((holding) => holding.source === "asx" || holding.source === "crypto" || holding.source === "gold")
           .map((holding) => holding.ticker.toUpperCase())
           .filter((ticker) => ticker.length > 0),
       ),

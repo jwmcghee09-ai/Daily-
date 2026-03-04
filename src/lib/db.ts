@@ -69,6 +69,14 @@ interface HoldingTickerRow {
   units: number;
 }
 
+interface BullionHoldingRow {
+  id: string;
+  ticker: string;
+  name: string;
+  sector: string;
+  units: number;
+}
+
 interface HoldingRiskRow {
   source: string;
   ticker: string;
@@ -600,6 +608,15 @@ function toCryptoYahooSymbol(ticker: string): string {
   return `${clean}-USD`;
 }
 
+function detectBullionMetal(holding: { name: string; ticker: string; sector: string }): "gold" | "silver" {
+  const text = `${holding.name} ${holding.ticker} ${holding.sector}`.toLowerCase();
+  if (text.includes("silver") || /(^|\W)ag(\W|$)/.test(text)) {
+    return "silver";
+  }
+
+  return "gold";
+}
+
 function extractAsxQuote(result: YahooChartResult | undefined): AsxQuoteData {
   const regular = sanitizeNumber(result?.meta?.regularMarketPrice, Number.NaN);
 
@@ -649,35 +666,48 @@ function extractDatedCloseSeries(result: YahooChartResult | undefined): DatedPri
 
 async function fetchAsxQuoteFromYahoo(ticker: string): Promise<AsxQuoteData | null> {
   const symbol = toYahooSymbol(ticker);
-  if (!symbol) {
-    return null;
-  }
-
-  const url = `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=5d`;
-
-  try {
-    const response = await fetch(url, {
-      method: "GET",
-      cache: "no-store",
-      headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; SPECTRE/1.0)",
-        Accept: "application/json",
-      },
-    });
-
-    if (!response.ok) {
-      return null;
-    }
-
-    const payload = (await response.json()) as YahooChartResponse;
-    return extractAsxQuote(payload.chart?.result?.[0]);
-  } catch {
-    return null;
-  }
+  return fetchYahooQuoteBySymbol(symbol);
 }
 
 async function fetchCryptoQuoteFromYahoo(ticker: string): Promise<AsxQuoteData | null> {
   const symbol = toCryptoYahooSymbol(ticker);
+  if (!symbol) {
+    return null;
+  }
+
+  return fetchYahooQuoteBySymbol(symbol);
+}
+
+async function fetchBullionSpotFromYahoo(metal: "gold" | "silver"): Promise<AsxQuoteData | null> {
+  const commoditySymbol = metal === "gold" ? "XAUUSD=X" : "XAGUSD=X";
+  const commodityQuote = await fetchYahooQuoteBySymbol(commoditySymbol);
+  const audUsdQuote = await fetchYahooQuoteBySymbol("AUDUSD=X");
+
+  const commodityPrice = sanitizeNumber(commodityQuote?.price, Number.NaN);
+  const commodityPrevClose = sanitizeNumber(commodityQuote?.prevClose, commodityPrice);
+  const audUsd = sanitizeNumber(audUsdQuote?.price, Number.NaN);
+  const audUsdPrevClose = sanitizeNumber(audUsdQuote?.prevClose, audUsd);
+
+  if (!Number.isFinite(commodityPrice) || commodityPrice <= 0 || !Number.isFinite(audUsd) || audUsd <= 0) {
+    return null;
+  }
+
+  const priceAud = commodityPrice / audUsd;
+  const prevCloseAud =
+    Number.isFinite(commodityPrevClose) &&
+    commodityPrevClose > 0 &&
+    Number.isFinite(audUsdPrevClose) &&
+    audUsdPrevClose > 0
+      ? commodityPrevClose / audUsdPrevClose
+      : priceAud;
+
+  return {
+    price: priceAud,
+    prevClose: prevCloseAud,
+  };
+}
+
+async function fetchYahooQuoteBySymbol(symbol: string): Promise<AsxQuoteData | null> {
   if (!symbol) {
     return null;
   }
@@ -1039,6 +1069,14 @@ export async function refreshAsxPrices(userId: string): Promise<PriceRefreshResu
     `)
     .all(scopedPattern) as HoldingTickerRow[];
 
+  const bullionRows = db
+    .prepare(`
+      SELECT id, ticker, name, sector, units
+      FROM holdings
+      WHERE source = 'gold' AND id LIKE ?
+    `)
+    .all(scopedPattern) as BullionHoldingRow[];
+
   const uniqueAsxTickers = Array.from(
     new Set(
       asxRows
@@ -1057,7 +1095,7 @@ export async function refreshAsxPrices(userId: string): Promise<PriceRefreshResu
 
   const nowIso = new Date().toISOString();
 
-  if (uniqueAsxTickers.length === 0 && uniqueCryptoTickers.length === 0) {
+  if (uniqueAsxTickers.length === 0 && uniqueCryptoTickers.length === 0 && bullionRows.length === 0) {
     setScopedMetaValue(db, userId, LAST_PRICE_REFRESH_KEY, nowIso);
     return {
       state: readPortfolioState(userId),
@@ -1068,6 +1106,8 @@ export async function refreshAsxPrices(userId: string): Promise<PriceRefreshResu
   }
 
   const quoteUpdates: Array<{ source: "asx" | "crypto"; ticker: string; price: number; prevClose: number }> = [];
+  const bullionUpdates: Array<{ id: string; price: number; prevClose: number; metal: "gold" | "silver" }> = [];
+  const updatedLabels = new Set<string>();
   const failedTickers: string[] = [];
 
   // Sequential fetch reduces the chance of upstream rate limiting.
@@ -1083,6 +1123,7 @@ export async function refreshAsxPrices(userId: string): Promise<PriceRefreshResu
         price,
         prevClose: Number.isFinite(prevClose) && prevClose > 0 ? prevClose : price,
       });
+      updatedLabels.add(ticker);
     } else {
       failedTickers.push(ticker);
     }
@@ -1100,12 +1141,37 @@ export async function refreshAsxPrices(userId: string): Promise<PriceRefreshResu
         price,
         prevClose: Number.isFinite(prevClose) && prevClose > 0 ? prevClose : price,
       });
+      updatedLabels.add(`${ticker} (crypto)`);
     } else {
       failedTickers.push(`${ticker} (crypto)`);
     }
   }
 
-  if (quoteUpdates.length === 0) {
+  if (bullionRows.length > 0) {
+    const goldQuote = await fetchBullionSpotFromYahoo("gold");
+    const silverQuote = await fetchBullionSpotFromYahoo("silver");
+
+    for (const row of bullionRows) {
+      const metal = detectBullionMetal(row);
+      const quote = metal === "gold" ? goldQuote : silverQuote;
+      const price = sanitizeNumber(quote?.price, Number.NaN);
+      const prevClose = sanitizeNumber(quote?.prevClose, price);
+
+      if (Number.isFinite(price) && price > 0) {
+        bullionUpdates.push({
+          id: row.id,
+          price,
+          prevClose: Number.isFinite(prevClose) && prevClose > 0 ? prevClose : price,
+          metal,
+        });
+        updatedLabels.add(metal === "gold" ? "XAU (gold)" : "XAG (silver)");
+      } else {
+        failedTickers.push(metal === "gold" ? "XAU (gold)" : "XAG (silver)");
+      }
+    }
+  }
+
+  if (quoteUpdates.length === 0 && bullionUpdates.length === 0) {
     setScopedMetaValue(db, userId, LAST_PRICE_REFRESH_KEY, nowIso);
     return {
       state: readPortfolioState(userId),
@@ -1127,8 +1193,21 @@ export async function refreshAsxPrices(userId: string): Promise<PriceRefreshResu
       WHERE source = ? AND ticker = ? AND id LIKE ?
     `);
 
+    const bullionUpdateStmt = db.prepare(`
+      UPDATE holdings
+      SET
+        prev_close = ?,
+        price = ?,
+        value = CASE WHEN units > 0 THEN units * ? ELSE value END
+      WHERE id = ? AND source = 'gold'
+    `);
+
     for (const quote of quoteUpdates) {
       updateStmt.run(quote.prevClose, quote.price, quote.price, quote.source, quote.ticker, scopedPattern);
+    }
+
+    for (const quote of bullionUpdates) {
+      bullionUpdateStmt.run(quote.prevClose, quote.price, quote.price, quote.id);
     }
 
     const totalRow = db
@@ -1152,7 +1231,7 @@ export async function refreshAsxPrices(userId: string): Promise<PriceRefreshResu
 
   return {
     state: readPortfolioState(userId),
-    updatedTickers: quoteUpdates.map((quote) => (quote.source === "crypto" ? `${quote.ticker} (crypto)` : quote.ticker)),
+    updatedTickers: Array.from(updatedLabels),
     failedTickers,
     fetchedAt: nowIso,
   };
