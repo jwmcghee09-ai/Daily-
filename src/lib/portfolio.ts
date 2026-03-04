@@ -75,11 +75,11 @@ const RISK_WINDOW_DAYS: Record<RiskWindow, number> = {
 
 const FIELD_ALIASES = {
   account: ["account", "accountname", "portfolio", "broker", "fund", "superaccount", "accountnumber"],
-  ticker: ["ticker", "symbol", "asxcode", "code", "securitycode", "instrument", "stock", "metal", "bullion", "product", "isin", "cusip", "sedol", "ric", "fundcode", "identifier"],
+  ticker: ["ticker", "symbol", "pair", "asxcode", "code", "securitycode", "instrument", "stock", "metal", "bullion", "product", "isin", "cusip", "sedol", "ric", "fundcode", "identifier"],
   name: ["name", "fundname", "security", "securityname", "holding", "description", "investment", "asset", "company"],
-  units: ["units", "quantity", "qty", "shares", "unitsheld", "availunits", "availableunits", "weight", "weightoz", "weightg", "gram", "grams", "ounce", "ounces", "oz", "troyounce", "troyounces"],
+  units: ["units", "quantity", "qty", "shares", "vol", "cvol", "unitsheld", "availunits", "availableunits", "weight", "weightoz", "weightg", "gram", "grams", "ounce", "ounces", "oz", "troyounce", "troyounces"],
   price: ["price", "unit", "unitprice", "lastprice", "marketprice", "currentprice", "close", "last"],
-  value: ["value", "marketvalue", "currentvalue", "valuation", "balance", "amount", "mktvalue"],
+  value: ["value", "marketvalue", "currentvalue", "valuation", "balance", "amount", "mktvalue", "cost", "ccost", "net"],
   cost: ["costbase", "cost", "bookvalue", "purchasevalue", "avgcost", "averagecost", "purchase"],
   sector: ["sector", "industry", "assetclass", "class", "category"],
   date: ["date", "unitdate", "valuationdate", "asat", "reportdate", "pricedate"],
@@ -126,8 +126,131 @@ function isLikelyHeaderLine(line: string): boolean {
 export function parseRowsToHoldings(rows: CsvRow[], source: DataSource): PortfolioHolding[] {
   const importedAt = new Date().toISOString();
 
+  if (source === "crypto" && looksLikeCryptoTradeLedger(rows)) {
+    return parseCryptoTradeRows(rows, importedAt);
+  }
+
   return rows
     .map((row, index) => toHolding(row, source, importedAt, index))
+    .filter((holding): holding is PortfolioHolding => Boolean(holding));
+}
+
+function looksLikeCryptoTradeLedger(rows: CsvRow[]): boolean {
+  return rows.some((raw) => {
+    const row = normalizeRowKeys(raw);
+    return Boolean(row.pair && (row.vol || row.cvol || row.quantity || row.qty) && (row.type || row.side || row.action));
+  });
+}
+
+function parseCryptoTradeRows(rows: CsvRow[], importedAt: string): PortfolioHolding[] {
+  interface CryptoAggregate {
+    account: string;
+    ticker: string;
+    name: string;
+    units: number;
+    costBase: number;
+    lastPrice: number;
+    reportDate: string;
+  }
+
+  const map = new Map<string, CryptoAggregate>();
+
+  rows.forEach((raw) => {
+    const row = normalizeRowKeys(raw);
+    const pairRaw = readFirst(row, ["pair", ...FIELD_ALIASES.ticker]);
+    if (!pairRaw) {
+      return;
+    }
+
+    const ticker = normalizeTicker(toCryptoBaseSymbol(pairRaw));
+    if (!ticker) {
+      return;
+    }
+
+    const side = readFirst(row, ["type", "side", "action"]).toLowerCase();
+    const isBuy = side.includes("buy");
+    const isSell = side.includes("sell");
+    if (!isBuy && !isSell) {
+      return;
+    }
+
+    const units = toNumber(readFirst(row, ["vol", "cvol", ...FIELD_ALIASES.units]));
+    if (!Number.isFinite(units) || units <= 0) {
+      return;
+    }
+
+    const price = toNumber(readFirst(row, ["price", "cprice", ...FIELD_ALIASES.price]));
+    const notional = toNumber(readFirst(row, ["cost", "ccost", "net", ...FIELD_ALIASES.value]));
+    const account = readFirst(row, FIELD_ALIASES.account) || "Crypto Wallet";
+    const reportDate = parseDate(readFirst(row, FIELD_ALIASES.date)) || todayDate();
+    const existing = map.get(ticker) || {
+      account,
+      ticker,
+      name: `${ticker} Position`,
+      units: 0,
+      costBase: 0,
+      lastPrice: Number.isFinite(price) && price > 0 ? price : 0,
+      reportDate,
+    };
+
+    if (Number.isFinite(price) && price > 0) {
+      existing.lastPrice = price;
+    }
+    if (reportDate > existing.reportDate) {
+      existing.reportDate = reportDate;
+    }
+
+    if (isBuy) {
+      existing.units += units;
+      if (Number.isFinite(notional) && notional > 0) {
+        existing.costBase += notional;
+      } else if (Number.isFinite(price) && price > 0) {
+        existing.costBase += units * price;
+      }
+    } else {
+      if (existing.units > 0 && existing.costBase > 0) {
+        const reduceUnits = Math.min(units, existing.units);
+        const averageCostPerUnit = existing.costBase / existing.units;
+        existing.costBase = Math.max(0, existing.costBase - averageCostPerUnit * reduceUnits);
+      }
+      existing.units = Math.max(0, existing.units - units);
+    }
+
+    map.set(ticker, existing);
+  });
+
+  let index = 0;
+  return Array.from(map.values())
+    .map((entry) => {
+      if (!Number.isFinite(entry.units) || entry.units <= 0) {
+        return null;
+      }
+
+      const price = entry.lastPrice > 0 ? entry.lastPrice : entry.costBase > 0 ? entry.costBase / entry.units : 0;
+      const value = entry.units * price;
+      if (!Number.isFinite(value) || value <= 0) {
+        return null;
+      }
+
+      const costBase = entry.costBase > 0 ? entry.costBase : value;
+      const holding: PortfolioHolding = {
+        id: `crypto-${slug(entry.account)}-${slug(entry.ticker)}-${entry.reportDate}-${index}`,
+        source: "crypto",
+        account: entry.account,
+        ticker: entry.ticker,
+        name: entry.name,
+        units: entry.units,
+        price,
+        prevClose: price,
+        value,
+        costBase,
+        sector: "Crypto",
+        reportDate: entry.reportDate,
+        importedAt,
+      };
+      index += 1;
+      return holding;
+    })
     .filter((holding): holding is PortfolioHolding => Boolean(holding));
 }
 
@@ -316,6 +439,20 @@ function normalizeTicker(value: string): string {
     .replace(/\s+/g, "")
     .replace(/[^A-Z0-9.-]/g, "")
     .slice(0, 20);
+}
+
+function toCryptoBaseSymbol(value: string): string {
+  const cleaned = value.toUpperCase().trim();
+  if (cleaned.includes("/")) {
+    return cleaned.split("/")[0];
+  }
+  if (cleaned.includes(":")) {
+    return cleaned.split(":")[0];
+  }
+  if (cleaned.includes("-")) {
+    return cleaned.split("-")[0];
+  }
+  return cleaned;
 }
 
 function parseDate(value: string): string | null {
