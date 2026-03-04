@@ -296,6 +296,66 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 .console-lbl{font-family:var(--mono);font-size:.52rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:.25rem}
 .console-val{font-family:var(--disp);font-size:1.6rem;letter-spacing:.04em;color:var(--purple-hi)}
 @media(max-width:600px){.console-grid{grid-template-columns:1fr 1fr}}
+
+/* ── MOBILE CENTERING (in-app dashboard) ── */
+@media(max-width:1024px){
+  .nav-inner{padding:0 1.15rem}
+  .nav-links{display:none}
+  .nav-user{display:none}
+  .nav-right{margin-left:auto}
+  .hero{
+    grid-template-columns:1fr;
+    gap:1.45rem;
+    padding:88px 0 2.4rem;
+  }
+  .hero-left,.meta-panel{
+    width:min(700px,100%);
+    margin:0 auto;
+  }
+}
+@media(max-width:860px){
+  .risk-header{
+    flex-direction:column;
+    align-items:center;
+    gap:1rem;
+    text-align:center;
+  }
+  .window-tabs{
+    justify-content:center;
+    flex-wrap:wrap;
+  }
+}
+@media(max-width:700px){
+  .hero-left{text-align:center}
+  .hero-eyebrow{justify-content:center}
+  .hero-meta{
+    align-items:center;
+    text-align:center;
+  }
+  .meta-row{
+    justify-content:center;
+    flex-wrap:wrap;
+  }
+  .hero-actions{justify-content:center}
+  .kpi-grid-mini{grid-template-columns:1fr}
+  .sec{padding:2.6rem 0}
+  .sec-head{
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+    gap:.55rem;
+  }
+  .sec-line{width:100%}
+  .panel-half-title{justify-content:center}
+  .stress-grid{grid-template-columns:1fr}
+  .foot-inner{
+    justify-content:center;
+    text-align:center;
+  }
+  .alert-form{padding:1rem}
+  .table-wrap{padding-bottom:.35rem}
+  table{min-width:760px}
+}
 </style>
 </head>
 <body>
