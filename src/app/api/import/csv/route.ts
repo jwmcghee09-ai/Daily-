@@ -1,5 +1,5 @@
 import Papa from "papaparse";
-import XLSX from "xlsx";
+import * as XLSX from "xlsx";
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { saveImport } from "@/lib/db";
