@@ -168,14 +168,70 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
 .risk-card{background:linear-gradient(165deg,rgba(16,11,28,.96) 0%,rgba(10,7,18,.95) 100%);padding:1.4rem 1.6rem;transition:all .24s;position:relative}
 .risk-card:hover{background:linear-gradient(165deg,rgba(20,14,34,.97),rgba(14,10,24,.96))}
 .risk-lbl{font-family:var(--mono);font-size:.52rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:.35rem;display:flex;align-items:center;justify-content:space-between}
-.risk-help{font-size:.55rem;color:rgba(138,134,168,.4);cursor:help}
+.risk-help{
+  appearance:none;
+  width:18px;
+  height:18px;
+  border:1px solid rgba(138,134,168,.5);
+  border-radius:50%;
+  background:rgba(10,7,18,.9);
+  color:rgba(214,210,236,.9);
+  font-family:var(--mono);
+  font-size:.56rem;
+  line-height:1;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  position:relative;
+  padding:0;
+}
+.risk-help:hover,.risk-help:focus,.risk-help:focus-visible{border-color:rgba(255,77,26,.45);color:#fff;outline:none}
+.risk-help-tip{
+  position:absolute;
+  right:0;
+  top:calc(100% + 8px);
+  width:min(280px,72vw);
+  padding:.55rem .6rem;
+  border-radius:8px;
+  border:1px solid rgba(255,77,26,.3);
+  background:linear-gradient(140deg,rgba(24,17,38,.98),rgba(12,8,22,.98));
+  color:var(--text);
+  font-family:var(--mono);
+  font-size:.56rem;
+  letter-spacing:.02em;
+  line-height:1.5;
+  text-transform:none;
+  opacity:0;
+  transform:translateY(-2px);
+  pointer-events:none;
+  transition:opacity .18s ease,transform .18s ease;
+  z-index:10;
+  text-align:left;
+}
+.risk-help:hover .risk-help-tip,.risk-help:focus .risk-help-tip,.risk-help:focus-visible .risk-help-tip{opacity:1;transform:translateY(0)}
 .risk-val{font-family:var(--disp);font-size:1.9rem;letter-spacing:.04em;color:var(--text);line-height:1}
 .risk-val.danger{color:var(--orange);text-shadow:0 0 16px rgba(255,77,26,.25)}
 .risk-val.purple{color:var(--purple-hi)}
 .risk-sub{font-family:var(--mono);font-size:.54rem;color:var(--muted);margin-top:.3rem}
 .risk-window{font-family:var(--mono);font-size:.55rem;color:var(--muted);margin-bottom:1rem}
 .risk-window span{color:var(--purple-hi)}
-@media(max-width:860px){.risk-grid{grid-template-columns:repeat(2,1fr)}}
+.risk-estimate-note{
+  margin-bottom:1rem;
+  padding:.65rem .8rem;
+  border-radius:10px;
+  border:1px solid rgba(255,77,26,.3);
+  background:linear-gradient(140deg,rgba(255,77,26,.12),rgba(18,12,32,.9));
+  font-family:var(--mono);
+  font-size:.56rem;
+  letter-spacing:.02em;
+  line-height:1.55;
+  color:#ffd7cf;
+}
+@media(max-width:860px){
+  .risk-grid{grid-template-columns:repeat(2,1fr)}
+  .risk-help-tip{left:0;right:auto;width:min(260px,84vw)}
+}
 
 /* ── CHARTS ── */
 .chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:var(--shadow)}
@@ -727,6 +783,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
           <div class="sec-line"></div>
         </div>
         <div class="risk-window" id="risk-window-label">Window <span>6M</span> — 42 snapshot points from 2025-09-03 to 2026-03-03</div>
+        <div class="risk-estimate-note" id="risk-estimate-note" hidden></div>
       </div>
       <div class="window-tabs">
         <button class="wtab" data-window="3M">3M</button>
@@ -737,44 +794,44 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     </div>
     <div class="risk-grid">
       <div class="risk-card">
-        <div class="risk-lbl">Risk Score <span class="risk-help">?</span></div>
+        <div class="risk-lbl">Risk Score <button type="button" class="risk-help" aria-label="Risk score help">?<span class="risk-help-tip">Composite score from concentration, volatility, drawdown, VaR and benchmark metrics. Higher score means higher portfolio risk.</span></button></div>
         <div class="risk-val danger" id="risk-score">72 / 100</div>
         <div class="risk-sub" id="risk-score-sub">Elevated</div>
       </div>
       <div class="risk-card">
-        <div class="risk-lbl">Concentration (Top 3) <span class="risk-help">?</span></div>
+        <div class="risk-lbl">Concentration (Top 3) <button type="button" class="risk-help" aria-label="Top 3 concentration help">?<span class="risk-help-tip">Top 3 holding values divided by total portfolio value. Higher values mean more single-name concentration risk.</span></button></div>
         <div class="risk-val danger" id="risk-top3">42%</div>
         <div class="risk-sub" id="risk-top3-sub">High concentration</div>
       </div>
       <div class="risk-card">
-        <div class="risk-lbl">1-Day VaR 95% <span class="risk-help">?</span></div>
+        <div class="risk-lbl">1-Day VaR 95% <button type="button" class="risk-help" aria-label="VaR help">?<span class="risk-help-tip">95% historical Value at Risk using the 5th percentile of daily returns in the selected risk window.</span></button></div>
         <div class="risk-val danger" id="risk-var95">−8.4%</div>
-        <div class="risk-sub">Max expected loss</div>
+        <div class="risk-sub" id="risk-var95-sub">Max expected loss</div>
       </div>
       <div class="risk-card">
-        <div class="risk-lbl">Expected Shortfall <span class="risk-help">?</span></div>
+        <div class="risk-lbl">Expected Shortfall <button type="button" class="risk-help" aria-label="Expected shortfall help">?<span class="risk-help-tip">Average loss inside the worst 5% of daily returns in the selected risk window.</span></button></div>
         <div class="risk-val danger" id="risk-cvar95">−9.9%</div>
-        <div class="risk-sub">CVaR beyond VaR</div>
+        <div class="risk-sub" id="risk-cvar95-sub">CVaR beyond VaR</div>
       </div>
       <div class="risk-card">
-        <div class="risk-lbl">Max Drawdown <span class="risk-help">?</span></div>
+        <div class="risk-lbl">Max Drawdown <button type="button" class="risk-help" aria-label="Max drawdown help">?<span class="risk-help-tip">Largest peak-to-trough decline observed inside the selected risk window.</span></button></div>
         <div class="risk-val danger" id="risk-max-drawdown">−12.1%</div>
-        <div class="risk-sub">Worst peak to trough</div>
+        <div class="risk-sub" id="risk-max-drawdown-sub">Worst peak to trough</div>
       </div>
       <div class="risk-card">
-        <div class="risk-lbl">Volatility (Ann.) <span class="risk-help">?</span></div>
+        <div class="risk-lbl">Volatility (Ann.) <button type="button" class="risk-help" aria-label="Volatility help">?<span class="risk-help-tip">Standard deviation of daily returns, annualised using sqrt(252).</span></button></div>
         <div class="risk-val" id="risk-volatility">18.4%</div>
-        <div class="risk-sub">Annualised std dev</div>
+        <div class="risk-sub" id="risk-volatility-sub">Annualised std dev</div>
       </div>
       <div class="risk-card">
-        <div class="risk-lbl">Beta vs ASX 200 <span class="risk-help">?</span></div>
+        <div class="risk-lbl">Beta vs ASX 200 <button type="button" class="risk-help" aria-label="Beta help">?<span class="risk-help-tip">Sensitivity of portfolio returns to ASX 200 returns from date-aligned daily history.</span></button></div>
         <div class="risk-val purple" id="risk-beta">1.18</div>
-        <div class="risk-sub">Market sensitivity</div>
+        <div class="risk-sub" id="risk-beta-sub">Market sensitivity</div>
       </div>
       <div class="risk-card">
-        <div class="risk-lbl">Tracking Error <span class="risk-help">?</span></div>
+        <div class="risk-lbl">Tracking Error <button type="button" class="risk-help" aria-label="Tracking error help">?<span class="risk-help-tip">Standard deviation of active return (portfolio return minus ASX 200 return), annualised from daily data.</span></button></div>
         <div class="risk-val" id="risk-tracking-error">14.2%</div>
-        <div class="risk-sub">vs benchmark</div>
+        <div class="risk-sub" id="risk-tracking-error-sub">vs benchmark</div>
       </div>
     </div>
   </section>
@@ -1013,6 +1070,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   const SOURCE_LABEL = { super: "SUPER", asx: "ASX", gold: "GOLD", index: "INDEX", fund: "FUND", crypto: "CRYPTO" };
   const SOURCE_BADGE = { super: "super", asx: "asx", gold: "gold", index: "fund", fund: "fund", crypto: "crypto" };
   const RISK_WINDOW_DAYS = { "1M": 31, "3M": 92, "6M": 183, "1Y": 366 };
+  const RISK_API_WINDOW_MAP = { "1M": "1M", "3M": "3M", "6M": "1Y", "1Y": "1Y", "ALL": "1Y" };
 
   const state = {
     sessionUser: null,
@@ -1541,7 +1599,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   }
 
   async function loadHistoricalRisk() {
-    const apiWindow = state.riskWindow === "1Y" ? "1Y" : "3M";
+    const apiWindow = RISK_API_WINDOW_MAP[state.riskWindow] || "3M";
     try {
       state.historicalRiskEstimate = await apiJson(`/api/risk/estimate?window=${apiWindow}`, { method: "POST" });
     } catch {
@@ -1600,6 +1658,12 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     const effectiveVolatilityPct = metrics.volatilityAnnualPct ?? state.historicalRiskEstimate?.volatilityAnnualPct ?? null;
     const effectiveBeta = state.historicalRiskEstimate?.betaToBenchmark ?? null;
     const effectiveTrackingError = state.historicalRiskEstimate?.trackingErrorAnnualPct ?? null;
+    const usingYahooVar95 = metrics.var95Pct == null && Number.isFinite(state.historicalRiskEstimate?.var95Pct);
+    const usingYahooCvar95 = metrics.cvar95Pct == null && Number.isFinite(state.historicalRiskEstimate?.cvar95Pct);
+    const usingYahooDrawdown = metrics.maxDrawdownPct == null && Number.isFinite(state.historicalRiskEstimate?.maxDrawdownPct);
+    const usingYahooVolatility = metrics.volatilityAnnualPct == null && Number.isFinite(state.historicalRiskEstimate?.volatilityAnnualPct);
+    const usingYahooBeta = Number.isFinite(state.historicalRiskEstimate?.betaToBenchmark);
+    const usingYahooTrackingError = Number.isFinite(state.historicalRiskEstimate?.trackingErrorAnnualPct);
     const riskScore = computeRiskScore(metrics, metrics.dailyReturns.length);
 
     const latestReportDate = holdings.reduce((max, item) => (String(item.reportDate || "") > String(max) ? item.reportDate : max), "");
@@ -1653,6 +1717,12 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     setText("risk-volatility", effectiveVolatilityPct != null ? formatPercent(effectiveVolatilityPct, { decimals: 1 }) : "—");
     setText("risk-beta", Number.isFinite(effectiveBeta) ? Number(effectiveBeta).toFixed(2) : "—");
     setText("risk-tracking-error", Number.isFinite(effectiveTrackingError) ? formatPercent(effectiveTrackingError, { decimals: 1 }) : "—");
+    setText("risk-var95-sub", usingYahooVar95 ? "Yahoo estimate fallback" : "Max expected loss");
+    setText("risk-cvar95-sub", usingYahooCvar95 ? "Yahoo estimate fallback" : "CVaR beyond VaR");
+    setText("risk-max-drawdown-sub", usingYahooDrawdown ? "Yahoo estimate fallback" : "Worst peak to trough");
+    setText("risk-volatility-sub", usingYahooVolatility ? "Yahoo estimate fallback" : "Annualised std dev");
+    setText("risk-beta-sub", usingYahooBeta ? "Yahoo estimate vs ASX 200" : "Market sensitivity");
+    setText("risk-tracking-error-sub", usingYahooTrackingError ? "Yahoo estimate vs ASX 200" : "vs benchmark");
 
     setText("pro-expected-shortfall", effectiveCvar95Pct != null ? formatPercent(effectiveCvar95Pct, { negative: true, decimals: 1 }) : "—");
     setText("pro-beta", Number.isFinite(effectiveBeta) ? Number(effectiveBeta).toFixed(2) : "—");
@@ -1674,6 +1744,40 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     const riskLabel = document.getElementById("risk-window-label");
     if (riskLabel) {
       riskLabel.innerHTML = `Window <span>${escapeHtml(riskWindowText)}</span> — ${points} snapshot points from ${escapeHtml(startDate)} to ${escapeHtml(endDate)}`;
+    }
+    const estimateNote = document.getElementById("risk-estimate-note");
+    if (estimateNote) {
+      const estimate = state.historicalRiskEstimate;
+      const shouldShowEstimate =
+        Boolean(estimate?.note) &&
+        (
+          usingYahooVar95 ||
+          usingYahooCvar95 ||
+          usingYahooDrawdown ||
+          usingYahooVolatility ||
+          usingYahooBeta ||
+          usingYahooTrackingError
+        );
+      if (shouldShowEstimate) {
+        const details = [];
+        if (Number.isFinite(estimate.pointsUsed) && Number.isFinite(estimate.pointsTarget)) {
+          details.push(`${estimate.pointsUsed}/${estimate.pointsTarget} points`);
+        }
+        if (Array.isArray(estimate.usedTickers)) {
+          details.push(`${estimate.usedTickers.length} tickers`);
+        }
+        if (Number.isFinite(estimate.benchmarkPointsUsed)) {
+          details.push(`${estimate.benchmarkPointsUsed} benchmark days`);
+        }
+        const requestWindow = state.riskWindow;
+        const yahooWindow = estimate.riskWindow || (RISK_API_WINDOW_MAP[requestWindow] || "3M");
+        const windowMessage = yahooWindow !== requestWindow ? `Yahoo proxy window ${yahooWindow} used for ${requestWindow}. ` : "";
+        estimateNote.hidden = false;
+        estimateNote.textContent = `${windowMessage}${estimate.note}${details.length ? ` (${details.join(", ")})` : ""}`;
+      } else {
+        estimateNote.hidden = true;
+        estimateNote.textContent = "";
+      }
     }
 
     const qualityValues = Array.from(document.querySelectorAll(".quality-card .quality-val"));
