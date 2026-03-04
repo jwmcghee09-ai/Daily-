@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { CSSProperties, ChangeEvent, FormEvent, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Papa, { ParseError } from "papaparse";
+import * as XLSX from "xlsx";
 import {
   Area,
   AreaChart,
@@ -68,6 +69,8 @@ const AUTO_REFRESH_INTERVAL_MS = 5 * 60 * 1000;
 const AUTO_REFRESH_RESUME_GRACE_MS = 20 * 1000;
 const ADMIN_CONTACT_EMAIL = "admin@spectre-assets.com";
 const LANDING_SAMPLE_RISK_SCORE = 72;
+const TEXT_UPLOAD_EXTENSIONS = new Set(["csv", "txt", "tsv"]);
+const WORKBOOK_UPLOAD_EXTENSIONS = new Set(["xlsx", "xls", "numbers", "ods"]);
 
 const LANDING_PREVIEW_SERIES = [
   { month: "Jan", portfolio: 1180000, buffer: 1100000 },
@@ -1212,11 +1215,12 @@ export default function Home() {
     setWorking(true);
 
     try {
-      const csvText = await file.text();
+      const csvText = await readUploadFileAsCsvText(file);
       const cleanCsvText = extractCsvDataSection(csvText);
       const parsed = Papa.parse<CsvRow>(cleanCsvText, {
         header: true,
         skipEmptyLines: "greedy",
+        delimiter: "",
         transformHeader: (header) => header.trim(),
       });
 
@@ -1225,7 +1229,7 @@ export default function Home() {
       if (holdings.length === 0) {
         setBanner({
           type: "error",
-          message: "No valid holdings were found. Check that your CSV includes value/price/units (or weight) columns.",
+          message: "No valid holdings were found. Check that your file includes value/price/units (or weight) columns.",
         });
         event.target.value = "";
         return;
@@ -1705,7 +1709,7 @@ export default function Home() {
             <div className="spectre-wrap">
               <p className="spectre-section-label orange">SPECTRE OPS</p>
               <h2 className="spectre-section-title">From CSV to <span>risk clarity.</span></h2>
-              <p className="spectre-section-sub">Upload CSV, normalize holdings, then review risk score and exposure metrics. Purpose-built for Australian investors managing multi-source portfolios.</p>
+              <p className="spectre-section-sub">Upload files, normalize holdings, then review risk score and exposure metrics. Purpose-built for Australian investors managing multi-source portfolios.</p>
 
               <div className="spectre-ops-grid">
                 <article><p>01</p><h3>Import</h3><span>Import super, ASX, crypto, index, mutual fund, and bullion CSV exports.</span></article>
@@ -2201,7 +2205,7 @@ export default function Home() {
 
       <section id="uploads" className="upload-grid">
         <UploadCard
-          title="Super Report (CSV)"
+          title="Super Report File"
           description="Upload your superannuation holdings export."
           help="Imports super holdings into account, ticker, units, price, value, and cost base fields."
           onUpload={(event) => onUpload(event, "super")}
@@ -2210,7 +2214,7 @@ export default function Home() {
           disabled={working || loading}
         />
         <UploadCard
-          title="ASX Report (CSV)"
+          title="ASX Report File"
           description="Upload brokerage or watchlist holdings export."
           help="Imports ASX holdings and enables live quote refresh for pricing and daily portfolio movement."
           onUpload={(event) => onUpload(event, "asx")}
@@ -2219,7 +2223,7 @@ export default function Home() {
           disabled={working || loading}
         />
         <UploadCard
-          title="Index Report (CSV)"
+          title="Index Report File"
           description="Upload index holdings or benchmark positions."
           help="Imports index or benchmark positions so they are included in value, allocation, and risk views."
           onUpload={(event) => onUpload(event, "index")}
@@ -2228,7 +2232,7 @@ export default function Home() {
           disabled={working || loading}
         />
         <UploadCard
-          title="Mutual Fund Report (CSV)"
+          title="Mutual Fund Report File"
           description="Upload managed fund or mutual fund holdings."
           help="Imports managed fund holdings and includes them in total value, cost base, and portfolio analytics."
           onUpload={(event) => onUpload(event, "fund")}
@@ -2237,7 +2241,7 @@ export default function Home() {
           disabled={working || loading}
         />
         <UploadCard
-          title="Crypto Report (CSV)"
+          title="Crypto Report File"
           description="Upload crypto wallet or exchange holdings."
           help="Imports crypto holdings and refreshes live prices using Yahoo crypto pairs (for example BTC-USD)."
           onUpload={(event) => onUpload(event, "crypto")}
@@ -2246,7 +2250,7 @@ export default function Home() {
           disabled={working || loading}
         />
         <UploadCard
-          title="ABC Bullion Report (Gold/Silver CSV)"
+          title="ABC Bullion Report File"
           description="Upload ABC Bullion gold/silver holdings. Put metal weight in units/weight (oz or grams)."
           help="Imports gold and silver holdings by metal weight and tracks bullion exposure alongside other assets."
           onUpload={(event) => onUpload(event, "gold")}
@@ -2808,8 +2812,13 @@ function UploadCard({
       <h2>{title}</h2>
       <p>{description}</p>
       <label className="file-input">
-        <input type="file" accept=".csv,text/csv" onChange={onUpload} disabled={disabled} />
-        <span>{disabled ? "Please wait..." : "Select CSV"}</span>
+        <input
+          type="file"
+          accept=".csv,.tsv,.txt,.xlsx,.xls,.numbers,.ods,text/csv,text/tab-separated-values,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,application/vnd.oasis.opendocument.spreadsheet,application/x-iwork-numbers-sffnumbers"
+          onChange={onUpload}
+          disabled={disabled}
+        />
+        <span>{disabled ? "Please wait..." : "Select File"}</span>
       </label>
       <button type="button" onClick={downloadTemplate} className="template-btn" disabled={disabled}>
         Download template
@@ -3180,6 +3189,39 @@ function toCheckoutPlan(value: string | null): CheckoutPlan {
   }
 
   return "starter";
+}
+
+function getFileExtension(fileName: string): string {
+  const trimmed = fileName.trim();
+  const dotIndex = trimmed.lastIndexOf(".");
+  if (dotIndex < 0 || dotIndex === trimmed.length - 1) {
+    return "";
+  }
+  return trimmed.slice(dotIndex + 1).toLowerCase();
+}
+
+async function readUploadFileAsCsvText(file: File): Promise<string> {
+  const extension = getFileExtension(file.name);
+  if (TEXT_UPLOAD_EXTENSIONS.has(extension)) {
+    return await file.text();
+  }
+
+  if (WORKBOOK_UPLOAD_EXTENSIONS.has(extension)) {
+    const workbook = XLSX.read(await file.arrayBuffer(), { type: "array", dense: true });
+    const firstSheet = workbook.SheetNames[0];
+    if (!firstSheet) {
+      throw new Error("Workbook file has no sheets.");
+    }
+
+    const worksheet = workbook.Sheets[firstSheet];
+    if (!worksheet) {
+      throw new Error("Workbook sheet could not be read.");
+    }
+
+    return XLSX.utils.sheet_to_csv(worksheet, { blankrows: false });
+  }
+
+  throw new Error("Unsupported file type. Use CSV, TSV, TXT, XLSX, XLS, NUMBERS, or ODS.");
 }
 
 async function parseApiError(response: Response, fallback: string): Promise<string> {

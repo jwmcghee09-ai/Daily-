@@ -458,43 +458,43 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       <div class="sec-line"></div>
       <span class="sec-label" id="uploads-source-count">6 sources</span>
     </div>
-    <input id="upload-file-input" type="file" accept=".csv,text/csv" style="display:none" />
+    <input id="upload-file-input" type="file" accept=".csv,.tsv,.txt,.xlsx,.xls,.numbers,.ods,text/csv,text/tab-separated-values,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,application/vnd.oasis.opendocument.spreadsheet,application/x-iwork-numbers-sffnumbers" style="display:none" />
     <div class="upload-grid">
       <div class="upload-card" data-source="super">
         <div class="upload-num">01 — Super</div>
         <div class="upload-title">Super Report</div>
         <div class="upload-desc">Upload your superannuation holdings export CSV.</div>
-        <div class="upload-action">Upload CSV</div>
+        <div class="upload-action">Upload File</div>
       </div>
       <div class="upload-card" data-source="asx">
         <div class="upload-num">02 — ASX</div>
         <div class="upload-title">ASX Holdings</div>
         <div class="upload-desc">Upload brokerage or watchlist holdings export.</div>
-        <div class="upload-action">Upload CSV</div>
+        <div class="upload-action">Upload File</div>
       </div>
       <div class="upload-card" data-source="index">
         <div class="upload-num">03 — Index</div>
         <div class="upload-title">Index Report</div>
         <div class="upload-desc">Upload index or benchmark positions CSV.</div>
-        <div class="upload-action">Upload CSV</div>
+        <div class="upload-action">Upload File</div>
       </div>
       <div class="upload-card" data-source="fund">
         <div class="upload-num">04 — Funds</div>
         <div class="upload-title">Mutual Fund</div>
         <div class="upload-desc">Upload managed fund or ETF holdings export.</div>
-        <div class="upload-action">Upload CSV</div>
+        <div class="upload-action">Upload File</div>
       </div>
       <div class="upload-card" data-source="crypto">
         <div class="upload-num">05 — Crypto</div>
         <div class="upload-title">Crypto Report</div>
         <div class="upload-desc">Upload crypto holdings or exchange export CSV.</div>
-        <div class="upload-action">Upload CSV</div>
+        <div class="upload-action">Upload File</div>
       </div>
       <div class="upload-card" data-source="gold">
         <div class="upload-num">06 — Bullion</div>
         <div class="upload-title">ABC Bullion</div>
         <div class="upload-desc">Upload ABC Bullion gold and silver holdings CSV.</div>
-        <div class="upload-action">Upload CSV</div>
+        <div class="upload-action">Upload File</div>
       </div>
     </div>
   </section>
@@ -1902,19 +1902,61 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     }
   }
 
-  async function uploadCsvFile(file) {
+  const TEXT_UPLOAD_EXTENSIONS = new Set(["csv", "txt", "tsv"]);
+  const SUPPORTED_UPLOAD_EXTENSIONS = new Set(["csv", "txt", "tsv", "xlsx", "xls", "numbers", "ods"]);
+
+  function getFileExtension(fileName) {
+    const dotIndex = fileName.lastIndexOf(".");
+    if (dotIndex < 0 || dotIndex === fileName.length - 1) {
+      return "";
+    }
+    return fileName.slice(dotIndex + 1).toLowerCase();
+  }
+
+  function arrayBufferToBase64(buffer) {
+    const bytes = new Uint8Array(buffer);
+    const chunkSize = 0x8000;
+    let binary = "";
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      const slice = bytes.subarray(i, i + chunkSize);
+      binary += String.fromCharCode(...slice);
+    }
+    return btoa(binary);
+  }
+
+  async function uploadReportFile(file) {
     if (!file || !state.uploadSource) return;
-    const text = await file.text();
-    if (!text.trim()) {
-      showToast("CSV file is empty.", "error");
+    const extension = getFileExtension(file.name);
+    if (!SUPPORTED_UPLOAD_EXTENSIONS.has(extension)) {
+      showToast("Unsupported file type. Use CSV, TSV, TXT, XLSX, XLS, NUMBERS, or ODS.", "error");
       return;
     }
-    showToast("Uploading CSV...");
+
+    const payload = { source: state.uploadSource };
+
+    if (TEXT_UPLOAD_EXTENSIONS.has(extension)) {
+      const text = await file.text();
+      if (!text.trim()) {
+        showToast("Text report file is empty.", "error");
+        return;
+      }
+      payload.csvText = text;
+    } else {
+      const arrayBuffer = await file.arrayBuffer();
+      if (!arrayBuffer || arrayBuffer.byteLength === 0) {
+        showToast("Workbook file is empty.", "error");
+        return;
+      }
+      payload.fileName = file.name;
+      payload.fileBase64 = arrayBufferToBase64(arrayBuffer);
+    }
+
+    showToast("Uploading report...");
     try {
       state.portfolio = await apiJson("/api/import/csv", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ source: state.uploadSource, csvText: text }),
+        body: JSON.stringify(payload),
       });
       await loadHistoricalRisk();
       renderPortfolio();
@@ -1966,7 +2008,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       if (!(target instanceof HTMLInputElement)) return;
       const file = target.files && target.files[0];
       if (file) {
-        await uploadCsvFile(file);
+        await uploadReportFile(file);
       }
     });
   }
