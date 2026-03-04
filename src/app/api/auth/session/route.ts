@@ -21,6 +21,7 @@ export async function GET() {
       id: sessionUser.id,
       email: sessionUser.email,
       displayName: sessionUser.displayName,
+      createdAt: sessionUser.createdAt,
       planTier: entitlements.planTier,
       proEnabled: entitlements.proEnabled,
       subscriptionStatus: entitlements.subscriptionStatus,

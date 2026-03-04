@@ -183,6 +183,7 @@ interface SessionUser {
   id: string;
   email: string;
   displayName: string;
+  createdAt?: string;
   planTier: "none" | "starter" | "pro";
   proEnabled: boolean;
   subscriptionStatus: string | null;
@@ -204,6 +205,10 @@ interface VerificationResendResponse {
 }
 
 interface BillingCheckoutResponse {
+  url?: string;
+}
+
+interface BillingPortalResponse {
   url?: string;
 }
 
@@ -258,6 +263,7 @@ export default function Home() {
   const [authWorking, setAuthWorking] = useState(false);
   const [authError, setAuthError] = useState("");
   const [checkoutWorking, setCheckoutWorking] = useState(false);
+  const [billingPortalWorking, setBillingPortalWorking] = useState(false);
   const [landingMenuOpen, setLandingMenuOpen] = useState(false);
   const [dipAlerts, setDipAlerts] = useState<PriceDipAlertSetting[]>([]);
   const [availableDipTickers, setAvailableDipTickers] = useState<string[]>([]);
@@ -765,6 +771,13 @@ export default function Home() {
   const dipAlertPlanMessage = proAnalyticsEnabled
     ? `Pro plan: up to ${dipAlertMax} active dip alerts.`
     : `Starter plan: up to ${dipAlertMax} active dip alerts. Upgrade to Pro for more coverage.`;
+  const hasMembership =
+    (sessionUser?.subscriptionStatus || "").trim().length > 0 || (sessionUser?.planTier ?? "none") !== "none";
+  const settingsMembershipStatus = sessionUser?.subscriptionStatus
+    ? sessionUser.subscriptionStatus.toUpperCase()
+    : hasMembership
+      ? "ACTIVE"
+      : "NOT ACTIVE";
   const usingYahooFallback = metrics.var95Amount == null && historicalRiskEstimate != null;
   const riskReturnsUsed = usingYahooFallback ? (historicalRiskEstimate?.returnsCount ?? 0) : metrics.dailyReturns.length;
 
@@ -1330,6 +1343,30 @@ export default function Home() {
 
   const startProCheckout = async (guestEmail?: string) => {
     await startCheckout("pro", guestEmail);
+  };
+
+  const openBillingPortal = async () => {
+    setBillingPortalWorking(true);
+
+    try {
+      const response = await fetch("/api/billing/portal", { method: "POST" });
+      if (!response.ok) {
+        throw new Error(await parseApiError(response, "Unable to open billing settings."));
+      }
+
+      const payload = (await response.json()) as BillingPortalResponse;
+      if (!payload.url) {
+        throw new Error("Billing portal URL was missing.");
+      }
+
+      window.location.assign(payload.url);
+    } catch (error) {
+      setBanner({ type: "error", message: error instanceof Error ? error.message : "Unable to open billing settings." });
+      setBillingPortalWorking(false);
+      return;
+    }
+
+    setBillingPortalWorking(false);
   };
 
   const submitAuth = async (event: FormEvent<HTMLFormElement>) => {
@@ -2016,6 +2053,7 @@ export default function Home() {
         <div className="spectre-app-nav-inner">
           <a href="#dashboard-top" className="spectre-app-nav-logo">SPECTRE</a>
           <div className="spectre-app-nav-links">
+            <a href="#settings">Settings</a>
             <a href="#uploads">Uploads</a>
             <a href="#metrics">Metrics</a>
             <a href="#risk">Risk</a>
@@ -2025,7 +2063,7 @@ export default function Home() {
           </div>
           <div className="nav-right">
             <span className="nav-user">{sessionUser.email}</span>
-            <button type="button" className="nav-signout" onClick={logout} disabled={working || refreshingPrices || checkoutWorking}>
+            <button type="button" className="nav-signout" onClick={logout} disabled={working || refreshingPrices || checkoutWorking || billingPortalWorking}>
               Sign Out
             </button>
           </div>
@@ -2091,7 +2129,77 @@ export default function Home() {
 
       {banner ? <div className={`banner ${banner.type}`}>{banner.message}</div> : null}
 
-      
+      <section id="settings" className="settings-section">
+        <div className="settings-head">
+          <h2>Settings</h2>
+          <p>View account details, manage membership, and contact support.</p>
+        </div>
+        <div className="settings-grid">
+          <article className="settings-card">
+            <h3>Account Details</h3>
+            <div className="settings-rows">
+              <p><span>Name</span><strong>{sessionUser.displayName}</strong></p>
+              <p><span>Email</span><strong>{sessionUser.email}</strong></p>
+              <p><span>Plan</span><strong>{sessionUser.proEnabled ? "PRO" : sessionUser.planTier.toUpperCase()}</strong></p>
+              <p><span>Membership Status</span><strong>{settingsMembershipStatus}</strong></p>
+              <p>
+                <span>Member Since</span>
+                <strong>
+                  {sessionUser.createdAt && !Number.isNaN(new Date(sessionUser.createdAt).getTime())
+                    ? new Date(sessionUser.createdAt).toLocaleDateString("en-AU", { year: "numeric", month: "short", day: "2-digit" })
+                    : "N/A"}
+                </strong>
+              </p>
+            </div>
+          </article>
+
+          <article className="settings-card">
+            <h3>Membership</h3>
+            <p className="settings-note">
+              Open Stripe billing to manage payment details, invoices, and cancel your membership.
+            </p>
+            <div className="settings-actions">
+              {hasMembership ? (
+                <button
+                  type="button"
+                  className="refresh-btn"
+                  onClick={() => void openBillingPortal()}
+                  disabled={billingPortalWorking || working || refreshingPrices || checkoutWorking}
+                >
+                  {billingPortalWorking ? "Opening..." : "Manage / Cancel Membership"}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="refresh-btn"
+                  onClick={() => void startStarterCheckout(sessionUser.email)}
+                  disabled={billingPortalWorking || working || refreshingPrices || checkoutWorking}
+                >
+                  {checkoutWorking ? "Redirecting..." : "Start Membership ($3/mo)"}
+                </button>
+              )}
+              {!sessionUser.proEnabled ? (
+                <button
+                  type="button"
+                  className="template-btn"
+                  onClick={() => void startProCheckout(sessionUser.email)}
+                  disabled={billingPortalWorking || working || refreshingPrices || checkoutWorking}
+                >
+                  {checkoutWorking ? "Redirecting..." : "Upgrade to Pro"}
+                </button>
+              ) : null}
+            </div>
+          </article>
+
+          <article className="settings-card">
+            <h3>Contact Us</h3>
+            <p className="settings-note">Need help with account access, imports, or billing?</p>
+            <a className="settings-email" href={`mailto:${ADMIN_CONTACT_EMAIL}`}>{ADMIN_CONTACT_EMAIL}</a>
+            <p className="settings-note settings-note-small">Support email is available directly inside your program settings.</p>
+          </article>
+        </div>
+      </section>
+
       <section id="uploads" className="upload-grid">
         <UploadCard
           title="Super Report (CSV)"
@@ -3056,9 +3164,11 @@ function normalizeSessionUser(user: SessionUser): SessionUser {
   const planTier = user.planTier === "pro" ? "pro" : user.planTier === "starter" ? "starter" : "none";
   const proEnabled = user.proEnabled === true || planTier === "pro";
   const subscriptionStatus = typeof user.subscriptionStatus === "string" && user.subscriptionStatus.length > 0 ? user.subscriptionStatus : null;
+  const createdAt = typeof user.createdAt === "string" && user.createdAt.length > 0 ? user.createdAt : undefined;
 
   return {
     ...user,
+    createdAt,
     planTier,
     proEnabled,
     subscriptionStatus,
