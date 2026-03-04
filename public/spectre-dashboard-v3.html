@@ -804,6 +804,31 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
         <div class="risk-sub" id="risk-top3-sub">High concentration</div>
       </div>
       <div class="risk-card">
+        <div class="risk-lbl">Portfolio Concentration (HHI) <button type="button" class="risk-help" aria-label="HHI concentration help">?<span class="risk-help-tip">Herfindahl-Hirschman Index: sum of squared holding weights multiplied by 10,000. Higher values mean concentration in fewer positions.</span></button></div>
+        <div class="risk-val" id="risk-hhi">1,820</div>
+        <div class="risk-sub" id="risk-hhi-sub">Moderate concentration</div>
+      </div>
+      <div class="risk-card">
+        <div class="risk-lbl">Relative Strength Index (RSI) <button type="button" class="risk-help" aria-label="RSI help">?<span class="risk-help-tip">RSI (0-100) measures speed and magnitude of recent price changes. Above 70 can indicate overbought risk, below 30 can indicate oversold conditions.</span></button></div>
+        <div class="risk-val" id="risk-rsi">56.2</div>
+        <div class="risk-sub" id="risk-rsi-sub">Neutral range</div>
+      </div>
+      <div class="risk-card">
+        <div class="risk-lbl">Stochastic Oscillator <button type="button" class="risk-help" aria-label="Stochastic oscillator help">?<span class="risk-help-tip">Stochastic (0-100) compares the latest close to the recent range. Above 80 can indicate overbought conditions, below 20 can indicate oversold conditions.</span></button></div>
+        <div class="risk-val" id="risk-stochastic">61.8</div>
+        <div class="risk-sub" id="risk-stochastic-sub">Neutral range</div>
+      </div>
+      <div class="risk-card">
+        <div class="risk-lbl">Williams %R <button type="button" class="risk-help" aria-label="Williams percent R help">?<span class="risk-help-tip">Williams %R (0 to -100) is similar to stochastic. -20 to 0 can indicate overbought conditions, -80 to -100 can indicate oversold conditions.</span></button></div>
+        <div class="risk-val" id="risk-williams-r">−38.2</div>
+        <div class="risk-sub" id="risk-williams-r-sub">Neutral range</div>
+      </div>
+      <div class="risk-card">
+        <div class="risk-lbl">On-Balance Volume (OBV) <button type="button" class="risk-help" aria-label="OBV help">?<span class="risk-help-tip">OBV tracks directional flow to infer buying/selling pressure. This portfolio-level OBV uses snapshot value-flow as a proxy because raw traded volume is not uploaded.</span></button></div>
+        <div class="risk-val" id="risk-obv">+0</div>
+        <div class="risk-sub" id="risk-obv-sub">Flat flow</div>
+      </div>
+      <div class="risk-card">
         <div class="risk-lbl">1-Day VaR 95% <button type="button" class="risk-help" aria-label="VaR help">?<span class="risk-help-tip">95% historical Value at Risk using the 5th percentile of daily returns in the selected risk window.</span></button></div>
         <div class="risk-val danger" id="risk-var95">−8.4%</div>
         <div class="risk-sub" id="risk-var95-sub">Max expected loss</div>
@@ -1179,6 +1204,18 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     return opts.negative ? `−${rendered}` : rendered;
   }
 
+  function formatSignedCompact(value, opts = {}) {
+    if (!Number.isFinite(value)) return "—";
+    if (value === 0) return "0";
+    const rendered = new Intl.NumberFormat("en-AU", {
+      notation: "compact",
+      compactDisplay: "short",
+      minimumFractionDigits: opts.decimals ?? 0,
+      maximumFractionDigits: opts.decimals ?? 1,
+    }).format(Math.abs(value));
+    return `${value > 0 ? "+" : "−"}${rendered}`;
+  }
+
   function toDate(value) {
     const parsed = new Date(value);
     return Number.isNaN(parsed.getTime()) ? null : parsed;
@@ -1260,6 +1297,70 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     return sum(tail) / tail.length;
   }
 
+  function computeRsi(values, period = 14) {
+    const closes = values.filter(Number.isFinite);
+    if (closes.length <= period) return null;
+    const start = Math.max(1, closes.length - period);
+    let gains = 0;
+    let losses = 0;
+    for (let i = start; i < closes.length; i += 1) {
+      const change = closes[i] - closes[i - 1];
+      if (change > 0) gains += change;
+      if (change < 0) losses += Math.abs(change);
+    }
+    const avgGain = gains / period;
+    const avgLoss = losses / period;
+    if (avgLoss === 0 && avgGain === 0) return 50;
+    if (avgLoss === 0) return 100;
+    const rs = avgGain / avgLoss;
+    return 100 - (100 / (1 + rs));
+  }
+
+  function computeStochastic(values, period = 14) {
+    const closes = values.filter(Number.isFinite);
+    if (closes.length < period) return null;
+    const window = closes.slice(-period);
+    const lowest = Math.min(...window);
+    const highest = Math.max(...window);
+    const current = closes[closes.length - 1];
+    if (!Number.isFinite(lowest) || !Number.isFinite(highest) || !Number.isFinite(current)) return null;
+    if (highest === lowest) return 50;
+    return clamp(((current - lowest) / (highest - lowest)) * 100, 0, 100);
+  }
+
+  function computeWilliamsR(values, period = 14) {
+    const closes = values.filter(Number.isFinite);
+    if (closes.length < period) return null;
+    const window = closes.slice(-period);
+    const lowest = Math.min(...window);
+    const highest = Math.max(...window);
+    const current = closes[closes.length - 1];
+    if (!Number.isFinite(lowest) || !Number.isFinite(highest) || !Number.isFinite(current)) return null;
+    if (highest === lowest) return -50;
+    return -100 * ((highest - current) / (highest - lowest));
+  }
+
+  function computeObvProxy(values) {
+    const closes = values.filter(Number.isFinite);
+    if (closes.length < 2) {
+      return { value: null, trend: "Needs more history" };
+    }
+    let obv = 0;
+    const series = [0];
+    for (let i = 1; i < closes.length; i += 1) {
+      const prev = closes[i - 1];
+      const current = closes[i];
+      const flowMagnitude = Math.abs(current - prev);
+      if (current > prev) obv += flowMagnitude;
+      if (current < prev) obv -= flowMagnitude;
+      series.push(obv);
+    }
+    const lookback = Math.min(5, series.length - 1);
+    const trendDelta = lookback > 0 ? series[series.length - 1] - series[series.length - 1 - lookback] : 0;
+    const trend = trendDelta > 0 ? "Rising buying pressure" : trendDelta < 0 ? "Falling buying pressure" : "Flat flow";
+    return { value: obv, trend };
+  }
+
   function resolveHoldingUnits(units, value, price) {
     if (Number.isFinite(units) && units > 0) return units;
     if (Number.isFinite(value) && Number.isFinite(price) && value > 0 && price > 0) return value / price;
@@ -1278,6 +1379,12 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       pnl: (holding.value || 0) - (holding.costBase || 0),
     }));
     const top3ConcentrationPct = totalValue > 0 ? (sum(sortedHoldings.slice(0, 3).map((item) => item.value || 0)) / totalValue) * 100 : 0;
+    const hhi = totalValue > 0
+      ? sum(holdings.map((item) => {
+        const weight = (Number(item.value) || 0) / totalValue;
+        return weight * weight;
+      })) * 10000
+      : 0;
     const accountAllocation = buildAllocation(holdings, "account", totalValue);
     const sectorAllocation = buildAllocation(holdings, "sector", totalValue);
     const largestAccountPct = accountAllocation.length > 0 ? accountAllocation[0].pct : 0;
@@ -1303,6 +1410,11 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     const var95Pct = var95Raw != null ? Math.max(0, -var95Raw * 100) : null;
     const cvar95Raw = dailyReturns.length >= 20 ? expectedShortfall95(dailyReturns) : null;
     const cvar95Pct = cvar95Raw != null ? Math.max(0, -cvar95Raw * 100) : null;
+    const riskValues = riskHistory.map((item) => Number(item.value)).filter((value) => Number.isFinite(value) && value > 0);
+    const rsi14 = computeRsi(riskValues, 14);
+    const stochastic14 = computeStochastic(riskValues, 14);
+    const williamsR14 = computeWilliamsR(riskValues, 14);
+    const obv = computeObvProxy(riskValues);
 
     return {
       totalValue,
@@ -1310,6 +1422,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       pnl,
       pnlPct,
       top3ConcentrationPct,
+      hhi,
       largestAccountPct,
       topHoldings,
       accountAllocation,
@@ -1323,6 +1436,11 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       maxDrawdownPct,
       var95Pct,
       cvar95Pct,
+      rsi14,
+      stochastic14,
+      williamsR14,
+      obvValue: obv.value,
+      obvTrend: obv.trend,
       riskPointsUsed: riskHistory.length,
       riskStartDate: riskHistory.length > 0 ? riskHistory[0].date : null,
       riskEndDate: riskHistory.length > 0 ? riskHistory[riskHistory.length - 1].date : null,
@@ -1711,6 +1829,64 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     setText("risk-score-sub", riskScore ? riskScore.label : "Insufficient history");
     setText("risk-top3", formatPercent(metrics.top3ConcentrationPct, { decimals: 1 }));
     setText("risk-top3-sub", metrics.top3ConcentrationPct >= 40 ? "High concentration" : "Balanced concentration");
+    setText("risk-hhi", Number.isFinite(metrics.hhi) ? Number(metrics.hhi).toLocaleString("en-AU", { maximumFractionDigits: 0 }) : "—");
+    setText(
+      "risk-hhi-sub",
+      metrics.hhi >= 2500
+        ? "High concentration"
+        : metrics.hhi >= 1500
+          ? "Moderate concentration"
+          : "Diversified",
+    );
+    setClass(
+      "risk-hhi",
+      `risk-val ${metrics.hhi >= 2500 ? "danger" : metrics.hhi >= 1500 ? "purple" : ""}`.trim(),
+    );
+    setText("risk-rsi", Number.isFinite(metrics.rsi14) ? Number(metrics.rsi14).toFixed(1) : "—");
+    setText(
+      "risk-rsi-sub",
+      !Number.isFinite(metrics.rsi14)
+        ? "Needs more history"
+        : metrics.rsi14 > 70
+          ? "Overbought (>70)"
+          : metrics.rsi14 < 30
+            ? "Oversold (<30)"
+            : "Neutral range",
+    );
+    setClass("risk-rsi", `risk-val ${metrics.rsi14 > 70 ? "danger" : metrics.rsi14 < 30 ? "purple" : ""}`.trim());
+    setText("risk-stochastic", Number.isFinite(metrics.stochastic14) ? Number(metrics.stochastic14).toFixed(1) : "—");
+    setText(
+      "risk-stochastic-sub",
+      !Number.isFinite(metrics.stochastic14)
+        ? "Needs more history"
+        : metrics.stochastic14 > 80
+          ? "Overbought (>80)"
+          : metrics.stochastic14 < 20
+            ? "Oversold (<20)"
+            : "Neutral range",
+    );
+    setClass(
+      "risk-stochastic",
+      `risk-val ${metrics.stochastic14 > 80 ? "danger" : metrics.stochastic14 < 20 ? "purple" : ""}`.trim(),
+    );
+    setText("risk-williams-r", Number.isFinite(metrics.williamsR14) ? Number(metrics.williamsR14).toFixed(1) : "—");
+    setText(
+      "risk-williams-r-sub",
+      !Number.isFinite(metrics.williamsR14)
+        ? "Needs more history"
+        : metrics.williamsR14 > -20
+          ? "Overbought (-20 to 0)"
+          : metrics.williamsR14 < -80
+            ? "Oversold (-80 to -100)"
+            : "Neutral range",
+    );
+    setClass(
+      "risk-williams-r",
+      `risk-val ${metrics.williamsR14 > -20 ? "danger" : metrics.williamsR14 < -80 ? "purple" : ""}`.trim(),
+    );
+    setText("risk-obv", Number.isFinite(metrics.obvValue) ? formatSignedCompact(metrics.obvValue, { decimals: 1 }) : "—");
+    setText("risk-obv-sub", metrics.obvTrend || "Needs more history");
+    setClass("risk-obv", `risk-val ${metrics.obvValue < 0 ? "danger" : metrics.obvValue > 0 ? "purple" : ""}`.trim());
     setText("risk-var95", effectiveVar95Pct != null ? formatPercent(effectiveVar95Pct, { negative: true, decimals: 1 }) : "—");
     setText("risk-cvar95", effectiveCvar95Pct != null ? formatPercent(effectiveCvar95Pct, { negative: true, decimals: 1 }) : "—");
     setText("risk-max-drawdown", effectiveMaxDrawdownPct != null ? formatPercent(effectiveMaxDrawdownPct, { negative: true, decimals: 1 }) : "—");
