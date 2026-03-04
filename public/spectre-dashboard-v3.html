@@ -819,11 +819,6 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
         <div class="risk-sub" id="risk-stochastic-sub">Neutral range</div>
       </div>
       <div class="risk-card">
-        <div class="risk-lbl">Williams %R <button type="button" class="risk-help" aria-label="Williams percent R help">?<span class="risk-help-tip">Williams %R (0 to -100) is similar to stochastic. -20 to 0 can indicate overbought conditions, -80 to -100 can indicate oversold conditions.</span></button></div>
-        <div class="risk-val" id="risk-williams-r">−38.2</div>
-        <div class="risk-sub" id="risk-williams-r-sub">Neutral range</div>
-      </div>
-      <div class="risk-card">
         <div class="risk-lbl">On-Balance Volume (OBV) <button type="button" class="risk-help" aria-label="OBV help">?<span class="risk-help-tip">OBV tracks directional flow to infer buying/selling pressure. This portfolio-level OBV uses snapshot value-flow as a proxy because raw traded volume is not uploaded.</span></button></div>
         <div class="risk-val" id="risk-obv">+0</div>
         <div class="risk-sub" id="risk-obv-sub">Flat flow</div>
@@ -1328,18 +1323,6 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     return clamp(((current - lowest) / (highest - lowest)) * 100, 0, 100);
   }
 
-  function computeWilliamsR(values, period = 14) {
-    const closes = values.filter(Number.isFinite);
-    if (closes.length < period) return null;
-    const window = closes.slice(-period);
-    const lowest = Math.min(...window);
-    const highest = Math.max(...window);
-    const current = closes[closes.length - 1];
-    if (!Number.isFinite(lowest) || !Number.isFinite(highest) || !Number.isFinite(current)) return null;
-    if (highest === lowest) return -50;
-    return -100 * ((highest - current) / (highest - lowest));
-  }
-
   function computeObvProxy(values) {
     const closes = values.filter(Number.isFinite);
     if (closes.length < 2) {
@@ -1413,7 +1396,6 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     const riskValues = riskHistory.map((item) => Number(item.value)).filter((value) => Number.isFinite(value) && value > 0);
     const rsi14 = computeRsi(riskValues, 14);
     const stochastic14 = computeStochastic(riskValues, 14);
-    const williamsR14 = computeWilliamsR(riskValues, 14);
     const obv = computeObvProxy(riskValues);
 
     return {
@@ -1438,7 +1420,6 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       cvar95Pct,
       rsi14,
       stochastic14,
-      williamsR14,
       obvValue: obv.value,
       obvTrend: obv.trend,
       riskPointsUsed: riskHistory.length,
@@ -1868,21 +1849,6 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     setClass(
       "risk-stochastic",
       `risk-val ${metrics.stochastic14 > 80 ? "danger" : metrics.stochastic14 < 20 ? "purple" : ""}`.trim(),
-    );
-    setText("risk-williams-r", Number.isFinite(metrics.williamsR14) ? Number(metrics.williamsR14).toFixed(1) : "—");
-    setText(
-      "risk-williams-r-sub",
-      !Number.isFinite(metrics.williamsR14)
-        ? "Needs more history"
-        : metrics.williamsR14 > -20
-          ? "Overbought (-20 to 0)"
-          : metrics.williamsR14 < -80
-            ? "Oversold (-80 to -100)"
-            : "Neutral range",
-    );
-    setClass(
-      "risk-williams-r",
-      `risk-val ${metrics.williamsR14 > -20 ? "danger" : metrics.williamsR14 < -80 ? "purple" : ""}`.trim(),
     );
     setText("risk-obv", Number.isFinite(metrics.obvValue) ? formatSignedCompact(metrics.obvValue, { decimals: 1 }) : "—");
     setText("risk-obv-sub", metrics.obvTrend || "Needs more history");
