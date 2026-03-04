@@ -1616,8 +1616,8 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     setText("meta-prices-updated", latestPriceTime ? formatDateTime(latestPriceTime) : "—");
     setText("holdings-count-label", `${holdings.length} positions`);
 
-    setText("mini-total-value", formatCurrency(metrics.totalValue, { compact: true }));
-    setText("mini-unrealised-pnl", formatSignedCurrency(metrics.pnl, { compact: true }));
+    setText("mini-total-value", formatCurrency(metrics.totalValue));
+    setText("mini-unrealised-pnl", formatSignedCurrency(metrics.pnl));
     setText("mini-day-change", formatSignedCurrency(today.amount));
     setText("mini-var95", effectiveVar95Pct != null ? formatPercent(effectiveVar95Pct, { negative: true, decimals: 1 }) : "—");
     setClass("mini-unrealised-pnl", `kpi-mini-val ${metrics.pnl >= 0 ? "accent" : ""}`.trim());
