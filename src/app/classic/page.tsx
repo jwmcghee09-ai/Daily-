@@ -411,6 +411,19 @@ export default function Home() {
     }
   }, [completePendingRegistrationAfterCheckout]);
 
+  useEffect(() => {
+    if (!sessionUser || loading) {
+      return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("classic") === "1") {
+      return;
+    }
+
+    window.location.replace("/");
+  }, [loading, sessionUser]);
+
   const refreshPrices = useCallback(async (showBanner: boolean) => {
     if (!sessionUser) {
       return;
