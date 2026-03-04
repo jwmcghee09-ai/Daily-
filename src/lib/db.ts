@@ -1569,6 +1569,7 @@ export function clearPortfolioData(userId: string): PortfolioState {
     db.prepare("DELETE FROM holdings WHERE id LIKE ?").run(scopedPattern);
     db.prepare("DELETE FROM snapshots WHERE date LIKE ?").run(scopedPattern);
     db.prepare("DELETE FROM meta WHERE key LIKE ?").run(scopedPattern);
+    db.prepare("DELETE FROM price_dip_alerts WHERE user_id = ?").run(userId);
     db.exec("COMMIT");
   } catch (error) {
     db.exec("ROLLBACK");

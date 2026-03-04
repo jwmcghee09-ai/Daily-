@@ -1264,7 +1264,7 @@ export default function Home() {
   };
 
   const clearData = async () => {
-    if (!window.confirm("Delete all imported holdings and snapshots?")) {
+    if (!window.confirm("Delete all imported holdings, snapshots, and dip alerts? Your sign-in email/password stays active.")) {
       return;
     }
 
@@ -1278,7 +1278,10 @@ export default function Home() {
 
       const cleared = (await response.json()) as PortfolioState;
       setState(cleared);
-      setBanner({ type: "info", message: "Portfolio data cleared from SQLite." });
+      setDipAlerts([]);
+      setAvailableDipTickers([]);
+      setDipAlertTicker("");
+      setBanner({ type: "info", message: "Portfolio and alert data cleared. Login credentials were kept." });
     } catch (error) {
       setBanner({ type: "error", message: error instanceof Error ? error.message : "Failed to clear data." });
     } finally {
@@ -1839,7 +1842,7 @@ export default function Home() {
               <p className="spectre-section-sub">These safeguards reflect controls active in the current release.</p>
               <div className="spectre-safety-grid">
                 <article><h3>Privacy Promise</h3><p><strong>We do not sell your data.</strong> Portfolio uploads are used only to generate your analytics workspace.</p></article>
-                <article><h3>Data Control and Deletion</h3><p>You can clear imported holdings and snapshots anytime from the dashboard using Clear Data. If you cancel your account, your stored account and portfolio data is deleted from our server.</p></article>
+                <article><h3>Data Control and Deletion</h3><p>You can clear imported holdings, snapshots, and dip alerts anytime from the dashboard using Clear Data. This keeps your account login (email + password hash) so you can still sign in. If you cancel your account, your stored account and portfolio data is deleted from our server.</p></article>
                 <article><h3>Account and Payment Security</h3><p>Email verification, scrypt password hashing, secure cookies, and Stripe-hosted checkout are enabled in production.</p></article>
                 <article><h3>Hosting and Hardening</h3><p>Production runs over HTTPS with CSP/HSTS/anti-framing headers, plus encrypted backups and restore checks.</p></article>
               </div>

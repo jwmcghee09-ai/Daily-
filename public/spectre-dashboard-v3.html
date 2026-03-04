@@ -1930,7 +1930,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   }
 
   async function clearData() {
-    const confirmed = window.confirm("Clear all imported holdings and snapshots?");
+    const confirmed = window.confirm("Clear all imported holdings, snapshots, and dip alerts? Your sign-in email/password stays active.");
     if (!confirmed) return;
     const button = document.getElementById("clear-data-btn");
     const original = button ? button.textContent : "Clear Data";
@@ -1940,9 +1940,10 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     }
     try {
       state.portfolio = await apiJson("/api/portfolio", { method: "DELETE" });
+      await loadAlerts();
       await loadHistoricalRisk();
       renderPortfolio();
-      showToast("Portfolio data cleared.");
+      showToast("Portfolio and alert data cleared. Login kept.");
     } catch (error) {
       showToast(error instanceof Error ? error.message : "Failed to clear data.", "error");
     } finally {
