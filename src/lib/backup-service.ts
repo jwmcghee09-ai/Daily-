@@ -7,6 +7,7 @@ import { DatabaseSync } from "node:sqlite";
 import { getDatabaseFilePath } from "@/lib/db";
 
 const BACKUP_FILE_SUFFIX = ".spectre-backup.json";
+const DEFAULT_BACKUP_RETENTION_DAYS = 60;
 
 interface BackupPayload {
   version: 1;
@@ -146,6 +147,68 @@ function findLatestBackupFile(outputDir: string): string | null {
   return entries[0] || null;
 }
 
+function listBackupFiles(outputDir: string): string[] {
+  if (!fs.existsSync(outputDir)) {
+    return [];
+  }
+
+  return fs
+    .readdirSync(outputDir)
+    .filter((entry) => entry.endsWith(BACKUP_FILE_SUFFIX))
+    .map((entry) => path.join(outputDir, entry))
+    .sort((a, b) => fs.statSync(a).mtimeMs - fs.statSync(b).mtimeMs);
+}
+
+function readBackupRetentionDays(): number {
+  const raw = String(process.env.BACKUP_RETENTION_DAYS || "").trim();
+  if (!raw) {
+    return DEFAULT_BACKUP_RETENTION_DAYS;
+  }
+
+  const parsed = Number.parseInt(raw, 10);
+  if (!Number.isFinite(parsed) || parsed < 1) {
+    return DEFAULT_BACKUP_RETENTION_DAYS;
+  }
+
+  return Math.min(parsed, 3650);
+}
+
+function pruneOldBackupFiles(outputDir: string, retentionDays: number): { deletedCount: number; remainingCount: number } {
+  const files = listBackupFiles(outputDir);
+  if (files.length === 0 || retentionDays < 1) {
+    return { deletedCount: 0, remainingCount: files.length };
+  }
+
+  const cutoff = Date.now() - retentionDays * 24 * 60 * 60 * 1000;
+  let deletedCount = 0;
+
+  for (const filePath of files) {
+    const stats = fs.statSync(filePath);
+    if (stats.mtimeMs >= cutoff) {
+      continue;
+    }
+    fs.rmSync(filePath, { force: true });
+    deletedCount += 1;
+  }
+
+  return { deletedCount, remainingCount: Math.max(0, files.length - deletedCount) };
+}
+
+function readDiskUsagePercent(targetPath: string): number | null {
+  try {
+    const stats = fs.statfsSync(targetPath);
+    const total = Number(stats.blocks) * Number(stats.bsize);
+    const free = Number(stats.bavail) * Number(stats.bsize);
+    if (!Number.isFinite(total) || total <= 0 || !Number.isFinite(free)) {
+      return null;
+    }
+    const used = Math.max(0, total - free);
+    return (used / total) * 100;
+  } catch {
+    return null;
+  }
+}
+
 function safeCount(db: DatabaseSync, tableName: string): number | null {
   try {
     const row = db.prepare(`SELECT COUNT(*) AS count FROM ${tableName}`).get() as { count?: unknown } | undefined;
@@ -160,10 +223,15 @@ export function runEncryptedBackupNow(): {
   databasePath: string;
   rawSizeBytes: number;
   compressedSizeBytes: number;
+  backupRetentionDays: number;
+  deletedBackupFiles: number;
+  remainingBackupFiles: number;
+  diskUsageUsedPct: number | null;
 } {
   const dbPath = getDatabaseFilePath();
   const passphrase = requireBackupPassphrase();
   const outputDir = resolveBackupOutputDir();
+  const backupRetentionDays = readBackupRetentionDays();
 
   if (!fs.existsSync(dbPath)) {
     throw new Error(`SQLite database not found at ${dbPath}`);
@@ -191,11 +259,17 @@ export function runEncryptedBackupNow(): {
     throw new Error("Backup verification failed: byte length mismatch after decrypt/decompress.");
   }
 
+  const pruned = pruneOldBackupFiles(outputDir, backupRetentionDays);
+
   return {
     backupPath,
     databasePath: dbPath,
     rawSizeBytes: raw.length,
     compressedSizeBytes: gzipped.length,
+    backupRetentionDays,
+    deletedBackupFiles: pruned.deletedCount,
+    remainingBackupFiles: pruned.remainingCount,
+    diskUsageUsedPct: readDiskUsagePercent(outputDir),
   };
 }
 

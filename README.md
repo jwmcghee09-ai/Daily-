@@ -120,7 +120,11 @@ export BACKUP_PASSPHRASE='replace-with-long-random-secret'
 
 Optional:
 - `BACKUP_OUTPUT_DIR` (defaults to `./backups`)
+- `BACKUP_RETENTION_DAYS` (defaults to `60`; older backup files are auto-pruned)
 - `SQLITE_DB_PATH` (same behavior as app runtime)
+- `DISK_ALERT_WARN_PCT` (defaults to `80`)
+- `DISK_ALERT_CRITICAL_PCT` (defaults to `90`)
+- `SNAPSHOT_RETENTION_DAYS` (defaults to `730`; old per-user snapshots are trimmed on import)
 
 ### Create encrypted backup
 

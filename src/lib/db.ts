@@ -34,8 +34,11 @@ const DATA_DIR = path.dirname(DB_FILE);
 
 const UPDATED_AT_KEY = "updated_at";
 const LAST_PRICE_REFRESH_KEY = "last_price_refresh_at";
+const DEFAULT_SNAPSHOT_RETENTION_DAYS = 730;
+const MAX_SNAPSHOT_RETENTION_DAYS = 3650;
 
 const LOCAL_USER_ID = "local-user";
+const SNAPSHOT_RETENTION_DAYS = readSnapshotRetentionDays();
 
 let dbInstance: DatabaseSync | null = null;
 
@@ -462,6 +465,20 @@ function sanitizeDate(value: unknown): string {
   return date.toISOString().slice(0, 10);
 }
 
+function readSnapshotRetentionDays(): number {
+  const raw = String(process.env.SNAPSHOT_RETENTION_DAYS || "").trim();
+  if (!raw) {
+    return DEFAULT_SNAPSHOT_RETENTION_DAYS;
+  }
+
+  const parsed = Number.parseInt(raw, 10);
+  if (!Number.isFinite(parsed) || parsed < 30) {
+    return DEFAULT_SNAPSHOT_RETENTION_DAYS;
+  }
+
+  return Math.min(MAX_SNAPSHOT_RETENTION_DAYS, parsed);
+}
+
 function sanitizeUserId(userId: string): string {
   const cleaned = userId.trim().replace(/[^a-zA-Z0-9_-]/g, "");
   return cleaned.length > 0 ? cleaned : LOCAL_USER_ID;
@@ -486,6 +503,24 @@ function scopeId(userId: string, value: string): string {
 function unscopeValue(userId: string, value: string): string {
   const prefix = userPrefix(userId);
   return value.startsWith(prefix) ? value.slice(prefix.length) : value;
+}
+
+function pruneSnapshotsForUser(db: DatabaseSync, userId: string, retentionDays: number): number {
+  if (retentionDays <= 0) {
+    return 0;
+  }
+
+  const cutoff = new Date();
+  cutoff.setUTCDate(cutoff.getUTCDate() - retentionDays);
+  const cutoffDate = cutoff.toISOString().slice(0, 10);
+  const prefix = userPrefix(userId);
+  const startIndex = prefix.length + 1;
+
+  const result = db
+    .prepare("DELETE FROM snapshots WHERE date LIKE ? AND substr(date, ?, 10) < ?")
+    .run(userLikePattern(userId), startIndex, cutoffDate) as { changes?: number };
+
+  return Number(result.changes || 0);
 }
 
 function sanitizeHolding(raw: PortfolioHolding, source: DataSource, index: number): PortfolioHolding | null {
@@ -1037,6 +1072,8 @@ export function saveImport(userId: string, source: DataSource, holdings: Portfol
       VALUES (?, ?)
       ON CONFLICT(date) DO UPDATE SET value = excluded.value
     `).run(scopedSnapshotAt, sanitizeNumber(totalRow.total_value));
+
+    pruneSnapshotsForUser(db, userId, SNAPSHOT_RETENTION_DAYS);
 
     setScopedMetaValue(db, userId, UPDATED_AT_KEY, nowIso);
 
@@ -1888,6 +1925,69 @@ export function readBillingSubscription(userId: string): BillingSubscription | n
     .get(userId) as BillingSubscriptionRow | undefined;
 
   return row ? toBillingSubscription(row) : null;
+}
+
+export function findUserIdByStripeCustomerId(stripeCustomerId: string): string | null {
+  const db = getDb();
+  const normalizedCustomerId = toOptionalNullableString(stripeCustomerId);
+  if (!normalizedCustomerId) {
+    return null;
+  }
+
+  const row = db
+    .prepare("SELECT user_id FROM billing_subscriptions WHERE stripe_customer_id = ? LIMIT 1")
+    .get(normalizedCustomerId) as { user_id: string } | undefined;
+
+  return row?.user_id || null;
+}
+
+export function findUserIdByStripeSubscriptionId(stripeSubscriptionId: string): string | null {
+  const db = getDb();
+  const normalizedSubscriptionId = toOptionalNullableString(stripeSubscriptionId);
+  if (!normalizedSubscriptionId) {
+    return null;
+  }
+
+  const row = db
+    .prepare("SELECT user_id FROM billing_subscriptions WHERE stripe_subscription_id = ? LIMIT 1")
+    .get(normalizedSubscriptionId) as { user_id: string } | undefined;
+
+  return row?.user_id || null;
+}
+
+export function deleteUserAccountData(userId: string): boolean {
+  const db = getDb();
+  const scopedPattern = userLikePattern(userId);
+
+  ensurePasswordResetSchema(db);
+  ensureEmailVerificationSchema(db);
+
+  const user = db.prepare("SELECT email FROM users WHERE id = ? LIMIT 1").get(userId) as { email: string } | undefined;
+  if (!user) {
+    return false;
+  }
+
+  const normalizedEmail = normalizeEmail(user.email);
+
+  db.exec("BEGIN IMMEDIATE");
+
+  try {
+    db.prepare("DELETE FROM holdings WHERE id LIKE ?").run(scopedPattern);
+    db.prepare("DELETE FROM snapshots WHERE date LIKE ?").run(scopedPattern);
+    db.prepare("DELETE FROM meta WHERE key LIKE ?").run(scopedPattern);
+    db.prepare("DELETE FROM sessions WHERE user_id = ?").run(userId);
+    db.prepare("DELETE FROM password_resets WHERE user_id = ?").run(userId);
+    db.prepare("DELETE FROM email_verifications WHERE user_id = ?").run(userId);
+    db.prepare("DELETE FROM price_dip_alerts WHERE user_id = ?").run(userId);
+    db.prepare("DELETE FROM billing_subscriptions WHERE user_id = ?").run(userId);
+    db.prepare("DELETE FROM pre_signup_billing WHERE email = ?").run(normalizedEmail);
+    db.prepare("DELETE FROM users WHERE id = ?").run(userId);
+    db.exec("COMMIT");
+    return true;
+  } catch (error) {
+    db.exec("ROLLBACK");
+    throw error;
+  }
 }
 
 function hasActiveSubscription(record: { status: string | null; currentPeriodEnd: string | null }): boolean {

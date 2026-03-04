@@ -9,7 +9,6 @@ export const runtime = "nodejs";
 
 const MAX_IMPORT_FILE_BYTES = 2 * 1024 * 1024;
 const MAX_IMPORT_BODY_BYTES = 4 * 1024 * 1024;
-const MAX_HOLDINGS = 10000;
 const TEXT_UPLOAD_EXTENSIONS = new Set(["csv", "txt", "tsv"]);
 const WORKBOOK_UPLOAD_EXTENSIONS = new Set(["xlsx", "xls", "numbers", "ods"]);
 const SUPPORTED_UPLOAD_EXTENSIONS = new Set([...TEXT_UPLOAD_EXTENSIONS, ...WORKBOOK_UPLOAD_EXTENSIONS]);
@@ -173,11 +172,7 @@ export async function POST(request: Request) {
 
     const holdings = parseRowsToHoldings(parsed.data, payload.source).filter(isValidParsedHolding);
     if (holdings.length === 0) {
-      return NextResponse.json({ error: "No valid holdings were found in this CSV." }, { status: 400 });
-    }
-
-    if (holdings.length > MAX_HOLDINGS) {
-      return NextResponse.json({ error: `Too many holdings in one import. Max ${MAX_HOLDINGS} rows.` }, { status: 413 });
+      return NextResponse.json({ error: "No valid holdings were found in this file." }, { status: 400 });
     }
 
     const state = saveImport(sessionUser.id, payload.source, holdings);
