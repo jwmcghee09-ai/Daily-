@@ -4,6 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import zlib from "node:zlib";
 import { DatabaseSync } from "node:sqlite";
+import { HeadObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getDatabaseFilePath } from "@/lib/db";
 
 const BACKUP_FILE_SUFFIX = ".spectre-backup.json";
@@ -24,6 +25,18 @@ interface BackupPayload {
     rawSizeBytes?: number;
     compressedSizeBytes?: number;
   };
+}
+
+interface OffsiteBackupConfig {
+  bucket: string;
+  region: string;
+  prefix: string;
+  endpoint: string | null;
+  forcePathStyle: boolean;
+  accessKeyId: string;
+  secretAccessKey: string;
+  serverSideEncryption: "AES256" | null;
+  verifyUpload: boolean;
 }
 
 function timestampForFile(date = new Date()): string {
@@ -173,6 +186,130 @@ function readBackupRetentionDays(): number {
   return Math.min(parsed, 3650);
 }
 
+function readBooleanEnv(name: string, fallback: boolean): boolean {
+  const raw = String(process.env[name] || "").trim().toLowerCase();
+  if (!raw) {
+    return fallback;
+  }
+
+  return raw === "1" || raw === "true" || raw === "yes" || raw === "on";
+}
+
+function normalizeObjectPrefix(prefix: string): string {
+  return prefix.replace(/^\/+/, "").replace(/\/+$/, "");
+}
+
+function readOffsiteBackupConfig(): OffsiteBackupConfig | null {
+  const enabled = readBooleanEnv("BACKUP_OFFSITE_ENABLED", false);
+  if (!enabled) {
+    return null;
+  }
+
+  const bucket = String(process.env.BACKUP_OFFSITE_BUCKET || "").trim();
+  if (!bucket) {
+    throw new Error("BACKUP_OFFSITE_BUCKET is required when BACKUP_OFFSITE_ENABLED=true.");
+  }
+
+  const region = String(process.env.BACKUP_OFFSITE_REGION || "").trim() || "us-east-1";
+  const prefix = normalizeObjectPrefix(String(process.env.BACKUP_OFFSITE_PREFIX || "spectre").trim() || "spectre");
+  const endpoint = String(process.env.BACKUP_OFFSITE_ENDPOINT || "").trim() || null;
+  const forcePathStyle = readBooleanEnv("BACKUP_OFFSITE_FORCE_PATH_STYLE", Boolean(endpoint));
+  const accessKeyId = String(process.env.BACKUP_OFFSITE_ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY_ID || "").trim();
+  const secretAccessKey = String(process.env.BACKUP_OFFSITE_SECRET_ACCESS_KEY || process.env.AWS_SECRET_ACCESS_KEY || "").trim();
+  const sseRaw = String(process.env.BACKUP_OFFSITE_SSE || "").trim().toUpperCase();
+  const verifyUpload = readBooleanEnv("BACKUP_OFFSITE_VERIFY_UPLOAD", true);
+
+  if (!accessKeyId || !secretAccessKey) {
+    throw new Error(
+      "BACKUP_OFFSITE_ACCESS_KEY_ID and BACKUP_OFFSITE_SECRET_ACCESS_KEY are required when BACKUP_OFFSITE_ENABLED=true.",
+    );
+  }
+
+  if (sseRaw && sseRaw !== "AES256") {
+    throw new Error("BACKUP_OFFSITE_SSE only supports AES256.");
+  }
+
+  return {
+    bucket,
+    region,
+    prefix,
+    endpoint,
+    forcePathStyle,
+    accessKeyId,
+    secretAccessKey,
+    serverSideEncryption: sseRaw === "AES256" ? "AES256" : null,
+    verifyUpload,
+  };
+}
+
+function createOffsiteObjectKey(prefix: string, backupPath: string): string {
+  const fileName = path.basename(backupPath);
+  return prefix ? `${prefix}/${fileName}` : fileName;
+}
+
+async function uploadBackupOffsite(
+  backupPath: string,
+): Promise<{ enabled: boolean; uploaded: boolean; bucket: string | null; objectKey: string | null; endpoint: string | null }> {
+  const config = readOffsiteBackupConfig();
+  if (!config) {
+    return {
+      enabled: false,
+      uploaded: false,
+      bucket: null,
+      objectKey: null,
+      endpoint: null,
+    };
+  }
+
+  const objectKey = createOffsiteObjectKey(config.prefix, backupPath);
+  const body = fs.readFileSync(backupPath);
+  const client = new S3Client({
+    region: config.region,
+    endpoint: config.endpoint || undefined,
+    forcePathStyle: config.forcePathStyle,
+    credentials: {
+      accessKeyId: config.accessKeyId,
+      secretAccessKey: config.secretAccessKey,
+    },
+  });
+
+  await client.send(
+    new PutObjectCommand({
+      Bucket: config.bucket,
+      Key: objectKey,
+      Body: body,
+      ContentType: "application/json",
+      ServerSideEncryption: config.serverSideEncryption || undefined,
+      Metadata: {
+        app: "spectre",
+        format: "spectre-backup-v1",
+        encrypted: "true",
+      },
+    }),
+  );
+
+  if (config.verifyUpload) {
+    const head = await client.send(
+      new HeadObjectCommand({
+        Bucket: config.bucket,
+        Key: objectKey,
+      }),
+    );
+
+    if (!Number.isFinite(head.ContentLength) || Number(head.ContentLength) !== body.length) {
+      throw new Error("Offsite backup verification failed: uploaded object size mismatch.");
+    }
+  }
+
+  return {
+    enabled: true,
+    uploaded: true,
+    bucket: config.bucket,
+    objectKey,
+    endpoint: config.endpoint,
+  };
+}
+
 function pruneOldBackupFiles(outputDir: string, retentionDays: number): { deletedCount: number; remainingCount: number } {
   const files = listBackupFiles(outputDir);
   if (files.length === 0 || retentionDays < 1) {
@@ -218,7 +355,7 @@ function safeCount(db: DatabaseSync, tableName: string): number | null {
   }
 }
 
-export function runEncryptedBackupNow(): {
+export async function runEncryptedBackupNow(): Promise<{
   backupPath: string;
   databasePath: string;
   rawSizeBytes: number;
@@ -227,7 +364,12 @@ export function runEncryptedBackupNow(): {
   deletedBackupFiles: number;
   remainingBackupFiles: number;
   diskUsageUsedPct: number | null;
-} {
+  offsiteEnabled: boolean;
+  offsiteUploaded: boolean;
+  offsiteBucket: string | null;
+  offsiteObjectKey: string | null;
+  offsiteEndpoint: string | null;
+}> {
   const dbPath = getDatabaseFilePath();
   const passphrase = requireBackupPassphrase();
   const outputDir = resolveBackupOutputDir();
@@ -259,6 +401,7 @@ export function runEncryptedBackupNow(): {
     throw new Error("Backup verification failed: byte length mismatch after decrypt/decompress.");
   }
 
+  const offsite = await uploadBackupOffsite(backupPath);
   const pruned = pruneOldBackupFiles(outputDir, backupRetentionDays);
 
   return {
@@ -270,6 +413,11 @@ export function runEncryptedBackupNow(): {
     deletedBackupFiles: pruned.deletedCount,
     remainingBackupFiles: pruned.remainingCount,
     diskUsageUsedPct: readDiskUsagePercent(outputDir),
+    offsiteEnabled: offsite.enabled,
+    offsiteUploaded: offsite.uploaded,
+    offsiteBucket: offsite.bucket,
+    offsiteObjectKey: offsite.objectKey,
+    offsiteEndpoint: offsite.endpoint,
   };
 }
 

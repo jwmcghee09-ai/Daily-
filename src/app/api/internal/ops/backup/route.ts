@@ -9,7 +9,7 @@ export async function POST(request: Request) {
   try {
     assertCronTokenAuthorized(request);
 
-    const result = runEncryptedBackupNow();
+    const result = await runEncryptedBackupNow();
     await sendDiskUsageAlertIfNeeded(result.diskUsageUsedPct);
 
     return NextResponse.json({
@@ -22,6 +22,11 @@ export async function POST(request: Request) {
       deletedBackupFiles: result.deletedBackupFiles,
       remainingBackupFiles: result.remainingBackupFiles,
       diskUsageUsedPct: result.diskUsageUsedPct,
+      offsiteEnabled: result.offsiteEnabled,
+      offsiteUploaded: result.offsiteUploaded,
+      offsiteBucket: result.offsiteBucket,
+      offsiteObjectKey: result.offsiteObjectKey,
+      offsiteEndpoint: result.offsiteEndpoint,
     });
   } catch (error) {
     if (error instanceof Error && error.name === "UnauthorizedError") {

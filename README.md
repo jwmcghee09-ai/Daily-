@@ -125,6 +125,16 @@ Optional:
 - `DISK_ALERT_WARN_PCT` (defaults to `80`)
 - `DISK_ALERT_CRITICAL_PCT` (defaults to `90`)
 - `SNAPSHOT_RETENTION_DAYS` (defaults to `730`; old per-user snapshots are trimmed on import)
+- `BACKUP_OFFSITE_ENABLED` (`true` to enable automatic offsite upload after each encrypted backup)
+- `BACKUP_OFFSITE_BUCKET` (target bucket/container name)
+- `BACKUP_OFFSITE_REGION` (defaults to `us-east-1`)
+- `BACKUP_OFFSITE_PREFIX` (defaults to `spectre`)
+- `BACKUP_OFFSITE_ENDPOINT` (optional; set for S3-compatible providers like Backblaze B2)
+- `BACKUP_OFFSITE_FORCE_PATH_STYLE` (defaults to `true` when endpoint is set)
+- `BACKUP_OFFSITE_ACCESS_KEY_ID`
+- `BACKUP_OFFSITE_SECRET_ACCESS_KEY`
+- `BACKUP_OFFSITE_VERIFY_UPLOAD` (defaults to `true`; checks uploaded object size)
+- `BACKUP_OFFSITE_SSE` (optional; `AES256`)
 
 ### Create encrypted backup
 
@@ -172,6 +182,35 @@ The script will:
 - replace target DB with restored file
 - remove stale `-wal` and `-shm` sidecar files
 
+### Offsite backup setup (S3-compatible)
+
+Backups are encrypted before upload, so offsite storage receives only encrypted payload files.
+
+Set these env vars on the web service (and any host running `npm run backup:db`):
+
+```bash
+BACKUP_OFFSITE_ENABLED=true
+BACKUP_OFFSITE_BUCKET=your-backup-bucket
+BACKUP_OFFSITE_REGION=us-east-1
+BACKUP_OFFSITE_PREFIX=spectre/prod
+BACKUP_OFFSITE_ACCESS_KEY_ID=...
+BACKUP_OFFSITE_SECRET_ACCESS_KEY=...
+```
+
+If using Backblaze B2 (S3 API), also set:
+
+```bash
+BACKUP_OFFSITE_ENDPOINT=https://s3.<region>.backblazeb2.com
+BACKUP_OFFSITE_FORCE_PATH_STYLE=true
+```
+
+Optional hardening:
+
+```bash
+BACKUP_OFFSITE_VERIFY_UPLOAD=true
+BACKUP_OFFSITE_SSE=AES256
+```
+
 ### Recommended ops routine
 
 - Nightly: `npm run backup:db`
@@ -183,7 +222,7 @@ The script will:
 Because Render Cron runs separately from your web service disk, use Cron to call internal backup endpoints on your live app:
 
 1. Set env vars:
-   - On Web Service: `BACKUP_PASSPHRASE`, `BACKUP_OUTPUT_DIR=/var/data/backups`, `BACKUP_CRON_TOKEN`
+   - On Web Service: `BACKUP_PASSPHRASE`, `BACKUP_OUTPUT_DIR=/var/data/backups`, `BACKUP_CRON_TOKEN`, plus `BACKUP_OFFSITE_*` vars above
    - On Cron Job: `BACKUP_CRON_TOKEN` (same value)
 
 2. Cron job command for backup:
