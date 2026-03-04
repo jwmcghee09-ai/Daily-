@@ -3700,7 +3700,7 @@ td {
   background: var(--sl-card-2);
   border: 1px solid var(--sl-border-2);
   border-radius: 12px;
-  padding: 1.4rem;
+  padding: 1.3rem;
   box-shadow: 0 40px 100px rgba(0, 0, 0, 0.65);
   animation: spectre-float 5s ease-in-out infinite;
 }
@@ -3714,112 +3714,90 @@ td {
   color: var(--sl-muted);
 }
 
-.spectre-gauge-row {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 0.9rem;
-  align-items: center;
-}
-
-.spectre-gauge {
-  width: 96px;
-  height: 96px;
-  border-radius: 50%;
-  display: grid;
-  place-content: center;
-  background:
-    radial-gradient(circle at center, rgba(8, 4, 18, 0.95) 58%, transparent 59%),
-    conic-gradient(#22c55e 0% 24%, var(--sl-amber) 24% 72%, var(--sl-orange) 72% 100%);
-}
-
-.spectre-gauge span {
-  font-family: var(--sl-disp);
-  font-size: 1.9rem;
-  color: var(--sl-amber);
-}
-
-.spectre-gauge-label {
-  font-family: var(--sl-mono);
-  font-size: 0.58rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--sl-muted);
-}
-
-.spectre-gauge-value {
-  font-family: var(--sl-disp);
-  font-size: 2.4rem;
-  line-height: 1;
-  color: var(--sl-amber);
-}
-
-.spectre-gauge-value span {
-  font-family: var(--sl-mono);
-  font-size: 0.9rem;
-  color: var(--sl-muted);
-}
-
-.spectre-gauge-sub {
-  font-size: 0.78rem;
-  color: var(--sl-muted-2);
-}
-
-.spectre-hero-metrics {
-  margin-top: 0.9rem;
+.spectre-snapshot-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.7rem;
+  gap: 0.65rem;
+  margin-bottom: 1rem;
 }
 
-.spectre-hero-metrics article {
+.spectre-snapshot-card {
   background: rgba(10, 6, 20, 0.65);
   border: 1px solid var(--sl-border);
-  border-radius: 6px;
-  padding: 0.7rem;
+  border-radius: 8px;
+  padding: 0.8rem 0.9rem;
+  min-height: 82px;
 }
 
-.spectre-hero-metrics p {
-  margin-bottom: 0.25rem;
+.spectre-snapshot-card p {
+  margin-bottom: 0.24rem;
   font-family: var(--sl-mono);
-  font-size: 0.55rem;
+  font-size: 0.52rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--sl-muted);
 }
 
-.spectre-hero-metrics strong {
+.spectre-snapshot-card strong {
   font-family: var(--sl-disp);
-  font-size: 1.45rem;
+  font-size: 2rem;
+  line-height: 1;
+  color: var(--sl-text);
 }
 
-.spectre-hero-metrics strong.danger { color: var(--sl-orange); }
-.spectre-hero-metrics strong.warn { color: var(--sl-amber); }
-.spectre-hero-metrics strong.ok { color: var(--sl-purple-hi); }
+.spectre-snapshot-card strong.accent {
+  color: var(--sl-orange);
+}
 
-.spectre-sparkline {
-  margin-top: 0.9rem;
+.spectre-snapshot-risk {
+  background: rgba(10, 6, 20, 0.65);
+  border: 1px solid var(--sl-border);
+  border-radius: 8px;
+  padding: 0.8rem 0.9rem;
+}
+
+.spectre-snapshot-risk-top {
   display: flex;
-  align-items: flex-end;
-  gap: 4px;
-  height: 38px;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
 }
 
-.spectre-sparkline span {
-  flex: 1;
-  border-radius: 2px 2px 0 0;
-  background: rgba(255, 77, 26, 0.25);
+.spectre-snapshot-risk-top span {
+  font-family: var(--sl-mono);
+  font-size: 0.52rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sl-muted);
 }
 
-.spectre-sparkline span:nth-child(1) { height: 22%; }
-.spectre-sparkline span:nth-child(2) { height: 38%; }
-.spectre-sparkline span:nth-child(3) { height: 30%; }
-.spectre-sparkline span:nth-child(4) { height: 54%; }
-.spectre-sparkline span:nth-child(5) { height: 68%; }
-.spectre-sparkline span:nth-child(6) { height: 62%; }
-.spectre-sparkline span:nth-child(7) { height: 78%; }
-.spectre-sparkline span:nth-child(8) { height: 86%; }
-.spectre-sparkline span:nth-child(9) { height: 80%; }
-.spectre-sparkline span:nth-child(10) { height: 92%; }
+.spectre-snapshot-risk-top strong {
+  font-family: var(--sl-disp);
+  font-size: 1.8rem;
+  color: var(--sl-orange);
+}
+
+.spectre-snapshot-track {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.spectre-snapshot-fill {
+  display: block;
+  height: 100%;
+  width: 8%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--sl-purple-hi), var(--sl-orange));
+}
+
+@media (max-width: 620px) {
+  .spectre-snapshot-grid {
+    grid-template-columns: 1fr;
+  }
+}
 
 .spectre-ticker {
   overflow: hidden;

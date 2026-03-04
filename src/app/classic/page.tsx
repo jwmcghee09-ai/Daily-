@@ -1655,34 +1655,33 @@ export default function Home() {
 
             <div className="spectre-hero-right">
               <div className="spectre-hero-dashboard">
-                <p className="spectre-dash-title">Live Portfolio Dashboard</p>
-                <div className="spectre-gauge-row">
-                  <div className="spectre-gauge" role="img" aria-label="Portfolio risk score 72 out of 100">
-                    <span>72</span>
-                  </div>
-                  <div>
-                    <p className="spectre-gauge-label">Portfolio Risk Score</p>
-                    <p className="spectre-gauge-value">72<span>/100</span></p>
-                    <p className="spectre-gauge-sub">Moderate risk profile</p>
-                  </div>
+                <p className="spectre-dash-title">Portfolio Snapshot</p>
+                <div className="spectre-snapshot-grid">
+                  <article className="spectre-snapshot-card">
+                    <p>Total Value</p>
+                    <strong>$4K</strong>
+                  </article>
+                  <article className="spectre-snapshot-card">
+                    <p>Unrealised P/L</p>
+                    <strong className="accent">+$559</strong>
+                  </article>
+                  <article className="spectre-snapshot-card">
+                    <p>Today's Change</p>
+                    <strong>+$6</strong>
+                  </article>
+                  <article className="spectre-snapshot-card">
+                    <p>1-Day VaR 95%</p>
+                    <strong className="accent">−0.7%</strong>
+                  </article>
                 </div>
-                <div className="spectre-hero-metrics">
-                  <article><p>VaR 95</p><strong className="danger">-8.4%</strong></article>
-                  <article><p>Concentration</p><strong className="danger">42%</strong></article>
-                  <article><p>Drawdown</p><strong className="warn">-12.1%</strong></article>
-                  <article><p>Data Quality</p><strong className="ok">Good</strong></article>
-                </div>
-                <div className="spectre-sparkline">
-                  <span />
-                  <span />
-                  <span />
-                  <span />
-                  <span />
-                  <span />
-                  <span />
-                  <span />
-                  <span />
-                  <span />
+                <div className="spectre-snapshot-risk">
+                  <div className="spectre-snapshot-risk-top">
+                    <span>Risk Score</span>
+                    <strong>8 / 100</strong>
+                  </div>
+                  <div className="spectre-snapshot-track">
+                    <span className="spectre-snapshot-fill" />
+                  </div>
                 </div>
               </div>
             </div>
