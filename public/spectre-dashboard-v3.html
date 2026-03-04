@@ -1199,6 +1199,22 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     return opts.negative ? `−${rendered}` : rendered;
   }
 
+  function toSydneyDateKey(value) {
+    const date = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    const parts = new Intl.DateTimeFormat("en-AU", {
+      timeZone: "Australia/Sydney",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).formatToParts(date);
+    const year = parts.find((part) => part.type === "year")?.value;
+    const month = parts.find((part) => part.type === "month")?.value;
+    const day = parts.find((part) => part.type === "day")?.value;
+    if (!year || !month || !day) return "";
+    return `${year}-${month}-${day}`;
+  }
+
   function formatSignedCompact(value, opts = {}) {
     if (!Number.isFinite(value)) return "—";
     if (value === 0) return "0";
@@ -1439,25 +1455,22 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       .sort((a, b) => b.value - a.value);
   }
 
-  function computeTodayChange(holdings) {
-    const totals = holdings.reduce(
-      (acc, holding) => {
-        const units = resolveHoldingUnits(holding.units, holding.value, holding.price);
-        if (units <= 0 || !Number.isFinite(holding.price) || !Number.isFinite(holding.prevClose) || holding.prevClose <= 0) {
-          return acc;
-        }
-        const prevValue = units * holding.prevClose;
-        const currentValue = units * holding.price;
-        acc.prev += prevValue;
-        acc.current += currentValue;
-        return acc;
-      },
-      { prev: 0, current: 0 },
-    );
-    const change = totals.current - totals.prev;
+  function computeTodayChange(holdings, snapshots) {
+    const currentTotal = sum(holdings.map((holding) => Number(holding.value) || 0));
+    const todayKeySydney = toSydneyDateKey(new Date());
+    const todaySnapshots = (snapshots || [])
+      .filter((snapshot) => Number.isFinite(snapshot?.value) && toSydneyDateKey(snapshot?.date) === todayKeySydney)
+      .sort((a, b) => String(a.date || "").localeCompare(String(b.date || "")));
+
+    if (todaySnapshots.length === 0) {
+      return { amount: 0, pct: 0 };
+    }
+
+    const dayStartValue = Number(todaySnapshots[0].value) || 0;
+    const change = currentTotal - dayStartValue;
     return {
       amount: change,
-      pct: totals.prev > 0 ? (change / totals.prev) * 100 : 0,
+      pct: dayStartValue > 0 ? (change / dayStartValue) * 100 : 0,
     };
   }
 
@@ -1750,7 +1763,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     const holdings = state.portfolio.holdings || [];
     const snapshots = state.portfolio.snapshots || [];
     const metrics = computeMetrics(holdings, snapshots, state.riskWindow);
-    const today = computeTodayChange(holdings);
+    const today = computeTodayChange(holdings, snapshots);
     const effectiveVar95Pct = metrics.var95Pct ?? state.historicalRiskEstimate?.var95Pct ?? null;
     const effectiveCvar95Pct = metrics.cvar95Pct ?? state.historicalRiskEstimate?.cvar95Pct ?? null;
     const effectiveMaxDrawdownPct = metrics.maxDrawdownPct ?? state.historicalRiskEstimate?.maxDrawdownPct ?? null;
