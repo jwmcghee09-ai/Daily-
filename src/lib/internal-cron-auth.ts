@@ -15,6 +15,37 @@ function getHeaderToken(request: Request): string {
   return direct.trim();
 }
 
+function getQueryToken(request: Request): string {
+  try {
+    const url = new URL(request.url);
+    return (
+      url.searchParams.get("backup_cron_token") ||
+      url.searchParams.get("cron_token") ||
+      url.searchParams.get("token") ||
+      ""
+    ).trim();
+  } catch {
+    return "";
+  }
+}
+
+function normalizeToken(raw: string): string {
+  const trimmed = String(raw || "").trim();
+  if (!trimmed) {
+    return "";
+  }
+
+  // Common env/curl mistakes: tokens wrapped in matching quotes.
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
+  ) {
+    return trimmed.slice(1, -1).trim();
+  }
+
+  return trimmed;
+}
+
 function timingSafeStringEquals(a: string, b: string): boolean {
   const aBytes = Buffer.from(a);
   const bBytes = Buffer.from(b);
@@ -27,13 +58,13 @@ function timingSafeStringEquals(a: string, b: string): boolean {
 }
 
 export function assertCronTokenAuthorized(request: Request): { ok: true } {
-  const expected = String(process.env.BACKUP_CRON_TOKEN || "").trim();
+  const expected = normalizeToken(process.env.BACKUP_CRON_TOKEN || "");
 
-  if (expected.length < 24) {
+  if (expected.length === 0) {
     throw new Error("BACKUP_CRON_TOKEN is not configured.");
   }
 
-  const presented = getBearerToken(request) || getHeaderToken(request);
+  const presented = normalizeToken(getBearerToken(request) || getHeaderToken(request) || getQueryToken(request));
 
   if (!presented || !timingSafeStringEquals(presented, expected)) {
     const error = new Error("Unauthorized");

@@ -241,6 +241,13 @@ curl -fsS -X POST \
   https://your-domain/api/internal/ops/backup
 ```
 
+Alternative (query param fallback):
+
+```bash
+curl -fsS -X POST \
+  "https://your-domain/api/internal/ops/backup?backup_cron_token=$BACKUP_CRON_TOKEN"
+```
+
 3. Cron job command for restore test:
 
 ```bash
@@ -255,6 +262,13 @@ Alternative:
 curl -fsS -X POST \
   -H "x-backup-cron-token: $BACKUP_CRON_TOKEN" \
   https://your-domain/api/internal/ops/backup/restore-test
+```
+
+Query param fallback:
+
+```bash
+curl -fsS -X POST \
+  "https://your-domain/api/internal/ops/backup/restore-test?backup_cron_token=$BACKUP_CRON_TOKEN"
 ```
 
 This ensures backups run inside the web service context that has access to `/var/data`.
