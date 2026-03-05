@@ -94,6 +94,7 @@ async function uploadOffsiteIfEnabled(backupPath) {
       Bucket: config.bucket,
       Key: objectKey,
       Body: body,
+      ContentLength: body.length,
       ContentType: "application/json",
       ServerSideEncryption: config.serverSideEncryption || undefined,
       Metadata: {
