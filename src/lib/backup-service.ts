@@ -279,6 +279,8 @@ async function uploadBackupOffsite(
     region: config.region,
     endpoint: config.endpoint || undefined,
     forcePathStyle: config.forcePathStyle,
+    requestChecksumCalculation: "WHEN_REQUIRED",
+    responseChecksumValidation: "WHEN_REQUIRED",
     credentials: {
       accessKeyId: config.accessKeyId,
       secretAccessKey: config.secretAccessKey,
