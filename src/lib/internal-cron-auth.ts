@@ -35,15 +35,10 @@ function normalizeToken(raw: string): string {
     return "";
   }
 
-  // Common env/curl mistakes: tokens wrapped in matching quotes.
-  if (
-    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
-    (trimmed.startsWith("'") && trimmed.endsWith("'"))
-  ) {
-    return trimmed.slice(1, -1).trim();
-  }
-
-  return trimmed;
+  // Tolerate shell/copy mistakes: stray quotes (including smart quotes) and whitespace.
+  const withoutEdgeQuotes = trimmed.replace(/^['"`“”‘’]+|['"`“”‘’]+$/g, "");
+  const withoutWhitespace = withoutEdgeQuotes.replace(/\s+/g, "");
+  return withoutWhitespace;
 }
 
 function timingSafeStringEquals(a: string, b: string): boolean {
