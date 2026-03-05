@@ -3,19 +3,27 @@ import { DatabaseSync } from "node:sqlite";
 import { getDatabaseFilePath } from "@/lib/db";
 
 const STARTING_CAPITAL_AUD = 5000;
-const MA_SHORT_PERIOD = 20;
-const MA_LONG_PERIOD = 50;
+const ASX_DIRECTORY_URL = "https://asx.api.markitdigital.com/asx-research/1.0/companies/directory/file";
+const ASX_FETCH_CONCURRENCY = clampInteger(process.env.PLATINUM_FETCH_CONCURRENCY, 12, 2, 40);
+const SCAN_TIME_ZONE = process.env.PLATINUM_TIME_ZONE || "Australia/Sydney";
+const PLATINUM_HISTORY_DAYS = clampInteger(process.env.PLATINUM_HISTORY_DAYS, 240, 30, 1825);
+
+const MA_MEDIUM_PERIOD = 50;
+const MA_LONG_PERIOD = 200;
 const MOMENTUM_LOOKBACK = 20;
 const ZSCORE_LOOKBACK = 20;
-const MAX_OPEN_POSITIONS = 5;
-const TARGET_EQUITY_PER_BUY = 0.2;
-const MAX_CASH_PER_BUY = 0.45;
-const MIN_TRADE_NOTIONAL = 250;
-const FEE_RATE = 0.001;
-const SLIPPAGE_RATE = 0.0005;
-const SCAN_TIME_ZONE = process.env.PLATINUM_TIME_ZONE || "Australia/Sydney";
+const INDICATOR_MIN_BARS = 220;
 
-const DEFAULT_ASX_UNIVERSE = [
+const MAX_OPEN_POSITIONS = clampInteger(process.env.PLATINUM_MAX_POSITIONS, 12, 3, 40);
+const TARGET_EQUITY_PER_BUY = clampNumber(process.env.PLATINUM_TARGET_PER_POSITION, 0.1, 0.02, 0.35);
+const MAX_CASH_PER_BUY = clampNumber(process.env.PLATINUM_MAX_CASH_PER_BUY, 0.35, 0.05, 0.8);
+const MIN_TRADE_NOTIONAL = clampNumber(process.env.PLATINUM_MIN_TRADE_NOTIONAL, 300, 50, 5000);
+const FEE_RATE = clampNumber(process.env.PLATINUM_FEE_RATE, 0.001, 0, 0.01);
+const SLIPPAGE_RATE = clampNumber(process.env.PLATINUM_SLIPPAGE_RATE, 0.0006, 0, 0.02);
+const STOP_LOSS_PCT = clampNumber(process.env.PLATINUM_STOP_LOSS_PCT, 0.1, 0.02, 0.4);
+const TRAILING_STOP_PCT = clampNumber(process.env.PLATINUM_TRAILING_STOP_PCT, 0.09, 0.02, 0.35);
+
+const FALLBACK_UNIVERSE = [
   "BHP",
   "CBA",
   "CSL",
@@ -58,6 +66,8 @@ const DEFAULT_ASX_UNIVERSE = [
   "ASX",
 ];
 
+const DEFAULT_UNIVERSE_SIZE_ESTIMATE = 1843;
+
 type RecommendationAction = "buy" | "sell" | "hold";
 
 interface PortfolioRow {
@@ -72,6 +82,7 @@ interface PositionRow {
   units: number;
   avg_cost: number;
   last_price: number;
+  peak_price: number;
   updated_at: string;
 }
 
@@ -81,6 +92,9 @@ interface RecommendationRow {
   ticker: string;
   action: RecommendationAction;
   score: number;
+  expected_return_pct: number;
+  confidence: number;
+  indicator_count: number;
   price: number;
   ma_short: number;
   ma_long: number;
@@ -111,17 +125,21 @@ interface SnapshotRow {
   created_at: string;
 }
 
-interface DatedPricePoint {
+interface PriceBar {
   date: string;
+  open: number;
+  high: number;
+  low: number;
   close: number;
-}
-
-interface YahooChartMeta {
-  regularMarketPrice?: number;
+  volume: number;
 }
 
 interface YahooChartIndicator {
+  open?: Array<number | null>;
+  high?: Array<number | null>;
+  low?: Array<number | null>;
   close?: Array<number | null>;
+  volume?: Array<number | null>;
 }
 
 interface YahooAdjCloseIndicator {
@@ -129,7 +147,6 @@ interface YahooAdjCloseIndicator {
 }
 
 interface YahooChartResult {
-  meta?: YahooChartMeta;
   timestamp?: Array<number | null>;
   indicators?: {
     quote?: YahooChartIndicator[];
@@ -148,12 +165,44 @@ interface PositionMutable {
   units: number;
   avgCost: number;
   lastPrice: number;
+  peakPrice: number;
+}
+
+interface IndicatorPack {
+  close: number;
+  sma20: number;
+  sma50: number;
+  sma200: number;
+  ema12: number;
+  ema26: number;
+  macdLine: number;
+  macdSignal: number;
+  macdHist: number;
+  rsi14: number;
+  stochK: number;
+  stochD: number;
+  bollingerPos: number;
+  atr14: number;
+  atrPct: number;
+  adx14: number;
+  plusDi: number;
+  minusDi: number;
+  roc20: number;
+  mfi14: number;
+  cci20: number;
+  volumeSurge: number;
+  obvSlope: number;
+  zScore20: number;
+  donchianBreakout: boolean;
 }
 
 interface RecommendationCandidate {
   ticker: string;
   action: RecommendationAction;
   score: number;
+  expectedReturnPct: number;
+  confidence: number;
+  indicatorCount: number;
   price: number;
   maShort: number;
   maLong: number;
@@ -175,11 +224,25 @@ interface TradeCandidate {
   createdAt: string;
 }
 
+interface ScanOutcome {
+  ticker: string;
+  recommendation: RecommendationCandidate | null;
+  latestPrice: number | null;
+  skipReason: string | null;
+}
+
+interface SignalBreakdownItem {
+  label: string;
+  value: number;
+  weight: number;
+}
+
 export interface PlatinumPaperPosition {
   ticker: string;
   units: number;
   avgCost: number;
   lastPrice: number;
+  peakPrice: number;
   marketValue: number;
   unrealizedPnl: number;
   updatedAt: string;
@@ -191,6 +254,9 @@ export interface PlatinumRecommendation {
   ticker: string;
   action: RecommendationAction;
   score: number;
+  expectedReturnPct: number;
+  confidence: number;
+  indicatorCount: number;
   price: number;
   maShort: number;
   maLong: number;
@@ -255,6 +321,24 @@ export interface PlatinumScanRunResult {
 let dbInstance: DatabaseSync | null = null;
 let schemaReady = false;
 
+function clampInteger(raw: string | undefined, fallback: number, min: number, max: number): number {
+  const parsed = Number.parseInt(String(raw || "").trim(), 10);
+  if (!Number.isFinite(parsed)) {
+    return fallback;
+  }
+
+  return Math.min(max, Math.max(min, parsed));
+}
+
+function clampNumber(raw: string | undefined, fallback: number, min: number, max: number): number {
+  const parsed = Number.parseFloat(String(raw || "").trim());
+  if (!Number.isFinite(parsed)) {
+    return fallback;
+  }
+
+  return Math.min(max, Math.max(min, parsed));
+}
+
 function getDb(): DatabaseSync {
   if (!dbInstance) {
     dbInstance = new DatabaseSync(getDatabaseFilePath());
@@ -267,6 +351,14 @@ function getDb(): DatabaseSync {
   }
 
   return dbInstance;
+}
+
+function hasColumn(db: DatabaseSync, table: string, column: string): boolean {
+  const row = db.prepare(`SELECT 1 AS ok FROM pragma_table_info('${table}') WHERE name = ? LIMIT 1`).get(column) as
+    | { ok: number }
+    | undefined;
+
+  return Boolean(row?.ok);
 }
 
 function ensurePlatinumSchema(db: DatabaseSync): void {
@@ -287,6 +379,7 @@ function ensurePlatinumSchema(db: DatabaseSync): void {
       units REAL NOT NULL,
       avg_cost REAL NOT NULL,
       last_price REAL NOT NULL,
+      peak_price REAL NOT NULL DEFAULT 0,
       updated_at TEXT NOT NULL,
       PRIMARY KEY (user_id, ticker)
     );
@@ -298,6 +391,9 @@ function ensurePlatinumSchema(db: DatabaseSync): void {
       ticker TEXT NOT NULL,
       action TEXT NOT NULL,
       score REAL NOT NULL,
+      expected_return_pct REAL NOT NULL DEFAULT 0,
+      confidence REAL NOT NULL DEFAULT 0,
+      indicator_count INTEGER NOT NULL DEFAULT 0,
       price REAL NOT NULL,
       ma_short REAL NOT NULL,
       ma_long REAL NOT NULL,
@@ -341,6 +437,23 @@ function ensurePlatinumSchema(db: DatabaseSync): void {
     CREATE INDEX IF NOT EXISTS idx_platinum_paper_snapshots_user_scan
       ON platinum_paper_snapshots (user_id, scan_date DESC);
   `);
+
+  if (!hasColumn(db, "platinum_paper_positions", "peak_price")) {
+    db.exec("ALTER TABLE platinum_paper_positions ADD COLUMN peak_price REAL NOT NULL DEFAULT 0;");
+    db.exec("UPDATE platinum_paper_positions SET peak_price = CASE WHEN peak_price <= 0 THEN last_price ELSE peak_price END;");
+  }
+
+  if (!hasColumn(db, "platinum_recommendations", "expected_return_pct")) {
+    db.exec("ALTER TABLE platinum_recommendations ADD COLUMN expected_return_pct REAL NOT NULL DEFAULT 0;");
+  }
+
+  if (!hasColumn(db, "platinum_recommendations", "confidence")) {
+    db.exec("ALTER TABLE platinum_recommendations ADD COLUMN confidence REAL NOT NULL DEFAULT 0;");
+  }
+
+  if (!hasColumn(db, "platinum_recommendations", "indicator_count")) {
+    db.exec("ALTER TABLE platinum_recommendations ADD COLUMN indicator_count INTEGER NOT NULL DEFAULT 0;");
+  }
 }
 
 function toFiniteNumber(value: unknown, fallback = 0): number {
@@ -356,14 +469,6 @@ function normalizeTicker(value: string): string {
     .slice(0, 20);
 }
 
-function clamp(value: number, min: number, max: number): number {
-  if (!Number.isFinite(value)) {
-    return min;
-  }
-
-  return Math.min(max, Math.max(min, value));
-}
-
 function floorTo(value: number, decimals: number): number {
   if (!Number.isFinite(value)) {
     return 0;
@@ -371,6 +476,14 @@ function floorTo(value: number, decimals: number): number {
 
   const factor = 10 ** decimals;
   return Math.floor(value * factor) / factor;
+}
+
+function clamp(value: number, min: number, max: number): number {
+  if (!Number.isFinite(value)) {
+    return min;
+  }
+
+  return Math.min(max, Math.max(min, value));
 }
 
 function average(values: number[]): number {
@@ -391,21 +504,404 @@ function stdDev(values: number[]): number {
   return Math.sqrt(variance);
 }
 
+function sum(values: number[]): number {
+  return values.reduce((acc, value) => acc + value, 0);
+}
+
 function sma(values: number[], period: number): number | null {
   if (values.length < period) {
     return null;
   }
 
+  return average(values.slice(-period));
+}
+
+function ema(values: number[], period: number): number | null {
+  if (values.length < period) {
+    return null;
+  }
+
+  const multiplier = 2 / (period + 1);
+  let emaValue = average(values.slice(0, period));
+
+  for (let index = period; index < values.length; index += 1) {
+    emaValue = (values[index] - emaValue) * multiplier + emaValue;
+  }
+
+  return emaValue;
+}
+
+function emaSeries(values: number[], period: number): number[] {
+  const result = new Array<number>(values.length).fill(Number.NaN);
+  if (values.length < period) {
+    return result;
+  }
+
+  const multiplier = 2 / (period + 1);
+  let emaValue = average(values.slice(0, period));
+  result[period - 1] = emaValue;
+
+  for (let index = period; index < values.length; index += 1) {
+    emaValue = (values[index] - emaValue) * multiplier + emaValue;
+    result[index] = emaValue;
+  }
+
+  return result;
+}
+
+function rsi(values: number[], period = 14): number | null {
+  if (values.length < period + 1) {
+    return null;
+  }
+
+  let gains = 0;
+  let losses = 0;
+
+  for (let index = values.length - period; index < values.length; index += 1) {
+    const diff = values[index] - values[index - 1];
+    if (diff >= 0) {
+      gains += diff;
+    } else {
+      losses += Math.abs(diff);
+    }
+  }
+
+  if (losses === 0) {
+    return 100;
+  }
+
+  const rs = gains / losses;
+  return 100 - 100 / (1 + rs);
+}
+
+function trueRange(high: number, low: number, prevClose: number): number {
+  return Math.max(high - low, Math.abs(high - prevClose), Math.abs(low - prevClose));
+}
+
+function atr(highs: number[], lows: number[], closes: number[], period = 14): number | null {
+  if (highs.length < period + 1 || lows.length < period + 1 || closes.length < period + 1) {
+    return null;
+  }
+
+  const ranges: number[] = [];
+  for (let index = 1; index < closes.length; index += 1) {
+    ranges.push(trueRange(highs[index], lows[index], closes[index - 1]));
+  }
+
+  return average(ranges.slice(-period));
+}
+
+function adx(
+  highs: number[],
+  lows: number[],
+  closes: number[],
+  period = 14,
+): { adx: number; plusDi: number; minusDi: number } | null {
+  if (highs.length < period + 2 || lows.length < period + 2 || closes.length < period + 2) {
+    return null;
+  }
+
+  const trValues: number[] = [];
+  const plusDmValues: number[] = [];
+  const minusDmValues: number[] = [];
+
+  for (let index = 1; index < highs.length; index += 1) {
+    const upMove = highs[index] - highs[index - 1];
+    const downMove = lows[index - 1] - lows[index];
+
+    const plusDm = upMove > downMove && upMove > 0 ? upMove : 0;
+    const minusDm = downMove > upMove && downMove > 0 ? downMove : 0;
+
+    trValues.push(trueRange(highs[index], lows[index], closes[index - 1]));
+    plusDmValues.push(plusDm);
+    minusDmValues.push(minusDm);
+  }
+
+  if (trValues.length < period || plusDmValues.length < period || minusDmValues.length < period) {
+    return null;
+  }
+
+  const trN = sum(trValues.slice(-period));
+  const plusDmN = sum(plusDmValues.slice(-period));
+  const minusDmN = sum(minusDmValues.slice(-period));
+
+  if (trN <= 0) {
+    return null;
+  }
+
+  const plusDi = (plusDmN / trN) * 100;
+  const minusDi = (minusDmN / trN) * 100;
+  const diSum = plusDi + minusDi;
+  const dx = diSum > 0 ? (Math.abs(plusDi - minusDi) / diSum) * 100 : 0;
+
+  return {
+    adx: dx,
+    plusDi,
+    minusDi,
+  };
+}
+
+function stochasticK(highs: number[], lows: number[], closes: number[], period = 14): number | null {
+  if (highs.length < period || lows.length < period || closes.length < period) {
+    return null;
+  }
+
+  const high = Math.max(...highs.slice(-period));
+  const low = Math.min(...lows.slice(-period));
+  const close = closes[closes.length - 1];
+
+  if (high <= low) {
+    return 50;
+  }
+
+  return ((close - low) / (high - low)) * 100;
+}
+
+function bollingerPosition(values: number[], period = 20): number | null {
+  if (values.length < period) {
+    return null;
+  }
+
   const window = values.slice(-period);
-  return average(window);
+  const center = average(window);
+  const deviation = stdDev(window);
+
+  if (deviation <= 0) {
+    return 0.5;
+  }
+
+  const lower = center - deviation * 2;
+  const upper = center + deviation * 2;
+  const close = values[values.length - 1];
+
+  if (upper <= lower) {
+    return 0.5;
+  }
+
+  return clamp((close - lower) / (upper - lower), 0, 1);
+}
+
+function roc(values: number[], lookback: number): number | null {
+  if (values.length <= lookback) {
+    return null;
+  }
+
+  const start = values[values.length - 1 - lookback];
+  const end = values[values.length - 1];
+
+  if (!Number.isFinite(start) || start <= 0) {
+    return null;
+  }
+
+  return end / start - 1;
+}
+
+function mfi(highs: number[], lows: number[], closes: number[], volumes: number[], period = 14): number | null {
+  if (highs.length < period + 1 || lows.length < period + 1 || closes.length < period + 1 || volumes.length < period + 1) {
+    return null;
+  }
+
+  let positiveFlow = 0;
+  let negativeFlow = 0;
+
+  for (let index = closes.length - period; index < closes.length; index += 1) {
+    const typicalPrice = (highs[index] + lows[index] + closes[index]) / 3;
+    const prevTypicalPrice = (highs[index - 1] + lows[index - 1] + closes[index - 1]) / 3;
+    const flow = typicalPrice * Math.max(volumes[index], 0);
+
+    if (typicalPrice >= prevTypicalPrice) {
+      positiveFlow += flow;
+    } else {
+      negativeFlow += flow;
+    }
+  }
+
+  if (negativeFlow <= 0) {
+    return 100;
+  }
+
+  const ratio = positiveFlow / negativeFlow;
+  return 100 - 100 / (1 + ratio);
+}
+
+function cci(highs: number[], lows: number[], closes: number[], period = 20): number | null {
+  if (highs.length < period || lows.length < period || closes.length < period) {
+    return null;
+  }
+
+  const tps: number[] = [];
+
+  for (let index = closes.length - period; index < closes.length; index += 1) {
+    tps.push((highs[index] + lows[index] + closes[index]) / 3);
+  }
+
+  const meanTp = average(tps);
+  const meanDeviation = average(tps.map((value) => Math.abs(value - meanTp)));
+
+  if (meanDeviation <= 0) {
+    return 0;
+  }
+
+  const latestTp = tps[tps.length - 1];
+  return (latestTp - meanTp) / (0.015 * meanDeviation);
+}
+
+function obvSlope(closes: number[], volumes: number[], lookback = 20): number | null {
+  if (closes.length < lookback + 1 || volumes.length < lookback + 1) {
+    return null;
+  }
+
+  const obv: number[] = [0];
+
+  for (let index = 1; index < closes.length; index += 1) {
+    const previous = obv[obv.length - 1];
+    const volume = Math.max(volumes[index], 0);
+
+    if (closes[index] > closes[index - 1]) {
+      obv.push(previous + volume);
+    } else if (closes[index] < closes[index - 1]) {
+      obv.push(previous - volume);
+    } else {
+      obv.push(previous);
+    }
+  }
+
+  const recent = obv.slice(-lookback);
+  const n = recent.length;
+  if (n < 3) {
+    return null;
+  }
+
+  const xMean = (n - 1) / 2;
+  const yMean = average(recent);
+
+  let numerator = 0;
+  let denominator = 0;
+
+  for (let index = 0; index < n; index += 1) {
+    const dx = index - xMean;
+    numerator += dx * (recent[index] - yMean);
+    denominator += dx * dx;
+  }
+
+  if (denominator <= 0) {
+    return null;
+  }
+
+  const slope = numerator / denominator;
+  const volumeBase = average(volumes.slice(-lookback).map((value) => Math.max(value, 0)));
+
+  if (volumeBase <= 0) {
+    return 0;
+  }
+
+  return slope / volumeBase;
+}
+
+function zScore(values: number[], period = 20): number | null {
+  if (values.length < period) {
+    return null;
+  }
+
+  const window = values.slice(-period);
+  const mean = average(window);
+  const deviation = stdDev(window);
+
+  if (deviation <= 0) {
+    return 0;
+  }
+
+  return (values[values.length - 1] - mean) / deviation;
+}
+
+function parseConfiguredUniverse(): string[] {
+  const raw = String(process.env.PLATINUM_ASX_UNIVERSE || "").trim();
+  if (!raw) {
+    return [];
+  }
+
+  return Array.from(
+    new Set(
+      raw
+        .split(",")
+        .map((ticker) => normalizeTicker(ticker))
+        .filter((ticker) => /^[A-Z0-9]{2,5}$/.test(ticker)),
+    ),
+  );
+}
+
+async function fetchAsxUniverseFromDirectory(): Promise<string[]> {
+  try {
+    const response = await fetch(ASX_DIRECTORY_URL, {
+      method: "GET",
+      cache: "no-store",
+      headers: {
+        "User-Agent": "Mozilla/5.0 (compatible; SPECTRE-Platinum/1.0)",
+        Accept: "text/csv,application/octet-stream,text/plain,*/*",
+      },
+    });
+
+    if (!response.ok) {
+      return [];
+    }
+
+    const csv = await response.text();
+    const lines = csv.split(/\r?\n/);
+    const tickers: string[] = [];
+
+    for (let index = 1; index < lines.length; index += 1) {
+      const line = lines[index].trim();
+      if (!line) {
+        continue;
+      }
+
+      const match = line.match(/^"([^"]+)"/);
+      const rawCode = match?.[1] || "";
+      const code = normalizeTicker(rawCode);
+      if (/^[A-Z0-9]{2,5}$/.test(code)) {
+        tickers.push(code);
+      }
+    }
+
+    return Array.from(new Set(tickers));
+  } catch {
+    return [];
+  }
+}
+
+async function resolveUniverse(): Promise<string[]> {
+  const configured = parseConfiguredUniverse();
+  if (configured.length > 0) {
+    return configured;
+  }
+
+  const directory = await fetchAsxUniverseFromDirectory();
+  if (directory.length >= 500) {
+    return directory;
+  }
+
+  return FALLBACK_UNIVERSE;
+}
+
+function estimateUniverseSizeFromConfig(): number {
+  const configured = parseConfiguredUniverse();
+  if (configured.length > 0) {
+    return configured.length;
+  }
+
+  return DEFAULT_UNIVERSE_SIZE_ESTIMATE;
 }
 
 function toYahooAsxSymbol(ticker: string): string {
   const normalized = normalizeTicker(ticker);
+  if (!normalized) {
+    return "";
+  }
+
   return normalized.includes(".") ? normalized : `${normalized}.AX`;
 }
 
-async function fetchAsxSeriesFromYahoo(ticker: string, range = "1y"): Promise<DatedPricePoint[] | null> {
+async function fetchAsxSeriesFromYahoo(ticker: string, range = "1y"): Promise<PriceBar[] | null> {
   const symbol = toYahooAsxSymbol(ticker);
   if (!symbol) {
     return null;
@@ -429,46 +925,318 @@ async function fetchAsxSeriesFromYahoo(ticker: string, range = "1y"): Promise<Da
 
     const payload = (await response.json()) as YahooChartResponse;
     const result = payload.chart?.result?.[0];
-    const timestamps = result?.timestamp ?? [];
-    const adjusted = result?.indicators?.adjclose?.[0]?.adjclose ?? [];
-    const closes = result?.indicators?.quote?.[0]?.close ?? [];
-    const preferred = adjusted.length > 0 ? adjusted : closes;
-    const pointCount = Math.min(timestamps.length, preferred.length);
 
-    const points: DatedPricePoint[] = [];
+    const timestamps = result?.timestamp ?? [];
+    const quote = result?.indicators?.quote?.[0];
+    const adjusted = result?.indicators?.adjclose?.[0]?.adjclose ?? [];
+
+    const opens = quote?.open ?? [];
+    const highs = quote?.high ?? [];
+    const lows = quote?.low ?? [];
+    const closes = quote?.close ?? [];
+    const volumes = quote?.volume ?? [];
+
+    const pointCount = Math.min(
+      timestamps.length,
+      opens.length,
+      highs.length,
+      lows.length,
+      closes.length,
+      volumes.length,
+      adjusted.length > 0 ? adjusted.length : Number.MAX_SAFE_INTEGER,
+    );
+
+    const bars: PriceBar[] = [];
 
     for (let index = 0; index < pointCount; index += 1) {
       const timestamp = Number(timestamps[index]);
-      const close = Number(preferred[index]);
+      const open = Number(opens[index]);
+      const high = Number(highs[index]);
+      const low = Number(lows[index]);
+      const closeRaw = adjusted.length > 0 ? Number(adjusted[index]) : Number(closes[index]);
+      const close = Number.isFinite(closeRaw) && closeRaw > 0 ? closeRaw : Number(closes[index]);
+      const volume = Number(volumes[index]);
 
-      if (!Number.isFinite(timestamp) || timestamp <= 0 || !Number.isFinite(close) || close <= 0) {
+      if (
+        !Number.isFinite(timestamp) ||
+        timestamp <= 0 ||
+        !Number.isFinite(open) ||
+        !Number.isFinite(high) ||
+        !Number.isFinite(low) ||
+        !Number.isFinite(close) ||
+        open <= 0 ||
+        high <= 0 ||
+        low <= 0 ||
+        close <= 0
+      ) {
         continue;
       }
 
-      points.push({
+      bars.push({
         date: new Date(timestamp * 1000).toISOString().slice(0, 10),
+        open,
+        high,
+        low,
         close,
+        volume: Number.isFinite(volume) && volume > 0 ? volume : 0,
       });
     }
 
-    return points.length >= MA_LONG_PERIOD + 2 ? points : null;
+    return bars.length >= INDICATOR_MIN_BARS ? bars : null;
   } catch {
     return null;
   }
 }
 
-function readUniverseFromEnv(): string[] {
-  const raw = String(process.env.PLATINUM_ASX_UNIVERSE || "").trim();
-  if (!raw) {
-    return DEFAULT_ASX_UNIVERSE;
+function buildIndicators(bars: PriceBar[]): IndicatorPack | null {
+  if (bars.length < INDICATOR_MIN_BARS) {
+    return null;
   }
 
-  const parsed = raw
-    .split(",")
-    .map((ticker) => normalizeTicker(ticker))
-    .filter((ticker) => ticker.length > 0);
+  const closes = bars.map((bar) => bar.close);
+  const highs = bars.map((bar) => bar.high);
+  const lows = bars.map((bar) => bar.low);
+  const volumes = bars.map((bar) => bar.volume);
 
-  return parsed.length > 0 ? Array.from(new Set(parsed)) : DEFAULT_ASX_UNIVERSE;
+  const close = closes[closes.length - 1];
+  const sma20 = sma(closes, 20);
+  const sma50 = sma(closes, MA_MEDIUM_PERIOD);
+  const sma200 = sma(closes, MA_LONG_PERIOD);
+  const ema12Series = emaSeries(closes, 12);
+  const ema26Series = emaSeries(closes, 26);
+  const ema12 = ema12Series[ema12Series.length - 1];
+  const ema26 = ema26Series[ema26Series.length - 1];
+
+  const macdBaseSeries = ema12Series
+    .map((value, index) => {
+      const ema26Value = ema26Series[index];
+      if (!Number.isFinite(value) || !Number.isFinite(ema26Value)) {
+        return Number.NaN;
+      }
+
+      return value - ema26Value;
+    })
+    .filter((value) => Number.isFinite(value));
+
+  const macdSignal = ema(macdBaseSeries, 9);
+
+  if (
+    sma20 == null ||
+    sma50 == null ||
+    sma200 == null ||
+    !Number.isFinite(ema12) ||
+    !Number.isFinite(ema26) ||
+    macdSignal == null
+  ) {
+    return null;
+  }
+
+  const macdLine = ema12 - ema26;
+  const macdHist = macdLine - macdSignal;
+
+  const rsi14 = rsi(closes, 14);
+  const stochK = stochasticK(highs, lows, closes, 14);
+  const stochD = stochasticK(highs.slice(0, -1), lows.slice(0, -1), closes.slice(0, -1), 14);
+  const bollPos = bollingerPosition(closes, 20);
+  const atr14 = atr(highs, lows, closes, 14);
+  const adxPack = adx(highs, lows, closes, 14);
+  const roc20 = roc(closes, MOMENTUM_LOOKBACK);
+  const mfi14 = mfi(highs, lows, closes, volumes, 14);
+  const cci20 = cci(highs, lows, closes, 20);
+  const obv = obvSlope(closes, volumes, 20);
+  const z = zScore(closes, ZSCORE_LOOKBACK);
+
+  if (
+    rsi14 == null ||
+    stochK == null ||
+    stochD == null ||
+    bollPos == null ||
+    atr14 == null ||
+    adxPack == null ||
+    roc20 == null ||
+    mfi14 == null ||
+    cci20 == null ||
+    obv == null ||
+    z == null
+  ) {
+    return null;
+  }
+
+  const avgVolume20 = average(volumes.slice(-20));
+  const latestVolume = Math.max(volumes[volumes.length - 1], 0);
+  const volumeSurge = avgVolume20 > 0 ? latestVolume / avgVolume20 : 1;
+
+  const highest20 = Math.max(...highs.slice(-20));
+  const donchianBreakout = close >= highest20 * 0.997;
+
+  return {
+    close,
+    sma20,
+    sma50,
+    sma200,
+    ema12,
+    ema26,
+    macdLine,
+    macdSignal,
+    macdHist,
+    rsi14,
+    stochK,
+    stochD,
+    bollingerPos: bollPos,
+    atr14,
+    atrPct: close > 0 ? atr14 / close : 0,
+    adx14: adxPack.adx,
+    plusDi: adxPack.plusDi,
+    minusDi: adxPack.minusDi,
+    roc20,
+    mfi14,
+    cci20,
+    volumeSurge,
+    obvSlope: obv,
+    zScore20: z,
+    donchianBreakout,
+  };
+}
+
+function toSignalBreakdown(indicators: IndicatorPack): SignalBreakdownItem[] {
+  const trendAlignment =
+    (indicators.close > indicators.sma20 ? 1 : -1) * 0.3 +
+    (indicators.close > indicators.sma50 ? 1 : -1) * 0.35 +
+    (indicators.sma50 > indicators.sma200 ? 1 : -1) * 0.35;
+
+  const emaSignal = indicators.ema12 > indicators.ema26 ? 1 : -1;
+  const macdSignal = clamp(indicators.macdHist / Math.max(indicators.atr14, indicators.close * 0.004), -1, 1);
+  const adxSignal =
+    indicators.adx14 > 20
+      ? clamp((indicators.plusDi - indicators.minusDi) / 20, -1, 1) * clamp((indicators.adx14 - 20) / 20, 0, 1)
+      : 0;
+
+  const rsiSignal =
+    indicators.rsi14 > 55 && indicators.rsi14 < 75
+      ? 0.9
+      : indicators.rsi14 >= 75 && indicators.rsi14 <= 85
+        ? 0.25
+        : indicators.rsi14 > 85
+          ? -0.7
+          : indicators.rsi14 < 30
+            ? 0.5
+            : indicators.rsi14 < 45
+              ? -0.35
+              : 0;
+
+  const stochasticSignal = clamp((indicators.stochK - indicators.stochD) / 20, -1, 1);
+  const bollSignal =
+    indicators.bollingerPos > 0.8
+      ? 0.45
+      : indicators.bollingerPos < 0.2
+        ? -0.3
+        : clamp((indicators.bollingerPos - 0.5) * 2, -0.8, 0.8);
+
+  const momentumSignal = clamp(indicators.roc20 / 0.18, -1, 1);
+  const mfiSignal =
+    indicators.mfi14 > 55 && indicators.mfi14 < 80
+      ? 0.8
+      : indicators.mfi14 >= 80
+        ? -0.35
+        : indicators.mfi14 < 20
+          ? 0.35
+          : 0;
+
+  const cciSignal = clamp(indicators.cci20 / 180, -1, 1);
+  const obvSignal = clamp(indicators.obvSlope / 0.6, -1, 1);
+  const volumeSignal = clamp((indicators.volumeSurge - 1) / 1.2, -1, 1);
+  const zSignal = clamp(-indicators.zScore20 / 2.5, -1, 1);
+  const breakoutSignal = indicators.donchianBreakout ? 1 : 0;
+  const volatilityPenalty = clamp((indicators.atrPct - 0.045) / 0.08, -1, 1);
+
+  return [
+    { label: "Trend MA", value: trendAlignment, weight: 1.2 },
+    { label: "EMA", value: emaSignal, weight: 0.8 },
+    { label: "MACD", value: macdSignal, weight: 1.1 },
+    { label: "ADX", value: adxSignal, weight: 1.0 },
+    { label: "RSI", value: rsiSignal, weight: 0.8 },
+    { label: "Stoch", value: stochasticSignal, weight: 0.5 },
+    { label: "Bollinger", value: bollSignal, weight: 0.6 },
+    { label: "ROC", value: momentumSignal, weight: 1.1 },
+    { label: "MFI", value: mfiSignal, weight: 0.6 },
+    { label: "CCI", value: cciSignal, weight: 0.55 },
+    { label: "OBV", value: obvSignal, weight: 0.65 },
+    { label: "Volume", value: volumeSignal, weight: 0.7 },
+    { label: "Z-Score", value: zSignal, weight: 0.55 },
+    { label: "Breakout", value: breakoutSignal, weight: 0.9 },
+    { label: "Volatility", value: -volatilityPenalty, weight: 0.55 },
+  ];
+}
+
+function evaluateRecommendation(
+  ticker: string,
+  indicators: IndicatorPack,
+  position: PositionMutable | undefined,
+): RecommendationCandidate {
+  const breakdown = toSignalBreakdown(indicators);
+  const weightTotal = sum(breakdown.map((entry) => Math.abs(entry.weight))) || 1;
+  const weightedRaw = sum(breakdown.map((entry) => entry.value * entry.weight));
+  const score = weightedRaw / weightTotal;
+
+  const expectedReturnPct = clamp(
+    score * 13 + indicators.roc20 * 100 * 0.45 - indicators.atrPct * 100 * 0.25,
+    -25,
+    30,
+  );
+
+  const confidence = clamp(
+    (Math.abs(score) * 0.55 + clamp(indicators.adx14 / 40, 0, 1) * 0.25 + clamp(indicators.volumeSurge / 2, 0, 1) * 0.2) * 100,
+    0,
+    99,
+  );
+
+  const hasPosition = Boolean(position && position.units > 0);
+
+  let action: RecommendationAction = "hold";
+
+  if (hasPosition && position) {
+    const stopLossHit = indicators.close <= position.avgCost * (1 - STOP_LOSS_PCT);
+    const trailingStopHit = position.peakPrice > 0 && indicators.close <= position.peakPrice * (1 - TRAILING_STOP_PCT);
+    const trendBreak = indicators.close < indicators.sma50 && indicators.macdHist < 0;
+
+    if (stopLossHit || trailingStopHit || score < -0.15 || (trendBreak && indicators.rsi14 < 48)) {
+      action = "sell";
+    }
+  } else {
+    const trendGate = indicators.close > indicators.sma50 && indicators.sma50 > indicators.sma200;
+    const qualityGate = indicators.volumeSurge > 0.9 && indicators.adx14 >= 14;
+
+    if (score > 0.22 && expectedReturnPct >= 4 && trendGate && qualityGate) {
+      action = "buy";
+    }
+  }
+
+  const topSignals = [...breakdown]
+    .sort((a, b) => Math.abs(b.value * b.weight) - Math.abs(a.value * a.weight))
+    .slice(0, 4)
+    .map((entry) => `${entry.label}:${(entry.value * entry.weight).toFixed(2)}`)
+    .join(" | ");
+
+  const reason =
+    `Score ${score.toFixed(3)}; exp ${expectedReturnPct.toFixed(2)}%; conf ${confidence.toFixed(0)}%; ` +
+    `MA20 ${indicators.sma20.toFixed(2)} / MA50 ${indicators.sma50.toFixed(2)} / MA200 ${indicators.sma200.toFixed(2)}; ` +
+    `ROC20 ${(indicators.roc20 * 100).toFixed(2)}%; RSI ${indicators.rsi14.toFixed(1)}; ATR ${(indicators.atrPct * 100).toFixed(2)}%; ` +
+    `signals[${topSignals}]`;
+
+  return {
+    ticker,
+    action,
+    score,
+    expectedReturnPct,
+    confidence,
+    indicatorCount: breakdown.length,
+    price: indicators.close,
+    maShort: indicators.sma20,
+    maLong: indicators.sma50,
+    momentum: indicators.roc20,
+    zScore: indicators.zScore20,
+    reason,
+  };
 }
 
 function currentScanDate(): string {
@@ -518,7 +1286,7 @@ function ensurePortfolioRow(db: DatabaseSync, userId: string): PortfolioRow {
 function readPositions(db: DatabaseSync, userId: string): PositionRow[] {
   return db
     .prepare(`
-      SELECT ticker, units, avg_cost, last_price, updated_at
+      SELECT ticker, units, avg_cost, last_price, peak_price, updated_at
       FROM platinum_paper_positions
       WHERE user_id = ?
       ORDER BY ticker ASC
@@ -526,73 +1294,9 @@ function readPositions(db: DatabaseSync, userId: string): PositionRow[] {
     .all(userId) as PositionRow[];
 }
 
-function buildSignalRecommendation(
-  ticker: string,
-  closes: number[],
-  hasOpenPosition: boolean,
-): RecommendationCandidate | null {
-  if (closes.length < MA_LONG_PERIOD + 2 || closes.length <= MOMENTUM_LOOKBACK) {
-    return null;
-  }
-
-  const latestPrice = closes[closes.length - 1];
-  const maShort = sma(closes, MA_SHORT_PERIOD);
-  const maLong = sma(closes, MA_LONG_PERIOD);
-
-  if (maShort == null || maLong == null || latestPrice <= 0) {
-    return null;
-  }
-
-  const momentumBase = closes[closes.length - 1 - MOMENTUM_LOOKBACK];
-  if (!Number.isFinite(momentumBase) || momentumBase <= 0) {
-    return null;
-  }
-
-  const momentum = latestPrice / momentumBase - 1;
-  const zWindow = closes.slice(-ZSCORE_LOOKBACK);
-  const zMean = average(zWindow);
-  const zStd = stdDev(zWindow);
-  const zScore = zStd > 0 ? (latestPrice - zMean) / zStd : 0;
-
-  const trendSignal = maShort > maLong ? 1 : -1;
-  const momentumSignal = clamp(momentum / 0.08, -1.5, 1.5);
-  const reversionSignal = clamp(-zScore / 2, -1.2, 1.2);
-  const score = trendSignal * 1.3 + momentumSignal * 0.9 + reversionSignal * 0.6;
-
-  let action: RecommendationAction = "hold";
-
-  if (hasOpenPosition) {
-    if (maShort < maLong || momentum < -0.04 || zScore > 1.8) {
-      action = "sell";
-    }
-  } else if (maShort > maLong && momentum > 0.03 && zScore < 1.25) {
-    action = "buy";
-  }
-
-  const reason =
-    `MA${MA_SHORT_PERIOD} ${maShort.toFixed(2)} vs MA${MA_LONG_PERIOD} ${maLong.toFixed(2)}; ` +
-    `momentum ${((momentum || 0) * 100).toFixed(2)}%; ` +
-    `z-score ${zScore.toFixed(2)}`;
-
-  return {
-    ticker,
-    action,
-    score,
-    price: latestPrice,
-    maShort,
-    maLong,
-    momentum,
-    zScore,
-    reason,
-  };
-}
-
-function toSummary(
-  row: PortfolioRow,
-  positions: PlatinumPaperPosition[],
-): PlatinumPaperPortfolioSummary {
-  const investedValue = positions.reduce((sum, position) => sum + position.marketValue, 0);
-  const unrealizedPnl = positions.reduce((sum, position) => sum + position.unrealizedPnl, 0);
+function toSummary(row: PortfolioRow, positions: PlatinumPaperPosition[]): PlatinumPaperPortfolioSummary {
+  const investedValue = positions.reduce((sumValue, position) => sumValue + position.marketValue, 0);
+  const unrealizedPnl = positions.reduce((sumValue, position) => sumValue + position.unrealizedPnl, 0);
   const cash = toFiniteNumber(row.cash, STARTING_CAPITAL_AUD);
   const startingCash = toFiniteNumber(row.starting_cash, STARTING_CAPITAL_AUD);
   const realizedPnl = toFiniteNumber(row.realized_pnl, 0);
@@ -623,6 +1327,7 @@ export function getPlatinumPaperState(userId: string): PlatinumPaperState {
       const units = toFiniteNumber(row.units, 0);
       const avgCost = toFiniteNumber(row.avg_cost, 0);
       const lastPrice = toFiniteNumber(row.last_price, 0);
+      const peakPrice = Math.max(toFiniteNumber(row.peak_price, 0), lastPrice);
       const marketValue = units * lastPrice;
       const unrealizedPnl = (lastPrice - avgCost) * units;
 
@@ -631,6 +1336,7 @@ export function getPlatinumPaperState(userId: string): PlatinumPaperState {
         units,
         avgCost,
         lastPrice,
+        peakPrice,
         marketValue,
         unrealizedPnl,
         updatedAt: row.updated_at,
@@ -653,14 +1359,16 @@ export function getPlatinumPaperState(userId: string): PlatinumPaperState {
   const recommendations = latestScanDate
     ? (db
         .prepare(`
-          SELECT id, scan_date, ticker, action, score, price, ma_short, ma_long, momentum, z_score, reason, created_at
+          SELECT id, scan_date, ticker, action, score, expected_return_pct, confidence, indicator_count, price,
+            ma_short, ma_long, momentum, z_score, reason, created_at
           FROM platinum_recommendations
           WHERE user_id = ? AND scan_date = ?
           ORDER BY
             CASE action WHEN 'buy' THEN 0 WHEN 'sell' THEN 1 ELSE 2 END,
+            expected_return_pct DESC,
             ABS(score) DESC,
             ticker ASC
-          LIMIT 80
+          LIMIT 200
         `)
         .all(userId, latestScanDate) as RecommendationRow[])
     : [];
@@ -671,7 +1379,7 @@ export function getPlatinumPaperState(userId: string): PlatinumPaperState {
       FROM platinum_paper_trades
       WHERE user_id = ?
       ORDER BY created_at DESC
-      LIMIT 80
+      LIMIT 200
     `)
     .all(userId) as TradeRow[];
 
@@ -681,7 +1389,7 @@ export function getPlatinumPaperState(userId: string): PlatinumPaperState {
       FROM platinum_paper_snapshots
       WHERE user_id = ?
       ORDER BY scan_date DESC
-      LIMIT 60
+      LIMIT 200
     `)
     .all(userId) as SnapshotRow[];
 
@@ -695,6 +1403,9 @@ export function getPlatinumPaperState(userId: string): PlatinumPaperState {
       ticker: row.ticker,
       action: row.action,
       score: toFiniteNumber(row.score, 0),
+      expectedReturnPct: toFiniteNumber(row.expected_return_pct, 0),
+      confidence: toFiniteNumber(row.confidence, 0),
+      indicatorCount: toFiniteNumber(row.indicator_count, 0),
       price: toFiniteNumber(row.price, 0),
       maShort: toFiniteNumber(row.ma_short, 0),
       maLong: toFiniteNumber(row.ma_long, 0),
@@ -724,7 +1435,7 @@ export function getPlatinumPaperState(userId: string): PlatinumPaperState {
         createdAt: row.created_at,
       }))
       .reverse(),
-    universeSize: readUniverseFromEnv().length,
+    universeSize: estimateUniverseSizeFromConfig(),
   };
 }
 
@@ -742,6 +1453,7 @@ function mapRowsToMutablePositions(rows: PositionRow[]): Map<string, PositionMut
       units: toFiniteNumber(row.units, 0),
       avgCost: toFiniteNumber(row.avg_cost, 0),
       lastPrice: toFiniteNumber(row.last_price, 0),
+      peakPrice: Math.max(toFiniteNumber(row.peak_price, 0), toFiniteNumber(row.last_price, 0)),
     });
   }
 
@@ -750,10 +1462,52 @@ function mapRowsToMutablePositions(rows: PositionRow[]): Map<string, PositionMut
 
 function computeInvestedValue(positions: Map<string, PositionMutable>): number {
   let total = 0;
+
   for (const position of positions.values()) {
     total += position.units * position.lastPrice;
   }
+
   return total;
+}
+
+async function mapWithConcurrency<T, R>(
+  items: T[],
+  concurrency: number,
+  worker: (item: T, index: number) => Promise<R>,
+): Promise<R[]> {
+  if (items.length === 0) {
+    return [];
+  }
+
+  const limit = Math.max(1, Math.min(concurrency, items.length));
+  const results: R[] = new Array(items.length);
+  let cursor = 0;
+
+  const runners = Array.from({ length: limit }, async () => {
+    while (true) {
+      const index = cursor;
+      cursor += 1;
+
+      if (index >= items.length) {
+        return;
+      }
+
+      results[index] = await worker(items[index], index);
+    }
+  });
+
+  await Promise.all(runners);
+  return results;
+}
+
+function pruneHistoricalData(db: DatabaseSync, userId: string): void {
+  const cutoff = new Date();
+  cutoff.setUTCDate(cutoff.getUTCDate() - PLATINUM_HISTORY_DAYS);
+  const cutoffDate = cutoff.toISOString().slice(0, 10);
+
+  db.prepare("DELETE FROM platinum_recommendations WHERE user_id = ? AND scan_date < ?").run(userId, cutoffDate);
+  db.prepare("DELETE FROM platinum_paper_trades WHERE user_id = ? AND scan_date < ?").run(userId, cutoffDate);
+  db.prepare("DELETE FROM platinum_paper_snapshots WHERE user_id = ? AND scan_date < ?").run(userId, cutoffDate);
 }
 
 export async function runPlatinumDailyScan(userId: string): Promise<PlatinumScanRunResult> {
@@ -781,39 +1535,65 @@ export async function runPlatinumDailyScan(userId: string): Promise<PlatinumScan
   const portfolioRow = ensurePortfolioRow(db, userId);
   const existingPositions = mapRowsToMutablePositions(readPositions(db, userId));
 
-  const universe = Array.from(new Set([...readUniverseFromEnv(), ...Array.from(existingPositions.keys())]));
-  const skippedTickers: string[] = [];
-  const recommendations: RecommendationCandidate[] = [];
+  const universeRaw = await resolveUniverse();
+  const universe = Array.from(new Set([...universeRaw, ...Array.from(existingPositions.keys())]));
+
+  const outcomes = await mapWithConcurrency(universe, ASX_FETCH_CONCURRENCY, async (ticker): Promise<ScanOutcome> => {
+    try {
+      const series = await fetchAsxSeriesFromYahoo(ticker, "1y");
+      if (!series) {
+        return { ticker, recommendation: null, latestPrice: null, skipReason: "no_price_series" };
+      }
+
+      const indicators = buildIndicators(series);
+      if (!indicators) {
+        return { ticker, recommendation: null, latestPrice: null, skipReason: "insufficient_history" };
+      }
+
+      const position = existingPositions.get(ticker);
+      const recommendation = evaluateRecommendation(ticker, indicators, position);
+
+      return {
+        ticker,
+        recommendation,
+        latestPrice: indicators.close,
+        skipReason: null,
+      };
+    } catch {
+      return { ticker, recommendation: null, latestPrice: null, skipReason: "fetch_error" };
+    }
+  });
+
+  const skippedTickers = outcomes
+    .filter((outcome) => outcome.recommendation == null)
+    .map((outcome) => outcome.ticker);
+
+  const recommendations = outcomes
+    .map((outcome) => outcome.recommendation)
+    .filter((item): item is RecommendationCandidate => Boolean(item));
+
   const latestPriceByTicker = new Map<string, number>();
-
-  for (const ticker of universe) {
-    const series = await fetchAsxSeriesFromYahoo(ticker, "1y");
-    if (!series) {
-      skippedTickers.push(ticker);
-      continue;
+  for (const outcome of outcomes) {
+    if (outcome.latestPrice != null && Number.isFinite(outcome.latestPrice) && outcome.latestPrice > 0) {
+      latestPriceByTicker.set(outcome.ticker, outcome.latestPrice);
     }
+  }
 
-    const closes = series.map((point) => point.close).filter((value) => Number.isFinite(value) && value > 0);
-    const hasOpenPosition = existingPositions.has(ticker);
-    const recommendation = buildSignalRecommendation(ticker, closes, hasOpenPosition);
-
-    if (!recommendation) {
-      skippedTickers.push(ticker);
-      continue;
+  for (const [ticker, position] of existingPositions.entries()) {
+    const latestPrice = latestPriceByTicker.get(ticker);
+    if (latestPrice && Number.isFinite(latestPrice) && latestPrice > 0) {
+      position.lastPrice = latestPrice;
+      position.peakPrice = Math.max(position.peakPrice, latestPrice);
     }
-
-    recommendations.push(recommendation);
-    latestPriceByTicker.set(ticker, recommendation.price);
   }
 
   let cash = toFiniteNumber(portfolioRow.cash, STARTING_CAPITAL_AUD);
   let realizedPnl = toFiniteNumber(portfolioRow.realized_pnl, 0);
-
   const trades: TradeCandidate[] = [];
 
   const sellRecommendations = recommendations
     .filter((item) => item.action === "sell")
-    .sort((a, b) => Math.abs(b.score) - Math.abs(a.score));
+    .sort((a, b) => a.expectedReturnPct - b.expectedReturnPct);
 
   for (const recommendation of sellRecommendations) {
     const position = existingPositions.get(recommendation.ticker);
@@ -847,7 +1627,13 @@ export async function runPlatinumDailyScan(userId: string): Promise<PlatinumScan
 
   const buyRecommendations = recommendations
     .filter((item) => item.action === "buy")
-    .sort((a, b) => b.score - a.score);
+    .sort((a, b) => {
+      if (b.expectedReturnPct !== a.expectedReturnPct) {
+        return b.expectedReturnPct - a.expectedReturnPct;
+      }
+
+      return b.confidence - a.confidence;
+    });
 
   for (const recommendation of buyRecommendations) {
     if (existingPositions.has(recommendation.ticker)) {
@@ -901,6 +1687,7 @@ export async function runPlatinumDailyScan(userId: string): Promise<PlatinumScan
       units,
       avgCost: fillPrice,
       lastPrice: recommendation.price,
+      peakPrice: recommendation.price,
     });
 
     trades.push({
@@ -917,13 +1704,6 @@ export async function runPlatinumDailyScan(userId: string): Promise<PlatinumScan
     });
   }
 
-  for (const [ticker, position] of existingPositions.entries()) {
-    const latestPrice = latestPriceByTicker.get(ticker);
-    if (latestPrice && Number.isFinite(latestPrice) && latestPrice > 0) {
-      position.lastPrice = latestPrice;
-    }
-  }
-
   const investedValue = computeInvestedValue(existingPositions);
   const equity = cash + investedValue;
 
@@ -932,8 +1712,9 @@ export async function runPlatinumDailyScan(userId: string): Promise<PlatinumScan
   try {
     const recommendationInsert = db.prepare(`
       INSERT INTO platinum_recommendations (
-        id, user_id, scan_date, ticker, action, score, price, ma_short, ma_long, momentum, z_score, reason, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        id, user_id, scan_date, ticker, action, score, expected_return_pct, confidence, indicator_count, price,
+        ma_short, ma_long, momentum, z_score, reason, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     for (const recommendation of recommendations) {
@@ -944,6 +1725,9 @@ export async function runPlatinumDailyScan(userId: string): Promise<PlatinumScan
         recommendation.ticker,
         recommendation.action,
         recommendation.score,
+        recommendation.expectedReturnPct,
+        recommendation.confidence,
+        recommendation.indicatorCount,
         recommendation.price,
         recommendation.maShort,
         recommendation.maLong,
@@ -979,8 +1763,8 @@ export async function runPlatinumDailyScan(userId: string): Promise<PlatinumScan
     db.prepare("DELETE FROM platinum_paper_positions WHERE user_id = ?").run(userId);
 
     const positionInsert = db.prepare(`
-      INSERT INTO platinum_paper_positions (user_id, ticker, units, avg_cost, last_price, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO platinum_paper_positions (user_id, ticker, units, avg_cost, last_price, peak_price, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `);
 
     for (const position of existingPositions.values()) {
@@ -988,7 +1772,15 @@ export async function runPlatinumDailyScan(userId: string): Promise<PlatinumScan
         continue;
       }
 
-      positionInsert.run(userId, position.ticker, position.units, position.avgCost, position.lastPrice, nowIso);
+      positionInsert.run(
+        userId,
+        position.ticker,
+        position.units,
+        position.avgCost,
+        position.lastPrice,
+        Math.max(position.peakPrice, position.lastPrice),
+        nowIso,
+      );
     }
 
     db.prepare(`
@@ -1006,6 +1798,8 @@ export async function runPlatinumDailyScan(userId: string): Promise<PlatinumScan
         equity = excluded.equity,
         created_at = excluded.created_at
     `).run(crypto.randomUUID(), userId, scanDate, cash, investedValue, equity, nowIso);
+
+    pruneHistoricalData(db, userId);
 
     db.exec("COMMIT");
   } catch (error) {

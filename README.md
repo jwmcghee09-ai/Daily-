@@ -277,8 +277,9 @@ This ensures backups run inside the web service context that has access to `/var
 
 SPECTRE Platinum includes a paper-trading engine that:
 - starts with `A$5,000` fake capital
-- scans an ASX universe daily with formula-based signals (moving averages, momentum, z-score mean reversion)
-- records recommendations and automatically executes paper BUY/SELL trades
+- scans the full ASX directory daily (or `PLATINUM_ASX_UNIVERSE` override)
+- uses a broad leading-indicator model (trend, momentum, volatility, volume, breakout, mean reversion factors)
+- ranks expected return and confidence, then automatically executes paper BUY/SELL trades
 
 API endpoints:
 - User-triggered (authenticated Platinum user only): `POST /api/platinum/paper-trading`
@@ -287,6 +288,7 @@ API endpoints:
 Optional env vars:
 - `PLATINUM_ASX_UNIVERSE` (comma-separated tickers, e.g. `BHP,CBA,CSL,...`)
 - `PLATINUM_TIME_ZONE` (defaults to `Australia/Sydney`)
+- `PLATINUM_FETCH_CONCURRENCY` (default `12`, controls parallel Yahoo requests)
 
 Render cron command example (daily run):
 

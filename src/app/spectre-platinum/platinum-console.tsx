@@ -1,6 +1,19 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Legend,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import styles from "./page.module.css";
 
 interface PlatinumConsoleProps {
@@ -12,6 +25,7 @@ interface PlatinumPaperPosition {
   units: number;
   avgCost: number;
   lastPrice: number;
+  peakPrice: number;
   marketValue: number;
   unrealizedPnl: number;
   updatedAt: string;
@@ -23,6 +37,9 @@ interface PlatinumRecommendation {
   ticker: string;
   action: "buy" | "sell" | "hold";
   score: number;
+  expectedReturnPct: number;
+  confidence: number;
+  indicatorCount: number;
   price: number;
   maShort: number;
   maLong: number;
@@ -101,6 +118,12 @@ function pct(value: number): string {
   return `${value.toFixed(2)}%`;
 }
 
+const CHART_TOOLTIP_STYLE = {
+  backgroundColor: "#0f0a1a",
+  border: "1px solid rgba(255,255,255,0.2)",
+  borderRadius: "8px",
+};
+
 export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
   const [state, setState] = useState<PlatinumPaperState | null>(null);
   const [loading, setLoading] = useState(true);
@@ -150,10 +173,10 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
       setState(payload.result.state);
 
       if (payload.result.alreadyRanToday) {
-        setStatusMessage(`Daily scan already ran for ${payload.result.scanDate} (Australia/Sydney).`);
+        setStatusMessage(`Daily scan already ran for ${payload.result.scanDate} (${"Australia/Sydney"}).`);
       } else {
         setStatusMessage(
-          `Scan ${payload.result.scanDate}: ${payload.result.generatedRecommendations} recommendations, ${payload.result.executedTrades} paper trades executed.`,
+          `Scan ${payload.result.scanDate}: ${payload.result.generatedRecommendations} recommendations generated, ${payload.result.executedTrades} paper trades executed, ${payload.result.skippedTickers.length} skipped tickers.`,
         );
       }
     } catch (error) {
@@ -168,7 +191,7 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
       return [];
     }
 
-    return state.latestRecommendations.slice(0, 20);
+    return state.latestRecommendations.slice(0, 40);
   }, [state]);
 
   const recentTrades = useMemo<PlatinumPaperTrade[]>(() => {
@@ -176,7 +199,7 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
       return [];
     }
 
-    return state.recentTrades.slice(0, 20);
+    return state.recentTrades.slice(0, 30);
   }, [state]);
 
   const positions = useMemo<PlatinumPaperPosition[]>(() => {
@@ -185,6 +208,51 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
     }
 
     return state.positions;
+  }, [state]);
+
+  const equityCurveData = useMemo(() => {
+    if (!state) {
+      return [] as Array<{ date: string; equity: number; cash: number; invested: number }>;
+    }
+
+    return state.snapshots.map((snapshot) => ({
+      date: snapshot.scanDate.slice(5),
+      equity: snapshot.equity,
+      cash: snapshot.cash,
+      invested: snapshot.investedValue,
+    }));
+  }, [state]);
+
+  const opportunityData = useMemo(() => {
+    if (!state) {
+      return [] as Array<{ ticker: string; expected: number; confidence: number }>;
+    }
+
+    return state.latestRecommendations
+      .filter((recommendation) => recommendation.action === "buy")
+      .sort((a, b) => b.expectedReturnPct - a.expectedReturnPct)
+      .slice(0, 12)
+      .map((recommendation) => ({
+        ticker: recommendation.ticker,
+        expected: recommendation.expectedReturnPct,
+        confidence: recommendation.confidence,
+      }));
+  }, [state]);
+
+  const actionMixData = useMemo(() => {
+    if (!state) {
+      return [] as Array<{ action: string; count: number }>;
+    }
+
+    const buyCount = state.latestRecommendations.filter((recommendation) => recommendation.action === "buy").length;
+    const sellCount = state.latestRecommendations.filter((recommendation) => recommendation.action === "sell").length;
+    const holdCount = state.latestRecommendations.filter((recommendation) => recommendation.action === "hold").length;
+
+    return [
+      { action: "BUY", count: buyCount },
+      { action: "SELL", count: sellCount },
+      { action: "HOLD", count: holdCount },
+    ];
   }, [state]);
 
   if (loading) {
@@ -200,11 +268,11 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
       <div className={styles.toolbar}>
         <div>
           <p className={styles.userRow}>Signed in as {userEmail}</p>
-          <p className={styles.infoText}>Model capital starts at {currency.format(state.portfolio.startingCash)} and executes fake trades from BUY/SELL recommendations.</p>
-          <p className={styles.infoText}>Universe scanned: {state.universeSize} ASX tickers (configurable via PLATINUM_ASX_UNIVERSE).</p>
+          <p className={styles.infoText}>Paper account starts at {currency.format(state.portfolio.startingCash)} and auto-executes fake BUY/SELL trades from ranked leading indicators.</p>
+          <p className={styles.infoText}>Universe target: whole ASX ({state.universeSize} tickers estimate).</p>
         </div>
         <button className={styles.scanButton} onClick={() => void runDailyScan()} disabled={runningScan}>
-          {runningScan ? "Running Scan..." : "Run Daily Scan"}
+          {runningScan ? "Scanning Whole ASX..." : "Run Full ASX Daily Scan"}
         </button>
       </div>
 
@@ -242,6 +310,66 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
         </article>
       </div>
 
+      <div className={styles.chartGrid}>
+        <article className={styles.chartCard}>
+          <h3>Equity Curve</h3>
+          <div className={styles.chartWrap}>
+            <ResponsiveContainer width="100%" height={260}>
+              <LineChart data={equityCurveData} margin={{ top: 8, right: 12, left: 4, bottom: 8 }}>
+                <CartesianGrid stroke="rgba(255,255,255,0.08)" strokeDasharray="3 3" />
+                <XAxis dataKey="date" tick={{ fill: "#a7a2bf", fontSize: 11 }} />
+                <YAxis tick={{ fill: "#a7a2bf", fontSize: 11 }} />
+                <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
+                <Legend />
+                <Line type="monotone" dataKey="equity" stroke="#ff4d1a" strokeWidth={2} dot={false} name="Equity" />
+                <Line type="monotone" dataKey="cash" stroke="#9ce9b8" strokeWidth={2} dot={false} name="Cash" />
+                <Line type="monotone" dataKey="invested" stroke="#9b5de5" strokeWidth={2} dot={false} name="Invested" />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </article>
+
+        <article className={styles.chartCard}>
+          <h3>Top Expected Return Ideas</h3>
+          <div className={styles.chartWrap}>
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={opportunityData} margin={{ top: 8, right: 12, left: 4, bottom: 8 }}>
+                <CartesianGrid stroke="rgba(255,255,255,0.08)" strokeDasharray="3 3" />
+                <XAxis dataKey="ticker" tick={{ fill: "#a7a2bf", fontSize: 11 }} />
+                <YAxis tick={{ fill: "#a7a2bf", fontSize: 11 }} />
+                <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
+                <Legend />
+                <Bar dataKey="expected" name="Expected Return %">
+                  {opportunityData.map((entry) => (
+                    <Cell key={entry.ticker} fill={entry.expected >= 0 ? "#ff4d1a" : "#ff8f80"} />
+                  ))}
+                </Bar>
+                <Bar dataKey="confidence" name="Confidence %" fill="#9b5de5" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </article>
+
+        <article className={styles.chartCard}>
+          <h3>Signal Action Mix</h3>
+          <div className={styles.chartWrap}>
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={actionMixData} margin={{ top: 8, right: 12, left: 4, bottom: 8 }}>
+                <CartesianGrid stroke="rgba(255,255,255,0.08)" strokeDasharray="3 3" />
+                <XAxis dataKey="action" tick={{ fill: "#a7a2bf", fontSize: 11 }} />
+                <YAxis tick={{ fill: "#a7a2bf", fontSize: 11 }} />
+                <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
+                <Bar dataKey="count" name="Ticker Count">
+                  <Cell fill="#9ce9b8" />
+                  <Cell fill="#ff8f80" />
+                  <Cell fill="#8c8ca4" />
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </article>
+      </div>
+
       <div className={styles.panelGrid}>
         <article className={styles.panel}>
           <h3>Open Positions ({positions.length})</h3>
@@ -256,6 +384,7 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
                     <th>Units</th>
                     <th>Avg Cost</th>
                     <th>Last Price</th>
+                    <th>Peak Price</th>
                     <th>Market Value</th>
                     <th>Unrealized P/L</th>
                   </tr>
@@ -267,6 +396,7 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
                       <td>{numberFmt.format(position.units)}</td>
                       <td>{currency.format(position.avgCost)}</td>
                       <td>{currency.format(position.lastPrice)}</td>
+                      <td>{currency.format(position.peakPrice)}</td>
                       <td>{currency.format(position.marketValue)}</td>
                       <td className={position.unrealizedPnl >= 0 ? styles.positive : styles.negative}>
                         {currency.format(position.unrealizedPnl)}
@@ -280,7 +410,7 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
         </article>
 
         <article className={styles.panel}>
-          <h3>Latest Recommendations ({topRecommendations.length})</h3>
+          <h3>Top Recommendations ({topRecommendations.length})</h3>
           {topRecommendations.length === 0 ? (
             <p className={styles.infoText}>Run a daily scan to generate recommendations.</p>
           ) : (
@@ -291,6 +421,8 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
                     <th>Ticker</th>
                     <th>Action</th>
                     <th>Score</th>
+                    <th>Expected</th>
+                    <th>Confidence</th>
                     <th>Price</th>
                     <th>Reason</th>
                   </tr>
@@ -299,10 +431,22 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
                   {topRecommendations.map((recommendation) => (
                     <tr key={recommendation.id}>
                       <td>{recommendation.ticker}</td>
-                      <td className={recommendation.action === "buy" ? styles.positive : recommendation.action === "sell" ? styles.negative : ""}>
+                      <td
+                        className={
+                          recommendation.action === "buy"
+                            ? styles.positive
+                            : recommendation.action === "sell"
+                              ? styles.negative
+                              : ""
+                        }
+                      >
                         {recommendation.action.toUpperCase()}
                       </td>
-                      <td>{recommendation.score.toFixed(2)}</td>
+                      <td>{recommendation.score.toFixed(3)}</td>
+                      <td className={recommendation.expectedReturnPct >= 0 ? styles.positive : styles.negative}>
+                        {pct(recommendation.expectedReturnPct)}
+                      </td>
+                      <td>{pct(recommendation.confidence)}</td>
                       <td>{currency.format(recommendation.price)}</td>
                       <td>{recommendation.reason}</td>
                     </tr>
