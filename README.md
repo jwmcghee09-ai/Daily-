@@ -272,3 +272,26 @@ curl -fsS -X POST \
 ```
 
 This ensures backups run inside the web service context that has access to `/var/data`.
+
+## Platinum Daily Paper Scan
+
+SPECTRE Platinum includes a paper-trading engine that:
+- starts with `A$5,000` fake capital
+- scans an ASX universe daily with formula-based signals (moving averages, momentum, z-score mean reversion)
+- records recommendations and automatically executes paper BUY/SELL trades
+
+API endpoints:
+- User-triggered (authenticated Platinum user only): `POST /api/platinum/paper-trading`
+- Cron-triggered (token-protected): `POST /api/internal/ops/platinum/scan`
+
+Optional env vars:
+- `PLATINUM_ASX_UNIVERSE` (comma-separated tickers, e.g. `BHP,CBA,CSL,...`)
+- `PLATINUM_TIME_ZONE` (defaults to `Australia/Sydney`)
+
+Render cron command example (daily run):
+
+```bash
+curl -fsS -X POST \
+  -H "Authorization: Bearer $BACKUP_CRON_TOKEN" \
+  https://your-domain/api/internal/ops/platinum/scan
+```
