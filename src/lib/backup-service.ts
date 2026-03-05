@@ -39,6 +39,94 @@ interface OffsiteBackupConfig {
   verifyUpload: boolean;
 }
 
+function parseBackblazeRegionFromEndpoint(endpoint: string | null): string | null {
+  if (!endpoint) {
+    return null;
+  }
+
+  try {
+    const host = new URL(endpoint).hostname.toLowerCase();
+    const match = host.match(/^s3\.([a-z0-9-]+)\.backblazeb2\.com$/);
+    return match?.[1] || null;
+  } catch {
+    return null;
+  }
+}
+
+function resolveOffsiteRegion(endpoint: string | null): string {
+  const configured =
+    readNormalizedEnv("BACKUP_OFFSITE_REGION") ||
+    readNormalizedEnv("AWS_REGION") ||
+    readNormalizedEnv("AWS_DEFAULT_REGION");
+
+  if (configured) {
+    return configured;
+  }
+
+  const backblazeRegion = parseBackblazeRegionFromEndpoint(endpoint);
+  if (backblazeRegion) {
+    return backblazeRegion;
+  }
+
+  return "us-east-1";
+}
+
+function readAwsStatusCode(error: unknown): number | null {
+  const raw = (error as { $metadata?: { httpStatusCode?: unknown } } | null)?.$metadata?.httpStatusCode;
+  if (typeof raw !== "number" || !Number.isFinite(raw)) {
+    return null;
+  }
+  return raw;
+}
+
+function readAwsErrorCode(error: unknown): string {
+  if (!error || typeof error !== "object") {
+    return "";
+  }
+
+  const known = error as { name?: unknown; Code?: unknown; code?: unknown };
+  const code = known.Code ?? known.code ?? known.name;
+  return typeof code === "string" ? code : "";
+}
+
+function readErrorMessage(error: unknown): string {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  if (error && typeof error === "object" && typeof (error as { message?: unknown }).message === "string") {
+    return (error as { message: string }).message;
+  }
+
+  return "Unknown error.";
+}
+
+function buildOffsiteErrorMessage(
+  operation: "PutObject" | "HeadObject",
+  error: unknown,
+  config: OffsiteBackupConfig,
+  objectKey: string,
+): string {
+  const code = readAwsErrorCode(error);
+  const statusCode = readAwsStatusCode(error);
+  const message = readErrorMessage(error);
+  const endpointInfo = config.endpoint ? `endpoint=${config.endpoint}` : "endpoint=AWS default";
+  const statusInfo = statusCode ? `, status=${statusCode}` : "";
+  const codeInfo = code ? `, code=${code}` : "";
+
+  const signatureRelated =
+    code === "SignatureDoesNotMatch" ||
+    code === "AuthorizationHeaderMalformed" ||
+    /signature/i.test(message);
+  const backblazeRelated = Boolean(parseBackblazeRegionFromEndpoint(config.endpoint));
+
+  if (signatureRelated && backblazeRelated) {
+    return `Offsite upload failed during ${operation}: ${message} (${endpointInfo}, region=${config.region}, bucket=${config.bucket}, key=${objectKey}${statusInfo}${codeInfo}). For Backblaze B2, ensure BACKUP_OFFSITE_REGION matches the endpoint region and BACKUP_OFFSITE_FORCE_PATH_STYLE=true.`;
+  }
+
+  return `Offsite upload failed during ${operation}: ${message} (${endpointInfo}, region=${config.region}, bucket=${config.bucket}, key=${objectKey}${statusInfo}${codeInfo}).`;
+}
+
 function timestampForFile(date = new Date()): string {
   return date.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
 }
@@ -220,9 +308,9 @@ function readOffsiteBackupConfig(): OffsiteBackupConfig | null {
     throw new Error("BACKUP_OFFSITE_BUCKET is required when BACKUP_OFFSITE_ENABLED=true.");
   }
 
-  const region = readNormalizedEnv("BACKUP_OFFSITE_REGION", "us-east-1") || "us-east-1";
-  const prefix = normalizeObjectPrefix(readNormalizedEnv("BACKUP_OFFSITE_PREFIX", "spectre") || "spectre");
   const endpoint = readNormalizedEnv("BACKUP_OFFSITE_ENDPOINT") || null;
+  const region = resolveOffsiteRegion(endpoint);
+  const prefix = normalizeObjectPrefix(readNormalizedEnv("BACKUP_OFFSITE_PREFIX", "spectre") || "spectre");
   const forcePathStyle = readBooleanEnv("BACKUP_OFFSITE_FORCE_PATH_STYLE", Boolean(endpoint));
   const accessKeyId =
     readNormalizedEnv("BACKUP_OFFSITE_ACCESS_KEY_ID") || readNormalizedEnv("AWS_ACCESS_KEY_ID");
@@ -287,29 +375,49 @@ async function uploadBackupOffsite(
     },
   });
 
-  await client.send(
-    new PutObjectCommand({
-      Bucket: config.bucket,
-      Key: objectKey,
-      Body: body,
-      ContentLength: body.length,
-      ContentType: "application/json",
-      ServerSideEncryption: config.serverSideEncryption || undefined,
-      Metadata: {
-        app: "spectre",
-        format: "spectre-backup-v1",
-        encrypted: "true",
-      },
-    }),
-  );
-
-  if (config.verifyUpload) {
-    const head = await client.send(
-      new HeadObjectCommand({
+  try {
+    await client.send(
+      new PutObjectCommand({
         Bucket: config.bucket,
         Key: objectKey,
+        Body: body,
+        ContentLength: body.length,
+        ContentType: "application/json",
+        ServerSideEncryption: config.serverSideEncryption || undefined,
+        Metadata: {
+          app: "spectre",
+          format: "spectre-backup-v1",
+          encrypted: "true",
+        },
       }),
     );
+  } catch (error) {
+    throw new Error(buildOffsiteErrorMessage("PutObject", error, config, objectKey));
+  }
+
+  if (config.verifyUpload) {
+    let head;
+    try {
+      head = await client.send(
+        new HeadObjectCommand({
+          Bucket: config.bucket,
+          Key: objectKey,
+        }),
+      );
+    } catch (error) {
+      const code = readAwsErrorCode(error);
+      const statusCode = readAwsStatusCode(error);
+      const message = readErrorMessage(error);
+      const denied = code === "AccessDenied" || statusCode === 401 || statusCode === 403 || /access denied/i.test(message);
+
+      if (denied) {
+        throw new Error(
+          "Offsite upload succeeded, but verification (HeadObject) was denied. For Backblaze B2, grant key read permissions or set BACKUP_OFFSITE_VERIFY_UPLOAD=false.",
+        );
+      }
+
+      throw new Error(buildOffsiteErrorMessage("HeadObject", error, config, objectKey));
+    }
 
     if (!Number.isFinite(head.ContentLength) || Number(head.ContentLength) !== body.length) {
       throw new Error("Offsite backup verification failed: uploaded object size mismatch.");
