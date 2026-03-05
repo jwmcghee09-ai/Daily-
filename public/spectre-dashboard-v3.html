@@ -424,6 +424,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     <a href="#" class="nav-logo">SPECTRE</a>
     <ul class="nav-links">
       <li><a href="/spectre-settings-v3.html">Settings</a></li>
+      <li id="nav-platinum-link" style="display:none"><a href="/spectre-platinum">Platinum</a></li>
       <li><a href="#uploads">Uploads</a></li>
       <li><a href="#metrics">Metrics</a></li>
       <li><a href="#risk">Risk</a></li>
@@ -1091,6 +1092,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   const SOURCE_BADGE = { super: "super", asx: "asx", gold: "gold", index: "fund", fund: "fund", crypto: "crypto" };
   const RISK_WINDOW_DAYS = { "1M": 31, "3M": 92, "6M": 183, "1Y": 366 };
   const RISK_API_WINDOW_MAP = { "1M": "1M", "3M": "3M", "6M": "1Y", "1Y": "1Y", "ALL": "1Y" };
+  const PLATINUM_EMAIL = "jwmcghee09@gmail.com";
 
   const state = {
     sessionUser: null,
@@ -1124,6 +1126,10 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   function setClass(id, className) {
     const el = document.getElementById(id);
     if (el) el.className = className;
+  }
+
+  function isPlatinumUser(email) {
+    return (email || "").trim().toLowerCase() === PLATINUM_EMAIL;
   }
 
   function escapeHtml(value) {
@@ -1687,6 +1693,10 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     }
     state.sessionUser = payload.user;
     setText("nav-user-email", payload.user.email);
+    const navPlatinumLink = document.getElementById("nav-platinum-link");
+    if (navPlatinumLink) {
+      navPlatinumLink.style.display = isPlatinumUser(payload.user.email) ? "" : "none";
+    }
     setText("meta-account-name", payload.user.displayName || payload.user.email);
     const chipClass = payload.user.proEnabled ? "plan-chip pro" : "plan-chip starter";
     const chipLabel = payload.user.proEnabled ? "Pro Active" : "Starter";

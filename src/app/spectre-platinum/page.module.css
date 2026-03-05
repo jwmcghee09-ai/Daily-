@@ -1,0 +1,103 @@
+.page {
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse 75% 120% at -10% 50%, #2d1150 0%, #1c0c35 28%, transparent 60%),
+    radial-gradient(ellipse 65% 120% at 110% 50%, #3f0d0d 0%, #2b0808 26%, transparent 56%),
+    linear-gradient(140deg, #180b2c 0%, #12071c 38%, #1a0a11 65%, #2c0c0c 100%);
+  color: #f2eeff;
+  padding: 2rem 1.1rem;
+}
+
+.shell {
+  max-width: 1100px;
+  margin: 0 auto;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
+  background: rgba(11, 8, 20, 0.84);
+  box-shadow: 0 22px 48px -30px rgba(0, 0, 0, 0.85);
+  padding: 2rem 1.2rem;
+}
+
+.header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 1.4rem;
+  padding-bottom: 1.2rem;
+}
+
+.kicker {
+  margin: 0 0 0.5rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #c084fc;
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  line-height: 1;
+  letter-spacing: 0.08em;
+  color: #ff4d1a;
+}
+
+.subtitle {
+  margin: 0.8rem 0 1.1rem;
+  max-width: 60ch;
+  color: #c8c3dd;
+}
+
+.backLink {
+  display: inline-block;
+  text-decoration: none;
+  font-size: 0.75rem;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  border-radius: 8px;
+  padding: 0.6rem 0.95rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #f2eeff;
+}
+
+.backLink:hover {
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.card {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-left: 2px solid rgba(255, 77, 26, 0.7);
+  border-radius: 14px;
+  background: linear-gradient(160deg, rgba(18, 12, 32, 0.92), rgba(11, 8, 20, 0.92));
+  padding: 1rem;
+}
+
+.card h2 {
+  margin: 0 0 0.45rem;
+  font-size: 1rem;
+  letter-spacing: 0.05em;
+}
+
+.card p {
+  margin: 0 0 0.75rem;
+  color: #b4b0cc;
+}
+
+.card ul {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+.card li {
+  margin-bottom: 0.35rem;
+}
+
+@media (max-width: 860px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -87,6 +87,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
     <a href="/spectre-dashboard-v3.html" class="nav-logo">SPECTRE</a>
     <ul class="nav-links">
       <li><a href="/spectre-dashboard-v3.html">Dashboard</a></li>
+      <li id="nav-platinum-link" style="display:none"><a href="/spectre-platinum">Platinum</a></li>
       <li><a href="/spectre-settings-v3.html" class="active">Settings</a></li>
     </ul>
     <div class="nav-right">
@@ -149,6 +150,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
 <script>
 (() => {
   const ADMIN_CONTACT_EMAIL = "admin@spectre-assets.com";
+  const PLATINUM_EMAIL = "jwmcghee09@gmail.com";
   const toastEl = document.getElementById("system-toast");
   const state = { sessionUser: null };
 
@@ -165,6 +167,10 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
   function setText(id, value) {
     const el = document.getElementById(id);
     if (el) el.textContent = value;
+  }
+
+  function isPlatinumUser(email) {
+    return (email || "").trim().toLowerCase() === PLATINUM_EMAIL;
   }
 
   function formatDate(value) {
@@ -200,6 +206,10 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
     }
     state.sessionUser = payload.user;
     setText("nav-user-email", payload.user.email || "—");
+    const navPlatinumLink = document.getElementById("nav-platinum-link");
+    if (navPlatinumLink) {
+      navPlatinumLink.style.display = isPlatinumUser(payload.user.email) ? "" : "none";
+    }
     setText("settings-account-name", payload.user.displayName || payload.user.email || "—");
     setText("settings-account-email", payload.user.email || "—");
     const planLabel = payload.user.proEnabled ? "Pro Active" : "Starter";
