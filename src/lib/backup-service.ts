@@ -39,6 +39,8 @@ interface OffsiteBackupConfig {
   verifyUpload: boolean;
 }
 
+const DEFAULT_OFFSITE_UPLOAD_MAX_ATTEMPTS = 3;
+
 function parseBackblazeRegionFromEndpoint(endpoint: string | null): string | null {
   if (!endpoint) {
     return null;
@@ -125,6 +127,62 @@ function buildOffsiteErrorMessage(
   }
 
   return `Offsite upload failed during ${operation}: ${message} (${endpointInfo}, region=${config.region}, bucket=${config.bucket}, key=${objectKey}${statusInfo}${codeInfo}).`;
+}
+
+function readOffsiteUploadMaxAttempts(): number {
+  const raw = String(process.env.BACKUP_OFFSITE_UPLOAD_MAX_ATTEMPTS || "").trim();
+  if (!raw) {
+    return DEFAULT_OFFSITE_UPLOAD_MAX_ATTEMPTS;
+  }
+
+  const parsed = Number.parseInt(raw, 10);
+  if (!Number.isFinite(parsed)) {
+    return DEFAULT_OFFSITE_UPLOAD_MAX_ATTEMPTS;
+  }
+
+  return Math.min(8, Math.max(1, parsed));
+}
+
+function shouldRetryOffsiteError(error: unknown): boolean {
+  const code = readAwsErrorCode(error);
+  const statusCode = readAwsStatusCode(error);
+  const message = readErrorMessage(error).toLowerCase();
+
+  if (statusCode && [408, 425, 429, 500, 502, 503, 504].includes(statusCode)) {
+    return true;
+  }
+
+  if (
+    code === "IncompleteBody" ||
+    code === "RequestTimeout" ||
+    code === "TimeoutError" ||
+    code === "SlowDown" ||
+    code === "ServiceUnavailable" ||
+    code === "InternalError" ||
+    code === "InternalServerError" ||
+    code === "Throttling"
+  ) {
+    return true;
+  }
+
+  return (
+    message.includes("incompletebody") ||
+    message.includes("request body was too small") ||
+    message.includes("socket hang up") ||
+    message.includes("econnreset") ||
+    message.includes("etimedout") ||
+    message.includes("epipe")
+  );
+}
+
+function computeRetryDelayMs(attempt: number): number {
+  const base = 250 * 2 ** Math.max(0, attempt - 1);
+  const jitter = Math.floor(Math.random() * 200);
+  return Math.min(5000, base + jitter);
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function timestampForFile(date = new Date()): string {
@@ -375,24 +433,42 @@ async function uploadBackupOffsite(
     },
   });
 
-  try {
-    await client.send(
-      new PutObjectCommand({
-        Bucket: config.bucket,
-        Key: objectKey,
-        Body: body,
-        ContentLength: body.length,
-        ContentType: "application/json",
-        ServerSideEncryption: config.serverSideEncryption || undefined,
-        Metadata: {
-          app: "spectre",
-          format: "spectre-backup-v1",
-          encrypted: "true",
-        },
-      }),
-    );
-  } catch (error) {
-    throw new Error(buildOffsiteErrorMessage("PutObject", error, config, objectKey));
+  const maxAttempts = readOffsiteUploadMaxAttempts();
+  let putSucceeded = false;
+  let putLastError: unknown = null;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      await client.send(
+        new PutObjectCommand({
+          Bucket: config.bucket,
+          Key: objectKey,
+          Body: body,
+          ContentLength: body.length,
+          ContentType: "application/json",
+          ServerSideEncryption: config.serverSideEncryption || undefined,
+          Metadata: {
+            app: "spectre",
+            format: "spectre-backup-v1",
+            encrypted: "true",
+          },
+        }),
+      );
+      putSucceeded = true;
+      break;
+    } catch (error) {
+      putLastError = error;
+      if (attempt >= maxAttempts || !shouldRetryOffsiteError(error)) {
+        break;
+      }
+
+      await delay(computeRetryDelayMs(attempt));
+    }
+  }
+
+  if (!putSucceeded) {
+    const baseMessage = buildOffsiteErrorMessage("PutObject", putLastError, config, objectKey);
+    throw new Error(`${baseMessage} Attempts=${maxAttempts}.`);
   }
 
   if (config.verifyUpload) {
