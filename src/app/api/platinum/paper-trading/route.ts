@@ -32,7 +32,7 @@ export async function GET() {
   }
 }
 
-export async function POST() {
+export async function POST(request: Request) {
   try {
     const user = await getAuthenticatedUser();
 
@@ -44,7 +44,14 @@ export async function POST() {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const result = await runPlatinumDailyScan(user.id);
+    const url = new URL(request.url);
+    const mode = (url.searchParams.get("mode") || "daily").toLowerCase();
+    const isLiveMode = mode === "live";
+
+    const result = await runPlatinumDailyScan(user.id, {
+      allowIntraday: isLiveMode,
+      requireMarketOpen: isLiveMode,
+    });
 
     return NextResponse.json({
       ok: true,

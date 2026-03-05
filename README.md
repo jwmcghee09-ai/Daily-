@@ -279,16 +279,24 @@ SPECTRE Platinum includes a paper-trading engine that:
 - starts with `A$5,000` fake capital
 - scans the full ASX directory daily (or `PLATINUM_ASX_UNIVERSE` override)
 - uses a broad leading-indicator model (trend, momentum, volatility, volume, breakout, mean reversion factors)
+- includes pattern recognition (engulfing, hammer/shooting-star, inside-bar breaks, structure trends)
+- can apply an optional OpenAI overlay for AI adjustment/confidence/summary
 - ranks expected return and confidence, then automatically executes paper BUY/SELL trades
 
 API endpoints:
 - User-triggered (authenticated Platinum user only): `POST /api/platinum/paper-trading`
+- User live mode while ASX open: `POST /api/platinum/paper-trading?mode=live`
 - Cron-triggered (token-protected): `POST /api/internal/ops/platinum/scan`
+- Cron live mode (market-hours gated): `POST /api/internal/ops/platinum/scan?mode=live`
 
 Optional env vars:
 - `PLATINUM_ASX_UNIVERSE` (comma-separated tickers, e.g. `BHP,CBA,CSL,...`)
 - `PLATINUM_TIME_ZONE` (defaults to `Australia/Sydney`)
 - `PLATINUM_FETCH_CONCURRENCY` (default `12`, controls parallel Yahoo requests)
+- `PLATINUM_LIVE_SCAN_INTERVAL_MINUTES` (default `5`, min interval for live scans)
+- `OPENAI_API_KEY` (enables AI overlay)
+- `PLATINUM_AI_MODEL` (default `gpt-4.1-mini`)
+- `PLATINUM_AI_MAX_CANDIDATES` (default `40`)
 
 Render cron command example (daily run):
 
@@ -296,4 +304,12 @@ Render cron command example (daily run):
 curl -fsS -X POST \
   -H "Authorization: Bearer $BACKUP_CRON_TOKEN" \
   https://your-domain/api/internal/ops/platinum/scan
+```
+
+Render cron command example (hourly live mode; only executes trades while ASX is open):
+
+```bash
+curl -fsS -X POST \
+  -H "Authorization: Bearer $BACKUP_CRON_TOKEN" \
+  "https://your-domain/api/internal/ops/platinum/scan?mode=live"
 ```

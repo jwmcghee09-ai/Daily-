@@ -7,6 +7,12 @@ const ASX_DIRECTORY_URL = "https://asx.api.markitdigital.com/asx-research/1.0/co
 const ASX_FETCH_CONCURRENCY = clampInteger(process.env.PLATINUM_FETCH_CONCURRENCY, 12, 2, 40);
 const SCAN_TIME_ZONE = process.env.PLATINUM_TIME_ZONE || "Australia/Sydney";
 const PLATINUM_HISTORY_DAYS = clampInteger(process.env.PLATINUM_HISTORY_DAYS, 240, 30, 1825);
+const MIN_LIVE_SCAN_INTERVAL_MS = clampInteger(process.env.PLATINUM_LIVE_SCAN_INTERVAL_MINUTES, 5, 1, 60) * 60 * 1000;
+const ASX_OPEN_START_MINUTES = 10 * 60;
+const ASX_OPEN_END_MINUTES = 16 * 60 + 10;
+const AI_MODEL = (process.env.PLATINUM_AI_MODEL || "gpt-4.1-mini").trim();
+const AI_MAX_CANDIDATES = clampInteger(process.env.PLATINUM_AI_MAX_CANDIDATES, 40, 10, 120);
+const AI_TIMEOUT_MS = clampInteger(process.env.PLATINUM_AI_TIMEOUT_MS, 15000, 3000, 40000);
 
 const MA_MEDIUM_PERIOD = 50;
 const MA_LONG_PERIOD = 200;
@@ -95,6 +101,10 @@ interface RecommendationRow {
   expected_return_pct: number;
   confidence: number;
   indicator_count: number;
+  final_score: number;
+  ai_adjustment: number;
+  ai_confidence: number;
+  ai_summary: string;
   price: number;
   ma_short: number;
   ma_long: number;
@@ -211,6 +221,10 @@ interface RecommendationCandidate {
   expectedReturnPct: number;
   confidence: number;
   indicatorCount: number;
+  finalScore: number;
+  aiAdjustment: number;
+  aiConfidence: number;
+  aiSummary: string;
   price: number;
   maShort: number;
   maLong: number;
@@ -265,6 +279,10 @@ export interface PlatinumRecommendation {
   expectedReturnPct: number;
   confidence: number;
   indicatorCount: number;
+  finalScore: number;
+  aiAdjustment: number;
+  aiConfidence: number;
+  aiSummary: string;
   price: number;
   maShort: number;
   maLong: number;
@@ -324,6 +342,27 @@ export interface PlatinumScanRunResult {
   generatedRecommendations: number;
   skippedTickers: string[];
   alreadyRanToday: boolean;
+  marketOpen: boolean;
+  skippedBecauseMarketClosed: boolean;
+  usedAiOverlay: boolean;
+  aiModel: string | null;
+}
+
+interface RunScanOptions {
+  allowIntraday?: boolean;
+  requireMarketOpen?: boolean;
+}
+
+interface AiOverlayEntry {
+  ticker: string;
+  adjustment: number;
+  confidence: number;
+  summary: string;
+}
+
+interface AiOverlayResult {
+  model: string;
+  entries: AiOverlayEntry[];
 }
 
 let dbInstance: DatabaseSync | null = null;
@@ -402,6 +441,10 @@ function ensurePlatinumSchema(db: DatabaseSync): void {
       expected_return_pct REAL NOT NULL DEFAULT 0,
       confidence REAL NOT NULL DEFAULT 0,
       indicator_count INTEGER NOT NULL DEFAULT 0,
+      final_score REAL NOT NULL DEFAULT 0,
+      ai_adjustment REAL NOT NULL DEFAULT 0,
+      ai_confidence REAL NOT NULL DEFAULT 0,
+      ai_summary TEXT NOT NULL DEFAULT '',
       price REAL NOT NULL,
       ma_short REAL NOT NULL,
       ma_long REAL NOT NULL,
@@ -461,6 +504,22 @@ function ensurePlatinumSchema(db: DatabaseSync): void {
 
   if (!hasColumn(db, "platinum_recommendations", "indicator_count")) {
     db.exec("ALTER TABLE platinum_recommendations ADD COLUMN indicator_count INTEGER NOT NULL DEFAULT 0;");
+  }
+
+  if (!hasColumn(db, "platinum_recommendations", "final_score")) {
+    db.exec("ALTER TABLE platinum_recommendations ADD COLUMN final_score REAL NOT NULL DEFAULT 0;");
+  }
+
+  if (!hasColumn(db, "platinum_recommendations", "ai_adjustment")) {
+    db.exec("ALTER TABLE platinum_recommendations ADD COLUMN ai_adjustment REAL NOT NULL DEFAULT 0;");
+  }
+
+  if (!hasColumn(db, "platinum_recommendations", "ai_confidence")) {
+    db.exec("ALTER TABLE platinum_recommendations ADD COLUMN ai_confidence REAL NOT NULL DEFAULT 0;");
+  }
+
+  if (!hasColumn(db, "platinum_recommendations", "ai_summary")) {
+    db.exec("ALTER TABLE platinum_recommendations ADD COLUMN ai_summary TEXT NOT NULL DEFAULT '';");
   }
 }
 
@@ -1380,6 +1439,10 @@ function evaluateRecommendation(
     expectedReturnPct,
     confidence,
     indicatorCount: breakdown.length,
+    finalScore: score,
+    aiAdjustment: 0,
+    aiConfidence: 0,
+    aiSummary: "",
     price: indicators.close,
     maShort: indicators.sma20,
     maLong: indicators.sma50,
@@ -1402,6 +1465,189 @@ function currentScanDate(): string {
   const month = parts.find((part) => part.type === "month")?.value || "01";
   const day = parts.find((part) => part.type === "day")?.value || "01";
   return `${year}-${month}-${day}`;
+}
+
+function getSydneyClockParts(now: Date): { weekday: string; hour: number; minute: number } {
+  const formatter = new Intl.DateTimeFormat("en-AU", {
+    timeZone: SCAN_TIME_ZONE,
+    weekday: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+
+  const parts = formatter.formatToParts(now);
+  const weekday = (parts.find((part) => part.type === "weekday")?.value || "").toLowerCase();
+  const hour = Number.parseInt(parts.find((part) => part.type === "hour")?.value || "0", 10);
+  const minute = Number.parseInt(parts.find((part) => part.type === "minute")?.value || "0", 10);
+
+  return {
+    weekday,
+    hour: Number.isFinite(hour) ? hour : 0,
+    minute: Number.isFinite(minute) ? minute : 0,
+  };
+}
+
+export function isAsxMarketOpenNow(now = new Date()): boolean {
+  const clock = getSydneyClockParts(now);
+  const isWeekday = ["mon", "tue", "wed", "thu", "fri"].includes(clock.weekday.slice(0, 3));
+  if (!isWeekday) {
+    return false;
+  }
+
+  const minuteOfDay = clock.hour * 60 + clock.minute;
+  return minuteOfDay >= ASX_OPEN_START_MINUTES && minuteOfDay <= ASX_OPEN_END_MINUTES;
+}
+
+function clampTickerListForAi(candidates: RecommendationCandidate[]): RecommendationCandidate[] {
+  const sorted = [...candidates].sort((a, b) => {
+    const aMagnitude = Math.abs(a.expectedReturnPct) + Math.abs(a.finalScore) * 8;
+    const bMagnitude = Math.abs(b.expectedReturnPct) + Math.abs(b.finalScore) * 8;
+    return bMagnitude - aMagnitude;
+  });
+
+  return sorted.slice(0, AI_MAX_CANDIDATES);
+}
+
+function parseAiOverlayResponse(raw: string): AiOverlayEntry[] {
+  const trimmed = String(raw || "")
+    .trim()
+    .replace(/^```json\s*/i, "")
+    .replace(/^```\s*/i, "")
+    .replace(/```$/, "")
+    .trim();
+  if (!trimmed) {
+    return [];
+  }
+
+  try {
+    const payload = JSON.parse(trimmed) as { entries?: Array<{ ticker?: string; adjustment?: number; confidence?: number; summary?: string }> };
+    const entries = payload.entries || [];
+    return entries
+      .map((entry) => ({
+        ticker: normalizeTicker(String(entry.ticker || "")),
+        adjustment: clamp(Number(entry.adjustment || 0), -3, 3),
+        confidence: clamp(Number(entry.confidence || 0), 0, 100),
+        summary: String(entry.summary || "").trim().slice(0, 220),
+      }))
+      .filter((entry) => entry.ticker.length > 0);
+  } catch {
+    return [];
+  }
+}
+
+async function fetchAiOverlay(candidates: RecommendationCandidate[]): Promise<AiOverlayResult | null> {
+  const apiKey = String(process.env.OPENAI_API_KEY || "").trim();
+  if (!apiKey || candidates.length === 0) {
+    return null;
+  }
+
+  const selected = clampTickerListForAi(candidates).map((candidate) => ({
+    ticker: candidate.ticker,
+    action: candidate.action,
+    score: Number(candidate.score.toFixed(4)),
+    expectedReturnPct: Number(candidate.expectedReturnPct.toFixed(2)),
+    confidence: Number(candidate.confidence.toFixed(1)),
+    maShort: Number(candidate.maShort.toFixed(3)),
+    maLong: Number(candidate.maLong.toFixed(3)),
+    momentumPct: Number((candidate.momentum * 100).toFixed(3)),
+    zScore: Number(candidate.zScore.toFixed(3)),
+    reason: candidate.reason.slice(0, 220),
+  }));
+
+  const prompt =
+    "You are a strict ASX intraday quantitative overlay. " +
+    "Given quantitative candidates, return JSON only with schema {\"entries\":[{\"ticker\":\"ABC\",\"adjustment\":number,\"confidence\":number,\"summary\":\"...\"}]}. " +
+    "adjustment range must be [-3,3], confidence [0,100], summary <= 25 words. " +
+    "Use risk-aware adjustments; do not invent tickers.";
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), AI_TIMEOUT_MS);
+
+  try {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      signal: controller.signal,
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: AI_MODEL,
+        temperature: 0.1,
+        messages: [
+          { role: "system", content: prompt },
+          { role: "user", content: JSON.stringify({ entries: selected }) },
+        ],
+      }),
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const payload = (await response.json()) as {
+      choices?: Array<{ message?: { content?: string } }>;
+      model?: string;
+    };
+
+    const content = payload.choices?.[0]?.message?.content || "";
+    const entries = parseAiOverlayResponse(content);
+
+    return {
+      model: payload.model || AI_MODEL,
+      entries,
+    };
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function applyAiOverlay(recommendations: RecommendationCandidate[]): Promise<{ used: boolean; model: string | null }> {
+  for (const recommendation of recommendations) {
+    recommendation.aiAdjustment = 0;
+    recommendation.aiConfidence = 0;
+    recommendation.aiSummary = "";
+    recommendation.finalScore = recommendation.score;
+  }
+
+  const overlay = await fetchAiOverlay(recommendations);
+  if (!overlay || overlay.entries.length === 0) {
+    return { used: false, model: null };
+  }
+
+  const byTicker = new Map(overlay.entries.map((entry) => [entry.ticker, entry]));
+
+  for (const recommendation of recommendations) {
+    const overlayEntry = byTicker.get(recommendation.ticker);
+    if (!overlayEntry) {
+      continue;
+    }
+
+    recommendation.aiAdjustment = clamp(overlayEntry.adjustment, -3, 3);
+    recommendation.aiConfidence = clamp(overlayEntry.confidence, 0, 100);
+    recommendation.aiSummary = overlayEntry.summary;
+
+    const confidenceBoost = (recommendation.aiConfidence / 100 - 0.5) * 0.12;
+    recommendation.finalScore = recommendation.score + recommendation.aiAdjustment * 0.18 + confidenceBoost;
+    recommendation.expectedReturnPct = clamp(recommendation.expectedReturnPct + recommendation.aiAdjustment * 1.8, -30, 35);
+
+    if (recommendation.action === "buy" && recommendation.aiAdjustment <= -1.5) {
+      recommendation.action = "hold";
+    }
+
+    if (recommendation.action === "sell" && recommendation.aiAdjustment >= 1.5) {
+      recommendation.action = "hold";
+    }
+
+    if (recommendation.aiSummary) {
+      recommendation.reason = `${recommendation.reason}; AI[${recommendation.aiSummary}]`;
+    }
+  }
+
+  return { used: true, model: overlay.model };
 }
 
 function ensurePortfolioRow(db: DatabaseSync, userId: string): PortfolioRow {
@@ -1509,12 +1755,14 @@ export function getPlatinumPaperState(userId: string): PlatinumPaperState {
   const recommendations = latestScanDate
     ? (db
         .prepare(`
-          SELECT id, scan_date, ticker, action, score, expected_return_pct, confidence, indicator_count, price,
+          SELECT id, scan_date, ticker, action, score, expected_return_pct, confidence, indicator_count, final_score,
+            ai_adjustment, ai_confidence, ai_summary, price,
             ma_short, ma_long, momentum, z_score, reason, created_at
           FROM platinum_recommendations
           WHERE user_id = ? AND scan_date = ?
           ORDER BY
             CASE action WHEN 'buy' THEN 0 WHEN 'sell' THEN 1 ELSE 2 END,
+            final_score DESC,
             expected_return_pct DESC,
             ABS(score) DESC,
             ticker ASC
@@ -1556,6 +1804,10 @@ export function getPlatinumPaperState(userId: string): PlatinumPaperState {
       expectedReturnPct: toFiniteNumber(row.expected_return_pct, 0),
       confidence: toFiniteNumber(row.confidence, 0),
       indicatorCount: toFiniteNumber(row.indicator_count, 0),
+      finalScore: toFiniteNumber(row.final_score, toFiniteNumber(row.score, 0)),
+      aiAdjustment: toFiniteNumber(row.ai_adjustment, 0),
+      aiConfidence: toFiniteNumber(row.ai_confidence, 0),
+      aiSummary: String(row.ai_summary || ""),
       price: toFiniteNumber(row.price, 0),
       maShort: toFiniteNumber(row.ma_short, 0),
       maLong: toFiniteNumber(row.ma_long, 0),
@@ -1660,18 +1912,16 @@ function pruneHistoricalData(db: DatabaseSync, userId: string): void {
   db.prepare("DELETE FROM platinum_paper_snapshots WHERE user_id = ? AND scan_date < ?").run(userId, cutoffDate);
 }
 
-export async function runPlatinumDailyScan(userId: string): Promise<PlatinumScanRunResult> {
+export async function runPlatinumDailyScan(userId: string, options: RunScanOptions = {}): Promise<PlatinumScanRunResult> {
   const db = getDb();
   const scanDate = currentScanDate();
   const nowIso = new Date().toISOString();
+  const allowIntraday = options.allowIntraday === true;
+  const marketOpen = isAsxMarketOpenNow();
 
   ensurePortfolioRow(db, userId);
 
-  const alreadyRan = db
-    .prepare("SELECT 1 AS ok FROM platinum_paper_snapshots WHERE user_id = ? AND scan_date = ? LIMIT 1")
-    .get(userId, scanDate) as { ok: number } | undefined;
-
-  if (alreadyRan?.ok) {
+  if (options.requireMarketOpen === true && !marketOpen) {
     return {
       state: getPlatinumPaperState(userId),
       scanDate,
@@ -1679,10 +1929,51 @@ export async function runPlatinumDailyScan(userId: string): Promise<PlatinumScan
       generatedRecommendations: 0,
       skippedTickers: [],
       alreadyRanToday: true,
+      marketOpen: false,
+      skippedBecauseMarketClosed: true,
+      usedAiOverlay: false,
+      aiModel: null,
+    };
+  }
+
+  const alreadyRan = db
+    .prepare("SELECT 1 AS ok FROM platinum_paper_snapshots WHERE user_id = ? AND scan_date = ? LIMIT 1")
+    .get(userId, scanDate) as { ok: number } | undefined;
+
+  if (!allowIntraday && alreadyRan?.ok) {
+    return {
+      state: getPlatinumPaperState(userId),
+      scanDate,
+      executedTrades: 0,
+      generatedRecommendations: 0,
+      skippedTickers: [],
+      alreadyRanToday: true,
+      marketOpen,
+      skippedBecauseMarketClosed: false,
+      usedAiOverlay: false,
+      aiModel: null,
     };
   }
 
   const portfolioRow = ensurePortfolioRow(db, userId);
+  const lastScanMs = portfolioRow.last_scan_at ? new Date(portfolioRow.last_scan_at).getTime() : Number.NaN;
+  const nowMs = Date.now();
+
+  if (allowIntraday && Number.isFinite(lastScanMs) && nowMs - lastScanMs < MIN_LIVE_SCAN_INTERVAL_MS) {
+    return {
+      state: getPlatinumPaperState(userId),
+      scanDate,
+      executedTrades: 0,
+      generatedRecommendations: 0,
+      skippedTickers: [],
+      alreadyRanToday: true,
+      marketOpen,
+      skippedBecauseMarketClosed: false,
+      usedAiOverlay: false,
+      aiModel: null,
+    };
+  }
+
   const existingPositions = mapRowsToMutablePositions(readPositions(db, userId));
 
   const universeRaw = await resolveUniverse();
@@ -1722,6 +2013,8 @@ export async function runPlatinumDailyScan(userId: string): Promise<PlatinumScan
     .map((outcome) => outcome.recommendation)
     .filter((item): item is RecommendationCandidate => Boolean(item));
 
+  const aiOverlay = await applyAiOverlay(recommendations);
+
   const latestPriceByTicker = new Map<string, number>();
   for (const outcome of outcomes) {
     if (outcome.latestPrice != null && Number.isFinite(outcome.latestPrice) && outcome.latestPrice > 0) {
@@ -1743,7 +2036,7 @@ export async function runPlatinumDailyScan(userId: string): Promise<PlatinumScan
 
   const sellRecommendations = recommendations
     .filter((item) => item.action === "sell")
-    .sort((a, b) => a.expectedReturnPct - b.expectedReturnPct);
+    .sort((a, b) => a.finalScore - b.finalScore);
 
   for (const recommendation of sellRecommendations) {
     const position = existingPositions.get(recommendation.ticker);
@@ -1780,6 +2073,10 @@ export async function runPlatinumDailyScan(userId: string): Promise<PlatinumScan
     .sort((a, b) => {
       if (b.expectedReturnPct !== a.expectedReturnPct) {
         return b.expectedReturnPct - a.expectedReturnPct;
+      }
+
+      if (b.finalScore !== a.finalScore) {
+        return b.finalScore - a.finalScore;
       }
 
       return b.confidence - a.confidence;
@@ -1862,9 +2159,9 @@ export async function runPlatinumDailyScan(userId: string): Promise<PlatinumScan
   try {
     const recommendationInsert = db.prepare(`
       INSERT INTO platinum_recommendations (
-        id, user_id, scan_date, ticker, action, score, expected_return_pct, confidence, indicator_count, price,
-        ma_short, ma_long, momentum, z_score, reason, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        id, user_id, scan_date, ticker, action, score, expected_return_pct, confidence, indicator_count, final_score,
+        ai_adjustment, ai_confidence, ai_summary, price, ma_short, ma_long, momentum, z_score, reason, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     for (const recommendation of recommendations) {
@@ -1878,6 +2175,10 @@ export async function runPlatinumDailyScan(userId: string): Promise<PlatinumScan
         recommendation.expectedReturnPct,
         recommendation.confidence,
         recommendation.indicatorCount,
+        recommendation.finalScore,
+        recommendation.aiAdjustment,
+        recommendation.aiConfidence,
+        recommendation.aiSummary,
         recommendation.price,
         recommendation.maShort,
         recommendation.maLong,
@@ -1964,5 +2265,9 @@ export async function runPlatinumDailyScan(userId: string): Promise<PlatinumScan
     generatedRecommendations: recommendations.length,
     skippedTickers,
     alreadyRanToday: false,
+    marketOpen,
+    skippedBecauseMarketClosed: false,
+    usedAiOverlay: aiOverlay.used,
+    aiModel: aiOverlay.model,
   };
 }

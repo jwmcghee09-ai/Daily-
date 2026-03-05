@@ -40,6 +40,10 @@ interface PlatinumRecommendation {
   expectedReturnPct: number;
   confidence: number;
   indicatorCount: number;
+  finalScore: number;
+  aiAdjustment: number;
+  aiConfidence: number;
+  aiSummary: string;
   price: number;
   maShort: number;
   maLong: number;
@@ -100,6 +104,10 @@ interface PlatinumPayload {
     generatedRecommendations: number;
     skippedTickers: string[];
     alreadyRanToday: boolean;
+    marketOpen: boolean;
+    skippedBecauseMarketClosed: boolean;
+    usedAiOverlay: boolean;
+    aiModel: string | null;
   };
   error?: string;
 }
@@ -130,6 +138,7 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
   const [runningScan, setRunningScan] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [marketStatusMessage, setMarketStatusMessage] = useState<string | null>(null);
 
   const loadState = useCallback(async () => {
     setLoading(true);
@@ -172,11 +181,13 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
 
       setState(payload.result.state);
 
-      if (payload.result.alreadyRanToday) {
+      if (payload.result.skippedBecauseMarketClosed) {
+        setStatusMessage("ASX is currently closed. Live scan skipped.");
+      } else if (payload.result.alreadyRanToday) {
         setStatusMessage(`Daily scan already ran for ${payload.result.scanDate} (${"Australia/Sydney"}).`);
       } else {
         setStatusMessage(
-          `Scan ${payload.result.scanDate}: ${payload.result.generatedRecommendations} recommendations generated, ${payload.result.executedTrades} paper trades executed, ${payload.result.skippedTickers.length} skipped tickers.`,
+          `Scan ${payload.result.scanDate}: ${payload.result.generatedRecommendations} recommendations generated, ${payload.result.executedTrades} paper trades executed, ${payload.result.skippedTickers.length} skipped tickers.${payload.result.usedAiOverlay ? ` AI model: ${payload.result.aiModel || "enabled"}.` : ""}`,
         );
       }
     } catch (error) {
@@ -185,6 +196,41 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
       setRunningScan(false);
     }
   }, []);
+
+  const runLiveUpdate = useCallback(async () => {
+    try {
+      const response = await fetch("/api/platinum/paper-trading?mode=live", {
+        method: "POST",
+      });
+
+      const payload = (await response.json()) as PlatinumPayload;
+      if (!response.ok || !payload.ok || !payload.result) {
+        return;
+      }
+
+      if (payload.result.skippedBecauseMarketClosed) {
+        setMarketStatusMessage("ASX closed: waiting for market open.");
+        return;
+      }
+
+      setMarketStatusMessage(payload.result.marketOpen ? "ASX open: live model running." : "ASX status unavailable.");
+      setState(payload.result.state);
+    } catch {
+      // background updates are best-effort
+    }
+  }, []);
+
+  useEffect(() => {
+    void runLiveUpdate();
+
+    const intervalId = window.setInterval(() => {
+      void runLiveUpdate();
+    }, 5 * 60 * 1000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [runLiveUpdate]);
 
   const topRecommendations = useMemo<PlatinumRecommendation[]>(() => {
     if (!state) {
@@ -270,6 +316,7 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
           <p className={styles.userRow}>Signed in as {userEmail}</p>
           <p className={styles.infoText}>Paper account starts at {currency.format(state.portfolio.startingCash)} and auto-executes fake BUY/SELL trades from ranked leading indicators.</p>
           <p className={styles.infoText}>Universe target: whole ASX ({state.universeSize} tickers estimate).</p>
+          {marketStatusMessage ? <p className={styles.infoText}>{marketStatusMessage}</p> : null}
         </div>
         <button className={styles.scanButton} onClick={() => void runDailyScan()} disabled={runningScan}>
           {runningScan ? "Scanning Whole ASX..." : "Run Full ASX Daily Scan"}
@@ -421,8 +468,11 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
                     <th>Ticker</th>
                     <th>Action</th>
                     <th>Score</th>
+                    <th>Final</th>
                     <th>Expected</th>
                     <th>Confidence</th>
+                    <th>AI Adj</th>
+                    <th>AI Note</th>
                     <th>Price</th>
                     <th>Reason</th>
                   </tr>
@@ -443,10 +493,15 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
                         {recommendation.action.toUpperCase()}
                       </td>
                       <td>{recommendation.score.toFixed(3)}</td>
+                      <td>{recommendation.finalScore.toFixed(3)}</td>
                       <td className={recommendation.expectedReturnPct >= 0 ? styles.positive : styles.negative}>
                         {pct(recommendation.expectedReturnPct)}
                       </td>
                       <td>{pct(recommendation.confidence)}</td>
+                      <td className={recommendation.aiAdjustment >= 0 ? styles.positive : styles.negative}>
+                        {recommendation.aiAdjustment.toFixed(2)}
+                      </td>
+                      <td>{recommendation.aiSummary || "—"}</td>
                       <td>{currency.format(recommendation.price)}</td>
                       <td>{recommendation.reason}</td>
                     </tr>
