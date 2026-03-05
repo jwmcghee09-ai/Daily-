@@ -194,6 +194,14 @@ interface IndicatorPack {
   obvSlope: number;
   zScore20: number;
   donchianBreakout: boolean;
+  bullishEngulfing: boolean;
+  bearishEngulfing: boolean;
+  hammer: boolean;
+  shootingStar: boolean;
+  insideBarBreakoutUp: boolean;
+  insideBarBreakoutDown: boolean;
+  higherHighHigherLow: boolean;
+  lowerHighLowerLow: boolean;
 }
 
 interface RecommendationCandidate {
@@ -814,6 +822,111 @@ function zScore(values: number[], period = 20): number | null {
   return (values[values.length - 1] - mean) / deviation;
 }
 
+function lineSlope(values: number[]): number {
+  const n = values.length;
+  if (n < 2) {
+    return 0;
+  }
+
+  const xMean = (n - 1) / 2;
+  const yMean = average(values);
+  let numerator = 0;
+  let denominator = 0;
+
+  for (let index = 0; index < n; index += 1) {
+    const dx = index - xMean;
+    numerator += dx * (values[index] - yMean);
+    denominator += dx * dx;
+  }
+
+  if (denominator <= 0) {
+    return 0;
+  }
+
+  return numerator / denominator;
+}
+
+function detectPricePatterns(bars: PriceBar[]): {
+  bullishEngulfing: boolean;
+  bearishEngulfing: boolean;
+  hammer: boolean;
+  shootingStar: boolean;
+  insideBarBreakoutUp: boolean;
+  insideBarBreakoutDown: boolean;
+  higherHighHigherLow: boolean;
+  lowerHighLowerLow: boolean;
+} {
+  const fallback = {
+    bullishEngulfing: false,
+    bearishEngulfing: false,
+    hammer: false,
+    shootingStar: false,
+    insideBarBreakoutUp: false,
+    insideBarBreakoutDown: false,
+    higherHighHigherLow: false,
+    lowerHighLowerLow: false,
+  };
+
+  if (bars.length < 4) {
+    return fallback;
+  }
+
+  const latest = bars[bars.length - 1];
+  const prev = bars[bars.length - 2];
+  const prev2 = bars[bars.length - 3];
+
+  const latestBody = Math.abs(latest.close - latest.open);
+  const latestRange = Math.max(0.0000001, latest.high - latest.low);
+  const latestUpperWick = latest.high - Math.max(latest.open, latest.close);
+  const latestLowerWick = Math.min(latest.open, latest.close) - latest.low;
+
+  const prevBearish = prev.close < prev.open;
+  const prevBullish = prev.close > prev.open;
+  const latestBullish = latest.close > latest.open;
+  const latestBearish = latest.close < latest.open;
+
+  const bullishEngulfing =
+    prevBearish && latestBullish && latest.open <= prev.close && latest.close >= prev.open;
+  const bearishEngulfing =
+    prevBullish && latestBearish && latest.open >= prev.close && latest.close <= prev.open;
+
+  const hammer =
+    latestLowerWick >= latestBody * 2 &&
+    latestUpperWick <= latestBody * 1.2 &&
+    latest.close > latest.open &&
+    latestBody / latestRange <= 0.45;
+
+  const shootingStar =
+    latestUpperWick >= latestBody * 2 &&
+    latestLowerWick <= latestBody * 1.2 &&
+    latest.close < latest.open &&
+    latestBody / latestRange <= 0.45;
+
+  const insideBar = prev.high <= prev2.high && prev.low >= prev2.low;
+  const insideBarBreakoutUp = insideBar && latest.close > prev2.high;
+  const insideBarBreakoutDown = insideBar && latest.close < prev2.low;
+
+  const highs = bars.slice(-12).map((bar) => bar.high);
+  const lows = bars.slice(-12).map((bar) => bar.low);
+  const avgClose = average(bars.slice(-12).map((bar) => bar.close));
+  const normalizedHighSlope = avgClose > 0 ? lineSlope(highs) / avgClose : 0;
+  const normalizedLowSlope = avgClose > 0 ? lineSlope(lows) / avgClose : 0;
+
+  const higherHighHigherLow = normalizedHighSlope > 0.0015 && normalizedLowSlope > 0.0012;
+  const lowerHighLowerLow = normalizedHighSlope < -0.0015 && normalizedLowSlope < -0.0012;
+
+  return {
+    bullishEngulfing,
+    bearishEngulfing,
+    hammer,
+    shootingStar,
+    insideBarBreakoutUp,
+    insideBarBreakoutDown,
+    higherHighHigherLow,
+    lowerHighLowerLow,
+  };
+}
+
 function parseConfiguredUniverse(): string[] {
   const raw = String(process.env.PLATINUM_ASX_UNIVERSE || "").trim();
   if (!raw) {
@@ -1068,6 +1181,7 @@ function buildIndicators(bars: PriceBar[]): IndicatorPack | null {
 
   const highest20 = Math.max(...highs.slice(-20));
   const donchianBreakout = close >= highest20 * 0.997;
+  const patterns = detectPricePatterns(bars);
 
   return {
     close,
@@ -1095,6 +1209,14 @@ function buildIndicators(bars: PriceBar[]): IndicatorPack | null {
     obvSlope: obv,
     zScore20: z,
     donchianBreakout,
+    bullishEngulfing: patterns.bullishEngulfing,
+    bearishEngulfing: patterns.bearishEngulfing,
+    hammer: patterns.hammer,
+    shootingStar: patterns.shootingStar,
+    insideBarBreakoutUp: patterns.insideBarBreakoutUp,
+    insideBarBreakoutDown: patterns.insideBarBreakoutDown,
+    higherHighHigherLow: patterns.higherHighHigherLow,
+    lowerHighLowerLow: patterns.lowerHighLowerLow,
   };
 }
 
@@ -1148,6 +1270,16 @@ function toSignalBreakdown(indicators: IndicatorPack): SignalBreakdownItem[] {
   const zSignal = clamp(-indicators.zScore20 / 2.5, -1, 1);
   const breakoutSignal = indicators.donchianBreakout ? 1 : 0;
   const volatilityPenalty = clamp((indicators.atrPct - 0.045) / 0.08, -1, 1);
+  const candlePatternSignal =
+    (indicators.bullishEngulfing ? 0.8 : 0) +
+    (indicators.hammer ? 0.55 : 0) +
+    (indicators.bearishEngulfing ? -0.8 : 0) +
+    (indicators.shootingStar ? -0.55 : 0);
+  const structurePatternSignal =
+    (indicators.higherHighHigherLow ? 0.9 : 0) +
+    (indicators.lowerHighLowerLow ? -0.9 : 0) +
+    (indicators.insideBarBreakoutUp ? 0.7 : 0) +
+    (indicators.insideBarBreakoutDown ? -0.7 : 0);
 
   return [
     { label: "Trend MA", value: trendAlignment, weight: 1.2 },
@@ -1165,6 +1297,8 @@ function toSignalBreakdown(indicators: IndicatorPack): SignalBreakdownItem[] {
     { label: "Z-Score", value: zSignal, weight: 0.55 },
     { label: "Breakout", value: breakoutSignal, weight: 0.9 },
     { label: "Volatility", value: -volatilityPenalty, weight: 0.55 },
+    { label: "CandlePattern", value: candlePatternSignal, weight: 0.95 },
+    { label: "StructurePattern", value: structurePatternSignal, weight: 1.0 },
   ];
 }
 
@@ -1191,6 +1325,10 @@ function evaluateRecommendation(
   );
 
   const hasPosition = Boolean(position && position.units > 0);
+  const bearishPattern =
+    indicators.bearishEngulfing || indicators.shootingStar || indicators.insideBarBreakoutDown || indicators.lowerHighLowerLow;
+  const bullishPattern =
+    indicators.bullishEngulfing || indicators.hammer || indicators.insideBarBreakoutUp || indicators.higherHighHigherLow;
 
   let action: RecommendationAction = "hold";
 
@@ -1199,17 +1337,28 @@ function evaluateRecommendation(
     const trailingStopHit = position.peakPrice > 0 && indicators.close <= position.peakPrice * (1 - TRAILING_STOP_PCT);
     const trendBreak = indicators.close < indicators.sma50 && indicators.macdHist < 0;
 
-    if (stopLossHit || trailingStopHit || score < -0.15 || (trendBreak && indicators.rsi14 < 48)) {
+    if (stopLossHit || trailingStopHit || score < -0.15 || bearishPattern || (trendBreak && indicators.rsi14 < 48)) {
       action = "sell";
     }
   } else {
     const trendGate = indicators.close > indicators.sma50 && indicators.sma50 > indicators.sma200;
     const qualityGate = indicators.volumeSurge > 0.9 && indicators.adx14 >= 14;
 
-    if (score > 0.22 && expectedReturnPct >= 4 && trendGate && qualityGate) {
+    if (score > 0.22 && expectedReturnPct >= 4 && trendGate && qualityGate && bullishPattern) {
       action = "buy";
     }
   }
+
+  const patternTags = [
+    indicators.bullishEngulfing ? "BullEngulf" : "",
+    indicators.bearishEngulfing ? "BearEngulf" : "",
+    indicators.hammer ? "Hammer" : "",
+    indicators.shootingStar ? "ShootingStar" : "",
+    indicators.insideBarBreakoutUp ? "InsideBreakUp" : "",
+    indicators.insideBarBreakoutDown ? "InsideBreakDown" : "",
+    indicators.higherHighHigherLow ? "HHHL" : "",
+    indicators.lowerHighLowerLow ? "LHLL" : "",
+  ].filter((value) => value.length > 0);
 
   const topSignals = [...breakdown]
     .sort((a, b) => Math.abs(b.value * b.weight) - Math.abs(a.value * a.weight))
@@ -1221,7 +1370,8 @@ function evaluateRecommendation(
     `Score ${score.toFixed(3)}; exp ${expectedReturnPct.toFixed(2)}%; conf ${confidence.toFixed(0)}%; ` +
     `MA20 ${indicators.sma20.toFixed(2)} / MA50 ${indicators.sma50.toFixed(2)} / MA200 ${indicators.sma200.toFixed(2)}; ` +
     `ROC20 ${(indicators.roc20 * 100).toFixed(2)}%; RSI ${indicators.rsi14.toFixed(1)}; ATR ${(indicators.atrPct * 100).toFixed(2)}%; ` +
-    `signals[${topSignals}]`;
+    `signals[${topSignals}]` +
+    `${patternTags.length > 0 ? `; patterns[${patternTags.join(",")}]` : ""}`;
 
   return {
     ticker,
