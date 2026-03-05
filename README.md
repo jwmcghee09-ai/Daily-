@@ -233,11 +233,27 @@ curl -fsS -X POST \
   https://your-domain/api/internal/ops/backup
 ```
 
+Alternative (simpler header, avoids Bearer quoting issues):
+
+```bash
+curl -fsS -X POST \
+  -H "x-backup-cron-token: $BACKUP_CRON_TOKEN" \
+  https://your-domain/api/internal/ops/backup
+```
+
 3. Cron job command for restore test:
 
 ```bash
 curl -fsS -X POST \
   -H "Authorization: Bearer $BACKUP_CRON_TOKEN" \
+  https://your-domain/api/internal/ops/backup/restore-test
+```
+
+Alternative:
+
+```bash
+curl -fsS -X POST \
+  -H "x-backup-cron-token: $BACKUP_CRON_TOKEN" \
   https://your-domain/api/internal/ops/backup/restore-test
 ```
 
