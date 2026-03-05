@@ -154,14 +154,14 @@
   overflow-x: auto;
 }
 
-table {
+.tableWrap table {
   width: 100%;
   border-collapse: collapse;
   min-width: 620px;
 }
 
-th,
-td {
+.tableWrap th,
+.tableWrap td {
   padding: 0.48rem 0.5rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   text-align: left;
@@ -170,7 +170,7 @@ td {
   vertical-align: top;
 }
 
-th {
+.tableWrap th {
   color: #9f98bf;
   font-size: 0.58rem;
   letter-spacing: 0.12em;
