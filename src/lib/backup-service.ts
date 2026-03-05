@@ -199,24 +199,36 @@ function normalizeObjectPrefix(prefix: string): string {
   return prefix.replace(/^\/+/, "").replace(/\/+$/, "");
 }
 
+function readNormalizedEnv(name: string, fallback = ""): string {
+  const raw = String(process.env[name] || fallback || "").trim();
+  if (!raw) {
+    return "";
+  }
+
+  const withoutEdgeQuotes = raw.replace(/^['"`“”‘’]+|['"`“”‘’]+$/g, "");
+  return withoutEdgeQuotes.trim();
+}
+
 function readOffsiteBackupConfig(): OffsiteBackupConfig | null {
   const enabled = readBooleanEnv("BACKUP_OFFSITE_ENABLED", false);
   if (!enabled) {
     return null;
   }
 
-  const bucket = String(process.env.BACKUP_OFFSITE_BUCKET || "").trim();
+  const bucket = readNormalizedEnv("BACKUP_OFFSITE_BUCKET");
   if (!bucket) {
     throw new Error("BACKUP_OFFSITE_BUCKET is required when BACKUP_OFFSITE_ENABLED=true.");
   }
 
-  const region = String(process.env.BACKUP_OFFSITE_REGION || "").trim() || "us-east-1";
-  const prefix = normalizeObjectPrefix(String(process.env.BACKUP_OFFSITE_PREFIX || "spectre").trim() || "spectre");
-  const endpoint = String(process.env.BACKUP_OFFSITE_ENDPOINT || "").trim() || null;
+  const region = readNormalizedEnv("BACKUP_OFFSITE_REGION", "us-east-1") || "us-east-1";
+  const prefix = normalizeObjectPrefix(readNormalizedEnv("BACKUP_OFFSITE_PREFIX", "spectre") || "spectre");
+  const endpoint = readNormalizedEnv("BACKUP_OFFSITE_ENDPOINT") || null;
   const forcePathStyle = readBooleanEnv("BACKUP_OFFSITE_FORCE_PATH_STYLE", Boolean(endpoint));
-  const accessKeyId = String(process.env.BACKUP_OFFSITE_ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY_ID || "").trim();
-  const secretAccessKey = String(process.env.BACKUP_OFFSITE_SECRET_ACCESS_KEY || process.env.AWS_SECRET_ACCESS_KEY || "").trim();
-  const sseRaw = String(process.env.BACKUP_OFFSITE_SSE || "").trim().toUpperCase();
+  const accessKeyId =
+    readNormalizedEnv("BACKUP_OFFSITE_ACCESS_KEY_ID") || readNormalizedEnv("AWS_ACCESS_KEY_ID");
+  const secretAccessKey =
+    readNormalizedEnv("BACKUP_OFFSITE_SECRET_ACCESS_KEY") || readNormalizedEnv("AWS_SECRET_ACCESS_KEY");
+  const sseRaw = readNormalizedEnv("BACKUP_OFFSITE_SSE").toUpperCase();
   const verifyUpload = readBooleanEnv("BACKUP_OFFSITE_VERIFY_UPLOAD", true);
 
   if (!accessKeyId || !secretAccessKey) {
