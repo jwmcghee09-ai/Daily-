@@ -112,6 +112,22 @@ interface PlatinumPayload {
   error?: string;
 }
 
+interface PlatinumAnalysis {
+  generatedAt: string;
+  model: string;
+  overview: string;
+  riskSignals: string[];
+  tradeSignals: string[];
+  watchlist: string[];
+  nextActions: string[];
+}
+
+interface PlatinumAnalysisPayload {
+  ok: boolean;
+  analysis?: PlatinumAnalysis;
+  error?: string;
+}
+
 const currency = new Intl.NumberFormat("en-AU", {
   style: "currency",
   currency: "AUD",
@@ -134,8 +150,11 @@ const CHART_TOOLTIP_STYLE = {
 
 export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
   const [state, setState] = useState<PlatinumPaperState | null>(null);
+  const [analysis, setAnalysis] = useState<PlatinumAnalysis | null>(null);
   const [loading, setLoading] = useState(true);
   const [runningScan, setRunningScan] = useState(false);
+  const [runningAnalysis, setRunningAnalysis] = useState(false);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [marketStatusMessage, setMarketStatusMessage] = useState<string | null>(null);
@@ -180,6 +199,8 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
       }
 
       setState(payload.result.state);
+      setAnalysis(null);
+      setAnalysisError(null);
 
       if (payload.result.skippedBecauseMarketClosed) {
         setStatusMessage("ASX is currently closed. Live scan skipped.");
@@ -194,6 +215,28 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
       setErrorMessage(error instanceof Error ? error.message : "Failed to run daily scan.");
     } finally {
       setRunningScan(false);
+    }
+  }, []);
+
+  const runAiAnalysis = useCallback(async () => {
+    setRunningAnalysis(true);
+    setAnalysisError(null);
+
+    try {
+      const response = await fetch("/api/platinum/analysis", {
+        method: "POST",
+      });
+
+      const payload = (await response.json()) as PlatinumAnalysisPayload;
+      if (!response.ok || !payload.ok || !payload.analysis) {
+        throw new Error(payload.error || `Request failed (${response.status}).`);
+      }
+
+      setAnalysis(payload.analysis);
+    } catch (error) {
+      setAnalysisError(error instanceof Error ? error.message : "Failed to generate AI analysis.");
+    } finally {
+      setRunningAnalysis(false);
     }
   }, []);
 
@@ -325,6 +368,64 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
 
       {statusMessage ? <p className={styles.successText}>{statusMessage}</p> : null}
       {errorMessage ? <p className={styles.errorText}>{errorMessage}</p> : null}
+
+      <article className={`${styles.panel} ${styles.aiPanel}`}>
+        <div className={styles.aiToolbar}>
+          <div>
+            <h3>AI Market Brief</h3>
+            {analysis ? (
+              <p className={styles.infoText}>
+                Generated {new Date(analysis.generatedAt).toLocaleString("en-AU")} via {analysis.model}
+              </p>
+            ) : (
+              <p className={styles.infoText}>Generate a plain-English breakdown of current risk and trade signals.</p>
+            )}
+          </div>
+          <button className={styles.analysisButton} onClick={() => void runAiAnalysis()} disabled={runningAnalysis}>
+            {runningAnalysis ? "Generating Analysis..." : "Generate AI Analysis"}
+          </button>
+        </div>
+        {analysisError ? <p className={styles.errorText}>{analysisError}</p> : null}
+        {analysis ? (
+          <div className={styles.aiBody}>
+            <p className={styles.infoText}>{analysis.overview}</p>
+            <div className={styles.aiGrid}>
+              <section>
+                <h4>Risk Signals</h4>
+                <ul className={styles.aiList}>
+                  {(analysis.riskSignals.length > 0 ? analysis.riskSignals : ["No major risk flags in the latest data."]).map((item) => (
+                    <li key={`risk-${item}`}>{item}</li>
+                  ))}
+                </ul>
+              </section>
+              <section>
+                <h4>Trade Signals</h4>
+                <ul className={styles.aiList}>
+                  {(analysis.tradeSignals.length > 0 ? analysis.tradeSignals : ["No high-conviction trade setups were identified."]).map((item) => (
+                    <li key={`trade-${item}`}>{item}</li>
+                  ))}
+                </ul>
+              </section>
+              <section>
+                <h4>Watchlist</h4>
+                <ul className={styles.aiList}>
+                  {(analysis.watchlist.length > 0 ? analysis.watchlist : ["No watchlist entries returned."]).map((item) => (
+                    <li key={`watch-${item}`}>{item}</li>
+                  ))}
+                </ul>
+              </section>
+              <section>
+                <h4>Next Actions</h4>
+                <ul className={styles.aiList}>
+                  {(analysis.nextActions.length > 0 ? analysis.nextActions : ["Refresh scans and rerun AI analysis after next market update."]).map((item) => (
+                    <li key={`next-${item}`}>{item}</li>
+                  ))}
+                </ul>
+              </section>
+            </div>
+          </div>
+        ) : null}
+      </article>
 
       <div className={styles.metricGrid}>
         <article className={styles.metricCard}>

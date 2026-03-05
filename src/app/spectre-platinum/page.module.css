@@ -176,6 +176,67 @@
   text-transform: uppercase;
 }
 
+.aiPanel {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.aiToolbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.analysisButton {
+  border: 1px solid rgba(156, 233, 184, 0.45);
+  background: linear-gradient(135deg, #2c8b5a 0%, #246e48 100%);
+  color: #fff;
+  border-radius: 10px;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.7rem 1rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.analysisButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.aiBody {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.aiGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.aiGrid h4 {
+  margin: 0 0 0.45rem;
+  color: #c7c3db;
+  font-size: 0.65rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.aiList {
+  margin: 0;
+  padding-left: 1rem;
+  display: grid;
+  gap: 0.3rem;
+}
+
+.aiList li {
+  color: #ddd8ef;
+  font-size: 0.76rem;
+}
+
 .tableWrap {
   overflow-x: auto;
 }
@@ -242,6 +303,14 @@
 @media (max-width: 860px) {
   .toolbar {
     flex-direction: column;
+  }
+
+  .aiToolbar {
+    flex-direction: column;
+  }
+
+  .aiGrid {
+    grid-template-columns: 1fr;
   }
 
   .panelGrid {

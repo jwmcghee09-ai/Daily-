@@ -286,6 +286,7 @@ SPECTRE Platinum includes a paper-trading engine that:
 API endpoints:
 - User-triggered (authenticated Platinum user only): `POST /api/platinum/paper-trading`
 - User live mode while ASX open: `POST /api/platinum/paper-trading?mode=live`
+- User-triggered AI brief (authenticated Platinum user only): `POST /api/platinum/analysis`
 - Cron-triggered (token-protected): `POST /api/internal/ops/platinum/scan`
 - Cron live mode (market-hours gated): `POST /api/internal/ops/platinum/scan?mode=live`
 
@@ -297,6 +298,8 @@ Optional env vars:
 - `OPENAI_API_KEY` (enables AI overlay)
 - `PLATINUM_AI_MODEL` (default `gpt-4.1-mini`)
 - `PLATINUM_AI_MAX_CANDIDATES` (default `40`)
+- `PLATINUM_ANALYSIS_MODEL` (default `PLATINUM_AI_MODEL` or `gpt-4.1-mini`)
+- `PLATINUM_ANALYSIS_TIMEOUT_MS` (default `20000`)
 
 Render cron command example (daily run):
 
