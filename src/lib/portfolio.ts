@@ -111,7 +111,21 @@ export function extractCsvDataSection(csvText: string): string {
 
 function isLikelyHeaderLine(line: string): boolean {
   const normalized = normalizeHeader(line);
-  const signals = ["code", "ticker", "symbol", "units", "weight", "value", "mktvalue", "purchase", "last"];
+  const signals = [
+    "code",
+    "ticker",
+    "symbol",
+    "units",
+    "weight",
+    "value",
+    "mktvalue",
+    "purchase",
+    "last",
+    "transactiontype",
+    "transactionsubcategory",
+    "descriptionpayerdetails",
+    "amount",
+  ];
   let hits = 0;
 
   for (const signal of signals) {
@@ -130,6 +144,10 @@ export function parseRowsToHoldings(rows: CsvRow[], source: DataSource): Portfol
     return parseCryptoTradeRows(rows, importedAt);
   }
 
+  if (source === "super" && looksLikeSuperTransactionLedger(rows)) {
+    return parseSuperTransactionRows(rows, importedAt);
+  }
+
   return rows
     .map((row, index) => toHolding(row, source, importedAt, index))
     .filter((holding): holding is PortfolioHolding => Boolean(holding));
@@ -140,6 +158,68 @@ function looksLikeCryptoTradeLedger(rows: CsvRow[]): boolean {
     const row = normalizeRowKeys(raw);
     return Boolean(row.pair && (row.vol || row.cvol || row.quantity || row.qty) && (row.type || row.side || row.action));
   });
+}
+
+function looksLikeSuperTransactionLedger(rows: CsvRow[]): boolean {
+  return rows.some((raw) => {
+    const row = normalizeRowKeys(raw);
+    return Boolean(row.transactiontype && row.amount && (row.date || row.transactionsubcategory || row.descriptionpayerdetails));
+  });
+}
+
+function parseSuperTransactionRows(rows: CsvRow[], importedAt: string): PortfolioHolding[] {
+  let netFlow = 0;
+  let latestDate = "";
+
+  for (const raw of rows) {
+    const row = normalizeRowKeys(raw);
+    const dateRaw = String(row.date || "").trim();
+    const amount = toNumber(String(row.amount || ""));
+
+    if (!Number.isFinite(amount)) {
+      continue;
+    }
+
+    // Ignore breakdown rows that usually have no date (e.g. Gross/Rebate lines).
+    if (!dateRaw) {
+      continue;
+    }
+
+    const parsedDate = parseDate(dateRaw);
+    if (!parsedDate) {
+      continue;
+    }
+
+    netFlow += amount;
+    if (parsedDate > latestDate) {
+      latestDate = parsedDate;
+    }
+  }
+
+  if (!Number.isFinite(netFlow) || netFlow <= 0) {
+    return [];
+  }
+
+  const value = Number(netFlow.toFixed(2));
+  const reportDate = latestDate || todayDate();
+
+  const holding: PortfolioHolding = {
+    id: `super-transaction-net-${reportDate}`,
+    source: "super",
+    account: "Superannuation",
+    ticker: "SUPERCASH",
+    name: "Super Transactions (Net Flow)",
+    units: 1,
+    price: value,
+    prevClose: value,
+    value,
+    costBase: value,
+    sector: "Super",
+    reportDate,
+    importedAt,
+  };
+
+  return [holding];
 }
 
 function parseCryptoTradeRows(rows: CsvRow[], importedAt: string): PortfolioHolding[] {
@@ -460,12 +540,13 @@ function parseDate(value: string): string | null {
     return null;
   }
 
-  const direct = new Date(value);
+  const normalized = value.trim().replace(/\./g, "/").replace(/-/g, "/");
+  const direct = new Date(normalized);
   if (!Number.isNaN(direct.getTime())) {
     return direct.toISOString().slice(0, 10);
   }
 
-  const match = value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+  const match = normalized.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
   if (!match) {
     return null;
   }
