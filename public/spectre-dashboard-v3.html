@@ -1462,16 +1462,30 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   }
 
   function computeTodayChange(holdings, snapshots) {
-    const currentTotal = sum(holdings.map((holding) => Number(holding.value) || 0));
+    const todayKeySydney = toSydneyDateKey(new Date());
+    const preExistingHoldings = (holdings || []).filter((holding) => {
+      const importedAt = new Date(holding?.importedAt || "");
+      if (Number.isNaN(importedAt.getTime())) {
+        return true;
+      }
+      return toSydneyDateKey(importedAt) < todayKeySydney;
+    });
+    const hasSameDayImports = preExistingHoldings.length < (holdings || []).length;
+    const currentTotal = sum(preExistingHoldings.map((holding) => Number(holding.value) || 0));
     let fallbackPreviousTotal = 0;
     let fallbackCurrentTotal = 0;
 
-    for (const holding of holdings || []) {
+    for (const holding of preExistingHoldings) {
       const quantity = resolveHoldingUnits(Number(holding?.units), Number(holding?.value), Number(holding?.price));
       const price = Number(holding?.price);
       const prevClose = Number(holding?.prevClose);
 
       if (!Number.isFinite(quantity) || quantity <= 0 || !Number.isFinite(price) || !Number.isFinite(prevClose) || price <= 0 || prevClose <= 0) {
+        const value = Number(holding?.value);
+        if (Number.isFinite(value) && value > 0) {
+          fallbackPreviousTotal += value;
+          fallbackCurrentTotal += value;
+        }
         continue;
       }
 
@@ -1479,12 +1493,11 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       fallbackCurrentTotal += quantity * price;
     }
 
-    const todayKeySydney = toSydneyDateKey(new Date());
     const todaySnapshots = (snapshots || [])
       .filter((snapshot) => Number.isFinite(snapshot?.value) && toSydneyDateKey(snapshot?.date) === todayKeySydney)
       .sort((a, b) => String(a.date || "").localeCompare(String(b.date || "")));
 
-    if (todaySnapshots.length === 0) {
+    if (hasSameDayImports || todaySnapshots.length === 0) {
       if (fallbackPreviousTotal > 0) {
         const amount = fallbackCurrentTotal - fallbackPreviousTotal;
         return { amount, pct: (amount / fallbackPreviousTotal) * 100 };

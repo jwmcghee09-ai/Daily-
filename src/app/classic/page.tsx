@@ -854,8 +854,23 @@ export default function Home() {
       .sort((a, b) => b.changePct - a.changePct);
   }, [state.holdings]);
 
+  const todaySydney = toSydneyDateKey(new Date());
+
+  const preExistingHoldings = useMemo(() => {
+    return state.holdings.filter((holding) => {
+      const importedAt = new Date(holding.importedAt);
+      if (Number.isNaN(importedAt.getTime())) {
+        return true;
+      }
+
+      return toSydneyDateKey(importedAt) < todaySydney;
+    });
+  }, [state.holdings, todaySydney]);
+
+  const hasSameDayImports = preExistingHoldings.length < state.holdings.length;
+
   const todaySnapshotSeries = useMemo(() => {
-    const todaySydney = toSydneyDateKey(new Date());
+    const todaySydneyKey = toSydneyDateKey(new Date());
 
     return state.snapshots
       .map((snapshot) => ({ date: new Date(snapshot.date), value: snapshot.value }))
@@ -864,7 +879,7 @@ export default function Home() {
           !Number.isNaN(snapshot.date.getTime()) &&
           Number.isFinite(snapshot.value) &&
           snapshot.value >= 0 &&
-          toSydneyDateKey(snapshot.date) === todaySydney,
+          toSydneyDateKey(snapshot.date) === todaySydneyKey,
       )
       .sort((a, b) => a.date.getTime() - b.date.getTime());
   }, [state.snapshots]);
@@ -873,7 +888,7 @@ export default function Home() {
     let previousTotal = 0;
     let currentTotal = 0;
 
-    for (const holding of state.holdings) {
+    for (const holding of preExistingHoldings) {
       const quantity = resolveHoldingUnits(holding.units, holding.value, holding.price);
       if (
         quantity <= 0 ||
@@ -882,6 +897,10 @@ export default function Home() {
         holding.price <= 0 ||
         holding.prevClose <= 0
       ) {
+        if (Number.isFinite(holding.value) && holding.value > 0) {
+          previousTotal += holding.value;
+          currentTotal += holding.value;
+        }
         continue;
       }
 
@@ -898,9 +917,10 @@ export default function Home() {
       amount,
       pct: (amount / previousTotal) * 100,
     };
-  }, [state.holdings]);
+  }, [preExistingHoldings]);
 
-  const hasTodaySnapshotBaseline = todaySnapshotSeries.length > 0 && todaySnapshotSeries[0].value > 0;
+  const hasTodaySnapshotBaseline =
+    !hasSameDayImports && todaySnapshotSeries.length > 0 && todaySnapshotSeries[0].value > 0;
   const todayBaselineValue = hasTodaySnapshotBaseline ? todaySnapshotSeries[0].value : null;
   const todayPortfolioChangeAmount =
     todayBaselineValue != null ? metrics.totalValue - todayBaselineValue : (todaySessionFallback?.amount ?? 0);
