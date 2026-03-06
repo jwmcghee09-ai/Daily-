@@ -128,6 +128,11 @@ interface PlatinumAnalysisPayload {
   error?: string;
 }
 
+type ApiPayload = {
+  ok?: boolean;
+  error?: string;
+};
+
 const currency = new Intl.NumberFormat("en-AU", {
   style: "currency",
   currency: "AUD",
@@ -163,6 +168,31 @@ const AXIS_TICK = {
 };
 const GRID_STROKE = "rgba(255,255,255,0.05)";
 
+function summarizeUnexpectedApiBody(raw: string): string {
+  const compact = String(raw || "").replace(/\s+/g, " ").trim();
+  if (!compact) {
+    return "Empty response body.";
+  }
+
+  if (compact.toLowerCase().startsWith("<!doctype") || compact.toLowerCase().startsWith("<html")) {
+    return "Server returned an HTML page instead of JSON (likely an upstream/server error).";
+  }
+
+  return compact.slice(0, 220);
+}
+
+async function readJsonPayload<T extends ApiPayload>(response: Response): Promise<T> {
+  const raw = await response.text();
+
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    throw new Error(
+      `API returned non-JSON response (${response.status}). ${summarizeUnexpectedApiBody(raw)}`,
+    );
+  }
+}
+
 export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
   const [state, setState] = useState<PlatinumPaperState | null>(null);
   const [analysis, setAnalysis] = useState<PlatinumAnalysis | null>(null);
@@ -180,7 +210,7 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
 
     try {
       const response = await fetch("/api/platinum/paper-trading", { cache: "no-store" });
-      const payload = (await response.json()) as PlatinumPayload;
+      const payload = await readJsonPayload<PlatinumPayload>(response);
 
       if (!response.ok || !payload.ok || !payload.state) {
         throw new Error(payload.error || `Request failed (${response.status}).`);
@@ -205,7 +235,7 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
 
     try {
       const response = await fetch("/api/platinum/paper-trading", { method: "POST" });
-      const payload = (await response.json()) as PlatinumPayload;
+      const payload = await readJsonPayload<PlatinumPayload>(response);
 
       if (!response.ok || !payload.ok || !payload.result) {
         throw new Error(payload.error || `Request failed (${response.status}).`);
@@ -237,7 +267,7 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
 
     try {
       const response = await fetch("/api/platinum/analysis", { method: "POST" });
-      const payload = (await response.json()) as PlatinumAnalysisPayload;
+      const payload = await readJsonPayload<PlatinumAnalysisPayload>(response);
 
       if (!response.ok || !payload.ok || !payload.analysis) {
         throw new Error(payload.error || `Request failed (${response.status}).`);
@@ -254,7 +284,7 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
   const runLiveUpdate = useCallback(async () => {
     try {
       const response = await fetch("/api/platinum/paper-trading?mode=live", { method: "POST" });
-      const payload = (await response.json()) as PlatinumPayload;
+      const payload = await readJsonPayload<PlatinumPayload>(response);
 
       if (!response.ok || !payload.ok || !payload.result) return;
 

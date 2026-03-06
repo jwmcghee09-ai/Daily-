@@ -19,6 +19,7 @@
   padding: 2rem clamp(0.65rem, 1.8vw, 1.25rem) 5rem;
   font-family: 'DM Sans', sans-serif;
   position: relative;
+  overflow-x: hidden;
 }
 
 .page::before {
@@ -38,6 +39,7 @@
   width: 100%;
   max-width: 100%;
   margin: 0 auto;
+  min-width: 0;
 }
 
 /* ── HEADER ── */
@@ -114,7 +116,11 @@
 }
 
 /* ── CONSOLE ── */
-.consoleWrap { display: grid; gap: 1.1rem; }
+.consoleWrap {
+  display: grid;
+  gap: 1.1rem;
+  min-width: 0;
+}
 
 /* ── TOOLBAR ── */
 .toolbar {
@@ -127,6 +133,7 @@
   border-radius: 12px;
   background: linear-gradient(160deg, rgba(16,11,28,.97), rgba(10,7,18,.97));
   padding: 1.1rem 1.25rem;
+  min-width: 0;
 }
 
 .userRow {
@@ -220,6 +227,7 @@
   display: grid;
   gap: 1rem;
   padding: 1.1rem 1.25rem;
+  min-width: 0;
 }
 
 .aiToolbar {
@@ -287,6 +295,7 @@
   border-top: 2px solid rgba(255,77,26,.7);
   border-radius: 12px;
   overflow: hidden;
+  min-width: 0;
 }
 
 .metricCard {
@@ -318,6 +327,7 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1.1rem;
+  min-width: 0;
 }
 
 .chartCard {
@@ -326,6 +336,7 @@
   border-radius: 12px;
   background: linear-gradient(160deg, rgba(16,11,28,.97), rgba(10,7,18,.97));
   padding: 1.1rem 1.25rem;
+  min-width: 0;
 }
 
 .chartCard h3 {
@@ -345,6 +356,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1.1rem;
+  min-width: 0;
 }
 
 /* ── PANEL ── */
@@ -354,6 +366,7 @@
   border-radius: 12px;
   background: linear-gradient(160deg, rgba(16,11,28,.97), rgba(10,7,18,.97));
   padding: 1.1rem 1.25rem;
+  min-width: 0;
 }
 
 .panel h3 {
@@ -367,7 +380,10 @@
 }
 
 /* ── TABLE ── */
-.tableWrap { overflow-x: auto; }
+.tableWrap {
+  max-width: 100%;
+  overflow-x: auto;
+}
 
 .tableWrap table {
   width: 100%;
