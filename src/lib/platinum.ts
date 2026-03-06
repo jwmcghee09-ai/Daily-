@@ -19,6 +19,9 @@ const MA_LONG_PERIOD = 200;
 const MOMENTUM_LOOKBACK = 20;
 const ZSCORE_LOOKBACK = 20;
 const INDICATOR_MIN_BARS = 220;
+const PATTERN_LOOKBACK_BARS = clampInteger(process.env.PLATINUM_PATTERN_LOOKBACK_BARS, 18, 8, 40);
+const PATTERN_FORECAST_HORIZON_BARS = clampInteger(process.env.PLATINUM_PATTERN_FORECAST_HORIZON_BARS, 5, 2, 20);
+const PATTERN_MATCH_TOP_K = clampInteger(process.env.PLATINUM_PATTERN_MATCH_TOP_K, 30, 5, 80);
 
 const MAX_OPEN_POSITIONS = clampInteger(process.env.PLATINUM_MAX_POSITIONS, 12, 3, 40);
 const TARGET_EQUITY_PER_BUY = clampNumber(process.env.PLATINUM_TARGET_PER_POSITION, 0.1, 0.02, 0.35);
@@ -210,6 +213,9 @@ interface IndicatorPack {
   drawdown63: number;
   obvSlope: number;
   zScore20: number;
+  patternExpectedReturn: number;
+  patternHitRate: number;
+  patternConfidence: number;
   donchianBreakout: boolean;
   bullishEngulfing: boolean;
   bearishEngulfing: boolean;
@@ -939,6 +945,111 @@ function drawdownFromRecentHigh(values: number[], lookback = 63): number | null 
   return last / peak - 1;
 }
 
+function buildNormalizedReturnVector(values: number[], anchor: number, lookback: number): number[] | null {
+  const start = anchor - lookback + 1;
+  if (start < 0 || anchor >= values.length) {
+    return null;
+  }
+
+  const vector: number[] = [];
+  for (let index = start + 1; index <= anchor; index += 1) {
+    const prev = values[index - 1];
+    const current = values[index];
+    if (!Number.isFinite(prev) || !Number.isFinite(current) || prev <= 0 || current <= 0) {
+      return null;
+    }
+    vector.push(Math.log(current / prev));
+  }
+
+  if (vector.length < 4) {
+    return null;
+  }
+
+  const norm = Math.sqrt(vector.reduce((acc, value) => acc + value * value, 0));
+  if (!Number.isFinite(norm) || norm <= 0) {
+    return null;
+  }
+
+  return vector.map((value) => value / norm);
+}
+
+function cosineSimilarity(a: number[], b: number[]): number {
+  if (a.length !== b.length || a.length === 0) {
+    return 0;
+  }
+
+  let dot = 0;
+  for (let index = 0; index < a.length; index += 1) {
+    dot += a[index] * b[index];
+  }
+
+  return clamp(dot, -1, 1);
+}
+
+function patternSimilarityForecast(values: number[]): { expectedReturn: number; hitRate: number; confidence: number } {
+  const minimumBars = PATTERN_LOOKBACK_BARS + PATTERN_FORECAST_HORIZON_BARS + 80;
+  if (values.length < minimumBars) {
+    return { expectedReturn: 0, hitRate: 0.5, confidence: 0 };
+  }
+
+  const currentAnchor = values.length - 1;
+  const currentVector = buildNormalizedReturnVector(values, currentAnchor, PATTERN_LOOKBACK_BARS);
+  if (!currentVector) {
+    return { expectedReturn: 0, hitRate: 0.5, confidence: 0 };
+  }
+
+  const candidates: Array<{ similarity: number; forwardReturn: number }> = [];
+  const minAnchor = PATTERN_LOOKBACK_BARS - 1;
+  const maxAnchor = values.length - (PATTERN_LOOKBACK_BARS + PATTERN_FORECAST_HORIZON_BARS);
+
+  for (let anchor = minAnchor; anchor <= maxAnchor; anchor += 1) {
+    const vector = buildNormalizedReturnVector(values, anchor, PATTERN_LOOKBACK_BARS);
+    if (!vector) {
+      continue;
+    }
+
+    const similarity = cosineSimilarity(currentVector, vector);
+    if (!Number.isFinite(similarity) || similarity <= 0.2) {
+      continue;
+    }
+
+    const start = values[anchor];
+    const end = values[anchor + PATTERN_FORECAST_HORIZON_BARS];
+    if (!Number.isFinite(start) || !Number.isFinite(end) || start <= 0 || end <= 0) {
+      continue;
+    }
+
+    candidates.push({
+      similarity,
+      forwardReturn: end / start - 1,
+    });
+  }
+
+  if (candidates.length === 0) {
+    return { expectedReturn: 0, hitRate: 0.5, confidence: 0 };
+  }
+
+  const selected = [...candidates]
+    .sort((a, b) => b.similarity - a.similarity)
+    .slice(0, PATTERN_MATCH_TOP_K);
+  const totalWeight = sum(selected.map((entry) => entry.similarity));
+  if (!Number.isFinite(totalWeight) || totalWeight <= 0) {
+    return { expectedReturn: 0, hitRate: 0.5, confidence: 0 };
+  }
+
+  const weightedReturn = selected.reduce((acc, entry) => acc + entry.forwardReturn * entry.similarity, 0) / totalWeight;
+  const weightedHitRate = selected.reduce((acc, entry) => acc + (entry.forwardReturn > 0 ? 1 : 0) * entry.similarity, 0) / totalWeight;
+  const meanSimilarity = totalWeight / selected.length;
+  const coverage = selected.length / PATTERN_MATCH_TOP_K;
+  const confidence = clamp(meanSimilarity * 0.7 + coverage * 0.3, 0, 1);
+
+  return {
+    expectedReturn: clamp(weightedReturn, -0.25, 0.25),
+    hitRate: clamp(weightedHitRate, 0, 1),
+    confidence,
+  };
+}
+
 function lineSlope(values: number[]): number {
   const n = values.length;
   if (n < 2) {
@@ -1286,6 +1397,7 @@ function buildIndicators(bars: PriceBar[]): IndicatorPack | null {
   const z = zScore(closes, ZSCORE_LOOKBACK);
   const realizedVol20 = realizedVolatility(closes, 20);
   const drawdown63 = drawdownFromRecentHigh(closes, 63);
+  const patternForecast = patternSimilarityForecast(closes);
 
   if (
     rsi14 == null ||
@@ -1344,6 +1456,9 @@ function buildIndicators(bars: PriceBar[]): IndicatorPack | null {
     drawdown63,
     obvSlope: obv,
     zScore20: z,
+    patternExpectedReturn: patternForecast.expectedReturn,
+    patternHitRate: patternForecast.hitRate,
+    patternConfidence: patternForecast.confidence,
     donchianBreakout,
     bullishEngulfing: patterns.bullishEngulfing,
     bearishEngulfing: patterns.bearishEngulfing,
@@ -1462,6 +1577,8 @@ function toSignalBreakdown(indicators: IndicatorPack): SignalBreakdownItem[] {
   const volQualitySignal = clamp((0.36 - indicators.realizedVol20) / 0.32, -1, 1);
   const drawdownSignal = clamp((indicators.drawdown63 + 0.18) / 0.18, -1, 1);
   const zSignal = clamp(-indicators.zScore20 / 2.5, -1, 1);
+  const patternForecastSignal = clamp((indicators.patternExpectedReturn * 100) / 6, -1, 1) * indicators.patternConfidence;
+  const patternHitRateSignal = clamp((indicators.patternHitRate - 0.5) * 2, -1, 1) * indicators.patternConfidence;
   const breakoutSignal = indicators.donchianBreakout ? 1 : 0;
   const volatilityPenalty = clamp((indicators.atrPct - 0.045) / 0.08, -1, 1);
   const candlePatternSignal =
@@ -1492,6 +1609,8 @@ function toSignalBreakdown(indicators: IndicatorPack): SignalBreakdownItem[] {
     { label: "VolQuality", value: volQualitySignal, weight: 0.85 },
     { label: "Drawdown", value: drawdownSignal, weight: 0.75 },
     { label: "Z-Score", value: zSignal, weight: 0.55 },
+    { label: "PatternForecast", value: patternForecastSignal, weight: 1.05 },
+    { label: "PatternHitRate", value: patternHitRateSignal, weight: 0.75 },
     { label: "Breakout", value: breakoutSignal, weight: 0.9 },
     { label: "Volatility", value: -volatilityPenalty, weight: 0.55 },
     { label: "CandlePattern", value: candlePatternSignal, weight: 0.95 },
@@ -1511,7 +1630,12 @@ function evaluateRecommendation(
   const score = weightedRaw / weightTotal;
 
   const regimeExpectedAdj = marketRegime.state === "risk_on" ? 1.5 : marketRegime.state === "risk_off" ? -2.4 : -0.35;
-  const expectedReturnRaw = score * 13 + indicators.roc20 * 100 * 0.45 - indicators.atrPct * 100 * 0.25 + regimeExpectedAdj;
+  const expectedReturnRaw =
+    score * 13 +
+    indicators.roc20 * 100 * 0.45 -
+    indicators.atrPct * 100 * 0.25 +
+    indicators.patternExpectedReturn * 100 * 0.6 +
+    regimeExpectedAdj;
   const expectedReturnPct = clamp(
     expectedReturnRaw,
     -25,
@@ -1520,7 +1644,10 @@ function evaluateRecommendation(
 
   const confidenceMultiplier = marketRegime.state === "risk_on" ? 1.04 : marketRegime.state === "risk_off" ? 0.86 : 0.95;
   const confidence = clamp(
-    (Math.abs(score) * 0.55 + clamp(indicators.adx14 / 40, 0, 1) * 0.25 + clamp(indicators.volumeSurge / 2, 0, 1) * 0.2) *
+    (Math.abs(score) * 0.52 +
+      clamp(indicators.adx14 / 40, 0, 1) * 0.22 +
+      clamp(indicators.volumeSurge / 2, 0, 1) * 0.16 +
+      indicators.patternConfidence * 0.1) *
       100 *
       confidenceMultiplier,
     0,
@@ -1542,16 +1669,26 @@ function evaluateRecommendation(
     const trailingStopHit = position.peakPrice > 0 && indicators.close <= position.peakPrice * (1 - TRAILING_STOP_PCT);
     const trendBreak = indicators.close < indicators.sma50 && indicators.macdHist < 0;
     const regimeExit = marketRegime.state === "risk_off" && (indicators.close < indicators.sma20 || indicators.drawdown63 <= -0.12);
+    const patternExit = indicators.patternConfidence >= 0.45 && indicators.patternExpectedReturn <= -0.03;
 
-    if (stopLossHit || trailingStopHit || regimeExit || score < -0.15 || bearishPattern || (trendBreak && indicators.rsi14 < 48)) {
+    if (
+      stopLossHit ||
+      trailingStopHit ||
+      regimeExit ||
+      patternExit ||
+      score < -0.15 ||
+      bearishPattern ||
+      (trendBreak && indicators.rsi14 < 48)
+    ) {
       action = "sell";
     }
   } else {
     const trendGate = indicators.close > indicators.sma50 && indicators.sma50 > indicators.sma200;
     const qualityGate = indicators.volumeSurge > 0.9 && indicators.adx14 >= 14 && liquidityGate && volatilityGate;
     const regimeGate = marketRegime.allowNewLongs;
+    const patternGate = indicators.patternConfidence < 0.35 || indicators.patternExpectedReturn > 0;
 
-    if (score > 0.22 && expectedReturnPct >= 4 && trendGate && qualityGate && bullishPattern && regimeGate) {
+    if (score > 0.22 && expectedReturnPct >= 4 && trendGate && qualityGate && bullishPattern && regimeGate && patternGate) {
       action = "buy";
     }
   }
@@ -1577,6 +1714,7 @@ function evaluateRecommendation(
     `Score ${score.toFixed(3)}; exp ${expectedReturnPct.toFixed(2)}%; conf ${confidence.toFixed(0)}%; ` +
     `MA20 ${indicators.sma20.toFixed(2)} / MA50 ${indicators.sma50.toFixed(2)} / MA200 ${indicators.sma200.toFixed(2)}; ` +
     `ROC20 ${(indicators.roc20 * 100).toFixed(2)}%; RSI ${indicators.rsi14.toFixed(1)}; ATR ${(indicators.atrPct * 100).toFixed(2)}%; ` +
+    `Pattern${PATTERN_FORECAST_HORIZON_BARS} ${(indicators.patternExpectedReturn * 100).toFixed(2)}% @ ${(indicators.patternHitRate * 100).toFixed(0)}% hit / ${(indicators.patternConfidence * 100).toFixed(0)}% conf; ` +
     `ADV20 $${(indicators.avgDollarVolume20 / 1_000_000).toFixed(2)}M; RV20 ${(indicators.realizedVol20 * 100).toFixed(1)}%; DD63 ${(indicators.drawdown63 * 100).toFixed(1)}%; ` +
     `regime[${marketRegime.state}:${marketRegime.score.toFixed(2)}]` +
     `signals[${topSignals}]` +

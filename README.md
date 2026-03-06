@@ -302,6 +302,9 @@ Optional env vars:
 - `PLATINUM_MIN_AVG_DOLLAR_VOLUME_AUD` (default `1000000`, liquidity gate for new buys)
 - `PLATINUM_TARGET_ANNUAL_VOLATILITY` (default `0.18`, volatility-targeted position sizing)
 - `PLATINUM_MIN_CASH_RESERVE_PCT` (default `0.08`, keeps cash buffer after buys)
+- `PLATINUM_PATTERN_LOOKBACK_BARS` (default `18`, lookback bars for nearest-pattern forecast matching)
+- `PLATINUM_PATTERN_FORECAST_HORIZON_BARS` (default `5`, forward bars for pattern-return estimation)
+- `PLATINUM_PATTERN_MATCH_TOP_K` (default `30`, number of best historical matches used in pattern forecast)
 - `PLATINUM_ANALYSIS_MODEL` (default `PLATINUM_AI_MODEL` or `gpt-4.1-mini`)
 - `PLATINUM_ANALYSIS_TIMEOUT_MS` (default `20000`)
 
@@ -313,7 +316,7 @@ curl -fsS -X POST \
   https://your-domain/api/internal/ops/platinum/scan
 ```
 
-Render cron command example (hourly live mode; only executes trades while ASX is open):
+Render cron command example (every 5 minutes live mode; only executes trades while ASX is open):
 
 ```bash
 curl -fsS -X POST \

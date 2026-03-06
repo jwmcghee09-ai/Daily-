@@ -19,7 +19,7 @@ services:
   - type: cron
     name: spectre-platinum-live-scan
     runtime: node
-    schedule: "*/30 * * * *"
+    schedule: "*/5 * * * *"
     buildCommand: npm ci
     startCommand: curl -fsS -X POST -H "Authorization: Bearer $BACKUP_CRON_TOKEN" "$PLATINUM_SCAN_BASE_URL/api/internal/ops/platinum/scan?mode=live"
     envVars:
