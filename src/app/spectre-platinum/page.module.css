@@ -418,8 +418,11 @@
 .tableWrap tr:hover td { background: rgba(255,77,26,.03); }
 
 /* ── P/L COLOURS ── */
-.positive { color: #9b5de5; }
-.negative { color: #ff4d1a; }
+.positive,
+.tableWrap td.positive { color: #9b5de5 !important; }
+
+.negative,
+.tableWrap td.negative { color: #ff4d1a !important; }
 
 /* ── RESPONSIVE ── */
 @media (max-width: 1120px) {
