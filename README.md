@@ -298,6 +298,10 @@ Optional env vars:
 - `OPENAI_API_KEY` (enables AI overlay)
 - `PLATINUM_AI_MODEL` (default `gpt-4.1-mini`)
 - `PLATINUM_AI_MAX_CANDIDATES` (default `40`)
+- `PLATINUM_REGIME_SYMBOL` (default `^AXJO`, benchmark used for risk regime detection)
+- `PLATINUM_MIN_AVG_DOLLAR_VOLUME_AUD` (default `1000000`, liquidity gate for new buys)
+- `PLATINUM_TARGET_ANNUAL_VOLATILITY` (default `0.18`, volatility-targeted position sizing)
+- `PLATINUM_MIN_CASH_RESERVE_PCT` (default `0.08`, keeps cash buffer after buys)
 - `PLATINUM_ANALYSIS_MODEL` (default `PLATINUM_AI_MODEL` or `gpt-4.1-mini`)
 - `PLATINUM_ANALYSIS_TIMEOUT_MS` (default `20000`)
 

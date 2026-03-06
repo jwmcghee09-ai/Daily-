@@ -28,6 +28,10 @@ const FEE_RATE = clampNumber(process.env.PLATINUM_FEE_RATE, 0.001, 0, 0.01);
 const SLIPPAGE_RATE = clampNumber(process.env.PLATINUM_SLIPPAGE_RATE, 0.0006, 0, 0.02);
 const STOP_LOSS_PCT = clampNumber(process.env.PLATINUM_STOP_LOSS_PCT, 0.1, 0.02, 0.4);
 const TRAILING_STOP_PCT = clampNumber(process.env.PLATINUM_TRAILING_STOP_PCT, 0.09, 0.02, 0.35);
+const REGIME_BENCHMARK_SYMBOL = (process.env.PLATINUM_REGIME_SYMBOL || "^AXJO").trim();
+const MIN_AVG_DOLLAR_VOLUME_AUD = clampNumber(process.env.PLATINUM_MIN_AVG_DOLLAR_VOLUME_AUD, 1000000, 100000, 100000000);
+const TARGET_ANNUAL_VOLATILITY = clampNumber(process.env.PLATINUM_TARGET_ANNUAL_VOLATILITY, 0.18, 0.05, 0.8);
+const MIN_CASH_RESERVE_PCT = clampNumber(process.env.PLATINUM_MIN_CASH_RESERVE_PCT, 0.08, 0, 0.5);
 
 const FALLBACK_UNIVERSE = [
   "BHP",
@@ -201,6 +205,9 @@ interface IndicatorPack {
   mfi14: number;
   cci20: number;
   volumeSurge: number;
+  avgDollarVolume20: number;
+  realizedVol20: number;
+  drawdown63: number;
   obvSlope: number;
   zScore20: number;
   donchianBreakout: boolean;
@@ -230,7 +237,17 @@ interface RecommendationCandidate {
   maLong: number;
   momentum: number;
   zScore: number;
+  realizedVol20: number;
+  avgDollarVolume20: number;
   reason: string;
+}
+
+interface MarketRegime {
+  state: "risk_on" | "neutral" | "risk_off";
+  score: number;
+  positionSizeMultiplier: number;
+  allowNewLongs: boolean;
+  summary: string;
 }
 
 interface TradeCandidate {
@@ -881,6 +898,46 @@ function zScore(values: number[], period = 20): number | null {
   return (values[values.length - 1] - mean) / deviation;
 }
 
+function realizedVolatility(values: number[], lookback = 20): number | null {
+  if (values.length < lookback + 1) {
+    return null;
+  }
+
+  const returns: number[] = [];
+  for (let index = values.length - lookback; index < values.length; index += 1) {
+    const prev = values[index - 1];
+    const current = values[index];
+    if (!Number.isFinite(prev) || !Number.isFinite(current) || prev <= 0 || current <= 0) {
+      return null;
+    }
+
+    returns.push(Math.log(current / prev));
+  }
+
+  const sigma = stdDev(returns);
+  if (!Number.isFinite(sigma)) {
+    return null;
+  }
+
+  return sigma * Math.sqrt(252);
+}
+
+function drawdownFromRecentHigh(values: number[], lookback = 63): number | null {
+  if (values.length < lookback) {
+    return null;
+  }
+
+  const window = values.slice(-lookback);
+  const peak = Math.max(...window);
+  const last = window[window.length - 1];
+
+  if (!Number.isFinite(peak) || !Number.isFinite(last) || peak <= 0) {
+    return null;
+  }
+
+  return last / peak - 1;
+}
+
 function lineSlope(values: number[]): number {
   const n = values.length;
   if (n < 2) {
@@ -1073,8 +1130,69 @@ function toYahooAsxSymbol(ticker: string): string {
   return normalized.includes(".") ? normalized : `${normalized}.AX`;
 }
 
-async function fetchAsxSeriesFromYahoo(ticker: string, range = "1y"): Promise<PriceBar[] | null> {
-  const symbol = toYahooAsxSymbol(ticker);
+function parseYahooBars(payload: YahooChartResponse): PriceBar[] {
+  const result = payload.chart?.result?.[0];
+
+  const timestamps = result?.timestamp ?? [];
+  const quote = result?.indicators?.quote?.[0];
+  const adjusted = result?.indicators?.adjclose?.[0]?.adjclose ?? [];
+
+  const opens = quote?.open ?? [];
+  const highs = quote?.high ?? [];
+  const lows = quote?.low ?? [];
+  const closes = quote?.close ?? [];
+  const volumes = quote?.volume ?? [];
+
+  const pointCount = Math.min(
+    timestamps.length,
+    opens.length,
+    highs.length,
+    lows.length,
+    closes.length,
+    volumes.length,
+    adjusted.length > 0 ? adjusted.length : Number.MAX_SAFE_INTEGER,
+  );
+
+  const bars: PriceBar[] = [];
+
+  for (let index = 0; index < pointCount; index += 1) {
+    const timestamp = Number(timestamps[index]);
+    const open = Number(opens[index]);
+    const high = Number(highs[index]);
+    const low = Number(lows[index]);
+    const closeRaw = adjusted.length > 0 ? Number(adjusted[index]) : Number(closes[index]);
+    const close = Number.isFinite(closeRaw) && closeRaw > 0 ? closeRaw : Number(closes[index]);
+    const volume = Number(volumes[index]);
+
+    if (
+      !Number.isFinite(timestamp) ||
+      timestamp <= 0 ||
+      !Number.isFinite(open) ||
+      !Number.isFinite(high) ||
+      !Number.isFinite(low) ||
+      !Number.isFinite(close) ||
+      open <= 0 ||
+      high <= 0 ||
+      low <= 0 ||
+      close <= 0
+    ) {
+      continue;
+    }
+
+    bars.push({
+      date: new Date(timestamp * 1000).toISOString().slice(0, 10),
+      open,
+      high,
+      low,
+      close,
+      volume: Number.isFinite(volume) && volume > 0 ? volume : 0,
+    });
+  }
+
+  return bars;
+}
+
+async function fetchYahooSeriesBySymbol(symbol: string, range = "1y"): Promise<PriceBar[] | null> {
   if (!symbol) {
     return null;
   }
@@ -1096,68 +1214,16 @@ async function fetchAsxSeriesFromYahoo(ticker: string, range = "1y"): Promise<Pr
     }
 
     const payload = (await response.json()) as YahooChartResponse;
-    const result = payload.chart?.result?.[0];
-
-    const timestamps = result?.timestamp ?? [];
-    const quote = result?.indicators?.quote?.[0];
-    const adjusted = result?.indicators?.adjclose?.[0]?.adjclose ?? [];
-
-    const opens = quote?.open ?? [];
-    const highs = quote?.high ?? [];
-    const lows = quote?.low ?? [];
-    const closes = quote?.close ?? [];
-    const volumes = quote?.volume ?? [];
-
-    const pointCount = Math.min(
-      timestamps.length,
-      opens.length,
-      highs.length,
-      lows.length,
-      closes.length,
-      volumes.length,
-      adjusted.length > 0 ? adjusted.length : Number.MAX_SAFE_INTEGER,
-    );
-
-    const bars: PriceBar[] = [];
-
-    for (let index = 0; index < pointCount; index += 1) {
-      const timestamp = Number(timestamps[index]);
-      const open = Number(opens[index]);
-      const high = Number(highs[index]);
-      const low = Number(lows[index]);
-      const closeRaw = adjusted.length > 0 ? Number(adjusted[index]) : Number(closes[index]);
-      const close = Number.isFinite(closeRaw) && closeRaw > 0 ? closeRaw : Number(closes[index]);
-      const volume = Number(volumes[index]);
-
-      if (
-        !Number.isFinite(timestamp) ||
-        timestamp <= 0 ||
-        !Number.isFinite(open) ||
-        !Number.isFinite(high) ||
-        !Number.isFinite(low) ||
-        !Number.isFinite(close) ||
-        open <= 0 ||
-        high <= 0 ||
-        low <= 0 ||
-        close <= 0
-      ) {
-        continue;
-      }
-
-      bars.push({
-        date: new Date(timestamp * 1000).toISOString().slice(0, 10),
-        open,
-        high,
-        low,
-        close,
-        volume: Number.isFinite(volume) && volume > 0 ? volume : 0,
-      });
-    }
-
+    const bars = parseYahooBars(payload);
     return bars.length >= INDICATOR_MIN_BARS ? bars : null;
   } catch {
     return null;
   }
+}
+
+async function fetchAsxSeriesFromYahoo(ticker: string, range = "1y"): Promise<PriceBar[] | null> {
+  const symbol = toYahooAsxSymbol(ticker);
+  return fetchYahooSeriesBySymbol(symbol, range);
 }
 
 function buildIndicators(bars: PriceBar[]): IndicatorPack | null {
@@ -1217,6 +1283,8 @@ function buildIndicators(bars: PriceBar[]): IndicatorPack | null {
   const cci20 = cci(highs, lows, closes, 20);
   const obv = obvSlope(closes, volumes, 20);
   const z = zScore(closes, ZSCORE_LOOKBACK);
+  const realizedVol20 = realizedVolatility(closes, 20);
+  const drawdown63 = drawdownFromRecentHigh(closes, 63);
 
   if (
     rsi14 == null ||
@@ -1229,12 +1297,17 @@ function buildIndicators(bars: PriceBar[]): IndicatorPack | null {
     mfi14 == null ||
     cci20 == null ||
     obv == null ||
-    z == null
+    z == null ||
+    realizedVol20 == null ||
+    drawdown63 == null
   ) {
     return null;
   }
 
   const avgVolume20 = average(volumes.slice(-20));
+  const avgDollarVolume20 = average(
+    bars.slice(-20).map((bar) => bar.close * Math.max(bar.volume, 0)),
+  );
   const latestVolume = Math.max(volumes[volumes.length - 1], 0);
   const volumeSurge = avgVolume20 > 0 ? latestVolume / avgVolume20 : 1;
 
@@ -1265,6 +1338,9 @@ function buildIndicators(bars: PriceBar[]): IndicatorPack | null {
     mfi14,
     cci20,
     volumeSurge,
+    avgDollarVolume20,
+    realizedVol20,
+    drawdown63,
     obvSlope: obv,
     zScore20: z,
     donchianBreakout,
@@ -1277,6 +1353,61 @@ function buildIndicators(bars: PriceBar[]): IndicatorPack | null {
     higherHighHigherLow: patterns.higherHighHigherLow,
     lowerHighLowerLow: patterns.lowerHighLowerLow,
   };
+}
+
+function inferMarketRegime(indicators: IndicatorPack | null): MarketRegime {
+  if (!indicators) {
+    return {
+      state: "neutral",
+      score: 0,
+      positionSizeMultiplier: 0.72,
+      allowNewLongs: true,
+      summary: `Regime neutral (benchmark unavailable: ${REGIME_BENCHMARK_SYMBOL}).`,
+    };
+  }
+
+  let score = 0;
+  score += indicators.close > indicators.sma200 ? 0.45 : -0.45;
+  score += indicators.sma50 > indicators.sma200 ? 0.3 : -0.3;
+  score += clamp(indicators.roc20 / 0.14, -0.22, 0.22);
+  score += clamp((0.32 - indicators.realizedVol20) / 0.42, -0.18, 0.18);
+  score += clamp((indicators.drawdown63 + 0.12) / 0.26, -0.18, 0.18);
+
+  const normalizedScore = clamp(score, -1, 1);
+
+  if (normalizedScore <= -0.22) {
+    return {
+      state: "risk_off",
+      score: normalizedScore,
+      positionSizeMultiplier: 0.42,
+      allowNewLongs: false,
+      summary: `Regime risk_off (${REGIME_BENCHMARK_SYMBOL}) score ${normalizedScore.toFixed(2)}; ROC20 ${(indicators.roc20 * 100).toFixed(2)}%, vol ${(indicators.realizedVol20 * 100).toFixed(1)}%, DD63 ${(indicators.drawdown63 * 100).toFixed(1)}%.`,
+    };
+  }
+
+  if (normalizedScore >= 0.35) {
+    return {
+      state: "risk_on",
+      score: normalizedScore,
+      positionSizeMultiplier: 1,
+      allowNewLongs: true,
+      summary: `Regime risk_on (${REGIME_BENCHMARK_SYMBOL}) score ${normalizedScore.toFixed(2)}; ROC20 ${(indicators.roc20 * 100).toFixed(2)}%, vol ${(indicators.realizedVol20 * 100).toFixed(1)}%, DD63 ${(indicators.drawdown63 * 100).toFixed(1)}%.`,
+    };
+  }
+
+  return {
+    state: "neutral",
+    score: normalizedScore,
+    positionSizeMultiplier: 0.72,
+    allowNewLongs: true,
+    summary: `Regime neutral (${REGIME_BENCHMARK_SYMBOL}) score ${normalizedScore.toFixed(2)}; ROC20 ${(indicators.roc20 * 100).toFixed(2)}%, vol ${(indicators.realizedVol20 * 100).toFixed(1)}%, DD63 ${(indicators.drawdown63 * 100).toFixed(1)}%.`,
+  };
+}
+
+async function resolveMarketRegime(): Promise<MarketRegime> {
+  const benchmarkSeries = await fetchYahooSeriesBySymbol(REGIME_BENCHMARK_SYMBOL, "1y");
+  const benchmarkIndicators = benchmarkSeries ? buildIndicators(benchmarkSeries) : null;
+  return inferMarketRegime(benchmarkIndicators);
 }
 
 function toSignalBreakdown(indicators: IndicatorPack): SignalBreakdownItem[] {
@@ -1326,6 +1457,9 @@ function toSignalBreakdown(indicators: IndicatorPack): SignalBreakdownItem[] {
   const cciSignal = clamp(indicators.cci20 / 180, -1, 1);
   const obvSignal = clamp(indicators.obvSlope / 0.6, -1, 1);
   const volumeSignal = clamp((indicators.volumeSurge - 1) / 1.2, -1, 1);
+  const liquiditySignal = clamp((Math.log10(Math.max(indicators.avgDollarVolume20, 1)) - 6.2) / 1.4, -1, 1);
+  const volQualitySignal = clamp((0.36 - indicators.realizedVol20) / 0.32, -1, 1);
+  const drawdownSignal = clamp((indicators.drawdown63 + 0.18) / 0.18, -1, 1);
   const zSignal = clamp(-indicators.zScore20 / 2.5, -1, 1);
   const breakoutSignal = indicators.donchianBreakout ? 1 : 0;
   const volatilityPenalty = clamp((indicators.atrPct - 0.045) / 0.08, -1, 1);
@@ -1353,6 +1487,9 @@ function toSignalBreakdown(indicators: IndicatorPack): SignalBreakdownItem[] {
     { label: "CCI", value: cciSignal, weight: 0.55 },
     { label: "OBV", value: obvSignal, weight: 0.65 },
     { label: "Volume", value: volumeSignal, weight: 0.7 },
+    { label: "Liquidity", value: liquiditySignal, weight: 0.85 },
+    { label: "VolQuality", value: volQualitySignal, weight: 0.85 },
+    { label: "Drawdown", value: drawdownSignal, weight: 0.75 },
     { label: "Z-Score", value: zSignal, weight: 0.55 },
     { label: "Breakout", value: breakoutSignal, weight: 0.9 },
     { label: "Volatility", value: -volatilityPenalty, weight: 0.55 },
@@ -1365,20 +1502,26 @@ function evaluateRecommendation(
   ticker: string,
   indicators: IndicatorPack,
   position: PositionMutable | undefined,
+  marketRegime: MarketRegime,
 ): RecommendationCandidate {
   const breakdown = toSignalBreakdown(indicators);
   const weightTotal = sum(breakdown.map((entry) => Math.abs(entry.weight))) || 1;
   const weightedRaw = sum(breakdown.map((entry) => entry.value * entry.weight));
   const score = weightedRaw / weightTotal;
 
+  const regimeExpectedAdj = marketRegime.state === "risk_on" ? 1.5 : marketRegime.state === "risk_off" ? -2.4 : -0.35;
+  const expectedReturnRaw = score * 13 + indicators.roc20 * 100 * 0.45 - indicators.atrPct * 100 * 0.25 + regimeExpectedAdj;
   const expectedReturnPct = clamp(
-    score * 13 + indicators.roc20 * 100 * 0.45 - indicators.atrPct * 100 * 0.25,
+    expectedReturnRaw,
     -25,
     30,
   );
 
+  const confidenceMultiplier = marketRegime.state === "risk_on" ? 1.04 : marketRegime.state === "risk_off" ? 0.86 : 0.95;
   const confidence = clamp(
-    (Math.abs(score) * 0.55 + clamp(indicators.adx14 / 40, 0, 1) * 0.25 + clamp(indicators.volumeSurge / 2, 0, 1) * 0.2) * 100,
+    (Math.abs(score) * 0.55 + clamp(indicators.adx14 / 40, 0, 1) * 0.25 + clamp(indicators.volumeSurge / 2, 0, 1) * 0.2) *
+      100 *
+      confidenceMultiplier,
     0,
     99,
   );
@@ -1388,6 +1531,8 @@ function evaluateRecommendation(
     indicators.bearishEngulfing || indicators.shootingStar || indicators.insideBarBreakoutDown || indicators.lowerHighLowerLow;
   const bullishPattern =
     indicators.bullishEngulfing || indicators.hammer || indicators.insideBarBreakoutUp || indicators.higherHighHigherLow;
+  const liquidityGate = indicators.avgDollarVolume20 >= MIN_AVG_DOLLAR_VOLUME_AUD;
+  const volatilityGate = indicators.realizedVol20 <= 0.95;
 
   let action: RecommendationAction = "hold";
 
@@ -1395,15 +1540,17 @@ function evaluateRecommendation(
     const stopLossHit = indicators.close <= position.avgCost * (1 - STOP_LOSS_PCT);
     const trailingStopHit = position.peakPrice > 0 && indicators.close <= position.peakPrice * (1 - TRAILING_STOP_PCT);
     const trendBreak = indicators.close < indicators.sma50 && indicators.macdHist < 0;
+    const regimeExit = marketRegime.state === "risk_off" && (indicators.close < indicators.sma20 || indicators.drawdown63 <= -0.12);
 
-    if (stopLossHit || trailingStopHit || score < -0.15 || bearishPattern || (trendBreak && indicators.rsi14 < 48)) {
+    if (stopLossHit || trailingStopHit || regimeExit || score < -0.15 || bearishPattern || (trendBreak && indicators.rsi14 < 48)) {
       action = "sell";
     }
   } else {
     const trendGate = indicators.close > indicators.sma50 && indicators.sma50 > indicators.sma200;
-    const qualityGate = indicators.volumeSurge > 0.9 && indicators.adx14 >= 14;
+    const qualityGate = indicators.volumeSurge > 0.9 && indicators.adx14 >= 14 && liquidityGate && volatilityGate;
+    const regimeGate = marketRegime.allowNewLongs;
 
-    if (score > 0.22 && expectedReturnPct >= 4 && trendGate && qualityGate && bullishPattern) {
+    if (score > 0.22 && expectedReturnPct >= 4 && trendGate && qualityGate && bullishPattern && regimeGate) {
       action = "buy";
     }
   }
@@ -1429,6 +1576,8 @@ function evaluateRecommendation(
     `Score ${score.toFixed(3)}; exp ${expectedReturnPct.toFixed(2)}%; conf ${confidence.toFixed(0)}%; ` +
     `MA20 ${indicators.sma20.toFixed(2)} / MA50 ${indicators.sma50.toFixed(2)} / MA200 ${indicators.sma200.toFixed(2)}; ` +
     `ROC20 ${(indicators.roc20 * 100).toFixed(2)}%; RSI ${indicators.rsi14.toFixed(1)}; ATR ${(indicators.atrPct * 100).toFixed(2)}%; ` +
+    `ADV20 $${(indicators.avgDollarVolume20 / 1_000_000).toFixed(2)}M; RV20 ${(indicators.realizedVol20 * 100).toFixed(1)}%; DD63 ${(indicators.drawdown63 * 100).toFixed(1)}%; ` +
+    `regime[${marketRegime.state}:${marketRegime.score.toFixed(2)}]` +
     `signals[${topSignals}]` +
     `${patternTags.length > 0 ? `; patterns[${patternTags.join(",")}]` : ""}`;
 
@@ -1448,6 +1597,8 @@ function evaluateRecommendation(
     maLong: indicators.sma50,
     momentum: indicators.roc20,
     zScore: indicators.zScore20,
+    realizedVol20: indicators.realizedVol20,
+    avgDollarVolume20: indicators.avgDollarVolume20,
     reason,
   };
 }
@@ -1536,7 +1687,7 @@ function parseAiOverlayResponse(raw: string): AiOverlayEntry[] {
   }
 }
 
-async function fetchAiOverlay(candidates: RecommendationCandidate[]): Promise<AiOverlayResult | null> {
+async function fetchAiOverlay(candidates: RecommendationCandidate[], marketRegime: MarketRegime): Promise<AiOverlayResult | null> {
   const apiKey = String(process.env.OPENAI_API_KEY || "").trim();
   if (!apiKey || candidates.length === 0) {
     return null;
@@ -1548,6 +1699,8 @@ async function fetchAiOverlay(candidates: RecommendationCandidate[]): Promise<Ai
     score: Number(candidate.score.toFixed(4)),
     expectedReturnPct: Number(candidate.expectedReturnPct.toFixed(2)),
     confidence: Number(candidate.confidence.toFixed(1)),
+    realizedVolPct: Number((candidate.realizedVol20 * 100).toFixed(2)),
+    avgDollarVolumeM: Number((candidate.avgDollarVolume20 / 1_000_000).toFixed(2)),
     maShort: Number(candidate.maShort.toFixed(3)),
     maLong: Number(candidate.maLong.toFixed(3)),
     momentumPct: Number((candidate.momentum * 100).toFixed(3)),
@@ -1556,10 +1709,10 @@ async function fetchAiOverlay(candidates: RecommendationCandidate[]): Promise<Ai
   }));
 
   const prompt =
-    "You are a strict ASX intraday quantitative overlay. " +
+    "You are a strict ASX quantitative overlay used in an institutional-style workflow. " +
     "Given quantitative candidates, return JSON only with schema {\"entries\":[{\"ticker\":\"ABC\",\"adjustment\":number,\"confidence\":number,\"summary\":\"...\"}]}. " +
     "adjustment range must be [-3,3], confidence [0,100], summary <= 25 words. " +
-    "Use risk-aware adjustments; do not invent tickers.";
+    "Use risk-aware adjustments that respect the provided market regime; do not invent tickers.";
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), AI_TIMEOUT_MS);
@@ -1577,7 +1730,17 @@ async function fetchAiOverlay(candidates: RecommendationCandidate[]): Promise<Ai
         temperature: 0.1,
         messages: [
           { role: "system", content: prompt },
-          { role: "user", content: JSON.stringify({ entries: selected }) },
+          {
+            role: "user",
+            content: JSON.stringify({
+              marketRegime: {
+                state: marketRegime.state,
+                score: Number(marketRegime.score.toFixed(3)),
+                summary: marketRegime.summary,
+              },
+              entries: selected,
+            }),
+          },
         ],
       }),
     });
@@ -1605,7 +1768,10 @@ async function fetchAiOverlay(candidates: RecommendationCandidate[]): Promise<Ai
   }
 }
 
-async function applyAiOverlay(recommendations: RecommendationCandidate[]): Promise<{ used: boolean; model: string | null }> {
+async function applyAiOverlay(
+  recommendations: RecommendationCandidate[],
+  marketRegime: MarketRegime,
+): Promise<{ used: boolean; model: string | null }> {
   for (const recommendation of recommendations) {
     recommendation.aiAdjustment = 0;
     recommendation.aiConfidence = 0;
@@ -1613,7 +1779,7 @@ async function applyAiOverlay(recommendations: RecommendationCandidate[]): Promi
     recommendation.finalScore = recommendation.score;
   }
 
-  const overlay = await fetchAiOverlay(recommendations);
+  const overlay = await fetchAiOverlay(recommendations, marketRegime);
   if (!overlay || overlay.entries.length === 0) {
     return { used: false, model: null };
   }
@@ -1975,6 +2141,7 @@ export async function runPlatinumDailyScan(userId: string, options: RunScanOptio
   }
 
   const existingPositions = mapRowsToMutablePositions(readPositions(db, userId));
+  const marketRegime = await resolveMarketRegime();
 
   const universeRaw = await resolveUniverse();
   const universe = Array.from(new Set([...universeRaw, ...Array.from(existingPositions.keys())]));
@@ -1992,7 +2159,7 @@ export async function runPlatinumDailyScan(userId: string, options: RunScanOptio
       }
 
       const position = existingPositions.get(ticker);
-      const recommendation = evaluateRecommendation(ticker, indicators, position);
+      const recommendation = evaluateRecommendation(ticker, indicators, position, marketRegime);
 
       return {
         ticker,
@@ -2013,7 +2180,7 @@ export async function runPlatinumDailyScan(userId: string, options: RunScanOptio
     .map((outcome) => outcome.recommendation)
     .filter((item): item is RecommendationCandidate => Boolean(item));
 
-  const aiOverlay = await applyAiOverlay(recommendations);
+  const aiOverlay = await applyAiOverlay(recommendations, marketRegime);
 
   const latestPriceByTicker = new Map<string, number>();
   for (const outcome of outcomes) {
@@ -2093,7 +2260,14 @@ export async function runPlatinumDailyScan(userId: string, options: RunScanOptio
 
     const investedValue = computeInvestedValue(existingPositions);
     const equity = cash + investedValue;
-    const buyBudget = Math.min(equity * TARGET_EQUITY_PER_BUY, cash * MAX_CASH_PER_BUY);
+    const baseBudget = Math.min(equity * TARGET_EQUITY_PER_BUY, cash * MAX_CASH_PER_BUY);
+    const convictionMultiplier = clamp(0.65 + recommendation.finalScore * 0.4 + recommendation.confidence / 260, 0.35, 1.35);
+    const volScalar = clamp(
+      TARGET_ANNUAL_VOLATILITY / Math.max(recommendation.realizedVol20, 0.08),
+      0.4,
+      1.6,
+    );
+    const buyBudget = baseBudget * convictionMultiplier * volScalar * marketRegime.positionSizeMultiplier;
 
     if (!Number.isFinite(buyBudget) || buyBudget < MIN_TRADE_NOTIONAL) {
       continue;
@@ -2113,8 +2287,11 @@ export async function runPlatinumDailyScan(userId: string, options: RunScanOptio
     let fee = notional * FEE_RATE;
     let totalCost = notional + fee;
 
-    if (totalCost > cash) {
-      units = floorTo(cash / (fillPrice * (1 + FEE_RATE)), 4);
+    const minCashReserve = equity * MIN_CASH_RESERVE_PCT;
+    const cashAvailableForTrade = Math.max(0, cash - minCashReserve);
+
+    if (totalCost > cashAvailableForTrade) {
+      units = floorTo(cashAvailableForTrade / (fillPrice * (1 + FEE_RATE)), 4);
       if (units <= 0) {
         continue;
       }
@@ -2123,7 +2300,7 @@ export async function runPlatinumDailyScan(userId: string, options: RunScanOptio
       totalCost = notional + fee;
     }
 
-    if (notional < MIN_TRADE_NOTIONAL || totalCost > cash) {
+    if (notional < MIN_TRADE_NOTIONAL || totalCost > cashAvailableForTrade) {
       continue;
     }
 
