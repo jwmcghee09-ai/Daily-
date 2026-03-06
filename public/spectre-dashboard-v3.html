@@ -1463,16 +1463,41 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 
   function computeTodayChange(holdings, snapshots) {
     const currentTotal = sum(holdings.map((holding) => Number(holding.value) || 0));
+    let fallbackPreviousTotal = 0;
+    let fallbackCurrentTotal = 0;
+
+    for (const holding of holdings || []) {
+      const quantity = resolveHoldingUnits(Number(holding?.units), Number(holding?.value), Number(holding?.price));
+      const price = Number(holding?.price);
+      const prevClose = Number(holding?.prevClose);
+
+      if (!Number.isFinite(quantity) || quantity <= 0 || !Number.isFinite(price) || !Number.isFinite(prevClose) || price <= 0 || prevClose <= 0) {
+        continue;
+      }
+
+      fallbackPreviousTotal += quantity * prevClose;
+      fallbackCurrentTotal += quantity * price;
+    }
+
     const todayKeySydney = toSydneyDateKey(new Date());
     const todaySnapshots = (snapshots || [])
       .filter((snapshot) => Number.isFinite(snapshot?.value) && toSydneyDateKey(snapshot?.date) === todayKeySydney)
       .sort((a, b) => String(a.date || "").localeCompare(String(b.date || "")));
 
     if (todaySnapshots.length === 0) {
+      if (fallbackPreviousTotal > 0) {
+        const amount = fallbackCurrentTotal - fallbackPreviousTotal;
+        return { amount, pct: (amount / fallbackPreviousTotal) * 100 };
+      }
       return { amount: 0, pct: 0 };
     }
 
     const dayStartValue = Number(todaySnapshots[0].value) || 0;
+    if (dayStartValue <= 0 && fallbackPreviousTotal > 0) {
+      const amount = fallbackCurrentTotal - fallbackPreviousTotal;
+      return { amount, pct: (amount / fallbackPreviousTotal) * 100 };
+    }
+
     const change = currentTotal - dayStartValue;
     return {
       amount: change,

@@ -869,9 +869,45 @@ export default function Home() {
       .sort((a, b) => a.date.getTime() - b.date.getTime());
   }, [state.snapshots]);
 
-  const todayBaselineValue = todaySnapshotSeries.length > 0 ? todaySnapshotSeries[0].value : metrics.totalValue;
-  const todayPortfolioChangeAmount = metrics.totalValue - todayBaselineValue;
-  const todayPortfolioChangePct = todayBaselineValue > 0 ? (todayPortfolioChangeAmount / todayBaselineValue) * 100 : null;
+  const todaySessionFallback = useMemo(() => {
+    let previousTotal = 0;
+    let currentTotal = 0;
+
+    for (const holding of state.holdings) {
+      const quantity = resolveHoldingUnits(holding.units, holding.value, holding.price);
+      if (
+        quantity <= 0 ||
+        !Number.isFinite(holding.price) ||
+        !Number.isFinite(holding.prevClose) ||
+        holding.price <= 0 ||
+        holding.prevClose <= 0
+      ) {
+        continue;
+      }
+
+      previousTotal += quantity * holding.prevClose;
+      currentTotal += quantity * holding.price;
+    }
+
+    if (previousTotal <= 0) {
+      return null;
+    }
+
+    const amount = currentTotal - previousTotal;
+    return {
+      amount,
+      pct: (amount / previousTotal) * 100,
+    };
+  }, [state.holdings]);
+
+  const hasTodaySnapshotBaseline = todaySnapshotSeries.length > 0 && todaySnapshotSeries[0].value > 0;
+  const todayBaselineValue = hasTodaySnapshotBaseline ? todaySnapshotSeries[0].value : null;
+  const todayPortfolioChangeAmount =
+    todayBaselineValue != null ? metrics.totalValue - todayBaselineValue : (todaySessionFallback?.amount ?? 0);
+  const todayPortfolioChangePct =
+    todayBaselineValue != null
+      ? (todayPortfolioChangeAmount / todayBaselineValue) * 100
+      : (todaySessionFallback?.pct ?? null);
   const asxSessionOpenNow = isAsxRegularSessionOpenNow();
   const asxSessionDataFreshNow = isAsxSessionDataFreshNow(state.lastPriceRefreshAt);
   const showTodaySessionChange = asxSessionOpenNow && asxSessionDataFreshNow;
