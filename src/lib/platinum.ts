@@ -2076,6 +2076,17 @@ export function getPlatinumPaperState(userId: string): PlatinumPaperState {
         .all(userId, latestScanDate) as RecommendationRow[])
     : [];
 
+  const dedupedRecommendations: RecommendationRow[] = [];
+  const seenRecommendationTickers = new Set<string>();
+  for (const row of recommendations) {
+    const ticker = normalizeTicker(row.ticker);
+    if (!ticker || seenRecommendationTickers.has(ticker)) {
+      continue;
+    }
+    seenRecommendationTickers.add(ticker);
+    dedupedRecommendations.push(row);
+  }
+
   const trades = db
     .prepare(`
       SELECT id, scan_date, ticker, side, units, price, notional, fee, reason, created_at
@@ -2100,7 +2111,7 @@ export function getPlatinumPaperState(userId: string): PlatinumPaperState {
     portfolio: toSummary(portfolioRow, positions),
     latestScanDate,
     positions,
-    latestRecommendations: recommendations.map((row) => ({
+    latestRecommendations: dedupedRecommendations.map((row) => ({
       id: row.id,
       scanDate: row.scan_date,
       ticker: row.ticker,
@@ -2474,6 +2485,9 @@ export async function runPlatinumDailyScan(userId: string, options: RunScanOptio
   db.exec("BEGIN IMMEDIATE");
 
   try {
+    // Keep one recommendation set per scan date; live-mode reruns should replace prior rows for the same day.
+    db.prepare("DELETE FROM platinum_recommendations WHERE user_id = ? AND scan_date = ?").run(userId, scanDate);
+
     const recommendationInsert = db.prepare(`
       INSERT INTO platinum_recommendations (
         id, user_id, scan_date, ticker, action, score, expected_return_pct, confidence, indicator_count, final_score,
