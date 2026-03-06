@@ -1,3 +1,14 @@
+/* ─── SPECTRE PLATINUM — Design System ──────────────────────────
+   Fonts:   Bebas Neue (display) · DM Mono (labels/mono) · DM Sans (body)
+   Orange:  #ff4d1a  Purple: #9b5de5  Off-white: #f2eeff
+   Muted:   #8a86a8  Muted-2: #b4b0cc
+   Card bg: rgba(10,7,18,.97)
+   Card border-top accent: rgba(255,77,26,.7)
+────────────────────────────────────────────────────────────────── */
+
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap');
+
+/* ── PAGE ── */
 .page {
   min-height: 100vh;
   background:
@@ -5,180 +16,209 @@
     radial-gradient(ellipse 65% 120% at 110% 50%, #3f0d0d 0%, #2b0808 26%, transparent 56%),
     linear-gradient(140deg, #180b2c 0%, #12071c 38%, #1a0a11 65%, #2c0c0c 100%);
   color: #f2eeff;
-  padding: 2rem 1rem;
+  padding: 2rem 1.25rem 5rem;
+  font-family: 'DM Sans', sans-serif;
+  position: relative;
 }
 
+.page::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(rgba(255,255,255,.026) 0.6px, transparent 0.6px);
+  background-size: 3px 3px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── SHELL ── */
 .shell {
-  max-width: 1260px;
+  position: relative;
+  z-index: 1;
+  max-width: 1360px;
   margin: 0 auto;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 18px;
-  background: rgba(11, 8, 20, 0.84);
-  box-shadow: 0 22px 48px -30px rgba(0, 0, 0, 0.85);
-  padding: 1.4rem;
 }
 
+/* ── HEADER ── */
 .header {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  margin-bottom: 1rem;
-  padding-bottom: 1rem;
+  margin-bottom: 2.4rem;
+  padding-bottom: 1.8rem;
+  border-bottom: 1px solid rgba(255,255,255,.07);
 }
 
 .kicker {
-  margin: 0 0 0.5rem;
-  font-size: 0.7rem;
-  letter-spacing: 0.16em;
+  margin: 0 0 0.55rem;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.26em;
   text-transform: uppercase;
   color: #c084fc;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.kicker::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ff4d1a;
+  box-shadow: 0 0 10px rgba(255,77,26,.9), 0 0 22px rgba(255,77,26,.4);
+  flex-shrink: 0;
 }
 
 .title {
   margin: 0;
-  font-size: clamp(2rem, 5vw, 3.4rem);
-  line-height: 1;
-  letter-spacing: 0.08em;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(3rem, 8vw, 6.2rem);
+  line-height: 0.88;
+  letter-spacing: 0.12em;
   color: #ff4d1a;
+  text-shadow: 0 0 50px rgba(255,77,26,.28), 0 0 100px rgba(255,77,26,.1);
 }
 
 .subtitle {
-  margin: 0.8rem 0 1rem;
-  max-width: 80ch;
-  color: #c8c3dd;
+  margin: 1rem 0 1.4rem;
+  max-width: 72ch;
+  color: #8a86a8;
+  font-size: 0.8rem;
+  line-height: 1.8;
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 0.03em;
 }
 
 .backLink {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
   text-decoration: none;
-  font-size: 0.75rem;
-  letter-spacing: 0.11em;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.57rem;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   border-radius: 8px;
-  padding: 0.55rem 0.9rem;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 0.55rem 1rem;
+  border: 1px solid rgba(255,255,255,.1);
+  color: #8a86a8;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.backLink::before { content: '←'; font-size: 0.8rem; }
+
+.backLink:hover {
+  border-color: rgba(255,77,26,.35);
   color: #f2eeff;
 }
 
-.backLink:hover {
-  border-color: rgba(255, 255, 255, 0.35);
-}
+/* ── CONSOLE ── */
+.consoleWrap { display: grid; gap: 1.1rem; }
 
-.consoleWrap {
-  display: grid;
-  gap: 0.95rem;
-}
-
+/* ── TOOLBAR ── */
 .toolbar {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   gap: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255,255,255,.07);
+  border-top: 2px solid rgba(255,77,26,.7);
   border-radius: 12px;
-  background: linear-gradient(165deg, rgba(16, 11, 28, 0.96), rgba(10, 7, 18, 0.95));
-  padding: 0.9rem;
+  background: linear-gradient(160deg, rgba(16,11,28,.97), rgba(10,7,18,.97));
+  padding: 1.1rem 1.25rem;
 }
 
 .userRow {
-  margin: 0 0 0.4rem;
-  font-size: 0.78rem;
-  color: #ffe8e2;
+  margin: 0 0 0.3rem;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #ff4d1a;
 }
 
+/* ── BUTTONS ── */
 .scanButton {
-  border: 1px solid rgba(255, 132, 113, 0.5);
-  background: linear-gradient(135deg, #ff4d1a 0%, #e03800 100%);
+  flex-shrink: 0;
+  border: 1px solid rgba(255,120,90,.45);
+  background: linear-gradient(135deg, #ff4d1a 0%, #d93200 100%);
   color: #fff;
   border-radius: 10px;
-  font-size: 0.72rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  padding: 0.72rem 1rem;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.scanButton:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.metricGrid {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 0.6rem;
-}
-
-.chartGrid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.95rem;
-}
-
-.chartCard {
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 12px;
-  background: linear-gradient(165deg, rgba(16, 11, 28, 0.96), rgba(10, 7, 18, 0.95));
-  padding: 0.9rem;
-}
-
-.chartCard h3 {
-  margin: 0 0 0.7rem;
-  color: #f2eeff;
-  font-size: 0.85rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.chartWrap {
-  width: 100%;
-  height: 260px;
-}
-
-.metricCard {
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 12px;
-  background: linear-gradient(165deg, rgba(16, 11, 28, 0.96), rgba(10, 7, 18, 0.95));
-  padding: 0.9rem;
-}
-
-.metricCard h3 {
-  margin: 0 0 0.35rem;
-  color: #c7c3db;
-  font-size: 0.65rem;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
+  padding: 0.72rem 1.3rem;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 8px 24px -8px rgba(255,77,26,.6);
+  transition: opacity 0.2s, box-shadow 0.2s;
 }
 
-.metricCard p {
-  margin: 0;
-  font-size: 1.05rem;
-  color: #f7f4ff;
-}
+.scanButton:hover:not(:disabled) { box-shadow: 0 8px 30px -6px rgba(255,77,26,.85); }
+.scanButton:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
 
-.panelGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.95rem;
-}
-
-.panel {
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 12px;
-  background: linear-gradient(165deg, rgba(16, 11, 28, 0.96), rgba(10, 7, 18, 0.95));
-  padding: 0.9rem;
-}
-
-.panel h3 {
-  margin: 0 0 0.7rem;
-  color: #f2eeff;
-  font-size: 0.85rem;
-  letter-spacing: 0.08em;
+.analysisButton {
+  flex-shrink: 0;
+  border: 1px solid rgba(155,93,229,.45);
+  background: linear-gradient(135deg, #7c3aed 0%, #4e18b0 100%);
+  color: #fff;
+  border-radius: 10px;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
+  padding: 0.72rem 1.3rem;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 8px 24px -8px rgba(155,93,229,.55);
+  transition: opacity 0.2s, box-shadow 0.2s;
 }
 
+.analysisButton:hover:not(:disabled) { box-shadow: 0 8px 30px -6px rgba(155,93,229,.8); }
+.analysisButton:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
+
+/* ── MESSAGES ── */
+.successText {
+  margin: 0;
+  font-family: 'DM Mono', monospace;
+  color: #c084fc;
+  font-size: 0.65rem;
+  letter-spacing: 0.05em;
+  padding: 0.65rem 1rem;
+  background: rgba(155,93,229,.06);
+  border: 1px solid rgba(155,93,229,.2);
+  border-radius: 8px;
+}
+
+.errorText {
+  margin: 0;
+  font-family: 'DM Mono', monospace;
+  color: #ff8060;
+  font-size: 0.65rem;
+  letter-spacing: 0.05em;
+  padding: 0.65rem 1rem;
+  background: rgba(255,77,26,.06);
+  border: 1px solid rgba(255,77,26,.2);
+  border-radius: 8px;
+}
+
+.infoText {
+  margin: 0.15rem 0;
+  color: #8a86a8;
+  font-size: 0.78rem;
+  line-height: 1.65;
+}
+
+/* ── AI PANEL ── */
 .aiPanel {
+  border: 1px solid rgba(255,255,255,.07);
+  border-top: 2px solid rgba(155,93,229,.7);
+  border-radius: 12px;
+  background: linear-gradient(160deg, rgba(16,11,28,.97), rgba(10,7,18,.97));
   display: grid;
-  gap: 0.8rem;
+  gap: 1rem;
+  padding: 1.1rem 1.25rem;
 }
 
 .aiToolbar {
@@ -188,58 +228,145 @@
   gap: 1rem;
 }
 
-.analysisButton {
-  border: 1px solid rgba(156, 233, 184, 0.45);
-  background: linear-gradient(135deg, #2c8b5a 0%, #246e48 100%);
-  color: #fff;
-  border-radius: 10px;
-  font-size: 0.72rem;
-  letter-spacing: 0.1em;
+.aiToolbar h3 {
+  margin: 0 0 0.3rem;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.55rem;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  padding: 0.7rem 1rem;
-  cursor: pointer;
-  white-space: nowrap;
+  color: #c084fc;
+  font-weight: 400;
 }
 
-.analysisButton:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.aiBody {
-  display: grid;
-  gap: 0.8rem;
-}
+.aiBody { display: grid; gap: 0.9rem; }
 
 .aiGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.8rem;
+  gap: 0.9rem;
+}
+
+.aiGrid section {
+  background: rgba(155,93,229,.04);
+  border: 1px solid rgba(155,93,229,.12);
+  border-radius: 8px;
+  padding: 0.8rem 0.9rem;
 }
 
 .aiGrid h4 {
-  margin: 0 0 0.45rem;
-  color: #c7c3db;
-  font-size: 0.65rem;
-  letter-spacing: 0.14em;
+  margin: 0 0 0.5rem;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.5rem;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
+  color: #c084fc;
+  font-weight: 400;
 }
 
 .aiList {
   margin: 0;
   padding-left: 1rem;
   display: grid;
-  gap: 0.3rem;
+  gap: 0.35rem;
 }
 
 .aiList li {
-  color: #ddd8ef;
+  color: #b4b0cc;
   font-size: 0.76rem;
+  line-height: 1.6;
 }
 
-.tableWrap {
-  overflow-x: auto;
+/* ── METRIC GRID ── */
+.metricGrid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 1px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.07);
+  border-top: 2px solid rgba(255,77,26,.7);
+  border-radius: 12px;
+  overflow: hidden;
 }
+
+.metricCard {
+  background: linear-gradient(160deg, rgba(16,11,28,.97), rgba(10,7,18,.97));
+  padding: 1.1rem 1.2rem;
+}
+
+.metricCard h3 {
+  margin: 0 0 0.45rem;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.5rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #8a86a8;
+  font-weight: 400;
+}
+
+.metricCard p {
+  margin: 0;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.8rem;
+  letter-spacing: 0.05em;
+  color: #f2eeff;
+  line-height: 1;
+}
+
+/* ── CHART GRID ── */
+.chartGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.1rem;
+}
+
+.chartCard {
+  border: 1px solid rgba(255,255,255,.07);
+  border-top: 2px solid rgba(255,77,26,.7);
+  border-radius: 12px;
+  background: linear-gradient(160deg, rgba(16,11,28,.97), rgba(10,7,18,.97));
+  padding: 1.1rem 1.25rem;
+}
+
+.chartCard h3 {
+  margin: 0 0 0.9rem;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.53rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #b4b0cc;
+  font-weight: 400;
+}
+
+.chartWrap { width: 100%; height: 260px; }
+
+/* ── PANEL GRID ── */
+.panelGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.1rem;
+}
+
+/* ── PANEL ── */
+.panel {
+  border: 1px solid rgba(255,255,255,.07);
+  border-top: 2px solid rgba(255,77,26,.7);
+  border-radius: 12px;
+  background: linear-gradient(160deg, rgba(16,11,28,.97), rgba(10,7,18,.97));
+  padding: 1.1rem 1.25rem;
+}
+
+.panel h3 {
+  margin: 0 0 0.9rem;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.53rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #b4b0cc;
+  font-weight: 400;
+}
+
+/* ── TABLE ── */
+.tableWrap { overflow-x: auto; }
 
 .tableWrap table {
   width: 100%;
@@ -247,77 +374,51 @@
   min-width: 620px;
 }
 
-.tableWrap th,
-.tableWrap td {
-  padding: 0.48rem 0.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+.tableWrap th {
+  padding: 0.42rem 0.65rem;
+  border-bottom: 1px solid rgba(255,255,255,.07);
   text-align: left;
-  font-size: 0.72rem;
-  color: #ddd8ef;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.47rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #8a86a8;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.tableWrap td {
+  padding: 0.52rem 0.65rem;
+  border-bottom: 1px solid rgba(255,255,255,.05);
+  text-align: left;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.64rem;
+  color: #b4b0cc;
   vertical-align: top;
 }
 
-.tableWrap th {
-  color: #9f98bf;
-  font-size: 0.58rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
+.tableWrap tr:last-child td { border-bottom: none; }
+.tableWrap tr:hover td { background: rgba(255,77,26,.03); }
 
-.infoText {
-  margin: 0.2rem 0;
-  color: #c8c3dd;
-  font-size: 0.78rem;
-}
+/* ── P/L COLOURS ── */
+.positive { color: #f2eeff; }
+.negative { color: #ff4d1a; }
 
-.successText {
-  margin: 0;
-  color: #b5f4ce;
-  font-size: 0.78rem;
-}
-
-.errorText {
-  margin: 0;
-  color: #ffd4cc;
-  font-size: 0.78rem;
-}
-
-.positive {
-  color: #9ce9b8;
-}
-
-.negative {
-  color: #ff8f80;
-}
-
+/* ── RESPONSIVE ── */
 @media (max-width: 1120px) {
-  .metricGrid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .chartGrid {
-    grid-template-columns: 1fr;
-  }
+  .metricGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .chartGrid  { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 860px) {
-  .toolbar {
-    flex-direction: column;
-  }
+  .toolbar    { flex-direction: column; }
+  .aiToolbar  { flex-direction: column; }
+  .aiGrid     { grid-template-columns: 1fr; }
+  .panelGrid  { grid-template-columns: 1fr; }
+  .metricGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 
-  .aiToolbar {
-    flex-direction: column;
-  }
-
-  .aiGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .panelGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .metricGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+@media (max-width: 480px) {
+  .title      { font-size: 3rem; }
+  .metricGrid { grid-template-columns: 1fr 1fr; }
 }

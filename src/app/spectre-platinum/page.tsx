@@ -24,7 +24,7 @@ export default async function SpectrePlatinumPage() {
           <p className={styles.kicker}>Private Research Workspace</p>
           <h1 className={styles.title}>SPECTRE PLATINUM</h1>
           <p className={styles.subtitle}>
-            Full ASX universe scan with a multi-factor leading-indicator model, ranked return forecasts, and a
+            Full ASX universe scan · multi-factor leading-indicator model · ranked return forecasts ·
             $5,000 paper-trading engine that auto-executes BUY and SELL signals.
           </p>
           <Link className={styles.backLink} href="/spectre-dashboard-v3.html">

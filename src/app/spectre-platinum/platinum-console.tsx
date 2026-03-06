@@ -142,11 +142,26 @@ function pct(value: number): string {
   return `${value.toFixed(2)}%`;
 }
 
-const CHART_TOOLTIP_STYLE = {
-  backgroundColor: "#0f0a1a",
-  border: "1px solid rgba(255,255,255,0.2)",
+// SPECTRE chart constants
+const TOOLTIP_STYLE = {
+  backgroundColor: "rgba(10,7,18,0.97)",
+  border: "1px solid rgba(255,77,26,0.22)",
   borderRadius: "8px",
+  fontFamily: "'DM Mono', monospace",
+  fontSize: "11px",
+  color: "#f2eeff",
 };
+const LEGEND_STYLE = {
+  fontFamily: "'DM Mono', monospace",
+  fontSize: "10px",
+  color: "#8a86a8",
+};
+const AXIS_TICK = {
+  fill: "#8a86a8",
+  fontSize: 10,
+  fontFamily: "'DM Mono', monospace",
+};
+const GRID_STROKE = "rgba(255,255,255,0.05)";
 
 export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
   const [state, setState] = useState<PlatinumPaperState | null>(null);
@@ -189,11 +204,9 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
     setStatusMessage(null);
 
     try {
-      const response = await fetch("/api/platinum/paper-trading", {
-        method: "POST",
-      });
-
+      const response = await fetch("/api/platinum/paper-trading", { method: "POST" });
       const payload = (await response.json()) as PlatinumPayload;
+
       if (!response.ok || !payload.ok || !payload.result) {
         throw new Error(payload.error || `Request failed (${response.status}).`);
       }
@@ -223,11 +236,9 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
     setAnalysisError(null);
 
     try {
-      const response = await fetch("/api/platinum/analysis", {
-        method: "POST",
-      });
-
+      const response = await fetch("/api/platinum/analysis", { method: "POST" });
       const payload = (await response.json()) as PlatinumAnalysisPayload;
+
       if (!response.ok || !payload.ok || !payload.analysis) {
         throw new Error(payload.error || `Request failed (${response.status}).`);
       }
@@ -242,14 +253,10 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
 
   const runLiveUpdate = useCallback(async () => {
     try {
-      const response = await fetch("/api/platinum/paper-trading?mode=live", {
-        method: "POST",
-      });
-
+      const response = await fetch("/api/platinum/paper-trading?mode=live", { method: "POST" });
       const payload = (await response.json()) as PlatinumPayload;
-      if (!response.ok || !payload.ok || !payload.result) {
-        return;
-      }
+
+      if (!response.ok || !payload.ok || !payload.result) return;
 
       if (payload.result.skippedBecauseMarketClosed) {
         setMarketStatusMessage("ASX closed: waiting for market open.");
@@ -265,45 +272,27 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
 
   useEffect(() => {
     void runLiveUpdate();
-
-    const intervalId = window.setInterval(() => {
-      void runLiveUpdate();
-    }, 5 * 60 * 1000);
-
-    return () => {
-      window.clearInterval(intervalId);
-    };
+    const intervalId = window.setInterval(() => { void runLiveUpdate(); }, 5 * 60 * 1000);
+    return () => { window.clearInterval(intervalId); };
   }, [runLiveUpdate]);
 
   const topRecommendations = useMemo<PlatinumRecommendation[]>(() => {
-    if (!state) {
-      return [];
-    }
-
+    if (!state) return [];
     return state.latestRecommendations.slice(0, 40);
   }, [state]);
 
   const recentTrades = useMemo<PlatinumPaperTrade[]>(() => {
-    if (!state) {
-      return [];
-    }
-
+    if (!state) return [];
     return state.recentTrades.slice(0, 30);
   }, [state]);
 
   const positions = useMemo<PlatinumPaperPosition[]>(() => {
-    if (!state) {
-      return [];
-    }
-
+    if (!state) return [];
     return state.positions;
   }, [state]);
 
   const equityCurveData = useMemo(() => {
-    if (!state) {
-      return [] as Array<{ date: string; equity: number; cash: number; invested: number }>;
-    }
-
+    if (!state) return [] as Array<{ date: string; equity: number; cash: number; invested: number }>;
     return state.snapshots.map((snapshot) => ({
       date: snapshot.scanDate.slice(5),
       equity: snapshot.equity,
@@ -313,63 +302,52 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
   }, [state]);
 
   const opportunityData = useMemo(() => {
-    if (!state) {
-      return [] as Array<{ ticker: string; expected: number; confidence: number }>;
-    }
-
+    if (!state) return [] as Array<{ ticker: string; expected: number; confidence: number }>;
     return state.latestRecommendations
-      .filter((recommendation) => recommendation.action === "buy")
+      .filter((r) => r.action === "buy")
       .sort((a, b) => b.expectedReturnPct - a.expectedReturnPct)
       .slice(0, 12)
-      .map((recommendation) => ({
-        ticker: recommendation.ticker,
-        expected: recommendation.expectedReturnPct,
-        confidence: recommendation.confidence,
-      }));
+      .map((r) => ({ ticker: r.ticker, expected: r.expectedReturnPct, confidence: r.confidence }));
   }, [state]);
 
   const actionMixData = useMemo(() => {
-    if (!state) {
-      return [] as Array<{ action: string; count: number }>;
-    }
-
-    const buyCount = state.latestRecommendations.filter((recommendation) => recommendation.action === "buy").length;
-    const sellCount = state.latestRecommendations.filter((recommendation) => recommendation.action === "sell").length;
-    const holdCount = state.latestRecommendations.filter((recommendation) => recommendation.action === "hold").length;
-
+    if (!state) return [] as Array<{ action: string; count: number }>;
+    const buyCount  = state.latestRecommendations.filter((r) => r.action === "buy").length;
+    const sellCount = state.latestRecommendations.filter((r) => r.action === "sell").length;
+    const holdCount = state.latestRecommendations.filter((r) => r.action === "hold").length;
     return [
-      { action: "BUY", count: buyCount },
+      { action: "BUY",  count: buyCount  },
       { action: "SELL", count: sellCount },
       { action: "HOLD", count: holdCount },
     ];
   }, [state]);
 
-  if (loading) {
-    return <p className={styles.infoText}>Loading Platinum model...</p>;
-  }
-
-  if (!state) {
-    return <p className={styles.errorText}>{errorMessage || "Unable to load Platinum state."}</p>;
-  }
+  if (loading) return <p className={styles.infoText}>Loading Platinum model…</p>;
+  if (!state)  return <p className={styles.errorText}>{errorMessage ?? "Unable to load Platinum state."}</p>;
 
   return (
     <section className={styles.consoleWrap}>
+
+      {/* ── TOOLBAR ── */}
       <div className={styles.toolbar}>
         <div>
           <p className={styles.userRow}>Signed in as {userEmail}</p>
-          <p className={styles.infoText}>Paper account starts at {currency.format(state.portfolio.startingCash)} and auto-executes fake BUY/SELL trades from ranked leading indicators.</p>
-          <p className={styles.infoText}>Universe target: whole ASX ({state.universeSize} tickers estimate).</p>
+          <p className={styles.infoText}>
+            Paper account starts at {currency.format(state.portfolio.startingCash)} and auto-executes BUY/SELL trades from ranked leading indicators.
+          </p>
+          <p className={styles.infoText}>Universe: whole ASX — {state.universeSize} tickers estimated.</p>
           {marketStatusMessage ? <p className={styles.infoText}>{marketStatusMessage}</p> : null}
         </div>
         <button className={styles.scanButton} onClick={() => void runDailyScan()} disabled={runningScan}>
-          {runningScan ? "Scanning Whole ASX..." : "Run Full ASX Daily Scan"}
+          {runningScan ? "Scanning ASX…" : "Run Full ASX Daily Scan"}
         </button>
       </div>
 
       {statusMessage ? <p className={styles.successText}>{statusMessage}</p> : null}
-      {errorMessage ? <p className={styles.errorText}>{errorMessage}</p> : null}
+      {errorMessage  ? <p className={styles.errorText}>{errorMessage}</p>   : null}
 
-      <article className={`${styles.panel} ${styles.aiPanel}`}>
+      {/* ── AI PANEL ── */}
+      <article className={styles.aiPanel}>
         <div className={styles.aiToolbar}>
           <div>
             <h3>AI Market Brief</h3>
@@ -382,10 +360,12 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
             )}
           </div>
           <button className={styles.analysisButton} onClick={() => void runAiAnalysis()} disabled={runningAnalysis}>
-            {runningAnalysis ? "Generating Analysis..." : "Generate AI Analysis"}
+            {runningAnalysis ? "Generating Analysis…" : "Generate AI Analysis"}
           </button>
         </div>
+
         {analysisError ? <p className={styles.errorText}>{analysisError}</p> : null}
+
         {analysis ? (
           <div className={styles.aiBody}>
             <p className={styles.infoText}>{analysis.overview}</p>
@@ -393,33 +373,37 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
               <section>
                 <h4>Risk Signals</h4>
                 <ul className={styles.aiList}>
-                  {(analysis.riskSignals.length > 0 ? analysis.riskSignals : ["No major risk flags in the latest data."]).map((item) => (
-                    <li key={`risk-${item}`}>{item}</li>
-                  ))}
+                  {(analysis.riskSignals.length > 0
+                    ? analysis.riskSignals
+                    : ["No major risk flags in the latest data."]
+                  ).map((item) => <li key={`risk-${item}`}>{item}</li>)}
                 </ul>
               </section>
               <section>
                 <h4>Trade Signals</h4>
                 <ul className={styles.aiList}>
-                  {(analysis.tradeSignals.length > 0 ? analysis.tradeSignals : ["No high-conviction trade setups were identified."]).map((item) => (
-                    <li key={`trade-${item}`}>{item}</li>
-                  ))}
+                  {(analysis.tradeSignals.length > 0
+                    ? analysis.tradeSignals
+                    : ["No high-conviction trade setups were identified."]
+                  ).map((item) => <li key={`trade-${item}`}>{item}</li>)}
                 </ul>
               </section>
               <section>
                 <h4>Watchlist</h4>
                 <ul className={styles.aiList}>
-                  {(analysis.watchlist.length > 0 ? analysis.watchlist : ["No watchlist entries returned."]).map((item) => (
-                    <li key={`watch-${item}`}>{item}</li>
-                  ))}
+                  {(analysis.watchlist.length > 0
+                    ? analysis.watchlist
+                    : ["No watchlist entries returned."]
+                  ).map((item) => <li key={`watch-${item}`}>{item}</li>)}
                 </ul>
               </section>
               <section>
                 <h4>Next Actions</h4>
                 <ul className={styles.aiList}>
-                  {(analysis.nextActions.length > 0 ? analysis.nextActions : ["Refresh scans and rerun AI analysis after next market update."]).map((item) => (
-                    <li key={`next-${item}`}>{item}</li>
-                  ))}
+                  {(analysis.nextActions.length > 0
+                    ? analysis.nextActions
+                    : ["Refresh scans and rerun AI analysis after next market update."]
+                  ).map((item) => <li key={`next-${item}`}>{item}</li>)}
                 </ul>
               </section>
             </div>
@@ -427,6 +411,7 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
         ) : null}
       </article>
 
+      {/* ── METRIC STRIP ── */}
       <div className={styles.metricGrid}>
         <article className={styles.metricCard}>
           <h3>Cash</h3>
@@ -454,24 +439,28 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
         </article>
         <article className={styles.metricCard}>
           <h3>Last Scan</h3>
-          <p>{state.portfolio.lastScanAt ? new Date(state.portfolio.lastScanAt).toLocaleString("en-AU") : "Never"}</p>
+          <p>{state.portfolio.lastScanAt
+            ? new Date(state.portfolio.lastScanAt).toLocaleString("en-AU")
+            : "Never"}
+          </p>
         </article>
       </div>
 
+      {/* ── CHARTS ── */}
       <div className={styles.chartGrid}>
         <article className={styles.chartCard}>
           <h3>Equity Curve</h3>
           <div className={styles.chartWrap}>
             <ResponsiveContainer width="100%" height={260}>
               <LineChart data={equityCurveData} margin={{ top: 8, right: 12, left: 4, bottom: 8 }}>
-                <CartesianGrid stroke="rgba(255,255,255,0.08)" strokeDasharray="3 3" />
-                <XAxis dataKey="date" tick={{ fill: "#a7a2bf", fontSize: 11 }} />
-                <YAxis tick={{ fill: "#a7a2bf", fontSize: 11 }} />
-                <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
-                <Legend />
-                <Line type="monotone" dataKey="equity" stroke="#ff4d1a" strokeWidth={2} dot={false} name="Equity" />
-                <Line type="monotone" dataKey="cash" stroke="#9ce9b8" strokeWidth={2} dot={false} name="Cash" />
-                <Line type="monotone" dataKey="invested" stroke="#9b5de5" strokeWidth={2} dot={false} name="Invested" />
+                <CartesianGrid stroke={GRID_STROKE} strokeDasharray="3 3" />
+                <XAxis dataKey="date" tick={AXIS_TICK} />
+                <YAxis tick={AXIS_TICK} />
+                <Tooltip contentStyle={TOOLTIP_STYLE} />
+                <Legend wrapperStyle={LEGEND_STYLE} />
+                <Line type="monotone" dataKey="equity"   stroke="#ff4d1a"              strokeWidth={2} dot={false} name="Equity" />
+                <Line type="monotone" dataKey="cash"     stroke="#c084fc"              strokeWidth={2} dot={false} name="Cash" />
+                <Line type="monotone" dataKey="invested" stroke="rgba(242,238,255,.4)" strokeWidth={1.5} dot={false} name="Invested" strokeDasharray="4 3" />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -482,17 +471,17 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
           <div className={styles.chartWrap}>
             <ResponsiveContainer width="100%" height={260}>
               <BarChart data={opportunityData} margin={{ top: 8, right: 12, left: 4, bottom: 8 }}>
-                <CartesianGrid stroke="rgba(255,255,255,0.08)" strokeDasharray="3 3" />
-                <XAxis dataKey="ticker" tick={{ fill: "#a7a2bf", fontSize: 11 }} />
-                <YAxis tick={{ fill: "#a7a2bf", fontSize: 11 }} />
-                <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
-                <Legend />
+                <CartesianGrid stroke={GRID_STROKE} strokeDasharray="3 3" />
+                <XAxis dataKey="ticker" tick={AXIS_TICK} />
+                <YAxis tick={AXIS_TICK} />
+                <Tooltip contentStyle={TOOLTIP_STYLE} />
+                <Legend wrapperStyle={LEGEND_STYLE} />
                 <Bar dataKey="expected" name="Expected Return %">
                   {opportunityData.map((entry) => (
-                    <Cell key={entry.ticker} fill={entry.expected >= 0 ? "#ff4d1a" : "#ff8f80"} />
+                    <Cell key={entry.ticker} fill={entry.expected >= 0 ? "#ff4d1a" : "rgba(255,77,26,.35)"} />
                   ))}
                 </Bar>
-                <Bar dataKey="confidence" name="Confidence %" fill="#9b5de5" />
+                <Bar dataKey="confidence" name="Confidence %" fill="rgba(192,132,252,.55)" />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -503,14 +492,14 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
           <div className={styles.chartWrap}>
             <ResponsiveContainer width="100%" height={260}>
               <BarChart data={actionMixData} margin={{ top: 8, right: 12, left: 4, bottom: 8 }}>
-                <CartesianGrid stroke="rgba(255,255,255,0.08)" strokeDasharray="3 3" />
-                <XAxis dataKey="action" tick={{ fill: "#a7a2bf", fontSize: 11 }} />
-                <YAxis tick={{ fill: "#a7a2bf", fontSize: 11 }} />
-                <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
-                <Bar dataKey="count" name="Ticker Count">
-                  <Cell fill="#9ce9b8" />
-                  <Cell fill="#ff8f80" />
-                  <Cell fill="#8c8ca4" />
+                <CartesianGrid stroke={GRID_STROKE} strokeDasharray="3 3" />
+                <XAxis dataKey="action" tick={AXIS_TICK} />
+                <YAxis tick={AXIS_TICK} />
+                <Tooltip contentStyle={TOOLTIP_STYLE} />
+                <Bar dataKey="count" name="Ticker Count" radius={[3, 3, 0, 0]}>
+                  <Cell fill="#f2eeff" />
+                  <Cell fill="#ff4d1a" />
+                  <Cell fill="rgba(138,134,168,.55)" />
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
@@ -518,6 +507,7 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
         </article>
       </div>
 
+      {/* ── POSITIONS + RECOMMENDATIONS ── */}
       <div className={styles.panelGrid}>
         <article className={styles.panel}>
           <h3>Open Positions ({positions.length})</h3>
@@ -614,6 +604,7 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
         </article>
       </div>
 
+      {/* ── RECENT TRADES ── */}
       <article className={styles.panel}>
         <h3>Recent Paper Trades ({recentTrades.length})</h3>
         {recentTrades.length === 0 ? (
@@ -637,7 +628,9 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
                   <tr key={trade.id}>
                     <td>{new Date(trade.createdAt).toLocaleDateString("en-AU")}</td>
                     <td>{trade.ticker}</td>
-                    <td className={trade.side === "buy" ? styles.positive : styles.negative}>{trade.side.toUpperCase()}</td>
+                    <td className={trade.side === "buy" ? styles.positive : styles.negative}>
+                      {trade.side.toUpperCase()}
+                    </td>
                     <td>{numberFmt.format(trade.units)}</td>
                     <td>{currency.format(trade.price)}</td>
                     <td>{currency.format(trade.notional)}</td>
@@ -649,6 +642,7 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
           </div>
         )}
       </article>
+
     </section>
   );
 }
