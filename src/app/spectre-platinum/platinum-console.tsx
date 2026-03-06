@@ -147,6 +147,42 @@ function pct(value: number): string {
   return `${value.toFixed(2)}%`;
 }
 
+interface ParsedRecommendationReason {
+  regime: string | null;
+  topSignals: string[];
+  patternTags: string[];
+  aiNote: string | null;
+  patternForecast: string | null;
+}
+
+function parseRecommendationReason(reason: string): ParsedRecommendationReason {
+  const text = String(reason || "");
+  const regime = text.match(/regime\[([^\]]+)\]/i)?.[1]?.trim() || null;
+  const signalsRaw = text.match(/signals\[([^\]]+)\]/i)?.[1] || "";
+  const patternsRaw = text.match(/patterns\[([^\]]+)\]/i)?.[1] || "";
+  const aiNote = text.match(/AI\[([^\]]+)\]/i)?.[1]?.trim() || null;
+  const patternForecast = text.match(/Pattern\d+\s+[-+]?\d+(?:\.\d+)?%\s+@\s+\d+%\s+hit\s+\/\s+\d+%\s+conf/i)?.[0] || null;
+
+  const topSignals = signalsRaw
+    .split("|")
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0)
+    .slice(0, 4);
+
+  const patternTags = patternsRaw
+    .split(",")
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0);
+
+  return {
+    regime,
+    topSignals,
+    patternTags,
+    aiNote,
+    patternForecast,
+  };
+}
+
 // SPECTRE chart constants
 const TOOLTIP_STYLE = {
   backgroundColor: "rgba(10,7,18,0.97)",
@@ -593,8 +629,14 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
                     <th>Expected</th>
                     <th>Confidence</th>
                     <th>AI Adj</th>
+                    <th>AI Conf</th>
                     <th>AI Note</th>
                     <th>Price</th>
+                    <th>MA20</th>
+                    <th>MA50</th>
+                    <th>ROC20</th>
+                    <th>Z</th>
+                    <th>Signals</th>
                     <th>Reason</th>
                   </tr>
                 </thead>
@@ -622,8 +664,18 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
                       <td className={recommendation.aiAdjustment >= 0 ? styles.positive : styles.negative}>
                         {recommendation.aiAdjustment.toFixed(2)}
                       </td>
+                      <td>{pct(recommendation.aiConfidence)}</td>
                       <td>{recommendation.aiSummary || "—"}</td>
                       <td>{currency.format(recommendation.price)}</td>
+                      <td>{currency.format(recommendation.maShort)}</td>
+                      <td>{currency.format(recommendation.maLong)}</td>
+                      <td className={recommendation.momentum >= 0 ? styles.positive : styles.negative}>
+                        {pct(recommendation.momentum * 100)}
+                      </td>
+                      <td className={recommendation.zScore >= 0 ? styles.positive : styles.negative}>
+                        {recommendation.zScore.toFixed(2)}
+                      </td>
+                      <td>{recommendation.indicatorCount}</td>
                       <td>{recommendation.reason}</td>
                     </tr>
                   ))}
@@ -633,6 +685,53 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
           )}
         </article>
       </div>
+
+      {/* ── RECOMMENDATION DRIVERS ── */}
+      <article className={styles.panel}>
+        <h3>Recommendation Drivers</h3>
+        {topRecommendations.length === 0 ? (
+          <p className={styles.infoText}>Run a daily scan to see the model drivers.</p>
+        ) : (
+          <div className={styles.driverGrid}>
+            {topRecommendations.slice(0, 12).map((recommendation) => {
+              const details = parseRecommendationReason(recommendation.reason);
+              return (
+                <section key={`driver-${recommendation.id}`} className={styles.driverCard}>
+                  <div className={styles.driverHeader}>
+                    <p className={styles.driverTicker}>{recommendation.ticker}</p>
+                    <p
+                      className={
+                        recommendation.action === "buy"
+                          ? styles.positive
+                          : recommendation.action === "sell"
+                            ? styles.negative
+                            : styles.infoText
+                      }
+                    >
+                      {recommendation.action.toUpperCase()}
+                    </p>
+                  </div>
+                  <p className={styles.driverMeta}>
+                    Expected {pct(recommendation.expectedReturnPct)} · Confidence {pct(recommendation.confidence)} · Final {recommendation.finalScore.toFixed(3)}
+                  </p>
+                  <p className={styles.driverMeta}>
+                    MA20 {currency.format(recommendation.maShort)} · MA50 {currency.format(recommendation.maLong)} · ROC20 {pct(recommendation.momentum * 100)} · Z {recommendation.zScore.toFixed(2)}
+                  </p>
+                  {details.patternForecast ? <p className={styles.driverMeta}>{details.patternForecast}</p> : null}
+                  {details.regime ? <p className={styles.driverMeta}>Regime: {details.regime}</p> : null}
+                  {details.topSignals.length > 0 ? (
+                    <p className={styles.driverSignals}>Top signals: {details.topSignals.join(" · ")}</p>
+                  ) : null}
+                  {details.patternTags.length > 0 ? (
+                    <p className={styles.driverSignals}>Patterns: {details.patternTags.join(", ")}</p>
+                  ) : null}
+                  {details.aiNote ? <p className={styles.driverAi}>AI: {details.aiNote}</p> : null}
+                </section>
+              );
+            })}
+          </div>
+        )}
+      </article>
 
       {/* ── RECENT TRADES ── */}
       <article className={styles.panel}>

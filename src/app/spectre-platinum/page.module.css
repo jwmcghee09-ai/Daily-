@@ -417,6 +417,61 @@
 .tableWrap tr:last-child td { border-bottom: none; }
 .tableWrap tr:hover td { background: rgba(255,77,26,.03); }
 
+/* ── DRIVER CARDS ── */
+.driverGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.driverCard {
+  border: 1px solid rgba(255,255,255,.08);
+  background: linear-gradient(150deg, rgba(20,14,35,.9), rgba(12,9,23,.9));
+  border-radius: 10px;
+  padding: 0.8rem 0.9rem;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.driverHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.driverTicker {
+  margin: 0;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.82rem;
+  letter-spacing: 0.06em;
+  color: #f2eeff;
+}
+
+.driverMeta {
+  margin: 0;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  line-height: 1.55;
+  color: #b4b0cc;
+}
+
+.driverSignals {
+  margin: 0;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.59rem;
+  line-height: 1.55;
+  color: #c8c4df;
+}
+
+.driverAi {
+  margin: 0;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.59rem;
+  line-height: 1.55;
+  color: #c084fc;
+}
+
 /* ── P/L COLOURS ── */
 .positive,
 .tableWrap td.positive { color: #9b5de5 !important; }
@@ -435,6 +490,7 @@
   .aiToolbar  { flex-direction: column; }
   .aiGrid     { grid-template-columns: 1fr; }
   .panelGrid  { grid-template-columns: 1fr; }
+  .driverGrid { grid-template-columns: 1fr; }
   .metricGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
