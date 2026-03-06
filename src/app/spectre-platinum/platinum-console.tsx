@@ -234,7 +234,7 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
     setStatusMessage(null);
 
     try {
-      const response = await fetch("/api/platinum/paper-trading", { method: "POST" });
+      const response = await fetch("/api/platinum/paper-trading?mode=force", { method: "POST" });
       const payload = await readJsonPayload<PlatinumPayload>(response);
 
       if (!response.ok || !payload.ok || !payload.result) {

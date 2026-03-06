@@ -47,10 +47,12 @@ export async function POST(request: Request) {
     const url = new URL(request.url);
     const mode = (url.searchParams.get("mode") || "daily").toLowerCase();
     const isLiveMode = mode === "live";
+    const isForceMode = mode === "force";
 
     const result = await runPlatinumDailyScan(user.id, {
-      allowIntraday: isLiveMode,
+      allowIntraday: isLiveMode || isForceMode,
       requireMarketOpen: isLiveMode,
+      forceRun: isForceMode,
     });
 
     return NextResponse.json({

@@ -368,6 +368,7 @@ export interface PlatinumScanRunResult {
 interface RunScanOptions {
   allowIntraday?: boolean;
   requireMarketOpen?: boolean;
+  forceRun?: boolean;
 }
 
 interface AiOverlayEntry {
@@ -2083,6 +2084,7 @@ export async function runPlatinumDailyScan(userId: string, options: RunScanOptio
   const scanDate = currentScanDate();
   const nowIso = new Date().toISOString();
   const allowIntraday = options.allowIntraday === true;
+  const forceRun = options.forceRun === true;
   const marketOpen = isAsxMarketOpenNow();
 
   ensurePortfolioRow(db, userId);
@@ -2106,7 +2108,7 @@ export async function runPlatinumDailyScan(userId: string, options: RunScanOptio
     .prepare("SELECT 1 AS ok FROM platinum_paper_snapshots WHERE user_id = ? AND scan_date = ? LIMIT 1")
     .get(userId, scanDate) as { ok: number } | undefined;
 
-  if (!allowIntraday && alreadyRan?.ok) {
+  if (!allowIntraday && alreadyRan?.ok && !forceRun) {
     return {
       state: getPlatinumPaperState(userId),
       scanDate,
@@ -2125,7 +2127,7 @@ export async function runPlatinumDailyScan(userId: string, options: RunScanOptio
   const lastScanMs = portfolioRow.last_scan_at ? new Date(portfolioRow.last_scan_at).getTime() : Number.NaN;
   const nowMs = Date.now();
 
-  if (allowIntraday && Number.isFinite(lastScanMs) && nowMs - lastScanMs < MIN_LIVE_SCAN_INTERVAL_MS) {
+  if (allowIntraday && Number.isFinite(lastScanMs) && nowMs - lastScanMs < MIN_LIVE_SCAN_INTERVAL_MS && !forceRun) {
     return {
       state: getPlatinumPaperState(userId),
       scanDate,
