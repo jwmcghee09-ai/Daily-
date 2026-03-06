@@ -16,7 +16,7 @@
     radial-gradient(ellipse 65% 120% at 110% 50%, #3f0d0d 0%, #2b0808 26%, transparent 56%),
     linear-gradient(140deg, #180b2c 0%, #12071c 38%, #1a0a11 65%, #2c0c0c 100%);
   color: #f2eeff;
-  padding: 2rem 1.25rem 5rem;
+  padding: 2rem clamp(0.65rem, 1.8vw, 1.25rem) 5rem;
   font-family: 'DM Sans', sans-serif;
   position: relative;
 }
@@ -35,7 +35,8 @@
 .shell {
   position: relative;
   z-index: 1;
-  max-width: 1220px;
+  width: 100%;
+  max-width: 100%;
   margin: 0 auto;
 }
 
