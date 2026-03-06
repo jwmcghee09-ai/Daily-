@@ -86,6 +86,16 @@ interface PlatinumPaperState {
     totalReturnPct: number;
     lastScanAt: string | null;
   };
+  riskControls: {
+    killSwitchEnabled: boolean;
+    maxOrderNotionalAud: number;
+    maxOrderEquityPct: number;
+    dailyLossCapAud: number;
+    dayStartEquity: number | null;
+    dailyPnlAud: number;
+    dailyLossCapTriggered: boolean;
+    marketOpenRequired: boolean;
+  };
   latestScanDate: string | null;
   positions: PlatinumPaperPosition[];
   latestRecommendations: PlatinumRecommendation[];
@@ -106,6 +116,8 @@ interface PlatinumPayload {
     alreadyRanToday: boolean;
     marketOpen: boolean;
     skippedBecauseMarketClosed: boolean;
+    skippedBecauseKillSwitch: boolean;
+    skippedBecauseDailyLossCap: boolean;
     usedAiOverlay: boolean;
     aiModel: string | null;
   };
@@ -281,7 +293,11 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
       setAnalysis(null);
       setAnalysisError(null);
 
-      if (payload.result.skippedBecauseMarketClosed) {
+      if (payload.result.skippedBecauseKillSwitch) {
+        setStatusMessage("Kill switch is ON. Auto-trading is paused.");
+      } else if (payload.result.skippedBecauseDailyLossCap) {
+        setStatusMessage("Daily loss cap reached. New trades are paused for today.");
+      } else if (payload.result.skippedBecauseMarketClosed) {
         setStatusMessage("ASX is currently closed. Live scan skipped.");
       } else if (payload.result.alreadyRanToday) {
         setStatusMessage(`Daily scan already ran for ${payload.result.scanDate} (${"Australia/Sydney"}).`);
@@ -323,6 +339,17 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
       const payload = await readJsonPayload<PlatinumPayload>(response);
 
       if (!response.ok || !payload.ok || !payload.result) return;
+      setState(payload.result.state);
+
+      if (payload.result.skippedBecauseKillSwitch) {
+        setMarketStatusMessage("Kill switch ON: live trading paused.");
+        return;
+      }
+
+      if (payload.result.skippedBecauseDailyLossCap) {
+        setMarketStatusMessage("Daily loss cap reached: no new trades today.");
+        return;
+      }
 
       if (payload.result.skippedBecauseMarketClosed) {
         setMarketStatusMessage("ASX closed: waiting for market open.");
@@ -330,7 +357,6 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
       }
 
       setMarketStatusMessage(payload.result.marketOpen ? "ASX open: live model running." : "ASX status unavailable.");
-      setState(payload.result.state);
     } catch {
       // background updates are best-effort
     }
@@ -402,6 +428,14 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
             Paper account starts at {currency.format(state.portfolio.startingCash)} and auto-executes BUY/SELL trades from ranked leading indicators.
           </p>
           <p className={styles.infoText}>Universe: whole ASX — {state.universeSize} tickers estimated.</p>
+          <p className={styles.infoText}>
+            Risk controls: max order {currency.format(state.riskControls.maxOrderNotionalAud)} or {(state.riskControls.maxOrderEquityPct * 100).toFixed(1)}% equity, daily loss cap {currency.format(state.riskControls.dailyLossCapAud)}.
+          </p>
+          <p className={styles.infoText}>
+            Today P/L vs start: <span className={state.riskControls.dailyPnlAud >= 0 ? styles.positive : styles.negative}>{currency.format(state.riskControls.dailyPnlAud)}</span>
+            {state.riskControls.killSwitchEnabled ? " · Kill switch ON" : ""}
+            {state.riskControls.marketOpenRequired ? " · Market-hours enforcement ON" : ""}
+          </p>
           {marketStatusMessage ? <p className={styles.infoText}>{marketStatusMessage}</p> : null}
         </div>
         <button className={styles.scanButton} onClick={() => void runDailyScan()} disabled={runningScan}>

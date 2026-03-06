@@ -31,6 +31,8 @@ export async function POST(request: Request) {
       alreadyRanToday: result.alreadyRanToday,
       marketOpen: result.marketOpen,
       skippedBecauseMarketClosed: result.skippedBecauseMarketClosed,
+      skippedBecauseKillSwitch: result.skippedBecauseKillSwitch,
+      skippedBecauseDailyLossCap: result.skippedBecauseDailyLossCap,
       generatedRecommendations: result.generatedRecommendations,
       executedTrades: result.executedTrades,
       skippedTickers: result.skippedTickers,
@@ -38,6 +40,9 @@ export async function POST(request: Request) {
       aiModel: result.aiModel,
       equity: result.state.portfolio.equity,
       totalReturnPct: result.state.portfolio.totalReturnPct,
+      dailyPnlAud: result.state.riskControls.dailyPnlAud,
+      dailyLossCapAud: result.state.riskControls.dailyLossCapAud,
+      killSwitchEnabled: result.state.riskControls.killSwitchEnabled,
     });
   } catch (error) {
     if (error instanceof Error && error.name === "UnauthorizedError") {

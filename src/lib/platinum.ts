@@ -35,6 +35,11 @@ const REGIME_BENCHMARK_SYMBOL = (process.env.PLATINUM_REGIME_SYMBOL || "^AXJO").
 const MIN_AVG_DOLLAR_VOLUME_AUD = clampNumber(process.env.PLATINUM_MIN_AVG_DOLLAR_VOLUME_AUD, 1000000, 100000, 100000000);
 const TARGET_ANNUAL_VOLATILITY = clampNumber(process.env.PLATINUM_TARGET_ANNUAL_VOLATILITY, 0.18, 0.05, 0.8);
 const MIN_CASH_RESERVE_PCT = clampNumber(process.env.PLATINUM_MIN_CASH_RESERVE_PCT, 0.08, 0, 0.5);
+const MAX_ORDER_NOTIONAL_AUD = clampNumber(process.env.PLATINUM_MAX_ORDER_NOTIONAL_AUD, 1200, 50, 1000000);
+const MAX_ORDER_EQUITY_PCT = clampNumber(process.env.PLATINUM_MAX_ORDER_EQUITY_PCT, 0.2, 0.01, 1);
+const DAILY_LOSS_CAP_AUD = clampNumber(process.env.PLATINUM_DAILY_LOSS_CAP_AUD, 300, 10, 1000000);
+const KILL_SWITCH_ENABLED = parseBoolean(process.env.PLATINUM_KILL_SWITCH, false);
+const ENFORCE_MARKET_HOURS_FOR_ALL_SCANS = parseBoolean(process.env.PLATINUM_ENFORCE_MARKET_HOURS, false);
 
 const FALLBACK_UNIVERSE = [
   "BHP",
@@ -88,6 +93,8 @@ interface PortfolioRow {
   cash: number;
   realized_pnl: number;
   last_scan_at: string | null;
+  day_start_scan_date: string | null;
+  day_start_equity: number | null;
 }
 
 interface PositionRow {
@@ -348,8 +355,20 @@ export interface PlatinumPaperPortfolioSummary {
   lastScanAt: string | null;
 }
 
+export interface PlatinumRiskControls {
+  killSwitchEnabled: boolean;
+  maxOrderNotionalAud: number;
+  maxOrderEquityPct: number;
+  dailyLossCapAud: number;
+  dayStartEquity: number | null;
+  dailyPnlAud: number;
+  dailyLossCapTriggered: boolean;
+  marketOpenRequired: boolean;
+}
+
 export interface PlatinumPaperState {
   portfolio: PlatinumPaperPortfolioSummary;
+  riskControls: PlatinumRiskControls;
   latestScanDate: string | null;
   positions: PlatinumPaperPosition[];
   latestRecommendations: PlatinumRecommendation[];
@@ -367,6 +386,8 @@ export interface PlatinumScanRunResult {
   alreadyRanToday: boolean;
   marketOpen: boolean;
   skippedBecauseMarketClosed: boolean;
+  skippedBecauseKillSwitch: boolean;
+  skippedBecauseDailyLossCap: boolean;
   usedAiOverlay: boolean;
   aiModel: string | null;
 }
@@ -410,6 +431,23 @@ function clampNumber(raw: string | undefined, fallback: number, min: number, max
   return Math.min(max, Math.max(min, parsed));
 }
 
+function parseBoolean(raw: string | undefined, fallback: boolean): boolean {
+  const normalized = String(raw || "").trim().toLowerCase();
+  if (!normalized) {
+    return fallback;
+  }
+
+  if (["1", "true", "yes", "on", "enabled"].includes(normalized)) {
+    return true;
+  }
+
+  if (["0", "false", "no", "off", "disabled"].includes(normalized)) {
+    return false;
+  }
+
+  return fallback;
+}
+
 function getDb(): DatabaseSync {
   if (!dbInstance) {
     dbInstance = new DatabaseSync(getDatabaseFilePath());
@@ -440,6 +478,8 @@ function ensurePlatinumSchema(db: DatabaseSync): void {
       cash REAL NOT NULL DEFAULT 5000,
       realized_pnl REAL NOT NULL DEFAULT 0,
       last_scan_at TEXT,
+      day_start_scan_date TEXT,
+      day_start_equity REAL,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
     );
@@ -516,6 +556,14 @@ function ensurePlatinumSchema(db: DatabaseSync): void {
   if (!hasColumn(db, "platinum_paper_positions", "peak_price")) {
     db.exec("ALTER TABLE platinum_paper_positions ADD COLUMN peak_price REAL NOT NULL DEFAULT 0;");
     db.exec("UPDATE platinum_paper_positions SET peak_price = CASE WHEN peak_price <= 0 THEN last_price ELSE peak_price END;");
+  }
+
+  if (!hasColumn(db, "platinum_paper_portfolios", "day_start_scan_date")) {
+    db.exec("ALTER TABLE platinum_paper_portfolios ADD COLUMN day_start_scan_date TEXT;");
+  }
+
+  if (!hasColumn(db, "platinum_paper_portfolios", "day_start_equity")) {
+    db.exec("ALTER TABLE platinum_paper_portfolios ADD COLUMN day_start_equity REAL;");
   }
 
   if (!hasColumn(db, "platinum_recommendations", "expected_return_pct")) {
@@ -1958,7 +2006,7 @@ async function applyAiOverlay(
 function ensurePortfolioRow(db: DatabaseSync, userId: string): PortfolioRow {
   const existing = db
     .prepare(`
-      SELECT starting_cash, cash, realized_pnl, last_scan_at
+      SELECT starting_cash, cash, realized_pnl, last_scan_at, day_start_scan_date, day_start_equity
       FROM platinum_paper_portfolios
       WHERE user_id = ?
       LIMIT 1
@@ -1972,8 +2020,10 @@ function ensurePortfolioRow(db: DatabaseSync, userId: string): PortfolioRow {
   const nowIso = new Date().toISOString();
 
   db.prepare(`
-    INSERT INTO platinum_paper_portfolios (user_id, starting_cash, cash, realized_pnl, last_scan_at, created_at, updated_at)
-    VALUES (?, ?, ?, 0, NULL, ?, ?)
+    INSERT INTO platinum_paper_portfolios (
+      user_id, starting_cash, cash, realized_pnl, last_scan_at, day_start_scan_date, day_start_equity, created_at, updated_at
+    )
+    VALUES (?, ?, ?, 0, NULL, NULL, NULL, ?, ?)
   `).run(userId, STARTING_CAPITAL_AUD, STARTING_CAPITAL_AUD, nowIso, nowIso);
 
   return {
@@ -1981,6 +2031,8 @@ function ensurePortfolioRow(db: DatabaseSync, userId: string): PortfolioRow {
     cash: STARTING_CAPITAL_AUD,
     realized_pnl: 0,
     last_scan_at: null,
+    day_start_scan_date: null,
+    day_start_equity: null,
   };
 }
 
@@ -2015,6 +2067,58 @@ function toSummary(row: PortfolioRow, positions: PlatinumPaperPosition[]): Plati
     totalPnl,
     totalReturnPct,
     lastScanAt: row.last_scan_at,
+  };
+}
+
+function toRiskControlsState(row: PortfolioRow, equity: number, scanDate: string): PlatinumRiskControls {
+  const hasBaseline = row.day_start_scan_date === scanDate && Number.isFinite(row.day_start_equity);
+  const dayStartEquity = hasBaseline ? toFiniteNumber(row.day_start_equity, equity) : null;
+  const dailyPnlAud = hasBaseline ? equity - toFiniteNumber(row.day_start_equity, equity) : 0;
+  const dailyLossCapTriggered = dailyPnlAud <= -DAILY_LOSS_CAP_AUD;
+
+  return {
+    killSwitchEnabled: KILL_SWITCH_ENABLED,
+    maxOrderNotionalAud: MAX_ORDER_NOTIONAL_AUD,
+    maxOrderEquityPct: MAX_ORDER_EQUITY_PCT,
+    dailyLossCapAud: DAILY_LOSS_CAP_AUD,
+    dayStartEquity,
+    dailyPnlAud,
+    dailyLossCapTriggered,
+    marketOpenRequired: ENFORCE_MARKET_HOURS_FOR_ALL_SCANS,
+  };
+}
+
+function syncDailyBaseline(
+  db: DatabaseSync,
+  userId: string,
+  row: PortfolioRow,
+  scanDate: string,
+  equity: number,
+  nowIso: string,
+): { dayStartEquity: number; dailyPnlAud: number; dailyLossCapTriggered: boolean } {
+  const hasBaseline = row.day_start_scan_date === scanDate && Number.isFinite(row.day_start_equity);
+
+  if (!hasBaseline) {
+    db.prepare(`
+      UPDATE platinum_paper_portfolios
+      SET day_start_scan_date = ?, day_start_equity = ?, updated_at = ?
+      WHERE user_id = ?
+    `).run(scanDate, equity, nowIso, userId);
+
+    return {
+      dayStartEquity: equity,
+      dailyPnlAud: 0,
+      dailyLossCapTriggered: false,
+    };
+  }
+
+  const dayStartEquity = toFiniteNumber(row.day_start_equity, equity);
+  const dailyPnlAud = equity - dayStartEquity;
+
+  return {
+    dayStartEquity,
+    dailyPnlAud,
+    dailyLossCapTriggered: dailyPnlAud <= -DAILY_LOSS_CAP_AUD,
   };
 }
 
@@ -2107,8 +2211,12 @@ export function getPlatinumPaperState(userId: string): PlatinumPaperState {
     `)
     .all(userId) as SnapshotRow[];
 
+  const summary = toSummary(portfolioRow, positions);
+  const riskControls = toRiskControlsState(portfolioRow, summary.equity, currentScanDate());
+
   return {
-    portfolio: toSummary(portfolioRow, positions),
+    portfolio: summary,
+    riskControls,
     latestScanDate,
     positions,
     latestRecommendations: dedupedRecommendations.map((row) => ({
@@ -2235,10 +2343,11 @@ export async function runPlatinumDailyScan(userId: string, options: RunScanOptio
   const allowIntraday = options.allowIntraday === true;
   const forceRun = options.forceRun === true;
   const marketOpen = isAsxMarketOpenNow();
+  const mustBeMarketOpen = options.requireMarketOpen === true || (ENFORCE_MARKET_HOURS_FOR_ALL_SCANS && !forceRun);
 
   ensurePortfolioRow(db, userId);
 
-  if (options.requireMarketOpen === true && !marketOpen) {
+  if (mustBeMarketOpen && !marketOpen) {
     return {
       state: getPlatinumPaperState(userId),
       scanDate,
@@ -2248,6 +2357,8 @@ export async function runPlatinumDailyScan(userId: string, options: RunScanOptio
       alreadyRanToday: true,
       marketOpen: false,
       skippedBecauseMarketClosed: true,
+      skippedBecauseKillSwitch: false,
+      skippedBecauseDailyLossCap: false,
       usedAiOverlay: false,
       aiModel: null,
     };
@@ -2267,6 +2378,8 @@ export async function runPlatinumDailyScan(userId: string, options: RunScanOptio
       alreadyRanToday: true,
       marketOpen,
       skippedBecauseMarketClosed: false,
+      skippedBecauseKillSwitch: false,
+      skippedBecauseDailyLossCap: false,
       usedAiOverlay: false,
       aiModel: null,
     };
@@ -2286,12 +2399,52 @@ export async function runPlatinumDailyScan(userId: string, options: RunScanOptio
       alreadyRanToday: true,
       marketOpen,
       skippedBecauseMarketClosed: false,
+      skippedBecauseKillSwitch: false,
+      skippedBecauseDailyLossCap: false,
       usedAiOverlay: false,
       aiModel: null,
     };
   }
 
   const existingPositions = mapRowsToMutablePositions(readPositions(db, userId));
+  let cash = toFiniteNumber(portfolioRow.cash, STARTING_CAPITAL_AUD);
+  const preScanEquity = cash + computeInvestedValue(existingPositions);
+  const dailyBaseline = syncDailyBaseline(db, userId, portfolioRow, scanDate, preScanEquity, nowIso);
+
+  if (KILL_SWITCH_ENABLED) {
+    return {
+      state: getPlatinumPaperState(userId),
+      scanDate,
+      executedTrades: 0,
+      generatedRecommendations: 0,
+      skippedTickers: [],
+      alreadyRanToday: true,
+      marketOpen,
+      skippedBecauseMarketClosed: false,
+      skippedBecauseKillSwitch: true,
+      skippedBecauseDailyLossCap: false,
+      usedAiOverlay: false,
+      aiModel: null,
+    };
+  }
+
+  if (dailyBaseline.dailyLossCapTriggered) {
+    return {
+      state: getPlatinumPaperState(userId),
+      scanDate,
+      executedTrades: 0,
+      generatedRecommendations: 0,
+      skippedTickers: [],
+      alreadyRanToday: true,
+      marketOpen,
+      skippedBecauseMarketClosed: false,
+      skippedBecauseKillSwitch: false,
+      skippedBecauseDailyLossCap: true,
+      usedAiOverlay: false,
+      aiModel: null,
+    };
+  }
+
   const marketRegime = await resolveMarketRegime();
 
   const universeRaw = await resolveUniverse();
@@ -2348,7 +2501,6 @@ export async function runPlatinumDailyScan(userId: string, options: RunScanOptio
     }
   }
 
-  let cash = toFiniteNumber(portfolioRow.cash, STARTING_CAPITAL_AUD);
   let realizedPnl = toFiniteNumber(portfolioRow.realized_pnl, 0);
   const trades: TradeCandidate[] = [];
 
@@ -2363,14 +2515,37 @@ export async function runPlatinumDailyScan(userId: string, options: RunScanOptio
     }
 
     const fillPrice = recommendation.price * (1 - SLIPPAGE_RATE);
-    const units = position.units;
+    if (!Number.isFinite(fillPrice) || fillPrice <= 0) {
+      continue;
+    }
+
+    const equityForOrderCap = cash + computeInvestedValue(existingPositions);
+    const perOrderCapNotional = Math.min(MAX_ORDER_NOTIONAL_AUD, Math.max(equityForOrderCap, 0) * MAX_ORDER_EQUITY_PCT);
+    if (!Number.isFinite(perOrderCapNotional) || perOrderCapNotional <= 0) {
+      continue;
+    }
+
+    const maxUnitsByCap = floorTo(perOrderCapNotional / fillPrice, 4);
+    const units = Math.min(position.units, maxUnitsByCap);
+    if (!Number.isFinite(units) || units <= 0) {
+      continue;
+    }
+
     const notional = units * fillPrice;
     const fee = notional * FEE_RATE;
 
     cash += notional - fee;
     realizedPnl += (fillPrice - position.avgCost) * units - fee;
 
-    existingPositions.delete(recommendation.ticker);
+    const remainingUnits = floorTo(position.units - units, 4);
+    if (remainingUnits <= 0) {
+      existingPositions.delete(recommendation.ticker);
+    } else {
+      position.units = remainingUnits;
+      position.lastPrice = recommendation.price;
+      position.peakPrice = Math.max(position.peakPrice, recommendation.price);
+      existingPositions.set(recommendation.ticker, position);
+    }
 
     trades.push({
       id: crypto.randomUUID(),
@@ -2419,8 +2594,10 @@ export async function runPlatinumDailyScan(userId: string, options: RunScanOptio
       1.6,
     );
     const buyBudget = baseBudget * convictionMultiplier * volScalar * marketRegime.positionSizeMultiplier;
+    const perOrderCapNotional = Math.min(MAX_ORDER_NOTIONAL_AUD, Math.max(equity, 0) * MAX_ORDER_EQUITY_PCT);
+    const cappedBuyBudget = Math.min(buyBudget, perOrderCapNotional);
 
-    if (!Number.isFinite(buyBudget) || buyBudget < MIN_TRADE_NOTIONAL) {
+    if (!Number.isFinite(cappedBuyBudget) || cappedBuyBudget < MIN_TRADE_NOTIONAL) {
       continue;
     }
 
@@ -2429,7 +2606,7 @@ export async function runPlatinumDailyScan(userId: string, options: RunScanOptio
       continue;
     }
 
-    let units = floorTo(buyBudget / (fillPrice * (1 + FEE_RATE)), 4);
+    let units = floorTo(cappedBuyBudget / (fillPrice * (1 + FEE_RATE)), 4);
     if (units <= 0) {
       continue;
     }
@@ -2598,6 +2775,8 @@ export async function runPlatinumDailyScan(userId: string, options: RunScanOptio
     alreadyRanToday: false,
     marketOpen,
     skippedBecauseMarketClosed: false,
+    skippedBecauseKillSwitch: false,
+    skippedBecauseDailyLossCap: false,
     usedAiOverlay: aiOverlay.used,
     aiModel: aiOverlay.model,
   };
