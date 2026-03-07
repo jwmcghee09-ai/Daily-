@@ -233,6 +233,31 @@ interface PriceDipAlertsPayload {
   availableTickers: string[];
 }
 
+interface HoldingsAiBreakdown {
+  ticker: string;
+  summary: string;
+  influences: string[];
+  riskFlags: string[];
+  confidence: number;
+}
+
+interface HoldingsAiAnalysis {
+  generatedAt: string;
+  model: string;
+  question: string;
+  answer: string;
+  portfolioDrivers: string[];
+  holdingBreakdown: HoldingsAiBreakdown[];
+  riskChecks: string[];
+  nextActions: string[];
+}
+
+interface HoldingsAiApiPayload {
+  ok?: boolean;
+  analysis?: HoldingsAiAnalysis;
+  error?: string;
+}
+
 type CheckoutPlan = "starter" | "pro";
 
 interface PendingRegistrationDraft {
@@ -245,6 +270,7 @@ interface PendingRegistrationDraft {
 
 const PENDING_REGISTRATION_KEY = "spectre.pending-registration.v1";
 const PENDING_REGISTRATION_MAX_AGE_MS = 30 * 60 * 1000;
+const HOLDINGS_AI_DEFAULT_PROMPT = "What may be influencing the value of my current holdings?";
 
 export default function Home() {
   const [state, setState] = useState<PortfolioState>(EMPTY_STATE);
@@ -274,6 +300,10 @@ export default function Home() {
   const [dipAlertTicker, setDipAlertTicker] = useState("");
   const [dipAlertThreshold, setDipAlertThreshold] = useState("3");
   const [dipAlertSaving, setDipAlertSaving] = useState(false);
+  const [holdingsAiQuestion, setHoldingsAiQuestion] = useState(HOLDINGS_AI_DEFAULT_PROMPT);
+  const [holdingsAiLoading, setHoldingsAiLoading] = useState(false);
+  const [holdingsAiError, setHoldingsAiError] = useState("");
+  const [holdingsAiResult, setHoldingsAiResult] = useState<HoldingsAiAnalysis | null>(null);
   const refreshInFlight = useRef(false);
   const lastAutoRefreshAttemptAtRef = useRef(0);
 
@@ -599,6 +629,56 @@ export default function Home() {
     }
   }, [loadDipAlerts]);
 
+  const runHoldingsAi = useCallback(async (event?: FormEvent) => {
+    event?.preventDefault();
+
+    if (!sessionUser) {
+      return;
+    }
+
+    if (!sessionUser.proEnabled) {
+      setBanner({ type: "error", message: "Upgrade to Pro to use Ask AI for holdings." });
+      return;
+    }
+
+    if (state.holdings.length === 0) {
+      setHoldingsAiError("Import holdings first, then run Ask AI.");
+      return;
+    }
+
+    const question = holdingsAiQuestion.trim().length > 0
+      ? holdingsAiQuestion.trim()
+      : HOLDINGS_AI_DEFAULT_PROMPT;
+
+    setHoldingsAiLoading(true);
+    setHoldingsAiError("");
+
+    try {
+      const response = await fetch("/api/pro/holdings-ai", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ question }),
+      });
+
+      if (!response.ok) {
+        throw new Error(await parseApiError(response, "Failed to run Ask AI holdings analysis."));
+      }
+
+      const payload = (await response.json()) as HoldingsAiApiPayload;
+      if (!payload.ok || !payload.analysis) {
+        throw new Error(payload.error || "AI analysis response was empty.");
+      }
+
+      setHoldingsAiResult(payload.analysis);
+    } catch (error) {
+      setHoldingsAiError(error instanceof Error ? error.message : "Failed to run Ask AI holdings analysis.");
+    } finally {
+      setHoldingsAiLoading(false);
+    }
+  }, [holdingsAiQuestion, sessionUser, state.holdings.length]);
+
   useEffect(() => {
     if (!sessionUser || loading) {
       return;
@@ -697,6 +777,16 @@ export default function Home() {
       cancelled = true;
     };
   }, [loadDipAlerts, sessionUser, state.updatedAt]);
+
+  useEffect(() => {
+    if (sessionUser?.proEnabled) {
+      return;
+    }
+
+    setHoldingsAiError("");
+    setHoldingsAiResult(null);
+    setHoldingsAiLoading(false);
+  }, [sessionUser?.proEnabled]);
 
   const metrics = useMemo(() => computeMetrics(state.holdings, state.snapshots, riskWindow), [state.holdings, state.snapshots, riskWindow]);
 
@@ -1729,7 +1819,7 @@ export default function Home() {
                     <strong className="accent">+$559</strong>
                   </article>
                   <article className="spectre-snapshot-card">
-                    <p>Today's Change</p>
+                    <p>Today&apos;s Change</p>
                     <strong>+$6</strong>
                   </article>
                   <article className="spectre-snapshot-card">
@@ -1778,7 +1868,7 @@ export default function Home() {
 
               <div className="spectre-callouts">
                 <article>
-                  <p>Before: "Looks diversified"</p>
+                  <p>Before: &quot;Looks diversified&quot;</p>
                   <h3>Many line items</h3>
                   <span>Investor sees many line items across multiple statements with no unified risk view.</span>
                 </article>
@@ -2513,6 +2603,111 @@ export default function Home() {
             <strong>{proAnalyticsEnabled && benchmarkTrackingErrorAnnualPct != null ? formatPercent(benchmarkTrackingErrorAnnualPct) : "LOCKED"}</strong>
           </article>
         </div>
+        {proAnalyticsEnabled ? (
+          <div className="holdings-ai-panel">
+            <div className="holdings-ai-head">
+              <h3>Ask AI: Holdings Drivers</h3>
+              {holdingsAiResult ? (
+                <span>
+                  {new Date(holdingsAiResult.generatedAt).toLocaleString("en-AU")} via {holdingsAiResult.model}
+                </span>
+              ) : null}
+            </div>
+            <p className="holdings-ai-note">Ask what may be influencing value, momentum, risk, and concentration in your current portfolio.</p>
+            <form className="holdings-ai-form" onSubmit={(event) => void runHoldingsAi(event)}>
+              <textarea
+                value={holdingsAiQuestion}
+                onChange={(event) => setHoldingsAiQuestion(event.target.value)}
+                placeholder={HOLDINGS_AI_DEFAULT_PROMPT}
+                maxLength={700}
+                disabled={holdingsAiLoading}
+              />
+              <div className="holdings-ai-actions">
+                <button type="submit" className="refresh-btn" disabled={holdingsAiLoading || state.holdings.length === 0}>
+                  {holdingsAiLoading ? "Analyzing..." : "Ask AI"}
+                </button>
+              </div>
+            </form>
+            {holdingsAiError ? <p className="holdings-ai-error">{holdingsAiError}</p> : null}
+            {holdingsAiResult ? (
+              <div className="holdings-ai-output">
+                <article className="holdings-ai-block">
+                  <h4>Answer</h4>
+                  <p>{holdingsAiResult.answer}</p>
+                </article>
+
+                <article className="holdings-ai-block">
+                  <h4>Portfolio Drivers</h4>
+                  {holdingsAiResult.portfolioDrivers.length === 0 ? (
+                    <p className="empty">No portfolio drivers returned.</p>
+                  ) : (
+                    <ul>
+                      {holdingsAiResult.portfolioDrivers.map((driver, index) => (
+                        <li key={`${driver}-${index}`}>{driver}</li>
+                      ))}
+                    </ul>
+                  )}
+                </article>
+
+                <article className="holdings-ai-block">
+                  <h4>Holding-Level Influences</h4>
+                  {holdingsAiResult.holdingBreakdown.length === 0 ? (
+                    <p className="empty">No holding-level breakdown returned.</p>
+                  ) : (
+                    <div className="holdings-ai-breakdown-grid">
+                      {holdingsAiResult.holdingBreakdown.map((item, index) => (
+                        <div className="holdings-ai-breakdown-card" key={`${item.ticker}-${index}`}>
+                          <div className="holdings-ai-breakdown-head">
+                            <strong>{item.ticker}</strong>
+                            <span>Confidence {item.confidence}%</span>
+                          </div>
+                          <p>{item.summary}</p>
+                          {item.influences.length > 0 ? (
+                            <ul>
+                              {item.influences.map((influence, influenceIndex) => (
+                                <li key={`${influence}-${influenceIndex}`}>{influence}</li>
+                              ))}
+                            </ul>
+                          ) : null}
+                          {item.riskFlags.length > 0 ? (
+                            <p className="holdings-ai-risk-flags">Risk: {item.riskFlags.join(" | ")}</p>
+                          ) : null}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </article>
+
+                <div className="holdings-ai-block-grid">
+                  <article className="holdings-ai-block">
+                    <h4>Risk Checks</h4>
+                    {holdingsAiResult.riskChecks.length === 0 ? (
+                      <p className="empty">No risk checks returned.</p>
+                    ) : (
+                      <ul>
+                        {holdingsAiResult.riskChecks.map((item, index) => (
+                          <li key={`${item}-${index}`}>{item}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </article>
+                  <article className="holdings-ai-block">
+                    <h4>Next Actions</h4>
+                    {holdingsAiResult.nextActions.length === 0 ? (
+                      <p className="empty">No next actions returned.</p>
+                    ) : (
+                      <ul>
+                        {holdingsAiResult.nextActions.map((item, index) => (
+                          <li key={`${item}-${index}`}>{item}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </article>
+                </div>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
         {!proAnalyticsEnabled ? (
           <div className="pro-analytics-cta">
             <button type="button" onClick={() => void startProCheckout(authEmail)} className="refresh-btn" disabled={checkoutWorking}>

@@ -1692,6 +1692,160 @@ tr:hover td {
   margin-top: 12px;
 }
 
+.holdings-ai-panel {
+  margin-top: 14px;
+  border: 1px solid #5e2f5a;
+  border-radius: 12px;
+  padding: 12px;
+  background: linear-gradient(145deg, rgba(17, 10, 30, 0.9) 0%, rgba(13, 10, 20, 0.94) 100%);
+}
+
+.holdings-ai-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.holdings-ai-head h3 {
+  margin: 0;
+  font-size: 0.92rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #f4edff;
+}
+
+.holdings-ai-head span {
+  font-size: 0.74rem;
+  color: #bcafcf;
+}
+
+.holdings-ai-note {
+  margin-top: 8px;
+  color: #c5bfd7;
+  font-size: 0.86rem;
+}
+
+.holdings-ai-form {
+  margin-top: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.holdings-ai-form textarea {
+  width: 100%;
+  min-height: 88px;
+  resize: vertical;
+  border: 1px solid #61395f;
+  border-radius: 10px;
+  background: rgba(11, 9, 20, 0.92);
+  color: #f2ebff;
+  padding: 10px;
+  font: inherit;
+  line-height: 1.45;
+}
+
+.holdings-ai-form textarea:focus-visible {
+  outline: 1px solid #b08de0;
+  outline-offset: 2px;
+}
+
+.holdings-ai-actions {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.holdings-ai-error {
+  margin-top: 8px;
+  color: #ff7c5c;
+  font-size: 0.84rem;
+}
+
+.holdings-ai-output {
+  margin-top: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+.holdings-ai-block {
+  border: 1px solid #4a2b5f;
+  border-radius: 10px;
+  background: rgba(13, 9, 24, 0.92);
+  padding: 10px;
+}
+
+.holdings-ai-block h4 {
+  margin: 0 0 8px;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #d8c6f4;
+}
+
+.holdings-ai-block p {
+  margin: 0;
+  font-size: 0.88rem;
+  color: #ebdeff;
+  line-height: 1.45;
+}
+
+.holdings-ai-block ul {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 6px;
+}
+
+.holdings-ai-block li {
+  color: #dcd0f1;
+  font-size: 0.84rem;
+  line-height: 1.4;
+}
+
+.holdings-ai-breakdown-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 8px;
+}
+
+.holdings-ai-breakdown-card {
+  border: 1px solid #55356c;
+  border-radius: 10px;
+  background: rgba(15, 10, 29, 0.94);
+  padding: 9px;
+  display: grid;
+  gap: 7px;
+}
+
+.holdings-ai-breakdown-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.holdings-ai-breakdown-head strong {
+  font-size: 0.95rem;
+  color: #f5efff;
+}
+
+.holdings-ai-breakdown-head span {
+  color: #bfa8dc;
+  font-size: 0.73rem;
+}
+
+.holdings-ai-risk-flags {
+  color: #ffa68f !important;
+  font-size: 0.8rem !important;
+}
+
+.holdings-ai-block-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+
 .upload-grid {
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 12px;
@@ -3008,6 +3162,15 @@ td {
 
   .dip-alerts-form {
     grid-template-columns: 1fr;
+  }
+
+  .holdings-ai-actions {
+    width: 100%;
+  }
+
+  .holdings-ai-actions .refresh-btn {
+    width: 100%;
+    justify-content: center;
   }
 
   .risk-window-controls {
