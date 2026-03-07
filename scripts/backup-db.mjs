@@ -30,6 +30,34 @@ function readNormalizedEnv(name, fallback = "") {
   return withoutEdgeQuotes.trim();
 }
 
+function parseBackblazeRegionFromEndpoint(endpoint) {
+  if (!endpoint) {
+    return null;
+  }
+
+  try {
+    const host = new URL(endpoint).hostname.toLowerCase();
+    const match = host.match(/^s3\.([a-z0-9-]+)\.backblazeb2\.com$/);
+    return match?.[1] || null;
+  } catch {
+    return null;
+  }
+}
+
+function stripFlexibleChecksumMiddleware(client) {
+  try {
+    client.middlewareStack.remove("flexibleChecksumsMiddleware");
+  } catch {}
+
+  try {
+    client.middlewareStack.remove("flexibleChecksumsInputMiddleware");
+  } catch {}
+
+  try {
+    client.middlewareStack.remove("flexibleChecksumsResponseMiddleware");
+  } catch {}
+}
+
 function readOffsiteConfig() {
   if (!readBooleanEnv("BACKUP_OFFSITE_ENABLED", false)) {
     return null;
@@ -90,6 +118,10 @@ async function uploadOffsiteIfEnabled(backupPath) {
       secretAccessKey: config.secretAccessKey,
     },
   });
+
+  if (parseBackblazeRegionFromEndpoint(config.endpoint)) {
+    stripFlexibleChecksumMiddleware(client);
+  }
 
   await client.send(
     new PutObjectCommand({

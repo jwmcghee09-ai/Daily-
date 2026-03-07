@@ -73,6 +73,42 @@ function resolveOffsiteRegion(endpoint: string | null): string {
   return "us-east-1";
 }
 
+function stripFlexibleChecksumMiddleware(client: S3Client): void {
+  try {
+    client.middlewareStack.remove("flexibleChecksumsMiddleware");
+  } catch {}
+
+  try {
+    client.middlewareStack.remove("flexibleChecksumsInputMiddleware");
+  } catch {}
+
+  try {
+    client.middlewareStack.remove("flexibleChecksumsResponseMiddleware");
+  } catch {}
+}
+
+function createOffsiteS3Client(config: OffsiteBackupConfig): S3Client {
+  const client = new S3Client({
+    region: config.region,
+    endpoint: config.endpoint || undefined,
+    forcePathStyle: config.forcePathStyle,
+    requestChecksumCalculation: "WHEN_REQUIRED",
+    responseChecksumValidation: "WHEN_REQUIRED",
+    credentials: {
+      accessKeyId: config.accessKeyId,
+      secretAccessKey: config.secretAccessKey,
+    },
+  });
+
+  // Backblaze B2's S3-compatible endpoint can reject the AWS SDK v3 flexible
+  // checksum path with IncompleteBody on PutObject even for buffered uploads.
+  if (parseBackblazeRegionFromEndpoint(config.endpoint)) {
+    stripFlexibleChecksumMiddleware(client);
+  }
+
+  return client;
+}
+
 function readAwsStatusCode(error: unknown): number | null {
   const raw = (error as { $metadata?: { httpStatusCode?: unknown } } | null)?.$metadata?.httpStatusCode;
   if (typeof raw !== "number" || !Number.isFinite(raw)) {
@@ -421,17 +457,7 @@ async function uploadBackupOffsite(
 
   const objectKey = createOffsiteObjectKey(config.prefix, backupPath);
   const body = fs.readFileSync(backupPath);
-  const client = new S3Client({
-    region: config.region,
-    endpoint: config.endpoint || undefined,
-    forcePathStyle: config.forcePathStyle,
-    requestChecksumCalculation: "WHEN_REQUIRED",
-    responseChecksumValidation: "WHEN_REQUIRED",
-    credentials: {
-      accessKeyId: config.accessKeyId,
-      secretAccessKey: config.secretAccessKey,
-    },
-  });
+  const client = createOffsiteS3Client(config);
 
   const maxAttempts = readOffsiteUploadMaxAttempts();
   let putSucceeded = false;

@@ -224,6 +224,7 @@ Because Render Cron runs separately from your web service disk, use Cron to call
 1. Set env vars:
    - On Web Service: `BACKUP_PASSPHRASE`, `BACKUP_OUTPUT_DIR=/var/data/backups`, `BACKUP_CRON_TOKEN`, plus `BACKUP_OFFSITE_*` vars above
    - On Cron Job: `BACKUP_CRON_TOKEN` (same value)
+   - If you deploy with the included `render.yaml`, it provisions `spectre-nightly-backup` and `spectre-weekly-restore-test`; set `BACKUP_BASE_URL` on those cron services to your live app URL (for example `https://spectre-portfolio.onrender.com`)
 
 2. Cron job command for backup:
 

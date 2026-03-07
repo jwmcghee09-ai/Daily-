@@ -12,16 +12,64 @@ services:
         value: production
       - key: SQLITE_DB_PATH
         value: /var/data/aladdin.sqlite
+      - key: BACKUP_OUTPUT_DIR
+        value: /var/data/backups
+      - key: BACKUP_OFFSITE_ENABLED
+        value: true
+      - key: BACKUP_OFFSITE_FORCE_PATH_STYLE
+        value: true
+      - key: BACKUP_OFFSITE_VERIFY_UPLOAD
+        value: true
+      - key: BACKUP_OFFSITE_PREFIX
+        value: spectre/prod
+      - key: BACKUP_PASSPHRASE
+        sync: false
+      - key: BACKUP_CRON_TOKEN
+        sync: false
+      - key: BACKUP_OFFSITE_BUCKET
+        sync: false
+      - key: BACKUP_OFFSITE_REGION
+        sync: false
+      - key: BACKUP_OFFSITE_ENDPOINT
+        sync: false
+      - key: BACKUP_OFFSITE_ACCESS_KEY_ID
+        sync: false
+      - key: BACKUP_OFFSITE_SECRET_ACCESS_KEY
+        sync: false
+      - key: BACKUP_OFFSITE_SSE
+        sync: false
     disk:
       name: spectre-sqlite-data
       mountPath: /var/data
       sizeGB: 1
   - type: cron
+    name: spectre-nightly-backup
+    runtime: node
+    schedule: "0 17 * * *"
+    buildCommand: npm ci
+    startCommand: 'curl -fsS -X POST -H "x-backup-cron-token: $BACKUP_CRON_TOKEN" "$BACKUP_BASE_URL/api/internal/ops/backup"'
+    envVars:
+      - key: BACKUP_BASE_URL
+        sync: false
+      - key: BACKUP_CRON_TOKEN
+        sync: false
+  - type: cron
+    name: spectre-weekly-restore-test
+    runtime: node
+    schedule: "30 17 * * 0"
+    buildCommand: npm ci
+    startCommand: 'curl -fsS -X POST -H "x-backup-cron-token: $BACKUP_CRON_TOKEN" "$BACKUP_BASE_URL/api/internal/ops/backup/restore-test"'
+    envVars:
+      - key: BACKUP_BASE_URL
+        sync: false
+      - key: BACKUP_CRON_TOKEN
+        sync: false
+  - type: cron
     name: spectre-platinum-live-scan
     runtime: node
     schedule: "*/5 * * * *"
     buildCommand: npm ci
-    startCommand: curl -fsS -X POST -H "Authorization: Bearer $BACKUP_CRON_TOKEN" "$PLATINUM_SCAN_BASE_URL/api/internal/ops/platinum/scan?mode=live"
+    startCommand: 'curl -fsS -X POST -H "Authorization: Bearer $BACKUP_CRON_TOKEN" "$PLATINUM_SCAN_BASE_URL/api/internal/ops/platinum/scan?mode=live"'
     envVars:
       - key: PLATINUM_SCAN_BASE_URL
         sync: false
