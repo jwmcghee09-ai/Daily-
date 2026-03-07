@@ -1,4 +1,4 @@
-export type DataSource = "super" | "asx" | "gold" | "index" | "fund" | "crypto" | "tax";
+export type DataSource = "super" | "asx" | "gold" | "index" | "fund" | "crypto" | "tax" | "savings";
 
 export interface CsvRow {
   [key: string]: string | number | null | undefined;
@@ -153,6 +153,10 @@ export function parseRowsToHoldings(rows: CsvRow[], source: DataSource): Portfol
     return parseTaxTransactionRows(rows, importedAt);
   }
 
+  if (source === "savings" && looksLikeSavingsTransactionLedger(rows)) {
+    return parseSavingsTransactionRows(rows, importedAt);
+  }
+
   return rows
     .map((row, index) => toHolding(row, source, importedAt, index))
     .filter((holding): holding is PortfolioHolding => Boolean(holding));
@@ -289,6 +293,76 @@ function parseTaxTransactionRows(rows: CsvRow[], importedAt: string): PortfolioH
   return [holding];
 }
 
+function looksLikeSavingsTransactionLedger(rows: CsvRow[]): boolean {
+  return rows.some((raw) => {
+    const row = normalizeRowKeys(raw);
+    return Boolean((row.amount || row.credit || row.debit) && (row.date || row.transactiondate || row.valuedate || row.posteddate));
+  });
+}
+
+function parseSavingsTransactionRows(rows: CsvRow[], importedAt: string): PortfolioHolding[] {
+  let netFlow = 0;
+  let latestDate = "";
+  let latestBalance = Number.NaN;
+
+  for (const raw of rows) {
+    const row = normalizeRowKeys(raw);
+    const parsedDate = parseDate(readFirst(row, FIELD_ALIASES.date));
+    if (!parsedDate) {
+      continue;
+    }
+
+    const rawAmount = toNumber(String(row.amount || ""));
+    const rawCredit = toNumber(String(row.credit || ""));
+    const rawDebit = toNumber(String(row.debit || ""));
+
+    let signedAmount = Number.NaN;
+    if (Number.isFinite(rawAmount)) {
+      signedAmount = rawAmount;
+    } else if (Number.isFinite(rawCredit) || Number.isFinite(rawDebit)) {
+      signedAmount = (Number.isFinite(rawCredit) ? rawCredit : 0) - (Number.isFinite(rawDebit) ? rawDebit : 0);
+    }
+
+    if (Number.isFinite(signedAmount)) {
+      netFlow += signedAmount;
+    }
+
+    const balance = toNumber(String(row.balance || row.runningbalance || row.accountbalance || ""));
+    if (Number.isFinite(balance) && parsedDate >= latestDate) {
+      latestBalance = balance;
+    }
+
+    if (parsedDate > latestDate) {
+      latestDate = parsedDate;
+    }
+  }
+
+  const fallbackValue = Number(netFlow.toFixed(2));
+  const value = Number((Number.isFinite(latestBalance) && latestBalance > 0 ? latestBalance : fallbackValue).toFixed(2));
+  if (!Number.isFinite(value) || value <= 0) {
+    return [];
+  }
+
+  const reportDate = latestDate || todayDate();
+  const holding: PortfolioHolding = {
+    id: `savings-transaction-net-${reportDate}`,
+    source: "savings",
+    account: "Savings Account",
+    ticker: "SAVINGSCASH",
+    name: "Savings Cash Position",
+    units: 1,
+    price: value,
+    prevClose: value,
+    value,
+    costBase: value,
+    sector: "Savings",
+    reportDate,
+    importedAt,
+  };
+
+  return [holding];
+}
+
 function parseCryptoTradeRows(rows: CsvRow[], importedAt: string): PortfolioHolding[] {
   interface CryptoAggregate {
     account: string;
@@ -413,6 +487,8 @@ function toHolding(
     readFirst(row, FIELD_ALIASES.account) ||
     (source === "super"
       ? "Superannuation"
+      : source === "savings"
+        ? "Savings Account"
       : source === "gold"
         ? "ABC Bullion"
         : source === "index"
@@ -439,12 +515,14 @@ function toHolding(
       ? `GOLD-${index + 1}`
       : source === "index"
         ? `INDEX-${index + 1}`
-        : source === "fund"
-          ? `FUND-${index + 1}`
-          : source === "tax"
-            ? `TAX-${index + 1}`
-          : source === "crypto"
-            ? `CRYPTO-${index + 1}`
+      : source === "fund"
+        ? `FUND-${index + 1}`
+      : source === "savings"
+        ? `SAVINGS-${index + 1}`
+      : source === "tax"
+        ? `TAX-${index + 1}`
+      : source === "crypto"
+        ? `CRYPTO-${index + 1}`
           : name);
   const ticker = normalizeTicker(tickerCandidate);
   const maxTickerLength = source === "asx" ? 8 : source === "crypto" ? 20 : 16;
@@ -488,6 +566,8 @@ function toHolding(
     readFirst(row, FIELD_ALIASES.sector) ||
     (source === "super"
       ? "Super"
+      : source === "savings"
+        ? "Savings"
       : source === "gold"
         ? "Precious Metals"
         : source === "index"

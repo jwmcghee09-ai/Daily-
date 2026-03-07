@@ -1241,6 +1241,7 @@ export default function Home() {
 
   const assetSplit = useMemo(() => {
     const superValue = state.holdings.filter((holding) => holding.source === "super").reduce((acc, holding) => acc + holding.value, 0);
+    const savingsValue = state.holdings.filter((holding) => holding.source === "savings").reduce((acc, holding) => acc + holding.value, 0);
     const asxValue = state.holdings.filter((holding) => holding.source === "asx").reduce((acc, holding) => acc + holding.value, 0);
     const cryptoValue = state.holdings.filter((holding) => holding.source === "crypto").reduce((acc, holding) => acc + holding.value, 0);
     const indexValue = state.holdings.filter((holding) => holding.source === "index").reduce((acc, holding) => acc + holding.value, 0);
@@ -1250,6 +1251,7 @@ export default function Home() {
 
     const raw = [
       { name: "Super", value: superValue },
+      { name: "Savings", value: savingsValue },
       { name: "ASX Shares", value: asxValue },
       { name: "Crypto", value: cryptoValue },
       { name: "Indices", value: indexValue },
@@ -2408,6 +2410,15 @@ export default function Home() {
           onUpload={(event) => onUpload(event, "crypto")}
           template={cryptoTemplateCsv()}
           templateName="crypto-template.csv"
+          disabled={working || loading}
+        />
+        <UploadCard
+          title="Savings Report File"
+          description="Upload savings account report or transaction export."
+          help="Imports savings account reports. Transaction-ledger files are converted into a net savings cash position when possible."
+          onUpload={(event) => onUpload(event, "savings")}
+          template={savingsTemplateCsv()}
+          templateName="savings-template.csv"
           disabled={working || loading}
         />
         <UploadCard
@@ -3693,6 +3704,14 @@ function cryptoTemplateCsv(): string {
     "account,ticker,name,units,price,value,cost base,sector,date",
     "Binance Wallet,BTC,Bitcoin,0.1500,97250,14587.5,13200,Crypto,2026-02-18",
     "Coinbase,ETH,Ethereum,1.8000,5320,9576,8400,Crypto,2026-02-18",
+  ].join("\n");
+}
+
+function savingsTemplateCsv(): string {
+  return [
+    "date,description,amount,balance,account",
+    "2026-03-01,Salary Deposit,2500,17240.55,Savings Account",
+    "2026-03-03,Rent Payment,-680,16560.55,Savings Account",
   ].join("\n");
 }
 

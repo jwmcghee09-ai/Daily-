@@ -109,7 +109,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
 .divider{height:1px;background:var(--border);margin:0}
 
 /* ── UPLOAD GRID ── */
-.upload-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:var(--shadow)}
+.upload-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:var(--shadow)}
 .upload-card{background:linear-gradient(165deg,rgba(16,11,28,.96) 0%,rgba(10,7,18,.95) 100%);padding:1.6rem 1.8rem;border-top:2px solid rgba(255,77,26,.75);transition:all .24s;cursor:pointer;display:flex;flex-direction:column;gap:.35rem}
 .upload-card:hover{transform:translateY(-2px);background:linear-gradient(165deg,rgba(20,14,34,.97) 0%,rgba(14,10,24,.96) 100%);box-shadow:0 0 0 1px rgba(255,77,26,.12) inset}
 .upload-num{font-family:var(--mono);font-size:.52rem;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,77,26,.6);font-weight:600}
@@ -541,7 +541,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     <div class="sec-head">
       <h2 class="sec-title">Data Uploads</h2>
       <div class="sec-line"></div>
-      <span class="sec-label" id="uploads-source-count">7 sources</span>
+      <span class="sec-label" id="uploads-source-count">8 sources</span>
     </div>
     <input id="upload-file-input" type="file" accept=".csv,.tsv,.psv,.txt,.json,.xlsx,.xls,.xlsm,.xlsb,.numbers,.ods,text/csv,text/tab-separated-values,application/json,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,application/vnd.ms-excel.sheet.macroEnabled.12,application/vnd.ms-excel.sheet.binary.macroEnabled.12,application/vnd.oasis.opendocument.spreadsheet,application/x-iwork-numbers-sffnumbers" style="display:none" />
     <div class="upload-grid">
@@ -575,14 +575,20 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
         <div class="upload-desc">Upload crypto holdings or exchange export CSV.</div>
         <div class="upload-action">Upload File</div>
       </div>
+      <div class="upload-card" data-source="savings">
+        <div class="upload-num">06 — Savings</div>
+        <div class="upload-title">Savings Report</div>
+        <div class="upload-desc">Upload savings account report or transaction export.</div>
+        <div class="upload-action">Upload File</div>
+      </div>
       <div class="upload-card" data-source="tax">
-        <div class="upload-num">06 — Tax</div>
+        <div class="upload-num">07 — Tax</div>
         <div class="upload-title">Tax Report</div>
         <div class="upload-desc">Upload tax report or transaction export (CSV/XLSX/XLS/NUMBERS/ODS).</div>
         <div class="upload-action">Upload File</div>
       </div>
       <div class="upload-card" data-source="gold">
-        <div class="upload-num">07 — Bullion</div>
+        <div class="upload-num">08 — Bullion</div>
         <div class="upload-title">ABC Bullion</div>
         <div class="upload-desc">Upload ABC Bullion gold and silver holdings CSV.</div>
         <div class="upload-action">Upload File</div>
@@ -1137,8 +1143,8 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   const M = "rgba(255,255,255,.055)";
   const TEXT = "rgba(180,176,204,.65)";
   const MONO = "'DM Mono', monospace";
-  const SOURCE_LABEL = { super: "SUPER", asx: "ASX", gold: "GOLD", index: "INDEX", fund: "FUND", crypto: "CRYPTO", tax: "TAX" };
-  const SOURCE_BADGE = { super: "super", asx: "asx", gold: "gold", index: "fund", fund: "fund", crypto: "crypto", tax: "fund" };
+  const SOURCE_LABEL = { super: "SUPER", asx: "ASX", gold: "GOLD", index: "INDEX", fund: "FUND", crypto: "CRYPTO", savings: "SAVINGS", tax: "TAX" };
+  const SOURCE_BADGE = { super: "super", asx: "asx", gold: "gold", index: "fund", fund: "fund", crypto: "crypto", savings: "fund", tax: "fund" };
   const RISK_WINDOW_DAYS = { "1M": 31, "3M": 92, "6M": 183, "1Y": 366 };
   const RISK_API_WINDOW_MAP = { "1M": "1M", "3M": "3M", "6M": "1Y", "1Y": "1Y", "ALL": "1Y" };
   const PLATINUM_EMAIL = "jwmcghee09@gmail.com";

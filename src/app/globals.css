@@ -1075,6 +1075,12 @@ tr:hover td {
   border-color: #ffd29f;
 }
 
+.source-badge.savings {
+  background: linear-gradient(135deg, #88d7ff 0%, #3a8fca 100%);
+  color: #05131f;
+  border-color: #b6e7ff;
+}
+
 .source-badge.crypto {
   background: linear-gradient(135deg, #9f79ff 0%, #5c42da 100%);
   color: #f7f3ff;
@@ -1853,7 +1859,7 @@ tr:hover td {
 }
 
 .upload-grid {
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
   margin-inline: 0;
 }
@@ -5873,7 +5879,8 @@ td {
 
 .spectre-app .source-badge.fund,
 .spectre-app .source-badge.index,
-.spectre-app .source-badge.tax {
+.spectre-app .source-badge.tax,
+.spectre-app .source-badge.savings {
   background: rgba(255, 255, 255, 0.05);
   color: #fff;
   border: 1px solid rgba(255, 255, 255, 0.12);
