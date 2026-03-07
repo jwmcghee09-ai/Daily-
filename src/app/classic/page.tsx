@@ -1240,6 +1240,7 @@ export default function Home() {
     const cryptoValue = state.holdings.filter((holding) => holding.source === "crypto").reduce((acc, holding) => acc + holding.value, 0);
     const indexValue = state.holdings.filter((holding) => holding.source === "index").reduce((acc, holding) => acc + holding.value, 0);
     const fundValue = state.holdings.filter((holding) => holding.source === "fund").reduce((acc, holding) => acc + holding.value, 0);
+    const taxValue = state.holdings.filter((holding) => holding.source === "tax").reduce((acc, holding) => acc + holding.value, 0);
     const bullionValue = state.holdings.filter((holding) => holding.source === "gold").reduce((acc, holding) => acc + holding.value, 0);
 
     const raw = [
@@ -1248,6 +1249,7 @@ export default function Home() {
       { name: "Crypto", value: cryptoValue },
       { name: "Indices", value: indexValue },
       { name: "Mutual Funds", value: fundValue },
+      { name: "Tax Records", value: taxValue },
       { name: "Bullion", value: bullionValue },
     ];
 
@@ -2396,6 +2398,15 @@ export default function Home() {
           onUpload={(event) => onUpload(event, "crypto")}
           template={cryptoTemplateCsv()}
           templateName="crypto-template.csv"
+          disabled={working || loading}
+        />
+        <UploadCard
+          title="Tax Report File"
+          description="Upload tax report or transaction export (CSV, XLSX, XLS, NUMBERS, ODS)."
+          help="Imports tax report data. Transaction-ledger tax files are converted into a net tax position; holding-style reports are imported row by row."
+          onUpload={(event) => onUpload(event, "tax")}
+          template={taxTemplateCsv()}
+          templateName="tax-template.csv"
           disabled={working || loading}
         />
         <UploadCard
@@ -3580,6 +3591,14 @@ function cryptoTemplateCsv(): string {
     "account,ticker,name,units,price,value,cost base,sector,date",
     "Binance Wallet,BTC,Bitcoin,0.1500,97250,14587.5,13200,Crypto,2026-02-18",
     "Coinbase,ETH,Ethereum,1.8000,5320,9576,8400,Crypto,2026-02-18",
+  ].join("\n");
+}
+
+function taxTemplateCsv(): string {
+  return [
+    "date,transaction type,transaction subcategory,description payer details,amount",
+    "2026-03-01,Tax,PAYG,Withholding Tax,-1250.45",
+    "2026-03-04,Tax,Refund,ATO Tax Refund,340.1",
   ].join("\n");
 }
 

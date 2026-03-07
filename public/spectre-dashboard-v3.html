@@ -541,7 +541,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     <div class="sec-head">
       <h2 class="sec-title">Data Uploads</h2>
       <div class="sec-line"></div>
-      <span class="sec-label" id="uploads-source-count">6 sources</span>
+      <span class="sec-label" id="uploads-source-count">7 sources</span>
     </div>
     <input id="upload-file-input" type="file" accept=".csv,.tsv,.txt,.xlsx,.xls,.numbers,.ods,text/csv,text/tab-separated-values,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,application/vnd.oasis.opendocument.spreadsheet,application/x-iwork-numbers-sffnumbers" style="display:none" />
     <div class="upload-grid">
@@ -575,8 +575,14 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
         <div class="upload-desc">Upload crypto holdings or exchange export CSV.</div>
         <div class="upload-action">Upload File</div>
       </div>
+      <div class="upload-card" data-source="tax">
+        <div class="upload-num">06 — Tax</div>
+        <div class="upload-title">Tax Report</div>
+        <div class="upload-desc">Upload tax report or transaction export (CSV/XLSX/XLS/NUMBERS/ODS).</div>
+        <div class="upload-action">Upload File</div>
+      </div>
       <div class="upload-card" data-source="gold">
-        <div class="upload-num">06 — Bullion</div>
+        <div class="upload-num">07 — Bullion</div>
         <div class="upload-title">ABC Bullion</div>
         <div class="upload-desc">Upload ABC Bullion gold and silver holdings CSV.</div>
         <div class="upload-action">Upload File</div>
@@ -1131,8 +1137,8 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   const M = "rgba(255,255,255,.055)";
   const TEXT = "rgba(180,176,204,.65)";
   const MONO = "'DM Mono', monospace";
-  const SOURCE_LABEL = { super: "SUPER", asx: "ASX", gold: "GOLD", index: "INDEX", fund: "FUND", crypto: "CRYPTO" };
-  const SOURCE_BADGE = { super: "super", asx: "asx", gold: "gold", index: "fund", fund: "fund", crypto: "crypto" };
+  const SOURCE_LABEL = { super: "SUPER", asx: "ASX", gold: "GOLD", index: "INDEX", fund: "FUND", crypto: "CRYPTO", tax: "TAX" };
+  const SOURCE_BADGE = { super: "super", asx: "asx", gold: "gold", index: "fund", fund: "fund", crypto: "crypto", tax: "fund" };
   const RISK_WINDOW_DAYS = { "1M": 31, "3M": 92, "6M": 183, "1Y": 366 };
   const RISK_API_WINDOW_MAP = { "1M": "1M", "3M": "3M", "6M": "1Y", "1Y": "1Y", "ALL": "1Y" };
   const PLATINUM_EMAIL = "jwmcghee09@gmail.com";

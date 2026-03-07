@@ -1069,6 +1069,12 @@ tr:hover td {
   border-color: #8be3c8;
 }
 
+.source-badge.tax {
+  background: linear-gradient(135deg, #f6b35e 0%, #d7862a 100%);
+  color: #1c1305;
+  border-color: #ffd29f;
+}
+
 .source-badge.crypto {
   background: linear-gradient(135deg, #9f79ff 0%, #5c42da 100%);
   color: #f7f3ff;
@@ -5866,7 +5872,8 @@ td {
 }
 
 .spectre-app .source-badge.fund,
-.spectre-app .source-badge.index {
+.spectre-app .source-badge.index,
+.spectre-app .source-badge.tax {
   background: rgba(255, 255, 255, 0.05);
   color: #fff;
   border: 1px solid rgba(255, 255, 255, 0.12);

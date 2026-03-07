@@ -419,6 +419,10 @@ function normalizeSource(value: unknown): DataSource {
     return "super";
   }
 
+  if (value === "tax") {
+    return "tax";
+  }
+
   if (value === "gold") {
     return "gold";
   }
@@ -536,6 +540,8 @@ function sanitizeHolding(raw: PortfolioHolding, source: DataSource, index: numbe
       raw.account,
       source === "super"
         ? "Superannuation"
+        : source === "tax"
+          ? "Tax Records"
         : source === "gold"
           ? "ABC Bullion"
           : source === "index"
@@ -557,6 +563,8 @@ function sanitizeHolding(raw: PortfolioHolding, source: DataSource, index: numbe
       raw.sector,
       source === "super"
         ? "Super"
+        : source === "tax"
+          ? "Tax"
         : source === "gold"
           ? "Precious Metals"
           : source === "index"
@@ -1324,6 +1332,10 @@ export async function estimateHistoricalRiskFromYahoo(
   const valueByTicker = new Map<string, { ticker: string; source: DataSource; value: number; label: string }>();
   for (const row of rows) {
     const source = normalizeSource(row.source);
+    if (source === "tax") {
+      continue;
+    }
+
     const ticker = sanitizeString(row.ticker, "").toUpperCase();
     const value = sanitizeNumber(row.value, 0);
     if (!ticker || value <= 0) {

@@ -1,4 +1,4 @@
-export type DataSource = "super" | "asx" | "gold" | "index" | "fund" | "crypto";
+export type DataSource = "super" | "asx" | "gold" | "index" | "fund" | "crypto" | "tax";
 
 export interface CsvRow {
   [key: string]: string | number | null | undefined;
@@ -148,6 +148,10 @@ export function parseRowsToHoldings(rows: CsvRow[], source: DataSource): Portfol
     return parseSuperTransactionRows(rows, importedAt);
   }
 
+  if (source === "tax" && looksLikeSuperTransactionLedger(rows)) {
+    return parseTaxTransactionRows(rows, importedAt);
+  }
+
   return rows
     .map((row, index) => toHolding(row, source, importedAt, index))
     .filter((holding): holding is PortfolioHolding => Boolean(holding));
@@ -215,6 +219,68 @@ function parseSuperTransactionRows(rows: CsvRow[], importedAt: string): Portfoli
     value,
     costBase: value,
     sector: "Super",
+    reportDate,
+    importedAt,
+  };
+
+  return [holding];
+}
+
+function parseTaxTransactionRows(rows: CsvRow[], importedAt: string): PortfolioHolding[] {
+  let netFlow = 0;
+  let grossCredits = 0;
+  let grossDebits = 0;
+  let latestDate = "";
+
+  for (const raw of rows) {
+    const row = normalizeRowKeys(raw);
+    const dateRaw = String(row.date || "").trim();
+    const amount = toNumber(String(row.amount || ""));
+
+    if (!Number.isFinite(amount) || !dateRaw) {
+      continue;
+    }
+
+    const parsedDate = parseDate(dateRaw);
+    if (!parsedDate) {
+      continue;
+    }
+
+    netFlow += amount;
+    if (amount >= 0) {
+      grossCredits += amount;
+    } else {
+      grossDebits += Math.abs(amount);
+    }
+
+    if (parsedDate > latestDate) {
+      latestDate = parsedDate;
+    }
+  }
+
+  const netAbs = Math.abs(netFlow);
+  const grossFlow = grossCredits + grossDebits;
+  const value = Number((netAbs > 0 ? netAbs : grossFlow).toFixed(2));
+
+  if (!Number.isFinite(value) || value <= 0) {
+    return [];
+  }
+
+  const reportDate = latestDate || todayDate();
+  const isPayable = netFlow < 0;
+
+  const holding: PortfolioHolding = {
+    id: `tax-transaction-net-${reportDate}`,
+    source: "tax",
+    account: "Tax Records",
+    ticker: isPayable ? "TAXPAYABLE" : "TAXCREDIT",
+    name: isPayable ? "Tax Position (Net Payable)" : "Tax Position (Net Credit)",
+    units: 1,
+    price: value,
+    prevClose: value,
+    value,
+    costBase: value,
+    sector: "Tax",
     reportDate,
     importedAt,
   };
@@ -352,6 +418,8 @@ function toHolding(
           ? "Index Holdings"
           : source === "fund"
             ? "Mutual Funds"
+            : source === "tax"
+              ? "Tax Records"
             : source === "crypto"
               ? "Crypto Wallet"
               : "Brokerage");
@@ -372,6 +440,8 @@ function toHolding(
         ? `INDEX-${index + 1}`
         : source === "fund"
           ? `FUND-${index + 1}`
+          : source === "tax"
+            ? `TAX-${index + 1}`
           : source === "crypto"
             ? `CRYPTO-${index + 1}`
           : name);
@@ -423,6 +493,8 @@ function toHolding(
           ? "Index"
           : source === "fund"
             ? "Mutual Fund"
+            : source === "tax"
+              ? "Tax"
             : source === "crypto"
               ? "Crypto"
               : "Equity");

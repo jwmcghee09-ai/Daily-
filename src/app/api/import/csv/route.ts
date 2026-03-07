@@ -21,7 +21,7 @@ interface ImportCsvPayload {
 }
 
 function isValidSource(value: unknown): value is DataSource {
-  return value === "super" || value === "asx" || value === "gold" || value === "index" || value === "fund" || value === "crypto";
+  return value === "super" || value === "asx" || value === "gold" || value === "index" || value === "fund" || value === "crypto" || value === "tax";
 }
 
 function isValidParsedHolding(value: unknown): value is PortfolioHolding {
@@ -149,7 +149,7 @@ export async function POST(request: Request) {
     }
 
     if (!isValidSource(payload.source)) {
-      return NextResponse.json({ error: "Invalid source. Must be 'super', 'asx', 'gold', 'index', 'fund', or 'crypto'." }, { status: 400 });
+      return NextResponse.json({ error: "Invalid source. Must be 'super', 'asx', 'gold', 'index', 'fund', 'crypto', or 'tax'." }, { status: 400 });
     }
 
     const normalizedInput = toCsvText(payload);
