@@ -355,6 +355,34 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 .console-val{font-family:var(--disp);font-size:1.6rem;letter-spacing:.04em;color:var(--purple-hi)}
 @media(max-width:600px){.console-grid{grid-template-columns:1fr 1fr}}
 
+.console-ai{margin-top:1rem;background:rgba(12,8,22,.78);border:1px solid rgba(192,132,252,.18);border-radius:12px;padding:1rem}
+.console-ai-head{display:flex;align-items:center;justify-content:space-between;gap:.7rem;flex-wrap:wrap}
+.console-ai-title{font-family:var(--mono);font-size:.58rem;letter-spacing:.16em;text-transform:uppercase;color:var(--purple-hi)}
+.console-ai-meta{font-family:var(--mono);font-size:.52rem;color:var(--muted)}
+.console-ai-note{font-size:.76rem;color:var(--muted2);line-height:1.6;margin:.55rem 0 .7rem}
+.console-ai-form{display:grid;gap:.6rem}
+.console-ai-textarea{width:100%;min-height:82px;resize:vertical;background:rgba(7,4,15,.9);border:1px solid rgba(192,132,252,.22);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:.66rem;line-height:1.6;padding:.7rem .75rem}
+.console-ai-textarea:focus-visible{outline:1px solid rgba(192,132,252,.65);outline-offset:1px}
+.console-ai-actions{display:flex;align-items:center;gap:.55rem}
+.console-ai-btn{font-family:var(--mono);font-size:.58rem;letter-spacing:.11em;text-transform:uppercase;color:#fff;background:linear-gradient(135deg,var(--orange) 0%,var(--orange-dk) 100%);border:1px solid rgba(255,132,113,.45);border-radius:8px;padding:.52rem 1rem;cursor:pointer;transition:all .2s}
+.console-ai-btn:hover{transform:translateY(-1px);filter:brightness(1.04)}
+.console-ai-btn:disabled{opacity:.55;cursor:not-allowed;transform:none;filter:none}
+.console-ai-error{margin-top:.6rem;font-family:var(--mono);font-size:.57rem;color:#ffb29f}
+.console-ai-output{margin-top:.75rem;display:grid;gap:.65rem}
+.console-ai-block{background:rgba(10,7,18,.86);border:1px solid rgba(192,132,252,.14);border-radius:8px;padding:.72rem .78rem}
+.console-ai-block h4{font-family:var(--mono);font-size:.52rem;letter-spacing:.14em;text-transform:uppercase;color:var(--purple-hi);margin-bottom:.42rem}
+.console-ai-block p{font-size:.75rem;line-height:1.66;color:var(--text)}
+.console-ai-block ul{margin:0;padding-left:1rem;display:grid;gap:.28rem}
+.console-ai-block li{font-size:.7rem;line-height:1.55;color:var(--muted2)}
+.console-ai-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.6rem}
+.console-ai-holding-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.55rem}
+.console-ai-holding{background:rgba(8,6,15,.92);border:1px solid rgba(192,132,252,.11);border-radius:8px;padding:.62rem .66rem}
+.console-ai-holding-head{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:.35rem}
+.console-ai-holding-head strong{font-family:var(--mono);font-size:.68rem;color:#fff;letter-spacing:.08em}
+.console-ai-holding-head span{font-family:var(--mono);font-size:.5rem;color:var(--muted)}
+.console-ai-risk{margin-top:.35rem;font-family:var(--mono);font-size:.56rem;color:#ffb38f}
+@media(max-width:760px){.console-ai-grid,.console-ai-holding-grid{grid-template-columns:1fr}}
+
 /* ── MOBILE CENTERING (in-app dashboard) ── */
 @media(max-width:1024px){
   .nav-inner{padding:0 1.15rem}
@@ -620,6 +648,21 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
             <div class="console-lbl">Tracking Error</div>
             <div class="console-val" id="pro-tracking-error">14.2%</div>
           </div>
+        </div>
+        <div class="console-ai" id="pro-ai-panel">
+          <div class="console-ai-head">
+            <div class="console-ai-title">Ask AI Holdings Drivers</div>
+            <div class="console-ai-meta" id="pro-ai-meta">No analysis yet</div>
+          </div>
+          <p class="console-ai-note">Ask what may be influencing your holdings value, momentum, and risk right now.</p>
+          <div class="console-ai-form">
+            <textarea class="console-ai-textarea" id="pro-ai-question" maxlength="700" placeholder="What may be influencing the value of my current holdings?">What may be influencing the value of my current holdings?</textarea>
+            <div class="console-ai-actions">
+              <button type="button" class="console-ai-btn" id="pro-ai-ask-btn">Ask AI</button>
+            </div>
+          </div>
+          <div class="console-ai-error" id="pro-ai-error" hidden></div>
+          <div class="console-ai-output" id="pro-ai-output"></div>
         </div>
       </div>
     </div>
@@ -1093,6 +1136,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   const RISK_WINDOW_DAYS = { "1M": 31, "3M": 92, "6M": 183, "1Y": 366 };
   const RISK_API_WINDOW_MAP = { "1M": "1M", "3M": "3M", "6M": "1Y", "1Y": "1Y", "ALL": "1Y" };
   const PLATINUM_EMAIL = "jwmcghee09@gmail.com";
+  const HOLDINGS_AI_DEFAULT_QUESTION = "What may be influencing the value of my current holdings?";
 
   const state = {
     sessionUser: null,
@@ -1100,6 +1144,9 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     alerts: [],
     availableAlertTickers: [],
     historicalRiskEstimate: null,
+    holdingsAi: null,
+    holdingsAiError: "",
+    holdingsAiLoading: false,
     riskWindow: "6M",
     uploadSource: null,
   };
@@ -1745,6 +1792,12 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     if (proConsole) {
       proConsole.style.display = payload.user.proEnabled ? "" : "none";
     }
+    if (!payload.user.proEnabled) {
+      state.holdingsAi = null;
+      state.holdingsAiError = "";
+      state.holdingsAiLoading = false;
+    }
+    renderHoldingsAi();
   }
 
   async function loadPortfolio() {
@@ -1805,6 +1858,149 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
         `;
       })
       .join("");
+  }
+
+  function renderAiList(items, emptyLabel = "No data returned.") {
+    if (!Array.isArray(items) || items.length === 0) {
+      return `<p>${escapeHtml(emptyLabel)}</p>`;
+    }
+
+    return `<ul>${items.slice(0, 10).map((item) => `<li>${escapeHtml(String(item || ""))}</li>`).join("")}</ul>`;
+  }
+
+  function renderHoldingsAi() {
+    const askButton = document.getElementById("pro-ai-ask-btn");
+    const questionInput = document.getElementById("pro-ai-question");
+    const metaEl = document.getElementById("pro-ai-meta");
+    const errorEl = document.getElementById("pro-ai-error");
+    const outputEl = document.getElementById("pro-ai-output");
+    if (!(askButton instanceof HTMLButtonElement) || !(questionInput instanceof HTMLTextAreaElement) || !metaEl || !errorEl || !outputEl) {
+      return;
+    }
+
+    const hasHoldings = Array.isArray(state.portfolio?.holdings) && state.portfolio.holdings.length > 0;
+    const isPro = Boolean(state.sessionUser?.proEnabled);
+
+    askButton.disabled = state.holdingsAiLoading || !isPro || !hasHoldings;
+    askButton.textContent = state.holdingsAiLoading ? "Analyzing..." : "Ask AI";
+
+    if (questionInput.value.trim().length === 0) {
+      questionInput.value = HOLDINGS_AI_DEFAULT_QUESTION;
+    }
+
+    if (state.holdingsAiError) {
+      errorEl.hidden = false;
+      errorEl.textContent = state.holdingsAiError;
+    } else {
+      errorEl.hidden = true;
+      errorEl.textContent = "";
+    }
+
+    const analysis = state.holdingsAi;
+    if (!analysis) {
+      metaEl.textContent = "No analysis yet";
+      outputEl.innerHTML = "";
+      return;
+    }
+
+    const generatedAt = analysis.generatedAt ? formatDateTime(analysis.generatedAt) : "Now";
+    metaEl.textContent = `${generatedAt} via ${analysis.model || "AI model"}`;
+
+    const breakdown = Array.isArray(analysis.holdingBreakdown) ? analysis.holdingBreakdown.slice(0, 10) : [];
+    const breakdownHtml = breakdown.length === 0
+      ? `<p>No holding-level breakdown returned.</p>`
+      : `
+        <div class="console-ai-holding-grid">
+          ${breakdown.map((row) => {
+            const influences = Array.isArray(row.influences) && row.influences.length > 0
+              ? `<ul>${row.influences.slice(0, 6).map((item) => `<li>${escapeHtml(String(item || ""))}</li>`).join("")}</ul>`
+              : "";
+            const riskFlags = Array.isArray(row.riskFlags) && row.riskFlags.length > 0
+              ? `<div class="console-ai-risk">Risk: ${escapeHtml(row.riskFlags.join(" | "))}</div>`
+              : "";
+
+            return `
+              <div class="console-ai-holding">
+                <div class="console-ai-holding-head">
+                  <strong>${escapeHtml(String(row.ticker || "—"))}</strong>
+                  <span>Confidence ${Number.isFinite(Number(row.confidence)) ? Math.round(Number(row.confidence)) : 0}%</span>
+                </div>
+                <p>${escapeHtml(String(row.summary || ""))}</p>
+                ${influences}
+                ${riskFlags}
+              </div>
+            `;
+          }).join("")}
+        </div>
+      `;
+
+    outputEl.innerHTML = `
+      <div class="console-ai-block">
+        <h4>Answer</h4>
+        <p>${escapeHtml(String(analysis.answer || ""))}</p>
+      </div>
+      <div class="console-ai-block">
+        <h4>Portfolio Drivers</h4>
+        ${renderAiList(analysis.portfolioDrivers, "No portfolio drivers returned.")}
+      </div>
+      <div class="console-ai-block">
+        <h4>Holding-Level Influences</h4>
+        ${breakdownHtml}
+      </div>
+      <div class="console-ai-grid">
+        <div class="console-ai-block">
+          <h4>Risk Checks</h4>
+          ${renderAiList(analysis.riskChecks, "No risk checks returned.")}
+        </div>
+        <div class="console-ai-block">
+          <h4>Next Actions</h4>
+          ${renderAiList(analysis.nextActions, "No next actions returned.")}
+        </div>
+      </div>
+    `;
+  }
+
+  async function runHoldingsAi() {
+    if (!state.sessionUser?.proEnabled) {
+      showToast("Ask AI is available on Pro only.", "error");
+      return;
+    }
+
+    if (!Array.isArray(state.portfolio?.holdings) || state.portfolio.holdings.length === 0) {
+      showToast("Import holdings first, then run Ask AI.", "error");
+      return;
+    }
+
+    const questionInput = document.getElementById("pro-ai-question");
+    const question = questionInput instanceof HTMLTextAreaElement && questionInput.value.trim().length > 0
+      ? questionInput.value.trim().slice(0, 700)
+      : HOLDINGS_AI_DEFAULT_QUESTION;
+
+    state.holdingsAiLoading = true;
+    state.holdingsAiError = "";
+    renderHoldingsAi();
+
+    try {
+      const payload = await apiJson("/api/pro/holdings-ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question }),
+      });
+
+      if (!payload || !payload.analysis) {
+        throw new Error("AI analysis response was empty.");
+      }
+
+      state.holdingsAi = payload.analysis;
+      state.holdingsAiError = "";
+      showToast("Ask AI analysis updated.");
+    } catch (error) {
+      state.holdingsAiError = error instanceof Error ? error.message : "Failed to run Ask AI analysis.";
+      showToast(state.holdingsAiError, "error");
+    } finally {
+      state.holdingsAiLoading = false;
+      renderHoldingsAi();
+    }
   }
 
   function renderPortfolio() {
@@ -2052,6 +2248,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 
     drawHoldingsBars(metrics.topHoldings.map((item) => ({ label: String(item.ticker || "—").slice(0, 6), val: item.value || 0 })));
     drawHistoryLine(metrics.history.map((item) => item.value), metrics.totalCost);
+    renderHoldingsAi();
   }
 
   function normalizeSlices(slices) {
@@ -2292,6 +2489,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     document.getElementById("clear-data-btn")?.addEventListener("click", clearData);
     document.getElementById("sign-out-btn")?.addEventListener("click", signOut);
     document.getElementById("add-alert-btn")?.addEventListener("click", addAlert);
+    document.getElementById("pro-ai-ask-btn")?.addEventListener("click", runHoldingsAi);
 
     document.getElementById("alerts-list")?.addEventListener("click", (event) => {
       const target = event.target;
@@ -2317,6 +2515,14 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       const file = target.files && target.files[0];
       if (file) {
         await uploadReportFile(file);
+      }
+    });
+
+    document.getElementById("pro-ai-question")?.addEventListener("keydown", (event) => {
+      if (!(event instanceof KeyboardEvent)) return;
+      if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+        event.preventDefault();
+        void runHoldingsAi();
       }
     });
   }
