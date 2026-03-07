@@ -10,6 +10,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "platinum:walkforward": "node scripts/platinum-walkforward.mjs",
     "backup:db": "node scripts/backup-db.mjs",
     "restore:test": "node scripts/restore-test.mjs",
     "restore:db": "node scripts/restore-db.mjs"

@@ -307,6 +307,15 @@ Optional env vars:
 - `PLATINUM_DAILY_LOSS_CAP_AUD` (default `300`, pauses new trades for the day once daily P/L <= `-cap`)
 - `PLATINUM_KILL_SWITCH` (default `false`; set to `true` to pause auto-trading immediately)
 - `PLATINUM_ENFORCE_MARKET_HOURS` (default `false`; when `true`, all scans require ASX market open unless force mode)
+- `PLATINUM_MAX_POSITION_CORRELATION` (default `0.84`; correlation cap used when adding new positions)
+- `PLATINUM_MAX_HIGH_CORR_EXPOSURES` (default `1`; max existing positions allowed above correlation cap)
+- `PLATINUM_MAX_STALE_BAR_DAYS` (default `4`; stale data filter)
+- `PLATINUM_MAX_ONE_DAY_MOVE_PCT` (default `0.27`; event-shock filter for one-day price jumps)
+- `PLATINUM_BUY_SCORE_RISK_ON` / `PLATINUM_BUY_SCORE_NEUTRAL` / `PLATINUM_BUY_SCORE_RISK_OFF`
+- `PLATINUM_BUY_EXPECTED_RISK_ON` / `PLATINUM_BUY_EXPECTED_NEUTRAL` / `PLATINUM_BUY_EXPECTED_RISK_OFF`
+- `PLATINUM_SELL_SCORE_RISK_ON` / `PLATINUM_SELL_SCORE_NEUTRAL` / `PLATINUM_SELL_SCORE_RISK_OFF`
+- `PLATINUM_MIN_ADX_RISK_ON` / `PLATINUM_MIN_ADX_NEUTRAL` / `PLATINUM_MIN_ADX_RISK_OFF`
+- `PLATINUM_MIN_VOLUME_SURGE_RISK_ON` / `PLATINUM_MIN_VOLUME_SURGE_NEUTRAL` / `PLATINUM_MIN_VOLUME_SURGE_RISK_OFF`
 - `PLATINUM_PATTERN_LOOKBACK_BARS` (default `18`, lookback bars for nearest-pattern forecast matching)
 - `PLATINUM_PATTERN_FORECAST_HORIZON_BARS` (default `5`, forward bars for pattern-return estimation)
 - `PLATINUM_PATTERN_MATCH_TOP_K` (default `30`, number of best historical matches used in pattern forecast)
@@ -327,4 +336,10 @@ Render cron command example (every 5 minutes live mode; only executes trades whi
 curl -fsS -X POST \
   -H "Authorization: Bearer $BACKUP_CRON_TOKEN" \
   "https://your-domain/api/internal/ops/platinum/scan?mode=live"
+```
+
+Walk-forward performance check from stored Platinum snapshots:
+
+```bash
+npm run platinum:walkforward -- --email you@example.com
 ```

@@ -101,6 +101,27 @@ interface PlatinumPaperState {
   latestRecommendations: PlatinumRecommendation[];
   recentTrades: PlatinumPaperTrade[];
   snapshots: PlatinumPaperSnapshot[];
+  signalLeaderboard: Array<{
+    label: string;
+    wins: number;
+    losses: number;
+    observations: number;
+    pnlSum: number;
+    adaptiveWeight: number;
+    updatedAt: string;
+  }>;
+  latestDiagnostics: {
+    scanDate: string;
+    marketRegime: string;
+    generatedRecommendations: number;
+    executedTrades: number;
+    skippedTickers: number;
+    avgScore: number;
+    avgFinalScore: number;
+    topSignalLeaders: string;
+    notes: string;
+    createdAt: string;
+  } | null;
   universeSize: number;
 }
 
@@ -436,6 +457,16 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
             {state.riskControls.killSwitchEnabled ? " · Kill switch ON" : ""}
             {state.riskControls.marketOpenRequired ? " · Market-hours enforcement ON" : ""}
           </p>
+          {state.signalLeaderboard.length > 0 ? (
+            <p className={styles.infoText}>
+              Adaptive signal leaders: {state.signalLeaderboard.slice(0, 3).map((item) => `${item.label}×${item.adaptiveWeight.toFixed(2)}`).join(" · ")}
+            </p>
+          ) : null}
+          {state.latestDiagnostics ? (
+            <p className={styles.infoText}>
+              Last diagnostics: regime {state.latestDiagnostics.marketRegime}, avg score {state.latestDiagnostics.avgScore.toFixed(3)}, avg final {state.latestDiagnostics.avgFinalScore.toFixed(3)}.
+            </p>
+          ) : null}
           {marketStatusMessage ? <p className={styles.infoText}>{marketStatusMessage}</p> : null}
         </div>
         <button className={styles.scanButton} onClick={() => void runDailyScan()} disabled={runningScan}>

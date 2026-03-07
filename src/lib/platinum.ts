@@ -40,6 +40,27 @@ const MAX_ORDER_EQUITY_PCT = clampNumber(process.env.PLATINUM_MAX_ORDER_EQUITY_P
 const DAILY_LOSS_CAP_AUD = clampNumber(process.env.PLATINUM_DAILY_LOSS_CAP_AUD, 300, 10, 1000000);
 const KILL_SWITCH_ENABLED = parseBoolean(process.env.PLATINUM_KILL_SWITCH, false);
 const ENFORCE_MARKET_HOURS_FOR_ALL_SCANS = parseBoolean(process.env.PLATINUM_ENFORCE_MARKET_HOURS, false);
+const REGIME_BUY_SCORE_RISK_ON = clampNumber(process.env.PLATINUM_BUY_SCORE_RISK_ON, 0.16, 0.05, 0.5);
+const REGIME_BUY_SCORE_NEUTRAL = clampNumber(process.env.PLATINUM_BUY_SCORE_NEUTRAL, 0.22, 0.05, 0.6);
+const REGIME_BUY_SCORE_RISK_OFF = clampNumber(process.env.PLATINUM_BUY_SCORE_RISK_OFF, 0.32, 0.05, 0.8);
+const REGIME_BUY_EXPECTED_RISK_ON = clampNumber(process.env.PLATINUM_BUY_EXPECTED_RISK_ON, 3.2, 1, 20);
+const REGIME_BUY_EXPECTED_NEUTRAL = clampNumber(process.env.PLATINUM_BUY_EXPECTED_NEUTRAL, 4, 1, 25);
+const REGIME_BUY_EXPECTED_RISK_OFF = clampNumber(process.env.PLATINUM_BUY_EXPECTED_RISK_OFF, 6, 1, 30);
+const REGIME_SELL_SCORE_RISK_ON = clampNumber(process.env.PLATINUM_SELL_SCORE_RISK_ON, -0.2, -1, 0);
+const REGIME_SELL_SCORE_NEUTRAL = clampNumber(process.env.PLATINUM_SELL_SCORE_NEUTRAL, -0.15, -1, 0);
+const REGIME_SELL_SCORE_RISK_OFF = clampNumber(process.env.PLATINUM_SELL_SCORE_RISK_OFF, -0.08, -1, 0);
+const REGIME_MIN_ADX_RISK_ON = clampNumber(process.env.PLATINUM_MIN_ADX_RISK_ON, 12, 5, 40);
+const REGIME_MIN_ADX_NEUTRAL = clampNumber(process.env.PLATINUM_MIN_ADX_NEUTRAL, 14, 5, 40);
+const REGIME_MIN_ADX_RISK_OFF = clampNumber(process.env.PLATINUM_MIN_ADX_RISK_OFF, 18, 5, 40);
+const REGIME_MIN_VOLUME_SURGE_RISK_ON = clampNumber(process.env.PLATINUM_MIN_VOLUME_SURGE_RISK_ON, 0.82, 0.4, 2.5);
+const REGIME_MIN_VOLUME_SURGE_NEUTRAL = clampNumber(process.env.PLATINUM_MIN_VOLUME_SURGE_NEUTRAL, 0.9, 0.4, 2.5);
+const REGIME_MIN_VOLUME_SURGE_RISK_OFF = clampNumber(process.env.PLATINUM_MIN_VOLUME_SURGE_RISK_OFF, 1.1, 0.4, 2.5);
+const MAX_POSITION_CORRELATION = clampNumber(process.env.PLATINUM_MAX_POSITION_CORRELATION, 0.84, 0.3, 0.99);
+const MAX_HIGH_CORR_EXPOSURES = clampInteger(process.env.PLATINUM_MAX_HIGH_CORR_EXPOSURES, 1, 0, 20);
+const MAX_STALE_BAR_DAYS = clampInteger(process.env.PLATINUM_MAX_STALE_BAR_DAYS, 4, 1, 15);
+const MAX_ONE_DAY_MOVE_PCT = clampNumber(process.env.PLATINUM_MAX_ONE_DAY_MOVE_PCT, 0.27, 0.05, 1);
+const MIN_AI_CALIBRATION = clampNumber(process.env.PLATINUM_MIN_AI_CALIBRATION, 0.55, 0.2, 1);
+const MAX_AI_CALIBRATION = clampNumber(process.env.PLATINUM_MAX_AI_CALIBRATION, 1.35, 1, 2.5);
 
 const FALLBACK_UNIVERSE = [
   "BHP",
@@ -137,6 +158,7 @@ interface TradeRow {
   price: number;
   notional: number;
   fee: number;
+  pnl?: number;
   reason: string;
   created_at: string;
 }
@@ -273,6 +295,7 @@ interface TradeCandidate {
   notional: number;
   fee: number;
   reason: string;
+  pnl?: number;
   createdAt: string;
 }
 
@@ -280,6 +303,8 @@ interface ScanOutcome {
   ticker: string;
   recommendation: RecommendationCandidate | null;
   latestPrice: number | null;
+  recentReturns: number[] | null;
+  latestBarDate: string | null;
   skipReason: string | null;
 }
 
@@ -287,6 +312,28 @@ interface SignalBreakdownItem {
   label: string;
   value: number;
   weight: number;
+}
+
+interface SignalStatRow {
+  label: string;
+  wins: number;
+  losses: number;
+  observations: number;
+  pnl_sum: number;
+  updated_at: string;
+}
+
+interface ScanDiagnosticsRow {
+  scan_date: string;
+  market_regime: string;
+  generated_recommendations: number;
+  executed_trades: number;
+  skipped_tickers: number;
+  avg_score: number;
+  avg_final_score: number;
+  top_signal_leaders: string;
+  notes: string;
+  created_at: string;
 }
 
 export interface PlatinumPaperPosition {
@@ -366,6 +413,29 @@ export interface PlatinumRiskControls {
   marketOpenRequired: boolean;
 }
 
+export interface PlatinumSignalLeaderboardItem {
+  label: string;
+  wins: number;
+  losses: number;
+  observations: number;
+  pnlSum: number;
+  adaptiveWeight: number;
+  updatedAt: string;
+}
+
+export interface PlatinumScanDiagnostics {
+  scanDate: string;
+  marketRegime: string;
+  generatedRecommendations: number;
+  executedTrades: number;
+  skippedTickers: number;
+  avgScore: number;
+  avgFinalScore: number;
+  topSignalLeaders: string;
+  notes: string;
+  createdAt: string;
+}
+
 export interface PlatinumPaperState {
   portfolio: PlatinumPaperPortfolioSummary;
   riskControls: PlatinumRiskControls;
@@ -374,6 +444,8 @@ export interface PlatinumPaperState {
   latestRecommendations: PlatinumRecommendation[];
   recentTrades: PlatinumPaperTrade[];
   snapshots: PlatinumPaperSnapshot[];
+  signalLeaderboard: PlatinumSignalLeaderboardItem[];
+  latestDiagnostics: PlatinumScanDiagnostics | null;
   universeSize: number;
 }
 
@@ -531,6 +603,7 @@ function ensurePlatinumSchema(db: DatabaseSync): void {
       price REAL NOT NULL,
       notional REAL NOT NULL,
       fee REAL NOT NULL,
+      pnl REAL NOT NULL DEFAULT 0,
       reason TEXT NOT NULL,
       created_at TEXT NOT NULL
     );
@@ -551,6 +624,38 @@ function ensurePlatinumSchema(db: DatabaseSync): void {
 
     CREATE INDEX IF NOT EXISTS idx_platinum_paper_snapshots_user_scan
       ON platinum_paper_snapshots (user_id, scan_date DESC);
+
+    CREATE TABLE IF NOT EXISTS platinum_signal_stats (
+      user_id TEXT NOT NULL,
+      label TEXT NOT NULL,
+      wins INTEGER NOT NULL DEFAULT 0,
+      losses INTEGER NOT NULL DEFAULT 0,
+      observations INTEGER NOT NULL DEFAULT 0,
+      pnl_sum REAL NOT NULL DEFAULT 0,
+      updated_at TEXT NOT NULL,
+      PRIMARY KEY (user_id, label)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_platinum_signal_stats_user
+      ON platinum_signal_stats (user_id, updated_at DESC);
+
+    CREATE TABLE IF NOT EXISTS platinum_scan_diagnostics (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      scan_date TEXT NOT NULL,
+      market_regime TEXT NOT NULL,
+      generated_recommendations INTEGER NOT NULL,
+      executed_trades INTEGER NOT NULL,
+      skipped_tickers INTEGER NOT NULL,
+      avg_score REAL NOT NULL,
+      avg_final_score REAL NOT NULL,
+      top_signal_leaders TEXT NOT NULL,
+      notes TEXT NOT NULL DEFAULT '',
+      created_at TEXT NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_platinum_scan_diagnostics_user_scan
+      ON platinum_scan_diagnostics (user_id, scan_date DESC, created_at DESC);
   `);
 
   if (!hasColumn(db, "platinum_paper_positions", "peak_price")) {
@@ -564,6 +669,10 @@ function ensurePlatinumSchema(db: DatabaseSync): void {
 
   if (!hasColumn(db, "platinum_paper_portfolios", "day_start_equity")) {
     db.exec("ALTER TABLE platinum_paper_portfolios ADD COLUMN day_start_equity REAL;");
+  }
+
+  if (!hasColumn(db, "platinum_paper_trades", "pnl")) {
+    db.exec("ALTER TABLE platinum_paper_trades ADD COLUMN pnl REAL NOT NULL DEFAULT 0;");
   }
 
   if (!hasColumn(db, "platinum_recommendations", "expected_return_pct")) {
@@ -645,6 +754,118 @@ function stdDev(values: number[]): number {
 
 function sum(values: number[]): number {
   return values.reduce((acc, value) => acc + value, 0);
+}
+
+function daysBetweenUtc(aIsoDate: string, bIsoDate: string): number {
+  const aMs = Date.parse(`${aIsoDate}T00:00:00Z`);
+  const bMs = Date.parse(`${bIsoDate}T00:00:00Z`);
+  if (!Number.isFinite(aMs) || !Number.isFinite(bMs)) {
+    return Number.POSITIVE_INFINITY;
+  }
+
+  return Math.floor(Math.abs(aMs - bMs) / (24 * 60 * 60 * 1000));
+}
+
+function buildRecentReturnVector(closes: number[], lookback = 63): number[] | null {
+  if (closes.length < lookback + 1) {
+    return null;
+  }
+
+  const start = closes.length - lookback;
+  const returns: number[] = [];
+  for (let index = start; index < closes.length; index += 1) {
+    const prev = closes[index - 1];
+    const current = closes[index];
+    if (!Number.isFinite(prev) || !Number.isFinite(current) || prev <= 0 || current <= 0) {
+      return null;
+    }
+    returns.push(Math.log(current / prev));
+  }
+
+  return returns;
+}
+
+function correlation(a: number[] | null, b: number[] | null): number | null {
+  if (!a || !b || a.length !== b.length || a.length < 5) {
+    return null;
+  }
+
+  const aMean = average(a);
+  const bMean = average(b);
+  let covariance = 0;
+  let aVar = 0;
+  let bVar = 0;
+
+  for (let index = 0; index < a.length; index += 1) {
+    const da = a[index] - aMean;
+    const db = b[index] - bMean;
+    covariance += da * db;
+    aVar += da * da;
+    bVar += db * db;
+  }
+
+  if (aVar <= 0 || bVar <= 0) {
+    return null;
+  }
+
+  return covariance / Math.sqrt(aVar * bVar);
+}
+
+function extractSignalEntriesFromReason(reason: string): Array<{ label: string; contribution: number }> {
+  const signalsRaw = String(reason || "").match(/signals\[([^\]]+)\]/i)?.[1] || "";
+  if (!signalsRaw) {
+    return [];
+  }
+
+  return signalsRaw
+    .split("|")
+    .map((part) => part.trim())
+    .map((part) => {
+      const [labelRaw, valueRaw] = part.split(":");
+      const label = String(labelRaw || "").trim();
+      const contribution = Number.parseFloat(String(valueRaw || "").trim());
+      return {
+        label,
+        contribution: Number.isFinite(contribution) ? contribution : 0,
+      };
+    })
+    .filter((entry) => entry.label.length > 0);
+}
+
+function regimeThresholds(regime: MarketRegime): {
+  buyScoreMin: number;
+  buyExpectedMin: number;
+  sellScoreMin: number;
+  minAdx: number;
+  minVolumeSurge: number;
+} {
+  if (regime.state === "risk_on") {
+    return {
+      buyScoreMin: REGIME_BUY_SCORE_RISK_ON,
+      buyExpectedMin: REGIME_BUY_EXPECTED_RISK_ON,
+      sellScoreMin: REGIME_SELL_SCORE_RISK_ON,
+      minAdx: REGIME_MIN_ADX_RISK_ON,
+      minVolumeSurge: REGIME_MIN_VOLUME_SURGE_RISK_ON,
+    };
+  }
+
+  if (regime.state === "risk_off") {
+    return {
+      buyScoreMin: REGIME_BUY_SCORE_RISK_OFF,
+      buyExpectedMin: REGIME_BUY_EXPECTED_RISK_OFF,
+      sellScoreMin: REGIME_SELL_SCORE_RISK_OFF,
+      minAdx: REGIME_MIN_ADX_RISK_OFF,
+      minVolumeSurge: REGIME_MIN_VOLUME_SURGE_RISK_OFF,
+    };
+  }
+
+  return {
+    buyScoreMin: REGIME_BUY_SCORE_NEUTRAL,
+    buyExpectedMin: REGIME_BUY_EXPECTED_NEUTRAL,
+    sellScoreMin: REGIME_SELL_SCORE_NEUTRAL,
+    minAdx: REGIME_MIN_ADX_NEUTRAL,
+    minVolumeSurge: REGIME_MIN_VOLUME_SURGE_NEUTRAL,
+  };
 }
 
 function sma(values: number[], period: number): number | null {
@@ -1574,7 +1795,229 @@ async function resolveMarketRegime(): Promise<MarketRegime> {
   return inferMarketRegime(benchmarkIndicators);
 }
 
-function toSignalBreakdown(indicators: IndicatorPack): SignalBreakdownItem[] {
+function computeAdaptiveWeightFromStats(stats: SignalStatRow | null): number {
+  if (!stats || stats.observations <= 0) {
+    return 1;
+  }
+
+  const winRate = stats.wins / Math.max(stats.observations, 1);
+  const avgPnl = stats.pnl_sum / Math.max(stats.observations, 1);
+  const recencyDays = daysBetweenUtc(currentScanDate(), stats.updated_at.slice(0, 10));
+  const recencyDecay = Number.isFinite(recencyDays) ? clamp(1 - recencyDays / 240, 0.45, 1) : 0.75;
+  const raw = 0.72 + winRate * 0.56 + clamp(avgPnl / 120, -0.18, 0.18);
+  return clamp(raw * recencyDecay, 0.55, 1.35);
+}
+
+function readAdaptiveSignalWeights(db: DatabaseSync, userId: string): Map<string, number> {
+  const rows = db
+    .prepare(`
+      SELECT label, wins, losses, observations, pnl_sum, updated_at
+      FROM platinum_signal_stats
+      WHERE user_id = ?
+      ORDER BY updated_at DESC
+      LIMIT 80
+    `)
+    .all(userId) as SignalStatRow[];
+
+  const map = new Map<string, number>();
+  for (const row of rows) {
+    map.set(row.label, computeAdaptiveWeightFromStats(row));
+  }
+
+  return map;
+}
+
+function readSignalLeaderboard(db: DatabaseSync, userId: string): PlatinumSignalLeaderboardItem[] {
+  const rows = db
+    .prepare(`
+      SELECT label, wins, losses, observations, pnl_sum, updated_at
+      FROM platinum_signal_stats
+      WHERE user_id = ?
+      ORDER BY observations DESC, pnl_sum DESC, updated_at DESC
+      LIMIT 16
+    `)
+    .all(userId) as SignalStatRow[];
+
+  return rows.map((row) => ({
+    label: row.label,
+    wins: toFiniteNumber(row.wins, 0),
+    losses: toFiniteNumber(row.losses, 0),
+    observations: toFiniteNumber(row.observations, 0),
+    pnlSum: toFiniteNumber(row.pnl_sum, 0),
+    adaptiveWeight: computeAdaptiveWeightFromStats(row),
+    updatedAt: row.updated_at,
+  }));
+}
+
+function readLatestDiagnostics(db: DatabaseSync, userId: string): PlatinumScanDiagnostics | null {
+  const row = db
+    .prepare(`
+      SELECT scan_date, market_regime, generated_recommendations, executed_trades, skipped_tickers,
+        avg_score, avg_final_score, top_signal_leaders, notes, created_at
+      FROM platinum_scan_diagnostics
+      WHERE user_id = ?
+      ORDER BY scan_date DESC, created_at DESC
+      LIMIT 1
+    `)
+    .get(userId) as ScanDiagnosticsRow | undefined;
+
+  if (!row) {
+    return null;
+  }
+
+  return {
+    scanDate: row.scan_date,
+    marketRegime: row.market_regime,
+    generatedRecommendations: toFiniteNumber(row.generated_recommendations, 0),
+    executedTrades: toFiniteNumber(row.executed_trades, 0),
+    skippedTickers: toFiniteNumber(row.skipped_tickers, 0),
+    avgScore: toFiniteNumber(row.avg_score, 0),
+    avgFinalScore: toFiniteNumber(row.avg_final_score, 0),
+    topSignalLeaders: row.top_signal_leaders || "",
+    notes: row.notes || "",
+    createdAt: row.created_at,
+  };
+}
+
+function computeAiOverlayCalibration(db: DatabaseSync, userId: string): number {
+  const rows = db
+    .prepare(`
+      SELECT pnl
+      FROM platinum_paper_trades
+      WHERE user_id = ? AND side = 'sell' AND pnl != 0
+      ORDER BY created_at DESC
+      LIMIT 120
+    `)
+    .all(userId) as Array<{ pnl?: number }>;
+
+  if (rows.length < 8) {
+    return 1;
+  }
+
+  const pnlValues = rows
+    .map((row) => toFiniteNumber(row.pnl, Number.NaN))
+    .filter((value) => Number.isFinite(value));
+
+  if (pnlValues.length < 8) {
+    return 1;
+  }
+
+  const winRate = pnlValues.filter((value) => value > 0).length / pnlValues.length;
+  const avgPnl = average(pnlValues);
+  const raw = 0.88 + (winRate - 0.5) * 0.7 + clamp(avgPnl / 90, -0.16, 0.16);
+  return clamp(raw, MIN_AI_CALIBRATION, MAX_AI_CALIBRATION);
+}
+
+function upsertSignalStatsFromTrades(db: DatabaseSync, userId: string, trades: TradeCandidate[], nowIso: string): void {
+  const updates = new Map<string, { wins: number; losses: number; observations: number; pnl: number }>();
+
+  for (const trade of trades) {
+    if (trade.side !== "sell") {
+      continue;
+    }
+
+    const pnl = toFiniteNumber(trade.pnl, Number.NaN);
+    if (!Number.isFinite(pnl)) {
+      continue;
+    }
+
+    const entries = extractSignalEntriesFromReason(trade.reason);
+    if (entries.length === 0) {
+      continue;
+    }
+
+    const pnlPerSignal = pnl / entries.length;
+    for (const entry of entries) {
+      const key = entry.label;
+      const existing = updates.get(key) || { wins: 0, losses: 0, observations: 0, pnl: 0 };
+      existing.observations += 1;
+      existing.pnl += pnlPerSignal;
+      if (pnlPerSignal >= 0) {
+        existing.wins += 1;
+      } else {
+        existing.losses += 1;
+      }
+      updates.set(key, existing);
+    }
+  }
+
+  if (updates.size === 0) {
+    return;
+  }
+
+  const upsert = db.prepare(`
+    INSERT INTO platinum_signal_stats (user_id, label, wins, losses, observations, pnl_sum, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(user_id, label) DO UPDATE SET
+      wins = platinum_signal_stats.wins + excluded.wins,
+      losses = platinum_signal_stats.losses + excluded.losses,
+      observations = platinum_signal_stats.observations + excluded.observations,
+      pnl_sum = platinum_signal_stats.pnl_sum + excluded.pnl_sum,
+      updated_at = excluded.updated_at
+  `);
+
+  for (const [label, stats] of updates.entries()) {
+    upsert.run(userId, label, stats.wins, stats.losses, stats.observations, stats.pnl, nowIso);
+  }
+}
+
+function topSignalLeadersFromRecommendations(recommendations: RecommendationCandidate[]): string {
+  const scoreboard = new Map<string, { total: number; count: number }>();
+
+  for (const recommendation of recommendations) {
+    const entries = extractSignalEntriesFromReason(recommendation.reason);
+    for (const entry of entries) {
+      const existing = scoreboard.get(entry.label) || { total: 0, count: 0 };
+      existing.total += Math.abs(entry.contribution);
+      existing.count += 1;
+      scoreboard.set(entry.label, existing);
+    }
+  }
+
+  return Array.from(scoreboard.entries())
+    .sort((a, b) => b[1].total - a[1].total)
+    .slice(0, 6)
+    .map(([label, value]) => `${label}:${value.total.toFixed(2)}(${value.count})`)
+    .join(" | ");
+}
+
+function saveScanDiagnostics(
+  db: DatabaseSync,
+  userId: string,
+  scanDate: string,
+  nowIso: string,
+  marketRegime: MarketRegime,
+  recommendations: RecommendationCandidate[],
+  trades: TradeCandidate[],
+  skippedTickerCount: number,
+): void {
+  const avgScore = recommendations.length > 0 ? average(recommendations.map((item) => item.score)) : 0;
+  const avgFinalScore = recommendations.length > 0 ? average(recommendations.map((item) => item.finalScore)) : 0;
+  const topSignals = topSignalLeadersFromRecommendations(recommendations);
+  const notes = `Regime=${marketRegime.state}; recs=${recommendations.length}; trades=${trades.length}; skipped=${skippedTickerCount}`;
+
+  db.prepare(`
+    INSERT INTO platinum_scan_diagnostics (
+      id, user_id, scan_date, market_regime, generated_recommendations, executed_trades, skipped_tickers,
+      avg_score, avg_final_score, top_signal_leaders, notes, created_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    crypto.randomUUID(),
+    userId,
+    scanDate,
+    marketRegime.state,
+    recommendations.length,
+    trades.length,
+    skippedTickerCount,
+    avgScore,
+    avgFinalScore,
+    topSignals,
+    notes,
+    nowIso,
+  );
+}
+
+function toSignalBreakdown(indicators: IndicatorPack, adaptiveWeights: Map<string, number>): SignalBreakdownItem[] {
   const trendAlignment =
     (indicators.close > indicators.sma20 ? 1 : -1) * 0.3 +
     (indicators.close > indicators.sma50 ? 1 : -1) * 0.35 +
@@ -1640,7 +2083,7 @@ function toSignalBreakdown(indicators: IndicatorPack): SignalBreakdownItem[] {
     (indicators.insideBarBreakoutUp ? 0.7 : 0) +
     (indicators.insideBarBreakoutDown ? -0.7 : 0);
 
-  return [
+  const baseSignals: SignalBreakdownItem[] = [
     { label: "Trend MA", value: trendAlignment, weight: 1.2 },
     { label: "EMA", value: emaSignal, weight: 0.8 },
     { label: "MACD", value: macdSignal, weight: 1.1 },
@@ -1664,6 +2107,11 @@ function toSignalBreakdown(indicators: IndicatorPack): SignalBreakdownItem[] {
     { label: "CandlePattern", value: candlePatternSignal, weight: 0.95 },
     { label: "StructurePattern", value: structurePatternSignal, weight: 1.0 },
   ];
+
+  return baseSignals.map((entry) => ({
+    ...entry,
+    weight: entry.weight * clamp(adaptiveWeights.get(entry.label) ?? 1, 0.55, 1.35),
+  }));
 }
 
 function evaluateRecommendation(
@@ -1671,8 +2119,10 @@ function evaluateRecommendation(
   indicators: IndicatorPack,
   position: PositionMutable | undefined,
   marketRegime: MarketRegime,
+  adaptiveWeights: Map<string, number>,
 ): RecommendationCandidate {
-  const breakdown = toSignalBreakdown(indicators);
+  const breakdown = toSignalBreakdown(indicators, adaptiveWeights);
+  const thresholds = regimeThresholds(marketRegime);
   const weightTotal = sum(breakdown.map((entry) => Math.abs(entry.weight))) || 1;
   const weightedRaw = sum(breakdown.map((entry) => entry.value * entry.weight));
   const score = weightedRaw / weightTotal;
@@ -1724,7 +2174,7 @@ function evaluateRecommendation(
       trailingStopHit ||
       regimeExit ||
       patternExit ||
-      score < -0.15 ||
+      score < thresholds.sellScoreMin ||
       bearishPattern ||
       (trendBreak && indicators.rsi14 < 48)
     ) {
@@ -1732,11 +2182,23 @@ function evaluateRecommendation(
     }
   } else {
     const trendGate = indicators.close > indicators.sma50 && indicators.sma50 > indicators.sma200;
-    const qualityGate = indicators.volumeSurge > 0.9 && indicators.adx14 >= 14 && liquidityGate && volatilityGate;
+    const qualityGate =
+      indicators.volumeSurge > thresholds.minVolumeSurge &&
+      indicators.adx14 >= thresholds.minAdx &&
+      liquidityGate &&
+      volatilityGate;
     const regimeGate = marketRegime.allowNewLongs;
     const patternGate = indicators.patternConfidence < 0.35 || indicators.patternExpectedReturn > 0;
 
-    if (score > 0.22 && expectedReturnPct >= 4 && trendGate && qualityGate && bullishPattern && regimeGate && patternGate) {
+    if (
+      score > thresholds.buyScoreMin &&
+      expectedReturnPct >= thresholds.buyExpectedMin &&
+      trendGate &&
+      qualityGate &&
+      bullishPattern &&
+      regimeGate &&
+      patternGate
+    ) {
       action = "buy";
     }
   }
@@ -1787,6 +2249,20 @@ function evaluateRecommendation(
     realizedVol20: indicators.realizedVol20,
     avgDollarVolume20: indicators.avgDollarVolume20,
     reason,
+  };
+}
+
+function estimateExecutionParams(recommendation: RecommendationCandidate): { spreadRate: number; slipRate: number; fillRatio: number } {
+  const liquidityM = Math.max(recommendation.avgDollarVolume20 / 1_000_000, 0.01);
+  const spreadRate = clamp(0.00035 + 0.0032 / Math.sqrt(liquidityM + 0.25), 0.00025, 0.01);
+  const volScaler = clamp(recommendation.realizedVol20 / 0.25, 0.6, 2.1);
+  const slipRate = clamp(SLIPPAGE_RATE * volScaler + spreadRate * 0.35, 0.0002, 0.03);
+  const fillRatio = clamp(0.52 + Math.log10(liquidityM + 1) * 0.32 - recommendation.realizedVol20 * 0.12, 0.45, 1);
+
+  return {
+    spreadRate,
+    slipRate,
+    fillRatio,
   };
 }
 
@@ -1958,6 +2434,7 @@ async function fetchAiOverlay(candidates: RecommendationCandidate[], marketRegim
 async function applyAiOverlay(
   recommendations: RecommendationCandidate[],
   marketRegime: MarketRegime,
+  calibrationFactor: number,
 ): Promise<{ used: boolean; model: string | null }> {
   for (const recommendation of recommendations) {
     recommendation.aiAdjustment = 0;
@@ -1979,13 +2456,14 @@ async function applyAiOverlay(
       continue;
     }
 
-    recommendation.aiAdjustment = clamp(overlayEntry.adjustment, -3, 3);
-    recommendation.aiConfidence = clamp(overlayEntry.confidence, 0, 100);
+    const calibratedAdjustment = clamp(overlayEntry.adjustment * calibrationFactor, -3, 3);
+    recommendation.aiAdjustment = calibratedAdjustment;
+    recommendation.aiConfidence = clamp(overlayEntry.confidence * calibrationFactor, 0, 100);
     recommendation.aiSummary = overlayEntry.summary;
 
     const confidenceBoost = (recommendation.aiConfidence / 100 - 0.5) * 0.12;
-    recommendation.finalScore = recommendation.score + recommendation.aiAdjustment * 0.18 + confidenceBoost;
-    recommendation.expectedReturnPct = clamp(recommendation.expectedReturnPct + recommendation.aiAdjustment * 1.8, -30, 35);
+    recommendation.finalScore = recommendation.score + calibratedAdjustment * 0.18 + confidenceBoost;
+    recommendation.expectedReturnPct = clamp(recommendation.expectedReturnPct + calibratedAdjustment * 1.8, -30, 35);
 
     if (recommendation.action === "buy" && recommendation.aiAdjustment <= -1.5) {
       recommendation.action = "hold";
@@ -2193,7 +2671,7 @@ export function getPlatinumPaperState(userId: string): PlatinumPaperState {
 
   const trades = db
     .prepare(`
-      SELECT id, scan_date, ticker, side, units, price, notional, fee, reason, created_at
+      SELECT id, scan_date, ticker, side, units, price, notional, fee, pnl, reason, created_at
       FROM platinum_paper_trades
       WHERE user_id = ?
       ORDER BY created_at DESC
@@ -2213,6 +2691,8 @@ export function getPlatinumPaperState(userId: string): PlatinumPaperState {
 
   const summary = toSummary(portfolioRow, positions);
   const riskControls = toRiskControlsState(portfolioRow, summary.equity, currentScanDate());
+  const signalLeaderboard = readSignalLeaderboard(db, userId);
+  const latestDiagnostics = readLatestDiagnostics(db, userId);
 
   return {
     portfolio: summary,
@@ -2261,6 +2741,8 @@ export function getPlatinumPaperState(userId: string): PlatinumPaperState {
         createdAt: row.created_at,
       }))
       .reverse(),
+    signalLeaderboard,
+    latestDiagnostics,
     universeSize: estimateUniverseSizeFromConfig(),
   };
 }
@@ -2334,6 +2816,7 @@ function pruneHistoricalData(db: DatabaseSync, userId: string): void {
   db.prepare("DELETE FROM platinum_recommendations WHERE user_id = ? AND scan_date < ?").run(userId, cutoffDate);
   db.prepare("DELETE FROM platinum_paper_trades WHERE user_id = ? AND scan_date < ?").run(userId, cutoffDate);
   db.prepare("DELETE FROM platinum_paper_snapshots WHERE user_id = ? AND scan_date < ?").run(userId, cutoffDate);
+  db.prepare("DELETE FROM platinum_scan_diagnostics WHERE user_id = ? AND scan_date < ?").run(userId, cutoffDate);
 }
 
 export async function runPlatinumDailyScan(userId: string, options: RunScanOptions = {}): Promise<PlatinumScanRunResult> {
@@ -2445,6 +2928,8 @@ export async function runPlatinumDailyScan(userId: string, options: RunScanOptio
     };
   }
 
+  const adaptiveWeights = readAdaptiveSignalWeights(db, userId);
+  const aiCalibrationFactor = computeAiOverlayCalibration(db, userId);
   const marketRegime = await resolveMarketRegime();
 
   const universeRaw = await resolveUniverse();
@@ -2454,25 +2939,47 @@ export async function runPlatinumDailyScan(userId: string, options: RunScanOptio
     try {
       const series = await fetchAsxSeriesFromYahoo(ticker, "1y");
       if (!series) {
-        return { ticker, recommendation: null, latestPrice: null, skipReason: "no_price_series" };
+        return { ticker, recommendation: null, latestPrice: null, recentReturns: null, latestBarDate: null, skipReason: "no_price_series" };
+      }
+
+      const latestBar = series[series.length - 1];
+      const latestBarDate = latestBar?.date || null;
+      const staleDays = latestBarDate ? daysBetweenUtc(scanDate, latestBarDate) : Number.POSITIVE_INFINITY;
+      if (!latestBarDate || staleDays > MAX_STALE_BAR_DAYS) {
+        return { ticker, recommendation: null, latestPrice: null, recentReturns: null, latestBarDate, skipReason: "stale_data" };
+      }
+
+      const closes = series.map((bar) => bar.close);
+      if (closes.length >= 2) {
+        const prev = closes[closes.length - 2];
+        const current = closes[closes.length - 1];
+        if (Number.isFinite(prev) && Number.isFinite(current) && prev > 0 && current > 0) {
+          const oneDayMove = Math.abs(current / prev - 1);
+          if (oneDayMove > MAX_ONE_DAY_MOVE_PCT) {
+            return { ticker, recommendation: null, latestPrice: current, recentReturns: null, latestBarDate, skipReason: "event_shock" };
+          }
+        }
       }
 
       const indicators = buildIndicators(series);
       if (!indicators) {
-        return { ticker, recommendation: null, latestPrice: null, skipReason: "insufficient_history" };
+        return { ticker, recommendation: null, latestPrice: null, recentReturns: null, latestBarDate, skipReason: "insufficient_history" };
       }
 
       const position = existingPositions.get(ticker);
-      const recommendation = evaluateRecommendation(ticker, indicators, position, marketRegime);
+      const recommendation = evaluateRecommendation(ticker, indicators, position, marketRegime, adaptiveWeights);
+      const recentReturns = buildRecentReturnVector(closes, 63);
 
       return {
         ticker,
         recommendation,
         latestPrice: indicators.close,
+        recentReturns,
+        latestBarDate,
         skipReason: null,
       };
     } catch {
-      return { ticker, recommendation: null, latestPrice: null, skipReason: "fetch_error" };
+      return { ticker, recommendation: null, latestPrice: null, recentReturns: null, latestBarDate: null, skipReason: "fetch_error" };
     }
   });
 
@@ -2484,12 +2991,16 @@ export async function runPlatinumDailyScan(userId: string, options: RunScanOptio
     .map((outcome) => outcome.recommendation)
     .filter((item): item is RecommendationCandidate => Boolean(item));
 
-  const aiOverlay = await applyAiOverlay(recommendations, marketRegime);
+  const aiOverlay = await applyAiOverlay(recommendations, marketRegime, aiCalibrationFactor);
 
   const latestPriceByTicker = new Map<string, number>();
+  const recentReturnsByTicker = new Map<string, number[]>();
   for (const outcome of outcomes) {
     if (outcome.latestPrice != null && Number.isFinite(outcome.latestPrice) && outcome.latestPrice > 0) {
       latestPriceByTicker.set(outcome.ticker, outcome.latestPrice);
+    }
+    if (outcome.recentReturns && outcome.recentReturns.length > 0) {
+      recentReturnsByTicker.set(outcome.ticker, outcome.recentReturns);
     }
   }
 
@@ -2514,7 +3025,8 @@ export async function runPlatinumDailyScan(userId: string, options: RunScanOptio
       continue;
     }
 
-    const fillPrice = recommendation.price * (1 - SLIPPAGE_RATE);
+    const execution = estimateExecutionParams(recommendation);
+    const fillPrice = recommendation.price * (1 - execution.slipRate - execution.spreadRate / 2);
     if (!Number.isFinite(fillPrice) || fillPrice <= 0) {
       continue;
     }
@@ -2526,16 +3038,18 @@ export async function runPlatinumDailyScan(userId: string, options: RunScanOptio
     }
 
     const maxUnitsByCap = floorTo(perOrderCapNotional / fillPrice, 4);
-    const units = Math.min(position.units, maxUnitsByCap);
+    const partialFillUnits = floorTo(position.units * execution.fillRatio, 4);
+    const units = Math.min(position.units, maxUnitsByCap, partialFillUnits > 0 ? partialFillUnits : position.units);
     if (!Number.isFinite(units) || units <= 0) {
       continue;
     }
 
     const notional = units * fillPrice;
     const fee = notional * FEE_RATE;
+    const tradePnl = (fillPrice - position.avgCost) * units - fee;
 
     cash += notional - fee;
-    realizedPnl += (fillPrice - position.avgCost) * units - fee;
+    realizedPnl += tradePnl;
 
     const remainingUnits = floorTo(position.units - units, 4);
     if (remainingUnits <= 0) {
@@ -2556,7 +3070,9 @@ export async function runPlatinumDailyScan(userId: string, options: RunScanOptio
       price: fillPrice,
       notional,
       fee,
-      reason: recommendation.reason,
+      reason:
+        `${recommendation.reason}; exec[slip=${(execution.slipRate * 100).toFixed(3)}%,spread=${(execution.spreadRate * 100).toFixed(3)}%,fill=${(execution.fillRatio * 100).toFixed(1)}%]; trade_pnl=${tradePnl.toFixed(2)}`,
+      pnl: tradePnl,
       createdAt: nowIso,
     });
   }
@@ -2584,6 +3100,22 @@ export async function runPlatinumDailyScan(userId: string, options: RunScanOptio
       break;
     }
 
+    const candidateReturns = recentReturnsByTicker.get(recommendation.ticker) || null;
+    if (candidateReturns && MAX_HIGH_CORR_EXPOSURES >= 0) {
+      let highCorrelationCount = 0;
+      for (const existingTicker of existingPositions.keys()) {
+        const existingReturns = recentReturnsByTicker.get(existingTicker) || null;
+        const corr = correlation(candidateReturns, existingReturns);
+        if (corr != null && corr >= MAX_POSITION_CORRELATION) {
+          highCorrelationCount += 1;
+        }
+      }
+
+      if (highCorrelationCount > MAX_HIGH_CORR_EXPOSURES) {
+        continue;
+      }
+    }
+
     const investedValue = computeInvestedValue(existingPositions);
     const equity = cash + investedValue;
     const baseBudget = Math.min(equity * TARGET_EQUITY_PER_BUY, cash * MAX_CASH_PER_BUY);
@@ -2601,12 +3133,14 @@ export async function runPlatinumDailyScan(userId: string, options: RunScanOptio
       continue;
     }
 
-    const fillPrice = recommendation.price * (1 + SLIPPAGE_RATE);
+    const execution = estimateExecutionParams(recommendation);
+    const fillPrice = recommendation.price * (1 + execution.slipRate + execution.spreadRate / 2);
     if (!Number.isFinite(fillPrice) || fillPrice <= 0) {
       continue;
     }
 
     let units = floorTo(cappedBuyBudget / (fillPrice * (1 + FEE_RATE)), 4);
+    units = floorTo(units * execution.fillRatio, 4);
     if (units <= 0) {
       continue;
     }
@@ -2651,7 +3185,8 @@ export async function runPlatinumDailyScan(userId: string, options: RunScanOptio
       price: fillPrice,
       notional,
       fee,
-      reason: recommendation.reason,
+      reason:
+        `${recommendation.reason}; exec[slip=${(execution.slipRate * 100).toFixed(3)}%,spread=${(execution.spreadRate * 100).toFixed(3)}%,fill=${(execution.fillRatio * 100).toFixed(1)}%]`,
       createdAt: nowIso,
     });
   }
@@ -2699,8 +3234,8 @@ export async function runPlatinumDailyScan(userId: string, options: RunScanOptio
 
     const tradeInsert = db.prepare(`
       INSERT INTO platinum_paper_trades (
-        id, user_id, scan_date, ticker, side, units, price, notional, fee, reason, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        id, user_id, scan_date, ticker, side, units, price, notional, fee, pnl, reason, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     for (const trade of trades) {
@@ -2714,6 +3249,7 @@ export async function runPlatinumDailyScan(userId: string, options: RunScanOptio
         trade.price,
         trade.notional,
         trade.fee,
+        toFiniteNumber(trade.pnl, 0),
         trade.reason,
         trade.createdAt,
       );
@@ -2756,7 +3292,10 @@ export async function runPlatinumDailyScan(userId: string, options: RunScanOptio
         invested_value = excluded.invested_value,
         equity = excluded.equity,
         created_at = excluded.created_at
-    `).run(crypto.randomUUID(), userId, scanDate, cash, investedValue, equity, nowIso);
+      `).run(crypto.randomUUID(), userId, scanDate, cash, investedValue, equity, nowIso);
+
+    upsertSignalStatsFromTrades(db, userId, trades, nowIso);
+    saveScanDiagnostics(db, userId, scanDate, nowIso, marketRegime, recommendations, trades, skippedTickers.length);
 
     pruneHistoricalData(db, userId);
 
