@@ -1777,6 +1777,7 @@ export default function Home() {
             <nav className="spectre-nav-links">
               <a href="#features">Capabilities</a>
               <a href="#insights">Preview</a>
+              <a href="#pro-ai">Pro AI</a>
               <a href="#workflow">Workflow</a>
               <a href="#safety">Data Safety</a>
               <a href="#pricing">Pricing</a>
@@ -1794,9 +1795,17 @@ export default function Home() {
             </button>
           </div>
           <div className={"spectre-nav-mobile" + (landingMenuOpen ? " open" : "")}>
-            {["features", "insights", "workflow", "safety", "pricing", "access"].map((section) => (
+            {["features", "insights", "pro-ai", "workflow", "safety", "pricing", "access"].map((section) => (
               <a key={section} href={`#${section}`} onClick={() => setLandingMenuOpen(false)}>
-                {section === "insights" ? "Preview" : section === "safety" ? "Data Safety" : section === "access" ? "Sign In" : section.charAt(0).toUpperCase() + section.slice(1)}
+                {section === "insights"
+                  ? "Preview"
+                  : section === "pro-ai"
+                    ? "Pro AI"
+                    : section === "safety"
+                      ? "Data Safety"
+                      : section === "access"
+                        ? "Sign In"
+                        : section.charAt(0).toUpperCase() + section.slice(1)}
               </a>
             ))}
           </div>
@@ -2013,6 +2022,28 @@ export default function Home() {
                 <article><p>01</p><h3>Import Reports</h3><span>Upload super, savings, tax report, ASX, crypto, index, mutual fund, and bullion files directly into SPECTRE.</span></article>
                 <article><p>02</p><h3>Normalize Exposure</h3><span>Aggregate positions by source, account, sector, and instrument in one structure.</span></article>
                 <article><p>03</p><h3>Act On Risk Signals</h3><span>Use risk score, drawdown, VaR, concentration metrics, and dip alert emails to monitor risk posture.</span></article>
+              </div>
+            </div>
+          </section>
+
+          <section id="pro-ai" className="spectre-section">
+            <div className="spectre-wrap">
+              <p className="spectre-section-label orange">Pro AI</p>
+              <h2 className="spectre-section-title">Ask AI holdings analysis in a dedicated box.</h2>
+              <p className="spectre-section-sub">This feature is premium only. Upgrade to Pro to ask questions about what may be influencing the value of your current holdings.</p>
+              <div className="spectre-pricing-grid">
+                <article className="spectre-plan featured">
+                  <p className="badge">Premium Only</p>
+                  <p className="tier">Pro AI Console</p>
+                  <h3>Included in Pro</h3>
+                  <p className="sub">Not available on Starter</p>
+                  <ul>
+                    <li>Ask AI about drivers behind your current holdings</li>
+                    <li>Get plain-English analysis of momentum and risk signals</li>
+                    <li>See AI reasoning alongside your portfolio context</li>
+                  </ul>
+                  <a href="#pricing" className="spectre-btn spectre-btn-pro">See Pro Plan</a>
+                </article>
               </div>
             </div>
           </section>
