@@ -2037,11 +2037,31 @@ export default function Home() {
                   <p className="tier">Pro AI Console</p>
                   <h3>Included in Pro</h3>
                   <p className="sub">Not available on Starter</p>
+                  <p className="spectre-pro-ai-copy">
+                    Ask direct questions about your holdings and get a plain-English read on what is driving changes in value, momentum, and risk posture.
+                  </p>
                   <ul>
                     <li>Ask AI about drivers behind your current holdings</li>
                     <li>Get plain-English analysis of momentum and risk signals</li>
                     <li>See AI reasoning alongside your portfolio context</li>
+                    <li>Includes signal context like trend, ROC, breakout, and pattern tags</li>
+                    <li>Highlights both upside drivers and downside pressure in one response</li>
+                    <li>Built into your private workspace with your imported portfolio data</li>
                   </ul>
+                  <div className="spectre-pro-ai-facts">
+                    <article>
+                      <h4>What AI Reads</h4>
+                      <p>Holdings, weights, live price context, technical signals, and portfolio concentration.</p>
+                    </article>
+                    <article>
+                      <h4>What You Get</h4>
+                      <p>Top drivers, confidence-aware explanation, and practical follow-up points to review.</p>
+                    </article>
+                    <article>
+                      <h4>Access</h4>
+                      <p>Pro only. Starter users can still view core risk metrics and upgrade anytime.</p>
+                    </article>
+                  </div>
                   <a href="#pricing" className="spectre-btn spectre-btn-pro">See Pro Plan</a>
                 </article>
               </div>

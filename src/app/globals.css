@@ -4409,9 +4409,46 @@ td {
   font-size: 2.7rem;
 }
 
+.spectre-pro-ai-copy {
+  margin: 0 0 1.1rem;
+  font-size: 0.9rem;
+  line-height: 1.72;
+  color: var(--sl-muted-2);
+}
+
 .spectre-pro-ai-box ul {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.8rem 1.1rem;
+}
+
+.spectre-pro-ai-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin: 0 0 1.3rem;
+}
+
+.spectre-pro-ai-facts article {
+  background: rgba(8, 4, 18, 0.65);
+  border: 1px solid var(--sl-border);
+  border-radius: 6px;
+  padding: 0.8rem 0.9rem;
+}
+
+.spectre-pro-ai-facts h4 {
+  margin: 0 0 0.4rem;
+  font-family: var(--sl-mono);
+  font-size: 0.56rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sl-purple-hi);
+}
+
+.spectre-pro-ai-facts p {
+  margin: 0;
+  font-size: 0.79rem;
+  line-height: 1.65;
+  color: var(--sl-muted-2);
 }
 
 .spectre-plan-note {
@@ -4676,7 +4713,8 @@ td {
   .spectre-pricing-grid,
   .spectre-access-layout { grid-template-columns: 1fr; }
   .spectre-hero-right { display: none; }
-  .spectre-pro-ai-box ul { grid-template-columns: 1fr; }
+  .spectre-pro-ai-box ul,
+  .spectre-pro-ai-facts { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 640px) {
