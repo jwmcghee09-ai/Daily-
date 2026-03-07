@@ -71,6 +71,9 @@ const ADMIN_CONTACT_EMAIL = "admin@spectre-assets.com";
 const LANDING_SAMPLE_RISK_SCORE = 72;
 const TEXT_UPLOAD_EXTENSIONS = new Set(["csv", "txt", "tsv", "psv", "json"]);
 const WORKBOOK_UPLOAD_EXTENSIONS = new Set(["xlsx", "xls", "xlsm", "xlsb", "numbers", "ods"]);
+const SUPPORTED_UPLOAD_FORMATS_LABEL = "CSV, TSV, PSV, TXT, JSON, XLSX, XLS, XLSM, XLSB, NUMBERS, or ODS";
+const INVALID_UPLOAD_FORMAT_MESSAGE = `Does not accept this file type. Please convert to - ${SUPPORTED_UPLOAD_FORMATS_LABEL}.`;
+const INVALID_UPLOAD_MESSAGE_TTL_MS = 5 * 60 * 1000;
 
 const LANDING_PREVIEW_SERIES = [
   { month: "Jan", portfolio: 1180000, buffer: 1100000 },
@@ -419,6 +422,20 @@ export default function Home() {
 
     void loadSessionAndState();
   }, []);
+
+  useEffect(() => {
+    if (!banner || banner.message !== INVALID_UPLOAD_FORMAT_MESSAGE) {
+      return;
+    }
+
+    const timerId = window.setTimeout(() => {
+      setBanner((current) => (current?.message === INVALID_UPLOAD_FORMAT_MESSAGE ? null : current));
+    }, INVALID_UPLOAD_MESSAGE_TTL_MS);
+
+    return () => {
+      window.clearTimeout(timerId);
+    };
+  }, [banner]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -1416,7 +1433,11 @@ export default function Home() {
         message: `${bestHoldings.length} ${source.toUpperCase()} holdings loaded from ${file.name} and saved to SQLite.${bestWarning}`,
       });
     } catch (error) {
-      setBanner({ type: "error", message: error instanceof Error ? error.message : "Upload failed." });
+      const rawMessage = error instanceof Error ? error.message : "Upload failed.";
+      const normalizedMessage = rawMessage.toLowerCase().includes("unsupported file type")
+        ? INVALID_UPLOAD_FORMAT_MESSAGE
+        : rawMessage;
+      setBanner({ type: "error", message: normalizedMessage });
     } finally {
       event.target.value = "";
       setWorking(false);
@@ -3524,7 +3545,7 @@ async function readUploadFileCandidates(file: File): Promise<UploadCandidate[]> 
     return candidates;
   }
 
-  throw new Error("Unsupported file type. Use CSV, TSV, PSV, TXT, JSON, XLSX, XLS, XLSM, XLSB, NUMBERS, or ODS.");
+  throw new Error(INVALID_UPLOAD_FORMAT_MESSAGE);
 }
 
 function coerceJsonRows(value: unknown): CsvRow[] {

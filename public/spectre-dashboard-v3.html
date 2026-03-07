@@ -1149,6 +1149,9 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   const RISK_API_WINDOW_MAP = { "1M": "1M", "3M": "3M", "6M": "1Y", "1Y": "1Y", "ALL": "1Y" };
   const PLATINUM_EMAIL = "jwmcghee09@gmail.com";
   const HOLDINGS_AI_DEFAULT_QUESTION = "What may be influencing the value of my current holdings?";
+  const SUPPORTED_UPLOAD_FORMATS_LABEL = "CSV, TSV, PSV, TXT, JSON, XLSX, XLS, XLSM, XLSB, NUMBERS, or ODS";
+  const INVALID_UPLOAD_FORMAT_MESSAGE = `Does not accept this file type. Please convert to - ${SUPPORTED_UPLOAD_FORMATS_LABEL}.`;
+  const INVALID_UPLOAD_MESSAGE_TTL_MS = 5 * 60 * 1000;
 
   const state = {
     sessionUser: null,
@@ -1167,14 +1170,14 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   const uploadInput = document.getElementById("upload-file-input");
   const uploads = Array.from(document.querySelectorAll(".upload-card[data-source]"));
 
-  function showToast(message, tone = "success") {
+  function showToast(message, tone = "success", durationMs = 2600) {
     if (!toastEl) return;
     toastEl.textContent = message;
     toastEl.className = `system-toast ${tone} show`;
     clearTimeout(showToast._t);
     showToast._t = setTimeout(() => {
       toastEl.className = "system-toast";
-    }, 2600);
+    }, durationMs);
   }
 
   function setText(id, value) {
@@ -2445,7 +2448,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     if (!file || !state.uploadSource) return;
     const extension = getFileExtension(file.name);
     if (!SUPPORTED_UPLOAD_EXTENSIONS.has(extension)) {
-      showToast("Unsupported file type. Use CSV, TSV, PSV, TXT, JSON, XLSX, XLS, XLSM, XLSB, NUMBERS, or ODS.", "error");
+      showToast(INVALID_UPLOAD_FORMAT_MESSAGE, "error", INVALID_UPLOAD_MESSAGE_TTL_MS);
       return;
     }
 
@@ -2479,7 +2482,11 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       renderPortfolio();
       showToast(`${state.uploadSource.toUpperCase()} report imported.`);
     } catch (error) {
-      showToast(error instanceof Error ? error.message : "Upload failed.", "error");
+      const message = error instanceof Error ? error.message : "Upload failed.";
+      const isInvalidTypeMessage =
+        message.toLowerCase().includes("unsupported file type") ||
+        message.toLowerCase().includes("does not accept this file type");
+      showToast(message, "error", isInvalidTypeMessage ? INVALID_UPLOAD_MESSAGE_TTL_MS : 2600);
     } finally {
       state.uploadSource = null;
       uploadInput.value = "";

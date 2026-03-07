@@ -12,6 +12,8 @@ const MAX_IMPORT_BODY_BYTES = 4 * 1024 * 1024;
 const TEXT_UPLOAD_EXTENSIONS = new Set(["csv", "txt", "tsv", "psv", "json"]);
 const WORKBOOK_UPLOAD_EXTENSIONS = new Set(["xlsx", "xls", "xlsm", "xlsb", "numbers", "ods"]);
 const SUPPORTED_UPLOAD_EXTENSIONS = new Set([...TEXT_UPLOAD_EXTENSIONS, ...WORKBOOK_UPLOAD_EXTENSIONS]);
+const SUPPORTED_UPLOAD_FORMATS_LABEL = "CSV, TSV, PSV, TXT, JSON, XLSX, XLS, XLSM, XLSB, NUMBERS, or ODS";
+const INVALID_UPLOAD_FORMAT_MESSAGE = `Does not accept this file type. Please convert to - ${SUPPORTED_UPLOAD_FORMATS_LABEL}.`;
 
 interface ImportCsvPayload {
   source?: unknown;
@@ -104,7 +106,7 @@ function toImportCandidates(payload: ImportCsvPayload): { candidates: ImportCand
   if (!SUPPORTED_UPLOAD_EXTENSIONS.has(extension)) {
     return {
       candidates: [],
-      error: "Unsupported file type. Use CSV, TSV, PSV, TXT, JSON, XLSX, XLS, XLSM, XLSB, NUMBERS, or ODS.",
+      error: INVALID_UPLOAD_FORMAT_MESSAGE,
     };
   }
 
