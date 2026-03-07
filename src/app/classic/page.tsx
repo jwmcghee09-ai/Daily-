@@ -2031,8 +2031,8 @@ export default function Home() {
               <p className="spectre-section-label orange">Pro AI</p>
               <h2 className="spectre-section-title">Ask AI holdings analysis in a dedicated box.</h2>
               <p className="spectre-section-sub">This feature is premium only. Upgrade to Pro to ask questions about what may be influencing the value of your current holdings.</p>
-              <div className="spectre-pricing-grid">
-                <article className="spectre-plan featured">
+              <div className="spectre-pro-ai-grid">
+                <article className="spectre-plan featured spectre-pro-ai-box">
                   <p className="badge">Premium Only</p>
                   <p className="tier">Pro AI Console</p>
                   <h3>Included in Pro</h3>

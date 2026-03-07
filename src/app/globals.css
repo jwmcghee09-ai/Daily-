@@ -4397,6 +4397,23 @@ td {
   line-height: 1.55;
 }
 
+.spectre-pro-ai-grid {
+  width: 100%;
+}
+
+.spectre-pro-ai-box {
+  width: 100%;
+}
+
+.spectre-pro-ai-box h3 {
+  font-size: 2.7rem;
+}
+
+.spectre-pro-ai-box ul {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.8rem 1.1rem;
+}
+
 .spectre-plan-note {
   display: block;
   margin-top: 0.8rem;
@@ -4659,6 +4676,7 @@ td {
   .spectre-pricing-grid,
   .spectre-access-layout { grid-template-columns: 1fr; }
   .spectre-hero-right { display: none; }
+  .spectre-pro-ai-box ul { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 640px) {
