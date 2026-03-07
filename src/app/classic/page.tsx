@@ -1810,7 +1810,7 @@ export default function Home() {
               <p className="spectre-hero-eye">System for Portfolio Exposure, Correlation, Threat &amp; Risk Evaluation</p>
               <h1 className="spectre-hero-title">Monitor exposure &amp; risk in one <span>private workspace.</span></h1>
               <p className="spectre-hero-desc">
-                SPECTRE turns CSV exports from super, ASX, crypto, index funds, mutual funds, and bullion into one clear risk view so you can act with confidence.
+                SPECTRE turns CSV exports from super, savings, tax reports, ASX, crypto, index funds, mutual funds, and bullion into one clear risk view so you can act with confidence.
               </p>
               <div className="spectre-hero-pills">
                 <span className="spectre-pill spectre-pill-purple">3-Step Workflow</span>
@@ -1896,7 +1896,7 @@ export default function Home() {
               <p className="spectre-section-sub">Upload files, normalize holdings, then review risk score and exposure metrics. Purpose-built for Australian investors managing multi-source portfolios.</p>
 
               <div className="spectre-ops-grid">
-                <article><p>01</p><h3>Import</h3><span>Import super, ASX, crypto, index, mutual fund, and bullion CSV exports.</span></article>
+                <article><p>01</p><h3>Import</h3><span>Import super, savings, tax report, ASX, crypto, index, mutual fund, and bullion exports.</span></article>
                 <article><p>02</p><h3>Normalize</h3><span>SPECTRE normalizes holdings by account, source, and sector in one workspace.</span></article>
                 <article><p>03</p><h3>Review</h3><span>Review risk score, concentration, VaR, drawdown, and scenario stress outcomes.</span></article>
               </div>
@@ -1915,7 +1915,7 @@ export default function Home() {
               </div>
 
               <div className="spectre-feature-grid">
-                <article><h3>ASX + Crypto + Super Imports</h3><p>Ingest brokerage, crypto wallet, superannuation, index, fund, and bullion exports in one workflow.</p></article>
+                <article><h3>ASX + Crypto + Super Imports</h3><p>Ingest brokerage, crypto wallet, superannuation, savings, tax report, index, fund, and bullion exports in one workflow.</p></article>
                 <article><h3>Risk Score + Dashboard</h3><p>Track one clear risk score alongside VaR95, drawdown, volatility, and concentration.</p></article>
                 <article><h3>Session Movers</h3><p>Surface ASX top movers and trigger dip alert emails using refreshed market prices.</p></article>
                 <article><h3>Snapshot Audit Trail</h3><p>Review portfolio trend history and data quality signals over time.</p></article>
@@ -2009,7 +2009,7 @@ export default function Home() {
               <h2 className="spectre-section-title">One clear 3-step path from files to risk decisions.</h2>
               <p className="spectre-section-sub">Start with existing statements, centralize exposure in SPECTRE, then monitor risk signals from one private dashboard.</p>
               <div className="spectre-steps-grid">
-                <article><p>01</p><h3>Import Reports</h3><span>Upload super, ASX, crypto, index, mutual fund, and bullion files directly into SPECTRE.</span></article>
+                <article><p>01</p><h3>Import Reports</h3><span>Upload super, savings, tax report, ASX, crypto, index, mutual fund, and bullion files directly into SPECTRE.</span></article>
                 <article><p>02</p><h3>Normalize Exposure</h3><span>Aggregate positions by source, account, sector, and instrument in one structure.</span></article>
                 <article><p>03</p><h3>Act On Risk Signals</h3><span>Use risk score, drawdown, VaR, concentration metrics, and dip alert emails to monitor risk posture.</span></article>
               </div>
@@ -2043,7 +2043,7 @@ export default function Home() {
                   <p className="sub">Live now</p>
                   <ul>
                     <li>One private investor workspace</li>
-                    <li>CSV import for super, ASX, crypto, index, funds, and bullion</li>
+                    <li>CSV/XLSX import for super, savings, tax reports, ASX, crypto, index, funds, and bullion</li>
                     <li>Risk score, dashboard charts, and snapshots</li>
                     <li>Email verification and password reset</li>
                   </ul>
@@ -2062,6 +2062,7 @@ export default function Home() {
                     <li>Expected Shortfall (ES 95) tail risk</li>
                     <li>Beta and tracking error vs ASX 200</li>
                     <li>Date-aligned benchmark analytics</li>
+                    <li>Ask AI holdings analysis for current portfolio drivers</li>
                     <li>Advanced reporting and team workflows</li>
                   </ul>
                   <button type="button" className="spectre-btn spectre-btn-pro" onClick={() => void startProCheckout(authEmail)} disabled={checkoutWorking}>
@@ -2288,7 +2289,7 @@ export default function Home() {
         <div className="hero-copy">
           <h1><Image src="/spectre-wordmark-plain.svg" alt="SPECTRE" width={620} height={148} className="hero-wordmark-image" priority /></h1>
           <p className="hero-tagline">System for Portfolio Exposure, Correlation, Threat & Risk Evaluation</p>
-          <p className="hero-description">Upload super, ASX, crypto, index, mutual fund, and ABC Bullion CSV reports to track exposure, concentration, and downside risk in one private workspace.</p>
+          <p className="hero-description">Upload super, savings, tax report, ASX, crypto, index, mutual fund, and ABC Bullion reports to track exposure, concentration, and downside risk in one private workspace. Pro also adds Ask AI holdings analysis.</p>
         </div>
         <div className="meta">
           <span className="meta-item">Account: {sessionUser.displayName} ({sessionUser.email})</span>
