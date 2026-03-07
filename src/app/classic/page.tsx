@@ -1810,12 +1810,13 @@ export default function Home() {
               <p className="spectre-hero-eye">System for Portfolio Exposure, Correlation, Threat &amp; Risk Evaluation</p>
               <h1 className="spectre-hero-title">Monitor exposure &amp; risk in one <span>private workspace.</span></h1>
               <p className="spectre-hero-desc">
-                SPECTRE turns CSV exports from super, savings, tax reports, ASX, crypto, index funds, mutual funds, and bullion into one clear risk view so you can act with confidence.
+                New in Pro: Ask AI for holdings analysis. SPECTRE turns exports from super, savings, tax reports, ASX, crypto, index funds, mutual funds, and bullion into one clear risk view so you can act with confidence.
               </p>
               <div className="spectre-hero-pills">
                 <span className="spectre-pill spectre-pill-purple">3-Step Workflow</span>
                 <span className="spectre-pill spectre-pill-orange">SPECTRE Framework</span>
                 <span className="spectre-pill">Security Controls</span>
+                <span className="spectre-pill spectre-pill-purple">Pro AI + Savings/Tax Uploads</span>
               </div>
               <div className="spectre-hero-actions">
                 <a href="#access" className="spectre-btn spectre-btn-primary">Start For $3 / Month</a>
