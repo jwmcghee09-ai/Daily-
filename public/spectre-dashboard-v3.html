@@ -543,7 +543,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       <div class="sec-line"></div>
       <span class="sec-label" id="uploads-source-count">7 sources</span>
     </div>
-    <input id="upload-file-input" type="file" accept=".csv,.tsv,.txt,.xlsx,.xls,.numbers,.ods,text/csv,text/tab-separated-values,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,application/vnd.oasis.opendocument.spreadsheet,application/x-iwork-numbers-sffnumbers" style="display:none" />
+    <input id="upload-file-input" type="file" accept=".csv,.tsv,.psv,.txt,.json,.xlsx,.xls,.xlsm,.xlsb,.numbers,.ods,text/csv,text/tab-separated-values,application/json,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,application/vnd.ms-excel.sheet.macroEnabled.12,application/vnd.ms-excel.sheet.binary.macroEnabled.12,application/vnd.oasis.opendocument.spreadsheet,application/x-iwork-numbers-sffnumbers" style="display:none" />
     <div class="upload-grid">
       <div class="upload-card" data-source="super">
         <div class="upload-num">01 — Super</div>
@@ -2413,8 +2413,8 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     }
   }
 
-  const TEXT_UPLOAD_EXTENSIONS = new Set(["csv", "txt", "tsv"]);
-  const SUPPORTED_UPLOAD_EXTENSIONS = new Set(["csv", "txt", "tsv", "xlsx", "xls", "numbers", "ods"]);
+  const TEXT_UPLOAD_EXTENSIONS = new Set(["csv", "txt", "tsv", "psv", "json"]);
+  const SUPPORTED_UPLOAD_EXTENSIONS = new Set(["csv", "txt", "tsv", "psv", "json", "xlsx", "xls", "xlsm", "xlsb", "numbers", "ods"]);
 
   function getFileExtension(fileName) {
     const dotIndex = fileName.lastIndexOf(".");
@@ -2439,7 +2439,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     if (!file || !state.uploadSource) return;
     const extension = getFileExtension(file.name);
     if (!SUPPORTED_UPLOAD_EXTENSIONS.has(extension)) {
-      showToast("Unsupported file type. Use CSV, TSV, TXT, XLSX, XLS, NUMBERS, or ODS.", "error");
+      showToast("Unsupported file type. Use CSV, TSV, PSV, TXT, JSON, XLSX, XLS, XLSM, XLSB, NUMBERS, or ODS.", "error");
       return;
     }
 

@@ -69,8 +69,8 @@ const AUTO_REFRESH_INTERVAL_MS = 5 * 60 * 1000;
 const AUTO_REFRESH_RESUME_GRACE_MS = 20 * 1000;
 const ADMIN_CONTACT_EMAIL = "admin@spectre-assets.com";
 const LANDING_SAMPLE_RISK_SCORE = 72;
-const TEXT_UPLOAD_EXTENSIONS = new Set(["csv", "txt", "tsv"]);
-const WORKBOOK_UPLOAD_EXTENSIONS = new Set(["xlsx", "xls", "numbers", "ods"]);
+const TEXT_UPLOAD_EXTENSIONS = new Set(["csv", "txt", "tsv", "psv", "json"]);
+const WORKBOOK_UPLOAD_EXTENSIONS = new Set(["xlsx", "xls", "xlsm", "xlsb", "numbers", "ods"]);
 
 const LANDING_PREVIEW_SERIES = [
   { month: "Jan", portfolio: 1180000, buffer: 1100000 },
@@ -231,6 +231,11 @@ interface PriceDipAlertsPayload {
   planTier: "none" | "starter" | "pro";
   proEnabled: boolean;
   availableTickers: string[];
+}
+
+interface UploadCandidate {
+  label: string;
+  text: string;
 }
 
 interface HoldingsAiBreakdown {
@@ -1363,21 +1368,27 @@ export default function Home() {
     setWorking(true);
 
     try {
-      const csvText = await readUploadFileAsCsvText(file);
-      const cleanCsvText = extractCsvDataSection(csvText);
-      const parsed = Papa.parse<CsvRow>(cleanCsvText, {
-        header: true,
-        skipEmptyLines: "greedy",
-        delimiter: "",
-        transformHeader: (header) => header.trim(),
-      });
+      const candidates = await readUploadFileCandidates(file);
+      let bestHoldings: ReturnType<typeof parseRowsToHoldings> = [];
+      let bestWarning = "";
 
-      const holdings = parseRowsToHoldings(parsed.data, source);
+      for (const candidate of candidates) {
+        const parsed = parseUploadRows(candidate.text);
+        if (parsed.rows.length === 0) {
+          continue;
+        }
 
-      if (holdings.length === 0) {
+        const holdings = parseRowsToHoldings(parsed.rows, source);
+        if (holdings.length > bestHoldings.length) {
+          bestHoldings = holdings;
+          bestWarning = getUserVisibleCsvWarning(parsed.errors);
+        }
+      }
+
+      if (bestHoldings.length === 0) {
         setBanner({
           type: "error",
-          message: "No valid holdings were found. Check that your file includes value/price/units (or weight) columns.",
+          message: "No valid holdings were found. Check that your file includes value/price/units columns and uses supported file formats.",
         });
         event.target.value = "";
         return;
@@ -1388,7 +1399,7 @@ export default function Home() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ source, holdings }),
+        body: JSON.stringify({ source, holdings: bestHoldings }),
       });
 
       if (!response.ok) {
@@ -1398,10 +1409,9 @@ export default function Home() {
       const persistedState = (await response.json()) as PortfolioState;
       setState(persistedState);
 
-      const warningText = getUserVisibleCsvWarning(parsed.errors);
       setBanner({
         type: "success",
-        message: `${holdings.length} ${source.toUpperCase()} holdings loaded from ${file.name} and saved to SQLite.${warningText}`,
+        message: `${bestHoldings.length} ${source.toUpperCase()} holdings loaded from ${file.name} and saved to SQLite.${bestWarning}`,
       });
     } catch (error) {
       setBanner({ type: "error", message: error instanceof Error ? error.message : "Upload failed." });
@@ -3079,7 +3089,7 @@ function UploadCard({
       <label className="file-input">
         <input
           type="file"
-          accept=".csv,.tsv,.txt,.xlsx,.xls,.numbers,.ods,text/csv,text/tab-separated-values,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,application/vnd.oasis.opendocument.spreadsheet,application/x-iwork-numbers-sffnumbers"
+          accept=".csv,.tsv,.psv,.txt,.json,.xlsx,.xls,.xlsm,.xlsb,.numbers,.ods,text/csv,text/tab-separated-values,application/json,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,application/vnd.ms-excel.sheet.macroEnabled.12,application/vnd.ms-excel.sheet.binary.macroEnabled.12,application/vnd.oasis.opendocument.spreadsheet,application/x-iwork-numbers-sffnumbers"
           onChange={onUpload}
           disabled={disabled}
         />
@@ -3465,28 +3475,120 @@ function getFileExtension(fileName: string): string {
   return trimmed.slice(dotIndex + 1).toLowerCase();
 }
 
-async function readUploadFileAsCsvText(file: File): Promise<string> {
+async function readUploadFileCandidates(file: File): Promise<UploadCandidate[]> {
   const extension = getFileExtension(file.name);
   if (TEXT_UPLOAD_EXTENSIONS.has(extension)) {
-    return await file.text();
+    const text = await file.text();
+    return [{ label: file.name, text }];
   }
 
   if (WORKBOOK_UPLOAD_EXTENSIONS.has(extension)) {
     const workbook = XLSX.read(await file.arrayBuffer(), { type: "array", dense: true });
-    const firstSheet = workbook.SheetNames[0];
-    if (!firstSheet) {
+    if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
       throw new Error("Workbook file has no sheets.");
     }
 
-    const worksheet = workbook.Sheets[firstSheet];
-    if (!worksheet) {
-      throw new Error("Workbook sheet could not be read.");
+    const candidates: UploadCandidate[] = [];
+    for (const sheetName of workbook.SheetNames) {
+      const worksheet = workbook.Sheets[sheetName];
+      if (!worksheet) {
+        continue;
+      }
+
+      const csvText = XLSX.utils.sheet_to_csv(worksheet, { blankrows: false });
+      if (csvText.trim().length === 0) {
+        continue;
+      }
+
+      candidates.push({
+        label: `${file.name} :: ${sheetName}`,
+        text: csvText,
+      });
     }
 
-    return XLSX.utils.sheet_to_csv(worksheet, { blankrows: false });
+    if (candidates.length === 0) {
+      throw new Error("Workbook file appears empty.");
+    }
+
+    return candidates;
   }
 
-  throw new Error("Unsupported file type. Use CSV, TSV, TXT, XLSX, XLS, NUMBERS, or ODS.");
+  throw new Error("Unsupported file type. Use CSV, TSV, PSV, TXT, JSON, XLSX, XLS, XLSM, XLSB, NUMBERS, or ODS.");
+}
+
+function coerceJsonRows(value: unknown): CsvRow[] {
+  const toRow = (record: Record<string, unknown>): CsvRow => {
+    return Object.entries(record).reduce<CsvRow>((acc, [key, cell]) => {
+      if (cell == null || typeof cell === "string" || typeof cell === "number") {
+        acc[key] = cell;
+      } else if (typeof cell === "boolean") {
+        acc[key] = cell ? "true" : "false";
+      } else {
+        acc[key] = JSON.stringify(cell);
+      }
+      return acc;
+    }, {});
+  };
+
+  const toRows = (rows: unknown[]): CsvRow[] => {
+    return rows
+      .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object" && !Array.isArray(item))
+      .map((item) => toRow(item));
+  };
+
+  if (Array.isArray(value)) {
+    return toRows(value);
+  }
+
+  if (!value || typeof value !== "object") {
+    return [];
+  }
+
+  const container = value as Record<string, unknown>;
+  const preferredKeys = ["holdings", "rows", "data", "items", "transactions", "positions"];
+  for (const key of preferredKeys) {
+    const candidate = container[key];
+    if (!Array.isArray(candidate)) {
+      continue;
+    }
+
+    const rows = toRows(candidate);
+    if (rows.length > 0) {
+      return rows;
+    }
+  }
+
+  const singleRow = toRow(container);
+  return Object.keys(singleRow).length > 0 ? [singleRow] : [];
+}
+
+function parseUploadRows(text: string): { rows: CsvRow[]; errors: ParseError[] } {
+  const normalizedText = extractCsvDataSection(text);
+  const trimmed = normalizedText.trim();
+
+  if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
+    try {
+      const parsedJson = JSON.parse(trimmed) as unknown;
+      const rows = coerceJsonRows(parsedJson);
+      if (rows.length > 0) {
+        return { rows, errors: [] };
+      }
+    } catch {
+      // Fall through to CSV parser.
+    }
+  }
+
+  const parsed = Papa.parse<CsvRow>(normalizedText, {
+    header: true,
+    skipEmptyLines: "greedy",
+    delimiter: "",
+    transformHeader: (header) => header.trim(),
+  });
+
+  return {
+    rows: parsed.data,
+    errors: parsed.errors,
+  };
 }
 
 async function parseApiError(response: Response, fallback: string): Promise<string> {

@@ -9,8 +9,8 @@ export const runtime = "nodejs";
 
 const MAX_IMPORT_FILE_BYTES = 2 * 1024 * 1024;
 const MAX_IMPORT_BODY_BYTES = 4 * 1024 * 1024;
-const TEXT_UPLOAD_EXTENSIONS = new Set(["csv", "txt", "tsv"]);
-const WORKBOOK_UPLOAD_EXTENSIONS = new Set(["xlsx", "xls", "numbers", "ods"]);
+const TEXT_UPLOAD_EXTENSIONS = new Set(["csv", "txt", "tsv", "psv", "json"]);
+const WORKBOOK_UPLOAD_EXTENSIONS = new Set(["xlsx", "xls", "xlsm", "xlsb", "numbers", "ods"]);
 const SUPPORTED_UPLOAD_EXTENSIONS = new Set([...TEXT_UPLOAD_EXTENSIONS, ...WORKBOOK_UPLOAD_EXTENSIONS]);
 
 interface ImportCsvPayload {
@@ -18,6 +18,11 @@ interface ImportCsvPayload {
   csvText?: unknown;
   fileName?: unknown;
   fileBase64?: unknown;
+}
+
+interface ImportCandidate {
+  label: string;
+  text: string;
 }
 
 function isValidSource(value: unknown): value is DataSource {
@@ -59,68 +64,150 @@ function decodeBase64File(fileBase64: string): Buffer {
   }
 }
 
-function parseWorkbookToCsv(fileBuffer: Buffer): string {
+function parseWorkbookToCsvCandidates(fileBuffer: Buffer): ImportCandidate[] {
   const workbook = XLSX.read(fileBuffer, { type: "buffer", dense: true });
-  const firstSheet = workbook.SheetNames[0];
-  if (!firstSheet) {
-    return "";
+  const candidates: ImportCandidate[] = [];
+
+  for (const sheetName of workbook.SheetNames) {
+    const worksheet = workbook.Sheets[sheetName];
+    if (!worksheet) {
+      continue;
+    }
+
+    const csvText = XLSX.utils.sheet_to_csv(worksheet, { blankrows: false });
+    if (csvText.trim().length === 0) {
+      continue;
+    }
+
+    candidates.push({
+      label: `sheet:${sheetName}`,
+      text: csvText,
+    });
   }
 
-  const worksheet = workbook.Sheets[firstSheet];
-  if (!worksheet) {
-    return "";
-  }
-
-  return XLSX.utils.sheet_to_csv(worksheet, { blankrows: false });
+  return candidates;
 }
 
-function toCsvText(payload: ImportCsvPayload): { csvText: string; error: string | null } {
+function toImportCandidates(payload: ImportCsvPayload): { candidates: ImportCandidate[]; error: string | null } {
   const csvText = typeof payload.csvText === "string" ? payload.csvText : "";
   if (csvText.trim().length > 0) {
-    return { csvText, error: null };
+    return { candidates: [{ label: "inline-text", text: csvText }], error: null };
   }
 
   const fileName = typeof payload.fileName === "string" ? payload.fileName.trim() : "";
   const fileBase64 = typeof payload.fileBase64 === "string" ? payload.fileBase64.trim() : "";
   if (!fileName || !fileBase64) {
-    return { csvText: "", error: "CSV content is required." };
+    return { candidates: [], error: "CSV content is required." };
   }
 
   const extension = getExtension(fileName);
   if (!SUPPORTED_UPLOAD_EXTENSIONS.has(extension)) {
     return {
-      csvText: "",
-      error: "Unsupported file type. Use CSV, TSV, TXT, XLSX, XLS, NUMBERS, or ODS.",
+      candidates: [],
+      error: "Unsupported file type. Use CSV, TSV, PSV, TXT, JSON, XLSX, XLS, XLSM, XLSB, NUMBERS, or ODS.",
     };
   }
 
   const fileBuffer = decodeBase64File(fileBase64);
   if (fileBuffer.length === 0) {
-    return { csvText: "", error: "Uploaded file could not be decoded." };
+    return { candidates: [], error: "Uploaded file could not be decoded." };
   }
   if (fileBuffer.length > MAX_IMPORT_FILE_BYTES) {
-    return { csvText: "", error: "Import file is too large. Max 2MB file size." };
+    return { candidates: [], error: "Import file is too large. Max 2MB file size." };
   }
 
   if (WORKBOOK_UPLOAD_EXTENSIONS.has(extension)) {
-    let workbookCsv = "";
+    let workbookCandidates: ImportCandidate[] = [];
     try {
-      workbookCsv = parseWorkbookToCsv(fileBuffer);
+      workbookCandidates = parseWorkbookToCsvCandidates(fileBuffer);
     } catch {
-      return { csvText: "", error: "Workbook file could not be parsed." };
+      return { candidates: [], error: "Workbook file could not be parsed." };
     }
-    if (workbookCsv.trim().length === 0) {
-      return { csvText: "", error: "Workbook file appears empty." };
+    if (workbookCandidates.length === 0) {
+      return { candidates: [], error: "Workbook file appears empty." };
     }
-    return { csvText: workbookCsv, error: null };
+    return { candidates: workbookCandidates, error: null };
   }
 
   const textValue = fileBuffer.toString("utf8");
   if (textValue.trim().length === 0) {
-    return { csvText: "", error: "Text file appears empty." };
+    return { candidates: [], error: "Text file appears empty." };
   }
 
-  return { csvText: textValue, error: null };
+  return { candidates: [{ label: fileName, text: textValue }], error: null };
+}
+
+function coerceJsonRows(value: unknown): CsvRow[] {
+  const toRow = (record: Record<string, unknown>): CsvRow => {
+    return Object.entries(record).reduce<CsvRow>((acc, [key, cell]) => {
+      if (cell == null || typeof cell === "string" || typeof cell === "number") {
+        acc[key] = cell;
+      } else if (typeof cell === "boolean") {
+        acc[key] = cell ? "true" : "false";
+      } else {
+        acc[key] = JSON.stringify(cell);
+      }
+      return acc;
+    }, {});
+  };
+
+  const toRows = (items: unknown[]): CsvRow[] => {
+    return items
+      .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object" && !Array.isArray(item))
+      .map((item) => toRow(item));
+  };
+
+  if (Array.isArray(value)) {
+    return toRows(value);
+  }
+
+  if (!value || typeof value !== "object") {
+    return [];
+  }
+
+  const container = value as Record<string, unknown>;
+  const keys = ["holdings", "rows", "data", "items", "transactions", "positions"];
+  for (const key of keys) {
+    const candidate = container[key];
+    if (Array.isArray(candidate)) {
+      const rows = toRows(candidate);
+      if (rows.length > 0) {
+        return rows;
+      }
+    }
+  }
+
+  const singleRow = toRow(container);
+  return Object.keys(singleRow).length > 0 ? [singleRow] : [];
+}
+
+function parseCandidateRows(text: string): { rows: CsvRow[]; parsedAny: boolean } {
+  const normalized = extractCsvDataSection(text);
+  const trimmed = normalized.trim();
+
+  if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
+    try {
+      const parsedJson = JSON.parse(trimmed) as unknown;
+      const jsonRows = coerceJsonRows(parsedJson);
+      if (jsonRows.length > 0) {
+        return { rows: jsonRows, parsedAny: true };
+      }
+    } catch {
+      // Fall back to CSV parser below.
+    }
+  }
+
+  const parsed = Papa.parse<CsvRow>(normalized, {
+    header: true,
+    skipEmptyLines: true,
+    delimiter: "",
+    transformHeader: (header) => header.trim(),
+  });
+
+  return {
+    rows: parsed.data || [],
+    parsedAny: parsed.data.length > 0 || parsed.errors.length === 0,
+  };
 }
 
 export async function POST(request: Request) {
@@ -152,30 +239,38 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid source. Must be 'super', 'asx', 'gold', 'index', 'fund', 'crypto', or 'tax'." }, { status: 400 });
     }
 
-    const normalizedInput = toCsvText(payload);
+    const normalizedInput = toImportCandidates(payload);
     if (normalizedInput.error) {
       const status = normalizedInput.error.includes("too large") ? 413 : 400;
       return NextResponse.json({ error: normalizedInput.error }, { status });
     }
 
-    const normalizedCsv = extractCsvDataSection(normalizedInput.csvText);
-    const parsed = Papa.parse<CsvRow>(normalizedCsv, {
-      header: true,
-      skipEmptyLines: true,
-      delimiter: "",
-      transformHeader: (header) => header.trim(),
-    });
+    let bestHoldings: PortfolioHolding[] = [];
+    let parsedAnyCandidate = false;
 
-    if (parsed.errors.length > 0 && parsed.data.length === 0) {
-      return NextResponse.json({ error: "Unable to parse CSV." }, { status: 400 });
+    for (const candidate of normalizedInput.candidates) {
+      const parsed = parseCandidateRows(candidate.text);
+      parsedAnyCandidate = parsedAnyCandidate || parsed.parsedAny;
+
+      if (parsed.rows.length === 0) {
+        continue;
+      }
+
+      const holdings = parseRowsToHoldings(parsed.rows, payload.source).filter(isValidParsedHolding);
+      if (holdings.length > bestHoldings.length) {
+        bestHoldings = holdings;
+      }
     }
 
-    const holdings = parseRowsToHoldings(parsed.data, payload.source).filter(isValidParsedHolding);
-    if (holdings.length === 0) {
+    if (!parsedAnyCandidate) {
+      return NextResponse.json({ error: "Unable to parse file data." }, { status: 400 });
+    }
+
+    if (bestHoldings.length === 0) {
       return NextResponse.json({ error: "No valid holdings were found in this file." }, { status: 400 });
     }
 
-    const state = saveImport(sessionUser.id, payload.source, holdings);
+    const state = saveImport(sessionUser.id, payload.source, bestHoldings);
     return NextResponse.json(state);
   } catch {
     return NextResponse.json({ error: "Failed to import report file." }, { status: 500 });

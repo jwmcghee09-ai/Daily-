@@ -74,15 +74,15 @@ const RISK_WINDOW_DAYS: Record<RiskWindow, number> = {
 };
 
 const FIELD_ALIASES = {
-  account: ["account", "accountname", "portfolio", "broker", "fund", "superaccount", "accountnumber"],
-  ticker: ["ticker", "symbol", "pair", "asxcode", "code", "securitycode", "instrument", "stock", "metal", "bullion", "product", "isin", "cusip", "sedol", "ric", "fundcode", "identifier"],
-  name: ["name", "fundname", "security", "securityname", "holding", "description", "investment", "asset", "company"],
-  units: ["units", "quantity", "qty", "shares", "vol", "cvol", "unitsheld", "availunits", "availableunits", "weight", "weightoz", "weightg", "gram", "grams", "ounce", "ounces", "oz", "troyounce", "troyounces"],
-  price: ["price", "unit", "unitprice", "lastprice", "marketprice", "currentprice", "close", "last"],
-  value: ["value", "marketvalue", "currentvalue", "valuation", "balance", "amount", "mktvalue", "cost", "ccost", "net"],
-  cost: ["costbase", "cost", "bookvalue", "purchasevalue", "avgcost", "averagecost", "purchase"],
-  sector: ["sector", "industry", "assetclass", "class", "category"],
-  date: ["date", "unitdate", "valuationdate", "asat", "reportdate", "pricedate"],
+  account: ["account", "accountname", "portfolio", "broker", "fund", "superaccount", "accountnumber", "wallet", "exchange", "platform"],
+  ticker: ["ticker", "symbol", "pair", "asxcode", "code", "securitycode", "instrument", "stock", "metal", "bullion", "product", "isin", "cusip", "sedol", "ric", "fundcode", "identifier", "asset", "coin", "currency"],
+  name: ["name", "fundname", "security", "securityname", "holding", "description", "investment", "assetname", "company", "fullname"],
+  units: ["units", "quantity", "qty", "shares", "vol", "cvol", "unitsheld", "availunits", "availableunits", "weight", "weightoz", "weightg", "gram", "grams", "ounce", "ounces", "oz", "troyounce", "troyounces", "balance", "position", "positionqty"],
+  price: ["price", "unit", "unitprice", "lastprice", "marketprice", "currentprice", "close", "last", "avgprice", "averageprice", "marketpriceaud", "closeprice"],
+  value: ["value", "marketvalue", "currentvalue", "valuation", "balancevalue", "amount", "mktvalue", "cost", "ccost", "net", "audvalue", "valueaud", "marketvalueaud", "notional"],
+  cost: ["costbase", "cost", "bookvalue", "purchasevalue", "avgcost", "averagecost", "purchase", "costbaseaud", "bookcost", "totalcost"],
+  sector: ["sector", "industry", "assetclass", "class", "category", "subsector"],
+  date: ["date", "unitdate", "valuationdate", "asat", "reportdate", "pricedate", "asofdate", "tradedate", "timestamp"],
 };
 
 const NON_HOLDING_MARKERS = ["subtotal", "total", "grand total", "chess", "issuer sponsored holdings", "there are no"];
@@ -134,7 +134,8 @@ function isLikelyHeaderLine(line: string): boolean {
     }
   }
 
-  return hits >= 2 && line.includes(",");
+  const hasDelimiter = line.includes(",") || line.includes(";") || line.includes("\t") || line.includes("|");
+  return hits >= 2 && hasDelimiter;
 }
 
 export function parseRowsToHoldings(rows: CsvRow[], source: DataSource): PortfolioHolding[] {
@@ -574,11 +575,27 @@ function toNumber(raw: string): number {
     return Number.NaN;
   }
 
-  const normalized = raw
+  const base = raw
     .replace(/\(([^)]+)\)/g, "-$1")
-    .replace(/[$,%\s]/g, "")
-    .replace(/,/g, "")
-    .replace(/[^0-9.-]/g, "");
+    .replace(/[$%\s]/g, "")
+    .replace(/[^\d,.-]/g, "");
+
+  const hasComma = base.includes(",");
+  const hasDot = base.includes(".");
+  let normalized = base;
+
+  // Handle locale format like 1.234,56 by treating comma as decimal separator.
+  if (hasComma && hasDot && base.lastIndexOf(",") > base.lastIndexOf(".")) {
+    normalized = base.replace(/\./g, "").replace(",", ".");
+  } else if (hasComma && !hasDot) {
+    const thousandsComma = /^-?\d{1,3}(,\d{3})+$/.test(base);
+    const decimalComma = /,\d{1,4}$/.test(base);
+    normalized = thousandsComma ? base.replace(/,/g, "") : decimalComma ? base.replace(",", ".") : base.replace(/,/g, "");
+  } else {
+    normalized = base.replace(/,/g, "");
+  }
+
+  normalized = normalized.replace(/[^0-9.-]/g, "");
 
   const parsed = Number.parseFloat(normalized);
   return Number.isFinite(parsed) ? parsed : Number.NaN;
