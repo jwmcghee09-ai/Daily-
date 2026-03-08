@@ -32,6 +32,7 @@ html{scroll-behavior:smooth}
 }
 
 body{background:var(--bg);color:var(--text);font-family:var(--sans);font-weight:400;line-height:1.7;overflow-x:hidden}
+body.boot-pending > *:not(#boot-splash):not(script){display:none!important}
 
 /* BACKGROUND — exact landing page */
 body::before{
@@ -398,6 +399,37 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 .system-toast.success{border-color:rgba(255,255,255,.2)}
 .system-toast.error{border-color:rgba(255,77,26,.45);color:#ffd9d2}
 
+#boot-splash{
+  position:fixed;
+  inset:0;
+  z-index:1600;
+  display:grid;
+  place-items:center;
+  padding:1rem;
+}
+.boot-shell{
+  min-width:220px;
+  text-align:center;
+  border:1px solid var(--border2);
+  border-radius:12px;
+  background:linear-gradient(160deg,rgba(15,10,28,.97) 0%,rgba(10,7,18,.96) 100%);
+  box-shadow:var(--shadow);
+  padding:1rem 1.2rem;
+}
+.boot-label{
+  display:block;
+  font-family:var(--mono);
+  font-size:.56rem;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  color:var(--orange);
+  margin-bottom:.35rem;
+}
+.boot-copy{
+  font-size:.82rem;
+  color:var(--muted2);
+}
+
 /* PRO CONSOLE */
 .console-wrap{background:linear-gradient(165deg,rgba(16,11,28,.96) 0%,rgba(10,7,18,.95) 100%);border:1px solid rgba(192,132,252,.15);border-radius:16px;padding:1.8rem 2rem;box-shadow:var(--shadow),0 0 30px rgba(155,93,229,.04) inset}
 .console-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.4rem}
@@ -498,7 +530,14 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 }
 </style>
 </head>
-<body>
+<body class="boot-pending">
+
+<div id="boot-splash" role="status" aria-live="polite">
+  <div class="boot-shell">
+    <span class="boot-label">SPECTRE</span>
+    <p class="boot-copy">Loading workspace...</p>
+  </div>
+</div>
 
 <!-- NAV -->
 <nav>
@@ -1251,6 +1290,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 
   const state = {
     demoMode: false,
+    redirecting: false,
     sessionUser: null,
     portfolio: { holdings: [], snapshots: [], updatedAt: "", lastPriceRefreshAt: "" },
     alerts: [],
@@ -1289,6 +1329,13 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 
   function cloneData(value) {
     return JSON.parse(JSON.stringify(value));
+  }
+
+  function markBootReady() {
+    if (typeof document === "undefined") return;
+    document.body.classList.remove("boot-pending");
+    const splash = document.getElementById("boot-splash");
+    if (splash) splash.remove();
   }
 
   function isDemoMode() {
@@ -2084,6 +2131,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     }
 
     if (response.status === 401) {
+      state.redirecting = true;
       window.location.href = "/classic";
       throw new Error("Please sign in first.");
     }
@@ -2120,6 +2168,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 
     const payload = await apiJson("/api/auth/session", { cache: "no-store" });
     if (!payload.authenticated || !payload.user) {
+      state.redirecting = true;
       window.location.href = "/classic";
       return;
     }
@@ -3009,6 +3058,12 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 
   async function boot() {
     state.demoMode = isDemoMode();
+    state.redirecting = false;
+    const bootSafetyTimer = window.setTimeout(() => {
+      if (!state.redirecting) {
+        markBootReady();
+      }
+    }, 8000);
     bindEvents();
     applyModeChrome();
     try {
@@ -3018,6 +3073,11 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       renderPortfolio();
     } catch (error) {
       showToast(error instanceof Error ? error.message : "Failed to load dashboard.", "error");
+    } finally {
+      window.clearTimeout(bootSafetyTimer);
+      if (!state.redirecting) {
+        markBootReady();
+      }
     }
   }
 
