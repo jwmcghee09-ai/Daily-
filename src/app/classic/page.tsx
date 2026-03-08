@@ -2508,12 +2508,12 @@ export default function Home() {
                 <div className="spectre-signin-divider" />
 
                 <div className="spectre-checkout-actions">
-                  <button type="button" className="spectre-checkout-btn" onClick={() => void startProCheckout(authEmail)} disabled={authWorking || checkoutWorking}>
-                    <span>Start Pro Checkout</span>
+                  <button type="button" className="spectre-checkout-btn" onClick={() => openCreateAccountForPlan("pro")} disabled={authWorking || checkoutWorking}>
+                    <span>Create Pro Account</span>
                     <strong>$15/mo</strong>
                   </button>
-                  <button type="button" className="spectre-checkout-btn" onClick={() => void startStarterCheckout(authEmail)} disabled={authWorking || checkoutWorking}>
-                    <span>Start Starter Checkout</span>
+                  <button type="button" className="spectre-checkout-btn" onClick={() => openCreateAccountForPlan("starter")} disabled={authWorking || checkoutWorking}>
+                    <span>Create Starter Account</span>
                     <strong>$3/mo</strong>
                   </button>
                 </div>
