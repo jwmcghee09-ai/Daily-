@@ -1381,13 +1381,13 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     const text = ` ${holding?.ticker || ""} ${holding?.name || ""} ${holding?.sector || ""} ${holding?.account || ""} `.toLowerCase();
     const ticker = String(holding?.ticker || "").trim().toUpperCase();
     if (INDEX_TICKER_HINTS.has(ticker)) return "index";
-    if (FUND_STYLE_HINTS.some((hint) => text.includes(hint))) return "fund";
     if (INDEX_STYLE_HINTS.some((hint) => text.includes(hint))) return "index";
+    if (FUND_STYLE_HINTS.some((hint) => text.includes(hint))) return "fund";
     return null;
   }
 
   function resolveRiskSource(holding) {
-    if (holding?.source !== "asx") return holding?.source || "asx";
+    if (holding?.source !== "asx" && holding?.source !== "fund") return holding?.source || "asx";
     return inferAsxInstrumentSource(holding) || "asx";
   }
 
@@ -1822,11 +1822,10 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
         return value * multiplier;
       })
       .sort((a, b) => b - a);
-    const concentrationTotalValue = sum(concentrationValues);
-    const top3ConcentrationPct = concentrationTotalValue > 0 ? (sum(concentrationValues.slice(0, 3)) / concentrationTotalValue) * 100 : 0;
-    const hhi = concentrationTotalValue > 0
+    const top3ConcentrationPct = totalValue > 0 ? (sum(concentrationValues.slice(0, 3)) / totalValue) * 100 : 0;
+    const hhi = totalValue > 0
       ? sum(concentrationValues.map((value) => {
-        const weight = value / concentrationTotalValue;
+        const weight = value / totalValue;
         return weight * weight;
       })) * 10000
       : 0;
@@ -3112,7 +3111,9 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
           break;
         }
       }
-
+      if (!state.redirecting) {
+        markBootReady();
+      }
       renderPortfolio();
     } catch (error) {
       showToast(error instanceof Error ? error.message : "Failed to load dashboard.", "error");

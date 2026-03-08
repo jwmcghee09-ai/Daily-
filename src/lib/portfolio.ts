@@ -845,18 +845,15 @@ export function computeMetrics(
     weightPct: totalValue > 0 ? (holding.value / totalValue) * 100 : 0,
   }));
 
-  const concentrationHoldings = holdings.map((holding) => {
+  const concentrationValues = holdings.map((holding) => {
     const riskSource = resolveRiskSource(holding);
-    return {
-      effectiveValue: holding.value * SOURCE_CONCENTRATION_MULTIPLIER[riskSource],
-    };
+    return holding.value * SOURCE_CONCENTRATION_MULTIPLIER[riskSource];
   });
-  const concentrationTotalValue = sum(concentrationHoldings.map((item) => item.effectiveValue));
-  const sortedConcentrationValues = concentrationHoldings.map((item) => item.effectiveValue).sort((a, b) => b - a);
+  const sortedConcentrationValues = [...concentrationValues].sort((a, b) => b - a);
 
   const top3ConcentrationPct =
-    concentrationTotalValue > 0
-      ? (sum(sortedConcentrationValues.slice(0, 3)) / concentrationTotalValue) * 100
+    totalValue > 0
+      ? (sum(sortedConcentrationValues.slice(0, 3)) / totalValue) * 100
       : 0;
 
   const accountAllocation = buildAllocation(holdings, "account", totalValue);
@@ -871,9 +868,9 @@ export function computeMetrics(
       : 0;
 
   const hhi =
-    concentrationTotalValue > 0
-      ? concentrationHoldings.reduce((acc, item) => {
-          const w = item.effectiveValue / concentrationTotalValue;
+    totalValue > 0
+      ? concentrationValues.reduce((acc, effectiveValue) => {
+          const w = effectiveValue / totalValue;
           return acc + w * w;
         }, 0) * 10000
       : 0;
@@ -937,12 +934,12 @@ export function computeMetrics(
 }
 
 function resolveRiskSource(holding: PortfolioHolding): DataSource {
-  if (holding.source !== "asx") {
-    return holding.source;
+  if (holding.source === "asx" || holding.source === "fund") {
+    const inferred = inferAsxInstrumentSource(holding.ticker, holding.name, holding.sector, holding.account);
+    return inferred ?? holding.source;
   }
 
-  const inferred = inferAsxInstrumentSource(holding.ticker, holding.name, holding.sector, holding.account);
-  return inferred ?? holding.source;
+  return holding.source;
 }
 
 function inferAsxInstrumentSource(ticker: string, name: string, sector: string, account: string): DataSource | null {
@@ -953,12 +950,12 @@ function inferAsxInstrumentSource(ticker: string, name: string, sector: string, 
     return "index";
   }
 
-  if (FUND_STYLE_HINTS.some((hint) => text.includes(hint))) {
-    return "fund";
-  }
-
   if (INDEX_STYLE_HINTS.some((hint) => text.includes(hint))) {
     return "index";
+  }
+
+  if (FUND_STYLE_HINTS.some((hint) => text.includes(hint))) {
+    return "fund";
   }
 
   return null;
