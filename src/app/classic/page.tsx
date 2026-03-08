@@ -1729,6 +1729,25 @@ export default function Home() {
     await startCheckout("pro", guestEmail);
   };
 
+  const openCreateAccountForPlan = useCallback((plan: CheckoutPlan) => {
+    setAuthMode("register");
+    setRegisterCheckoutPlan(plan);
+    setAuthError("");
+
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const accessSection = document.getElementById("access");
+    if (accessSection) {
+      accessSection.scrollIntoView({ behavior: "smooth", block: "start" });
+      window.history.replaceState({}, "", "#access");
+      return;
+    }
+
+    window.location.assign("/classic#access");
+  }, []);
+
   const openBillingPortal = async () => {
     if (demoMode) {
       window.location.assign("/classic#pricing");
@@ -2325,7 +2344,7 @@ export default function Home() {
                     <li>Risk score, dashboard charts, and snapshots</li>
                     <li>Email verification and password reset</li>
                   </ul>
-                  <button type="button" className="spectre-btn spectre-btn-primary" onClick={() => void startStarterCheckout(authEmail)} disabled={checkoutWorking}>
+                  <button type="button" className="spectre-btn spectre-btn-primary" onClick={() => openCreateAccountForPlan("starter")} disabled={checkoutWorking}>
                     {checkoutWorking ? "Redirecting..." : "Get Starter"}
                   </button>
                 </article>
@@ -2343,7 +2362,7 @@ export default function Home() {
                     <li>Ask AI holdings analysis for current portfolio drivers</li>
                     <li>Advanced reporting and team workflows</li>
                   </ul>
-                  <button type="button" className="spectre-btn spectre-btn-pro" onClick={() => void startProCheckout(authEmail)} disabled={checkoutWorking}>
+                  <button type="button" className="spectre-btn spectre-btn-pro" onClick={() => openCreateAccountForPlan("pro")} disabled={checkoutWorking}>
                     {checkoutWorking ? "Redirecting..." : "Get Pro"}
                   </button>
                   <span className="spectre-plan-note">Pro analytics unlock automatically when your subscription uses the Pro Stripe price.</span>
