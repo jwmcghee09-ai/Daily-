@@ -1514,7 +1514,13 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   }
 
   function applyPlanVisibility() {
-    const isPro = Boolean(state.demoMode || state.sessionUser?.proEnabled);
+    const hasProAccess = Boolean(state.demoMode || state.sessionUser?.proEnabled);
+    const showStarterUpsell = Boolean(
+      !state.demoMode &&
+      state.sessionUser &&
+      state.sessionUser.planTier === "starter" &&
+      !state.sessionUser.proEnabled,
+    );
     const navAlertsLink = document.getElementById("nav-alerts-link");
     const alertsSection = document.getElementById("alerts");
     const stressPanel = document.getElementById("stress-panel");
@@ -1525,16 +1531,16 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     const proRiskCards = Array.from(document.querySelectorAll(".pro-risk"));
     const riskGrid = document.querySelector(".risk-grid");
 
-    if (navAlertsLink) navAlertsLink.style.display = isPro ? "" : "none";
-    if (alertsSection) alertsSection.style.display = isPro ? "" : "none";
-    if (stressPanel) stressPanel.style.display = isPro ? "" : "none";
-    if (stressStarterNote) stressStarterNote.hidden = isPro;
-    if (riskWindowTabs) riskWindowTabs.style.display = isPro ? "" : "none";
-    if (riskStarterNote) riskStarterNote.hidden = isPro;
-    if (starterUpgradeStrip) starterUpgradeStrip.hidden = isPro;
-    if (riskGrid) riskGrid.classList.toggle("starter-layout", !isPro);
+    if (navAlertsLink) navAlertsLink.style.display = hasProAccess ? "" : "none";
+    if (alertsSection) alertsSection.style.display = hasProAccess ? "" : "none";
+    if (stressPanel) stressPanel.style.display = hasProAccess ? "" : "none";
+    if (stressStarterNote) stressStarterNote.hidden = !showStarterUpsell;
+    if (riskWindowTabs) riskWindowTabs.style.display = hasProAccess ? "" : "none";
+    if (riskStarterNote) riskStarterNote.hidden = !showStarterUpsell;
+    if (starterUpgradeStrip) starterUpgradeStrip.hidden = !showStarterUpsell;
+    if (riskGrid) riskGrid.classList.toggle("starter-layout", showStarterUpsell);
     proRiskCards.forEach((card) => {
-      card.style.display = isPro ? "" : "none";
+      card.style.display = hasProAccess ? "" : "none";
     });
   }
 
