@@ -2005,7 +2005,7 @@ export default function Home() {
             <a href="#top" className="spectre-nav-logo">SPECTRE</a>
             <nav className="spectre-nav-links">
               <a href="#features">Capabilities</a>
-              <a href="#insights">Preview</a>
+              <a href="#insights" className="spectre-nav-demo-link">Live Demo</a>
               <a href="#pro-ai">Pro AI</a>
               <a href="#workflow">Workflow</a>
               <a href="#safety">Data Safety</a>
@@ -2027,7 +2027,7 @@ export default function Home() {
             {["features", "insights", "pro-ai", "workflow", "safety", "pricing", "access"].map((section) => (
               <a key={section} href={`#${section}`} onClick={() => setLandingMenuOpen(false)}>
                 {section === "insights"
-                  ? "Preview"
+                  ? "Live Demo"
                   : section === "pro-ai"
                     ? "Pro AI"
                     : section === "safety"
@@ -2058,7 +2058,7 @@ export default function Home() {
               </div>
               <div className="spectre-hero-actions">
                 <a href="#access" className="spectre-btn spectre-btn-primary">Start For $3 / Month</a>
-                <button type="button" className="spectre-btn spectre-btn-ghost" onClick={openDemoWorkspace}>Try Demo Portfolio</button>
+                <button type="button" className="spectre-btn spectre-btn-demo" onClick={openDemoWorkspace}>Try Live Demo Portfolio</button>
               </div>
               <div className="spectre-hero-stats">
                 <article>
@@ -2164,7 +2164,7 @@ export default function Home() {
 
           <section id="insights" className="spectre-section">
             <div className="spectre-wrap">
-              <p className="spectre-section-label">Feature Preview</p>
+              <p className="spectre-section-label spectre-section-label-demo">Live Demo</p>
               <h2 className="spectre-section-title">Concrete dashboard visuals, not abstract promises.</h2>
               <p className="spectre-section-sub">These demo values show the exact dashboard style. Your real data loads from your own imported portfolio exports.</p>
               <div className="spectre-db-frame">

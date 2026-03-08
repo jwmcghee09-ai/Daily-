@@ -3614,6 +3614,19 @@ td {
   color: var(--sl-text);
 }
 
+.spectre-nav-links .spectre-nav-demo-link {
+  color: #fff;
+  background: linear-gradient(135deg, var(--sl-purple), #7c3aed);
+  border-radius: 3px;
+  padding: 0.34rem 0.9rem;
+  box-shadow: 0 2px 14px rgba(155, 93, 229, 0.42);
+}
+
+.spectre-nav-links .spectre-nav-demo-link:hover {
+  color: #fff;
+  filter: brightness(1.06);
+}
+
 .spectre-nav-links .spectre-nav-cta {
   color: #fff;
   background: var(--sl-orange);
@@ -3828,6 +3841,14 @@ td {
   background: transparent;
 }
 
+.spectre-btn-demo {
+  color: #fff;
+  border: 0;
+  background: linear-gradient(135deg, var(--sl-purple), #7c3aed);
+  box-shadow: 0 4px 20px rgba(155, 93, 229, 0.42);
+  font-weight: 800;
+}
+
 .spectre-btn-pro {
   color: #fff;
   border: 0;
@@ -4027,6 +4048,18 @@ td {
 }
 
 .spectre-section-label.orange { color: #ff6a3d; }
+
+.spectre-section-label-demo {
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.66rem;
+  letter-spacing: 0.24em;
+  background: linear-gradient(135deg, rgba(155, 93, 229, 0.95), rgba(124, 58, 237, 0.95));
+  border: 1px solid rgba(192, 132, 252, 0.55);
+  border-radius: 4px;
+  display: inline-flex;
+  padding: 0.22rem 0.55rem;
+}
 
 .spectre-section-title {
   margin-bottom: 0.85rem;
