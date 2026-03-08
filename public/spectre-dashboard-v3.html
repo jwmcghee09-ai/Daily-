@@ -1590,12 +1590,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 
   function applyPlanVisibility() {
     const hasProAccess = Boolean(state.demoMode || state.sessionUser?.proEnabled);
-    const showStarterUpsell = Boolean(
-      !state.demoMode &&
-      state.sessionUser &&
-      state.sessionUser.planTier === "starter" &&
-      !state.sessionUser.proEnabled,
-    );
+    const showStarterUpsell = false;
     const navAlertsLink = document.getElementById("nav-alerts-link");
     const alertsSection = document.getElementById("alerts");
     const stressPanel = document.getElementById("stress-panel");

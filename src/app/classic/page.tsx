@@ -2634,11 +2634,6 @@ export default function Home() {
         </div>
       ) : null}
       {banner ? <div className={`banner ${banner.type}`}>{banner.message}</div> : null}
-      {!demoMode && !proAnalyticsEnabled ? (
-        <div className="banner info">
-          Starter plan active: Dip alerts, stress testing, and advanced risk measurements are available on Pro. Upgrade to Pro in Settings.
-        </div>
-      ) : null}
 
       <section id="settings" className="settings-section">
         <div className="settings-head">
