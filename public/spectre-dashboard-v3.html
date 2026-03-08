@@ -228,6 +228,24 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
   line-height:1.55;
   color:#ffd7cf;
 }
+.starter-upgrade-strip{
+  margin:1rem 0 0;
+  border:1px solid rgba(192,132,252,.45);
+  background:linear-gradient(135deg,rgba(35,14,55,.92),rgba(22,10,35,.9));
+  color:#e8defa;
+  border-radius:10px;
+  padding:.75rem .95rem;
+  font-family:var(--mono);
+  font-size:.58rem;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+.starter-upgrade-strip a{
+  color:#fff;
+  text-decoration:none;
+  border-bottom:1px solid rgba(255,255,255,.35);
+  margin-left:.35rem;
+}
 @media(max-width:860px){
   .risk-grid{grid-template-columns:repeat(2,1fr)}
   .risk-help-tip{left:0;right:auto;width:min(260px,84vw)}
@@ -457,7 +475,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       <li><a href="#metrics">Metrics</a></li>
       <li><a href="#risk">Risk</a></li>
       <li><a href="#charts">Charts</a></li>
-      <li><a href="#alerts">Alerts</a></li>
+      <li id="nav-alerts-link"><a href="#alerts">Alerts</a></li>
       <li><a href="#holdings">Holdings</a></li>
     </ul>
     <div class="nav-right">
@@ -531,6 +549,13 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       </div>
     </div>
   </section>
+</div>
+
+<div class="wrap">
+  <div id="starter-upgrade-strip" class="starter-upgrade-strip" hidden>
+    Starter plan active: dip alerts, stress testing, and advanced risk measurements are Pro-only.
+    <a href="/spectre-settings-v3.html">Upgrade to Pro</a>
+  </div>
 </div>
 
 <div class="divider"></div>
@@ -706,7 +731,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
           </div>
         </div>
       </div>
-      <div class="panel-half" style="border-left:1px solid var(--border)">
+      <div class="panel-half" id="stress-panel" style="border-left:1px solid var(--border)">
         <div class="panel-half-title"><span class="dot"></span>Stress Testing</div>
         <div class="stress-grid">
           <div class="stress-card neg">
@@ -728,6 +753,15 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
             <div class="stress-lbl">Commodity Boom +25%</div>
             <div class="stress-val pos">+$41,240</div>
             <div class="stress-proj">Projected: $325,660</div>
+          </div>
+        </div>
+      </div>
+      <div class="panel-half" id="stress-starter-note" style="border-left:1px solid var(--border)" hidden>
+        <div class="panel-half-title"><span class="dot"></span>Stress Testing</div>
+        <div class="perf-list">
+          <div class="perf-row">
+            <div><div class="perf-ticker">PRO ONLY</div><div class="perf-name">Stress scenarios are unlocked on Pro.</div></div>
+            <div class="perf-val pos"><a href="/spectre-settings-v3.html" style="color:inherit;text-decoration:none">Upgrade</a></div>
           </div>
         </div>
       </div>
@@ -841,13 +875,14 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
         <div class="risk-window" id="risk-window-label">Window <span>6M</span> — 42 snapshot points from 2025-09-03 to 2026-03-03</div>
         <div class="risk-estimate-note" id="risk-estimate-note" hidden></div>
       </div>
-      <div class="window-tabs">
+      <div class="window-tabs" id="risk-window-tabs">
         <button class="wtab" data-window="3M">3M</button>
         <button class="wtab active" data-window="6M">6M</button>
         <button class="wtab" data-window="1Y">1Y</button>
         <button class="wtab" data-window="ALL">ALL</button>
       </div>
     </div>
+    <div class="risk-window" id="risk-starter-note" hidden>Starter snapshot mode: advanced risk measurements are available on Pro.</div>
     <div class="risk-grid">
       <div class="risk-card">
         <div class="risk-lbl">Risk Score <button type="button" class="risk-help" aria-label="Risk score help">?<span class="risk-help-tip">Composite score from concentration, volatility, drawdown, VaR and benchmark metrics. Higher score means higher portfolio risk.</span></button></div>
@@ -879,32 +914,32 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
         <div class="risk-val" id="risk-obv">+0</div>
         <div class="risk-sub" id="risk-obv-sub">Flat flow</div>
       </div>
-      <div class="risk-card">
+      <div class="risk-card pro-risk">
         <div class="risk-lbl">1-Day VaR 95% <button type="button" class="risk-help" aria-label="VaR help">?<span class="risk-help-tip">95% historical Value at Risk using the 5th percentile of daily returns in the selected risk window.</span></button></div>
         <div class="risk-val danger" id="risk-var95">−8.4%</div>
         <div class="risk-sub" id="risk-var95-sub">Max expected loss</div>
       </div>
-      <div class="risk-card">
+      <div class="risk-card pro-risk">
         <div class="risk-lbl">Expected Shortfall <button type="button" class="risk-help" aria-label="Expected shortfall help">?<span class="risk-help-tip">Average loss inside the worst 5% of daily returns in the selected risk window.</span></button></div>
         <div class="risk-val danger" id="risk-cvar95">−9.9%</div>
         <div class="risk-sub" id="risk-cvar95-sub">CVaR beyond VaR</div>
       </div>
-      <div class="risk-card">
+      <div class="risk-card pro-risk">
         <div class="risk-lbl">Max Drawdown <button type="button" class="risk-help" aria-label="Max drawdown help">?<span class="risk-help-tip">Largest peak-to-trough decline observed inside the selected risk window.</span></button></div>
         <div class="risk-val danger" id="risk-max-drawdown">−12.1%</div>
         <div class="risk-sub" id="risk-max-drawdown-sub">Worst peak to trough</div>
       </div>
-      <div class="risk-card">
+      <div class="risk-card pro-risk">
         <div class="risk-lbl">Volatility (Ann.) <button type="button" class="risk-help" aria-label="Volatility help">?<span class="risk-help-tip">Standard deviation of daily returns, annualised using sqrt(252).</span></button></div>
         <div class="risk-val" id="risk-volatility">18.4%</div>
         <div class="risk-sub" id="risk-volatility-sub">Annualised std dev</div>
       </div>
-      <div class="risk-card">
+      <div class="risk-card pro-risk">
         <div class="risk-lbl">Beta vs ASX 200 <button type="button" class="risk-help" aria-label="Beta help">?<span class="risk-help-tip">Sensitivity of portfolio returns to ASX 200 returns from date-aligned daily history.</span></button></div>
         <div class="risk-val purple" id="risk-beta">1.18</div>
         <div class="risk-sub" id="risk-beta-sub">Market sensitivity</div>
       </div>
-      <div class="risk-card">
+      <div class="risk-card pro-risk">
         <div class="risk-lbl">Tracking Error <button type="button" class="risk-help" aria-label="Tracking error help">?<span class="risk-help-tip">Standard deviation of active return (portfolio return minus ASX 200 return), annualised from daily data.</span></button></div>
         <div class="risk-val" id="risk-tracking-error">14.2%</div>
         <div class="risk-sub" id="risk-tracking-error-sub">vs benchmark</div>
@@ -1432,6 +1467,29 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       card.removeAttribute("aria-disabled");
       const action = card.querySelector(".upload-action");
       if (action) action.textContent = "Upload File";
+    });
+  }
+
+  function applyPlanVisibility() {
+    const isPro = Boolean(state.demoMode || state.sessionUser?.proEnabled);
+    const navAlertsLink = document.getElementById("nav-alerts-link");
+    const alertsSection = document.getElementById("alerts");
+    const stressPanel = document.getElementById("stress-panel");
+    const stressStarterNote = document.getElementById("stress-starter-note");
+    const riskWindowTabs = document.getElementById("risk-window-tabs");
+    const riskStarterNote = document.getElementById("risk-starter-note");
+    const starterUpgradeStrip = document.getElementById("starter-upgrade-strip");
+    const proRiskCards = Array.from(document.querySelectorAll(".pro-risk"));
+
+    if (navAlertsLink) navAlertsLink.style.display = isPro ? "" : "none";
+    if (alertsSection) alertsSection.style.display = isPro ? "" : "none";
+    if (stressPanel) stressPanel.style.display = isPro ? "" : "none";
+    if (stressStarterNote) stressStarterNote.hidden = isPro;
+    if (riskWindowTabs) riskWindowTabs.style.display = isPro ? "" : "none";
+    if (riskStarterNote) riskStarterNote.hidden = isPro;
+    if (starterUpgradeStrip) starterUpgradeStrip.hidden = isPro;
+    proRiskCards.forEach((card) => {
+      card.style.display = isPro ? "" : "none";
     });
   }
 
@@ -2007,6 +2065,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
         proConsole.style.display = "";
       }
       applyModeChrome();
+      applyPlanVisibility();
       renderHoldingsAi();
       return;
     }
@@ -2038,6 +2097,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       state.holdingsAiLoading = false;
     }
     applyModeChrome();
+    applyPlanVisibility();
     renderHoldingsAi();
   }
 
@@ -2053,6 +2113,12 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     if (state.demoMode) {
       state.alerts = cloneData(DEMO_DIP_ALERTS);
       state.availableAlertTickers = [...DEMO_AVAILABLE_TICKERS];
+      renderAlerts();
+      return;
+    }
+    if (!state.sessionUser?.proEnabled) {
+      state.alerts = [];
+      state.availableAlertTickers = [];
       renderAlerts();
       return;
     }
@@ -2668,6 +2734,10 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   }
 
   async function addAlert() {
+    if (!state.demoMode && !state.sessionUser?.proEnabled) {
+      showToast("Dip alerts are available on Pro only.", "error");
+      return;
+    }
     const tickerInput = document.getElementById("alert-ticker-input");
     const thresholdInput = document.getElementById("alert-threshold-input");
     if (!tickerInput || !thresholdInput) return;
@@ -2736,6 +2806,10 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   }
 
   async function deleteAlert(ticker) {
+    if (!state.demoMode && !state.sessionUser?.proEnabled) {
+      showToast("Dip alerts are available on Pro only.", "error");
+      return;
+    }
     if (state.demoMode) {
       state.alerts = state.alerts.filter((alert) => alert.ticker !== ticker);
       renderAlerts();
