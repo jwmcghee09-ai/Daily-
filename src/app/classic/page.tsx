@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import { useSearchParams } from "next/navigation";
 import { CSSProperties, ChangeEvent, FormEvent, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Papa, { ParseError } from "papaparse";
 import * as XLSX from "xlsx";
@@ -314,8 +313,7 @@ const DEMO_DIP_ALERTS: PriceDipAlertSetting[] = [
 const DEMO_PORTFOLIO_STATE = createDemoPortfolioState();
 
 export default function Home() {
-  const searchParams = useSearchParams();
-  const demoMode = searchParams.get("demo") === "1";
+  const [demoMode, setDemoMode] = useState(false);
   const [state, setState] = useState<PortfolioState>(EMPTY_STATE);
   const [banner, setBanner] = useState<Banner | null>(null);
   const [loading, setLoading] = useState(true);
@@ -349,6 +347,15 @@ export default function Home() {
   const [holdingsAiResult, setHoldingsAiResult] = useState<HoldingsAiAnalysis | null>(null);
   const refreshInFlight = useRef(false);
   const lastAutoRefreshAttemptAtRef = useRef(0);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    setDemoMode(params.get("demo") === "1");
+  }, []);
 
   const completePendingRegistrationAfterCheckout = useCallback(async () => {
     const draft = readPendingRegistrationDraft();
