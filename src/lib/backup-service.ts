@@ -88,12 +88,14 @@ function stripFlexibleChecksumMiddleware(client: S3Client): void {
 }
 
 function createOffsiteS3Client(config: OffsiteBackupConfig): S3Client {
+  const isBackblaze = Boolean(parseBackblazeRegionFromEndpoint(config.endpoint));
   const client = new S3Client({
     region: config.region,
     endpoint: config.endpoint || undefined,
     forcePathStyle: config.forcePathStyle,
     requestChecksumCalculation: "WHEN_REQUIRED",
     responseChecksumValidation: "WHEN_REQUIRED",
+    expectContinueHeader: isBackblaze ? false : undefined,
     credentials: {
       accessKeyId: config.accessKeyId,
       secretAccessKey: config.secretAccessKey,
@@ -101,8 +103,8 @@ function createOffsiteS3Client(config: OffsiteBackupConfig): S3Client {
   });
 
   // Backblaze B2's S3-compatible endpoint can reject the AWS SDK v3 flexible
-  // checksum path with IncompleteBody on PutObject even for buffered uploads.
-  if (parseBackblazeRegionFromEndpoint(config.endpoint)) {
+  // checksum path and 100-continue handshake on buffered PutObject uploads.
+  if (isBackblaze) {
     stripFlexibleChecksumMiddleware(client);
   }
 

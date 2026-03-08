@@ -107,19 +107,21 @@ async function uploadOffsiteIfEnabled(backupPath) {
 
   const objectKey = config.prefix ? `${config.prefix}/${path.basename(backupPath)}` : path.basename(backupPath);
   const body = fs.readFileSync(backupPath);
+  const isBackblaze = Boolean(parseBackblazeRegionFromEndpoint(config.endpoint));
   const client = new S3Client({
     region: config.region,
     endpoint: config.endpoint || undefined,
     forcePathStyle: config.forcePathStyle,
     requestChecksumCalculation: "WHEN_REQUIRED",
     responseChecksumValidation: "WHEN_REQUIRED",
+    expectContinueHeader: isBackblaze ? false : undefined,
     credentials: {
       accessKeyId: config.accessKeyId,
       secretAccessKey: config.secretAccessKey,
     },
   });
 
-  if (parseBackblazeRegionFromEndpoint(config.endpoint)) {
+  if (isBackblaze) {
     stripFlexibleChecksumMiddleware(client);
   }
 
