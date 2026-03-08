@@ -3085,7 +3085,20 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     try {
       await loadSession();
       if (!state.sessionUser) return;
-      await Promise.all([loadPortfolio(), loadAlerts(), loadHistoricalRisk()]);
+      try {
+        await loadPortfolio();
+      } catch (error) {
+        showToast(error instanceof Error ? error.message : "Failed to load portfolio.", "error");
+      }
+
+      const optionalTasks = await Promise.allSettled([loadAlerts(), loadHistoricalRisk()]);
+      for (const task of optionalTasks) {
+        if (task.status === "rejected") {
+          showToast(task.reason instanceof Error ? task.reason.message : "Some dashboard data could not be loaded.", "error");
+          break;
+        }
+      }
+
       renderPortfolio();
     } catch (error) {
       showToast(error instanceof Error ? error.message : "Failed to load dashboard.", "error");
