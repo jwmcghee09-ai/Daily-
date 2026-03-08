@@ -4049,18 +4049,6 @@ td {
 
 .spectre-section-label.orange { color: #ff6a3d; }
 
-.spectre-section-label-demo {
-  color: #fff;
-  font-weight: 800;
-  font-size: 0.66rem;
-  letter-spacing: 0.24em;
-  background: linear-gradient(135deg, rgba(155, 93, 229, 0.95), rgba(124, 58, 237, 0.95));
-  border: 1px solid rgba(192, 132, 252, 0.55);
-  border-radius: 4px;
-  display: inline-flex;
-  padding: 0.22rem 0.55rem;
-}
-
 .spectre-section-title {
   margin-bottom: 0.85rem;
   max-width: 740px;

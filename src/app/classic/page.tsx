@@ -2005,7 +2005,8 @@ export default function Home() {
             <a href="#top" className="spectre-nav-logo">SPECTRE</a>
             <nav className="spectre-nav-links">
               <a href="#features">Capabilities</a>
-              <a href="#insights" className="spectre-nav-demo-link">Live Demo</a>
+              <a href="#insights">Preview</a>
+              <a href="/spectre-dashboard-v3.html?demo=1" className="spectre-nav-demo-link">Live Demo</a>
               <a href="#pro-ai">Pro AI</a>
               <a href="#workflow">Workflow</a>
               <a href="#safety">Data Safety</a>
@@ -2024,10 +2025,13 @@ export default function Home() {
             </button>
           </div>
           <div className={"spectre-nav-mobile" + (landingMenuOpen ? " open" : "")}>
+            <a href="/spectre-dashboard-v3.html?demo=1" className="spectre-nav-demo-link" onClick={() => setLandingMenuOpen(false)}>
+              Live Demo
+            </a>
             {["features", "insights", "pro-ai", "workflow", "safety", "pricing", "access"].map((section) => (
               <a key={section} href={`#${section}`} onClick={() => setLandingMenuOpen(false)}>
                 {section === "insights"
-                  ? "Live Demo"
+                  ? "Preview"
                   : section === "pro-ai"
                     ? "Pro AI"
                     : section === "safety"
@@ -2164,7 +2168,7 @@ export default function Home() {
 
           <section id="insights" className="spectre-section">
             <div className="spectre-wrap">
-              <p className="spectre-section-label spectre-section-label-demo">Live Demo</p>
+              <p className="spectre-section-label">Feature Preview</p>
               <h2 className="spectre-section-title">Concrete dashboard visuals, not abstract promises.</h2>
               <p className="spectre-section-sub">These demo values show the exact dashboard style. Your real data loads from your own imported portfolio exports.</p>
               <div className="spectre-db-frame">
