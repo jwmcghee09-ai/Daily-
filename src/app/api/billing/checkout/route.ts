@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser, isLikelyEmail, normalizeEmail } from "@/lib/auth";
+import { readBillingSubscription, upsertBillingSubscriptionForUser } from "@/lib/db";
 import { BillingPlan, getAppBaseUrl, getPriceIdForPlan, getStripeClient } from "@/lib/stripe";
 
 export const runtime = "nodejs";
@@ -51,6 +52,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unable to determine checkout email." }, { status: 400 });
     }
 
+    if (user && plan === "pro") {
+      const upgraded = await tryUpgradeExistingSubscription({
+        userId: user.id,
+        stripe,
+        proPriceId: priceId,
+      });
+      if (upgraded) {
+        return NextResponse.json({ url: `${baseUrl}/spectre-settings-v3.html` });
+      }
+    }
+
     const metadata: Record<string, string> = {
       plan,
       priceId,
@@ -61,10 +73,14 @@ export async function POST(request: Request) {
       metadata.userId = user.id;
     }
 
+    const existingSubscription = user ? readBillingSubscription(user.id) : null;
+    const stripeCustomerId = existingSubscription?.stripeCustomerId || null;
+    const checkoutCustomer =
+      stripeCustomerId && stripeCustomerId.trim().length > 0 ? stripeCustomerId : null;
+
     const checkoutSession = await stripe.checkout.sessions.create({
       mode: "subscription",
       line_items: [{ price: priceId, quantity: 1 }],
-      customer_email: checkoutEmail,
       client_reference_id: user?.id,
       metadata,
       subscription_data: {
@@ -78,6 +94,7 @@ export async function POST(request: Request) {
       },
       success_url: `${baseUrl}/?checkout=success&plan=${encodeURIComponent(plan)}`,
       cancel_url: `${baseUrl}/?checkout=cancelled`,
+      ...(checkoutCustomer ? { customer: checkoutCustomer } : { customer_email: checkoutEmail }),
     });
 
     if (!checkoutSession.url) {
@@ -97,4 +114,78 @@ function toBillingPlan(value: unknown): BillingPlan {
   }
 
   return "starter";
+}
+
+const ACTIVE_OR_RECOVERABLE_STATUSES = new Set(["active", "trialing", "past_due", "unpaid"]);
+
+async function tryUpgradeExistingSubscription(input: {
+  userId: string;
+  stripe: ReturnType<typeof getStripeClient>;
+  proPriceId: string;
+}): Promise<boolean> {
+  const existing = readBillingSubscription(input.userId);
+  const existingSubscriptionId = (existing?.stripeSubscriptionId || "").trim();
+  if (!existingSubscriptionId) {
+    return false;
+  }
+
+  const subscription = await input.stripe.subscriptions.retrieve(existingSubscriptionId);
+  const status = (subscription.status || "").trim().toLowerCase();
+  if (!ACTIVE_OR_RECOVERABLE_STATUSES.has(status)) {
+    return false;
+  }
+
+  const currentItem = subscription.items.data[0];
+  if (!currentItem) {
+    return false;
+  }
+
+  if (currentItem.price.id === input.proPriceId) {
+    return true;
+  }
+
+  const updated = await input.stripe.subscriptions.update(subscription.id, {
+    cancel_at_period_end: false,
+    proration_behavior: "create_prorations",
+    items: [{ id: currentItem.id, price: input.proPriceId }],
+    metadata: {
+      ...(subscription.metadata || {}),
+      plan: "pro",
+      priceId: input.proPriceId,
+      userId: input.userId,
+    },
+  });
+
+  upsertBillingSubscriptionForUser({
+    userId: input.userId,
+    stripeCustomerId: extractStripeId(updated.customer),
+    stripeSubscriptionId: updated.id,
+    stripePriceId: input.proPriceId,
+    status: updated.status || existing?.status || null,
+    currentPeriodEnd: unixSecondsToIso(updated.current_period_end),
+  });
+
+  return true;
+}
+
+function extractStripeId(value: unknown): string | null {
+  if (typeof value === "string") {
+    const normalized = value.trim();
+    return normalized.length > 0 ? normalized : null;
+  }
+  if (value && typeof value === "object") {
+    const id = Reflect.get(value, "id");
+    if (typeof id === "string") {
+      const normalized = id.trim();
+      return normalized.length > 0 ? normalized : null;
+    }
+  }
+  return null;
+}
+
+function unixSecondsToIso(value: unknown): string | null {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return null;
+  }
+  return new Date(value * 1000).toISOString();
 }
