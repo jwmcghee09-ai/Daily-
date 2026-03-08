@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
 import { CSSProperties, ChangeEvent, FormEvent, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Papa, { ParseError } from "papaparse";
 import * as XLSX from "xlsx";
@@ -279,8 +280,42 @@ interface PendingRegistrationDraft {
 const PENDING_REGISTRATION_KEY = "spectre.pending-registration.v1";
 const PENDING_REGISTRATION_MAX_AGE_MS = 30 * 60 * 1000;
 const HOLDINGS_AI_DEFAULT_PROMPT = "What may be influencing the value of my current holdings?";
+const DEMO_USER_ID = "demo-portfolio";
+const DEMO_AVAILABLE_TICKERS = ["CBA", "BHP", "MQG", "BTC", "ETH"];
+const DEMO_SESSION_USER: SessionUser = {
+  id: DEMO_USER_ID,
+  email: "demo@spectre-assets.com",
+  displayName: "Demo Portfolio",
+  createdAt: "2026-01-10T09:30:00.000Z",
+  planTier: "pro",
+  proEnabled: true,
+  subscriptionStatus: "active",
+};
+const DEMO_DIP_ALERTS: PriceDipAlertSetting[] = [
+  {
+    id: "demo-alert-cba",
+    ticker: "CBA",
+    dropPctThreshold: 3.5,
+    enabled: true,
+    lastTriggeredAt: null,
+    createdAt: "2026-03-01T00:00:00.000Z",
+    updatedAt: "2026-03-01T00:00:00.000Z",
+  },
+  {
+    id: "demo-alert-btc",
+    ticker: "BTC",
+    dropPctThreshold: 5,
+    enabled: true,
+    lastTriggeredAt: "2026-03-05T04:00:00.000Z",
+    createdAt: "2026-03-02T00:00:00.000Z",
+    updatedAt: "2026-03-05T04:00:00.000Z",
+  },
+];
+const DEMO_PORTFOLIO_STATE = createDemoPortfolioState();
 
 export default function Home() {
+  const searchParams = useSearchParams();
+  const demoMode = searchParams.get("demo") === "1";
   const [state, setState] = useState<PortfolioState>(EMPTY_STATE);
   const [banner, setBanner] = useState<Banner | null>(null);
   const [loading, setLoading] = useState(true);
@@ -389,6 +424,19 @@ export default function Home() {
     const loadSessionAndState = async () => {
       setLoading(true);
 
+      if (demoMode) {
+        setSessionUser(DEMO_SESSION_USER);
+        setState(DEMO_PORTFOLIO_STATE);
+        setHistoricalRiskEstimate(null);
+        setDipAlerts(DEMO_DIP_ALERTS);
+        setAvailableDipTickers(DEMO_AVAILABLE_TICKERS);
+        setDipAlertMax(10);
+        setDipAlertTicker(DEMO_AVAILABLE_TICKERS[0]);
+        setBanner(null);
+        setLoading(false);
+        return;
+      }
+
       try {
         const sessionResponse = await fetch("/api/auth/session", { cache: "no-store" });
         if (!sessionResponse.ok) {
@@ -400,6 +448,9 @@ export default function Home() {
         if (!sessionPayload.authenticated || !sessionPayload.user) {
           setSessionUser(null);
           setState(EMPTY_STATE);
+          setDipAlerts([]);
+          setAvailableDipTickers([]);
+          setDipAlertMax(0);
           setLoading(false);
           return;
         }
@@ -421,7 +472,7 @@ export default function Home() {
     };
 
     void loadSessionAndState();
-  }, []);
+  }, [demoMode]);
 
   useEffect(() => {
     if (!banner || banner.message !== INVALID_UPLOAD_FORMAT_MESSAGE) {
@@ -473,6 +524,13 @@ export default function Home() {
   }, [completePendingRegistrationAfterCheckout]);
 
   const refreshPrices = useCallback(async (showBanner: boolean) => {
+    if (demoMode) {
+      if (showBanner) {
+        setBanner({ type: "info", message: "Demo prices are static. Create an account to refresh live prices." });
+      }
+      return;
+    }
+
     if (!sessionUser) {
       return;
     }
@@ -514,9 +572,17 @@ export default function Home() {
       setRefreshingPrices(false);
       refreshInFlight.current = false;
     }
-  }, [sessionUser]);
+  }, [demoMode, sessionUser]);
 
   const loadDipAlerts = useCallback(async () => {
+    if (demoMode) {
+      setDipAlerts(DEMO_DIP_ALERTS);
+      setAvailableDipTickers(DEMO_AVAILABLE_TICKERS);
+      setDipAlertMax(10);
+      setDipAlertTicker((current) => current || DEMO_AVAILABLE_TICKERS[0]);
+      return;
+    }
+
     if (!sessionUser) {
       setDipAlerts([]);
       setAvailableDipTickers([]);
@@ -542,7 +608,7 @@ export default function Home() {
       }
       return nextTickers[0] || "";
     });
-  }, [sessionUser]);
+  }, [demoMode, sessionUser]);
 
   const saveDipAlert = useCallback(async (event?: FormEvent) => {
     event?.preventDefault();
@@ -561,6 +627,48 @@ export default function Home() {
 
     if (!Number.isFinite(threshold) || threshold < 0.1 || threshold > 90) {
       setBanner({ type: "error", message: "Dip threshold must be between 0.1% and 90%." });
+      return;
+    }
+
+    if (demoMode) {
+      const nowIso = new Date().toISOString();
+      let didPersist = false;
+
+      setDipAlerts((current) => {
+        const existing = current.find((alert) => alert.ticker === ticker);
+        if (!existing && current.length >= dipAlertMax) {
+          return current;
+        }
+
+        didPersist = true;
+        if (existing) {
+          return current.map((alert) => (
+            alert.ticker === ticker
+              ? { ...alert, dropPctThreshold: threshold, enabled: true, updatedAt: nowIso }
+              : alert
+          ));
+        }
+
+        return [
+          ...current,
+          {
+            id: `demo-alert-${ticker.toLowerCase()}`,
+            ticker,
+            dropPctThreshold: threshold,
+            enabled: true,
+            lastTriggeredAt: null,
+            createdAt: nowIso,
+            updatedAt: nowIso,
+          },
+        ];
+      });
+
+      if (!didPersist) {
+        setBanner({ type: "error", message: "Demo alert limit reached. Remove one to add another." });
+        return;
+      }
+
+      setBanner({ type: "success", message: `Demo alert saved for ${ticker} at ${threshold.toFixed(2)}%.` });
       return;
     }
 
@@ -589,9 +697,17 @@ export default function Home() {
     } finally {
       setDipAlertSaving(false);
     }
-  }, [dipAlertThreshold, dipAlertTicker, loadDipAlerts, sessionUser]);
+  }, [demoMode, dipAlertMax, dipAlertThreshold, dipAlertTicker, loadDipAlerts, sessionUser]);
 
   const toggleDipAlert = useCallback(async (alert: PriceDipAlertSetting, enabled: boolean) => {
+    if (demoMode) {
+      const nowIso = new Date().toISOString();
+      setDipAlerts((current) => current.map((item) => (
+        item.id === alert.id ? { ...item, enabled, updatedAt: nowIso } : item
+      )));
+      return;
+    }
+
     setDipAlertSaving(true);
     try {
       const response = await fetch("/api/alerts/price-dip", {
@@ -616,9 +732,15 @@ export default function Home() {
     } finally {
       setDipAlertSaving(false);
     }
-  }, [loadDipAlerts]);
+  }, [demoMode, loadDipAlerts]);
 
   const deleteDipAlert = useCallback(async (ticker: string) => {
+    if (demoMode) {
+      setDipAlerts((current) => current.filter((alert) => alert.ticker !== ticker));
+      setBanner({ type: "info", message: `Demo alert removed for ${ticker}.` });
+      return;
+    }
+
     setDipAlertSaving(true);
     try {
       const response = await fetch(`/api/alerts/price-dip?ticker=${encodeURIComponent(ticker)}`, {
@@ -636,10 +758,27 @@ export default function Home() {
     } finally {
       setDipAlertSaving(false);
     }
-  }, [loadDipAlerts]);
+  }, [demoMode, loadDipAlerts]);
 
   const runHoldingsAi = useCallback(async (event?: FormEvent) => {
     event?.preventDefault();
+
+    const question = holdingsAiQuestion.trim().length > 0
+      ? holdingsAiQuestion.trim()
+      : HOLDINGS_AI_DEFAULT_PROMPT;
+
+    if (demoMode) {
+      setHoldingsAiLoading(true);
+      setHoldingsAiError("");
+
+      await new Promise((resolve) => {
+        window.setTimeout(resolve, 350);
+      });
+
+      setHoldingsAiResult(buildDemoHoldingsAiAnalysis(question));
+      setHoldingsAiLoading(false);
+      return;
+    }
 
     if (!sessionUser) {
       return;
@@ -654,10 +793,6 @@ export default function Home() {
       setHoldingsAiError("Import holdings first, then run Ask AI.");
       return;
     }
-
-    const question = holdingsAiQuestion.trim().length > 0
-      ? holdingsAiQuestion.trim()
-      : HOLDINGS_AI_DEFAULT_PROMPT;
 
     setHoldingsAiLoading(true);
     setHoldingsAiError("");
@@ -686,10 +821,10 @@ export default function Home() {
     } finally {
       setHoldingsAiLoading(false);
     }
-  }, [holdingsAiQuestion, sessionUser, state.holdings.length]);
+  }, [demoMode, holdingsAiQuestion, sessionUser, state.holdings.length]);
 
   useEffect(() => {
-    if (!sessionUser || loading) {
+    if (!sessionUser || loading || demoMode) {
       return;
     }
 
@@ -758,9 +893,17 @@ export default function Home() {
       window.removeEventListener("focus", refreshOnResume);
       window.removeEventListener("online", refreshOnResume);
     };
-  }, [loading, refreshPrices, sessionUser]);
+  }, [demoMode, loading, refreshPrices, sessionUser]);
 
   useEffect(() => {
+    if (demoMode) {
+      setDipAlerts(DEMO_DIP_ALERTS);
+      setAvailableDipTickers(DEMO_AVAILABLE_TICKERS);
+      setDipAlertMax(10);
+      setDipAlertTicker((current) => current || DEMO_AVAILABLE_TICKERS[0]);
+      return;
+    }
+
     if (!sessionUser) {
       setDipAlerts([]);
       setAvailableDipTickers([]);
@@ -785,7 +928,7 @@ export default function Home() {
     return () => {
       cancelled = true;
     };
-  }, [loadDipAlerts, sessionUser, state.updatedAt]);
+  }, [demoMode, loadDipAlerts, sessionUser, state.updatedAt]);
 
   useEffect(() => {
     if (sessionUser?.proEnabled) {
@@ -817,7 +960,9 @@ export default function Home() {
   const needsYahooEstimate = metrics.dailyReturns.length < 20 && state.holdings.length > 0;
 
   useEffect(() => {
-    if (!sessionUser || loading) {
+    if (!sessionUser || loading || demoMode) {
+      setHistoricalRiskEstimate(null);
+      setLoadingHistoricalEstimate(false);
       return;
     }
 
@@ -857,7 +1002,7 @@ export default function Home() {
     return () => {
       ignore = true;
     };
-  }, [loading, needsYahooEstimate, riskWindow, sessionUser, state.updatedAt]);
+  }, [demoMode, loading, needsYahooEstimate, riskWindow, sessionUser, state.updatedAt]);
 
   const effectiveVolatilityAnnualPct = metrics.volatilityAnnualPct ?? historicalRiskEstimate?.volatilityAnnualPct ?? null;
   const effectiveVar95Pct = metrics.var95Pct ?? historicalRiskEstimate?.var95Pct ?? null;
@@ -1365,6 +1510,12 @@ export default function Home() {
   }, [metrics.totalValue, state.holdings]);
 
   const onUpload = async (event: ChangeEvent<HTMLInputElement>, source: DataSource) => {
+    if (demoMode) {
+      event.target.value = "";
+      setBanner({ type: "info", message: "Uploads are disabled in demo mode. Create an account to import your own reports." });
+      return;
+    }
+
     const file = event.target.files?.[0];
 
     if (!file) {
@@ -1432,6 +1583,20 @@ export default function Home() {
   };
 
   const clearData = async () => {
+    if (demoMode) {
+      setState(DEMO_PORTFOLIO_STATE);
+      setHistoricalRiskEstimate(null);
+      setDipAlerts(DEMO_DIP_ALERTS);
+      setAvailableDipTickers(DEMO_AVAILABLE_TICKERS);
+      setDipAlertMax(10);
+      setDipAlertTicker(DEMO_AVAILABLE_TICKERS[0]);
+      setHoldingsAiQuestion(HOLDINGS_AI_DEFAULT_PROMPT);
+      setHoldingsAiError("");
+      setHoldingsAiResult(null);
+      setBanner({ type: "info", message: "Demo workspace reset to the sample portfolio." });
+      return;
+    }
+
     if (!window.confirm("Delete all imported holdings, snapshots, and dip alerts? Your sign-in email/password stays active.")) {
       return;
     }
@@ -1458,6 +1623,11 @@ export default function Home() {
   };
 
   const startCheckout = async (plan: CheckoutPlan, guestEmail?: string) => {
+    if (demoMode) {
+      window.location.assign("/classic#access");
+      return;
+    }
+
     let checkoutEmail = sessionUser?.email || "";
     const planLabel = plan === "pro" ? "Pro" : "Starter";
 
@@ -1521,6 +1691,11 @@ export default function Home() {
   };
 
   const openBillingPortal = async () => {
+    if (demoMode) {
+      window.location.assign("/classic#pricing");
+      return;
+    }
+
     setBillingPortalWorking(true);
 
     try {
@@ -1729,6 +1904,11 @@ export default function Home() {
   };
 
   const logout = async () => {
+    if (demoMode) {
+      window.location.assign("/classic");
+      return;
+    }
+
     setWorking(true);
 
     try {
@@ -1832,7 +2012,7 @@ export default function Home() {
               </div>
               <div className="spectre-hero-actions">
                 <a href="#access" className="spectre-btn spectre-btn-primary">Start For $3 / Month</a>
-                <a href="#insights" className="spectre-btn spectre-btn-ghost">See Dashboard Preview</a>
+                <a href="/classic?demo=1" className="spectre-btn spectre-btn-ghost">Try Demo Portfolio</a>
               </div>
               <div className="spectre-hero-stats">
                 <article>
@@ -2305,9 +2485,9 @@ export default function Home() {
             <a href="#alerts">Alerts</a>
           </div>
           <div className="nav-right">
-            <span className="nav-user">{sessionUser.email}</span>
+            <span className="nav-user">{demoMode ? "Demo workspace" : sessionUser.email}</span>
             <button type="button" className="nav-signout" onClick={logout} disabled={working || refreshingPrices || checkoutWorking || billingPortalWorking}>
-              Sign Out
+              {demoMode ? "Exit Demo" : "Sign Out"}
             </button>
           </div>
         </div>
@@ -2347,29 +2527,47 @@ export default function Home() {
           <p className="hero-description">Upload super, savings, tax report, ASX, crypto, index, mutual fund, and ABC Bullion reports to track exposure, concentration, and downside risk in one private workspace. Pro also adds Ask AI holdings analysis.</p>
         </div>
         <div className="meta">
-          <span className="meta-item">Account: {sessionUser.displayName} ({sessionUser.email})</span>
+          <span className="meta-item">Account: {sessionUser.displayName} ({demoMode ? "sample holdings" : sessionUser.email})</span>
           <span className="meta-item">
             Plan:
             {" "}
             <span className={`plan-chip ${sessionUser.proEnabled ? "pro" : "starter"}`}>
-              {sessionUser.proEnabled ? "PRO ACTIVE" : sessionUser.planTier.toUpperCase()}
+              {demoMode ? "PRO DEMO" : sessionUser.proEnabled ? "PRO ACTIVE" : sessionUser.planTier.toUpperCase()}
             </span>
           </span>
           <span className="meta-item">Holdings: {state.holdings.length}</span>
           <span className="meta-item">Latest report: {latestReportDate || "N/A"}</span>
           <span className="meta-item">Last saved: {state.updatedAt ? new Date(state.updatedAt).toLocaleString("en-AU") : "N/A"}</span>
-          <span className="meta-item">Live prices: {state.lastPriceRefreshAt ? new Date(state.lastPriceRefreshAt).toLocaleString("en-AU") : "Not refreshed yet"}</span>
+          <span className="meta-item">Live prices: {demoMode ? "Demo snapshot" : state.lastPriceRefreshAt ? new Date(state.lastPriceRefreshAt).toLocaleString("en-AU") : "Not refreshed yet"}</span>
           <div className="meta-actions">
-            <button type="button" onClick={() => void refreshPrices(true)} className="refresh-btn" disabled={loading || working || refreshingPrices}>
-              {refreshingPrices ? "Refreshing..." : "Refresh Prices"}
-            </button>
-            <button type="button" onClick={clearData} className="clear-btn" disabled={working || refreshingPrices || checkoutWorking}>
-              {working ? "Working..." : "Clear Data"}
-            </button>
+            {demoMode ? (
+              <>
+                <button type="button" onClick={() => window.location.assign("/classic#access")} className="refresh-btn">
+                  Create Account
+                </button>
+                <button type="button" onClick={clearData} className="clear-btn">
+                  Reset Demo
+                </button>
+              </>
+            ) : (
+              <>
+                <button type="button" onClick={() => void refreshPrices(true)} className="refresh-btn" disabled={loading || working || refreshingPrices}>
+                  {refreshingPrices ? "Refreshing..." : "Refresh Prices"}
+                </button>
+                <button type="button" onClick={clearData} className="clear-btn" disabled={working || refreshingPrices || checkoutWorking}>
+                  {working ? "Working..." : "Clear Data"}
+                </button>
+              </>
+            )}
           </div>
         </div>
       </header>
 
+      {demoMode ? (
+        <div className="banner info">
+          Demo mode uses seeded sample holdings and snapshot history. Create an account to upload your own files, refresh live prices, and save portfolio changes.
+        </div>
+      ) : null}
       {banner ? <div className={`banner ${banner.type}`}>{banner.message}</div> : null}
 
       <section id="settings" className="settings-section">
@@ -2398,40 +2596,58 @@ export default function Home() {
 
           <article className="settings-card">
             <h3>Membership</h3>
-            <p className="settings-note">
-              Open Stripe billing to manage payment details, invoices, and cancel your membership.
-            </p>
-            <div className="settings-actions">
-              {hasMembership ? (
-                <button
-                  type="button"
-                  className="refresh-btn"
-                  onClick={() => void openBillingPortal()}
-                  disabled={billingPortalWorking || working || refreshingPrices || checkoutWorking}
-                >
-                  {billingPortalWorking ? "Opening..." : "Manage / Cancel Membership"}
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  className="refresh-btn"
-                  onClick={() => void startStarterCheckout(sessionUser.email)}
-                  disabled={billingPortalWorking || working || refreshingPrices || checkoutWorking}
-                >
-                  {checkoutWorking ? "Redirecting..." : "Start Membership ($3/mo)"}
-                </button>
-              )}
-              {!sessionUser.proEnabled ? (
-                <button
-                  type="button"
-                  className="template-btn"
-                  onClick={() => void startProCheckout(sessionUser.email)}
-                  disabled={billingPortalWorking || working || refreshingPrices || checkoutWorking}
-                >
-                  {checkoutWorking ? "Redirecting..." : "Upgrade to Pro"}
-                </button>
-              ) : null}
-            </div>
+            {demoMode ? (
+              <>
+                <p className="settings-note">
+                  Demo mode includes sample Pro analytics only. Create an account to import your own reports and start a real Starter or Pro plan.
+                </p>
+                <div className="settings-actions">
+                  <button type="button" className="refresh-btn" onClick={() => window.location.assign("/classic#access")}>
+                    Create Account
+                  </button>
+                  <button type="button" className="template-btn" onClick={() => window.location.assign("/classic#pricing")}>
+                    See Pricing
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="settings-note">
+                  Open Stripe billing to manage payment details, invoices, and cancel your membership.
+                </p>
+                <div className="settings-actions">
+                  {hasMembership ? (
+                    <button
+                      type="button"
+                      className="refresh-btn"
+                      onClick={() => void openBillingPortal()}
+                      disabled={billingPortalWorking || working || refreshingPrices || checkoutWorking}
+                    >
+                      {billingPortalWorking ? "Opening..." : "Manage / Cancel Membership"}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className="refresh-btn"
+                      onClick={() => void startStarterCheckout(sessionUser.email)}
+                      disabled={billingPortalWorking || working || refreshingPrices || checkoutWorking}
+                    >
+                      {checkoutWorking ? "Redirecting..." : "Start Membership ($3/mo)"}
+                    </button>
+                  )}
+                  {!sessionUser.proEnabled ? (
+                    <button
+                      type="button"
+                      className="template-btn"
+                      onClick={() => void startProCheckout(sessionUser.email)}
+                      disabled={billingPortalWorking || working || refreshingPrices || checkoutWorking}
+                    >
+                      {checkoutWorking ? "Redirecting..." : "Upgrade to Pro"}
+                    </button>
+                  ) : null}
+                </div>
+              </>
+            )}
           </article>
 
           <article className="settings-card">
@@ -2451,7 +2667,8 @@ export default function Home() {
           onUpload={(event) => onUpload(event, "super")}
           template={superTemplateCsv()}
           templateName="super-template.csv"
-          disabled={working || loading}
+          disabled={working || loading || demoMode}
+          disabledLabel={demoMode ? "Create account to upload" : undefined}
         />
         <UploadCard
           title="ASX Report File"
@@ -2460,7 +2677,8 @@ export default function Home() {
           onUpload={(event) => onUpload(event, "asx")}
           template={asxTemplateCsv()}
           templateName="asx-template.csv"
-          disabled={working || loading}
+          disabled={working || loading || demoMode}
+          disabledLabel={demoMode ? "Create account to upload" : undefined}
         />
         <UploadCard
           title="Index Report File"
@@ -2469,7 +2687,8 @@ export default function Home() {
           onUpload={(event) => onUpload(event, "index")}
           template={indexTemplateCsv()}
           templateName="index-template.csv"
-          disabled={working || loading}
+          disabled={working || loading || demoMode}
+          disabledLabel={demoMode ? "Create account to upload" : undefined}
         />
         <UploadCard
           title="Mutual Fund Report File"
@@ -2478,7 +2697,8 @@ export default function Home() {
           onUpload={(event) => onUpload(event, "fund")}
           template={fundTemplateCsv()}
           templateName="mutual-fund-template.csv"
-          disabled={working || loading}
+          disabled={working || loading || demoMode}
+          disabledLabel={demoMode ? "Create account to upload" : undefined}
         />
         <UploadCard
           title="Crypto Report File"
@@ -2487,7 +2707,8 @@ export default function Home() {
           onUpload={(event) => onUpload(event, "crypto")}
           template={cryptoTemplateCsv()}
           templateName="crypto-template.csv"
-          disabled={working || loading}
+          disabled={working || loading || demoMode}
+          disabledLabel={demoMode ? "Create account to upload" : undefined}
         />
         <UploadCard
           title="Savings Report File"
@@ -2496,7 +2717,8 @@ export default function Home() {
           onUpload={(event) => onUpload(event, "savings")}
           template={savingsTemplateCsv()}
           templateName="savings-template.csv"
-          disabled={working || loading}
+          disabled={working || loading || demoMode}
+          disabledLabel={demoMode ? "Create account to upload" : undefined}
         />
         <UploadCard
           title="Tax Report File"
@@ -2505,7 +2727,8 @@ export default function Home() {
           onUpload={(event) => onUpload(event, "tax")}
           template={taxTemplateCsv()}
           templateName="tax-template.csv"
-          disabled={working || loading}
+          disabled={working || loading || demoMode}
+          disabledLabel={demoMode ? "Create account to upload" : undefined}
         />
         <UploadCard
           title="ABC Bullion Report File"
@@ -2514,7 +2737,8 @@ export default function Home() {
           onUpload={(event) => onUpload(event, "gold")}
           template={goldTemplateCsv()}
           templateName="bullion-template.csv"
-          disabled={working || loading}
+          disabled={working || loading || demoMode}
+          disabledLabel={demoMode ? "Create account to upload" : undefined}
         />
       </section>
 
@@ -2522,7 +2746,7 @@ export default function Home() {
         <div className="dip-alerts-head">
           <h2>Email Dip Alerts</h2>
           <p>Send an email when a selected ASX or crypto holding drops past your threshold versus previous close.</p>
-          <p className="dip-alerts-plan-note">{dipAlertPlanMessage}</p>
+          <p className="dip-alerts-plan-note">{demoMode ? "Demo mode: sample alerts can be edited locally, but no emails are sent." : dipAlertPlanMessage}</p>
         </div>
 
         <form className="dip-alerts-form" onSubmit={(event) => void saveDipAlert(event)}>
@@ -3150,6 +3374,7 @@ function UploadCard({
   template,
   templateName,
   disabled,
+  disabledLabel,
 }: {
   title: string;
   description: string;
@@ -3158,6 +3383,7 @@ function UploadCard({
   template: string;
   templateName: string;
   disabled: boolean;
+  disabledLabel?: string;
 }) {
   const downloadTemplate = () => {
     const blob = new Blob([template], { type: "text/csv;charset=utf-8;" });
@@ -3181,7 +3407,7 @@ function UploadCard({
           onChange={onUpload}
           disabled={disabled}
         />
-        <span>{disabled ? "Please wait..." : "Select File"}</span>
+        <span>{disabled ? (disabledLabel || "Please wait...") : "Select File"}</span>
       </label>
       <button type="button" onClick={downloadTemplate} className="template-btn" disabled={disabled}>
         Download template
@@ -3742,6 +3968,257 @@ function clearPendingRegistrationDraft(): void {
   }
 
   window.sessionStorage.removeItem(PENDING_REGISTRATION_KEY);
+}
+
+function buildDemoHoldingsAiAnalysis(question: string): HoldingsAiAnalysis {
+  return {
+    generatedAt: "2026-03-06T06:12:00.000Z",
+    model: "SPECTRE Demo AI",
+    question,
+    answer:
+      "This demo portfolio is driven by a few large risk buckets: super exposure as the core base, concentrated Australian equities, and two higher-volatility sleeves in crypto and bullion. The main downside sensitivity comes from concentration in the top three positions and the crypto allocation.",
+    portfolioDrivers: [
+      "Super remains the anchor allocation and keeps the overall portfolio diversified by account.",
+      "CBA, BHP, and MQG drive most of the listed-equity sensitivity to the ASX.",
+      "BTC and ETH add upside momentum but materially increase tail-risk and drawdown sensitivity.",
+      "Bullion offsets part of the equity/crypto shock profile during mixed-stress scenarios.",
+    ],
+    holdingBreakdown: [
+      {
+        ticker: "SUPBAL",
+        summary: "The super sleeve is the largest account and acts as the portfolio base layer.",
+        influences: ["Largest account weight in the portfolio", "Moderates concentration outside listed holdings"],
+        riskFlags: ["Largest account share"],
+        confidence: 88,
+      },
+      {
+        ticker: "BTC",
+        summary: "Bitcoin is the biggest single source of downside swing risk in the demo set.",
+        influences: ["High volatility contribution", "Strong impact on 1-day VaR and drawdown"],
+        riskFlags: ["Tail risk", "Volatility"],
+        confidence: 84,
+      },
+      {
+        ticker: "CBA",
+        summary: "CBA is one of the largest ASX positions and adds bank concentration risk.",
+        influences: ["Large equity weight", "Contributes to top-3 concentration"],
+        riskFlags: ["Concentration"],
+        confidence: 79,
+      },
+    ],
+    riskChecks: [
+      "Top-3 holdings still account for a large share of total value.",
+      "Crypto increases expected shortfall more than it increases diversification quality.",
+      "Bullion helps in mixed-shock scenarios but does not fully offset equity drawdowns.",
+    ],
+    nextActions: [
+      "Reduce concentration in the largest listed positions if capital preservation matters.",
+      "Review whether the crypto sleeve is sized appropriately relative to overall risk tolerance.",
+      "Track new snapshots over time to improve confidence in VaR and drawdown estimates.",
+    ],
+  };
+}
+
+function createDemoPortfolioState(): PortfolioState {
+  const importedAt = "2026-03-05T22:00:00.000Z";
+  const reportDate = "2026-03-06";
+  const holdings: PortfolioHolding[] = [
+    {
+      id: "demo-super-balanced",
+      source: "super",
+      account: "AustralianSuper",
+      ticker: "SUPBAL",
+      name: "Balanced Super Option",
+      units: 1,
+      price: 112000,
+      prevClose: 112000,
+      value: 112000,
+      costBase: 104500,
+      sector: "Super",
+      reportDate,
+      importedAt,
+    },
+    {
+      id: "demo-asx-cba",
+      source: "asx",
+      account: "CommSec",
+      ticker: "CBA",
+      name: "Commonwealth Bank",
+      units: 120,
+      price: 131.44,
+      prevClose: 130.92,
+      value: 15772.8,
+      costBase: 14820,
+      sector: "Banks",
+      reportDate,
+      importedAt,
+    },
+    {
+      id: "demo-asx-bhp",
+      source: "asx",
+      account: "CommSec",
+      ticker: "BHP",
+      name: "BHP Group",
+      units: 280,
+      price: 45.82,
+      prevClose: 45.28,
+      value: 12829.6,
+      costBase: 11984,
+      sector: "Materials",
+      reportDate,
+      importedAt,
+    },
+    {
+      id: "demo-asx-mqg",
+      source: "asx",
+      account: "CommSec",
+      ticker: "MQG",
+      name: "Macquarie Group",
+      units: 35,
+      price: 218.75,
+      prevClose: 215.72,
+      value: 7656.25,
+      costBase: 7035,
+      sector: "Financials",
+      reportDate,
+      importedAt,
+    },
+    {
+      id: "demo-crypto-btc",
+      source: "crypto",
+      account: "Kraken",
+      ticker: "BTC",
+      name: "Bitcoin",
+      units: 0.42,
+      price: 84200,
+      prevClose: 85740,
+      value: 35364,
+      costBase: 28000,
+      sector: "Crypto",
+      reportDate,
+      importedAt,
+    },
+    {
+      id: "demo-crypto-eth",
+      source: "crypto",
+      account: "Kraken",
+      ticker: "ETH",
+      name: "Ethereum",
+      units: 7.5,
+      price: 3140,
+      prevClose: 3121.27,
+      value: 23550,
+      costBase: 18750,
+      sector: "Crypto",
+      reportDate,
+      importedAt,
+    },
+    {
+      id: "demo-gold",
+      source: "gold",
+      account: "ABC Bullion",
+      ticker: "ABC-AU",
+      name: "Allocated Gold Holdings",
+      units: 7.8,
+      price: 4490,
+      prevClose: 4472,
+      value: 35022,
+      costBase: 31200,
+      sector: "Precious Metals",
+      reportDate,
+      importedAt,
+    },
+    {
+      id: "demo-savings",
+      source: "savings",
+      account: "Offset Saver",
+      ticker: "SAVINGSCASH",
+      name: "Savings Cash Position",
+      units: 1,
+      price: 18450,
+      prevClose: 18450,
+      value: 18450,
+      costBase: 18450,
+      sector: "Savings",
+      reportDate,
+      importedAt,
+    },
+    {
+      id: "demo-index",
+      source: "index",
+      account: "Vanguard",
+      ticker: "VAS",
+      name: "Vanguard Australian Shares ETF",
+      units: 95,
+      price: 104.6,
+      prevClose: 103.95,
+      value: 9937,
+      costBase: 9120,
+      sector: "Index",
+      reportDate,
+      importedAt,
+    },
+    {
+      id: "demo-fund",
+      source: "fund",
+      account: "Managed Funds",
+      ticker: "GGF",
+      name: "Global Growth Fund",
+      units: 220,
+      price: 68.4,
+      prevClose: 67.9,
+      value: 15048,
+      costBase: 13750,
+      sector: "Managed Fund",
+      reportDate,
+      importedAt,
+    },
+  ];
+
+  const totalValue = holdings.reduce((sum, holding) => sum + holding.value, 0);
+
+  return {
+    holdings,
+    snapshots: createDemoSnapshots(totalValue),
+    updatedAt: "2026-03-06T06:10:00.000Z",
+    lastPriceRefreshAt: "2026-03-06T06:05:00.000Z",
+  };
+}
+
+function createDemoSnapshots(finalValue: number): PortfolioSnapshot[] {
+  const snapshots: PortfolioSnapshot[] = [];
+  const days = 92;
+  const startMs = Date.UTC(2025, 11, 5, 6, 0, 0);
+  let value = finalValue * 0.88;
+
+  for (let index = 0; index < days; index += 1) {
+    const drift = finalValue * 0.00075;
+    const seasonal = Math.sin(index / 5) * 950 + Math.cos(index / 11) * 620;
+    const shock =
+      index === 19 ? -4200 :
+      index === 43 ? -6100 :
+      index === 68 ? 3200 :
+      index === 79 ? -2800 :
+      0;
+
+    value = Math.max(finalValue * 0.8, value + drift + seasonal + shock);
+
+    if (index === days - 1) {
+      value = finalValue;
+    }
+
+    snapshots.push({
+      date: new Date(startMs + index * 24 * 60 * 60 * 1000).toISOString(),
+      value: Number(value.toFixed(2)),
+    });
+  }
+
+  snapshots.push({
+    date: "2026-03-06T14:10:00.000Z",
+    value: Number(finalValue.toFixed(2)),
+  });
+
+  return snapshots;
 }
 
 function superTemplateCsv(): string {
