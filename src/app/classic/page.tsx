@@ -26,6 +26,7 @@ import {
   CsvRow,
   DataSource,
   EMPTY_STATE,
+  PortfolioHolding,
   PortfolioState,
   RiskWindow,
   computeMetrics,
