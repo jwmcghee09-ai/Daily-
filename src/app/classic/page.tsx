@@ -1303,14 +1303,6 @@ export default function Home() {
           "%",
           "(Top 3 holding values / total portfolio value) x 100.",
         ),
-        toRiskFlag(
-          "Largest account share",
-          metrics.largestAccountPct,
-          55,
-          75,
-          "%",
-          "(Largest account value / total portfolio value) x 100.",
-        ),
       ].filter((flag) => flag.value !== "N/A");
     }
 
@@ -2532,7 +2524,7 @@ export default function Home() {
             <a href="#risk">Risk</a>
             <a href="#charts">Charts</a>
             <a href="#holdings">Holdings</a>
-            <a href="#alerts">Alerts</a>
+            {proAnalyticsEnabled ? <a href="#alerts">Alerts</a> : null}
           </div>
           <div className="nav-right">
             <span className="nav-user">{demoMode ? "Demo workspace" : sessionUser.email}</span>
@@ -2619,6 +2611,11 @@ export default function Home() {
         </div>
       ) : null}
       {banner ? <div className={`banner ${banner.type}`}>{banner.message}</div> : null}
+      {!demoMode && !proAnalyticsEnabled ? (
+        <div className="banner info">
+          Starter plan active: Dip alerts, stress testing, and advanced risk measurements are available on Pro. Upgrade to Pro in Settings.
+        </div>
+      ) : null}
 
       <section id="settings" className="settings-section">
         <div className="settings-head">
@@ -2792,107 +2789,101 @@ export default function Home() {
         />
       </section>
 
-      <section id="alerts" className="dip-alerts-section">
-        <div className="dip-alerts-head">
-          <h2>Email Dip Alerts</h2>
-          <p>Send an email when a selected ASX or crypto holding drops past your threshold versus previous close.</p>
-          <p className="dip-alerts-plan-note">{demoMode ? "Demo mode: sample alerts can be edited locally, but no emails are sent." : dipAlertPlanMessage}</p>
-        </div>
-
-        <form className="dip-alerts-form" onSubmit={(event) => void saveDipAlert(event)}>
-          <label>
-            <span>Ticker</span>
-            <input
-              type="text"
-              list="dip-alert-tickers"
-              value={dipAlertTicker}
-              onChange={(event) => setDipAlertTicker(event.target.value.toUpperCase())}
-              placeholder={availableDipTickers[0] || "e.g. CBA or BTC"}
-              maxLength={20}
-              disabled={dipAlertSaving || !proAnalyticsEnabled}
-            />
-            <datalist id="dip-alert-tickers">
-              {availableDipTickers.map((ticker) => (
-                <option key={ticker} value={ticker} />
-              ))}
-            </datalist>
-          </label>
-
-          <label>
-            <span>Drop threshold (%)</span>
-            <input
-              type="number"
-              min={0.1}
-              max={90}
-              step={0.1}
-              value={dipAlertThreshold}
-              onChange={(event) => setDipAlertThreshold(event.target.value)}
-              disabled={dipAlertSaving || !proAnalyticsEnabled}
-            />
-          </label>
-
-          <button
-            type="submit"
-            className="refresh-btn"
-            disabled={!proAnalyticsEnabled || dipAlertSaving || dipAlertMax <= 0 || (dipAlerts.length >= dipAlertMax && !dipAlerts.some((alert) => alert.ticker === dipAlertTicker.trim().toUpperCase()))}
-          >
-            {dipAlertSaving ? "Saving..." : "Save Alert"}
-          </button>
-        </form>
-
-        {dipAlertMax > 0 ? (
-          <p className="dip-alerts-slots">
-            {dipAlerts.length}/{dipAlertMax} alert slots in use ({dipAlertSlotsRemaining} remaining).
-          </p>
-        ) : (
-          <p className="dip-alerts-slots">Upgrade to Pro to use dip alerts.</p>
-        )}
-
-        <div className="dip-alerts-grid">
-          {dipAlerts.length === 0 ? (
-            <div className="empty">No dip alerts yet. Add your first alert above.</div>
-          ) : (
-            dipAlerts.map((alert) => (
-              <article key={alert.id} className="dip-alert-card">
-                <div className="dip-alert-card-head">
-                  <h3>{alert.ticker}</h3>
-                  <span className={"dip-alert-status " + (alert.enabled ? "enabled" : "disabled")}>{alert.enabled ? "Enabled" : "Paused"}</span>
-                </div>
-                <p>Trigger when drop is at least <strong>{alert.dropPctThreshold.toFixed(2)}%</strong>.</p>
-                <p className="dip-alert-last">
-                  Last sent: {alert.lastTriggeredAt ? new Date(alert.lastTriggeredAt).toLocaleString("en-AU") : "Never"}
-                </p>
-                <div className="dip-alert-actions">
-                  <button
-                    type="button"
-                    className="template-btn"
-                    onClick={() => void toggleDipAlert(alert, !alert.enabled)}
-                    disabled={!proAnalyticsEnabled || dipAlertSaving}
-                  >
-                    {alert.enabled ? "Pause" : "Resume"}
-                  </button>
-                  <button
-                    type="button"
-                    className="clear-btn"
-                    onClick={() => void deleteDipAlert(alert.ticker)}
-                    disabled={!proAnalyticsEnabled || dipAlertSaving}
-                  >
-                    Remove
-                  </button>
-                </div>
-              </article>
-            ))
-          )}
-        </div>
-
-        {!proAnalyticsEnabled ? (
-          <div className="dip-alert-upgrade">
-            <button type="button" onClick={() => void startProCheckout(authEmail)} className="template-btn" disabled={checkoutWorking}>
-              {checkoutWorking ? "Redirecting..." : "Unlock Dip Alerts (Pro)"}
-            </button>
+      {proAnalyticsEnabled ? (
+        <section id="alerts" className="dip-alerts-section">
+          <div className="dip-alerts-head">
+            <h2>Email Dip Alerts</h2>
+            <p>Send an email when a selected ASX or crypto holding drops past your threshold versus previous close.</p>
+            <p className="dip-alerts-plan-note">{demoMode ? "Demo mode: sample alerts can be edited locally, but no emails are sent." : dipAlertPlanMessage}</p>
           </div>
-        ) : null}
-      </section>
+
+          <form className="dip-alerts-form" onSubmit={(event) => void saveDipAlert(event)}>
+            <label>
+              <span>Ticker</span>
+              <input
+                type="text"
+                list="dip-alert-tickers"
+                value={dipAlertTicker}
+                onChange={(event) => setDipAlertTicker(event.target.value.toUpperCase())}
+                placeholder={availableDipTickers[0] || "e.g. CBA or BTC"}
+                maxLength={20}
+                disabled={dipAlertSaving || !proAnalyticsEnabled}
+              />
+              <datalist id="dip-alert-tickers">
+                {availableDipTickers.map((ticker) => (
+                  <option key={ticker} value={ticker} />
+                ))}
+              </datalist>
+            </label>
+
+            <label>
+              <span>Drop threshold (%)</span>
+              <input
+                type="number"
+                min={0.1}
+                max={90}
+                step={0.1}
+                value={dipAlertThreshold}
+                onChange={(event) => setDipAlertThreshold(event.target.value)}
+                disabled={dipAlertSaving || !proAnalyticsEnabled}
+              />
+            </label>
+
+            <button
+              type="submit"
+              className="refresh-btn"
+              disabled={!proAnalyticsEnabled || dipAlertSaving || dipAlertMax <= 0 || (dipAlerts.length >= dipAlertMax && !dipAlerts.some((alert) => alert.ticker === dipAlertTicker.trim().toUpperCase()))}
+            >
+              {dipAlertSaving ? "Saving..." : "Save Alert"}
+            </button>
+          </form>
+
+          {dipAlertMax > 0 ? (
+            <p className="dip-alerts-slots">
+              {dipAlerts.length}/{dipAlertMax} alert slots in use ({dipAlertSlotsRemaining} remaining).
+            </p>
+          ) : (
+            <p className="dip-alerts-slots">Upgrade to Pro to use dip alerts.</p>
+          )}
+
+          <div className="dip-alerts-grid">
+            {dipAlerts.length === 0 ? (
+              <div className="empty">No dip alerts yet. Add your first alert above.</div>
+            ) : (
+              dipAlerts.map((alert) => (
+                <article key={alert.id} className="dip-alert-card">
+                  <div className="dip-alert-card-head">
+                    <h3>{alert.ticker}</h3>
+                    <span className={"dip-alert-status " + (alert.enabled ? "enabled" : "disabled")}>{alert.enabled ? "Enabled" : "Paused"}</span>
+                  </div>
+                  <p>Trigger when drop is at least <strong>{alert.dropPctThreshold.toFixed(2)}%</strong>.</p>
+                  <p className="dip-alert-last">
+                    Last sent: {alert.lastTriggeredAt ? new Date(alert.lastTriggeredAt).toLocaleString("en-AU") : "Never"}
+                  </p>
+                  <div className="dip-alert-actions">
+                    <button
+                      type="button"
+                      className="template-btn"
+                      onClick={() => void toggleDipAlert(alert, !alert.enabled)}
+                      disabled={!proAnalyticsEnabled || dipAlertSaving}
+                    >
+                      {alert.enabled ? "Pause" : "Resume"}
+                    </button>
+                    <button
+                      type="button"
+                      className="clear-btn"
+                      onClick={() => void deleteDipAlert(alert.ticker)}
+                      disabled={!proAnalyticsEnabled || dipAlertSaving}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </article>
+              ))
+            )}
+          </div>
+        </section>
+      ) : null}
 
       
       <section id="metrics" className="kpi-grid">
@@ -3183,9 +3174,7 @@ export default function Home() {
               ))
             )}
           </div>
-        ) : (
-          <div className="empty">Starter keeps this simple. Stress scenarios are available on Pro.</div>
-        )}
+        ) : null}
       </section>
 
       
@@ -3267,7 +3256,7 @@ export default function Home() {
             .
           </p>
         ) : (
-          <p className="risk-window-note">Starter focuses on core risk visibility (risk score + concentration). Upgrade to Pro for full quant risk windows.</p>
+          <p className="risk-window-note">Starter now shows a slim risk snapshot. Upgrade to Pro for full risk windows and advanced measurements.</p>
         )}
         {usingYahooFallback ? (
           <p className="estimate-note">
