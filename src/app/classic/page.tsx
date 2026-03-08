@@ -76,6 +76,36 @@ const WORKBOOK_UPLOAD_EXTENSIONS = new Set(["xlsx", "xls", "xlsm", "xlsb", "numb
 const SUPPORTED_UPLOAD_FORMATS_LABEL = "CSV, TSV, PSV, TXT, JSON, XLSX, XLS, XLSM, XLSB, NUMBERS, or ODS";
 const INVALID_UPLOAD_FORMAT_MESSAGE = `Does not accept this file type. Please convert to - ${SUPPORTED_UPLOAD_FORMATS_LABEL}.`;
 const INVALID_UPLOAD_MESSAGE_TTL_MS = 5 * 60 * 1000;
+const AI_RISK_NEGATIVE_KEYWORDS = [
+  "concentration",
+  "drawdown",
+  "volatility spike",
+  "tail risk",
+  "downside",
+  "bearish",
+  "sell",
+  "overvalued",
+  "correlation",
+  "stress",
+  "headwind",
+  "liquidity risk",
+  "rate risk",
+];
+const AI_RISK_POSITIVE_KEYWORDS = [
+  "diversified",
+  "broad exposure",
+  "defensive",
+  "hedged",
+  "resilient",
+  "quality",
+  "upside",
+  "buy",
+  "support",
+  "momentum",
+  "breakout",
+  "undervalued",
+  "risk-on",
+];
 
 const LANDING_PREVIEW_SERIES = [
   { month: "Jan", portfolio: 1180000, buffer: 1100000 },
@@ -1090,18 +1120,22 @@ export default function Home() {
     const sourceMixPenalty = normalizePenalty(metrics.sourceRiskLoad, 0.55, 1.35) * 10;
     const confidencePenalty = (1 - clamp(riskReturnsUsed / 63, 0, 1)) * 12;
     const totalPenalty = volatilityPenalty + varPenalty + drawdownPenalty + concentrationPenalty + accountPenalty + sourceMixPenalty + confidencePenalty;
-    const score = Math.round(clamp(100 - totalPenalty, 1, 99));
+    const baseScore = Math.round(clamp(100 - totalPenalty, 1, 99));
+    const aiAdjustment = proAnalyticsEnabled ? computeAiRiskAdjustment(holdingsAiResult) : 0;
+    const score = Math.round(clamp(baseScore + aiAdjustment, 1, 99));
 
     const label = score >= 75 ? "Controlled" : score >= 55 ? "Moderate" : "Elevated";
     const confidence = riskReturnsUsed >= 63 ? "High" : riskReturnsUsed >= 20 ? "Medium" : "Low";
 
     return {
+      baseScore,
       score,
       label,
       confidence,
       returnsUsed: riskReturnsUsed,
+      aiAdjustment,
     };
-  }, [effectiveMaxDrawdownPct, effectiveVar95Pct, effectiveVolatilityAnnualPct, metrics.diversifiedIndexFundPct, metrics.largestAccountPct, metrics.sourceRiskLoad, metrics.top3ConcentrationPct, metrics.totalValue, riskReturnsUsed, state.holdings.length]);
+  }, [effectiveMaxDrawdownPct, effectiveVar95Pct, effectiveVolatilityAnnualPct, holdingsAiResult, metrics.diversifiedIndexFundPct, metrics.largestAccountPct, metrics.sourceRiskLoad, metrics.top3ConcentrationPct, metrics.totalValue, proAnalyticsEnabled, riskReturnsUsed, state.holdings.length]);
 
   const portfolioRiskScoreTone = portfolioRiskScore == null
     ? "neutral"
@@ -1110,6 +1144,9 @@ export default function Home() {
       : portfolioRiskScore.score >= 55
         ? "neutral"
         : "negative";
+  const aiRiskAdjustmentLabel = portfolioRiskScore
+    ? `${portfolioRiskScore.aiAdjustment >= 0 ? "+" : ""}${portfolioRiskScore.aiAdjustment} pts`
+    : "+0 pts";
 
   const todayMovers = useMemo<TodayMover[]>(() => {
     const grouped = new Map<string, { changeAmount: number; previousValue: number; currentValue: number }>();
@@ -2912,7 +2949,7 @@ export default function Home() {
           value={portfolioRiskScore ? `${portfolioRiskScore.score}/100 (${portfolioRiskScore.label})` : "Need holdings"}
           help={
             portfolioRiskScore
-              ? `Composite score from volatility, VaR, drawdown, diversification-adjusted concentration, source mix, and sample confidence. Broad index/fund-heavy sleeves reduce concentration penalty impact; single-stock/crypto-heavy mixes increase it. Confidence: ${portfolioRiskScore.confidence} (${portfolioRiskScore.returnsUsed} daily returns).`
+              ? `Composite score from volatility, VaR, drawdown, diversification-adjusted concentration, source mix, and sample confidence. Broad index/fund-heavy sleeves reduce concentration penalty impact; single-stock/crypto-heavy mixes increase it. Confidence: ${portfolioRiskScore.confidence} (${portfolioRiskScore.returnsUsed} daily returns).${proAnalyticsEnabled ? ` Pro AI adjustment: ${portfolioRiskScore.aiAdjustment >= 0 ? "+" : ""}${portfolioRiskScore.aiAdjustment} points (bounded ±5).` : ""}`
               : "Composite score appears after holdings are imported."
           }
           tone={portfolioRiskScoreTone}
@@ -2993,6 +3030,10 @@ export default function Home() {
           <article className="pro-analytics-card">
             <p>Tracking Error (Annualized)</p>
             <strong>{proAnalyticsEnabled && benchmarkTrackingErrorAnnualPct != null ? formatPercent(benchmarkTrackingErrorAnnualPct) : "LOCKED"}</strong>
+          </article>
+          <article className="pro-analytics-card">
+            <p>AI Risk Adjustment</p>
+            <strong>{proAnalyticsEnabled ? aiRiskAdjustmentLabel : "LOCKED"}</strong>
           </article>
         </div>
         {proAnalyticsEnabled ? (
@@ -3566,6 +3607,57 @@ function normalizePenalty(value: number | null, low: number, high: number): numb
   }
 
   return clamp((value - low) / (high - low), 0, 1);
+}
+
+function countKeywordHits(corpus: string, keywords: string[]): number {
+  return keywords.reduce((total, keyword) => total + (corpus.includes(keyword) ? 1 : 0), 0);
+}
+
+function buildHoldingsAiSignalCorpus(analysis: HoldingsAiAnalysis): string {
+  const segments = new Set<string>();
+
+  const addSegment = (value: string | null | undefined): void => {
+    const normalized = (value || "").trim().toLowerCase();
+    if (normalized.length > 0) {
+      segments.add(normalized);
+    }
+  };
+
+  addSegment(analysis.answer);
+  analysis.portfolioDrivers.forEach(addSegment);
+  analysis.riskChecks.forEach(addSegment);
+  analysis.nextActions.forEach(addSegment);
+  analysis.holdingBreakdown.forEach((item) => {
+    addSegment(item.summary);
+    item.influences.forEach(addSegment);
+    item.riskFlags.forEach(addSegment);
+  });
+
+  return Array.from(segments).join(" | ");
+}
+
+function computeAiRiskAdjustment(analysis: HoldingsAiAnalysis | null): number {
+  if (!analysis) {
+    return 0;
+  }
+
+  const corpus = buildHoldingsAiSignalCorpus(analysis);
+  if (corpus.length === 0) {
+    return 0;
+  }
+
+  const negativeHits = countKeywordHits(corpus, AI_RISK_NEGATIVE_KEYWORDS);
+  const positiveHits = countKeywordHits(corpus, AI_RISK_POSITIVE_KEYWORDS);
+  const confidenceSamples = analysis.holdingBreakdown
+    .map((item) => Number(item.confidence))
+    .filter((value) => Number.isFinite(value));
+  const averageConfidence = confidenceSamples.length > 0
+    ? confidenceSamples.reduce((total, value) => total + value, 0) / confidenceSamples.length
+    : 60;
+  const confidenceWeight = clamp(averageConfidence / 100, 0.4, 1);
+  const weightedDelta = (positiveHits - negativeHits) * confidenceWeight;
+
+  return Math.round(clamp(weightedDelta, -5, 5));
 }
 
 function toRiskFlag(

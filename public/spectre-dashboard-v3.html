@@ -383,11 +383,13 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 .console-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.4rem}
 .console-title{font-family:var(--disp);font-size:1.2rem;letter-spacing:.08em;color:var(--purple-hi)}
 .console-badge{font-family:var(--mono);font-size:.5rem;letter-spacing:.16em;text-transform:uppercase;padding:.2rem .6rem;border-radius:3px;background:rgba(192,132,252,.1);color:var(--purple-hi);border:1px solid rgba(192,132,252,.22)}
-.console-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.65rem}
+.console-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.65rem}
 .console-stat{background:rgba(10,7,18,.7);border:1px solid rgba(155,93,229,.1);border-radius:10px;padding:.9rem 1rem}
 .console-lbl{font-family:var(--mono);font-size:.52rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:.25rem}
 .console-val{font-family:var(--disp);font-size:1.6rem;letter-spacing:.04em;color:var(--purple-hi)}
-@media(max-width:600px){.console-grid{grid-template-columns:1fr 1fr}}
+.console-val.danger{color:var(--orange)}
+@media(max-width:900px){.console-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.console-grid{grid-template-columns:1fr}}
 
 .console-ai{margin-top:1rem;background:rgba(12,8,22,.78);border:1px solid rgba(192,132,252,.18);border-radius:12px;padding:1rem}
 .console-ai-head{display:flex;align-items:center;justify-content:space-between;gap:.7rem;flex-wrap:wrap}
@@ -700,6 +702,10 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
           <div class="console-stat">
             <div class="console-lbl">Tracking Error</div>
             <div class="console-val" id="pro-tracking-error">14.2%</div>
+          </div>
+          <div class="console-stat">
+            <div class="console-lbl">AI Risk Adjustment</div>
+            <div class="console-val" id="pro-ai-risk-adjustment">+0 pts</div>
           </div>
         </div>
         <div class="console-ai" id="pro-ai-panel">
@@ -1198,6 +1204,36 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   const SUPPORTED_UPLOAD_FORMATS_LABEL = "CSV, TSV, PSV, TXT, JSON, XLSX, XLS, XLSM, XLSB, NUMBERS, or ODS";
   const INVALID_UPLOAD_FORMAT_MESSAGE = `Does not accept this file type. Please convert to - ${SUPPORTED_UPLOAD_FORMATS_LABEL}.`;
   const INVALID_UPLOAD_MESSAGE_TTL_MS = 5 * 60 * 1000;
+  const AI_RISK_NEGATIVE_KEYWORDS = [
+    "concentration",
+    "drawdown",
+    "volatility spike",
+    "tail risk",
+    "downside",
+    "bearish",
+    "sell",
+    "overvalued",
+    "correlation",
+    "stress",
+    "headwind",
+    "liquidity risk",
+    "rate risk",
+  ];
+  const AI_RISK_POSITIVE_KEYWORDS = [
+    "diversified",
+    "broad exposure",
+    "defensive",
+    "hedged",
+    "resilient",
+    "quality",
+    "upside",
+    "buy",
+    "support",
+    "momentum",
+    "breakout",
+    "undervalued",
+    "risk-on",
+  ];
   const DEMO_SESSION_USER = {
     id: "demo-portfolio",
     email: "demo@spectre-assets.com",
@@ -1904,7 +1940,50 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     };
   }
 
-  function computeRiskScore(metrics, riskReturnsUsed) {
+  function countKeywordHits(corpus, keywords) {
+    return keywords.reduce((total, keyword) => total + (corpus.includes(keyword) ? 1 : 0), 0);
+  }
+
+  function buildHoldingsAiSignalCorpus(analysis) {
+    if (!analysis || typeof analysis !== "object") return "";
+    const segments = new Set();
+    const addSegment = (value) => {
+      const normalized = String(value || "").trim().toLowerCase();
+      if (normalized) segments.add(normalized);
+    };
+
+    addSegment(analysis.answer);
+    (analysis.portfolioDrivers || []).forEach(addSegment);
+    (analysis.riskChecks || []).forEach(addSegment);
+    (analysis.nextActions || []).forEach(addSegment);
+    (analysis.holdingBreakdown || []).forEach((item) => {
+      if (!item || typeof item !== "object") return;
+      addSegment(item.summary);
+      (item.influences || []).forEach(addSegment);
+      (item.riskFlags || []).forEach(addSegment);
+    });
+
+    return Array.from(segments).join(" | ");
+  }
+
+  function computeAiRiskAdjustment(holdingsAi) {
+    const corpus = buildHoldingsAiSignalCorpus(holdingsAi);
+    if (!corpus) return 0;
+
+    const negativeHits = countKeywordHits(corpus, AI_RISK_NEGATIVE_KEYWORDS);
+    const positiveHits = countKeywordHits(corpus, AI_RISK_POSITIVE_KEYWORDS);
+    const confidenceSamples = (holdingsAi?.holdingBreakdown || [])
+      .map((item) => Number(item?.confidence))
+      .filter(Number.isFinite);
+    const averageConfidence = confidenceSamples.length > 0
+      ? confidenceSamples.reduce((total, value) => total + value, 0) / confidenceSamples.length
+      : 60;
+    const confidenceWeight = clamp(averageConfidence / 100, 0.4, 1);
+    const weightedDelta = (positiveHits - negativeHits) * confidenceWeight;
+    return Math.round(clamp(weightedDelta, -5, 5));
+  }
+
+  function computeRiskScore(metrics, riskReturnsUsed, holdingsAi, proEnabled) {
     if (metrics.totalValue <= 0) return null;
     const volatilityPenalty = normalizePenalty(metrics.volatilityAnnualPct, 8, 30) * 30;
     const varPenalty = normalizePenalty(metrics.var95Pct, 0.7, 3.2) * 22;
@@ -1917,9 +1996,11 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     const sourceMixPenalty = normalizePenalty(metrics.sourceRiskLoad, 0.55, 1.35) * 10;
     const confidencePenalty = (1 - clamp(riskReturnsUsed / 63, 0, 1)) * 12;
     const totalPenalty = volatilityPenalty + varPenalty + drawdownPenalty + concentrationPenalty + accountPenalty + sourceMixPenalty + confidencePenalty;
-    const score = Math.round(clamp(100 - totalPenalty, 1, 99));
+    const baseScore = Math.round(clamp(100 - totalPenalty, 1, 99));
+    const aiAdjustment = proEnabled ? computeAiRiskAdjustment(holdingsAi) : 0;
+    const score = Math.round(clamp(baseScore + aiAdjustment, 1, 99));
     const label = score >= 75 ? "Controlled" : score >= 55 ? "Moderate" : "Elevated";
-    return { score, label };
+    return { score, label, aiAdjustment };
   }
 
   function dpr(canvas) {
@@ -2366,6 +2447,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       state.holdingsAi = buildDemoHoldingsAiAnalysis(question);
       state.holdingsAiLoading = false;
       renderHoldingsAi();
+      renderPortfolio();
       showToast("Demo Ask AI analysis updated.");
       return;
     }
@@ -2409,6 +2491,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     } finally {
       state.holdingsAiLoading = false;
       renderHoldingsAi();
+      renderPortfolio();
     }
   }
 
@@ -2429,7 +2512,8 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     const usingYahooVolatility = metrics.volatilityAnnualPct == null && Number.isFinite(state.historicalRiskEstimate?.volatilityAnnualPct);
     const usingYahooBeta = Number.isFinite(state.historicalRiskEstimate?.betaToBenchmark);
     const usingYahooTrackingError = Number.isFinite(state.historicalRiskEstimate?.trackingErrorAnnualPct);
-    const riskScore = computeRiskScore(metrics, metrics.dailyReturns.length);
+    const isPro = Boolean(state.sessionUser?.proEnabled);
+    const riskScore = computeRiskScore(metrics, metrics.dailyReturns.length, state.holdingsAi, isPro);
 
     const latestReportDate = holdings.reduce((max, item) => (String(item.reportDate || "") > String(max) ? item.reportDate : max), "");
     const latestPriceTime = state.portfolio.lastPriceRefreshAt || state.portfolio.updatedAt || "";
@@ -2535,6 +2619,9 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     setText("pro-expected-shortfall", effectiveCvar95Pct != null ? formatPercent(effectiveCvar95Pct, { negative: true, decimals: 1 }) : "—");
     setText("pro-beta", Number.isFinite(effectiveBeta) ? Number(effectiveBeta).toFixed(2) : "—");
     setText("pro-tracking-error", Number.isFinite(effectiveTrackingError) ? formatPercent(effectiveTrackingError, { decimals: 1 }) : "—");
+    const aiAdjustment = Number(riskScore?.aiAdjustment || 0);
+    setText("pro-ai-risk-adjustment", `${aiAdjustment >= 0 ? "+" : ""}${aiAdjustment} pts`);
+    setClass("pro-ai-risk-adjustment", `console-val ${aiAdjustment < 0 ? "danger" : ""}`.trim());
 
     setText("bullion-gold-weight", `${goldWeightOz.toLocaleString("en-AU", { maximumFractionDigits: 2 })} oz`);
     setText("bullion-gold-value", formatCurrency(goldValue));
