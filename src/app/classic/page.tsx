@@ -1060,7 +1060,7 @@ export default function Home() {
   const benchmarkTrackingErrorAnnualPct = historicalRiskEstimate?.trackingErrorAnnualPct ?? null;
   const proAnalyticsEnabled = sessionUser?.proEnabled === true;
   const starterPlan = !proAnalyticsEnabled;
-  const starterUpgradeNoteVisible = !demoMode && sessionUser.planTier === "starter" && !sessionUser.proEnabled;
+  const starterUpgradeNoteVisible = !demoMode && sessionUser?.planTier === "starter" && sessionUser?.proEnabled !== true;
   const dipAlertSlotsRemaining = Math.max(0, dipAlertMax - dipAlerts.length);
   const dipAlertPlanMessage = proAnalyticsEnabled
     ? `Pro plan: up to ${dipAlertMax} active dip alerts.`
