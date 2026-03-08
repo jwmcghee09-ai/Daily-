@@ -472,19 +472,6 @@ export default function Home() {
     }
   }, [completePendingRegistrationAfterCheckout]);
 
-  useEffect(() => {
-    if (!sessionUser || loading) {
-      return;
-    }
-
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("classic") === "1") {
-      return;
-    }
-
-    window.location.replace("/");
-  }, [loading, sessionUser]);
-
   const refreshPrices = useCallback(async (showBanner: boolean) => {
     if (!sessionUser) {
       return;
@@ -1754,6 +1741,22 @@ export default function Home() {
       setWorking(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="spectre-landing">
+        <main className="spectre-main">
+          <section className="spectre-section">
+            <div className="spectre-wrap">
+              <p className="spectre-section-label">Loading</p>
+              <h2 className="spectre-section-title">Loading your SPECTRE workspace...</h2>
+              <p className="spectre-section-sub">Please wait while we confirm your account session and portfolio state.</p>
+            </div>
+          </section>
+        </main>
+      </div>
+    );
+  }
 
   if (!sessionUser) {
     const landingTicker = [
