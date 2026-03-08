@@ -68,6 +68,8 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
 .settings-actions{margin-top:.8rem;display:flex;gap:.55rem;flex-wrap:wrap}
 .btn-primary{font-family:var(--mono);font-size:.62rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#fff;background:linear-gradient(135deg,var(--orange) 0%,var(--orange-dk) 100%);border:1px solid rgba(255,132,113,.5);border-radius:10px;padding:.7rem 1.2rem;cursor:pointer;box-shadow:0 8px 20px -12px rgba(255,77,26,.8)}
 .btn-primary:disabled{opacity:.6;cursor:not-allowed}
+.btn-pro{font-family:var(--mono);font-size:.62rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#fff;background:linear-gradient(135deg,#9b5de5 0%,#7c3aed 100%);border:1px solid rgba(192,132,252,.55);border-radius:10px;padding:.7rem 1.2rem;cursor:pointer;box-shadow:0 8px 20px -12px rgba(155,93,229,.75)}
+.btn-pro:disabled{opacity:.6;cursor:not-allowed}
 .btn-ghost{font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted2);background:rgba(11,8,20,.7);border:1px solid var(--border2);border-radius:10px;padding:.7rem 1.2rem;cursor:pointer;text-decoration:none}
 .settings-email{display:inline-block;margin-top:.55rem;font-family:var(--mono);font-size:.7rem;letter-spacing:.04em;color:var(--orange);text-decoration:none;border-bottom:1px solid rgba(255,77,26,.42)}
 .footer{padding:2.2rem 0;border-top:1px solid var(--border);margin-top:2rem}
@@ -119,6 +121,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
         <div class="settings-title">Membership</div>
         <p class="settings-note">Open Stripe billing to manage payment details, invoices, and cancel membership.</p>
         <div class="settings-actions">
+          <button class="btn-pro" id="settings-upgrade-btn" hidden>Upgrade to Pro</button>
           <button class="btn-primary" id="settings-billing-btn">Manage / Cancel Membership</button>
           <a class="btn-ghost" id="settings-back-link" href="/spectre-dashboard-v3.html?mode=account">Back to Dashboard</a>
         </div>
@@ -199,6 +202,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
     const dashboardLink = document.getElementById("nav-dashboard-link");
     const backLink = document.getElementById("settings-back-link");
     const billingButton = document.getElementById("settings-billing-btn");
+    const upgradeButton = document.getElementById("settings-upgrade-btn");
 
     if (state.demoMode) {
       if (signOutButton) {
@@ -215,6 +219,9 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
         billingButton.textContent = "Create Account to Manage Billing";
         billingButton.disabled = false;
       }
+      if (upgradeButton) {
+        upgradeButton.hidden = true;
+      }
       return;
     }
 
@@ -227,6 +234,11 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
     }
     if (backLink) {
       backLink.setAttribute("href", "/spectre-dashboard-v3.html?mode=account");
+    }
+    if (upgradeButton) {
+      upgradeButton.hidden = true;
+      upgradeButton.textContent = "Upgrade to Pro";
+      upgradeButton.disabled = false;
     }
   }
 
@@ -288,10 +300,17 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
     setText("settings-account-status", membershipStatus);
     setText("settings-account-created", payload.user.createdAt ? formatDate(payload.user.createdAt) : "—");
     const billingButton = document.getElementById("settings-billing-btn");
+    const upgradeButton = document.getElementById("settings-upgrade-btn");
     if (billingButton) {
       const hasMembership = membershipStatus !== "NOT ACTIVE";
       billingButton.textContent = hasMembership ? "Manage / Cancel Membership" : "No Active Membership";
       billingButton.disabled = !hasMembership;
+    }
+    if (upgradeButton) {
+      const isStarter = payload.user.planTier === "starter" && !payload.user.proEnabled;
+      upgradeButton.hidden = !isStarter;
+      upgradeButton.textContent = "Upgrade to Pro";
+      upgradeButton.disabled = false;
     }
     const settingsEmailLink = document.getElementById("settings-contact-email");
     if (settingsEmailLink) {
@@ -326,6 +345,35 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
     }
   }
 
+  async function startProUpgradeCheckout() {
+    if (!state.sessionUser) return;
+    if (state.demoMode) {
+      window.location.assign("/classic#access");
+      return;
+    }
+    const upgradeButton = document.getElementById("settings-upgrade-btn");
+    const original = upgradeButton ? upgradeButton.textContent : "Upgrade to Pro";
+    if (upgradeButton) {
+      upgradeButton.textContent = "Redirecting...";
+      upgradeButton.disabled = true;
+    }
+    try {
+      const payload = await apiJson("/api/billing/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan: "pro" }),
+      });
+      if (!payload || !payload.url) throw new Error("Stripe checkout URL was not generated.");
+      window.location.assign(payload.url);
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : "Unable to start Pro checkout.", "error");
+      if (upgradeButton) {
+        upgradeButton.textContent = original;
+        upgradeButton.disabled = false;
+      }
+    }
+  }
+
   async function signOut(event) {
     event.preventDefault();
     if (state.demoMode) {
@@ -342,6 +390,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
 
   function bindEvents() {
     document.getElementById("settings-billing-btn")?.addEventListener("click", openBillingPortal);
+    document.getElementById("settings-upgrade-btn")?.addEventListener("click", startProUpgradeCheckout);
     document.getElementById("sign-out-btn")?.addEventListener("click", signOut);
   }
 

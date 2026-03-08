@@ -263,7 +263,8 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
   color:#ece8fb;
   max-width:760px;
 }
-.starter-upgrade-strip a{
+.starter-upgrade-strip a,
+.starter-upgrade-strip button{
   color:#fff;
   text-decoration:none;
   font-family:var(--mono);
@@ -276,8 +277,10 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
   background:linear-gradient(135deg,var(--purple) 0%,#7c3aed 100%);
   box-shadow:0 10px 22px -14px rgba(124,58,237,.8);
   white-space:nowrap;
+  cursor:pointer;
 }
-.starter-upgrade-strip a:hover{
+.starter-upgrade-strip a:hover,
+.starter-upgrade-strip button:hover{
   filter:brightness(1.08);
 }
 @media(max-width:860px){
@@ -285,7 +288,8 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
   .risk-grid.starter-layout{grid-template-columns:repeat(2,1fr)}
   .risk-help-tip{left:0;right:auto;width:min(260px,84vw)}
   .starter-upgrade-strip{grid-template-columns:1fr}
-  .starter-upgrade-strip a{justify-self:start}
+  .starter-upgrade-strip a,
+  .starter-upgrade-strip button{justify-self:start}
 }
 
 /* ── CHARTS ── */
@@ -829,7 +833,16 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
         <div class="perf-list">
           <div class="perf-row">
             <div><div class="perf-ticker">PRO ONLY</div><div class="perf-name">Stress scenarios are unlocked on Pro.</div></div>
-            <div class="perf-val pos"><a href="/spectre-settings-v3.html" style="color:inherit;text-decoration:none">Upgrade</a></div>
+            <div class="perf-val pos">
+              <button
+                type="button"
+                id="starter-upgrade-stress-btn"
+                data-starter-upgrade="pro"
+                style="color:inherit;background:transparent;border:0;font:inherit;cursor:pointer;padding:0"
+              >
+                Upgrade
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -950,7 +963,13 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
         <button class="wtab" data-window="ALL">ALL</button>
       </div>
     </div>
-    <div class="risk-window" id="risk-starter-note" hidden>Starter snapshot mode: advanced risk measurements are available on Pro.</div>
+    <div class="starter-upgrade-strip" id="risk-starter-note" hidden>
+      <div class="starter-upgrade-copy">
+        <div class="starter-upgrade-kicker">Starter Plan</div>
+        <div class="starter-upgrade-text">Advanced risk measurements are available on Pro.</div>
+      </div>
+      <button type="button" id="starter-upgrade-risk-btn" data-starter-upgrade="pro">Upgrade to Pro</button>
+    </div>
     <div class="risk-grid">
       <div class="risk-card">
         <div class="risk-lbl">Risk Score <button type="button" class="risk-help" aria-label="Risk score help">?<span class="risk-help-tip">Composite score from diversification-adjusted concentration, volatility, drawdown, VaR, account concentration, source mix, and data confidence. Broad index/fund/savings-heavy mixes lower risk load; single-stock/crypto-heavy mixes raise it. Higher score means lower portfolio risk.</span></button></div>
@@ -2184,6 +2203,40 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     return payload;
   }
 
+  async function startProUpgradeCheckout() {
+    if (state.demoMode) {
+      window.location.assign("/classic#access");
+      return;
+    }
+    if (!state.sessionUser) {
+      window.location.assign("/classic");
+      return;
+    }
+    const upgradeButtons = Array.from(document.querySelectorAll('[data-starter-upgrade="pro"]'));
+    const originalLabels = upgradeButtons.map((button) => button.textContent || "Upgrade to Pro");
+    upgradeButtons.forEach((button) => {
+      button.textContent = "Redirecting...";
+      button.disabled = true;
+    });
+    try {
+      const payload = await apiJson("/api/billing/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan: "pro" }),
+      });
+      if (!payload || !payload.url) {
+        throw new Error("Stripe checkout URL was not generated.");
+      }
+      window.location.assign(payload.url);
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : "Unable to start Pro checkout.", "error");
+      upgradeButtons.forEach((button, idx) => {
+        button.textContent = originalLabels[idx];
+        button.disabled = false;
+      });
+    }
+  }
+
   async function loadSession() {
     if (state.demoMode) {
       state.sessionUser = cloneData(DEMO_SESSION_USER);
@@ -3055,6 +3108,11 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     document.getElementById("sign-out-btn")?.addEventListener("click", signOut);
     document.getElementById("add-alert-btn")?.addEventListener("click", addAlert);
     document.getElementById("pro-ai-ask-btn")?.addEventListener("click", runHoldingsAi);
+    document.querySelectorAll('[data-starter-upgrade="pro"]').forEach((button) => {
+      button.addEventListener("click", () => {
+        void startProUpgradeCheckout();
+      });
+    });
 
     document.getElementById("alerts-list")?.addEventListener("click", (event) => {
       const target = event.target;
