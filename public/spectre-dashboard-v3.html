@@ -64,67 +64,6 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
 .nav-btn:hover{color:var(--text);border-color:rgba(255,255,255,.22)}
 
 /* ── HERO HEADER ── */
-.starter-top-upgrade{
-  margin-top:84px;
-  border:1px solid rgba(192,132,252,.45);
-  border-radius:16px;
-  padding:1rem 1.15rem;
-  background:
-    radial-gradient(120% 180% at 0% 0%,rgba(192,132,252,.18) 0%,rgba(192,132,252,0) 52%),
-    linear-gradient(150deg,rgba(19,11,34,.97),rgba(11,7,20,.96));
-  box-shadow:0 20px 44px -30px rgba(0,0,0,.85), inset 0 0 0 1px rgba(192,132,252,.08);
-  display:grid;
-  grid-template-columns:minmax(0,1fr) auto;
-  gap:1rem;
-  align-items:center;
-}
-.starter-top-copy h2{
-  margin:.2rem 0 .4rem;
-  font-family:var(--disp);
-  font-size:1.5rem;
-  letter-spacing:.07em;
-  color:var(--text);
-  line-height:1;
-}
-.starter-top-copy p{
-  margin:0;
-  font-size:.82rem;
-  line-height:1.7;
-  color:var(--muted2);
-}
-.starter-top-benefits{
-  margin-top:.7rem;
-  display:flex;
-  flex-wrap:wrap;
-  gap:.45rem;
-}
-.starter-top-benefits span{
-  font-family:var(--mono);
-  font-size:.54rem;
-  letter-spacing:.08em;
-  text-transform:uppercase;
-  color:#e9defe;
-  border:1px solid rgba(192,132,252,.35);
-  background:rgba(192,132,252,.12);
-  border-radius:999px;
-  padding:.3rem .55rem;
-}
-.starter-top-upgrade-btn{
-  font-family:var(--mono);
-  font-size:.58rem;
-  font-weight:600;
-  letter-spacing:.14em;
-  text-transform:uppercase;
-  color:#fff;
-  border:1px solid rgba(192,132,252,.55);
-  border-radius:10px;
-  padding:.65rem 1rem;
-  background:linear-gradient(135deg,var(--purple) 0%,#7c3aed 100%);
-  box-shadow:0 10px 22px -14px rgba(124,58,237,.78);
-  cursor:pointer;
-  white-space:nowrap;
-}
-.starter-top-upgrade-btn:hover{filter:brightness(1.08)}
 .hero{padding:100px 0 4rem;display:grid;grid-template-columns:1fr 420px;gap:4rem;align-items:start;position:relative;z-index:2}
 .hero-glow{position:absolute;top:-160px;left:-200px;width:900px;height:700px;pointer-events:none;background:radial-gradient(ellipse,rgba(100,40,180,.13) 0%,transparent 70%);z-index:1}
 .hero-eyebrow{font-family:var(--mono);font-size:.58rem;letter-spacing:.22em;text-transform:uppercase;color:var(--purple-hi);margin-bottom:1.1rem;display:flex;align-items:center;gap:.65rem}
@@ -563,12 +502,6 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   }
 }
 @media(max-width:700px){
-  .starter-top-upgrade{
-    margin-top:76px;
-    grid-template-columns:1fr;
-  }
-  .starter-top-upgrade-btn{justify-self:start}
-  .starter-top-copy h2{font-size:1.28rem}
   .hero-left{text-align:center}
   .hero-eyebrow{justify-content:center}
   .hero-meta{
@@ -630,25 +563,6 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     </div>
   </div>
 </nav>
-
-<div class="wrap">
-  <section class="starter-top-upgrade" id="starter-top-upgrade" hidden>
-    <div class="starter-top-copy">
-      <div class="starter-upgrade-kicker">Starter Plan</div>
-      <h2>Upgrade to Pro for full analytics coverage</h2>
-      <p>Pro unlocks the complete workflow so you can track deeper risk, benchmark exposure, and AI portfolio drivers in one place.</p>
-      <div class="starter-top-benefits">
-        <span>Ask AI holdings analysis</span>
-        <span>Dip alerts</span>
-        <span>Stress testing scenarios</span>
-        <span>VaR + Expected Shortfall</span>
-        <span>Volatility + Max Drawdown</span>
-        <span>Beta + Tracking Error vs ASX 200</span>
-      </div>
-    </div>
-    <button type="button" class="starter-top-upgrade-btn" data-starter-upgrade="pro">Upgrade to Pro</button>
-  </section>
-</div>
 
 <!-- HERO HEADER -->
 <div class="wrap">
@@ -1683,7 +1597,6 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       !state.sessionUser.proEnabled,
     );
     const navAlertsLink = document.getElementById("nav-alerts-link");
-    const starterTopUpgrade = document.getElementById("starter-top-upgrade");
     const alertsSection = document.getElementById("alerts");
     const stressPanel = document.getElementById("stress-panel");
     const stressStarterNote = document.getElementById("stress-starter-note");
@@ -1693,7 +1606,6 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     const riskGrid = document.querySelector(".risk-grid");
 
     if (navAlertsLink) navAlertsLink.style.display = hasProAccess ? "" : "none";
-    if (starterTopUpgrade) starterTopUpgrade.hidden = !showStarterUpsell;
     if (alertsSection) alertsSection.style.display = hasProAccess ? "" : "none";
     if (stressPanel) stressPanel.style.display = hasProAccess ? "" : "none";
     if (stressStarterNote) stressStarterNote.hidden = !showStarterUpsell;
