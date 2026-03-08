@@ -350,7 +350,7 @@ export default function Home() {
   const refreshInFlight = useRef(false);
   const lastAutoRefreshAttemptAtRef = useRef(0);
 
-  useEffect(() => {
+  const syncDemoModeFromLocation = useCallback(() => {
     if (typeof window === "undefined") {
       return;
     }
@@ -358,6 +358,30 @@ export default function Home() {
     const params = new URLSearchParams(window.location.search);
     setDemoMode(params.get("demo") === "1");
   }, []);
+
+  const openDemoWorkspace = useCallback(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const nextUrl = `${window.location.pathname}?demo=1`;
+    window.history.pushState({}, "", nextUrl);
+    setDemoMode(true);
+  }, []);
+
+  useEffect(() => {
+    syncDemoModeFromLocation();
+
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    window.addEventListener("popstate", syncDemoModeFromLocation);
+
+    return () => {
+      window.removeEventListener("popstate", syncDemoModeFromLocation);
+    };
+  }, [syncDemoModeFromLocation]);
 
   const completePendingRegistrationAfterCheckout = useCallback(async () => {
     const draft = readPendingRegistrationDraft();
@@ -2021,7 +2045,7 @@ export default function Home() {
               </div>
               <div className="spectre-hero-actions">
                 <a href="#access" className="spectre-btn spectre-btn-primary">Start For $3 / Month</a>
-                <a href="/classic?demo=1" className="spectre-btn spectre-btn-ghost">Try Demo Portfolio</a>
+                <button type="button" className="spectre-btn spectre-btn-ghost" onClick={openDemoWorkspace}>Try Demo Portfolio</button>
               </div>
               <div className="spectre-hero-stats">
                 <article>
