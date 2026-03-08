@@ -85,6 +85,36 @@ const SOURCE_RISK_MULTIPLIER: Record<DataSource, number> = {
   crypto: 1.6,
 };
 
+const INDEX_STYLE_HINTS = [
+  " index ",
+  " etf ",
+  "ishares",
+  "vanguard",
+  "betashares",
+  "spdr",
+  "vaneck",
+  "blackrock",
+  "msci",
+  "s&p",
+  "asx 200",
+  "nasdaq",
+  "dow jones",
+  "world ex",
+  "all world",
+  "total market",
+];
+
+const FUND_STYLE_HINTS = [
+  " managed fund",
+  " mutual fund",
+  " wholesale fund",
+  " unit trust",
+  " income fund",
+  " growth fund",
+  " balanced fund",
+  " fund ",
+];
+
 const FIELD_ALIASES = {
   account: ["account", "accountname", "portfolio", "broker", "fund", "superaccount", "accountnumber", "wallet", "exchange", "platform"],
   ticker: ["ticker", "symbol", "pair", "asxcode", "code", "securitycode", "instrument", "stock", "metal", "bullion", "product", "isin", "cusip", "sedol", "ric", "fundcode", "identifier", "asset", "coin", "currency"],
@@ -794,7 +824,10 @@ export function computeMetrics(
   const largestAccountPct = accountAllocation.length > 0 ? accountAllocation[0].pct : 0;
   const sourceRiskLoad =
     totalValue > 0
-      ? holdings.reduce((acc, item) => acc + item.value * SOURCE_RISK_MULTIPLIER[item.source], 0) / totalValue
+      ? holdings.reduce((acc, item) => {
+          const riskSource = resolveRiskSource(item);
+          return acc + item.value * SOURCE_RISK_MULTIPLIER[riskSource];
+        }, 0) / totalValue
       : 0;
 
   const hhi =
@@ -861,6 +894,29 @@ export function computeMetrics(
     riskStartDate: riskHistory.length > 0 ? riskHistory[0].date : null,
     riskEndDate: riskHistory.length > 0 ? riskHistory[riskHistory.length - 1].date : null,
   };
+}
+
+function resolveRiskSource(holding: PortfolioHolding): DataSource {
+  if (holding.source !== "asx") {
+    return holding.source;
+  }
+
+  const inferred = inferAsxInstrumentSource(holding.ticker, holding.name, holding.sector, holding.account);
+  return inferred ?? holding.source;
+}
+
+function inferAsxInstrumentSource(ticker: string, name: string, sector: string, account: string): DataSource | null {
+  const text = ` ${ticker} ${name} ${sector} ${account} `.toLowerCase();
+
+  if (FUND_STYLE_HINTS.some((hint) => text.includes(hint))) {
+    return "fund";
+  }
+
+  if (INDEX_STYLE_HINTS.some((hint) => text.includes(hint))) {
+    return "index";
+  }
+
+  return null;
 }
 
 function applyRiskWindow(history: PortfolioSnapshot[], riskWindow: RiskWindow): PortfolioSnapshot[] {

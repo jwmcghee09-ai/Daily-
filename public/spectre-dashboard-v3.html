@@ -1249,6 +1249,8 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   const SOURCE_LABEL = { super: "SUPER", asx: "ASX", gold: "GOLD", index: "INDEX", fund: "FUND", crypto: "CRYPTO", savings: "SAVINGS", tax: "TAX" };
   const SOURCE_BADGE = { super: "super", asx: "asx", gold: "gold", index: "fund", fund: "fund", crypto: "crypto", savings: "fund", tax: "fund" };
   const SOURCE_RISK_MULTIPLIER = { savings: 0.15, tax: 0.2, super: 0.55, index: 0.6, fund: 0.7, gold: 0.75, asx: 1, crypto: 1.6 };
+  const INDEX_STYLE_HINTS = [" index ", " etf ", "ishares", "vanguard", "betashares", "spdr", "vaneck", "blackrock", "msci", "s&p", "asx 200", "nasdaq", "dow jones", "world ex", "all world", "total market"];
+  const FUND_STYLE_HINTS = [" managed fund", " mutual fund", " wholesale fund", " unit trust", " income fund", " growth fund", " balanced fund", " fund "];
   const RISK_WINDOW_DAYS = { "1M": 31, "3M": 92, "6M": 183, "1Y": 366 };
   const RISK_API_WINDOW_MAP = { "1M": "1M", "3M": "3M", "6M": "1Y", "1Y": "1Y", "ALL": "1Y" };
   const PLATINUM_EMAIL = "jwmcghee09@gmail.com";
@@ -1368,8 +1370,21 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   }
 
   function normalizePenalty(value, low, high) {
-    if (!Number.isFinite(value)) return 1;
+    if (!Number.isFinite(value)) return 0.5;
+    if (high <= low) return 0;
     return clamp((value - low) / (high - low), 0, 1);
+  }
+
+  function inferAsxInstrumentSource(holding) {
+    const text = ` ${holding?.ticker || ""} ${holding?.name || ""} ${holding?.sector || ""} ${holding?.account || ""} `.toLowerCase();
+    if (FUND_STYLE_HINTS.some((hint) => text.includes(hint))) return "fund";
+    if (INDEX_STYLE_HINTS.some((hint) => text.includes(hint))) return "index";
+    return null;
+  }
+
+  function resolveRiskSource(holding) {
+    if (holding?.source !== "asx") return holding?.source || "asx";
+    return inferAsxInstrumentSource(holding) || "asx";
   }
 
   function formatDateTime(value) {
@@ -1807,7 +1822,8 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     const sourceRiskLoad = totalValue > 0
       ? holdings.reduce((acc, item) => {
         const value = Number(item.value) || 0;
-        const multiplier = SOURCE_RISK_MULTIPLIER[item.source] ?? 1;
+        const riskSource = resolveRiskSource(item);
+        const multiplier = SOURCE_RISK_MULTIPLIER[riskSource] ?? 1;
         return acc + value * multiplier;
       }, 0) / totalValue
       : 0;
