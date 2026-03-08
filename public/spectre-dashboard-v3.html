@@ -134,6 +134,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
 
 /* ── FEATURE PANELS (wide 2-col split) ── */
 .panel-split{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:var(--shadow)}
+.panel-split.starter-layout{grid-template-columns:1fr}
 .panel-half{background:linear-gradient(165deg,rgba(16,11,28,.96) 0%,rgba(10,7,18,.95) 100%);padding:2rem}
 .panel-half-title{font-family:var(--disp);font-size:1.2rem;letter-spacing:.06em;color:var(--text);margin-bottom:1.25rem;display:flex;align-items:center;gap:.55rem}
 .panel-half-title .dot{width:5px;height:5px;border-radius:50%;background:var(--orange);flex-shrink:0;box-shadow:0 0 6px rgba(255,77,26,.5)}
@@ -1511,13 +1512,17 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     const navAlertsLink = document.getElementById("nav-alerts-link");
     const alertsSection = document.getElementById("alerts");
     const stressPanel = document.getElementById("stress-panel");
+    const metricsPanelSplit = document.querySelector("#metrics .panel-split");
     const riskWindowTabs = document.getElementById("risk-window-tabs");
+    const riskGrid = document.querySelector(".risk-grid");
     const proRiskCards = Array.from(document.querySelectorAll(".pro-risk"));
 
     if (navAlertsLink) navAlertsLink.style.display = hasProAccess ? "" : "none";
     if (alertsSection) alertsSection.style.display = hasProAccess ? "" : "none";
     if (stressPanel) stressPanel.style.display = hasProAccess ? "" : "none";
+    if (metricsPanelSplit) metricsPanelSplit.classList.toggle("starter-layout", !hasProAccess);
     if (riskWindowTabs) riskWindowTabs.style.display = hasProAccess ? "" : "none";
+    if (riskGrid) riskGrid.classList.toggle("starter-layout", !hasProAccess);
     proRiskCards.forEach((card) => {
       card.style.display = hasProAccess ? "" : "none";
     });
