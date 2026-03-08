@@ -1082,8 +1082,11 @@ export default function Home() {
     const volatilityPenalty = normalizePenalty(effectiveVolatilityAnnualPct, 8, 30) * 30;
     const varPenalty = normalizePenalty(effectiveVar95Pct, 0.7, 3.2) * 22;
     const drawdownPenalty = normalizePenalty(effectiveMaxDrawdownPct, 6, 25) * 20;
-    const concentrationPenalty = normalizePenalty(metrics.top3ConcentrationPct, 30, 75) * 16;
-    const accountPenalty = normalizePenalty(metrics.largestAccountPct, 45, 85) * 12;
+    const diversifiedSleeveRelief = clamp(metrics.diversifiedIndexFundPct / 100, 0, 1);
+    const concentrationWeight = 16 * (1 - 0.55 * diversifiedSleeveRelief);
+    const accountWeight = 12 * (1 - 0.45 * diversifiedSleeveRelief);
+    const concentrationPenalty = normalizePenalty(metrics.top3ConcentrationPct, 30, 75) * concentrationWeight;
+    const accountPenalty = normalizePenalty(metrics.largestAccountPct, 45, 85) * accountWeight;
     const sourceMixPenalty = normalizePenalty(metrics.sourceRiskLoad, 0.55, 1.35) * 10;
     const confidencePenalty = (1 - clamp(riskReturnsUsed / 63, 0, 1)) * 12;
     const totalPenalty = volatilityPenalty + varPenalty + drawdownPenalty + concentrationPenalty + accountPenalty + sourceMixPenalty + confidencePenalty;
@@ -1098,7 +1101,7 @@ export default function Home() {
       confidence,
       returnsUsed: riskReturnsUsed,
     };
-  }, [effectiveMaxDrawdownPct, effectiveVar95Pct, effectiveVolatilityAnnualPct, metrics.largestAccountPct, metrics.sourceRiskLoad, metrics.top3ConcentrationPct, metrics.totalValue, riskReturnsUsed, state.holdings.length]);
+  }, [effectiveMaxDrawdownPct, effectiveVar95Pct, effectiveVolatilityAnnualPct, metrics.diversifiedIndexFundPct, metrics.largestAccountPct, metrics.sourceRiskLoad, metrics.top3ConcentrationPct, metrics.totalValue, riskReturnsUsed, state.holdings.length]);
 
   const portfolioRiskScoreTone = portfolioRiskScore == null
     ? "neutral"
@@ -2914,7 +2917,7 @@ export default function Home() {
           value={portfolioRiskScore ? `${portfolioRiskScore.score}/100 (${portfolioRiskScore.label})` : "Need holdings"}
           help={
             portfolioRiskScore
-              ? `Composite score from volatility, VaR, drawdown, diversification-adjusted concentration, source mix, and sample confidence. Broad index/fund/savings-heavy mixes lower risk load; single-stock/crypto-heavy mixes increase it. Confidence: ${portfolioRiskScore.confidence} (${portfolioRiskScore.returnsUsed} daily returns).`
+              ? `Composite score from volatility, VaR, drawdown, diversification-adjusted concentration, source mix, and sample confidence. Broad index/fund-heavy sleeves reduce concentration penalty impact; single-stock/crypto-heavy mixes increase it. Confidence: ${portfolioRiskScore.confidence} (${portfolioRiskScore.returnsUsed} daily returns).`
               : "Composite score appears after holdings are imported."
           }
           tone={portfolioRiskScoreTone}

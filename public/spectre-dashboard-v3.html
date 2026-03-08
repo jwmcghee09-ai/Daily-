@@ -1840,6 +1840,13 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
         return acc + value * multiplier;
       }, 0) / totalValue
       : 0;
+    const diversifiedIndexFundPct = totalValue > 0
+      ? (holdings.reduce((acc, item) => {
+        const value = Number(item.value) || 0;
+        const riskSource = resolveRiskSource(item);
+        return riskSource === "index" || riskSource === "fund" ? acc + value : acc;
+      }, 0) / totalValue) * 100
+      : 0;
 
     const latestSnapshotByDay = new Map();
     for (const item of snapshots || []) {
@@ -1876,6 +1883,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       hhi,
       largestAccountPct,
       sourceRiskLoad,
+      diversifiedIndexFundPct,
       topHoldings,
       accountAllocation,
       sectorAllocation,
@@ -1971,8 +1979,11 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     const volatilityPenalty = normalizePenalty(metrics.volatilityAnnualPct, 8, 30) * 30;
     const varPenalty = normalizePenalty(metrics.var95Pct, 0.7, 3.2) * 22;
     const drawdownPenalty = normalizePenalty(metrics.maxDrawdownPct, 6, 25) * 20;
-    const concentrationPenalty = normalizePenalty(metrics.top3ConcentrationPct, 30, 75) * 16;
-    const accountPenalty = normalizePenalty(metrics.largestAccountPct, 45, 85) * 12;
+    const diversifiedSleeveRelief = clamp((Number(metrics.diversifiedIndexFundPct) || 0) / 100, 0, 1);
+    const concentrationWeight = 16 * (1 - 0.55 * diversifiedSleeveRelief);
+    const accountWeight = 12 * (1 - 0.45 * diversifiedSleeveRelief);
+    const concentrationPenalty = normalizePenalty(metrics.top3ConcentrationPct, 30, 75) * concentrationWeight;
+    const accountPenalty = normalizePenalty(metrics.largestAccountPct, 45, 85) * accountWeight;
     const sourceMixPenalty = normalizePenalty(metrics.sourceRiskLoad, 0.55, 1.35) * 10;
     const confidencePenalty = (1 - clamp(riskReturnsUsed / 63, 0, 1)) * 12;
     const totalPenalty = volatilityPenalty + varPenalty + drawdownPenalty + concentrationPenalty + accountPenalty + sourceMixPenalty + confidencePenalty;

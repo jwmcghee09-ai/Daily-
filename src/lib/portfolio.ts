@@ -46,6 +46,7 @@ export interface PortfolioMetrics {
   top3ConcentrationPct: number;
   largestAccountPct: number;
   sourceRiskLoad: number;
+  diversifiedIndexFundPct: number;
   hhi: number;
   topHoldings: Array<PortfolioHolding & { weightPct: number }>;
   accountAllocation: AllocationItem[];
@@ -866,6 +867,13 @@ export function computeMetrics(
           return acc + item.value * SOURCE_RISK_MULTIPLIER[riskSource];
         }, 0) / totalValue
       : 0;
+  const diversifiedIndexFundPct =
+    totalValue > 0
+      ? (holdings.reduce((acc, item) => {
+          const riskSource = resolveRiskSource(item);
+          return riskSource === "index" || riskSource === "fund" ? acc + item.value : acc;
+        }, 0) / totalValue) * 100
+      : 0;
 
   const hhi =
     totalValue > 0
@@ -912,6 +920,7 @@ export function computeMetrics(
     top3ConcentrationPct,
     largestAccountPct,
     sourceRiskLoad,
+    diversifiedIndexFundPct,
     hhi,
     topHoldings,
     accountAllocation,
