@@ -1,3 +1,4 @@
+import Stripe from "stripe";
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser, isLikelyEmail, normalizeEmail } from "@/lib/auth";
 import { readBillingSubscription, upsertBillingSubscriptionForUser } from "@/lib/db";
@@ -36,8 +37,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "A valid email is required to start checkout." }, { status: 400 });
     }
 
-    let stripe;
-    let priceId;
+    let stripe: Stripe;
+    let priceId: string;
 
     try {
       stripe = getStripeClient();
@@ -120,7 +121,7 @@ const ACTIVE_OR_RECOVERABLE_STATUSES = new Set(["active", "trialing", "past_due"
 
 async function tryUpgradeExistingSubscription(input: {
   userId: string;
-  stripe: ReturnType<typeof getStripeClient>;
+  stripe: Stripe;
   proPriceId: string;
 }): Promise<boolean> {
   const existing = readBillingSubscription(input.userId);
@@ -162,7 +163,7 @@ async function tryUpgradeExistingSubscription(input: {
     stripeSubscriptionId: updated.id,
     stripePriceId: input.proPriceId,
     status: updated.status || existing?.status || null,
-    currentPeriodEnd: unixSecondsToIso(updated.current_period_end),
+    currentPeriodEnd: unixSecondsToIso(updated.items.data[0]?.current_period_end),
   });
 
   return true;
