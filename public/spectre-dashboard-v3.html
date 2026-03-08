@@ -1303,7 +1303,10 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 
   function isDemoMode() {
     if (typeof window === "undefined") return false;
-    return new URLSearchParams(window.location.search).get("demo") === "1";
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("mode") === "account") return false;
+    if (params.get("demo") === "1" || params.get("mode") === "demo") return true;
+    return true;
   }
 
   function isPlatinumUser(email) {

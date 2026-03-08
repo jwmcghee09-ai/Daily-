@@ -392,7 +392,7 @@ export default function Home() {
     }
 
     if (!loading && sessionUser) {
-      window.location.replace("/spectre-dashboard-v3.html");
+      window.location.replace("/spectre-dashboard-v3.html?mode=account");
     }
   }, [demoMode, loading, sessionUser]);
 

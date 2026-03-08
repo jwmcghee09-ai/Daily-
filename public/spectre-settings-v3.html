@@ -84,9 +84,9 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
 <body>
 <nav>
   <div class="nav-inner">
-    <a href="/spectre-dashboard-v3.html" class="nav-logo">SPECTRE</a>
+    <a href="/spectre-dashboard-v3.html?mode=account" class="nav-logo">SPECTRE</a>
     <ul class="nav-links">
-      <li><a href="/spectre-dashboard-v3.html" id="nav-dashboard-link">Dashboard</a></li>
+      <li><a href="/spectre-dashboard-v3.html?mode=account" id="nav-dashboard-link">Dashboard</a></li>
       <li id="nav-platinum-link" style="display:none"><a href="/spectre-platinum">Platinum</a></li>
       <li><a href="/spectre-settings-v3.html" class="active">Settings</a></li>
     </ul>
@@ -120,7 +120,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
         <p class="settings-note">Open Stripe billing to manage payment details, invoices, and cancel membership.</p>
         <div class="settings-actions">
           <button class="btn-primary" id="settings-billing-btn">Manage / Cancel Membership</button>
-          <a class="btn-ghost" id="settings-back-link" href="/spectre-dashboard-v3.html">Back to Dashboard</a>
+          <a class="btn-ghost" id="settings-back-link" href="/spectre-dashboard-v3.html?mode=account">Back to Dashboard</a>
         </div>
       </article>
       <article class="settings-card">
@@ -223,10 +223,10 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
       signOutButton.setAttribute("href", "#");
     }
     if (dashboardLink) {
-      dashboardLink.setAttribute("href", "/spectre-dashboard-v3.html");
+      dashboardLink.setAttribute("href", "/spectre-dashboard-v3.html?mode=account");
     }
     if (backLink) {
-      backLink.setAttribute("href", "/spectre-dashboard-v3.html");
+      backLink.setAttribute("href", "/spectre-dashboard-v3.html?mode=account");
     }
   }
 

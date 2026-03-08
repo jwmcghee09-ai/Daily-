@@ -3,5 +3,5 @@ import { getAuthenticatedUser } from "@/lib/auth";
 
 export default async function Home() {
   const user = await getAuthenticatedUser();
-  redirect(user ? "/spectre-dashboard-v3.html" : "/classic");
+  redirect(user ? "/spectre-dashboard-v3.html?mode=account" : "/classic");
 }
