@@ -924,7 +924,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     <div class="risk-window" id="risk-starter-note" hidden>Starter snapshot mode: advanced risk measurements are available on Pro.</div>
     <div class="risk-grid">
       <div class="risk-card">
-        <div class="risk-lbl">Risk Score <button type="button" class="risk-help" aria-label="Risk score help">?<span class="risk-help-tip">Composite score from concentration, volatility, drawdown, VaR and benchmark metrics. Higher score means higher portfolio risk.</span></button></div>
+        <div class="risk-lbl">Risk Score <button type="button" class="risk-help" aria-label="Risk score help">?<span class="risk-help-tip">Composite score from concentration, volatility, drawdown, VaR, account concentration, source mix, and data confidence. Index/fund/savings-heavy mixes lower risk load; single-stock/crypto-heavy mixes raise it. Higher score means lower portfolio risk.</span></button></div>
         <div class="risk-val danger" id="risk-score">72 / 100</div>
         <div class="risk-sub" id="risk-score-sub">Elevated</div>
       </div>
@@ -1219,6 +1219,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   const MONO = "'DM Mono', monospace";
   const SOURCE_LABEL = { super: "SUPER", asx: "ASX", gold: "GOLD", index: "INDEX", fund: "FUND", crypto: "CRYPTO", savings: "SAVINGS", tax: "TAX" };
   const SOURCE_BADGE = { super: "super", asx: "asx", gold: "gold", index: "fund", fund: "fund", crypto: "crypto", savings: "fund", tax: "fund" };
+  const SOURCE_RISK_MULTIPLIER = { savings: 0.15, tax: 0.2, super: 0.55, index: 0.6, fund: 0.7, gold: 0.75, asx: 1, crypto: 1.6 };
   const RISK_WINDOW_DAYS = { "1M": 31, "3M": 92, "6M": 183, "1Y": 366 };
   const RISK_API_WINDOW_MAP = { "1M": "1M", "3M": "3M", "6M": "1Y", "1Y": "1Y", "ALL": "1Y" };
   const PLATINUM_EMAIL = "jwmcghee09@gmail.com";
@@ -1759,6 +1760,13 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     const accountAllocation = buildAllocation(holdings, "account", totalValue);
     const sectorAllocation = buildAllocation(holdings, "sector", totalValue);
     const largestAccountPct = accountAllocation.length > 0 ? accountAllocation[0].pct : 0;
+    const sourceRiskLoad = totalValue > 0
+      ? holdings.reduce((acc, item) => {
+        const value = Number(item.value) || 0;
+        const multiplier = SOURCE_RISK_MULTIPLIER[item.source] ?? 1;
+        return acc + value * multiplier;
+      }, 0) / totalValue
+      : 0;
 
     const latestSnapshotByDay = new Map();
     for (const item of snapshots || []) {
@@ -1794,6 +1802,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       top3ConcentrationPct,
       hhi,
       largestAccountPct,
+      sourceRiskLoad,
       topHoldings,
       accountAllocation,
       sectorAllocation,
@@ -1891,8 +1900,9 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     const drawdownPenalty = normalizePenalty(metrics.maxDrawdownPct, 6, 25) * 20;
     const concentrationPenalty = normalizePenalty(metrics.top3ConcentrationPct, 30, 75) * 16;
     const accountPenalty = normalizePenalty(metrics.largestAccountPct, 45, 85) * 12;
+    const sourceMixPenalty = normalizePenalty(metrics.sourceRiskLoad, 0.55, 1.35) * 10;
     const confidencePenalty = (1 - clamp(riskReturnsUsed / 63, 0, 1)) * 12;
-    const totalPenalty = volatilityPenalty + varPenalty + drawdownPenalty + concentrationPenalty + accountPenalty + confidencePenalty;
+    const totalPenalty = volatilityPenalty + varPenalty + drawdownPenalty + concentrationPenalty + accountPenalty + sourceMixPenalty + confidencePenalty;
     const score = Math.round(clamp(100 - totalPenalty, 1, 99));
     const label = score >= 75 ? "Controlled" : score >= 55 ? "Moderate" : "Elevated";
     return { score, label };

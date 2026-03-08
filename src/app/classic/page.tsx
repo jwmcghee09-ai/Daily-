@@ -1084,8 +1084,9 @@ export default function Home() {
     const drawdownPenalty = normalizePenalty(effectiveMaxDrawdownPct, 6, 25) * 20;
     const concentrationPenalty = normalizePenalty(metrics.top3ConcentrationPct, 30, 75) * 16;
     const accountPenalty = normalizePenalty(metrics.largestAccountPct, 45, 85) * 12;
+    const sourceMixPenalty = normalizePenalty(metrics.sourceRiskLoad, 0.55, 1.35) * 10;
     const confidencePenalty = (1 - clamp(riskReturnsUsed / 63, 0, 1)) * 12;
-    const totalPenalty = volatilityPenalty + varPenalty + drawdownPenalty + concentrationPenalty + accountPenalty + confidencePenalty;
+    const totalPenalty = volatilityPenalty + varPenalty + drawdownPenalty + concentrationPenalty + accountPenalty + sourceMixPenalty + confidencePenalty;
     const score = Math.round(clamp(100 - totalPenalty, 1, 99));
 
     const label = score >= 75 ? "Controlled" : score >= 55 ? "Moderate" : "Elevated";
@@ -1097,7 +1098,7 @@ export default function Home() {
       confidence,
       returnsUsed: riskReturnsUsed,
     };
-  }, [effectiveMaxDrawdownPct, effectiveVar95Pct, effectiveVolatilityAnnualPct, metrics.largestAccountPct, metrics.top3ConcentrationPct, metrics.totalValue, riskReturnsUsed, state.holdings.length]);
+  }, [effectiveMaxDrawdownPct, effectiveVar95Pct, effectiveVolatilityAnnualPct, metrics.largestAccountPct, metrics.sourceRiskLoad, metrics.top3ConcentrationPct, metrics.totalValue, riskReturnsUsed, state.holdings.length]);
 
   const portfolioRiskScoreTone = portfolioRiskScore == null
     ? "neutral"
@@ -2894,7 +2895,7 @@ export default function Home() {
           value={portfolioRiskScore ? `${portfolioRiskScore.score}/100 (${portfolioRiskScore.label})` : "Need holdings"}
           help={
             portfolioRiskScore
-              ? `Composite score from volatility, VaR, drawdown, concentration, and sample confidence. Confidence: ${portfolioRiskScore.confidence} (${portfolioRiskScore.returnsUsed} daily returns).`
+              ? `Composite score from volatility, VaR, drawdown, concentration, source mix, and sample confidence. Index/fund/savings-heavy mixes lower risk load; single-stock/crypto-heavy mixes increase it. Confidence: ${portfolioRiskScore.confidence} (${portfolioRiskScore.returnsUsed} daily returns).`
               : "Composite score appears after holdings are imported."
           }
           tone={portfolioRiskScoreTone}

@@ -45,6 +45,7 @@ export interface PortfolioMetrics {
   pnlPct: number;
   top3ConcentrationPct: number;
   largestAccountPct: number;
+  sourceRiskLoad: number;
   hhi: number;
   topHoldings: Array<PortfolioHolding & { weightPct: number }>;
   accountAllocation: AllocationItem[];
@@ -71,6 +72,17 @@ const RISK_WINDOW_DAYS: Record<RiskWindow, number> = {
   "1M": 31,
   "3M": 92,
   "1Y": 366,
+};
+
+const SOURCE_RISK_MULTIPLIER: Record<DataSource, number> = {
+  savings: 0.15,
+  tax: 0.2,
+  super: 0.55,
+  index: 0.6,
+  fund: 0.7,
+  gold: 0.75,
+  asx: 1,
+  crypto: 1.6,
 };
 
 const FIELD_ALIASES = {
@@ -780,6 +792,10 @@ export function computeMetrics(
   const accountAllocation = buildAllocation(holdings, "account", totalValue);
   const sectorAllocation = buildAllocation(holdings, "sector", totalValue);
   const largestAccountPct = accountAllocation.length > 0 ? accountAllocation[0].pct : 0;
+  const sourceRiskLoad =
+    totalValue > 0
+      ? holdings.reduce((acc, item) => acc + item.value * SOURCE_RISK_MULTIPLIER[item.source], 0) / totalValue
+      : 0;
 
   const hhi =
     totalValue > 0
@@ -825,6 +841,7 @@ export function computeMetrics(
     pnlPct,
     top3ConcentrationPct,
     largestAccountPct,
+    sourceRiskLoad,
     hhi,
     topHoldings,
     accountAllocation,
