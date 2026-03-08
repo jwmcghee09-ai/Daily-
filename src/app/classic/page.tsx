@@ -1060,6 +1060,7 @@ export default function Home() {
   const benchmarkTrackingErrorAnnualPct = historicalRiskEstimate?.trackingErrorAnnualPct ?? null;
   const proAnalyticsEnabled = sessionUser?.proEnabled === true;
   const starterPlan = !proAnalyticsEnabled;
+  const starterUpgradeNoteVisible = !demoMode && sessionUser.planTier === "starter" && !sessionUser.proEnabled;
   const dipAlertSlotsRemaining = Math.max(0, dipAlertMax - dipAlerts.length);
   const dipAlertPlanMessage = proAnalyticsEnabled
     ? `Pro plan: up to ${dipAlertMax} active dip alerts.`
@@ -2634,6 +2635,11 @@ export default function Home() {
         </div>
       ) : null}
       {banner ? <div className={`banner ${banner.type}`}>{banner.message}</div> : null}
+      {starterUpgradeNoteVisible ? (
+        <div className="banner info">
+          Starter plan active: Upgrade to Pro for dip alerts, stress testing, Ask AI holdings analysis, and advanced risk measurements.
+        </div>
+      ) : null}
 
       <section id="settings" className="settings-section">
         <div className="settings-head">

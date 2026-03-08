@@ -97,6 +97,38 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
 .risk-bar-val{font-family:var(--disp);font-size:1.7rem;color:var(--orange)}
 .risk-track{height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden}
 .risk-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--purple) 0%,var(--orange) 100%);width:8%}
+.starter-plan-note{
+  margin:0 0 2.2rem;
+  border:1px solid rgba(192,132,252,.4);
+  border-radius:12px;
+  background:
+    radial-gradient(120% 170% at 0% 0%, rgba(192,132,252,.16) 0%, rgba(192,132,252,0) 52%),
+    linear-gradient(145deg,rgba(20,11,35,.95),rgba(11,7,20,.95));
+  padding:.9rem 1rem;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:1rem;
+}
+.starter-plan-note-copy{
+  font-size:.8rem;
+  line-height:1.6;
+  color:var(--muted2);
+}
+.starter-plan-note a{
+  font-family:var(--mono);
+  font-size:.56rem;
+  letter-spacing:.13em;
+  text-transform:uppercase;
+  color:#fff;
+  text-decoration:none;
+  border:1px solid rgba(192,132,252,.5);
+  border-radius:8px;
+  padding:.5rem .78rem;
+  background:linear-gradient(135deg,var(--purple) 0%,#7c3aed 100%);
+  white-space:nowrap;
+}
+.starter-plan-note a:hover{filter:brightness(1.08)}
 
 /* ── SECTION ── */
 .sec{padding:4rem 0;position:relative;z-index:2}
@@ -457,6 +489,10 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     flex-wrap:wrap;
   }
   .hero-actions{justify-content:center}
+  .starter-plan-note{
+    flex-direction:column;
+    align-items:flex-start;
+  }
   .kpi-grid-mini{grid-template-columns:1fr}
   .sec{padding:2.6rem 0}
   .sec-head{
@@ -571,6 +607,13 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
         <div class="risk-track"><div class="risk-fill" id="risk-bar-fill"></div></div>
       </div>
     </div>
+  </section>
+</div>
+
+<div class="wrap">
+  <section class="starter-plan-note" id="starter-plan-note" hidden>
+    <div class="starter-plan-note-copy">Starter plan active. Upgrade to Pro for dip alerts, stress testing, Ask AI holdings analysis, and advanced risk measurements.</div>
+    <a href="/spectre-settings-v3.html">Upgrade to Pro</a>
   </section>
 </div>
 
@@ -1509,13 +1552,21 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 
   function applyPlanVisibility() {
     const hasProAccess = Boolean(state.demoMode || state.sessionUser?.proEnabled);
+    const showStarterPlanNote = Boolean(
+      !state.demoMode &&
+      state.sessionUser &&
+      state.sessionUser.planTier === "starter" &&
+      !state.sessionUser.proEnabled,
+    );
     const navAlertsLink = document.getElementById("nav-alerts-link");
+    const starterPlanNote = document.getElementById("starter-plan-note");
     const alertsSection = document.getElementById("alerts");
     const stressPanel = document.getElementById("stress-panel");
     const riskWindowTabs = document.getElementById("risk-window-tabs");
     const proRiskCards = Array.from(document.querySelectorAll(".pro-risk"));
 
     if (navAlertsLink) navAlertsLink.style.display = hasProAccess ? "" : "none";
+    if (starterPlanNote) starterPlanNote.hidden = !showStarterPlanNote;
     if (alertsSection) alertsSection.style.display = hasProAccess ? "" : "none";
     if (stressPanel) stressPanel.style.display = hasProAccess ? "" : "none";
     if (riskWindowTabs) riskWindowTabs.style.display = hasProAccess ? "" : "none";
