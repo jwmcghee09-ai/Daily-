@@ -1817,7 +1817,7 @@ export default function Home() {
           <div className="spectre-wrap spectre-hero-layout">
             <div className="spectre-hero-left">
               <p className="spectre-hero-eye">System for Portfolio Exposure, Correlation, Threat &amp; Risk Evaluation</p>
-              <h1 className="spectre-hero-title">Track your super, ASX, crypto, and bullion in one <span>risk dashboard.</span></h1>
+              <h1 className="spectre-hero-title">See your entire investment portfolio risk <span>in one place.</span></h1>
               <p className="spectre-hero-desc">
                 Import exports from super funds, brokers, savings, tax reports, crypto, index funds, mutual funds, and bullion. SPECTRE consolidates every holding into one portfolio view with concentration, VaR, drawdown, and Pro AI analysis.
               </p>
@@ -2134,7 +2134,7 @@ export default function Home() {
                 <p className="spectre-section-sub">Sign in to continue from your last snapshot, or create your account with Stripe checkout in one flow.</p>
                 <div className="spectre-access-points">
                   <p>System for Portfolio Exposure, Correlation, Threat &amp; Risk Evaluation.</p>
-                  <p>Designed for active DIY investors who want pro-style risk visibility.</p>
+                  <p>Designed for retail investors who track portfolios.</p>
                   <p>Single interface for holdings, exposure, and risk posture.</p>
                 </div>
               </article>
