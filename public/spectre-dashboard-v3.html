@@ -231,26 +231,60 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
 }
 .starter-upgrade-strip{
   margin:1rem 0 0;
-  border:1px solid rgba(192,132,252,.45);
-  background:linear-gradient(135deg,rgba(35,14,55,.92),rgba(22,10,35,.9));
+  border:1px solid rgba(192,132,252,.42);
+  background:
+    radial-gradient(120% 160% at 0% 0%, rgba(192,132,252,.18) 0%, rgba(192,132,252,0) 48%),
+    linear-gradient(145deg,rgba(24,10,40,.96),rgba(14,8,26,.95));
   color:#e8defa;
-  border-radius:10px;
-  padding:.75rem .95rem;
+  border-radius:14px;
+  padding:1rem 1.15rem;
+  box-shadow:0 18px 44px -30px rgba(0,0,0,.85), inset 0 0 0 1px rgba(192,132,252,.08);
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:1rem;
+  align-items:center;
+}
+.starter-upgrade-copy{
+  min-width:0;
+}
+.starter-upgrade-kicker{
   font-family:var(--mono);
-  font-size:.58rem;
-  letter-spacing:.08em;
+  font-size:.52rem;
+  letter-spacing:.18em;
   text-transform:uppercase;
+  color:#c084fc;
+  margin-bottom:.35rem;
+}
+.starter-upgrade-text{
+  font-family:var(--sans);
+  font-size:.92rem;
+  line-height:1.5;
+  color:#ece8fb;
+  max-width:760px;
 }
 .starter-upgrade-strip a{
   color:#fff;
   text-decoration:none;
-  border-bottom:1px solid rgba(255,255,255,.35);
-  margin-left:.35rem;
+  font-family:var(--mono);
+  font-size:.56rem;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  border:1px solid rgba(255,255,255,.2);
+  border-radius:8px;
+  padding:.52rem .8rem;
+  background:linear-gradient(135deg,var(--purple) 0%,#7c3aed 100%);
+  box-shadow:0 10px 22px -14px rgba(124,58,237,.8);
+  white-space:nowrap;
+}
+.starter-upgrade-strip a:hover{
+  filter:brightness(1.08);
 }
 @media(max-width:860px){
   .risk-grid{grid-template-columns:repeat(2,1fr)}
   .risk-grid.starter-layout{grid-template-columns:repeat(2,1fr)}
   .risk-help-tip{left:0;right:auto;width:min(260px,84vw)}
+  .starter-upgrade-strip{grid-template-columns:1fr}
+  .starter-upgrade-strip a{justify-self:start}
 }
 
 /* ── CHARTS ── */
@@ -555,8 +589,11 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 
 <div class="wrap">
   <div id="starter-upgrade-strip" class="starter-upgrade-strip" hidden>
-    Starter plan active: dip alerts, stress testing, and advanced risk measurements are Pro-only.
-    <a href="/spectre-settings-v3.html">Upgrade to Pro</a>
+    <div class="starter-upgrade-copy">
+      <div class="starter-upgrade-kicker">Starter Plan</div>
+      <div class="starter-upgrade-text">Dip alerts, stress testing, and advanced risk measurements are available on Pro.</div>
+    </div>
+    <a href="/spectre-settings-v3.html">Upgrade To Pro</a>
   </div>
 </div>
 
