@@ -1400,7 +1400,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
         clearDataButton.textContent = "Reset Demo";
       }
       if (refreshPricesButton) {
-        refreshPricesButton.textContent = "Demo Snapshot";
+        refreshPricesButton.textContent = "Exit Demo";
       }
       if (settingsLink) {
         settingsLink.setAttribute("href", "/spectre-settings-v3.html?demo=1");
@@ -2575,7 +2575,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 
   async function refreshPrices() {
     if (state.demoMode) {
-      showToast("Demo prices are static. Create an account to refresh live prices.", "error");
+      window.location.assign("/classic");
       return;
     }
 
