@@ -21,10 +21,6 @@ function toPlanAlertLimit(planTier: "none" | "starter" | "pro", proEnabled: bool
     return 10;
   }
 
-  if (planTier === "starter") {
-    return 2;
-  }
-
   return 0;
 }
 

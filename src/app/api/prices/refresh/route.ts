@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
-import { markPriceDipAlertTriggered, readPriceDipAlerts, refreshAsxPrices } from "@/lib/db";
+import { markPriceDipAlertTriggered, readPriceDipAlerts, readUserEntitlements, refreshAsxPrices } from "@/lib/db";
 import { sendPriceDipAlertEmail } from "@/lib/mailer";
 
 export const runtime = "nodejs";
@@ -22,7 +22,8 @@ export async function POST() {
 
     const result = await refreshAsxPrices(sessionUser.id);
 
-    const alerts = readPriceDipAlerts(sessionUser.id);
+    const entitlements = readUserEntitlements(sessionUser.id);
+    const alerts = entitlements.proEnabled ? readPriceDipAlerts(sessionUser.id) : [];
     if (alerts.length === 0) {
       return NextResponse.json({
         ...result,

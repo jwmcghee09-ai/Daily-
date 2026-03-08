@@ -1063,7 +1063,7 @@ export default function Home() {
   const dipAlertSlotsRemaining = Math.max(0, dipAlertMax - dipAlerts.length);
   const dipAlertPlanMessage = proAnalyticsEnabled
     ? `Pro plan: up to ${dipAlertMax} active dip alerts.`
-    : `Starter plan: up to ${dipAlertMax} active dip alerts. Upgrade to Pro for more coverage.`;
+    : "Dip alerts are now Pro only. Upgrade to Pro to enable alert emails.";
   const hasMembership =
     (sessionUser?.subscriptionStatus || "").trim().length > 0 || (sessionUser?.planTier ?? "none") !== "none";
   const settingsMembershipStatus = sessionUser?.subscriptionStatus
@@ -2809,7 +2809,7 @@ export default function Home() {
               onChange={(event) => setDipAlertTicker(event.target.value.toUpperCase())}
               placeholder={availableDipTickers[0] || "e.g. CBA or BTC"}
               maxLength={20}
-              disabled={dipAlertSaving}
+              disabled={dipAlertSaving || !proAnalyticsEnabled}
             />
             <datalist id="dip-alert-tickers">
               {availableDipTickers.map((ticker) => (
@@ -2827,14 +2827,14 @@ export default function Home() {
               step={0.1}
               value={dipAlertThreshold}
               onChange={(event) => setDipAlertThreshold(event.target.value)}
-              disabled={dipAlertSaving}
+              disabled={dipAlertSaving || !proAnalyticsEnabled}
             />
           </label>
 
           <button
             type="submit"
             className="refresh-btn"
-            disabled={dipAlertSaving || dipAlertMax <= 0 || (dipAlerts.length >= dipAlertMax && !dipAlerts.some((alert) => alert.ticker === dipAlertTicker.trim().toUpperCase()))}
+            disabled={!proAnalyticsEnabled || dipAlertSaving || dipAlertMax <= 0 || (dipAlerts.length >= dipAlertMax && !dipAlerts.some((alert) => alert.ticker === dipAlertTicker.trim().toUpperCase()))}
           >
             {dipAlertSaving ? "Saving..." : "Save Alert"}
           </button>
@@ -2845,7 +2845,7 @@ export default function Home() {
             {dipAlerts.length}/{dipAlertMax} alert slots in use ({dipAlertSlotsRemaining} remaining).
           </p>
         ) : (
-          <p className="dip-alerts-slots">Enable a paid plan to use dip alerts.</p>
+          <p className="dip-alerts-slots">Upgrade to Pro to use dip alerts.</p>
         )}
 
         <div className="dip-alerts-grid">
@@ -2867,7 +2867,7 @@ export default function Home() {
                     type="button"
                     className="template-btn"
                     onClick={() => void toggleDipAlert(alert, !alert.enabled)}
-                    disabled={dipAlertSaving}
+                    disabled={!proAnalyticsEnabled || dipAlertSaving}
                   >
                     {alert.enabled ? "Pause" : "Resume"}
                   </button>
@@ -2875,7 +2875,7 @@ export default function Home() {
                     type="button"
                     className="clear-btn"
                     onClick={() => void deleteDipAlert(alert.ticker)}
-                    disabled={dipAlertSaving}
+                    disabled={!proAnalyticsEnabled || dipAlertSaving}
                   >
                     Remove
                   </button>
@@ -2888,7 +2888,7 @@ export default function Home() {
         {!proAnalyticsEnabled ? (
           <div className="dip-alert-upgrade">
             <button type="button" onClick={() => void startProCheckout(authEmail)} className="template-btn" disabled={checkoutWorking}>
-              {checkoutWorking ? "Redirecting..." : "Upgrade for More Alerts"}
+              {checkoutWorking ? "Redirecting..." : "Unlock Dip Alerts (Pro)"}
             </button>
           </div>
         ) : null}
@@ -3144,23 +3144,27 @@ export default function Home() {
 
           <article className="insight-card">
             <h3>Top Gainer / Loser {moverPeriodLabel}</h3>
-            {todayTopGainer == null || todayTopLoser == null ? (
-              <div className="empty">Need live prices to calculate movers.</div>
+            {proAnalyticsEnabled ? (
+              todayTopGainer == null || todayTopLoser == null ? (
+                <div className="empty">Need live prices to calculate movers.</div>
+              ) : (
+                <div className="performer-list">
+                  <div className="performer-row">
+                    <p>Gainer: {todayTopGainer.ticker}</p>
+                    <strong className={todayTopGainer.changeAmount >= 0 ? "positive" : "negative"}>
+                      {formatSignedCurrency(todayTopGainer.changeAmount)} ({formatPercent(todayTopGainer.changePct)})
+                    </strong>
+                  </div>
+                  <div className="performer-row">
+                    <p>Loser: {todayTopLoser.ticker}</p>
+                    <strong className={todayTopLoser.changeAmount >= 0 ? "positive" : "negative"}>
+                      {formatSignedCurrency(todayTopLoser.changeAmount)} ({formatPercent(todayTopLoser.changePct)})
+                    </strong>
+                  </div>
+                </div>
+              )
             ) : (
-              <div className="performer-list">
-                <div className="performer-row">
-                  <p>Gainer: {todayTopGainer.ticker}</p>
-                  <strong className={todayTopGainer.changeAmount >= 0 ? "positive" : "negative"}>
-                    {formatSignedCurrency(todayTopGainer.changeAmount)} ({formatPercent(todayTopGainer.changePct)})
-                  </strong>
-                </div>
-                <div className="performer-row">
-                  <p>Loser: {todayTopLoser.ticker}</p>
-                  <strong className={todayTopLoser.changeAmount >= 0 ? "positive" : "negative"}>
-                    {formatSignedCurrency(todayTopLoser.changeAmount)} ({formatPercent(todayTopLoser.changePct)})
-                  </strong>
-                </div>
-              </div>
+              <div className="empty">Pro only. Upgrade to unlock live top gainer/loser insights.</div>
             )}
           </article>
         </div>
