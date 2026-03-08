@@ -86,7 +86,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
   <div class="nav-inner">
     <a href="/spectre-dashboard-v3.html" class="nav-logo">SPECTRE</a>
     <ul class="nav-links">
-      <li><a href="/spectre-dashboard-v3.html">Dashboard</a></li>
+      <li><a href="/spectre-dashboard-v3.html" id="nav-dashboard-link">Dashboard</a></li>
       <li id="nav-platinum-link" style="display:none"><a href="/spectre-platinum">Platinum</a></li>
       <li><a href="/spectre-settings-v3.html" class="active">Settings</a></li>
     </ul>
@@ -120,7 +120,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
         <p class="settings-note">Open Stripe billing to manage payment details, invoices, and cancel membership.</p>
         <div class="settings-actions">
           <button class="btn-primary" id="settings-billing-btn">Manage / Cancel Membership</button>
-          <a class="btn-ghost" href="/spectre-dashboard-v3.html">Back to Dashboard</a>
+          <a class="btn-ghost" id="settings-back-link" href="/spectre-dashboard-v3.html">Back to Dashboard</a>
         </div>
       </article>
       <article class="settings-card">
@@ -151,8 +151,17 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
 (() => {
   const ADMIN_CONTACT_EMAIL = "admin@spectre-assets.com";
   const PLATINUM_EMAIL = "jwmcghee09@gmail.com";
+  const DEMO_SESSION_USER = {
+    id: "demo-portfolio",
+    email: "demo@spectre-assets.com",
+    displayName: "Demo Portfolio",
+    createdAt: "2026-01-10T09:30:00.000Z",
+    planTier: "pro",
+    proEnabled: true,
+    subscriptionStatus: "active",
+  };
   const toastEl = document.getElementById("system-toast");
-  const state = { sessionUser: null };
+  const state = { sessionUser: null, demoMode: false };
 
   function showToast(message, tone = "success") {
     if (!toastEl) return;
@@ -169,6 +178,11 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
     if (el) el.textContent = value;
   }
 
+  function isDemoMode() {
+    if (typeof window === "undefined") return false;
+    return new URLSearchParams(window.location.search).get("demo") === "1";
+  }
+
   function isPlatinumUser(email) {
     return (email || "").trim().toLowerCase() === PLATINUM_EMAIL;
   }
@@ -178,6 +192,42 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
     const d = new Date(value);
     if (Number.isNaN(d.getTime())) return "—";
     return d.toISOString().slice(0, 10);
+  }
+
+  function applyModeChrome() {
+    const signOutButton = document.getElementById("sign-out-btn");
+    const dashboardLink = document.getElementById("nav-dashboard-link");
+    const backLink = document.getElementById("settings-back-link");
+    const billingButton = document.getElementById("settings-billing-btn");
+
+    if (state.demoMode) {
+      if (signOutButton) {
+        signOutButton.textContent = "Create Account";
+        signOutButton.setAttribute("href", "/classic#access");
+      }
+      if (dashboardLink) {
+        dashboardLink.setAttribute("href", "/spectre-dashboard-v3.html?demo=1");
+      }
+      if (backLink) {
+        backLink.setAttribute("href", "/spectre-dashboard-v3.html?demo=1");
+      }
+      if (billingButton) {
+        billingButton.textContent = "Create Account to Manage Billing";
+        billingButton.disabled = false;
+      }
+      return;
+    }
+
+    if (signOutButton) {
+      signOutButton.textContent = "Sign Out";
+      signOutButton.setAttribute("href", "#");
+    }
+    if (dashboardLink) {
+      dashboardLink.setAttribute("href", "/spectre-dashboard-v3.html");
+    }
+    if (backLink) {
+      backLink.setAttribute("href", "/spectre-dashboard-v3.html");
+    }
   }
 
   async function apiJson(url, options = {}) {
@@ -199,6 +249,22 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
   }
 
   async function loadSession() {
+    if (state.demoMode) {
+      state.sessionUser = DEMO_SESSION_USER;
+      setText("nav-user-email", "Demo workspace");
+      const navPlatinumLink = document.getElementById("nav-platinum-link");
+      if (navPlatinumLink) {
+        navPlatinumLink.style.display = isPlatinumUser(DEMO_SESSION_USER.email) ? "" : "none";
+      }
+      setText("settings-account-name", DEMO_SESSION_USER.displayName);
+      setText("settings-account-email", DEMO_SESSION_USER.email);
+      setText("settings-account-plan", "Pro Demo");
+      setText("settings-account-status", "DEMO");
+      setText("settings-account-created", formatDate(DEMO_SESSION_USER.createdAt));
+      applyModeChrome();
+      return;
+    }
+
     const payload = await apiJson("/api/auth/session", { cache: "no-store" });
     if (!payload.authenticated || !payload.user) {
       window.location.href = "/classic";
@@ -232,10 +298,15 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
       settingsEmailLink.setAttribute("href", `mailto:${ADMIN_CONTACT_EMAIL}`);
       settingsEmailLink.textContent = ADMIN_CONTACT_EMAIL;
     }
+    applyModeChrome();
   }
 
   async function openBillingPortal() {
     if (!state.sessionUser) return;
+    if (state.demoMode) {
+      window.location.assign("/classic#access");
+      return;
+    }
     const billingButton = document.getElementById("settings-billing-btn");
     const original = billingButton ? billingButton.textContent : "Manage / Cancel Membership";
     if (billingButton) {
@@ -257,6 +328,10 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
 
   async function signOut(event) {
     event.preventDefault();
+    if (state.demoMode) {
+      window.location.href = "/classic#access";
+      return;
+    }
     try {
       await apiJson("/api/auth/logout", { method: "POST" });
     } catch {
@@ -271,7 +346,9 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
   }
 
   async function boot() {
+    state.demoMode = isDemoMode();
     bindEvents();
+    applyModeChrome();
     try {
       await loadSession();
     } catch (error) {

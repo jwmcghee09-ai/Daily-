@@ -33,7 +33,7 @@ export async function POST(request: Request) {
     const baseUrl = getAppBaseUrl(request);
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: subscription.stripeCustomerId,
-      return_url: `${baseUrl}/?classic=1#settings`,
+      return_url: `${baseUrl}/spectre-settings-v3.html`,
     });
 
     if (!portalSession.url) {

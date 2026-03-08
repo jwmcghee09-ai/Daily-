@@ -364,9 +364,7 @@ export default function Home() {
       return;
     }
 
-    const nextUrl = `${window.location.pathname}?demo=1`;
-    window.history.pushState({}, "", nextUrl);
-    setDemoMode(true);
+    window.location.assign("/spectre-dashboard-v3.html?demo=1");
   }, []);
 
   useEffect(() => {
@@ -382,6 +380,21 @@ export default function Home() {
       window.removeEventListener("popstate", syncDemoModeFromLocation);
     };
   }, [syncDemoModeFromLocation]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    if (demoMode) {
+      window.location.replace("/spectre-dashboard-v3.html?demo=1");
+      return;
+    }
+
+    if (!loading && sessionUser) {
+      window.location.replace("/spectre-dashboard-v3.html");
+    }
+  }, [demoMode, loading, sessionUser]);
 
   const completePendingRegistrationAfterCheckout = useCallback(async () => {
     const draft = readPendingRegistrationDraft();

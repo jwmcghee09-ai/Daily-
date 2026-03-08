@@ -451,7 +451,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   <div class="nav-inner">
     <a href="#" class="nav-logo">SPECTRE</a>
     <ul class="nav-links">
-      <li><a href="/spectre-settings-v3.html">Settings</a></li>
+      <li><a href="/spectre-settings-v3.html" id="nav-settings-link">Settings</a></li>
       <li id="nav-platinum-link" style="display:none"><a href="/spectre-platinum">Platinum</a></li>
       <li><a href="#uploads">Uploads</a></li>
       <li><a href="#metrics">Metrics</a></li>
@@ -1152,8 +1152,40 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   const SUPPORTED_UPLOAD_FORMATS_LABEL = "CSV, TSV, PSV, TXT, JSON, XLSX, XLS, XLSM, XLSB, NUMBERS, or ODS";
   const INVALID_UPLOAD_FORMAT_MESSAGE = `Does not accept this file type. Please convert to - ${SUPPORTED_UPLOAD_FORMATS_LABEL}.`;
   const INVALID_UPLOAD_MESSAGE_TTL_MS = 5 * 60 * 1000;
+  const DEMO_SESSION_USER = {
+    id: "demo-portfolio",
+    email: "demo@spectre-assets.com",
+    displayName: "Demo Portfolio",
+    createdAt: "2026-01-10T09:30:00.000Z",
+    planTier: "pro",
+    proEnabled: true,
+    subscriptionStatus: "active",
+  };
+  const DEMO_AVAILABLE_TICKERS = ["CBA", "BHP", "MQG", "BTC", "ETH"];
+  const DEMO_DIP_ALERTS = [
+    {
+      id: "demo-alert-cba",
+      ticker: "CBA",
+      dropPctThreshold: 3.5,
+      enabled: true,
+      lastTriggeredAt: null,
+      createdAt: "2026-03-01T00:00:00.000Z",
+      updatedAt: "2026-03-01T00:00:00.000Z",
+    },
+    {
+      id: "demo-alert-btc",
+      ticker: "BTC",
+      dropPctThreshold: 5,
+      enabled: true,
+      lastTriggeredAt: "2026-03-05T04:00:00.000Z",
+      createdAt: "2026-03-02T00:00:00.000Z",
+      updatedAt: "2026-03-05T04:00:00.000Z",
+    },
+  ];
+  const DEMO_PORTFOLIO_STATE = createDemoPortfolioState();
 
   const state = {
+    demoMode: false,
     sessionUser: null,
     portfolio: { holdings: [], snapshots: [], updatedAt: "", lastPriceRefreshAt: "" },
     alerts: [],
@@ -1188,6 +1220,15 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   function setClass(id, className) {
     const el = document.getElementById(id);
     if (el) el.className = className;
+  }
+
+  function cloneData(value) {
+    return JSON.parse(JSON.stringify(value));
+  }
+
+  function isDemoMode() {
+    if (typeof window === "undefined") return false;
+    return new URLSearchParams(window.location.search).get("demo") === "1";
   }
 
   function isPlatinumUser(email) {
@@ -1228,6 +1269,170 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     const d = new Date(value);
     if (Number.isNaN(d.getTime())) return value;
     return d.toISOString().slice(0, 10);
+  }
+
+  function buildDemoHoldingsAiAnalysis(question) {
+    return {
+      generatedAt: "2026-03-06T06:12:00.000Z",
+      model: "SPECTRE Demo AI",
+      question,
+      answer: "This demo portfolio is driven by super as the base layer, concentrated ASX exposure, and two higher-volatility sleeves in crypto and bullion.",
+      portfolioDrivers: [
+        "Super remains the core allocation and stabilizes account-level diversification.",
+        "CBA, BHP, and MQG drive most of the listed-equity sensitivity to the ASX.",
+        "BTC and ETH add upside momentum but materially increase tail-risk and drawdown sensitivity.",
+        "Bullion offsets part of the equity and crypto shock profile during mixed-stress scenarios.",
+      ],
+      holdingBreakdown: [
+        {
+          ticker: "SUPBAL",
+          summary: "The super sleeve is the largest account and acts as the portfolio base layer.",
+          influences: ["Largest account weight in the portfolio", "Moderates concentration outside listed holdings"],
+          riskFlags: ["Largest account share"],
+          confidence: 88,
+        },
+        {
+          ticker: "BTC",
+          summary: "Bitcoin is the biggest single source of downside swing risk in the demo set.",
+          influences: ["High volatility contribution", "Strong impact on 1-day VaR and drawdown"],
+          riskFlags: ["Tail risk", "Volatility"],
+          confidence: 84,
+        },
+        {
+          ticker: "CBA",
+          summary: "CBA is one of the largest ASX positions and adds bank concentration risk.",
+          influences: ["Large equity weight", "Contributes to top-3 concentration"],
+          riskFlags: ["Concentration"],
+          confidence: 79,
+        },
+      ],
+      riskChecks: [
+        "Top-3 holdings still account for a large share of total value.",
+        "Crypto increases expected shortfall more than it increases diversification quality.",
+        "Bullion helps in mixed-shock scenarios but does not fully offset equity drawdowns.",
+      ],
+      nextActions: [
+        "Reduce concentration in the largest listed positions if capital preservation matters.",
+        "Review whether the crypto sleeve is sized appropriately relative to overall risk tolerance.",
+        "Track new snapshots over time to improve confidence in VaR and drawdown estimates.",
+      ],
+    };
+  }
+
+  function createDemoPortfolioState() {
+    const importedAt = "2026-03-05T22:00:00.000Z";
+    const reportDate = "2026-03-06";
+    const holdings = [
+      { id: "demo-super-balanced", source: "super", account: "AustralianSuper", ticker: "SUPBAL", name: "Balanced Super Option", units: 1, price: 112000, prevClose: 112000, value: 112000, costBase: 104500, sector: "Super", reportDate, importedAt },
+      { id: "demo-asx-cba", source: "asx", account: "CommSec", ticker: "CBA", name: "Commonwealth Bank", units: 120, price: 131.44, prevClose: 130.92, value: 15772.8, costBase: 14820, sector: "Banks", reportDate, importedAt },
+      { id: "demo-asx-bhp", source: "asx", account: "CommSec", ticker: "BHP", name: "BHP Group", units: 280, price: 45.82, prevClose: 45.28, value: 12829.6, costBase: 11984, sector: "Materials", reportDate, importedAt },
+      { id: "demo-asx-mqg", source: "asx", account: "CommSec", ticker: "MQG", name: "Macquarie Group", units: 35, price: 218.75, prevClose: 215.72, value: 7656.25, costBase: 7035, sector: "Financials", reportDate, importedAt },
+      { id: "demo-crypto-btc", source: "crypto", account: "Kraken", ticker: "BTC", name: "Bitcoin", units: 0.42, price: 84200, prevClose: 85740, value: 35364, costBase: 28000, sector: "Crypto", reportDate, importedAt },
+      { id: "demo-crypto-eth", source: "crypto", account: "Kraken", ticker: "ETH", name: "Ethereum", units: 7.5, price: 3140, prevClose: 3121.27, value: 23550, costBase: 18750, sector: "Crypto", reportDate, importedAt },
+      { id: "demo-gold", source: "gold", account: "ABC Bullion", ticker: "ABC-AU", name: "Allocated Gold Holdings", units: 7.8, price: 4490, prevClose: 4472, value: 35022, costBase: 31200, sector: "Precious Metals", reportDate, importedAt },
+      { id: "demo-savings", source: "savings", account: "Offset Saver", ticker: "SAVINGSCASH", name: "Savings Cash Position", units: 1, price: 18450, prevClose: 18450, value: 18450, costBase: 18450, sector: "Savings", reportDate, importedAt },
+      { id: "demo-index", source: "index", account: "Vanguard", ticker: "VAS", name: "Vanguard Australian Shares ETF", units: 95, price: 104.6, prevClose: 103.95, value: 9937, costBase: 9120, sector: "Index", reportDate, importedAt },
+      { id: "demo-fund", source: "fund", account: "Managed Funds", ticker: "GGF", name: "Global Growth Fund", units: 220, price: 68.4, prevClose: 67.9, value: 15048, costBase: 13750, sector: "Managed Fund", reportDate, importedAt },
+    ];
+    const totalValue = holdings.reduce((acc, holding) => acc + Number(holding.value || 0), 0);
+
+    return {
+      holdings,
+      snapshots: createDemoSnapshots(totalValue),
+      updatedAt: "2026-03-06T06:10:00.000Z",
+      lastPriceRefreshAt: "2026-03-06T06:05:00.000Z",
+    };
+  }
+
+  function createDemoSnapshots(finalValue) {
+    const snapshots = [];
+    const days = 92;
+    const startMs = Date.UTC(2025, 11, 5, 6, 0, 0);
+    let value = finalValue * 0.88;
+
+    for (let index = 0; index < days; index += 1) {
+      const drift = finalValue * 0.00075;
+      const seasonal = Math.sin(index / 5) * 950 + Math.cos(index / 11) * 620;
+      const shock =
+        index === 19 ? -4200 :
+        index === 43 ? -6100 :
+        index === 68 ? 3200 :
+        index === 79 ? -2800 :
+        0;
+
+      value = Math.max(finalValue * 0.8, value + drift + seasonal + shock);
+
+      if (index === days - 1) {
+        value = finalValue;
+      }
+
+      snapshots.push({
+        date: new Date(startMs + index * 24 * 60 * 60 * 1000).toISOString(),
+        value: Number(value.toFixed(2)),
+      });
+    }
+
+    snapshots.push({
+      date: "2026-03-06T14:10:00.000Z",
+      value: Number(finalValue.toFixed(2)),
+    });
+
+    return snapshots;
+  }
+
+  function applyModeChrome() {
+    const signOutButton = document.getElementById("sign-out-btn");
+    const clearDataButton = document.getElementById("clear-data-btn");
+    const refreshPricesButton = document.getElementById("refresh-prices-btn");
+    const settingsLink = document.getElementById("nav-settings-link");
+
+    if (state.demoMode) {
+      setText("nav-user-email", "Demo workspace");
+      setText("meta-account-name", DEMO_SESSION_USER.displayName);
+      setClass("meta-plan-chip", "plan-chip pro");
+      setText("meta-plan-chip", "Pro Demo");
+      setText("pro-console-badge", "Pro Demo");
+      if (signOutButton) {
+        signOutButton.textContent = "Create Account";
+        signOutButton.setAttribute("href", "/classic#access");
+      }
+      if (clearDataButton) {
+        clearDataButton.textContent = "Reset Demo";
+      }
+      if (refreshPricesButton) {
+        refreshPricesButton.textContent = "Demo Snapshot";
+      }
+      if (settingsLink) {
+        settingsLink.setAttribute("href", "/spectre-settings-v3.html?demo=1");
+      }
+      uploads.forEach((card) => {
+        card.style.opacity = "0.72";
+        card.setAttribute("aria-disabled", "true");
+        const action = card.querySelector(".upload-action");
+        if (action) action.textContent = "Create Account to Upload";
+      });
+      return;
+    }
+
+    if (signOutButton) {
+      signOutButton.textContent = "Sign Out";
+      signOutButton.setAttribute("href", "#");
+    }
+    if (clearDataButton) {
+      clearDataButton.textContent = "Clear Data";
+    }
+    if (refreshPricesButton) {
+      refreshPricesButton.textContent = "Refresh Prices";
+    }
+    if (settingsLink) {
+      settingsLink.setAttribute("href", "/spectre-settings-v3.html");
+    }
+    uploads.forEach((card) => {
+      card.style.opacity = "";
+      card.removeAttribute("aria-disabled");
+      const action = card.querySelector(".upload-action");
+      if (action) action.textContent = "Upload File";
+    });
   }
 
   function detectBullionMetal(holding) {
@@ -1786,6 +1991,26 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   }
 
   async function loadSession() {
+    if (state.demoMode) {
+      state.sessionUser = cloneData(DEMO_SESSION_USER);
+      setText("nav-user-email", "Demo workspace");
+      const navPlatinumLink = document.getElementById("nav-platinum-link");
+      if (navPlatinumLink) {
+        navPlatinumLink.style.display = isPlatinumUser(DEMO_SESSION_USER.email) ? "" : "none";
+      }
+      setText("meta-account-name", DEMO_SESSION_USER.displayName);
+      setClass("meta-plan-chip", "plan-chip pro");
+      setText("meta-plan-chip", "Pro Demo");
+      setText("pro-console-badge", "Pro Demo");
+      const proConsole = document.getElementById("pro-console");
+      if (proConsole) {
+        proConsole.style.display = "";
+      }
+      applyModeChrome();
+      renderHoldingsAi();
+      return;
+    }
+
     const payload = await apiJson("/api/auth/session", { cache: "no-store" });
     if (!payload.authenticated || !payload.user) {
       window.location.href = "/classic";
@@ -1812,14 +2037,25 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       state.holdingsAiError = "";
       state.holdingsAiLoading = false;
     }
+    applyModeChrome();
     renderHoldingsAi();
   }
 
   async function loadPortfolio() {
+    if (state.demoMode) {
+      state.portfolio = cloneData(DEMO_PORTFOLIO_STATE);
+      return;
+    }
     state.portfolio = await apiJson("/api/portfolio", { cache: "no-store" });
   }
 
   async function loadAlerts() {
+    if (state.demoMode) {
+      state.alerts = cloneData(DEMO_DIP_ALERTS);
+      state.availableAlertTickers = [...DEMO_AVAILABLE_TICKERS];
+      renderAlerts();
+      return;
+    }
     const payload = await apiJson("/api/alerts/price-dip", { cache: "no-store" });
     state.alerts = payload.alerts || [];
     state.availableAlertTickers = payload.availableTickers || [];
@@ -1827,6 +2063,10 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   }
 
   async function loadHistoricalRisk() {
+    if (state.demoMode) {
+      state.historicalRiskEstimate = null;
+      return;
+    }
     const apiWindow = RISK_API_WINDOW_MAP[state.riskWindow] || "3M";
     try {
       state.historicalRiskEstimate = await apiJson(`/api/risk/estimate?window=${apiWindow}`, { method: "POST" });
@@ -1976,6 +2216,27 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   }
 
   async function runHoldingsAi() {
+    if (state.demoMode) {
+      const questionInput = document.getElementById("pro-ai-question");
+      const question = questionInput instanceof HTMLTextAreaElement && questionInput.value.trim().length > 0
+        ? questionInput.value.trim().slice(0, 700)
+        : HOLDINGS_AI_DEFAULT_QUESTION;
+
+      state.holdingsAiLoading = true;
+      state.holdingsAiError = "";
+      renderHoldingsAi();
+
+      await new Promise((resolve) => {
+        window.setTimeout(resolve, 350);
+      });
+
+      state.holdingsAi = buildDemoHoldingsAiAnalysis(question);
+      state.holdingsAiLoading = false;
+      renderHoldingsAi();
+      showToast("Demo Ask AI analysis updated.");
+      return;
+    }
+
     if (!state.sessionUser?.proEnabled) {
       showToast("Ask AI is available on Pro only.", "error");
       return;
@@ -2313,6 +2574,11 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   }
 
   async function refreshPrices() {
+    if (state.demoMode) {
+      showToast("Demo prices are static. Create an account to refresh live prices.", "error");
+      return;
+    }
+
     const button = document.getElementById("refresh-prices-btn");
     const original = button ? button.textContent : "Refresh Prices";
     if (button) {
@@ -2345,6 +2611,24 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   }
 
   async function clearData() {
+    if (state.demoMode) {
+      state.portfolio = cloneData(DEMO_PORTFOLIO_STATE);
+      state.alerts = cloneData(DEMO_DIP_ALERTS);
+      state.availableAlertTickers = [...DEMO_AVAILABLE_TICKERS];
+      state.historicalRiskEstimate = null;
+      state.holdingsAi = null;
+      state.holdingsAiError = "";
+      state.holdingsAiLoading = false;
+      const questionInput = document.getElementById("pro-ai-question");
+      if (questionInput instanceof HTMLTextAreaElement) {
+        questionInput.value = HOLDINGS_AI_DEFAULT_QUESTION;
+      }
+      renderAlerts();
+      renderPortfolio();
+      showToast("Demo portfolio reset.");
+      return;
+    }
+
     const confirmed = window.confirm("Clear all imported holdings, snapshots, and dip alerts? Your sign-in email/password stays active.");
     if (!confirmed) return;
     const button = document.getElementById("clear-data-btn");
@@ -2371,6 +2655,10 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 
   async function signOut(event) {
     event.preventDefault();
+    if (state.demoMode) {
+      window.location.href = "/classic#access";
+      return;
+    }
     try {
       await apiJson("/api/auth/logout", { method: "POST" });
     } catch {
@@ -2397,6 +2685,41 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       showToast("Dip alerts currently support your ASX, crypto, and bullion holdings only.", "error");
       return;
     }
+
+    if (state.demoMode) {
+      const existing = state.alerts.find((alert) => alert.ticker === ticker);
+      if (!existing && state.alerts.length >= 10) {
+        showToast("Demo alert limit reached. Remove one to add another.", "error");
+        return;
+      }
+      const nowIso = new Date().toISOString();
+      if (existing) {
+        state.alerts = state.alerts.map((alert) => (
+          alert.ticker === ticker
+            ? { ...alert, dropPctThreshold: threshold, enabled: true, updatedAt: nowIso }
+            : alert
+        ));
+      } else {
+        state.alerts = [
+          ...state.alerts,
+          {
+            id: `demo-alert-${ticker.toLowerCase()}`,
+            ticker,
+            dropPctThreshold: threshold,
+            enabled: true,
+            lastTriggeredAt: null,
+            createdAt: nowIso,
+            updatedAt: nowIso,
+          },
+        ];
+      }
+      tickerInput.value = "";
+      thresholdInput.value = "";
+      renderAlerts();
+      showToast(`Demo alert saved for ${ticker}.`);
+      return;
+    }
+
     try {
       await apiJson("/api/alerts/price-dip", {
         method: "PUT",
@@ -2413,6 +2736,13 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   }
 
   async function deleteAlert(ticker) {
+    if (state.demoMode) {
+      state.alerts = state.alerts.filter((alert) => alert.ticker !== ticker);
+      renderAlerts();
+      showToast(`Demo alert removed for ${ticker}.`);
+      return;
+    }
+
     try {
       await apiJson(`/api/alerts/price-dip?ticker=${encodeURIComponent(ticker)}`, { method: "DELETE" });
       await loadAlerts();
@@ -2445,6 +2775,11 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   }
 
   async function uploadReportFile(file) {
+    if (state.demoMode) {
+      showToast("Create an account to upload live portfolio files.", "error", INVALID_UPLOAD_MESSAGE_TTL_MS);
+      return;
+    }
+
     if (!file || !state.uploadSource) return;
     const extension = getFileExtension(file.name);
     if (!SUPPORTED_UPLOAD_EXTENSIONS.has(extension)) {
@@ -2521,6 +2856,10 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 
     uploads.forEach((card) => {
       card.addEventListener("click", () => {
+        if (state.demoMode) {
+          showToast("Create an account to upload live portfolio files.", "error", INVALID_UPLOAD_MESSAGE_TTL_MS);
+          return;
+        }
         const source = card.getAttribute("data-source");
         if (!source) return;
         state.uploadSource = source;
@@ -2547,7 +2886,9 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   }
 
   async function boot() {
+    state.demoMode = isDemoMode();
     bindEvents();
+    applyModeChrome();
     try {
       await loadSession();
       if (!state.sessionUser) return;
