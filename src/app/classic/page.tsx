@@ -2707,7 +2707,7 @@ export default function Home() {
                       onClick={() => void startProCheckout(sessionUser.email)}
                       disabled={billingPortalWorking || working || refreshingPrices || checkoutWorking}
                     >
-                      {checkoutWorking ? "Redirecting..." : "Upgrade to Pro"}
+                      {checkoutWorking ? "Redirecting..." : "Update Plan"}
                     </button>
                   ) : null}
                 </div>

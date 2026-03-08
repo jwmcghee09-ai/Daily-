@@ -121,7 +121,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
         <div class="settings-title">Membership</div>
         <p class="settings-note">Open Stripe billing to manage payment details, invoices, and cancel membership.</p>
         <div class="settings-actions">
-          <button class="btn-pro" id="settings-upgrade-btn" hidden>Upgrade to Pro</button>
+          <button class="btn-pro" id="settings-upgrade-btn" hidden>Update Plan</button>
           <button class="btn-primary" id="settings-billing-btn">Manage / Cancel Membership</button>
           <a class="btn-ghost" id="settings-back-link" href="/spectre-dashboard-v3.html?mode=account">Back to Dashboard</a>
         </div>
@@ -236,8 +236,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
       backLink.setAttribute("href", "/spectre-dashboard-v3.html?mode=account");
     }
     if (upgradeButton) {
-      upgradeButton.hidden = true;
-      upgradeButton.textContent = "Upgrade to Pro";
+      upgradeButton.textContent = "Update Plan";
       upgradeButton.disabled = false;
     }
   }
@@ -309,7 +308,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
     if (upgradeButton) {
       const isStarter = payload.user.planTier === "starter" && !payload.user.proEnabled;
       upgradeButton.hidden = !isStarter;
-      upgradeButton.textContent = "Upgrade to Pro";
+      upgradeButton.textContent = "Update Plan";
       upgradeButton.disabled = false;
     }
     const settingsEmailLink = document.getElementById("settings-contact-email");
@@ -352,7 +351,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
       return;
     }
     const upgradeButton = document.getElementById("settings-upgrade-btn");
-    const original = upgradeButton ? upgradeButton.textContent : "Upgrade to Pro";
+    const original = upgradeButton ? upgradeButton.textContent : "Update Plan";
     if (upgradeButton) {
       upgradeButton.textContent = "Redirecting...";
       upgradeButton.disabled = true;
