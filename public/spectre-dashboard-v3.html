@@ -953,7 +953,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     <div class="risk-window" id="risk-starter-note" hidden>Starter snapshot mode: advanced risk measurements are available on Pro.</div>
     <div class="risk-grid">
       <div class="risk-card">
-        <div class="risk-lbl">Risk Score <button type="button" class="risk-help" aria-label="Risk score help">?<span class="risk-help-tip">Composite score from concentration, volatility, drawdown, VaR, account concentration, source mix, and data confidence. Index/fund/savings-heavy mixes lower risk load; single-stock/crypto-heavy mixes raise it. Higher score means lower portfolio risk.</span></button></div>
+        <div class="risk-lbl">Risk Score <button type="button" class="risk-help" aria-label="Risk score help">?<span class="risk-help-tip">Composite score from diversification-adjusted concentration, volatility, drawdown, VaR, account concentration, source mix, and data confidence. Broad index/fund/savings-heavy mixes lower risk load; single-stock/crypto-heavy mixes raise it. Higher score means lower portfolio risk.</span></button></div>
         <div class="risk-val danger" id="risk-score">72 / 100</div>
         <div class="risk-sub" id="risk-score-sub">Elevated</div>
       </div>
@@ -1249,8 +1249,10 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   const SOURCE_LABEL = { super: "SUPER", asx: "ASX", gold: "GOLD", index: "INDEX", fund: "FUND", crypto: "CRYPTO", savings: "SAVINGS", tax: "TAX" };
   const SOURCE_BADGE = { super: "super", asx: "asx", gold: "gold", index: "fund", fund: "fund", crypto: "crypto", savings: "fund", tax: "fund" };
   const SOURCE_RISK_MULTIPLIER = { savings: 0.15, tax: 0.2, super: 0.55, index: 0.6, fund: 0.7, gold: 0.75, asx: 1, crypto: 1.6 };
+  const SOURCE_CONCENTRATION_MULTIPLIER = { savings: 0.2, tax: 0.25, super: 0.7, index: 0.3, fund: 0.45, gold: 0.8, asx: 1, crypto: 1.25 };
   const INDEX_STYLE_HINTS = [" index ", " etf ", "ishares", "vanguard", "betashares", "spdr", "vaneck", "blackrock", "msci", "s&p", "asx 200", "nasdaq", "dow jones", "world ex", "all world", "total market"];
   const FUND_STYLE_HINTS = [" managed fund", " mutual fund", " wholesale fund", " unit trust", " income fund", " growth fund", " balanced fund", " fund "];
+  const INDEX_TICKER_HINTS = new Set(["IVV", "IHVV", "SPY", "VOO", "QQQ", "NDQ", "DIA", "IWM", "VTS", "VEU", "VGS", "VAS", "A200", "IOZ", "STW"]);
   const RISK_WINDOW_DAYS = { "1M": 31, "3M": 92, "6M": 183, "1Y": 366 };
   const RISK_API_WINDOW_MAP = { "1M": "1M", "3M": "3M", "6M": "1Y", "1Y": "1Y", "ALL": "1Y" };
   const PLATINUM_EMAIL = "jwmcghee09@gmail.com";
@@ -1377,6 +1379,8 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 
   function inferAsxInstrumentSource(holding) {
     const text = ` ${holding?.ticker || ""} ${holding?.name || ""} ${holding?.sector || ""} ${holding?.account || ""} `.toLowerCase();
+    const ticker = String(holding?.ticker || "").trim().toUpperCase();
+    if (INDEX_TICKER_HINTS.has(ticker)) return "index";
     if (FUND_STYLE_HINTS.some((hint) => text.includes(hint))) return "fund";
     if (INDEX_STYLE_HINTS.some((hint) => text.includes(hint))) return "index";
     return null;
@@ -1809,10 +1813,20 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       weightPct: totalValue > 0 ? ((holding.value || 0) / totalValue) * 100 : 0,
       pnl: (holding.value || 0) - (holding.costBase || 0),
     }));
-    const top3ConcentrationPct = totalValue > 0 ? (sum(sortedHoldings.slice(0, 3).map((item) => item.value || 0)) / totalValue) * 100 : 0;
-    const hhi = totalValue > 0
-      ? sum(holdings.map((item) => {
-        const weight = (Number(item.value) || 0) / totalValue;
+
+    const concentrationValues = holdings
+      .map((item) => {
+        const value = Number(item.value) || 0;
+        const riskSource = resolveRiskSource(item);
+        const multiplier = SOURCE_CONCENTRATION_MULTIPLIER[riskSource] ?? 1;
+        return value * multiplier;
+      })
+      .sort((a, b) => b - a);
+    const concentrationTotalValue = sum(concentrationValues);
+    const top3ConcentrationPct = concentrationTotalValue > 0 ? (sum(concentrationValues.slice(0, 3)) / concentrationTotalValue) * 100 : 0;
+    const hhi = concentrationTotalValue > 0
+      ? sum(concentrationValues.map((value) => {
+        const weight = value / concentrationTotalValue;
         return weight * weight;
       })) * 10000
       : 0;

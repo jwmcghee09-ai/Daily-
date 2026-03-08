@@ -85,6 +85,35 @@ const SOURCE_RISK_MULTIPLIER: Record<DataSource, number> = {
   crypto: 1.6,
 };
 
+const SOURCE_CONCENTRATION_MULTIPLIER: Record<DataSource, number> = {
+  savings: 0.2,
+  tax: 0.25,
+  super: 0.7,
+  index: 0.3,
+  fund: 0.45,
+  gold: 0.8,
+  asx: 1,
+  crypto: 1.25,
+};
+
+const INDEX_TICKER_HINTS = new Set([
+  "IVV",
+  "IHVV",
+  "SPY",
+  "VOO",
+  "QQQ",
+  "NDQ",
+  "DIA",
+  "IWM",
+  "VTS",
+  "VEU",
+  "VGS",
+  "VAS",
+  "A200",
+  "IOZ",
+  "STW",
+]);
+
 const INDEX_STYLE_HINTS = [
   " index ",
   " etf ",
@@ -816,8 +845,19 @@ export function computeMetrics(
     weightPct: totalValue > 0 ? (holding.value / totalValue) * 100 : 0,
   }));
 
+  const concentrationHoldings = holdings.map((holding) => {
+    const riskSource = resolveRiskSource(holding);
+    return {
+      effectiveValue: holding.value * SOURCE_CONCENTRATION_MULTIPLIER[riskSource],
+    };
+  });
+  const concentrationTotalValue = sum(concentrationHoldings.map((item) => item.effectiveValue));
+  const sortedConcentrationValues = concentrationHoldings.map((item) => item.effectiveValue).sort((a, b) => b - a);
+
   const top3ConcentrationPct =
-    totalValue > 0 ? (sum(sortedHoldings.slice(0, 3).map((item) => item.value)) / totalValue) * 100 : 0;
+    concentrationTotalValue > 0
+      ? (sum(sortedConcentrationValues.slice(0, 3)) / concentrationTotalValue) * 100
+      : 0;
 
   const accountAllocation = buildAllocation(holdings, "account", totalValue);
   const sectorAllocation = buildAllocation(holdings, "sector", totalValue);
@@ -831,9 +871,9 @@ export function computeMetrics(
       : 0;
 
   const hhi =
-    totalValue > 0
-      ? holdings.reduce((acc, item) => {
-          const w = item.value / totalValue;
+    concentrationTotalValue > 0
+      ? concentrationHoldings.reduce((acc, item) => {
+          const w = item.effectiveValue / concentrationTotalValue;
           return acc + w * w;
         }, 0) * 10000
       : 0;
@@ -907,6 +947,11 @@ function resolveRiskSource(holding: PortfolioHolding): DataSource {
 
 function inferAsxInstrumentSource(ticker: string, name: string, sector: string, account: string): DataSource | null {
   const text = ` ${ticker} ${name} ${sector} ${account} `.toLowerCase();
+  const normalizedTicker = ticker.trim().toUpperCase();
+
+  if (INDEX_TICKER_HINTS.has(normalizedTicker)) {
+    return "index";
+  }
 
   if (FUND_STYLE_HINTS.some((hint) => text.includes(hint))) {
     return "fund";

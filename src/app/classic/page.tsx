@@ -2914,7 +2914,7 @@ export default function Home() {
           value={portfolioRiskScore ? `${portfolioRiskScore.score}/100 (${portfolioRiskScore.label})` : "Need holdings"}
           help={
             portfolioRiskScore
-              ? `Composite score from volatility, VaR, drawdown, concentration, source mix, and sample confidence. Index/fund/savings-heavy mixes lower risk load; single-stock/crypto-heavy mixes increase it. Confidence: ${portfolioRiskScore.confidence} (${portfolioRiskScore.returnsUsed} daily returns).`
+              ? `Composite score from volatility, VaR, drawdown, diversification-adjusted concentration, source mix, and sample confidence. Broad index/fund/savings-heavy mixes lower risk load; single-stock/crypto-heavy mixes increase it. Confidence: ${portfolioRiskScore.confidence} (${portfolioRiskScore.returnsUsed} daily returns).`
               : "Composite score appears after holdings are imported."
           }
           tone={portfolioRiskScoreTone}
