@@ -587,6 +587,16 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   </section>
 </div>
 
+<div class="wrap">
+  <div id="starter-upgrade-strip" class="starter-upgrade-strip" hidden>
+    <div class="starter-upgrade-copy">
+      <div class="starter-upgrade-kicker">Starter Plan</div>
+      <div class="starter-upgrade-text">Dip alerts, stress testing, and advanced risk measurements are available on Pro.</div>
+    </div>
+    <a href="/spectre-settings-v3.html?mode=account">Upgrade To Pro</a>
+  </div>
+</div>
+
 <div class="divider"></div>
 
 <!-- UPLOADS -->
@@ -1517,6 +1527,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     const stressStarterNote = document.getElementById("stress-starter-note");
     const riskWindowTabs = document.getElementById("risk-window-tabs");
     const riskStarterNote = document.getElementById("risk-starter-note");
+    const starterUpgradeStrip = document.getElementById("starter-upgrade-strip");
     const proRiskCards = Array.from(document.querySelectorAll(".pro-risk"));
     const riskGrid = document.querySelector(".risk-grid");
 
@@ -1526,6 +1537,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     if (stressStarterNote) stressStarterNote.hidden = !showStarterUpsell;
     if (riskWindowTabs) riskWindowTabs.style.display = hasProAccess ? "" : "none";
     if (riskStarterNote) riskStarterNote.hidden = !showStarterUpsell;
+    if (starterUpgradeStrip) starterUpgradeStrip.hidden = !showStarterUpsell;
     if (riskGrid) riskGrid.classList.toggle("starter-layout", showStarterUpsell);
     proRiskCards.forEach((card) => {
       card.style.display = hasProAccess ? "" : "none";
