@@ -533,6 +533,13 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
         <button class="btn-primary" id="refresh-prices-btn">Refresh Prices</button>
         <button class="btn-ghost" id="clear-data-btn">Clear Data</button>
       </div>
+      <div class="starter-upgrade-strip" id="starter-upgrade-banner" hidden>
+        <div class="starter-upgrade-copy">
+          <div class="starter-upgrade-kicker">Starter Plan</div>
+          <div class="starter-upgrade-text">Upgrade to Pro for email dip alerts, Ask AI holdings analysis, advanced risk windows, stress testing, and the full alert console.</div>
+        </div>
+        <a href="#" id="starter-upgrade-btn">Upgrade to Pro</a>
+      </div>
       <div class="hero-meta">
         <div class="meta-row">
           <span class="meta-lbl">Account</span>
@@ -1515,6 +1522,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     const alertsSection = document.getElementById("alerts");
     const stressPanel = document.getElementById("stress-panel");
     const stressStarterNote = document.getElementById("stress-starter-note");
+    const starterUpgradeBanner = document.getElementById("starter-upgrade-banner");
     const riskWindowTabs = document.getElementById("risk-window-tabs");
     const riskStarterNote = document.getElementById("risk-starter-note");
     const proRiskCards = Array.from(document.querySelectorAll(".pro-risk"));
@@ -1524,6 +1532,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     if (alertsSection) alertsSection.style.display = hasProAccess ? "" : "none";
     if (stressPanel) stressPanel.style.display = hasProAccess ? "" : "none";
     if (stressStarterNote) stressStarterNote.hidden = !showStarterUpsell;
+    if (starterUpgradeBanner) starterUpgradeBanner.hidden = !showStarterUpsell;
     if (riskWindowTabs) riskWindowTabs.style.display = hasProAccess ? "" : "none";
     if (riskStarterNote) riskStarterNote.hidden = !showStarterUpsell;
     if (riskGrid) riskGrid.classList.toggle("starter-layout", showStarterUpsell);
@@ -2781,6 +2790,41 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     window.location.href = "/classic";
   }
 
+  async function startProUpgrade(event) {
+    event.preventDefault();
+    if (state.demoMode || !state.sessionUser || state.sessionUser.proEnabled) {
+      return;
+    }
+
+    const button = document.getElementById("starter-upgrade-btn");
+    const original = button ? button.textContent : "Upgrade to Pro";
+
+    if (button) {
+      button.textContent = "Opening...";
+      button.setAttribute("aria-disabled", "true");
+    }
+
+    try {
+      const payload = await apiJson("/api/billing/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan: "pro" }),
+      });
+
+      if (!payload || !payload.url) {
+        throw new Error("Stripe checkout URL was missing.");
+      }
+
+      window.location.assign(payload.url);
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : "Unable to start Pro checkout.", "error");
+      if (button) {
+        button.textContent = original;
+        button.removeAttribute("aria-disabled");
+      }
+    }
+  }
+
   async function addAlert() {
     if (!state.demoMode && !state.sessionUser?.proEnabled) {
       showToast("Dip alerts are available on Pro only.", "error");
@@ -2964,6 +3008,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     document.getElementById("refresh-prices-btn")?.addEventListener("click", refreshPrices);
     document.getElementById("clear-data-btn")?.addEventListener("click", clearData);
     document.getElementById("sign-out-btn")?.addEventListener("click", signOut);
+    document.getElementById("starter-upgrade-btn")?.addEventListener("click", startProUpgrade);
     document.getElementById("add-alert-btn")?.addEventListener("click", addAlert);
     document.getElementById("pro-ai-ask-btn")?.addEventListener("click", runHoldingsAi);
 
