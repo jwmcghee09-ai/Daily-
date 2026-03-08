@@ -230,66 +230,10 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
   line-height:1.55;
   color:#ffd7cf;
 }
-.starter-upgrade-strip{
-  margin:1rem 0 0;
-  border:1px solid rgba(192,132,252,.42);
-  background:
-    radial-gradient(120% 160% at 0% 0%, rgba(192,132,252,.18) 0%, rgba(192,132,252,0) 48%),
-    linear-gradient(145deg,rgba(24,10,40,.96),rgba(14,8,26,.95));
-  color:#e8defa;
-  border-radius:14px;
-  padding:1rem 1.15rem;
-  box-shadow:0 18px 44px -30px rgba(0,0,0,.85), inset 0 0 0 1px rgba(192,132,252,.08);
-  display:grid;
-  grid-template-columns:minmax(0,1fr) auto;
-  gap:1rem;
-  align-items:center;
-}
-.starter-upgrade-copy{
-  min-width:0;
-}
-.starter-upgrade-kicker{
-  font-family:var(--mono);
-  font-size:.52rem;
-  letter-spacing:.18em;
-  text-transform:uppercase;
-  color:#c084fc;
-  margin-bottom:.35rem;
-}
-.starter-upgrade-text{
-  font-family:var(--sans);
-  font-size:.92rem;
-  line-height:1.5;
-  color:#ece8fb;
-  max-width:760px;
-}
-.starter-upgrade-strip a,
-.starter-upgrade-strip button{
-  color:#fff;
-  text-decoration:none;
-  font-family:var(--mono);
-  font-size:.56rem;
-  letter-spacing:.14em;
-  text-transform:uppercase;
-  border:1px solid rgba(255,255,255,.2);
-  border-radius:8px;
-  padding:.52rem .8rem;
-  background:linear-gradient(135deg,var(--purple) 0%,#7c3aed 100%);
-  box-shadow:0 10px 22px -14px rgba(124,58,237,.8);
-  white-space:nowrap;
-  cursor:pointer;
-}
-.starter-upgrade-strip a:hover,
-.starter-upgrade-strip button:hover{
-  filter:brightness(1.08);
-}
 @media(max-width:860px){
   .risk-grid{grid-template-columns:repeat(2,1fr)}
   .risk-grid.starter-layout{grid-template-columns:repeat(2,1fr)}
   .risk-help-tip{left:0;right:auto;width:min(260px,84vw)}
-  .starter-upgrade-strip{grid-template-columns:1fr}
-  .starter-upgrade-strip a,
-  .starter-upgrade-strip button{justify-self:start}
 }
 
 /* ── CHARTS ── */
@@ -828,24 +772,6 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
           </div>
         </div>
       </div>
-      <div class="panel-half" id="stress-starter-note" style="border-left:1px solid var(--border)" hidden>
-        <div class="panel-half-title"><span class="dot"></span>Stress Testing</div>
-        <div class="perf-list">
-          <div class="perf-row">
-            <div><div class="perf-ticker">PRO ONLY</div><div class="perf-name">Stress scenarios are unlocked on Pro.</div></div>
-            <div class="perf-val pos">
-              <button
-                type="button"
-                id="starter-upgrade-stress-btn"
-                data-starter-upgrade="pro"
-                style="color:inherit;background:transparent;border:0;font:inherit;cursor:pointer;padding:0"
-              >
-                Upgrade
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
 
   </section>
@@ -962,13 +888,6 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
         <button class="wtab" data-window="1Y">1Y</button>
         <button class="wtab" data-window="ALL">ALL</button>
       </div>
-    </div>
-    <div class="starter-upgrade-strip" id="risk-starter-note" hidden>
-      <div class="starter-upgrade-copy">
-        <div class="starter-upgrade-kicker">Starter Plan</div>
-        <div class="starter-upgrade-text">Advanced risk measurements are available on Pro.</div>
-      </div>
-      <button type="button" id="starter-upgrade-risk-btn" data-starter-upgrade="pro">Upgrade to Pro</button>
     </div>
     <div class="risk-grid">
       <div class="risk-card">
@@ -1590,23 +1509,16 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 
   function applyPlanVisibility() {
     const hasProAccess = Boolean(state.demoMode || state.sessionUser?.proEnabled);
-    const showStarterUpsell = false;
     const navAlertsLink = document.getElementById("nav-alerts-link");
     const alertsSection = document.getElementById("alerts");
     const stressPanel = document.getElementById("stress-panel");
-    const stressStarterNote = document.getElementById("stress-starter-note");
     const riskWindowTabs = document.getElementById("risk-window-tabs");
-    const riskStarterNote = document.getElementById("risk-starter-note");
     const proRiskCards = Array.from(document.querySelectorAll(".pro-risk"));
-    const riskGrid = document.querySelector(".risk-grid");
 
     if (navAlertsLink) navAlertsLink.style.display = hasProAccess ? "" : "none";
     if (alertsSection) alertsSection.style.display = hasProAccess ? "" : "none";
     if (stressPanel) stressPanel.style.display = hasProAccess ? "" : "none";
-    if (stressStarterNote) stressStarterNote.hidden = !showStarterUpsell;
     if (riskWindowTabs) riskWindowTabs.style.display = hasProAccess ? "" : "none";
-    if (riskStarterNote) riskStarterNote.hidden = !showStarterUpsell;
-    if (riskGrid) riskGrid.classList.toggle("starter-layout", showStarterUpsell);
     proRiskCards.forEach((card) => {
       card.style.display = hasProAccess ? "" : "none";
     });
@@ -2196,40 +2108,6 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     }
 
     return payload;
-  }
-
-  async function startProUpgradeCheckout() {
-    if (state.demoMode) {
-      window.location.assign("/classic#access");
-      return;
-    }
-    if (!state.sessionUser) {
-      window.location.assign("/classic");
-      return;
-    }
-    const upgradeButtons = Array.from(document.querySelectorAll('[data-starter-upgrade="pro"]'));
-    const originalLabels = upgradeButtons.map((button) => button.textContent || "Upgrade to Pro");
-    upgradeButtons.forEach((button) => {
-      button.textContent = "Redirecting...";
-      button.disabled = true;
-    });
-    try {
-      const payload = await apiJson("/api/billing/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan: "pro" }),
-      });
-      if (!payload || !payload.url) {
-        throw new Error("Stripe checkout URL was not generated.");
-      }
-      window.location.assign(payload.url);
-    } catch (error) {
-      showToast(error instanceof Error ? error.message : "Unable to start Pro checkout.", "error");
-      upgradeButtons.forEach((button, idx) => {
-        button.textContent = originalLabels[idx];
-        button.disabled = false;
-      });
-    }
   }
 
   async function loadSession() {
@@ -3103,11 +2981,6 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     document.getElementById("sign-out-btn")?.addEventListener("click", signOut);
     document.getElementById("add-alert-btn")?.addEventListener("click", addAlert);
     document.getElementById("pro-ai-ask-btn")?.addEventListener("click", runHoldingsAi);
-    document.querySelectorAll('[data-starter-upgrade="pro"]').forEach((button) => {
-      button.addEventListener("click", () => {
-        void startProUpgradeCheckout();
-      });
-    });
 
     document.getElementById("alerts-list")?.addEventListener("click", (event) => {
       const target = event.target;
