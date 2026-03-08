@@ -27,6 +27,7 @@ import {
   DataSource,
   EMPTY_STATE,
   PortfolioHolding,
+  PortfolioSnapshot,
   PortfolioState,
   RiskWindow,
   computeMetrics,
