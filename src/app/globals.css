@@ -7141,4 +7141,27 @@ td {
     letter-spacing: 0.2em;
     text-indent: 0.2em;
   }
+
+  .spectre-landing--sleek .spectre-hero-actions {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 600px) {
+  .spectre-landing--sleek .spectre-hero-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    width: min(100%, 360px);
+    gap: 0.65rem;
+    justify-items: center;
+    margin-inline: auto;
+  }
+
+  .spectre-landing--sleek .spectre-hero-actions .spectre-btn {
+    width: 100%;
+    text-align: center;
+    padding: 0.85rem 1rem;
+    letter-spacing: 0.09em;
+  }
 }
