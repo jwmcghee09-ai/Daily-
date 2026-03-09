@@ -2102,7 +2102,7 @@ export default function Home() {
               </p>
               <div className="spectre-hero-actions">
                 <a href="#access" className="spectre-btn spectre-btn-primary">Start For $3 / Month</a>
-                <a href="#insights" className="spectre-btn spectre-btn-demo">See Live Dashboard Preview</a>
+                <a href="#insights" className="spectre-btn spectre-btn-demo">See Demo</a>
               </div>
               <div className="spectre-hero-panels">
                 <article>
