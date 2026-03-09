@@ -6843,8 +6843,8 @@ td {
 }
 
 .spectre-landing--sleek .spectre-hero {
-  min-height: 100vh;
-  padding: 130px 0 80px;
+  min-height: auto;
+  padding: 110px 0 42px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   background: transparent;
 }
@@ -7004,7 +7004,7 @@ td {
 }
 
 .spectre-landing--sleek .spectre-section {
-  padding: 96px 0;
+  padding: 62px 0;
 }
 
 .spectre-landing--sleek .spectre-section.spectre-alt {
@@ -7128,13 +7128,13 @@ td {
   }
 
   .spectre-landing--sleek .spectre-section {
-    padding: 72px 0;
+    padding: 50px 0;
   }
 
   .spectre-landing--sleek .spectre-hero {
     min-height: auto;
-    padding-top: 106px;
-    padding-bottom: 56px;
+    padding-top: 98px;
+    padding-bottom: 34px;
   }
 
   .spectre-landing--sleek .spectre-hero-wordmark {
