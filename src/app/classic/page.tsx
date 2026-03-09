@@ -389,14 +389,6 @@ export default function Home() {
     setDemoMode(params.get("demo") === "1");
   }, []);
 
-  const openDemoWorkspace = useCallback(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    window.location.assign("/spectre-dashboard-v3.html?demo=1");
-  }, []);
-
   useEffect(() => {
     syncDemoModeFromLocation();
 
@@ -2101,71 +2093,30 @@ export default function Home() {
           <div className="spectre-hero-glow" aria-hidden="true" />
           <div className="spectre-wrap spectre-hero-layout">
             <div className="spectre-hero-left">
-              <p className="spectre-hero-eye">System for Portfolio Exposure, Correlation, Threat &amp; Risk Evaluation</p>
-              <h1 className="spectre-hero-title">See your entire investment portfolio risk <span>in one place.</span></h1>
+              <p className="spectre-hero-eye">SPECTRE OPS</p>
+              <p className="spectre-hero-wordmark">SPECTRE</p>
+              <h1 className="spectre-hero-title">See your investment portfolio risk <span>in one place.</span></h1>
+              <p className="spectre-hero-system">System for Portfolio Exposure, Correlation, Threat &amp; Risk Evaluation</p>
               <p className="spectre-hero-desc">
-                Import exports from super funds, brokers, savings, tax reports, crypto, index funds, mutual funds, and bullion. SPECTRE consolidates every holding into one portfolio view with concentration, VaR, drawdown, and Pro AI analysis.
+                SPECTRE turns CSV exports from super, ASX, crypto, index funds, mutual funds, and bullion into one clear risk view so you can act with confidence.
               </p>
-              <div className="spectre-hero-pills">
-                <span className="spectre-pill spectre-pill-purple">3-Step Workflow</span>
-                <span className="spectre-pill spectre-pill-orange">SPECTRE Framework</span>
-                <span className="spectre-pill">Security Controls</span>
-                <span className="spectre-pill spectre-pill-purple">Pro AI + Savings/Tax Uploads</span>
-              </div>
               <div className="spectre-hero-actions">
                 <a href="#access" className="spectre-btn spectre-btn-primary">Start For $3 / Month</a>
-                <button type="button" className="spectre-btn spectre-btn-demo" onClick={openDemoWorkspace}>Try Live Demo Portfolio</button>
+                <a href="#insights" className="spectre-btn spectre-btn-demo">See Live Dashboard Preview</a>
               </div>
-              <div className="spectre-hero-stats">
+              <div className="spectre-hero-panels">
                 <article>
-                  <strong>72<span>/100</span></strong>
-                  <p>Risk Score</p>
+                  <h3>3-Step Workflow</h3>
+                  <p>Upload CSV, normalize holdings, then review risk score and exposure metrics.</p>
                 </article>
                 <article>
-                  <strong>42%</strong>
-                  <p>Top-3 Concentration</p>
+                  <h3>SPECTRE Framework</h3>
+                  <p>System for Portfolio Exposure, Correlation, Threat &amp; Risk Evaluation.</p>
                 </article>
                 <article>
-                  <strong>-8.4%</strong>
-                  <p>VaR 95 Daily</p>
+                  <h3>Security Controls</h3>
+                  <p>Email verification, hashed passwords, encrypted backups, and hardened headers.</p>
                 </article>
-                <article>
-                  <strong>5 min</strong>
-                  <p>ASX Refresh</p>
-                </article>
-              </div>
-            </div>
-
-            <div className="spectre-hero-right">
-              <div className="spectre-hero-dashboard">
-                <p className="spectre-dash-title">Portfolio Snapshot</p>
-                <div className="spectre-snapshot-grid">
-                  <article className="spectre-snapshot-card">
-                    <p>Total Value</p>
-                    <strong>$4K</strong>
-                  </article>
-                  <article className="spectre-snapshot-card">
-                    <p>Unrealised P/L</p>
-                    <strong className="accent">+$559</strong>
-                  </article>
-                  <article className="spectre-snapshot-card">
-                    <p>Today&apos;s Change</p>
-                    <strong>+$6</strong>
-                  </article>
-                  <article className="spectre-snapshot-card">
-                    <p>1-Day VaR 95%</p>
-                    <strong className="accent">−0.7%</strong>
-                  </article>
-                </div>
-                <div className="spectre-snapshot-risk">
-                  <div className="spectre-snapshot-risk-top">
-                    <span>Risk Score</span>
-                    <strong>8 / 100</strong>
-                  </div>
-                  <div className="spectre-snapshot-track">
-                    <span className="spectre-snapshot-fill" />
-                  </div>
-                </div>
               </div>
             </div>
           </div>
