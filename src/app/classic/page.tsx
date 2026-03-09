@@ -2022,7 +2022,7 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="spectre-landing">
+      <div className="spectre-landing spectre-landing--sleek">
         <main className="spectre-main">
           <section className="spectre-section">
             <div className="spectre-wrap">
@@ -2051,7 +2051,7 @@ export default function Home() {
     ];
 
     return (
-      <div className="spectre-landing">
+      <div className="spectre-landing spectre-landing--sleek">
         <header className="spectre-nav">
           <div className="spectre-wrap spectre-nav-inner">
             <a href="#top" className="spectre-nav-logo">SPECTRE</a>
