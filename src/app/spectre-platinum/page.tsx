@@ -27,7 +27,7 @@ export default async function SpectrePlatinumPage() {
             Full ASX universe scan · multi-factor leading-indicator model · ranked return forecasts ·
             $5,000 paper-trading engine that auto-executes BUY and SELL signals.
           </p>
-          <Link className={styles.backLink} href="/spectre-dashboard-v3.html?mode=account">
+          <Link className={styles.backLink} href="/classic">
             Back to Dashboard
           </Link>
         </header>
