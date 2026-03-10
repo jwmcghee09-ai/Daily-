@@ -2049,14 +2049,16 @@ export default function Home() {
             <a href="#top" className="spectre-nav-logo">SPECTRE</a>
             <nav className="spectre-nav-links">
               <a href="#features">Capabilities</a>
+              <a href="#workflow">Workflow</a>
+              <a href="#pro-ai">Pro AI</a>
               <a href="#insights">Preview</a>
               <a href="/spectre-dashboard-v3.html?demo=1" className="spectre-nav-demo-link">Live Demo</a>
-              <a href="#pro-ai">Pro AI</a>
-              <a href="#workflow">Workflow</a>
               <a href="#safety">Data Safety</a>
               <a href="#pricing">Pricing</a>
-              <a href="#access" className="spectre-nav-cta">Sign In</a>
             </nav>
+            <div className="spectre-nav-utility">
+              <a href="#access" className="spectre-nav-cta">Sign In</a>
+            </div>
             <button
               type="button"
               className={"spectre-nav-hamburger" + (landingMenuOpen ? " open" : "")}
@@ -2072,7 +2074,7 @@ export default function Home() {
             <a href="/spectre-dashboard-v3.html?demo=1" className="spectre-nav-demo-link" onClick={() => setLandingMenuOpen(false)}>
               Live Demo
             </a>
-            {["features", "insights", "pro-ai", "workflow", "safety", "pricing", "access"].map((section) => (
+            {["features", "workflow", "pro-ai", "insights", "safety", "pricing", "access"].map((section) => (
               <a key={section} href={`#${section}`} onClick={() => setLandingMenuOpen(false)}>
                 {section === "insights"
                   ? "Preview"
