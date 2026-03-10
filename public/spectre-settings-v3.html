@@ -86,9 +86,9 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
 <body>
 <nav>
   <div class="nav-inner">
-    <a href="/classic" class="nav-logo">SPECTRE</a>
+    <a href="/spectre-dashboard-v3.html?mode=account" class="nav-logo">SPECTRE</a>
     <ul class="nav-links">
-      <li><a href="/classic" id="nav-dashboard-link">Dashboard</a></li>
+      <li><a href="/spectre-dashboard-v3.html?mode=account" id="nav-dashboard-link">Dashboard</a></li>
       <li id="nav-platinum-link" style="display:none"><a href="/spectre-platinum">Platinum</a></li>
       <li><a href="/spectre-settings-v3.html" class="active">Settings</a></li>
     </ul>
@@ -123,7 +123,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
         <div class="settings-actions">
           <button class="btn-pro" id="settings-upgrade-btn" hidden>Update Plan</button>
           <button class="btn-primary" id="settings-billing-btn">Manage / Cancel Membership</button>
-          <a class="btn-ghost" id="settings-back-link" href="/classic">Back to Dashboard</a>
+          <a class="btn-ghost" id="settings-back-link" href="/spectre-dashboard-v3.html?mode=account">Back to Dashboard</a>
         </div>
       </article>
       <article class="settings-card">
@@ -210,10 +210,10 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
         signOutButton.setAttribute("href", "/classic#access");
       }
       if (dashboardLink) {
-        dashboardLink.setAttribute("href", "/classic?demo=1");
+        dashboardLink.setAttribute("href", "/spectre-dashboard-v3.html?demo=1");
       }
       if (backLink) {
-        backLink.setAttribute("href", "/classic?demo=1");
+        backLink.setAttribute("href", "/spectre-dashboard-v3.html?demo=1");
       }
       if (billingButton) {
         billingButton.textContent = "Create Account to Manage Billing";
@@ -230,10 +230,10 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
       signOutButton.setAttribute("href", "#");
     }
     if (dashboardLink) {
-      dashboardLink.setAttribute("href", "/classic");
+      dashboardLink.setAttribute("href", "/spectre-dashboard-v3.html?mode=account");
     }
     if (backLink) {
-      backLink.setAttribute("href", "/classic");
+      backLink.setAttribute("href", "/spectre-dashboard-v3.html?mode=account");
     }
     if (upgradeButton) {
       upgradeButton.textContent = "Update Plan";

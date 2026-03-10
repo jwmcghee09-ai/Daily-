@@ -312,15 +312,6 @@ const PENDING_REGISTRATION_KEY = "spectre.pending-registration.v1";
 const PENDING_REGISTRATION_MAX_AGE_MS = 30 * 60 * 1000;
 const HOLDINGS_AI_DEFAULT_PROMPT = "What may be influencing the value of my current holdings?";
 const DEMO_AVAILABLE_TICKERS = ["CBA", "BHP", "MQG", "BTC", "ETH"];
-const DEMO_SESSION_USER: SessionUser = {
-  id: "demo-portfolio",
-  email: "demo@spectre-assets.com",
-  displayName: "Demo Portfolio",
-  createdAt: "2026-01-10T09:30:00.000Z",
-  planTier: "pro",
-  proEnabled: true,
-  subscriptionStatus: "active",
-};
 const DEMO_DIP_ALERTS: PriceDipAlertSetting[] = [
   {
     id: "demo-alert-cba",
@@ -376,8 +367,10 @@ export default function Home() {
   const [holdingsAiLoading, setHoldingsAiLoading] = useState(false);
   const [holdingsAiError, setHoldingsAiError] = useState("");
   const [holdingsAiResult, setHoldingsAiResult] = useState<HoldingsAiAnalysis | null>(null);
+  const [redirectTarget, setRedirectTarget] = useState<string | null>(null);
   const refreshInFlight = useRef(false);
   const lastAutoRefreshAttemptAtRef = useRef(0);
+  const redirectAttemptedRef = useRef<string | null>(null);
 
   const syncDemoModeFromLocation = useCallback(() => {
     if (typeof window === "undefined") {
@@ -401,6 +394,19 @@ export default function Home() {
       window.removeEventListener("popstate", syncDemoModeFromLocation);
     };
   }, [syncDemoModeFromLocation]);
+
+  useEffect(() => {
+    if (!redirectTarget || typeof window === "undefined") {
+      return;
+    }
+
+    if (redirectAttemptedRef.current === redirectTarget) {
+      return;
+    }
+
+    redirectAttemptedRef.current = redirectTarget;
+    window.location.replace(redirectTarget);
+  }, [redirectTarget]);
 
   const completePendingRegistrationAfterCheckout = useCallback(async () => {
     const draft = readPendingRegistrationDraft();
@@ -475,15 +481,10 @@ export default function Home() {
   useEffect(() => {
     const loadSessionAndState = async () => {
       setLoading(true);
+      setRedirectTarget(null);
 
       if (demoMode) {
-        setSessionUser(DEMO_SESSION_USER);
-        setState(DEMO_PORTFOLIO_STATE);
-        setHistoricalRiskEstimate(null);
-        setDipAlerts(DEMO_DIP_ALERTS);
-        setAvailableDipTickers(DEMO_AVAILABLE_TICKERS);
-        setDipAlertMax(10);
-        setDipAlertTicker(DEMO_AVAILABLE_TICKERS[0]);
+        setRedirectTarget("/spectre-dashboard-v3.html?demo=1");
         setBanner(null);
         setLoading(false);
         return;
@@ -508,14 +509,7 @@ export default function Home() {
         }
 
         setSessionUser(normalizeSessionUser(sessionPayload.user));
-
-        const response = await fetch("/api/portfolio", { cache: "no-store" });
-        if (!response.ok) {
-          throw new Error(await parseApiError(response, "Failed to load portfolio state."));
-        }
-
-        const payload = (await response.json()) as PortfolioState;
-        setState(payload);
+        setRedirectTarget("/spectre-dashboard-v3.html?mode=account");
       } catch (error) {
         setBanner({ type: "error", message: error instanceof Error ? error.message : "Failed to load portfolio." });
       } finally {
@@ -2012,6 +2006,25 @@ export default function Home() {
     );
   }
 
+  if (redirectTarget) {
+    return (
+      <div className="spectre-landing spectre-landing--sleek">
+        <main className="spectre-main">
+          <section className="spectre-section">
+            <div className="spectre-wrap">
+              <p className="spectre-section-label">Opening Workspace</p>
+              <h2 className="spectre-section-title">Opening your dashboard…</h2>
+              <p className="spectre-section-sub">
+                You are being redirected now. If nothing happens, use{" "}
+                <a href={redirectTarget} style={{ color: "#c084fc", textDecoration: "underline" }}>this direct link</a>.
+              </p>
+            </div>
+          </section>
+        </main>
+      </div>
+    );
+  }
+
   if (!sessionUser) {
     const landingTicker = [
       { symbol: "BHP", price: "45.82", delta: "+1.2%", tone: "up" },
@@ -2036,7 +2049,7 @@ export default function Home() {
               <a href="#workflow">Workflow</a>
               <a href="#pro-ai">Pro AI</a>
               <a href="#insights">Preview</a>
-              <a href="/classic?demo=1" className="spectre-nav-demo-link">Live Demo</a>
+              <a href="/spectre-dashboard-v3.html?demo=1" className="spectre-nav-demo-link">Live Demo</a>
               <a href="#safety">Data Safety</a>
               <a href="#pricing">Pricing</a>
             </nav>
@@ -2055,7 +2068,7 @@ export default function Home() {
             </button>
           </div>
           <div className={"spectre-nav-mobile" + (landingMenuOpen ? " open" : "")}>
-            <a href="/classic?demo=1" className="spectre-nav-demo-link" onClick={() => setLandingMenuOpen(false)}>
+            <a href="/spectre-dashboard-v3.html?demo=1" className="spectre-nav-demo-link" onClick={() => setLandingMenuOpen(false)}>
               Live Demo
             </a>
             {["features", "workflow", "pro-ai", "insights", "safety", "pricing", "access"].map((section) => (
