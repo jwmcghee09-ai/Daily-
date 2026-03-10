@@ -377,42 +377,6 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   font-size:.82rem;
   color:var(--muted2);
 }
-.boot-copy.error{color:#ffd9d2}
-.boot-detail{
-  margin-top:.4rem;
-  font-family:var(--mono);
-  font-size:.56rem;
-  color:var(--muted);
-  letter-spacing:.05em;
-  line-height:1.55;
-}
-.boot-actions{
-  margin-top:.65rem;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:.55rem;
-  flex-wrap:wrap;
-}
-.boot-btn{
-  appearance:none;
-  border:1px solid var(--border2);
-  border-radius:8px;
-  background:rgba(10,7,18,.82);
-  color:var(--text);
-  font-family:var(--mono);
-  font-size:.56rem;
-  letter-spacing:.1em;
-  text-transform:uppercase;
-  text-decoration:none;
-  padding:.42rem .78rem;
-  cursor:pointer;
-}
-.boot-btn:hover{border-color:rgba(255,255,255,.25);filter:brightness(1.03)}
-.boot-btn.primary{
-  border-color:rgba(255,132,113,.5);
-  background:linear-gradient(135deg,var(--orange) 0%,var(--orange-dk) 100%);
-}
 
 /* PRO CONSOLE */
 .console-wrap{background:linear-gradient(165deg,rgba(16,11,28,.96) 0%,rgba(10,7,18,.95) 100%);border:1px solid rgba(192,132,252,.15);border-radius:16px;padding:1.8rem 2rem;box-shadow:var(--shadow),0 0 30px rgba(155,93,229,.04) inset}
@@ -521,12 +485,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 <div id="boot-splash" role="status" aria-live="polite">
   <div class="boot-shell">
     <span class="boot-label">SPECTRE</span>
-    <p class="boot-copy" id="boot-copy">Loading workspace...</p>
-    <p class="boot-detail" id="boot-detail" hidden></p>
-    <div class="boot-actions">
-      <button type="button" class="boot-btn primary" id="boot-retry-btn" hidden>Retry</button>
-      <a class="boot-btn" id="boot-fallback-link" href="/classic#access" hidden>Go To Sign In</a>
-    </div>
+    <p class="boot-copy">Loading workspace...</p>
   </div>
 </div>
 
@@ -1245,7 +1204,6 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   const SUPPORTED_UPLOAD_FORMATS_LABEL = "CSV, TSV, PSV, TXT, JSON, XLSX, XLS, XLSM, XLSB, NUMBERS, or ODS";
   const INVALID_UPLOAD_FORMAT_MESSAGE = `Does not accept this file type. Please convert to - ${SUPPORTED_UPLOAD_FORMATS_LABEL}.`;
   const INVALID_UPLOAD_MESSAGE_TTL_MS = 5 * 60 * 1000;
-  const API_TIMEOUT_MS = 15 * 1000;
   const AI_RISK_NEGATIVE_KEYWORDS = [
     "concentration",
     "drawdown",
@@ -1327,10 +1285,6 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   const toastEl = document.getElementById("system-toast");
   const uploadInput = document.getElementById("upload-file-input");
   const uploads = Array.from(document.querySelectorAll(".upload-card[data-source]"));
-  const bootCopyEl = document.getElementById("boot-copy");
-  const bootDetailEl = document.getElementById("boot-detail");
-  const bootRetryBtn = document.getElementById("boot-retry-btn");
-  const bootFallbackLink = document.getElementById("boot-fallback-link");
 
   function showToast(message, tone = "success", durationMs = 2600) {
     if (!toastEl) return;
@@ -1361,31 +1315,6 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     document.body.classList.remove("boot-pending");
     const splash = document.getElementById("boot-splash");
     if (splash) splash.remove();
-  }
-
-  function setBootStatus(message, tone = "info", detail = "") {
-    if (bootCopyEl) {
-      bootCopyEl.textContent = message;
-      bootCopyEl.classList.toggle("error", tone === "error");
-    }
-
-    if (bootDetailEl) {
-      if (detail) {
-        bootDetailEl.hidden = false;
-        bootDetailEl.textContent = detail;
-      } else {
-        bootDetailEl.hidden = true;
-        bootDetailEl.textContent = "";
-      }
-    }
-
-    if (bootRetryBtn) {
-      bootRetryBtn.hidden = tone !== "error";
-    }
-
-    if (bootFallbackLink) {
-      bootFallbackLink.hidden = tone !== "error";
-    }
   }
 
   function isDemoMode() {
@@ -2283,51 +2212,26 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   }
 
   async function apiJson(url, options = {}) {
-    const controller = new AbortController();
-    const timeoutId = window.setTimeout(() => controller.abort(), API_TIMEOUT_MS);
-    const externalSignal = options.signal;
-    const onAbort = () => controller.abort();
-
-    if (externalSignal) {
-      if (externalSignal.aborted) {
-        controller.abort();
-      } else {
-        externalSignal.addEventListener("abort", onAbort, { once: true });
-      }
-    }
-
+    const response = await fetch(url, options);
+    let payload = null;
     try {
-      const response = await fetch(url, { ...options, signal: controller.signal });
-      let payload = null;
-      try {
-        payload = await response.json();
-      } catch {
-        payload = null;
-      }
-
-      if (response.status === 401) {
-        state.redirecting = true;
-        window.location.href = "/classic";
-        throw new Error("Please sign in first.");
-      }
-
-      if (!response.ok) {
-        const message = payload && payload.error ? payload.error : `Request failed (${response.status}).`;
-        throw new Error(message);
-      }
-
-      return payload;
-    } catch (error) {
-      if (error instanceof DOMException && error.name === "AbortError") {
-        throw new Error("Request timed out. Please try again.");
-      }
-      throw error;
-    } finally {
-      window.clearTimeout(timeoutId);
-      if (externalSignal) {
-        externalSignal.removeEventListener("abort", onAbort);
-      }
+      payload = await response.json();
+    } catch {
+      payload = null;
     }
+
+    if (response.status === 401) {
+      state.redirecting = true;
+      window.location.href = "/classic";
+      throw new Error("Please sign in first.");
+    }
+
+    if (!response.ok) {
+      const message = payload && payload.error ? payload.error : `Request failed (${response.status}).`;
+      throw new Error(message);
+    }
+
+    return payload;
   }
 
   async function loadSession() {
@@ -3197,10 +3101,6 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   }
 
   function bindEvents() {
-    bootRetryBtn?.addEventListener("click", () => {
-      window.location.reload();
-    });
-
     document.querySelectorAll(".wtab[data-window]").forEach((button) => {
       button.addEventListener("click", async () => {
         document.querySelectorAll(".wtab[data-window]").forEach((tab) => tab.classList.remove("active"));
@@ -3269,30 +3169,22 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   async function boot() {
     state.demoMode = isDemoMode();
     state.redirecting = false;
-    if (bootFallbackLink) {
-      bootFallbackLink.href = state.demoMode ? "/classic" : "/classic#access";
-    }
-    setBootStatus("Checking account session...");
     const bootSafetyTimer = window.setTimeout(() => {
       if (!state.redirecting) {
-        setBootStatus("Opening dashboard...", "info", "The app is taking longer than expected. You can retry if this continues.");
         markBootReady();
       }
     }, 8000);
-    let bootFailed = false;
     bindEvents();
     applyModeChrome();
     try {
       await loadSession();
       if (!state.sessionUser) return;
-      setBootStatus("Loading portfolio data...");
       try {
         await loadPortfolio();
       } catch (error) {
         showToast(error instanceof Error ? error.message : "Failed to load portfolio.", "error");
       }
 
-      setBootStatus("Loading risk, alerts, and analytics...");
       const optionalTasks = await Promise.allSettled([loadAlerts(), loadHistoricalRisk()]);
       for (const task of optionalTasks) {
         if (task.status === "rejected") {
@@ -3302,11 +3194,9 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       }
 
       if (!state.demoMode) {
-        setBootStatus("Refreshing live prices...");
         await refreshPrices({ silent: true, skipButtonState: true });
       }
 
-      setBootStatus("Rendering dashboard...");
       if (!state.redirecting) {
         markBootReady();
       }
@@ -3317,18 +3207,10 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
         }
       });
     } catch (error) {
-      if (!state.redirecting) {
-        bootFailed = true;
-        setBootStatus(
-          "Could not load dashboard.",
-          "error",
-          error instanceof Error ? error.message : "Unexpected error while booting the app.",
-        );
-        showToast(error instanceof Error ? error.message : "Failed to load dashboard.", "error");
-      }
+      showToast(error instanceof Error ? error.message : "Failed to load dashboard.", "error");
     } finally {
       window.clearTimeout(bootSafetyTimer);
-      if (!state.redirecting && !bootFailed) {
+      if (!state.redirecting) {
         markBootReady();
       }
     }

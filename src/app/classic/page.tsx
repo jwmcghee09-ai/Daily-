@@ -311,7 +311,17 @@ interface PendingRegistrationDraft {
 const PENDING_REGISTRATION_KEY = "spectre.pending-registration.v1";
 const PENDING_REGISTRATION_MAX_AGE_MS = 30 * 60 * 1000;
 const HOLDINGS_AI_DEFAULT_PROMPT = "What may be influencing the value of my current holdings?";
+const DEMO_USER_ID = "demo-portfolio";
 const DEMO_AVAILABLE_TICKERS = ["CBA", "BHP", "MQG", "BTC", "ETH"];
+const DEMO_SESSION_USER: SessionUser = {
+  id: DEMO_USER_ID,
+  email: "demo@spectre-assets.com",
+  displayName: "Demo Portfolio",
+  createdAt: "2026-01-10T09:30:00.000Z",
+  planTier: "pro",
+  proEnabled: true,
+  subscriptionStatus: "active",
+};
 const DEMO_DIP_ALERTS: PriceDipAlertSetting[] = [
   {
     id: "demo-alert-cba",
@@ -367,10 +377,8 @@ export default function Home() {
   const [holdingsAiLoading, setHoldingsAiLoading] = useState(false);
   const [holdingsAiError, setHoldingsAiError] = useState("");
   const [holdingsAiResult, setHoldingsAiResult] = useState<HoldingsAiAnalysis | null>(null);
-  const [redirectTarget, setRedirectTarget] = useState<string | null>(null);
   const refreshInFlight = useRef(false);
   const lastAutoRefreshAttemptAtRef = useRef(0);
-  const redirectAttemptedRef = useRef<string | null>(null);
 
   const syncDemoModeFromLocation = useCallback(() => {
     if (typeof window === "undefined") {
@@ -396,17 +404,19 @@ export default function Home() {
   }, [syncDemoModeFromLocation]);
 
   useEffect(() => {
-    if (!redirectTarget || typeof window === "undefined") {
+    if (typeof window === "undefined") {
       return;
     }
 
-    if (redirectAttemptedRef.current === redirectTarget) {
+    if (demoMode) {
+      window.location.replace("/spectre-dashboard-v3.html?demo=1");
       return;
     }
 
-    redirectAttemptedRef.current = redirectTarget;
-    window.location.replace(redirectTarget);
-  }, [redirectTarget]);
+    if (!loading && sessionUser) {
+      window.location.replace("/spectre-dashboard-v3.html?mode=account");
+    }
+  }, [demoMode, loading, sessionUser]);
 
   const completePendingRegistrationAfterCheckout = useCallback(async () => {
     const draft = readPendingRegistrationDraft();
@@ -481,10 +491,15 @@ export default function Home() {
   useEffect(() => {
     const loadSessionAndState = async () => {
       setLoading(true);
-      setRedirectTarget(null);
 
       if (demoMode) {
-        setRedirectTarget("/spectre-dashboard-v3.html?demo=1");
+        setSessionUser(DEMO_SESSION_USER);
+        setState(DEMO_PORTFOLIO_STATE);
+        setHistoricalRiskEstimate(null);
+        setDipAlerts(DEMO_DIP_ALERTS);
+        setAvailableDipTickers(DEMO_AVAILABLE_TICKERS);
+        setDipAlertMax(10);
+        setDipAlertTicker(DEMO_AVAILABLE_TICKERS[0]);
         setBanner(null);
         setLoading(false);
         return;
@@ -509,7 +524,14 @@ export default function Home() {
         }
 
         setSessionUser(normalizeSessionUser(sessionPayload.user));
-        setRedirectTarget("/spectre-dashboard-v3.html?mode=account");
+
+        const response = await fetch("/api/portfolio", { cache: "no-store" });
+        if (!response.ok) {
+          throw new Error(await parseApiError(response, "Failed to load portfolio state."));
+        }
+
+        const payload = (await response.json()) as PortfolioState;
+        setState(payload);
       } catch (error) {
         setBanner({ type: "error", message: error instanceof Error ? error.message : "Failed to load portfolio." });
       } finally {
@@ -1999,25 +2021,6 @@ export default function Home() {
               <p className="spectre-section-label">Loading</p>
               <h2 className="spectre-section-title">Loading your SPECTRE workspace...</h2>
               <p className="spectre-section-sub">Please wait while we confirm your account session and portfolio state.</p>
-            </div>
-          </section>
-        </main>
-      </div>
-    );
-  }
-
-  if (redirectTarget) {
-    return (
-      <div className="spectre-landing spectre-landing--sleek">
-        <main className="spectre-main">
-          <section className="spectre-section">
-            <div className="spectre-wrap">
-              <p className="spectre-section-label">Opening Workspace</p>
-              <h2 className="spectre-section-title">Opening your dashboard…</h2>
-              <p className="spectre-section-sub">
-                You are being redirected now. If nothing happens, use{" "}
-                <a href={redirectTarget} style={{ color: "#c084fc", textDecoration: "underline" }}>this direct link</a>.
-              </p>
             </div>
           </section>
         </main>
