@@ -7220,3 +7220,8 @@ td {
     0 0 18px -14px rgba(255, 77, 26, 0.34),
     0 0 22px -16px rgba(155, 93, 229, 0.22);
 }
+
+/* Restore dashboard flow: hero -> uploads -> metrics for both demo and signed-in */
+.spectre-app > #settings {
+  order: 30;
+}
