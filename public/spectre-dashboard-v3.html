@@ -2793,7 +2793,8 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       .join("");
   }
 
-  async function refreshPrices() {
+  async function refreshPrices(options = {}) {
+    const { silent = false, skipButtonState = false } = options;
     if (state.demoMode) {
       window.location.assign("/classic");
       return;
@@ -2801,7 +2802,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 
     const button = document.getElementById("refresh-prices-btn");
     const original = button ? button.textContent : "Refresh Prices";
-    if (button) {
+    if (button && !skipButtonState) {
       button.textContent = "Refreshing...";
       button.disabled = true;
     }
@@ -2810,20 +2811,24 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       state.portfolio = payload.state;
       await loadHistoricalRisk();
       renderPortfolio();
-      const triggered = Array.isArray(payload.triggeredAlerts) ? payload.triggeredAlerts.length : 0;
-      const failedEmails = Array.isArray(payload.failedAlertTickers) ? payload.failedAlertTickers.length : 0;
-      if (triggered > 0 || failedEmails > 0) {
-        showToast(
-          `Prices refreshed (${payload.updatedTickers.length}). Alerts sent: ${triggered}${failedEmails > 0 ? `, failed: ${failedEmails}` : ""}.`,
-          failedEmails > 0 ? "error" : "success",
-        );
-      } else {
-        showToast(`Prices refreshed (${payload.updatedTickers.length} tickers).`);
+      if (!silent) {
+        const triggered = Array.isArray(payload.triggeredAlerts) ? payload.triggeredAlerts.length : 0;
+        const failedEmails = Array.isArray(payload.failedAlertTickers) ? payload.failedAlertTickers.length : 0;
+        if (triggered > 0 || failedEmails > 0) {
+          showToast(
+            `Prices refreshed (${payload.updatedTickers.length}). Alerts sent: ${triggered}${failedEmails > 0 ? `, failed: ${failedEmails}` : ""}.`,
+            failedEmails > 0 ? "error" : "success",
+          );
+        } else {
+          showToast(`Prices refreshed (${payload.updatedTickers.length} tickers).`);
+        }
       }
     } catch (error) {
-      showToast(error instanceof Error ? error.message : "Price refresh failed.", "error");
+      if (!silent) {
+        showToast(error instanceof Error ? error.message : "Price refresh failed.", "error");
+      }
     } finally {
-      if (button) {
+      if (button && !skipButtonState) {
         button.textContent = original;
         button.disabled = false;
       }
@@ -3139,6 +3144,11 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
           break;
         }
       }
+
+      if (!state.demoMode) {
+        await refreshPrices({ silent: true, skipButtonState: true });
+      }
+
       if (!state.redirecting) {
         markBootReady();
       }
