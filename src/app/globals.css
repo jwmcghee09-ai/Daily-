@@ -7180,3 +7180,178 @@ td {
     letter-spacing: 0.09em;
   }
 }
+
+/* Restore wide split hero header style */
+.spectre-landing--sleek .spectre-hero {
+  min-height: auto;
+  padding: 112px 0 72px;
+}
+
+.spectre-landing--sleek .spectre-hero-layout {
+  grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
+  gap: 3rem;
+  align-items: center;
+}
+
+.spectre-landing--sleek .spectre-hero-left {
+  justify-items: start;
+  text-align: left;
+  gap: 0.9rem;
+}
+
+.spectre-landing--sleek .spectre-hero-eye {
+  justify-content: flex-start;
+}
+
+.spectre-landing--sleek .spectre-hero-title {
+  font-family: var(--sl-sans);
+  font-size: clamp(3.1rem, 5.9vw, 7.2rem);
+  line-height: 0.92;
+  letter-spacing: -0.015em;
+  font-weight: 800;
+  max-width: 10.8ch;
+  color: #f1efff;
+}
+
+.spectre-landing--sleek .spectre-hero-title span {
+  display: inline;
+  color: transparent;
+  background: linear-gradient(125deg, #c084fc 0%, #ff4d1a 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.spectre-landing--sleek .spectre-hero-desc {
+  max-width: 54ch;
+  font-size: 0.95rem;
+}
+
+.spectre-landing--sleek .spectre-hero-actions .spectre-btn {
+  min-width: 270px;
+  text-align: center;
+  border-radius: 8px;
+}
+
+.spectre-landing--sleek .spectre-hero-panels {
+  grid-template-columns: repeat(4, minmax(0, max-content));
+  justify-content: start;
+  gap: 0.52rem;
+  margin-top: 0.18rem;
+}
+
+.spectre-landing--sleek .spectre-hero-panels article {
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(14, 11, 22, 0.66);
+  box-shadow: none;
+  padding: 0.32rem 0.8rem;
+}
+
+.spectre-landing--sleek .spectre-hero-panels h3 {
+  margin: 0;
+  font-size: 0.6rem;
+  letter-spacing: 0.13em;
+  color: #d7d2ea;
+}
+
+.spectre-landing--sleek .spectre-hero-proof {
+  width: 100%;
+  margin-top: 0.8rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  gap: 0.95rem;
+}
+
+.spectre-landing--sleek .spectre-hero-proof article {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+}
+
+.spectre-landing--sleek .spectre-hero-proof strong {
+  margin-bottom: 0.24rem;
+  font-family: "Bebas Neue", "Avenir Next Condensed", var(--font-geist-sans), sans-serif;
+  font-size: clamp(2.7rem, 3.4vw, 3.35rem);
+  line-height: 0.9;
+  letter-spacing: 0.02em;
+  color: #f4f2ff;
+}
+
+.spectre-landing--sleek .spectre-hero-proof strong span {
+  font-family: "DM Mono", "Azeret Mono", var(--font-geist-mono), monospace;
+  font-size: 0.58em;
+  letter-spacing: 0.05em;
+  color: #b4afca;
+}
+
+.spectre-landing--sleek .spectre-hero-proof span {
+  font-family: "DM Mono", "Azeret Mono", var(--font-geist-mono), monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #9b96b6;
+}
+
+.spectre-landing--sleek .spectre-hero-dashboard {
+  max-width: 620px;
+  width: 100%;
+  border-radius: 16px;
+  padding: 1.5rem;
+  animation: none;
+}
+
+.spectre-landing--sleek .spectre-snapshot-card {
+  min-height: 90px;
+}
+
+.spectre-landing--sleek .spectre-snapshot-card strong {
+  font-size: clamp(2.3rem, 3.1vw, 3rem);
+}
+
+@media (max-width: 1180px) {
+  .spectre-landing--sleek .spectre-hero-layout {
+    grid-template-columns: 1fr;
+    gap: 1.8rem;
+  }
+
+  .spectre-landing--sleek .spectre-hero-left {
+    justify-items: center;
+    text-align: center;
+  }
+
+  .spectre-landing--sleek .spectre-hero-eye {
+    justify-content: center;
+  }
+
+  .spectre-landing--sleek .spectre-hero-title,
+  .spectre-landing--sleek .spectre-hero-desc {
+    max-width: 100%;
+  }
+
+  .spectre-landing--sleek .spectre-hero-panels {
+    grid-template-columns: repeat(2, minmax(0, max-content));
+    justify-content: center;
+  }
+}
+
+@media (max-width: 680px) {
+  .spectre-landing--sleek .spectre-hero-actions {
+    width: min(100%, 420px);
+    display: grid;
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+
+  .spectre-landing--sleek .spectre-hero-actions .spectre-btn {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .spectre-landing--sleek .spectre-hero-panels {
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+}
