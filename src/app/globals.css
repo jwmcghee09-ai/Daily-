@@ -7367,3 +7367,39 @@ td {
     grid-template-columns: 1fr;
   }
 }
+
+/* Landing box typography polish */
+.spectre-landing--sleek .spectre-ops-grid article h3,
+.spectre-landing--sleek .spectre-callouts article h3,
+.spectre-landing--sleek .spectre-feature-grid article h3,
+.spectre-landing--sleek .spectre-steps-grid article h3,
+.spectre-landing--sleek .spectre-safety-grid article h3,
+.spectre-landing--sleek .spectre-plan h3,
+.spectre-landing--sleek .spectre-db-card h3,
+.spectre-landing--sleek .spectre-signin-heading {
+  font-family: "Bebas Neue", "Avenir Next Condensed", var(--font-geist-sans), sans-serif;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  line-height: 1.06;
+}
+
+.spectre-landing--sleek .spectre-feature-grid article p,
+.spectre-landing--sleek .spectre-ops-grid article span,
+.spectre-landing--sleek .spectre-steps-grid article span,
+.spectre-landing--sleek .spectre-safety-grid article p,
+.spectre-landing--sleek .spectre-callouts article span,
+.spectre-landing--sleek .spectre-plan ul li,
+.spectre-landing--sleek .spectre-plan .sub,
+.spectre-landing--sleek .spectre-signin-sub,
+.spectre-landing--sleek .spectre-db-card span {
+  font-family: "DM Sans", var(--font-geist-sans), sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  line-height: 1.64;
+}
+
+.spectre-landing--sleek .spectre-plan .tier,
+.spectre-landing--sleek .spectre-plan .badge,
+.spectre-landing--sleek .spectre-db-card p {
+  font-family: "DM Mono", "Azeret Mono", var(--font-geist-mono), monospace;
+}
