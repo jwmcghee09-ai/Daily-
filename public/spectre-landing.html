@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>SPECTRE â€” Portfolio Risk Analysis</title>
+<title>SPECTRE - Portfolio Risk Analysis</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
@@ -165,18 +165,18 @@ a { text-decoration: none; color: inherit; }
 .fco a { color: var(--muted2); }
 @media (max-width: 900px) { .wrap { padding-inline: 1.1rem; } .nav-links { display: none; } .hero-layout, .dbf-grid { grid-template-columns: 1fr; } .hero-right { display: none; } .pro-card ul, .pro-facts { grid-template-columns: 1fr; } }
 @media (max-width: 640px) { .ops, .callouts, .feat, .steps, .safety, .pricing, .hero-panels { grid-template-columns: 1fr; } }
-.access-shell { display: grid; grid-template-columns: 1fr 440px; gap: 3rem; align-items: start; }
+.access-shell { display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 4rem; align-items: start; }
+.access-copy { padding-top: 1rem; }
 .access-copy p { max-width: 560px; }
-.access-points { display: grid; gap: 0.65rem; margin-top: 1rem; }
-.access-points p { display: flex; gap: 0.6rem; color: var(--muted2); font-size: 0.88rem; }
-.access-points p::before { content: "â€”"; color: var(--purple-hi); flex-shrink: 0; }
-.auth-card { background: var(--card2); border: 1px solid var(--border); border-radius: 10px; padding: 1.8rem; box-shadow: 0 20px 60px rgba(0,0,0,0.4); }
-.auth-head { display: flex; justify-content: space-between; align-items: center; gap: 0.8rem; margin-bottom: 1rem; }
-.auth-head h3 { font-family: var(--disp); font-size: 1.8rem; }
-.auth-toggle { display: flex; gap: 0.45rem; }
-.auth-toggle button, .checkout-choice { background: rgba(255,255,255,0.04); border: 1px solid var(--border2); border-radius: 4px; color: var(--muted2); font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase; padding: 0.46rem 0.72rem; cursor: pointer; transition: border-color 0.18s, color 0.18s, background 0.18s; }
-.auth-toggle button.active, .checkout-choice.active { background: rgba(124,77,255,0.18); border-color: rgba(208,179,255,0.34); color: #fff; }
-.auth-message { display: none; margin-bottom: 1rem; border-radius: 6px; padding: 0.8rem 0.9rem; font-size: 0.82rem; line-height: 1.6; }
+.access-copy .h2 { max-width: 540px; font-size: clamp(1.9rem, 3.8vw, 4rem); }
+.access-points { display: grid; gap: 0.9rem; margin-top: 2.25rem; }
+.access-points p { display: flex; gap: 0.7rem; color: var(--muted2); font-size: 0.88rem; line-height: 1.65; }
+.access-points p::before { content: "-"; color: var(--purple-hi); flex-shrink: 0; }
+.auth-card { background: rgba(8,5,18,0.98); border: 1px solid rgba(208,179,255,0.18); border-radius: 14px; padding: 2rem; box-shadow: 0 30px 80px rgba(0,0,0,0.45); }
+.auth-head { margin-bottom: 1.25rem; }
+.auth-head h3 { font-family: var(--sans); font-size: clamp(2rem, 3vw, 2.35rem); font-weight: 700; letter-spacing: -0.04em; line-height: 1; margin-bottom: 0.4rem; }
+.auth-subtitle { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.auth-message { display: none; margin-bottom: 1rem; border-radius: 8px; padding: 0.8rem 0.9rem; font-size: 0.82rem; line-height: 1.6; }
 .auth-message.show { display: block; }
 .auth-message.info { background: rgba(192,132,252,0.1); border: 1px solid rgba(192,132,252,0.24); color: #e9dbff; }
 .auth-message.success { background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.24); color: #d7ffef; }
@@ -184,18 +184,27 @@ a { text-decoration: none; color: inherit; }
 .auth-form { display: grid; gap: 0.9rem; }
 .auth-field { display: grid; gap: 0.32rem; }
 .auth-field label { font-family: var(--mono); font-size: 0.57rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
-.auth-field input { background: rgba(6,3,14,0.8); border: 1px solid var(--border); border-radius: 4px; color: var(--text); font-family: var(--mono); font-size: 0.82rem; padding: 0.68rem 0.78rem; outline: none; width: 100%; }
-.auth-field input:focus { border-color: var(--border2); }
-.auth-inline { display: flex; align-items: center; gap: 0.55rem; color: var(--muted2); font-size: 0.8rem; }
-.auth-inline input { width: auto; accent-color: var(--orange); }
-.auth-submit { width: 100%; }
-.auth-divider { height: 1px; background: var(--border); margin: 1.1rem 0; }
-.checkout-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.55rem; margin-top: 0.75rem; }
+.auth-field input { background: #dfe3eb; border: 1px solid rgba(255,255,255,0.06); border-radius: 5px; color: #11131a; font-family: var(--mono); font-size: 0.82rem; padding: 0.78rem 0.88rem; outline: none; width: 100%; }
+.auth-field input::placeholder { color: #596070; }
+.auth-field input:focus { border-color: rgba(255,255,255,0.2); }
+.password-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.5rem; align-items: end; }
+.show-password { min-width: 62px; height: 40px; align-self: end; border: 1px solid rgba(208,179,255,0.18); background: rgba(255,255,255,0.03); border-radius: 5px; color: var(--muted2); font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase; transition: border-color 0.18s, color 0.18s; }
+.show-password:hover { border-color: rgba(255,255,255,0.24); color: #fff; }
+.auth-inline { display: flex; align-items: flex-start; gap: 0.55rem; color: var(--muted2); font-size: 0.8rem; line-height: 1.5; }
+.auth-inline input { width: auto; margin-top: 0.1rem; accent-color: var(--orange); }
+.auth-submit { width: 100%; margin-top: 0.15rem; }
+.auth-divider { height: 1px; background: var(--border); margin: 1.2rem 0 1rem; }
+.utility-row { display: flex; flex-wrap: wrap; gap: 0.55rem; margin-bottom: 1.2rem; }
+.utility-pill { border: 1px solid rgba(255,106,61,0.6); background: rgba(255,255,255,0.02); border-radius: 999px; color: #fff; font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.04em; padding: 0.48rem 0.82rem; transition: background 0.18s, border-color 0.18s; }
+.utility-pill:hover, .utility-pill.active { background: rgba(255,106,61,0.12); border-color: rgba(255,106,61,0.9); }
 .checkout-actions { display: grid; gap: 0.6rem; }
-.checkout-actions .btn { width: 100%; }
-.muted-note { font-family: var(--mono); font-size: 0.58rem; line-height: 1.7; color: var(--muted); }
-@media (max-width: 900px) { .access-shell { grid-template-columns: 1fr; } }
-@media (max-width: 640px) { .auth-head { flex-direction: column; align-items: stretch; } .checkout-row { grid-template-columns: 1fr; } }
+.checkout-link { display: flex; align-items: center; justify-content: space-between; gap: 1rem; width: 100%; border: 1px solid rgba(208,179,255,0.12); border-radius: 6px; background: rgba(255,255,255,0.015); color: var(--muted2); font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.09em; text-transform: uppercase; padding: 0.95rem 1rem; transition: border-color 0.18s, transform 0.18s; }
+.checkout-link strong { color: var(--orange); font-weight: 500; }
+.checkout-link.active { border-color: rgba(255,106,61,0.6); box-shadow: 0 0 0 1px rgba(255,106,61,0.08); }
+.checkout-link:hover { border-color: rgba(255,255,255,0.22); transform: translateY(-1px); }
+.muted-note { font-family: var(--mono); font-size: 0.58rem; line-height: 1.7; color: var(--muted); margin-top: 0.15rem; }
+@media (max-width: 900px) { .access-shell { grid-template-columns: 1fr; gap: 2rem; } .access-copy { padding-top: 0; } }
+@media (max-width: 640px) { .password-row { grid-template-columns: 1fr; } .show-password { width: 100%; } .utility-row { gap: 0.45rem; } .auth-card { padding: 1.35rem; } }
 </style>
 </head>
 <body>
@@ -468,25 +477,22 @@ a { text-decoration: none; color: inherit; }
   <div class="wrap access-shell">
     <div class="access-copy">
       <p class="kicker">Client Access</p>
-      <h2 class="h2">Stay on this page and enter your private SPECTRE workspace.</h2>
-      <p class="sub">Sign in, create your account, or start Starter or Pro checkout without being sent back to the old landing design.</p>
+      <h2 class="h2">Enter your private SPECTRE workspace.</h2>
+      <p class="sub">Sign in to continue from your last snapshot, or create your account with Stripe checkout in one flow.</p>
       <div class="access-points">
-        <p>Sign in and go straight to your dashboard.</p>
-        <p>Create your account here, then verify your email before logging in.</p>
-        <p>Choose Starter or Pro checkout from the same section below.</p>
+        <p>System for Portfolio Exposure, Correlation, Threat &amp; Risk Evaluation.</p>
+        <p>Designed for retail investors who track portfolios.</p>
+        <p>Single interface for holdings, exposure, and risk posture.</p>
       </div>
     </div>
     <div class="auth-card">
       <div class="auth-head">
         <h3 id="auth-title">Sign In</h3>
-        <div class="auth-toggle">
-          <button type="button" id="mode-login" class="active">Sign In</button>
-          <button type="button" id="mode-register">Create Account</button>
-        </div>
+        <p class="auth-subtitle">Access your private SPECTRE workspace</p>
       </div>
       <div id="auth-message" class="auth-message"></div>
       <form id="auth-form" class="auth-form">
-        <div class="auth-field" id="name-field" style="display:none;">
+        <div class="auth-field" id="name-field" hidden>
           <label for="auth-name">Display Name</label>
           <input id="auth-name" name="displayName" type="text" placeholder="Your name" autocomplete="name" />
         </div>
@@ -494,26 +500,35 @@ a { text-decoration: none; color: inherit; }
           <label for="auth-email">Email</label>
           <input id="auth-email" name="email" type="email" placeholder="you@example.com" autocomplete="email" required />
         </div>
-        <div class="auth-field">
-          <label for="auth-password">Password</label>
-          <input id="auth-password" name="password" type="password" placeholder="Minimum 8 characters" autocomplete="current-password" required />
+        <div class="password-row">
+          <div class="auth-field">
+            <label for="auth-password">Password</label>
+            <input id="auth-password" name="password" type="password" placeholder="Minimum 8 characters" autocomplete="current-password" required />
+          </div>
+          <button type="button" class="show-password" id="show-password">Show</button>
         </div>
-        <label class="auth-inline" id="terms-field" style="display:none;">
+        <div class="auth-field" id="token-field" hidden>
+          <label for="auth-token">Reset Token</label>
+          <input id="auth-token" name="token" type="text" placeholder="Paste reset token" autocomplete="off" />
+        </div>
+        <label class="auth-inline" id="terms-field" hidden>
           <input id="auth-terms" type="checkbox" />
           <span>I agree to the <a href="/terms" style="color:#fff;">Terms</a> and <a href="/privacy" style="color:#fff;">Privacy Policy</a>.</span>
         </label>
         <button type="submit" id="auth-submit" class="btn btn-pri auth-submit">Sign In</button>
       </form>
+      <div class="utility-row">
+        <button type="button" class="utility-pill" id="mode-register">Use Register</button>
+        <button type="button" class="utility-pill" id="resend-verification">Resend Verification</button>
+        <button type="button" class="utility-pill" id="forgot-password">Forgot Password</button>
+        <button type="button" class="utility-pill" id="mode-reset">Reset With Token</button>
+      </div>
       <div class="auth-divider"></div>
-      <p class="kicker or" style="margin-bottom:0.9rem;">Choose Plan</p>
-      <div class="checkout-row">
-        <button type="button" class="checkout-choice active" data-checkout-plan="starter">Starter</button>
-        <button type="button" class="checkout-choice" data-checkout-plan="pro">Pro</button>
-      </div>
       <div class="checkout-actions">
-        <button type="button" id="checkout-button" class="btn btn-pri">Start Starter Checkout</button>
-        <p class="muted-note">Use the same email above for checkout if you are not signed in yet. After account creation, verify your email, sign in, then your paid access will follow your Stripe subscription.</p>
+        <button type="button" class="checkout-link" data-checkout-plan="pro"><span>Create Pro Account</span><strong>$15/MO</strong></button>
+        <button type="button" class="checkout-link active" data-checkout-plan="starter"><span>Create Starter Account</span><strong>$3/MO</strong></button>
       </div>
+      <p class="muted-note">Use the same email above for checkout if you are not signed in yet. After account creation, verify your email, sign in, then your paid access will follow your Stripe subscription.</p>
     </div>
   </div>
 </section>
@@ -531,18 +546,24 @@ a { text-decoration: none; color: inherit; }
   const form = document.getElementById('auth-form');
   const nameField = document.getElementById('name-field');
   const termsField = document.getElementById('terms-field');
+  const tokenField = document.getElementById('token-field');
   const submitButton = document.getElementById('auth-submit');
-  const modeLogin = document.getElementById('mode-login');
-  const modeRegister = document.getElementById('mode-register');
   const emailInput = document.getElementById('auth-email');
   const passwordInput = document.getElementById('auth-password');
   const nameInput = document.getElementById('auth-name');
+  const tokenInput = document.getElementById('auth-token');
   const termsInput = document.getElementById('auth-terms');
-  const checkoutButton = document.getElementById('checkout-button');
-  const checkoutChoices = Array.from(document.querySelectorAll('[data-checkout-plan]'));
+  const showPasswordButton = document.getElementById('show-password');
+  const registerButton = document.getElementById('mode-register');
+  const resendButton = document.getElementById('resend-verification');
+  const forgotButton = document.getElementById('forgot-password');
+  const resetModeButton = document.getElementById('mode-reset');
+  const checkoutLinks = Array.from(document.querySelectorAll('[data-checkout-plan]'));
   const accessLinks = Array.from(document.querySelectorAll('.js-access-link'));
+
   let mode = 'login';
   let selectedPlan = 'starter';
+
   function setMessage(text, tone) {
     if (!text) {
       message.className = 'auth-message';
@@ -552,56 +573,135 @@ a { text-decoration: none; color: inherit; }
     message.className = 'auth-message show ' + tone;
     message.textContent = text;
   }
+
   function setMode(nextMode) {
     mode = nextMode;
     const isRegister = nextMode === 'register';
-    title.textContent = isRegister ? 'Create Account' : 'Sign In';
-    nameField.style.display = isRegister ? 'grid' : 'none';
-    termsField.style.display = isRegister ? 'flex' : 'none';
-    submitButton.textContent = isRegister ? 'Create Account' : 'Sign In';
-    modeLogin.classList.toggle('active', !isRegister);
-    modeRegister.classList.toggle('active', isRegister);
+    const isReset = nextMode === 'reset';
+
+    title.textContent = isRegister ? 'Create Account' : isReset ? 'Reset Password' : 'Sign In';
+    nameField.hidden = !isRegister;
+    termsField.hidden = !isRegister;
+    tokenField.hidden = !isReset;
+    submitButton.textContent = isRegister ? 'Create Account' : isReset ? 'Reset Password' : 'Sign In';
     passwordInput.autocomplete = isRegister ? 'new-password' : 'current-password';
+
+    registerButton.classList.toggle('active', isRegister);
+    resetModeButton.classList.toggle('active', isReset);
     setMessage('', 'info');
   }
+
   function setPlan(plan) {
     selectedPlan = plan === 'pro' ? 'pro' : 'starter';
-    checkoutChoices.forEach((choice) => choice.classList.toggle('active', choice.dataset.checkoutPlan === selectedPlan));
-    checkoutButton.textContent = selectedPlan === 'pro' ? 'Start Pro Checkout' : 'Start Starter Checkout';
+    checkoutLinks.forEach((link) => link.classList.toggle('active', link.dataset.checkoutPlan === selectedPlan));
   }
+
+  function togglePassword() {
+    const isHidden = passwordInput.type === 'password';
+    passwordInput.type = isHidden ? 'text' : 'password';
+    showPasswordButton.textContent = isHidden ? 'Hide' : 'Show';
+  }
+
+  async function postJson(url, body) {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload.error || payload.message || 'Request failed.');
+    }
+    return payload;
+  }
+
   accessLinks.forEach((link) => {
     link.addEventListener('click', () => {
       const plan = link.dataset.plan;
-      if (plan) setPlan(plan);
+      if (plan) {
+        setPlan(plan);
+      }
     });
   });
-  checkoutChoices.forEach((choice) => {
-    choice.addEventListener('click', () => setPlan(choice.dataset.checkoutPlan));
+
+  checkoutLinks.forEach((link) => {
+    link.addEventListener('click', async () => {
+      setPlan(link.dataset.checkoutPlan);
+      const email = emailInput.value.trim();
+      setMessage('', 'info');
+      link.disabled = true;
+      link.style.opacity = '0.7';
+      try {
+        const payload = await postJson('/api/billing/checkout', { email, plan: selectedPlan });
+        if (!payload.url) {
+          throw new Error('Unable to start checkout.');
+        }
+        window.location.href = payload.url;
+      } catch (error) {
+        setMessage(error instanceof Error ? error.message : 'Checkout failed.', 'error');
+      } finally {
+        link.disabled = false;
+        link.style.opacity = '1';
+      }
+    });
   });
-  modeLogin.addEventListener('click', () => setMode('login'));
-  modeRegister.addEventListener('click', () => setMode('register'));
+
+  showPasswordButton.addEventListener('click', togglePassword);
+  registerButton.addEventListener('click', () => setMode(mode === 'register' ? 'login' : 'register'));
+  resetModeButton.addEventListener('click', () => setMode(mode === 'reset' ? 'login' : 'reset'));
+
+  resendButton.addEventListener('click', async () => {
+    const email = emailInput.value.trim();
+    setMessage('', 'info');
+    try {
+      const payload = await postJson('/api/auth/verify/resend', { email });
+      setMessage(payload.message || 'Verification email sent.', 'success');
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Unable to resend verification.', 'error');
+    }
+  });
+
+  forgotButton.addEventListener('click', async () => {
+    const email = emailInput.value.trim();
+    setMessage('', 'info');
+    try {
+      const payload = await postJson('/api/auth/password/request', { email });
+      setMessage(payload.message || 'Password reset email sent if the account exists.', 'success');
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Unable to request password reset.', 'error');
+    }
+  });
+
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
     setMessage('', 'info');
+
     const email = emailInput.value.trim();
     const password = passwordInput.value;
     const displayName = nameInput.value.trim();
     const acceptsTerms = Boolean(termsInput.checked);
+    const token = tokenInput.value.trim();
+
     submitButton.disabled = true;
     submitButton.style.opacity = '0.7';
+
     try {
       if (mode === 'login') {
-        const response = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
-        const payload = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(payload.error || 'Login failed.');
+        await postJson('/api/auth/login', { email, password });
         window.location.href = '/dashboard?mode=account';
         return;
       }
-      const response = await fetch('/api/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password, displayName, acceptsTerms }) });
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(payload.error || 'Failed to create account.');
+
+      if (mode === 'register') {
+        const payload = await postJson('/api/auth/register', { email, password, displayName, acceptsTerms });
+        setMode('login');
+        setMessage(payload.message || 'Account created. Check your email to verify it before signing in.', 'success');
+        return;
+      }
+
+      const payload = await postJson('/api/auth/password/reset', { token, newPassword: password });
       setMode('login');
-      setMessage(payload.message || 'Account created. Check your email to verify it before signing in.', 'success');
+      setMessage(payload.message || 'Password reset complete. You can now sign in.', 'success');
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Request failed.', 'error');
     } finally {
@@ -609,40 +709,28 @@ a { text-decoration: none; color: inherit; }
       submitButton.style.opacity = '1';
     }
   });
-  checkoutButton.addEventListener('click', async () => {
-    const email = emailInput.value.trim();
-    setMessage('', 'info');
-    checkoutButton.disabled = true;
-    checkoutButton.style.opacity = '0.7';
-    try {
-      const response = await fetch('/api/billing/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, plan: selectedPlan }) });
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok || !payload.url) throw new Error(payload.error || 'Unable to start checkout.');
-      window.location.href = payload.url;
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Checkout failed.', 'error');
-      checkoutButton.disabled = false;
-      checkoutButton.style.opacity = '1';
-    }
-  });
+
+  setMode('login');
+  setPlan('starter');
+
   const params = new URLSearchParams(window.location.search);
   if (params.get('checkout') === 'success') {
     setMessage((params.get('plan') === 'pro' ? 'Pro' : 'Starter') + ' checkout complete. Sign in or open your dashboard after Stripe finishes activating access.', 'success');
   } else if (params.get('checkout') === 'cancelled') {
     setMessage('Stripe checkout was cancelled.', 'info');
   } else if (params.get('verified') === 'success') {
-    setMode('login');
     setMessage('Email verified. You can now sign in.', 'success');
   } else if (params.get('verified') === 'invalid') {
-    setMode('login');
     setMessage('Verification link is invalid or expired.', 'error');
   } else if (params.get('verified') === 'rate_limited') {
-    setMode('login');
     setMessage('Too many verification attempts. Please wait and try again.', 'error');
   }
-  setMode('login');
-  setPlan('starter');
 })();
 </script>
 </body>
 </html>
+
+
+
+
+
