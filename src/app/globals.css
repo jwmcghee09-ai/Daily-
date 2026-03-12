@@ -7205,11 +7205,11 @@ td {
 
 .spectre-landing--sleek .spectre-hero-title {
   font-family: var(--sl-sans);
-  font-size: clamp(3.1rem, 5.9vw, 7.2rem);
-  line-height: 0.92;
+  font-size: clamp(2.45rem, 4.6vw, 5.2rem);
+  line-height: 0.94;
   letter-spacing: -0.015em;
   font-weight: 800;
-  max-width: 10.8ch;
+  max-width: 11.6ch;
   color: #f1efff;
 }
 
@@ -7257,6 +7257,8 @@ td {
 
 .spectre-landing--sleek .spectre-hero-proof {
   width: 100%;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   margin-top: 0.8rem;
   padding-top: 1.2rem;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
@@ -7264,18 +7266,20 @@ td {
 }
 
 .spectre-landing--sleek .spectre-hero-proof article {
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(20, 14, 33, 0.85) 0%, rgba(11, 8, 20, 0.92) 100%);
+  box-shadow: 0 16px 32px -26px rgba(0, 0, 0, 0.95);
+  padding: 0.72rem 0.82rem 0.76rem;
+  display: grid;
+  gap: 0.24rem;
 }
 
 .spectre-landing--sleek .spectre-hero-proof strong {
-  margin-bottom: 0.24rem;
+  margin-bottom: 0.05rem;
   font-family: "Bebas Neue", "Avenir Next Condensed", var(--font-geist-sans), sans-serif;
-  font-size: clamp(2.7rem, 3.4vw, 3.35rem);
-  line-height: 0.9;
+  font-size: clamp(1.85rem, 2.3vw, 2.4rem);
+  line-height: 0.96;
   letter-spacing: 0.02em;
   color: #f4f2ff;
 }
@@ -7289,8 +7293,8 @@ td {
 
 .spectre-landing--sleek .spectre-hero-proof span {
   font-family: "DM Mono", "Azeret Mono", var(--font-geist-mono), monospace;
-  font-size: 0.58rem;
-  letter-spacing: 0.18em;
+  font-size: 0.54rem;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: #9b96b6;
 }
@@ -7335,6 +7339,10 @@ td {
     grid-template-columns: repeat(2, minmax(0, max-content));
     justify-content: center;
   }
+
+  .spectre-landing--sleek .spectre-hero-proof {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 680px) {
@@ -7353,5 +7361,9 @@ td {
   .spectre-landing--sleek .spectre-hero-panels {
     grid-template-columns: 1fr;
     width: 100%;
+  }
+
+  .spectre-landing--sleek .spectre-hero-proof {
+    grid-template-columns: 1fr;
   }
 }
