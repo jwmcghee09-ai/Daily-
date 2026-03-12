@@ -60,7 +60,7 @@ export async function POST(request: Request) {
         proPriceId: priceId,
       });
       if (upgraded) {
-        return NextResponse.json({ url: `${baseUrl}/spectre-settings-v3.html` });
+        return NextResponse.json({ url: `${baseUrl}/settings` });
       }
     }
 

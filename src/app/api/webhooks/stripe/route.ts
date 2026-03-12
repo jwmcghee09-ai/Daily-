@@ -4,9 +4,6 @@ import Stripe from "stripe";
 import { notifyWebhookFailure } from "@/lib/alerts";
 import {
   createEmailVerificationRecord,
-  deleteUserAccountData,
-  findUserIdByStripeCustomerId,
-  findUserIdByStripeSubscriptionId,
   findAuthUserByEmail,
   hasActiveEmailVerificationForUser,
   updateBillingSubscriptionByStripeCustomerId,
@@ -178,23 +175,6 @@ async function handleStripeEvent(event: Stripe.Event): Promise<void> {
       if (customerId) {
         updateBillingSubscriptionByStripeCustomerId(customerId, patch);
         updatePreSignupBillingByStripeCustomerId(customerId, patch);
-      }
-
-      if (event.type === "customer.subscription.deleted") {
-        const deletedUserId =
-          userId ||
-          (subscriptionId ? findUserIdByStripeSubscriptionId(subscriptionId) : null) ||
-          (customerId ? findUserIdByStripeCustomerId(customerId) : null);
-
-        const normalizedStatus = (status || "").trim().toLowerCase();
-        const shouldDeleteUserData =
-          normalizedStatus === "canceled" ||
-          normalizedStatus === "unpaid" ||
-          normalizedStatus === "incomplete_expired";
-
-        if (deletedUserId && shouldDeleteUserData) {
-          deleteUserAccountData(deletedUserId);
-        }
       }
 
       return;

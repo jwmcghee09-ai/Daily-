@@ -3,7 +3,6 @@ import {
   createAuthUser,
   createEmailVerificationRecord,
   findAuthUserByEmail,
-  hasActivePreSignupBillingByEmail,
   linkPreSignupBillingToUser,
 } from "@/lib/db";
 import {
@@ -50,7 +49,7 @@ export async function POST(request: Request) {
     const acceptsTerms = payload.acceptsTerms === true;
 
     if (!acceptsTerms) {
-      return NextResponse.json({ error: "You must agree to the Terms & Conditions to create an account." }, { status: 400 });
+      return NextResponse.json({ error: "You must agree to the Terms of Service and Privacy Policy to create an account." }, { status: 400 });
     }
 
     if (!isLikelyEmail(email)) {
@@ -71,14 +70,7 @@ export async function POST(request: Request) {
     const existing = findAuthUserByEmail(email);
     if (existing) {
       return NextResponse.json({ error: "An account with this email already exists." }, { status: 409 });
-    }
-
-    if (!hasActivePreSignupBillingByEmail(email)) {
-      return NextResponse.json(
-        { error: "Complete Stripe checkout first, then sign up with the same email." },
-        { status: 402 },
-      );
-    }
+    }
 
     const passwordHash = hashPassword(password);
     const termsAcceptedAt = new Date().toISOString();
@@ -107,7 +99,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       authenticated: false,
       verificationRequired: true,
-      message: "Account created. Check your email to verify before signing in.",
+      message: "Account created. Check your email to verify before signing in, then choose your plan from pricing or settings.",
     });
   } catch {
     return NextResponse.json({ error: "Failed to create account." }, { status: 500 });

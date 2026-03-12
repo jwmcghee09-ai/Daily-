@@ -1,4 +1,4 @@
-﻿{
+{
     "name":  "aladdin-web",
     "version":  "0.1.0",
     "private":  true,
@@ -16,7 +16,8 @@
                     "restore:db":  "node scripts/restore-db.mjs",
                     "dev:local":  "powershell -ExecutionPolicy Bypass -File scripts/dev-local.ps1",
                     "sync:push":  "powershell -ExecutionPolicy Bypass -File scripts/save-and-push.ps1",
-                    "dev:sync":  "powershell -ExecutionPolicy Bypass -File scripts/dev-sync.ps1"
+                    "dev:sync":  "powershell -ExecutionPolicy Bypass -File scripts/dev-sync.ps1",
+                    "launch:check":  "node scripts/release-readiness.mjs"
                 },
     "dependencies":  {
                          "@aws-sdk/client-s3":  "^3.1002.0",
