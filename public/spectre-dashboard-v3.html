@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>SPECTRE - Dashboard</title>
+<title>SPECTRE — Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet"/>
@@ -34,7 +34,7 @@ html{scroll-behavior:smooth}
 body{background:var(--bg);color:var(--text);font-family:var(--sans);font-weight:400;line-height:1.7;overflow-x:hidden}
 body.boot-pending > *:not(#boot-splash):not(script){display:none!important}
 
-/* BACKGROUND â€” exact landing page */
+/* BACKGROUND — exact landing page */
 body::before{
   content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   background:
@@ -51,7 +51,7 @@ body::after{
 .wrap{width:100%;max-width:var(--max);margin:0 auto;padding:0 2.5rem;position:relative;z-index:2}
 @media(max-width:600px){.wrap{padding:0 1.1rem}}
 
-/* â”€â”€ NAV â”€â”€ */
+/* ── NAV ── */
 nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(10,6,20,.9);backdrop-filter:blur(22px);border-bottom:1px solid var(--border)}
 .nav-inner{max-width:var(--max);margin:0 auto;padding:0 2.5rem;height:100%;display:flex;align-items:center;justify-content:space-between}
 .nav-logo{font-family:var(--disp);font-size:1.45rem;letter-spacing:.14em;color:var(--orange);text-shadow:0 0 32px rgba(255,77,26,.4);text-decoration:none}
@@ -63,7 +63,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
 .nav-btn{font-family:var(--mono);font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted2);background:rgba(255,255,255,.04);border:1px solid var(--border2);border-radius:4px;padding:.32rem .8rem;cursor:pointer;transition:all .2s;text-decoration:none}
 .nav-btn:hover{color:var(--text);border-color:rgba(255,255,255,.22)}
 
-/* â”€â”€ HERO HEADER â”€â”€ */
+/* ── HERO HEADER ── */
 .hero{padding:100px 0 4rem;display:grid;grid-template-columns:1fr 420px;gap:4rem;align-items:start;position:relative;z-index:2}
 .hero-glow{position:absolute;top:-160px;left:-200px;width:900px;height:700px;pointer-events:none;background:radial-gradient(ellipse,rgba(100,40,180,.13) 0%,transparent 70%);z-index:1}
 .hero-eyebrow{font-family:var(--mono);font-size:.58rem;letter-spacing:.22em;text-transform:uppercase;color:var(--purple-hi);margin-bottom:1.1rem;display:flex;align-items:center;gap:.65rem}
@@ -97,7 +97,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
 .risk-bar-val{font-family:var(--disp);font-size:1.7rem;color:var(--orange)}
 .risk-track{height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden}
 .risk-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--purple) 0%,var(--orange) 100%);width:8%}
-/* â”€â”€ SECTION â”€â”€ */
+/* ── SECTION ── */
 .sec{padding:4rem 0;position:relative;z-index:2}
 .sec-head{display:flex;align-items:baseline;gap:1rem;margin-bottom:2rem}
 .sec-title{font-family:var(--disp);font-size:1.6rem;letter-spacing:.08em;color:var(--text)}
@@ -108,7 +108,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
 /* DIVIDER */
 .divider{height:1px;background:var(--border);margin:0}
 
-/* â”€â”€ UPLOAD GRID â”€â”€ */
+/* ── UPLOAD GRID ── */
 .upload-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:var(--shadow)}
 .upload-card{background:linear-gradient(165deg,rgba(16,11,28,.96) 0%,rgba(10,7,18,.95) 100%);padding:1.6rem 1.8rem;border-top:2px solid rgba(255,77,26,.75);transition:all .24s;cursor:pointer;display:flex;flex-direction:column;gap:.35rem}
 .upload-card:hover{transform:translateY(-2px);background:linear-gradient(165deg,rgba(20,14,34,.97) 0%,rgba(14,10,24,.96) 100%);box-shadow:0 0 0 1px rgba(255,77,26,.12) inset}
@@ -116,11 +116,11 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
 .upload-title{font-family:var(--disp);font-size:1.25rem;letter-spacing:.06em;color:var(--text)}
 .upload-desc{font-size:.8rem;color:var(--muted);line-height:1.65;margin-top:.1rem}
 .upload-action{font-family:var(--mono);font-size:.55rem;letter-spacing:.14em;text-transform:uppercase;color:var(--orange);margin-top:.75rem;display:flex;align-items:center;gap:.4rem}
-.upload-action::after{content:'â†’'}
+.upload-action::after{content:'→'}
 @media(max-width:860px){.upload-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:560px){.upload-grid{grid-template-columns:1fr}}
 
-/* â”€â”€ KPI CARDS â”€â”€ */
+/* ── KPI CARDS ── */
 .kpi-row{display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:var(--shadow)}
 .kpi-card{background:linear-gradient(165deg,rgba(16,11,28,.96) 0%,rgba(10,7,18,.95) 100%);padding:1.4rem 1.6rem;transition:all .24s}
 .kpi-card:hover{background:linear-gradient(165deg,rgba(20,14,34,.97),rgba(14,10,24,.96));box-shadow:0 0 0 1px rgba(255,77,26,.1) inset}
@@ -132,7 +132,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
 @media(max-width:980px){.kpi-row{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:560px){.kpi-row{grid-template-columns:repeat(2,1fr)}}
 
-/* â”€â”€ FEATURE PANELS (wide 2-col split) â”€â”€ */
+/* ── FEATURE PANELS (wide 2-col split) ── */
 .panel-split{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:var(--shadow)}
 .panel-split.starter-layout{grid-template-columns:1fr}
 .panel-half{background:linear-gradient(165deg,rgba(16,11,28,.96) 0%,rgba(10,7,18,.95) 100%);padding:2rem}
@@ -160,7 +160,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
 .perf-val.pos{color:var(--text)}
 .perf-val.neg{color:var(--orange)}
 
-/* â”€â”€ RISK SIGNALS â”€â”€ */
+/* ── RISK SIGNALS ── */
 .risk-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem}
 .window-tabs{display:flex;gap:2px;background:rgba(10,7,18,.7);border:1px solid var(--border);border-radius:8px;padding:3px}
 .wtab{font-family:var(--mono);font-size:.56rem;letter-spacing:.1em;text-transform:uppercase;padding:.28rem .7rem;border-radius:5px;cursor:pointer;color:var(--muted);transition:all .2s;border:none;background:none}
@@ -236,7 +236,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
   .risk-help-tip{left:0;right:auto;width:min(260px,84vw)}
 }
 
-/* â”€â”€ CHARTS â”€â”€ */
+/* ── CHARTS ── */
 .chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:var(--shadow)}
 .chart-card{background:linear-gradient(165deg,rgba(16,11,28,.96) 0%,rgba(10,7,18,.95) 100%);padding:1.6rem}
 .chart-card.full{grid-column:span 2}
@@ -249,7 +249,7 @@ canvas{width:100%!important;height:200px;display:block}
 .leg-line{width:16px;height:2px;border-radius:2px;flex-shrink:0}
 @media(max-width:700px){.chart-grid{grid-template-columns:1fr}.chart-card.full{grid-column:span 1}}
 
-/* â”€â”€ ALERTS â”€â”€ */
+/* ── ALERTS ── */
 .alert-row{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:1rem;box-shadow:var(--shadow)}
 .alert-card{background:linear-gradient(165deg,rgba(16,11,28,.96) 0%,rgba(10,7,18,.95) 100%);padding:1.4rem 1.6rem;display:flex;align-items:center;justify-content:space-between;gap:1rem}
 .alert-info{}
@@ -265,7 +265,7 @@ canvas{width:100%!important;height:200px;display:block}
 .field-input:focus{border-color:rgba(155,93,229,.45);box-shadow:0 0 0 3px rgba(155,93,229,.07)}
 @media(max-width:600px){.alert-row{grid-template-columns:1fr}.alert-form{grid-template-columns:1fr}}
 
-/* â”€â”€ HOLDINGS TABLE â”€â”€ */
+/* ── HOLDINGS TABLE ── */
 .table-wrap{background:linear-gradient(165deg,rgba(16,11,28,.96) 0%,rgba(10,7,18,.95) 100%);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:var(--shadow)}
 table{width:100%;border-collapse:collapse}
 thead tr{border-bottom:1px solid var(--border)}
@@ -288,7 +288,7 @@ td.accent{color:var(--orange)}
 .chip.neg{background:rgba(255,77,26,.08);color:var(--orange);border:1px solid rgba(255,77,26,.18)}
 @media(max-width:760px){.table-wrap{overflow-x:auto}}
 
-/* â”€â”€ BULLION â”€â”€ */
+/* ── BULLION ── */
 .bullion-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:var(--shadow)}
 .bullion-card{background:linear-gradient(165deg,rgba(16,11,28,.96) 0%,rgba(10,7,18,.95) 100%);padding:1.4rem 1.6rem;transition:all .24s}
 .bullion-card:hover{box-shadow:0 0 0 1px rgba(255,77,26,.1) inset}
@@ -299,7 +299,7 @@ td.accent{color:var(--orange)}
 @media(max-width:760px){.bullion-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:480px){.bullion-grid{grid-template-columns:1fr}}
 
-/* â”€â”€ DATA QUALITY â”€â”€ */
+/* ── DATA QUALITY ── */
 .quality-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:var(--shadow)}
 .quality-card{background:linear-gradient(165deg,rgba(16,11,28,.96) 0%,rgba(10,7,18,.95) 100%);padding:1.4rem 1.6rem}
 .quality-lbl{font-family:var(--mono);font-size:.52rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:.35rem}
@@ -311,7 +311,7 @@ td.accent{color:var(--orange)}
 @media(max-width:860px){.quality-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:480px){.quality-grid{grid-template-columns:1fr}}
 
-/* â”€â”€ FOOTER â”€â”€ */
+/* ── FOOTER ── */
 footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-index:2;margin-top:2rem}
 .foot-inner{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1.2rem}
 .foot-logo{font-family:var(--disp);font-size:1rem;letter-spacing:.16em;color:var(--muted)}
@@ -419,7 +419,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 .console-ai-risk{margin-top:.35rem;font-family:var(--mono);font-size:.56rem;color:#ffb38f}
 @media(max-width:760px){.console-ai-grid,.console-ai-holding-grid{grid-template-columns:1fr}}
 
-/* â”€â”€ MOBILE CENTERING (in-app dashboard) â”€â”€ */
+/* ── MOBILE CENTERING (in-app dashboard) ── */
 @media(max-width:1024px){
   .nav-inner{padding:0 1.15rem}
   .nav-links{display:none}
@@ -494,7 +494,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   <div class="nav-inner">
     <a href="#" class="nav-logo">SPECTRE</a>
     <ul class="nav-links">
-      <li><a href="/settings" id="nav-settings-link">Settings</a></li>
+      <li><a href="/spectre-settings-v3.html" id="nav-settings-link">Settings</a></li>
       <li id="nav-platinum-link" style="display:none"><a href="/spectre-platinum">Platinum</a></li>
       <li><a href="#uploads">Uploads</a></li>
       <li><a href="#metrics">Metrics</a></li>
@@ -562,7 +562,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
         </div>
         <div class="kpi-mini">
           <div class="kpi-mini-lbl">1-Day VaR 95%</div>
-          <div class="kpi-mini-val accent" id="mini-var95">âˆ’0.7%</div>
+          <div class="kpi-mini-val accent" id="mini-var95">−0.7%</div>
         </div>
       </div>
       <div class="risk-bar-wrap">
@@ -589,49 +589,49 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     <input id="upload-file-input" type="file" accept=".csv,.tsv,.psv,.txt,.json,.xlsx,.xls,.xlsm,.xlsb,.numbers,.ods,text/csv,text/tab-separated-values,application/json,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,application/vnd.ms-excel.sheet.macroEnabled.12,application/vnd.ms-excel.sheet.binary.macroEnabled.12,application/vnd.oasis.opendocument.spreadsheet,application/x-iwork-numbers-sffnumbers" style="display:none" />
     <div class="upload-grid">
       <div class="upload-card" data-source="super">
-        <div class="upload-num">01 â€” Super</div>
+        <div class="upload-num">01 — Super</div>
         <div class="upload-title">Super Report</div>
         <div class="upload-desc">Upload your superannuation holdings export CSV.</div>
         <div class="upload-action">Upload File</div>
       </div>
       <div class="upload-card" data-source="asx">
-        <div class="upload-num">02 â€” ASX</div>
+        <div class="upload-num">02 — ASX</div>
         <div class="upload-title">ASX Holdings</div>
         <div class="upload-desc">Upload brokerage or watchlist holdings export.</div>
         <div class="upload-action">Upload File</div>
       </div>
       <div class="upload-card" data-source="index">
-        <div class="upload-num">03 â€” Index</div>
+        <div class="upload-num">03 — Index</div>
         <div class="upload-title">Index Report</div>
         <div class="upload-desc">Upload index or benchmark positions CSV.</div>
         <div class="upload-action">Upload File</div>
       </div>
       <div class="upload-card" data-source="fund">
-        <div class="upload-num">04 â€” Funds</div>
+        <div class="upload-num">04 — Funds</div>
         <div class="upload-title">Mutual Fund</div>
         <div class="upload-desc">Upload managed fund or ETF holdings export.</div>
         <div class="upload-action">Upload File</div>
       </div>
       <div class="upload-card" data-source="crypto">
-        <div class="upload-num">05 â€” Crypto</div>
+        <div class="upload-num">05 — Crypto</div>
         <div class="upload-title">Crypto Report</div>
         <div class="upload-desc">Upload crypto holdings or exchange export CSV.</div>
         <div class="upload-action">Upload File</div>
       </div>
       <div class="upload-card" data-source="savings">
-        <div class="upload-num">06 â€” Savings</div>
+        <div class="upload-num">06 — Savings</div>
         <div class="upload-title">Savings Report</div>
         <div class="upload-desc">Upload savings account report or transaction export.</div>
         <div class="upload-action">Upload File</div>
       </div>
       <div class="upload-card" data-source="tax">
-        <div class="upload-num">07 â€” Tax</div>
+        <div class="upload-num">07 — Tax</div>
         <div class="upload-title">Tax Report</div>
         <div class="upload-desc">Upload tax report or transaction export (CSV/XLSX/XLS/NUMBERS/ODS).</div>
         <div class="upload-action">Upload File</div>
       </div>
       <div class="upload-card" data-source="gold">
-        <div class="upload-num">08 â€” Bullion</div>
+        <div class="upload-num">08 — Bullion</div>
         <div class="upload-title">ABC Bullion</div>
         <div class="upload-desc">Upload ABC Bullion gold and silver holdings CSV.</div>
         <div class="upload-action">Upload File</div>
@@ -668,8 +668,8 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       </div>
       <div class="kpi-card">
         <div class="kpi-lbl">Today's Change</div>
-        <div class="kpi-val accent" id="kpi-day-change">âˆ’$1,240</div>
-        <div class="kpi-sub" id="kpi-day-change-sub">âˆ’0.44% on day</div>
+        <div class="kpi-val accent" id="kpi-day-change">−$1,240</div>
+        <div class="kpi-sub" id="kpi-day-change-sub">−0.44% on day</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-lbl">Risk Score</div>
@@ -678,7 +678,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       </div>
       <div class="kpi-card">
         <div class="kpi-lbl">1-Day VaR 95%</div>
-        <div class="kpi-val accent" id="kpi-var95">âˆ’8.4%</div>
+        <div class="kpi-val accent" id="kpi-var95">−8.4%</div>
         <div class="kpi-sub">Max expected loss</div>
       </div>
     </div>
@@ -693,7 +693,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
         <div class="console-grid">
           <div class="console-stat">
             <div class="console-lbl">Expected Shortfall</div>
-            <div class="console-val" id="pro-expected-shortfall">âˆ’9.9%</div>
+            <div class="console-val" id="pro-expected-shortfall">−9.9%</div>
           </div>
           <div class="console-stat">
             <div class="console-lbl">Beta vs ASX 200</div>
@@ -745,11 +745,11 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
           </div>
           <div class="perf-row">
             <div><div class="perf-ticker">QAN</div><div class="perf-name">Qantas Airways</div></div>
-            <div class="perf-val neg">âˆ’$2,480</div>
+            <div class="perf-val neg">−$2,480</div>
           </div>
           <div class="perf-row">
             <div><div class="perf-ticker">ETH</div><div class="perf-name">Ethereum</div></div>
-            <div class="perf-val neg">âˆ’$1,960</div>
+            <div class="perf-val neg">−$1,960</div>
           </div>
         </div>
       </div>
@@ -757,18 +757,18 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
         <div class="panel-half-title"><span class="dot"></span>Stress Testing</div>
         <div class="stress-grid">
           <div class="stress-card neg">
-            <div class="stress-lbl">GFC Shock âˆ’40%</div>
-            <div class="stress-val neg">âˆ’$113,768</div>
+            <div class="stress-lbl">GFC Shock −40%</div>
+            <div class="stress-val neg">−$113,768</div>
             <div class="stress-proj">Projected: $170,652</div>
           </div>
           <div class="stress-card neg">
             <div class="stress-lbl">Rate Rise +2%</div>
-            <div class="stress-val neg">âˆ’$22,754</div>
+            <div class="stress-val neg">−$22,754</div>
             <div class="stress-proj">Projected: $261,666</div>
           </div>
           <div class="stress-card neg">
-            <div class="stress-lbl">AUD âˆ’15%</div>
-            <div class="stress-val neg">âˆ’$14,220</div>
+            <div class="stress-lbl">AUD −15%</div>
+            <div class="stress-val neg">−$14,220</div>
             <div class="stress-proj">Projected: $270,200</div>
           </div>
           <div class="stress-card pos">
@@ -821,7 +821,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       </div>
       <div class="bullion-card">
         <div class="bullion-lbl">Silver Unrealised P/L</div>
-        <div class="bullion-val accent" id="bullion-silver-pnl">âˆ’$214</div>
+        <div class="bullion-val accent" id="bullion-silver-pnl">−$214</div>
         <div class="bullion-sub">Since acquisition</div>
       </div>
     </div>
@@ -885,7 +885,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
           <h2 class="sec-title">Risk Signals</h2>
           <div class="sec-line"></div>
         </div>
-        <div class="risk-window" id="risk-window-label">Window <span>6M</span> â€” 42 snapshot points from 2025-09-03 to 2026-03-03</div>
+        <div class="risk-window" id="risk-window-label">Window <span>6M</span> — 42 snapshot points from 2025-09-03 to 2026-03-03</div>
         <div class="risk-estimate-note" id="risk-estimate-note" hidden></div>
       </div>
       <div class="window-tabs" id="risk-window-tabs">
@@ -928,17 +928,17 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       </div>
       <div class="risk-card pro-risk">
         <div class="risk-lbl">1-Day VaR 95% <button type="button" class="risk-help" aria-label="VaR help">?<span class="risk-help-tip">95% historical Value at Risk using the 5th percentile of daily returns in the selected risk window.</span></button></div>
-        <div class="risk-val danger" id="risk-var95">âˆ’8.4%</div>
+        <div class="risk-val danger" id="risk-var95">−8.4%</div>
         <div class="risk-sub" id="risk-var95-sub">Max expected loss</div>
       </div>
       <div class="risk-card pro-risk">
         <div class="risk-lbl">Expected Shortfall <button type="button" class="risk-help" aria-label="Expected shortfall help">?<span class="risk-help-tip">Average loss inside the worst 5% of daily returns in the selected risk window.</span></button></div>
-        <div class="risk-val danger" id="risk-cvar95">âˆ’9.9%</div>
+        <div class="risk-val danger" id="risk-cvar95">−9.9%</div>
         <div class="risk-sub" id="risk-cvar95-sub">CVaR beyond VaR</div>
       </div>
       <div class="risk-card pro-risk">
         <div class="risk-lbl">Max Drawdown <button type="button" class="risk-help" aria-label="Max drawdown help">?<span class="risk-help-tip">Largest peak-to-trough decline observed inside the selected risk window.</span></button></div>
-        <div class="risk-val danger" id="risk-max-drawdown">âˆ’12.1%</div>
+        <div class="risk-val danger" id="risk-max-drawdown">−12.1%</div>
         <div class="risk-sub" id="risk-max-drawdown-sub">Worst peak to trough</div>
       </div>
       <div class="risk-card pro-risk">
@@ -1035,14 +1035,14 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       <div class="alert-card">
         <div class="alert-info">
           <div class="alert-ticker">CBA.AX</div>
-          <div class="alert-detail">Alert at âˆ’5% Â· Last: $152.40</div>
+          <div class="alert-detail">Alert at −5% · Last: $152.40</div>
         </div>
         <div class="alert-badge on">Active</div>
       </div>
       <div class="alert-card">
         <div class="alert-info">
           <div class="alert-ticker">BTC-USD</div>
-          <div class="alert-detail">Alert at âˆ’10% Â· Last: $84,200</div>
+          <div class="alert-detail">Alert at −10% · Last: $84,200</div>
         </div>
         <div class="alert-badge off">Paused</div>
       </div>
@@ -1136,8 +1136,8 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
             <td>Host Plus (Super)</td>
             <td><span class="badge super">SUPER</span></td>
             <td><span class="chip pos">Superannuation</span></td>
-            <td>â€”</td>
-            <td class="val">â€”</td>
+            <td>—</td>
+            <td class="val">—</td>
             <td class="val">$84,200</td>
             <td>$71,400</td>
             <td class="accent">+$12,800</td>
@@ -1151,7 +1151,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
             <td class="val">$7.12</td>
             <td class="val">$4,272</td>
             <td>$6,752</td>
-            <td class="accent">âˆ’$2,480</td>
+            <td class="accent">−$2,480</td>
           </tr>
           <tr>
             <td class="ticker">ETH</td>
@@ -1162,7 +1162,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
             <td class="val">$3,840</td>
             <td class="val">$16,128</td>
             <td>$18,088</td>
-            <td class="accent">âˆ’$1,960</td>
+            <td class="accent">−$1,960</td>
           </tr>
         </tbody>
       </table>
@@ -1367,14 +1367,14 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   }
 
   function formatDateTime(value) {
-    if (!value) return "â€”";
+    if (!value) return "—";
     const d = new Date(value);
-    if (Number.isNaN(d.getTime())) return "â€”";
+    if (Number.isNaN(d.getTime())) return "—";
     return d.toLocaleString("en-AU", { dateStyle: "medium", timeStyle: "short" });
   }
 
   function formatDate(value) {
-    if (!value) return "â€”";
+    if (!value) return "—";
     const d = new Date(value);
     if (Number.isNaN(d.getTime())) return value;
     return d.toISOString().slice(0, 10);
@@ -1512,7 +1512,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
         refreshPricesButton.textContent = "Exit Demo";
       }
       if (settingsLink) {
-        settingsLink.setAttribute("href", "/settings?demo=1");
+        settingsLink.setAttribute("href", "/spectre-settings-v3.html?demo=1");
       }
       uploads.forEach((card) => {
         card.style.opacity = "0.72";
@@ -1534,7 +1534,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       refreshPricesButton.textContent = "Refresh Prices";
     }
     if (settingsLink) {
-      settingsLink.setAttribute("href", "/settings");
+      settingsLink.setAttribute("href", "/spectre-settings-v3.html");
     }
     uploads.forEach((card) => {
       card.style.opacity = "";
@@ -1574,7 +1574,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   }
 
   function formatCurrency(value, opts = {}) {
-    if (!Number.isFinite(value)) return "-";
+    if (!Number.isFinite(value)) return "—";
     return new Intl.NumberFormat("en-AU", {
       style: "currency",
       currency: "AUD",
@@ -1586,20 +1586,20 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   }
 
   function formatSignedCurrency(value, opts = {}) {
-    if (!Number.isFinite(value)) return "-";
+    if (!Number.isFinite(value)) return "—";
     if (value === 0) return formatCurrency(0, opts);
-    const sign = value > 0 ? "+" : "-";
+    const sign = value > 0 ? "+" : "−";
     return `${sign}${formatCurrency(Math.abs(value), opts)}`;
   }
 
   function formatPercent(value, opts = {}) {
-    if (!Number.isFinite(value)) return "-";
+    if (!Number.isFinite(value)) return "—";
     const absValue = Math.abs(value);
     const rendered = `${absValue.toFixed(opts.decimals ?? 1)}%`;
     if (opts.signed) {
-      return `${value >= 0 ? "+" : "-"}${rendered}`;
+      return `${value >= 0 ? "+" : "−"}${rendered}`;
     }
-    return opts.negative ? `âˆ’${rendered}` : rendered;
+    return opts.negative ? `−${rendered}` : rendered;
   }
 
   function toSydneyDateKey(value) {
@@ -1619,7 +1619,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   }
 
   function formatSignedCompact(value, opts = {}) {
-    if (!Number.isFinite(value)) return "-";
+    if (!Number.isFinite(value)) return "—";
     if (value === 0) return "0";
     const rendered = new Intl.NumberFormat("en-AU", {
       notation: "compact",
@@ -1627,7 +1627,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       minimumFractionDigits: opts.decimals ?? 0,
       maximumFractionDigits: opts.decimals ?? 1,
     }).format(Math.abs(value));
-    return `${value > 0 ? "+" : "âˆ’"}${rendered}`;
+    return `${value > 0 ? "+" : "−"}${rendered}`;
   }
 
   function toDate(value) {
@@ -2093,7 +2093,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     if (!sized) return;
     const { ctx, w, h } = sized;
     ctx.clearRect(0, 0, w, h);
-    const safeData = data.length > 0 ? data : [{ label: "â€”", val: 1 }];
+    const safeData = data.length > 0 ? data : [{ label: "—", val: 1 }];
     const pad = { t: 14, r: 10, b: 32, l: 10 };
     const cw = w - pad.l - pad.r;
     const ch = h - pad.t - pad.b;
@@ -2356,7 +2356,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
           <div class="alert-card">
             <div class="alert-info">
               <div class="alert-ticker">${escapeHtml(alert.ticker)}</div>
-              <div class="alert-detail">Alert at âˆ’${Number(alert.dropPctThreshold).toFixed(1)}% Â· ${escapeHtml(lastTriggered)}</div>
+              <div class="alert-detail">Alert at −${Number(alert.dropPctThreshold).toFixed(1)}% · ${escapeHtml(lastTriggered)}</div>
             </div>
             <div style="display:flex;align-items:center;gap:.5rem">
               <div class="alert-badge ${statusClass}">${statusLabel}</div>
@@ -2430,7 +2430,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
             return `
               <div class="console-ai-holding">
                 <div class="console-ai-holding-head">
-                  <strong>${escapeHtml(String(row.ticker || "â€”"))}</strong>
+                  <strong>${escapeHtml(String(row.ticker || "—"))}</strong>
                   <span>Confidence ${Number.isFinite(Number(row.confidence)) ? Math.round(Number(row.confidence)) : 0}%</span>
                 </div>
                 <p>${escapeHtml(String(row.summary || ""))}</p>
@@ -2571,17 +2571,17 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     const confidence = metrics.dailyReturns.length >= 63 ? "High" : metrics.dailyReturns.length >= 20 ? "Medium" : "Low";
 
     setText("meta-holdings-count", `${holdings.length} positions`);
-    setText("meta-latest-report", latestReportDate ? formatDate(latestReportDate) : "â€”");
-    setText("meta-prices-updated", latestPriceTime ? formatDateTime(latestPriceTime) : "â€”");
+    setText("meta-latest-report", latestReportDate ? formatDate(latestReportDate) : "—");
+    setText("meta-prices-updated", latestPriceTime ? formatDateTime(latestPriceTime) : "—");
     setText("holdings-count-label", `${holdings.length} positions`);
 
     setText("mini-total-value", formatCurrency(metrics.totalValue));
     setText("mini-unrealised-pnl", formatSignedCurrency(metrics.pnl));
     setText("mini-day-change", formatSignedCurrency(today.amount));
-    setText("mini-var95", effectiveVar95Pct != null ? formatPercent(effectiveVar95Pct, { negative: true, decimals: 1 }) : "â€”");
+    setText("mini-var95", effectiveVar95Pct != null ? formatPercent(effectiveVar95Pct, { negative: true, decimals: 1 }) : "—");
     setClass("mini-unrealised-pnl", `kpi-mini-val ${metrics.pnl >= 0 ? "accent" : ""}`.trim());
     setClass("mini-day-change", `kpi-mini-val ${today.amount < 0 ? "accent" : ""}`.trim());
-    setText("risk-bar-value", riskScore ? `${riskScore.score} / 100` : "â€”");
+    setText("risk-bar-value", riskScore ? `${riskScore.score} / 100` : "—");
     const fill = document.getElementById("risk-bar-fill");
     if (fill) fill.style.width = `${riskScore ? riskScore.score : 0}%`;
 
@@ -2591,15 +2591,15 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     setText("kpi-total-pnl-sub", `${formatPercent(metrics.pnlPct, { signed: true, decimals: 1 })} since entry`);
     setText("kpi-day-change", formatSignedCurrency(today.amount));
     setText("kpi-day-change-sub", `${formatPercent(today.pct, { signed: true, decimals: 2 })} on day`);
-    setText("kpi-risk-score", riskScore ? `${riskScore.score} / 100` : "â€”");
+    setText("kpi-risk-score", riskScore ? `${riskScore.score} / 100` : "—");
     setText("kpi-risk-score-sub", riskScore ? `${riskScore.label} exposure` : "Waiting for risk data");
-    setText("kpi-var95", effectiveVar95Pct != null ? formatPercent(effectiveVar95Pct, { negative: true, decimals: 1 }) : "â€”");
+    setText("kpi-var95", effectiveVar95Pct != null ? formatPercent(effectiveVar95Pct, { negative: true, decimals: 1 }) : "—");
 
-    setText("risk-score", riskScore ? `${riskScore.score} / 100` : "â€”");
+    setText("risk-score", riskScore ? `${riskScore.score} / 100` : "—");
     setText("risk-score-sub", riskScore ? riskScore.label : "Insufficient history");
     setText("risk-top3", formatPercent(metrics.top3ConcentrationPct, { decimals: 1 }));
     setText("risk-top3-sub", metrics.top3ConcentrationPct >= 40 ? "High concentration" : "Balanced concentration");
-    setText("risk-hhi", Number.isFinite(metrics.hhi) ? Number(metrics.hhi).toLocaleString("en-AU", { maximumFractionDigits: 0 }) : "â€”");
+    setText("risk-hhi", Number.isFinite(metrics.hhi) ? Number(metrics.hhi).toLocaleString("en-AU", { maximumFractionDigits: 0 }) : "—");
     setText(
       "risk-hhi-sub",
       metrics.hhi >= 2500
@@ -2612,7 +2612,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       "risk-hhi",
       `risk-val ${metrics.hhi >= 2500 ? "danger" : metrics.hhi >= 1500 ? "purple" : ""}`.trim(),
     );
-    setText("risk-rsi", Number.isFinite(metrics.rsi14) ? Number(metrics.rsi14).toFixed(1) : "â€”");
+    setText("risk-rsi", Number.isFinite(metrics.rsi14) ? Number(metrics.rsi14).toFixed(1) : "—");
     setText(
       "risk-rsi-sub",
       !Number.isFinite(metrics.rsi14)
@@ -2624,7 +2624,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
             : "Neutral range",
     );
     setClass("risk-rsi", `risk-val ${metrics.rsi14 > 70 ? "danger" : metrics.rsi14 < 30 ? "purple" : ""}`.trim());
-    setText("risk-stochastic", Number.isFinite(metrics.stochastic14) ? Number(metrics.stochastic14).toFixed(1) : "â€”");
+    setText("risk-stochastic", Number.isFinite(metrics.stochastic14) ? Number(metrics.stochastic14).toFixed(1) : "—");
     setText(
       "risk-stochastic-sub",
       !Number.isFinite(metrics.stochastic14)
@@ -2639,15 +2639,15 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       "risk-stochastic",
       `risk-val ${metrics.stochastic14 > 80 ? "danger" : metrics.stochastic14 < 20 ? "purple" : ""}`.trim(),
     );
-    setText("risk-obv", Number.isFinite(metrics.obvValue) ? formatSignedCompact(metrics.obvValue, { decimals: 1 }) : "â€”");
+    setText("risk-obv", Number.isFinite(metrics.obvValue) ? formatSignedCompact(metrics.obvValue, { decimals: 1 }) : "—");
     setText("risk-obv-sub", metrics.obvTrend || "Needs more history");
     setClass("risk-obv", `risk-val ${metrics.obvValue < 0 ? "danger" : metrics.obvValue > 0 ? "purple" : ""}`.trim());
-    setText("risk-var95", effectiveVar95Pct != null ? formatPercent(effectiveVar95Pct, { negative: true, decimals: 1 }) : "â€”");
-    setText("risk-cvar95", effectiveCvar95Pct != null ? formatPercent(effectiveCvar95Pct, { negative: true, decimals: 1 }) : "â€”");
-    setText("risk-max-drawdown", effectiveMaxDrawdownPct != null ? formatPercent(effectiveMaxDrawdownPct, { negative: true, decimals: 1 }) : "â€”");
-    setText("risk-volatility", effectiveVolatilityPct != null ? formatPercent(effectiveVolatilityPct, { decimals: 1 }) : "â€”");
-    setText("risk-beta", Number.isFinite(effectiveBeta) ? Number(effectiveBeta).toFixed(2) : "â€”");
-    setText("risk-tracking-error", Number.isFinite(effectiveTrackingError) ? formatPercent(effectiveTrackingError, { decimals: 1 }) : "â€”");
+    setText("risk-var95", effectiveVar95Pct != null ? formatPercent(effectiveVar95Pct, { negative: true, decimals: 1 }) : "—");
+    setText("risk-cvar95", effectiveCvar95Pct != null ? formatPercent(effectiveCvar95Pct, { negative: true, decimals: 1 }) : "—");
+    setText("risk-max-drawdown", effectiveMaxDrawdownPct != null ? formatPercent(effectiveMaxDrawdownPct, { negative: true, decimals: 1 }) : "—");
+    setText("risk-volatility", effectiveVolatilityPct != null ? formatPercent(effectiveVolatilityPct, { decimals: 1 }) : "—");
+    setText("risk-beta", Number.isFinite(effectiveBeta) ? Number(effectiveBeta).toFixed(2) : "—");
+    setText("risk-tracking-error", Number.isFinite(effectiveTrackingError) ? formatPercent(effectiveTrackingError, { decimals: 1 }) : "—");
     setText("risk-var95-sub", usingYahooVar95 ? "Yahoo estimate fallback" : "Max expected loss");
     setText("risk-cvar95-sub", usingYahooCvar95 ? "Yahoo estimate fallback" : "CVaR beyond VaR");
     setText("risk-max-drawdown-sub", usingYahooDrawdown ? "Yahoo estimate fallback" : "Worst peak to trough");
@@ -2655,9 +2655,9 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     setText("risk-beta-sub", usingYahooBeta ? "Yahoo estimate vs ASX 200" : "Market sensitivity");
     setText("risk-tracking-error-sub", usingYahooTrackingError ? "Yahoo estimate vs ASX 200" : "vs benchmark");
 
-    setText("pro-expected-shortfall", effectiveCvar95Pct != null ? formatPercent(effectiveCvar95Pct, { negative: true, decimals: 1 }) : "â€”");
-    setText("pro-beta", Number.isFinite(effectiveBeta) ? Number(effectiveBeta).toFixed(2) : "â€”");
-    setText("pro-tracking-error", Number.isFinite(effectiveTrackingError) ? formatPercent(effectiveTrackingError, { decimals: 1 }) : "â€”");
+    setText("pro-expected-shortfall", effectiveCvar95Pct != null ? formatPercent(effectiveCvar95Pct, { negative: true, decimals: 1 }) : "—");
+    setText("pro-beta", Number.isFinite(effectiveBeta) ? Number(effectiveBeta).toFixed(2) : "—");
+    setText("pro-tracking-error", Number.isFinite(effectiveTrackingError) ? formatPercent(effectiveTrackingError, { decimals: 1 }) : "—");
     const aiAdjustment = Number(riskScore?.aiAdjustment || 0);
     setText("pro-ai-risk-adjustment", `${aiAdjustment >= 0 ? "+" : ""}${aiAdjustment} pts`);
     setClass("pro-ai-risk-adjustment", `console-val ${aiAdjustment < 0 ? "danger" : ""}`.trim());
@@ -2673,11 +2673,11 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 
     const riskWindowText = state.riskWindow;
     const points = metrics.riskPointsUsed;
-    const startDate = metrics.riskStartDate ? formatDate(metrics.riskStartDate) : "â€”";
-    const endDate = metrics.riskEndDate ? formatDate(metrics.riskEndDate) : "â€”";
+    const startDate = metrics.riskStartDate ? formatDate(metrics.riskStartDate) : "—";
+    const endDate = metrics.riskEndDate ? formatDate(metrics.riskEndDate) : "—";
     const riskLabel = document.getElementById("risk-window-label");
     if (riskLabel) {
-      riskLabel.innerHTML = `Window <span>${escapeHtml(riskWindowText)}</span> â€” ${points} snapshot points from ${escapeHtml(startDate)} to ${escapeHtml(endDate)}`;
+      riskLabel.innerHTML = `Window <span>${escapeHtml(riskWindowText)}</span> — ${points} snapshot points from ${escapeHtml(startDate)} to ${escapeHtml(endDate)}`;
     }
     const estimateNote = document.getElementById("risk-estimate-note");
     if (estimateNote) {
@@ -2723,15 +2723,15 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       qualityValues[4].textContent = confidence;
       qualityValues[5].textContent = Number.isFinite(state.historicalRiskEstimate?.benchmarkPointsUsed)
         ? `${state.historicalRiskEstimate.benchmarkPointsUsed} Days`
-        : "â€”";
-      qualityValues[6].textContent = latestReportDate ? formatDate(latestReportDate) : "â€”";
+        : "—";
+      qualityValues[6].textContent = latestReportDate ? formatDate(latestReportDate) : "—";
       qualityValues[7].textContent = `${stale} Found`;
     }
 
     const perfList = document.querySelector(".perf-list");
     if (perfList) {
       const topPnl = [...holdings]
-        .map((holding) => ({ ticker: holding.ticker || "â€”", name: holding.name || "Unnamed", pnl: (holding.value || 0) - (holding.costBase || 0) }))
+        .map((holding) => ({ ticker: holding.ticker || "—", name: holding.name || "Unnamed", pnl: (holding.value || 0) - (holding.costBase || 0) }))
         .sort((a, b) => b.pnl - a.pnl)
         .slice(0, 5);
       perfList.innerHTML = topPnl
@@ -2781,7 +2781,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     renderLegend(legends[0], normalizedAccount);
     renderLegend(legends[1], normalizedSector);
 
-    drawHoldingsBars(metrics.topHoldings.map((item) => ({ label: String(item.ticker || "â€”").slice(0, 6), val: item.value || 0 })));
+    drawHoldingsBars(metrics.topHoldings.map((item) => ({ label: String(item.ticker || "—").slice(0, 6), val: item.value || 0 })));
     drawHistoryLine(metrics.history.map((item) => item.value), metrics.totalCost);
     renderHoldingsAi();
   }
@@ -2800,7 +2800,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     if (sorted.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td class="ticker">â€”</td>
+          <td class="ticker">—</td>
           <td colspan="8">No holdings loaded. Upload a CSV report to begin.</td>
         </tr>
       `;
@@ -2817,14 +2817,14 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
         const chipTone = pnl >= 0 ? "pos" : "neg";
         return `
           <tr>
-            <td class="ticker">${escapeHtml(holding.ticker || "â€”")}</td>
+            <td class="ticker">${escapeHtml(holding.ticker || "—")}</td>
             <td>${escapeHtml(holding.name || "Unnamed")}</td>
             <td><span class="badge ${badgeClass}">${sourceLabel}</span></td>
             <td><span class="chip ${chipTone}">${escapeHtml(holding.account || "Account")}</span></td>
-            <td>${Number.isFinite(holding.units) && holding.units > 0 ? Number(holding.units).toLocaleString("en-AU", { maximumFractionDigits: 4 }) : "â€”"}</td>
-            <td class="val">${Number.isFinite(holding.price) && holding.price > 0 ? formatCurrency(holding.price, { decimals: 2 }) : "â€”"}</td>
+            <td>${Number.isFinite(holding.units) && holding.units > 0 ? Number(holding.units).toLocaleString("en-AU", { maximumFractionDigits: 4 }) : "—"}</td>
+            <td class="val">${Number.isFinite(holding.price) && holding.price > 0 ? formatCurrency(holding.price, { decimals: 2 }) : "—"}</td>
             <td class="val">${formatCurrency(holding.value || 0)}</td>
-            <td>${Number.isFinite(holding.costBase) ? formatCurrency(holding.costBase) : "â€”"}</td>
+            <td>${Number.isFinite(holding.costBase) ? formatCurrency(holding.costBase) : "—"}</td>
             <td class="accent">${formatSignedCurrency(pnl)}</td>
           </tr>
         `;
@@ -3221,3 +3221,4 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 </script>
 </body>
 </html>
+
