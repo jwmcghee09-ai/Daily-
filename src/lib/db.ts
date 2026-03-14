@@ -1659,6 +1659,22 @@ export function findAuthUserByEmail(email: string): AuthUserWithPassword | null 
   };
 }
 
+export function listUsersWithEnabledDipAlerts(): AuthPublicUser[] {
+  const db = getDb();
+
+  const rows = db
+    .prepare(`
+      SELECT DISTINCT u.id, u.email, u.display_name, u.created_at
+      FROM users u
+      INNER JOIN price_dip_alerts a ON a.user_id = u.id
+      WHERE a.enabled = 1
+      ORDER BY u.created_at ASC
+    `)
+    .all() as UserRow[];
+
+  return rows.map(toPublicUser);
+}
+
 export function createAuthSession(userId: string, tokenHash: string, expiresAt: string): void {
   const db = getDb();
   const nowIso = new Date().toISOString();

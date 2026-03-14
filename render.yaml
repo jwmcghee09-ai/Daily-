@@ -75,3 +75,14 @@ services:
         sync: false
       - key: BACKUP_CRON_TOKEN
         sync: false
+  - type: cron
+    name: spectre-pro-dip-alert-scan
+    runtime: node
+    schedule: "*/5 * * * *"
+    buildCommand: npm ci
+    startCommand: 'curl -fsS -X POST -H "Authorization: Bearer $BACKUP_CRON_TOKEN" "$PRO_ALERT_SCAN_BASE_URL/api/internal/ops/pro/dip-alerts/scan"'
+    envVars:
+      - key: PRO_ALERT_SCAN_BASE_URL
+        sync: false
+      - key: BACKUP_CRON_TOKEN
+        sync: false

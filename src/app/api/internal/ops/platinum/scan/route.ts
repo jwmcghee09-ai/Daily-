@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { findAuthUserByEmail } from "@/lib/db";
 import { assertCronTokenAuthorized } from "@/lib/internal-cron-auth";
-import { refreshPricesAndTriggerDipAlertsForUser } from "@/lib/price-dip-alerts";
 import { runPlatinumDailyScan } from "@/lib/platinum";
 
 export const runtime = "nodejs";
@@ -24,11 +23,6 @@ export async function POST(request: Request) {
       allowIntraday: isLiveMode,
       requireMarketOpen: isLiveMode,
     });
-    const dipAlertResult = await refreshPricesAndTriggerDipAlertsForUser({
-      id: user.id,
-      email: user.email,
-      displayName: user.displayName,
-    });
 
     return NextResponse.json({
       ok: true,
@@ -49,10 +43,6 @@ export async function POST(request: Request) {
       dailyPnlAud: result.state.riskControls.dailyPnlAud,
       dailyLossCapAud: result.state.riskControls.dailyLossCapAud,
       killSwitchEnabled: result.state.riskControls.killSwitchEnabled,
-      dipAlertsChecked: dipAlertResult.checkedAlerts,
-      dipAlertsTriggered: dipAlertResult.triggeredAlerts,
-      dipAlertFailures: dipAlertResult.failedAlertTickers,
-      lastPriceRefreshAt: dipAlertResult.refreshedState.state.lastPriceRefreshAt,
     });
   } catch (error) {
     if (error instanceof Error && error.name === "UnauthorizedError") {
