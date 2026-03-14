@@ -733,6 +733,7 @@
 }
 
 .chartCardTitle {
+  font-family: var(--font-dm-sans), sans-serif;
   font-size: 13px;
   font-weight: 700;
 }
@@ -745,6 +746,7 @@
   border-radius: 999px;
   background: var(--accentDim);
   color: var(--accent);
+  font-family: var(--font-dm-mono), monospace;
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -773,7 +775,7 @@
   justify-content: space-between;
   gap: 12px;
   color: var(--muted);
-  font-family: var(--font-geist-mono), monospace;
+  font-family: var(--font-dm-mono), monospace;
   font-size: 12px;
 }
 
@@ -843,7 +845,7 @@
 
 .chartText {
   fill: var(--muted);
-  font-family: var(--font-geist-mono), monospace;
+  font-family: var(--font-dm-mono), monospace;
   font-size: 11px;
 }
 
@@ -859,7 +861,7 @@
 .concentrationValue,
 .moverSymbol,
 .moverChange {
-  font-family: var(--font-geist-mono), monospace;
+  font-family: var(--font-dm-mono), monospace;
   font-size: 12px;
 }
 
@@ -898,6 +900,7 @@
   padding-top: 12px;
   border-top: 1px solid var(--border);
   color: var(--muted);
+  font-family: var(--font-dm-mono), monospace;
   font-size: 11px;
   line-height: 1.6;
 }
@@ -921,6 +924,7 @@
   border-radius: 999px;
   background: rgba(255, 122, 48, 0.14);
   color: var(--accent2);
+  font-family: var(--font-dm-mono), monospace;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.1em;
@@ -963,13 +967,18 @@
 
 .aiConsole {
   padding: 20px;
-  font-family: var(--font-geist-mono), monospace;
+  font-family: var(--font-dm-mono), monospace;
   font-size: 13px;
 }
 
 .aiPrompt {
   margin-bottom: 12px;
   color: var(--accent);
+}
+
+.proPanel .sectionTitle,
+.miniCard div:first-child {
+  font-family: var(--font-dm-sans), sans-serif;
 }
 
 .aiResponse strong {
