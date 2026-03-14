@@ -12,9 +12,9 @@
 .page {
   min-height: 100vh;
   background:
-    radial-gradient(ellipse 80% 120% at 50% -12%, rgba(136, 84, 255, 0.2) 0%, rgba(136, 84, 255, 0.08) 26%, transparent 60%),
-    radial-gradient(ellipse 58% 100% at 85% 8%, rgba(255, 122, 48, 0.1) 0%, transparent 62%),
-    linear-gradient(180deg, #09070f 0%, #0b0812 38%, #09070f 100%);
+    radial-gradient(ellipse 70% 110% at -5% 50%, rgba(45, 17, 80, 0.9) 0%, rgba(28, 12, 53, 0.88) 28%, transparent 60%),
+    radial-gradient(ellipse 60% 110% at 108% 50%, rgba(63, 13, 13, 0.78) 0%, rgba(43, 8, 8, 0.72) 26%, transparent 56%),
+    linear-gradient(140deg, #180b2c 0%, #12071c 38%, #1a0a11 65%, #2c0c0c 100%);
   color: #f2eeff;
   padding: 2rem clamp(0.65rem, 1.8vw, 1.25rem) 5rem;
   font-family: 'DM Sans', sans-serif;
