@@ -236,6 +236,7 @@ const AXIS_TICK = {
   fontFamily: "'DM Mono', monospace",
 };
 const GRID_STROKE = "rgba(255,255,255,0.05)";
+const API_TIMEOUT_MS = 15000;
 
 function summarizeUnexpectedApiBody(raw: string): string {
   const compact = String(raw || "").replace(/\s+/g, " ").trim();
@@ -262,6 +263,26 @@ async function readJsonPayload<T extends ApiPayload>(response: Response): Promis
   }
 }
 
+async function fetchJsonWithTimeout<T extends ApiPayload>(input: RequestInfo | URL, init?: RequestInit, timeoutMs = API_TIMEOUT_MS): Promise<T> {
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(input, {
+      ...init,
+      signal: controller.signal,
+    });
+    return await readJsonPayload<T>(response);
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new Error(`Request timed out after ${Math.round(timeoutMs / 1000)} seconds.`);
+    }
+    throw error;
+  } finally {
+    window.clearTimeout(timeout);
+  }
+}
+
 export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
   const [state, setState] = useState<PlatinumPaperState | null>(null);
   const [analysis, setAnalysis] = useState<PlatinumAnalysis | null>(null);
@@ -278,7 +299,10 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
     setErrorMessage(null);
 
     try {
-      const response = await fetch("/api/platinum/paper-trading", { cache: "no-store" });
+      const response = await fetch("/api/platinum/paper-trading", {
+        cache: "no-store",
+        signal: AbortSignal.timeout(API_TIMEOUT_MS),
+      });
       const payload = await readJsonPayload<PlatinumPayload>(response);
 
       if (!response.ok || !payload.ok || !payload.state) {
@@ -287,7 +311,13 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
 
       setState(payload.state);
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Failed to load Platinum paper model.");
+      const message =
+        error instanceof DOMException && error.name === "TimeoutError"
+          ? `Platinum workspace timed out after ${Math.round(API_TIMEOUT_MS / 1000)} seconds.`
+          : error instanceof Error
+            ? error.message
+            : "Failed to load Platinum paper model.";
+      setErrorMessage(message);
     } finally {
       setLoading(false);
     }
@@ -303,7 +333,10 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
     setStatusMessage(null);
 
     try {
-      const response = await fetch("/api/platinum/paper-trading?mode=force", { method: "POST" });
+      const response = await fetch("/api/platinum/paper-trading?mode=force", {
+        method: "POST",
+        signal: AbortSignal.timeout(API_TIMEOUT_MS),
+      });
       const payload = await readJsonPayload<PlatinumPayload>(response);
 
       if (!response.ok || !payload.ok || !payload.result) {
@@ -339,11 +372,9 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
     setAnalysisError(null);
 
     try {
-      const response = await fetch("/api/platinum/analysis", { method: "POST" });
-      const payload = await readJsonPayload<PlatinumAnalysisPayload>(response);
-
-      if (!response.ok || !payload.ok || !payload.analysis) {
-        throw new Error(payload.error || `Request failed (${response.status}).`);
+      const payload = await fetchJsonWithTimeout<PlatinumAnalysisPayload>("/api/platinum/analysis", { method: "POST" }, 22000);
+      if (!payload.ok || !payload.analysis) {
+        throw new Error(payload.error || "Request failed.");
       }
 
       setAnalysis(payload.analysis);
@@ -356,7 +387,10 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
 
   const runLiveUpdate = useCallback(async () => {
     try {
-      const response = await fetch("/api/platinum/paper-trading?mode=live", { method: "POST" });
+      const response = await fetch("/api/platinum/paper-trading?mode=live", {
+        method: "POST",
+        signal: AbortSignal.timeout(API_TIMEOUT_MS),
+      });
       const payload = await readJsonPayload<PlatinumPayload>(response);
 
       if (!response.ok || !payload.ok || !payload.result) return;
