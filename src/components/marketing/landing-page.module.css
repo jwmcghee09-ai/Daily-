@@ -1,5 +1,5 @@
 .page {
-  --bg: #0d0a14;
+  --bg: #07040d;
   --surface: #16102a;
   --surface2: #1e1538;
   --surface3: rgba(255, 255, 255, 0.03);
@@ -20,9 +20,9 @@
   min-height: 100vh;
   color: var(--text);
   background:
-    radial-gradient(circle at top, rgba(168, 85, 247, 0.12), transparent 28%),
-    radial-gradient(circle at 80% 10%, rgba(255, 122, 48, 0.1), transparent 24%),
-    var(--bg);
+    radial-gradient(circle at 50% -8%, rgba(168, 85, 247, 0.16), transparent 22%),
+    radial-gradient(circle at 80% 8%, rgba(255, 122, 48, 0.12), transparent 18%),
+    linear-gradient(180deg, #090510 0%, #05030a 100%);
   font-family: var(--font-geist-sans), "Avenir Next", sans-serif;
 }
 
@@ -255,12 +255,22 @@
   transform: translateX(-50%);
   border-radius: 999px;
   background:
-    radial-gradient(ellipse at 35% 50%, rgba(168, 85, 247, 0.14) 0%, transparent 56%),
-    radial-gradient(ellipse at 66% 50%, rgba(255, 122, 48, 0.11) 0%, transparent 54%);
+    radial-gradient(ellipse at 35% 50%, rgba(168, 85, 247, 0.2) 0%, rgba(168, 85, 247, 0.06) 28%, transparent 58%),
+    radial-gradient(ellipse at 66% 50%, rgba(255, 122, 48, 0.15) 0%, rgba(255, 122, 48, 0.05) 24%, transparent 56%);
+  pointer-events: none;
+}
+
+.hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 28%, rgba(7, 4, 13, 0) 0%, rgba(7, 4, 13, 0.3) 52%, rgba(4, 2, 8, 0.84) 100%);
   pointer-events: none;
 }
 
 .heroIntro {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -352,6 +362,8 @@
 }
 
 .dashboardCard {
+  position: relative;
+  z-index: 1;
   margin-top: 60px;
   border: 1px solid var(--borderStrong);
   border-radius: 20px;
