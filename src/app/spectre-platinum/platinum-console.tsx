@@ -145,22 +145,6 @@ interface PlatinumPayload {
   error?: string;
 }
 
-interface PlatinumAnalysis {
-  generatedAt: string;
-  model: string;
-  overview: string;
-  riskSignals: string[];
-  tradeSignals: string[];
-  watchlist: string[];
-  nextActions: string[];
-}
-
-interface PlatinumAnalysisPayload {
-  ok: boolean;
-  analysis?: PlatinumAnalysis;
-  error?: string;
-}
-
 type ApiPayload = {
   ok?: boolean;
   error?: string;
@@ -184,16 +168,21 @@ interface ParsedRecommendationReason {
   regime: string | null;
   topSignals: string[];
   patternTags: string[];
-  aiNote: string | null;
   patternForecast: string | null;
 }
 
+function cleanRecommendationReason(reason: string): string {
+  return String(reason || "")
+    .replace(/;?\s*AI\[[^\]]+\]/gi, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
 function parseRecommendationReason(reason: string): ParsedRecommendationReason {
-  const text = String(reason || "");
+  const text = cleanRecommendationReason(reason);
   const regime = text.match(/regime\[([^\]]+)\]/i)?.[1]?.trim() || null;
   const signalsRaw = text.match(/signals\[([^\]]+)\]/i)?.[1] || "";
   const patternsRaw = text.match(/patterns\[([^\]]+)\]/i)?.[1] || "";
-  const aiNote = text.match(/AI\[([^\]]+)\]/i)?.[1]?.trim() || null;
   const patternForecast = text.match(/Pattern\d+\s+[-+]?\d+(?:\.\d+)?%\s+@\s+\d+%\s+hit\s+\/\s+\d+%\s+conf/i)?.[0] || null;
 
   const topSignals = signalsRaw
@@ -211,7 +200,6 @@ function parseRecommendationReason(reason: string): ParsedRecommendationReason {
     regime,
     topSignals,
     patternTags,
-    aiNote,
     patternForecast,
   };
 }
@@ -263,33 +251,10 @@ async function readJsonPayload<T extends ApiPayload>(response: Response): Promis
   }
 }
 
-async function fetchJsonWithTimeout<T extends ApiPayload>(input: RequestInfo | URL, init?: RequestInit, timeoutMs = API_TIMEOUT_MS): Promise<T> {
-  const controller = new AbortController();
-  const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
-
-  try {
-    const response = await fetch(input, {
-      ...init,
-      signal: controller.signal,
-    });
-    return await readJsonPayload<T>(response);
-  } catch (error) {
-    if (error instanceof DOMException && error.name === "AbortError") {
-      throw new Error(`Request timed out after ${Math.round(timeoutMs / 1000)} seconds.`);
-    }
-    throw error;
-  } finally {
-    window.clearTimeout(timeout);
-  }
-}
-
 export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
   const [state, setState] = useState<PlatinumPaperState | null>(null);
-  const [analysis, setAnalysis] = useState<PlatinumAnalysis | null>(null);
   const [loading, setLoading] = useState(true);
   const [runningScan, setRunningScan] = useState(false);
-  const [runningAnalysis, setRunningAnalysis] = useState(false);
-  const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [marketStatusMessage, setMarketStatusMessage] = useState<string | null>(null);
@@ -344,8 +309,6 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
       }
 
       setState(payload.result.state);
-      setAnalysis(null);
-      setAnalysisError(null);
 
       if (payload.result.skippedBecauseKillSwitch) {
         setStatusMessage("Kill switch is ON. Auto-trading is paused.");
@@ -357,31 +320,13 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
         setStatusMessage(`Daily scan already ran for ${payload.result.scanDate} (${"Australia/Sydney"}).`);
       } else {
         setStatusMessage(
-          `Scan ${payload.result.scanDate}: ${payload.result.generatedRecommendations} recommendations generated, ${payload.result.executedTrades} paper trades executed, ${payload.result.skippedTickers.length} skipped tickers.${payload.result.usedAiOverlay ? ` AI model: ${payload.result.aiModel || "enabled"}.` : ""}`,
+          `Scan ${payload.result.scanDate}: ${payload.result.generatedRecommendations} recommendations generated, ${payload.result.executedTrades} paper trades executed, ${payload.result.skippedTickers.length} skipped tickers.`,
         );
       }
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Failed to run daily scan.");
     } finally {
       setRunningScan(false);
-    }
-  }, []);
-
-  const runAiAnalysis = useCallback(async () => {
-    setRunningAnalysis(true);
-    setAnalysisError(null);
-
-    try {
-      const payload = await fetchJsonWithTimeout<PlatinumAnalysisPayload>("/api/platinum/analysis", { method: "POST" }, 22000);
-      if (!payload.ok || !payload.analysis) {
-        throw new Error(payload.error || "Request failed.");
-      }
-
-      setAnalysis(payload.analysis);
-    } catch (error) {
-      setAnalysisError(error instanceof Error ? error.message : "Failed to generate AI analysis.");
-    } finally {
-      setRunningAnalysis(false);
     }
   }, []);
 
@@ -510,71 +455,6 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
 
       {statusMessage ? <p className={styles.successText}>{statusMessage}</p> : null}
       {errorMessage  ? <p className={styles.errorText}>{errorMessage}</p>   : null}
-
-      {/* ── AI PANEL ── */}
-      <article className={styles.aiPanel}>
-        <div className={styles.aiToolbar}>
-          <div>
-            <h3>AI Market Brief</h3>
-            {analysis ? (
-              <p className={styles.infoText}>
-                Generated {new Date(analysis.generatedAt).toLocaleString("en-AU")} via {analysis.model}
-              </p>
-            ) : (
-              <p className={styles.infoText}>Generate a plain-English breakdown of current risk and trade signals.</p>
-            )}
-          </div>
-          <button className={styles.analysisButton} onClick={() => void runAiAnalysis()} disabled={runningAnalysis}>
-            {runningAnalysis ? "Generating Analysis…" : "Generate AI Analysis"}
-          </button>
-        </div>
-
-        {analysisError ? <p className={styles.errorText}>{analysisError}</p> : null}
-
-        {analysis ? (
-          <div className={styles.aiBody}>
-            <p className={styles.infoText}>{analysis.overview}</p>
-            <div className={styles.aiGrid}>
-              <section>
-                <h4>Risk Signals</h4>
-                <ul className={styles.aiList}>
-                  {(analysis.riskSignals.length > 0
-                    ? analysis.riskSignals
-                    : ["No major risk flags in the latest data."]
-                  ).map((item) => <li key={`risk-${item}`}>{item}</li>)}
-                </ul>
-              </section>
-              <section>
-                <h4>Trade Signals</h4>
-                <ul className={styles.aiList}>
-                  {(analysis.tradeSignals.length > 0
-                    ? analysis.tradeSignals
-                    : ["No high-conviction trade setups were identified."]
-                  ).map((item) => <li key={`trade-${item}`}>{item}</li>)}
-                </ul>
-              </section>
-              <section>
-                <h4>Watchlist</h4>
-                <ul className={styles.aiList}>
-                  {(analysis.watchlist.length > 0
-                    ? analysis.watchlist
-                    : ["No watchlist entries returned."]
-                  ).map((item) => <li key={`watch-${item}`}>{item}</li>)}
-                </ul>
-              </section>
-              <section>
-                <h4>Next Actions</h4>
-                <ul className={styles.aiList}>
-                  {(analysis.nextActions.length > 0
-                    ? analysis.nextActions
-                    : ["Refresh scans and rerun AI analysis after next market update."]
-                  ).map((item) => <li key={`next-${item}`}>{item}</li>)}
-                </ul>
-              </section>
-            </div>
-          </div>
-        ) : null}
-      </article>
 
       {/* ── METRIC STRIP ── */}
       <div className={styles.metricGrid}>
@@ -727,9 +607,6 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
                     <th>Final</th>
                     <th>Expected</th>
                     <th>Confidence</th>
-                    <th>AI Adj</th>
-                    <th>AI Conf</th>
-                    <th>AI Note</th>
                     <th>Price</th>
                     <th>MA20</th>
                     <th>MA50</th>
@@ -760,11 +637,6 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
                         {pct(recommendation.expectedReturnPct)}
                       </td>
                       <td>{pct(recommendation.confidence)}</td>
-                      <td className={recommendation.aiAdjustment >= 0 ? styles.positive : styles.negative}>
-                        {recommendation.aiAdjustment.toFixed(2)}
-                      </td>
-                      <td>{pct(recommendation.aiConfidence)}</td>
-                      <td>{recommendation.aiSummary || "—"}</td>
                       <td>{currency.format(recommendation.price)}</td>
                       <td>{currency.format(recommendation.maShort)}</td>
                       <td>{currency.format(recommendation.maLong)}</td>
@@ -775,7 +647,7 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
                         {recommendation.zScore.toFixed(2)}
                       </td>
                       <td>{recommendation.indicatorCount}</td>
-                      <td>{recommendation.reason}</td>
+                      <td>{cleanRecommendationReason(recommendation.reason)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -824,7 +696,6 @@ export default function PlatinumConsole({ userEmail }: PlatinumConsoleProps) {
                   {details.patternTags.length > 0 ? (
                     <p className={styles.driverSignals}>Patterns: {details.patternTags.join(", ")}</p>
                   ) : null}
-                  {details.aiNote ? <p className={styles.driverAi}>AI: {details.aiNote}</p> : null}
                 </section>
               );
             })}

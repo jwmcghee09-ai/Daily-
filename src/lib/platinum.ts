@@ -2443,42 +2443,9 @@ async function applyAiOverlay(
     recommendation.finalScore = recommendation.score;
   }
 
-  const overlay = await fetchAiOverlay(recommendations, marketRegime);
-  if (!overlay || overlay.entries.length === 0) {
-    return { used: false, model: null };
-  }
-
-  const byTicker = new Map(overlay.entries.map((entry) => [entry.ticker, entry]));
-
-  for (const recommendation of recommendations) {
-    const overlayEntry = byTicker.get(recommendation.ticker);
-    if (!overlayEntry) {
-      continue;
-    }
-
-    const calibratedAdjustment = clamp(overlayEntry.adjustment * calibrationFactor, -3, 3);
-    recommendation.aiAdjustment = calibratedAdjustment;
-    recommendation.aiConfidence = clamp(overlayEntry.confidence * calibrationFactor, 0, 100);
-    recommendation.aiSummary = overlayEntry.summary;
-
-    const confidenceBoost = (recommendation.aiConfidence / 100 - 0.5) * 0.12;
-    recommendation.finalScore = recommendation.score + calibratedAdjustment * 0.18 + confidenceBoost;
-    recommendation.expectedReturnPct = clamp(recommendation.expectedReturnPct + calibratedAdjustment * 1.8, -30, 35);
-
-    if (recommendation.action === "buy" && recommendation.aiAdjustment <= -1.5) {
-      recommendation.action = "hold";
-    }
-
-    if (recommendation.action === "sell" && recommendation.aiAdjustment >= 1.5) {
-      recommendation.action = "hold";
-    }
-
-    if (recommendation.aiSummary) {
-      recommendation.reason = `${recommendation.reason}; AI[${recommendation.aiSummary}]`;
-    }
-  }
-
-  return { used: true, model: overlay.model };
+  void marketRegime;
+  void calibrationFactor;
+  return { used: false, model: null };
 }
 
 function ensurePortfolioRow(db: DatabaseSync, userId: string): PortfolioRow {
