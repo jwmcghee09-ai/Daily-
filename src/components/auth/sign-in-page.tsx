@@ -55,6 +55,7 @@ export default function SignInPage({
   const [authError, setAuthError] = useState("");
   const [banner, setBanner] = useState<{ tone: "success" | "info" | "error"; message: string } | null>(null);
   const [sessionUser, setSessionUser] = useState<SessionUser | null>(null);
+  const activeSessionHasPaidAccess = sessionUser ? userHasPaidAccess(sessionUser) : false;
 
   useEffect(() => {
     if (verificationState === "success") {
@@ -97,7 +98,10 @@ export default function SignInPage({
   }, []);
 
   const planLabel = selectedPlan === "pro" ? "Pro" : "Starter";
-  const accessFlowLabel = hasRequestedCheckout ? `Sign in + ${planLabel} checkout` : "Sign in only";
+  const accessFlowLabel =
+    authMode === "register" || !activeSessionHasPaidAccess
+      ? `Create account + ${planLabel} checkout`
+      : "Existing account access";
 
   async function submitAuth(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -135,11 +139,7 @@ export default function SignInPage({
         setAcceptTerms(false);
         setBanner({
           tone: "info",
-          message:
-            payload.message ||
-            (hasRequestedCheckout
-              ? `Account created. Check your email to verify before signing in, then continue with ${planLabel}.`
-              : "Account created. Check your email to verify before signing in."),
+          message: payload.message || `Account created. Check your email to verify before signing in, then continue with ${planLabel}.`,
         });
         return;
       }
@@ -154,7 +154,7 @@ export default function SignInPage({
       setAcceptTerms(false);
       setBanner({ tone: "success", message: `Signed in as ${normalizedUser.displayName}.` });
 
-      if (hasRequestedCheckout) {
+      if (authMode === "register" || hasRequestedCheckout || !userHasPaidAccess(normalizedUser)) {
         await startCheckout(selectedPlan, normalizedUser.email);
         return;
       }
@@ -330,30 +330,14 @@ export default function SignInPage({
             </p>
             <div className={styles.planCallout}>
               Flow: <strong>{accessFlowLabel}</strong>
-              <span>{hasRequestedCheckout ? (selectedPlan === "pro" ? "$15/month" : "$3/month") : "No billing redirect"}</span>
-            </div>
-            <div className={styles.flowActions}>
-              <button
-                type="button"
-                className={styles.textButton}
-                onClick={() => setHasRequestedCheckout(false)}
-              >
-                Use sign in only
-              </button>
-              <button
-                type="button"
-                className={styles.textButton}
-                onClick={() => setHasRequestedCheckout(true)}
-              >
-                Continue to checkout
-              </button>
+              <span>{selectedPlan === "pro" ? "$15/month" : "$3/month"}</span>
             </div>
 
             <ul className={styles.pointList}>
               <li>Login, registration, verification resend, and password reset use the existing auth APIs.</li>
               <li>Starter and Pro buttons post to the live Stripe checkout route already configured in this repo.</li>
               <li>Live demo, privacy, terms, and contact links are all wired to current routes.</li>
-              <li>{hasRequestedCheckout ? "Signing in continues directly into the selected checkout flow." : "Signing in sends you straight to your dashboard without any billing redirect."}</li>
+              <li>Creating a new account continues directly into the selected paid checkout flow.</li>
             </ul>
 
             <div className={styles.sideMeta}>
@@ -387,10 +371,12 @@ export default function SignInPage({
               <h2>{authMode === "register" ? "Create your SPECTRE workspace" : "Sign in to SPECTRE"}</h2>
               <p>
                 {sessionUser
-                  ? `Signed in as ${sessionUser.displayName}. ${hasRequestedCheckout ? `Continue to ${planLabel} checkout or head back to your dashboard.` : "Open your dashboard directly."}`
-                  : hasRequestedCheckout
-                    ? "Create your account or sign in to your private SPECTRE workspace, then continue with the plan you selected."
-                    : "Create your account or sign in to your private SPECTRE workspace."}
+                  ? activeSessionHasPaidAccess
+                    ? `Signed in as ${sessionUser.displayName}. Open your dashboard directly.`
+                    : `Signed in as ${sessionUser.displayName}. Continue with ${planLabel} checkout to activate access.`
+                  : authMode === "register"
+                    ? "Create your account, then continue with the paid plan you selected."
+                    : "Sign in to your paid SPECTRE workspace, or create a new account and continue through checkout."}
               </p>
 
               {banner ? (
@@ -494,15 +480,13 @@ export default function SignInPage({
                     {working
                       ? "Please wait..."
                       : authMode === "register"
-                        ? hasRequestedCheckout
-                          ? `Create Account for ${planLabel}`
-                          : "Create Account"
+                        ? `Create Account for ${planLabel}`
                         : "Sign In"}
                   </button>
                 </form>
               ) : (
                 <div className={styles.sessionActions}>
-                  {hasRequestedCheckout ? (
+                  {!activeSessionHasPaidAccess ? (
                     <button
                       type="button"
                       className={`${styles.button} ${styles.primaryButton} ${styles.fullButton}`}
@@ -515,9 +499,11 @@ export default function SignInPage({
                       {checkoutWorking ? "Redirecting..." : `Continue with ${planLabel}`}
                     </button>
                   ) : null}
-                  <Link href="/dashboard?mode=account" className={`${styles.button} ${styles.outlineButton} ${styles.fullButton}`}>
-                    Open Dashboard
-                  </Link>
+                  {activeSessionHasPaidAccess ? (
+                    <Link href="/dashboard?mode=account" className={`${styles.button} ${styles.outlineButton} ${styles.fullButton}`}>
+                      Open Dashboard
+                    </Link>
+                  ) : null}
                 </div>
               )}
 
@@ -526,7 +512,11 @@ export default function SignInPage({
                   type="button"
                   className={styles.textButton}
                   onClick={() => {
-                    setAuthMode((current) => (current === "register" ? "login" : "register"));
+                    setAuthMode((current) => {
+                      const next = current === "register" ? "login" : "register";
+                      setHasRequestedCheckout(next === "register");
+                      return next;
+                    });
                     setAcceptTerms(false);
                     setShowPassword(false);
                     setAuthError("");
@@ -576,13 +566,6 @@ export default function SignInPage({
                   <strong>$3/mo</strong>
                 </button>
               </div>
-              <button
-                type="button"
-                className={`${styles.textButton} ${styles.signInOnlyButton}`}
-                onClick={() => setHasRequestedCheckout(false)}
-              >
-                Skip billing and sign in only
-              </button>
             </div>
           </section>
         </div>
@@ -607,6 +590,10 @@ function normalizeSessionUser(user: SessionUser): SessionUser {
     proEnabled,
     subscriptionStatus,
   };
+}
+
+function userHasPaidAccess(user: SessionUser): boolean {
+  return user.proEnabled || user.planTier !== "none";
 }
 
 async function parseApiError(response: Response, fallback: string): Promise<string> {

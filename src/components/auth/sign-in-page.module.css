@@ -156,13 +156,6 @@
   color: #ff7a30;
 }
 
-.flowActions {
-  display: flex;
-  gap: 14px;
-  flex-wrap: wrap;
-  margin-top: 14px;
-}
-
 .pointList {
   list-style: none;
   display: grid;
@@ -473,10 +466,6 @@
   color: #ff7a30;
 }
 
-.signInOnlyButton {
-  margin-top: 14px;
-}
-
 @media (max-width: 960px) {
   .grid {
     grid-template-columns: 1fr;
@@ -516,10 +505,6 @@
     width: 100%;
   }
 
-  .flowActions {
-    width: 100%;
-  }
-
   .topbarActions .button {
     width: auto;
     flex: 1 1 0;
@@ -529,8 +514,7 @@
     font-size: 11px;
   }
 
-  .linkRow .textButton,
-  .flowActions .textButton {
+  .linkRow .textButton {
     width: 100%;
   }
 
