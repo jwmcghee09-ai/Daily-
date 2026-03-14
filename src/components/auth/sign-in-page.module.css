@@ -302,7 +302,6 @@
 
 .toggleButton,
 .textButton,
-.checkoutButton,
 .button {
   cursor: pointer;
 }
@@ -423,47 +422,6 @@
   text-shadow: 0 0 18px rgba(255, 122, 48, 0.24);
   transform: translateY(-1px);
   outline: 0;
-}
-
-.divider {
-  margin: 24px 0 16px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: #9b8fbb;
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-.divider::before,
-.divider::after {
-  content: "";
-  flex: 1;
-  height: 1px;
-  background: rgba(160, 100, 255, 0.12);
-}
-
-.checkoutGrid {
-  display: grid;
-  gap: 12px;
-}
-
-.checkoutButton {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  padding: 16px 18px;
-  border: 1px solid rgba(160, 100, 255, 0.24);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.03);
-  color: #f4f0ff;
-  text-align: left;
-}
-
-.checkoutButton strong {
-  color: #ff7a30;
 }
 
 @media (max-width: 960px) {

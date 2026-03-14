@@ -536,36 +536,6 @@ export default function SignInPage({
                 </button>
               </div>
 
-              <div className={styles.divider}>or continue straight to billing</div>
-
-              <div className={styles.checkoutGrid}>
-                <button
-                  type="button"
-                  className={styles.checkoutButton}
-                  onClick={() => {
-                    setSelectedPlan("pro");
-                    setHasRequestedCheckout(true);
-                    void startCheckout("pro");
-                  }}
-                  disabled={checkoutWorking}
-                >
-                  <span>Continue with Pro</span>
-                  <strong>$15/mo</strong>
-                </button>
-                <button
-                  type="button"
-                  className={styles.checkoutButton}
-                  onClick={() => {
-                    setSelectedPlan("starter");
-                    setHasRequestedCheckout(true);
-                    void startCheckout("starter");
-                  }}
-                  disabled={checkoutWorking}
-                >
-                  <span>Continue with Starter</span>
-                  <strong>$3/mo</strong>
-                </button>
-              </div>
             </div>
           </section>
         </div>
