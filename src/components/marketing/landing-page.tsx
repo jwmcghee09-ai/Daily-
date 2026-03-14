@@ -314,20 +314,22 @@ export default function LandingPage({
             </div>
           ) : null}
 
-          <div className={`${styles.heroBadge} ${styles.reveal}`}>SPECTRE OPS — Portfolio Risk Analysis</div>
-          <h1 className={`${styles.heroTitle} ${styles.reveal}`}>
-            See your investment portfolio risk <span>in one place.</span>
-          </h1>
-          <p className={`${styles.heroSub} ${styles.reveal}`}>
-            System for Portfolio Exposure, Correlation, Threat &amp; Risk Evaluation. Turn CSV exports from super, ASX, crypto, and funds into one clear risk view.
-          </p>
-          <div className={`${styles.heroActions} ${styles.reveal}`}>
-            <Link href="/signin?mode=register&plan=starter" className={`${styles.button} ${styles.primaryButton} ${styles.heroButton}`}>
-              Start for $3 / Month
-            </Link>
-            <Link href="/dashboard?demo=1" className={`${styles.button} ${styles.outlineButton} ${styles.heroButton}`}>
-              See Live Demo →
-            </Link>
+          <div className={styles.heroIntro}>
+            <div className={`${styles.heroBadge} ${styles.reveal}`}>SPECTRE OPS — Portfolio Risk Analysis</div>
+            <h1 className={`${styles.heroTitle} ${styles.reveal}`}>
+              See your investment portfolio risk <span>in one place.</span>
+            </h1>
+            <p className={`${styles.heroSub} ${styles.reveal}`}>
+              System for Portfolio Exposure, Correlation, Threat &amp; Risk Evaluation. Turn CSV exports from super, ASX, crypto, and funds into one clear risk view.
+            </p>
+            <div className={`${styles.heroActions} ${styles.reveal}`}>
+              <Link href="/signin?mode=register&plan=starter" className={`${styles.button} ${styles.primaryButton} ${styles.heroButton}`}>
+                Start for $3 / Month
+              </Link>
+              <Link href="/dashboard?demo=1" className={`${styles.button} ${styles.outlineButton} ${styles.heroButton}`}>
+                See Live Demo →
+              </Link>
+            </div>
           </div>
 
           <div className={`${styles.dashboardCard} ${styles.reveal}`}>
