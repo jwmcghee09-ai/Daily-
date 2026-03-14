@@ -407,7 +407,7 @@
 
 .linkRow {
   display: flex;
-  gap: 12px;
+  gap: 18px;
   flex-wrap: wrap;
   margin-top: 20px;
 }
@@ -416,7 +416,10 @@
   border: 0;
   background: transparent;
   color: #9b8fbb;
-  font-size: 13px;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.35;
+  padding: 2px 0;
 }
 
 .divider {
