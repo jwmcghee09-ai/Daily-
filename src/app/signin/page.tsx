@@ -1,23 +1,19 @@
-import { redirect } from "next/navigation";
 import { getAuthenticatedUser } from "@/lib/auth";
-import LandingPage from "@/components/marketing/landing-page";
+import SignInPage from "@/components/auth/sign-in-page";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
-export default async function Home(props: { searchParams: SearchParams }) {
+export default async function SignInRoute(props: { searchParams: SearchParams }) {
   const user = await getAuthenticatedUser();
-  if (user) {
-    redirect("/dashboard?mode=account");
-  }
-
   const searchParams = await props.searchParams;
-  const checkout = readSingleParam(searchParams.checkout);
   const plan = readSingleParam(searchParams.plan);
 
   return (
-    <LandingPage
-      checkoutState={checkout === "success" || checkout === "cancelled" ? checkout : null}
-      checkoutPlan={plan === "pro" ? "pro" : "starter"}
+    <SignInPage
+      authenticatedUser={user ? { email: user.email, displayName: user.displayName } : null}
+      initialMode={readSingleParam(searchParams.mode) === "register" ? "register" : "login"}
+      initialPlan={plan === "pro" ? "pro" : plan === "starter" ? "starter" : null}
+      verificationState={readSingleParam(searchParams.verified)}
     />
   );
 }

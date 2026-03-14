@@ -71,9 +71,8 @@ export async function POST(request: Request) {
 
 function buildRedirectUrl(request: Request, state: VerifyState): URL {
   const baseUrl = resolveAppBaseUrl(request);
-  const url = new URL("/", baseUrl);
+  const url = new URL("/signin", baseUrl);
   url.searchParams.set("verified", state);
-  url.hash = "access";
   return url;
 }
 
