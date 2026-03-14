@@ -1997,10 +1997,11 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     const sourceMixPenalty = normalizePenalty(metrics.sourceRiskLoad, 0.55, 1.35) * 10;
     const confidencePenalty = (1 - clamp(riskReturnsUsed / 63, 0, 1)) * 12;
     const totalPenalty = volatilityPenalty + varPenalty + drawdownPenalty + concentrationPenalty + accountPenalty + sourceMixPenalty + confidencePenalty;
-    const baseScore = Math.round(clamp(100 - totalPenalty, 1, 99));
-    const aiAdjustment = proEnabled ? computeAiRiskAdjustment(holdingsAi) : 0;
+    const baseScore = Math.round(clamp(totalPenalty, 1, 99));
+    const qualitativeAdjustment = proEnabled ? computeAiRiskAdjustment(holdingsAi) : 0;
+    const aiAdjustment = -qualitativeAdjustment;
     const score = Math.round(clamp(baseScore + aiAdjustment, 1, 99));
-    const label = score >= 75 ? "Controlled" : score >= 55 ? "Moderate" : "Elevated";
+    const label = score >= 75 ? "Elevated" : score >= 55 ? "Moderate" : "Controlled";
     return { score, label, aiAdjustment };
   }
 

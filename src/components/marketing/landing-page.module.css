@@ -1325,7 +1325,14 @@
 
   .navInner {
     flex-direction: column;
-    align-items: stretch;
+    align-items: center;
+  }
+
+  .navInner > .brand {
+    display: inline-flex;
+    justify-content: center;
+    width: 100%;
+    text-align: center;
   }
 
   .navLinks {

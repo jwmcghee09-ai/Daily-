@@ -1031,11 +1031,12 @@ export default function Home() {
     const sourceMixPenalty = normalizePenalty(metrics.sourceRiskLoad, 0.55, 1.35) * 10;
     const confidencePenalty = (1 - clamp(riskReturnsUsed / 63, 0, 1)) * 12;
     const totalPenalty = volatilityPenalty + varPenalty + drawdownPenalty + concentrationPenalty + accountPenalty + sourceMixPenalty + confidencePenalty;
-    const baseScore = Math.round(clamp(100 - totalPenalty, 1, 99));
-    const aiAdjustment = proAnalyticsEnabled ? computeAiRiskAdjustment(holdingsAiResult) : 0;
+    const baseScore = Math.round(clamp(totalPenalty, 1, 99));
+    const qualitativeAdjustment = proAnalyticsEnabled ? computeAiRiskAdjustment(holdingsAiResult) : 0;
+    const aiAdjustment = -qualitativeAdjustment;
     const score = Math.round(clamp(baseScore + aiAdjustment, 1, 99));
 
-    const label = score >= 75 ? "Controlled" : score >= 55 ? "Moderate" : "Elevated";
+    const label = score >= 75 ? "Elevated" : score >= 55 ? "Moderate" : "Controlled";
     const confidence = riskReturnsUsed >= 63 ? "High" : riskReturnsUsed >= 20 ? "Medium" : "Low";
 
     return {
@@ -1051,10 +1052,10 @@ export default function Home() {
   const portfolioRiskScoreTone = portfolioRiskScore == null
     ? "neutral"
     : portfolioRiskScore.score >= 75
-      ? "positive"
+      ? "negative"
       : portfolioRiskScore.score >= 55
         ? "neutral"
-        : "negative";
+        : "positive";
   const aiRiskAdjustmentLabel = portfolioRiskScore
     ? `${portfolioRiskScore.aiAdjustment >= 0 ? "+" : ""}${portfolioRiskScore.aiAdjustment} pts`
     : "+0 pts";

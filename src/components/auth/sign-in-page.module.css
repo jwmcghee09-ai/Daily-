@@ -471,7 +471,15 @@
 
   .topbar {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
+  }
+
+  .brand {
+    text-align: center;
+  }
+
+  .topbarActions {
+    justify-content: center;
   }
 }
 

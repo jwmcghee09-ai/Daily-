@@ -351,7 +351,7 @@ export default function LandingPage({
 
             <div className={styles.dashboardCharts}>
               <div className={styles.chartBox}>
-                <div className={styles.chartTitle}>Risk Score Trend — 72 / 100 (Moderate)</div>
+                <div className={styles.chartTitle}>Risk Score Trend — 72 / 100 (Elevated)</div>
                 <svg className={styles.sparkline} viewBox="0 0 400 60" aria-hidden="true">
                   <defs>
                     <linearGradient id="landingLineGrad" x1="0" y1="0" x2="1" y2="0">
