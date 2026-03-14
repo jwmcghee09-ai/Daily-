@@ -479,7 +479,14 @@
   }
 
   .topbarActions {
+    width: 100%;
+    flex-wrap: nowrap;
     justify-content: center;
+  }
+
+  .topbarActions .button {
+    flex: 1 1 0;
+    min-width: 0;
   }
 }
 
@@ -500,7 +507,15 @@
     width: 100%;
   }
 
-  .topbarActions .button,
+  .topbarActions .button {
+    width: auto;
+    flex: 1 1 0;
+    min-width: 0;
+    padding-left: 10px;
+    padding-right: 10px;
+    font-size: 11px;
+  }
+
   .linkRow .textButton,
   .flowActions .textButton {
     width: 100%;

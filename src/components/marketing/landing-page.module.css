@@ -1339,8 +1339,15 @@
     display: none;
   }
 
+  .navActions {
+    width: 100%;
+    flex-wrap: nowrap;
+    justify-content: center;
+  }
+
   .navActions .button {
-    flex: 1 1 180px;
+    flex: 1 1 0;
+    min-width: 0;
   }
 
   .ticker {
@@ -1357,9 +1364,17 @@
     font-size: clamp(34px, 10vw, 52px);
   }
 
-  .heroActions .button,
-  .navActions .button {
+  .heroActions .button {
     width: 100%;
+  }
+
+  .navActions .button {
+    width: auto;
+    flex: 1 1 0;
+    min-width: 0;
+    padding-left: 10px;
+    padding-right: 10px;
+    font-size: 11px;
   }
 
   .featureGrid,
