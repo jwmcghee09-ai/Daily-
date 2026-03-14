@@ -12,8 +12,6 @@ export async function GET(request: NextRequest) {
     if (!user) {
       return NextResponse.redirect(buildRedirectUrl(request, "/signin"));
     }
-
-    return NextResponse.redirect(buildRedirectUrl(request, "/classic"));
   }
 
   const html = await fs.readFile(path.join(process.cwd(), "public", "spectre-dashboard-v3.html"), "utf8");

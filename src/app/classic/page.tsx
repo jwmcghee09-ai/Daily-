@@ -400,6 +400,11 @@ export default function Home() {
 
     if (demoMode) {
       window.location.replace("/dashboard?demo=1");
+      return;
+    }
+
+    if (!loading && sessionUser) {
+      window.location.replace("/dashboard?mode=account");
     }
   }, [demoMode, loading, sessionUser]);
 
