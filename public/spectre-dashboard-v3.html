@@ -123,6 +123,150 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
 .risk-bar-val{font-family:var(--sans);font-size:1.7rem;font-weight:800;color:var(--text)}
 .risk-track{height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden}
 .risk-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--purple) 0%,var(--purple-hi) 42%,var(--orange) 100%);width:8%}
+
+/* ── LANDING-STYLE SUMMARY CARD ── */
+.landing-preview-shell{
+  margin-bottom:1.5rem;
+  background:linear-gradient(160deg,rgba(22,16,42,.97) 0%,rgba(13,10,20,.96) 100%);
+  border:1px solid var(--border2);
+  border-radius:20px;
+  overflow:hidden;
+  box-shadow:0 32px 80px rgba(0,0,0,.55),0 0 0 1px rgba(168,85,247,.08) inset;
+}
+.landing-preview-head{
+  display:flex;
+  align-items:center;
+  gap:.7rem;
+  padding:.95rem 1.25rem;
+  border-bottom:1px solid var(--border);
+}
+.landing-preview-dots{display:flex;gap:.45rem}
+.landing-preview-dots span{width:12px;height:12px;border-radius:50%}
+.landing-preview-dots span:nth-child(1){background:#ff5f56}
+.landing-preview-dots span:nth-child(2){background:#ffbd2e}
+.landing-preview-dots span:nth-child(3){background:#27c93f}
+.landing-preview-url{
+  flex:1;
+  text-align:center;
+  color:var(--muted);
+  font-family:var(--mono);
+  font-size:.58rem;
+  letter-spacing:.12em;
+}
+.landing-preview-stats{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:16px;
+  padding:1.35rem 1.5rem 0;
+}
+.landing-preview-stat,
+.landing-preview-panel{
+  border:1px solid var(--border);
+  border-radius:16px;
+  background:rgba(30,21,56,.95);
+}
+.landing-preview-stat{padding:1rem 1.15rem}
+.landing-preview-label{
+  color:var(--muted);
+  font-family:var(--mono);
+  font-size:.52rem;
+  font-weight:700;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  margin-bottom:.4rem;
+}
+.landing-preview-value{
+  font-family:var(--disp);
+  font-size:1.55rem;
+  font-weight:700;
+  letter-spacing:.02em;
+  color:var(--text);
+  line-height:1.05;
+}
+.landing-preview-sub{
+  margin-top:.45rem;
+  color:var(--muted2);
+  font-family:var(--mono);
+  font-size:.58rem;
+}
+.landing-preview-sub.pos{color:var(--purple-hi)}
+.landing-preview-sub.neg{color:#ff8a65}
+.landing-preview-grid{
+  display:grid;
+  grid-template-columns:2fr 1fr;
+  gap:16px;
+  padding:1rem 1.5rem 1.5rem;
+}
+.landing-preview-panel{padding:1rem 1.15rem}
+.landing-preview-title{
+  color:var(--muted2);
+  font-family:var(--sans);
+  font-size:.95rem;
+  font-weight:700;
+  margin-bottom:.9rem;
+}
+.landing-preview-meta{
+  margin:.55rem 0 .45rem;
+  color:var(--muted);
+  font-family:var(--mono);
+  font-size:.55rem;
+}
+.landing-preview-risk-track{
+  height:6px;
+  overflow:hidden;
+  border-radius:999px;
+  background:rgba(255,255,255,.06);
+}
+.landing-preview-risk-fill{
+  height:100%;
+  width:0;
+  border-radius:inherit;
+  background:linear-gradient(90deg,var(--purple) 0%,var(--purple-hi) 42%,var(--orange) 100%);
+}
+.landing-preview-sparkline{
+  width:100%;
+  height:86px;
+  display:block;
+}
+.landing-preview-sparkline text{
+  fill:var(--muted);
+  font-family:var(--mono);
+  font-size:9px;
+}
+.landing-preview-allocation{
+  display:flex;
+  align-items:center;
+  gap:1rem;
+}
+.landing-preview-allocation canvas{
+  width:92px;
+  height:92px;
+  flex:0 0 92px;
+}
+.landing-preview-legend{
+  flex:1;
+  display:grid;
+  gap:.5rem;
+}
+.landing-preview-legend-item{
+  display:flex;
+  align-items:center;
+  gap:.5rem;
+  color:var(--muted2);
+  font-family:var(--mono);
+  font-size:.6rem;
+}
+.landing-preview-legend-dot{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  flex:0 0 8px;
+}
+.landing-preview-legend-value{
+  margin-left:auto;
+  color:var(--text);
+  font-weight:600;
+}
 /* ── SECTION ── */
 .sec{padding:4rem 0;position:relative;z-index:2}
 .sec-head{display:flex;align-items:baseline;gap:1rem;margin-bottom:2rem}
@@ -157,6 +301,14 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
 .kpi-sub{font-family:var(--mono);font-size:.56rem;color:var(--muted);margin-top:.3rem}
 @media(max-width:980px){.kpi-row{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:560px){.kpi-row{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:980px){
+  .landing-preview-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .landing-preview-grid{grid-template-columns:1fr}
+}
+@media(max-width:560px){
+  .landing-preview-stats{grid-template-columns:1fr}
+  .landing-preview-allocation{align-items:flex-start;flex-direction:column}
+}
 
 /* ── FEATURE PANELS (wide 2-col split) ── */
 .panel-split{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:var(--shadow)}
@@ -677,6 +829,63 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       <h2 class="sec-title">Portfolio Metrics</h2>
       <div class="sec-line"></div>
       <span class="sec-label">Live pricing</span>
+    </div>
+    <div class="landing-preview-shell">
+      <div class="landing-preview-head">
+        <div class="landing-preview-dots"><span></span><span></span><span></span></div>
+        <div class="landing-preview-url">spectre-assets.com / dashboard</div>
+      </div>
+      <div class="landing-preview-stats">
+        <div class="landing-preview-stat">
+          <div class="landing-preview-label">Portfolio Value</div>
+          <div class="landing-preview-value" id="preview-total-value">$0</div>
+          <div class="landing-preview-sub" id="preview-total-sub">No holdings yet</div>
+        </div>
+        <div class="landing-preview-stat">
+          <div class="landing-preview-label">Holdings</div>
+          <div class="landing-preview-value" id="preview-holdings-count">0</div>
+          <div class="landing-preview-sub" id="preview-holdings-sub">Across 0 sources</div>
+        </div>
+        <div class="landing-preview-stat">
+          <div class="landing-preview-label">VaR 95%</div>
+          <div class="landing-preview-value" id="preview-var95">—</div>
+          <div class="landing-preview-sub" id="preview-var95-sub">Waiting for risk data</div>
+        </div>
+        <div class="landing-preview-stat">
+          <div class="landing-preview-label">Max Drawdown</div>
+          <div class="landing-preview-value" id="preview-max-drawdown">—</div>
+          <div class="landing-preview-sub" id="preview-max-drawdown-sub">Selected window</div>
+        </div>
+      </div>
+      <div class="landing-preview-grid">
+        <div class="landing-preview-panel">
+          <div class="landing-preview-title" id="preview-trend-title">Portfolio History</div>
+          <svg class="landing-preview-sparkline" viewBox="0 0 400 86" aria-hidden="true">
+            <defs>
+              <linearGradient id="previewLineGrad" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stop-color="#a855f7"></stop>
+                <stop offset="100%" stop-color="#ff7a30"></stop>
+              </linearGradient>
+              <linearGradient id="previewFillGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#d946ef" stop-opacity="0.28"></stop>
+                <stop offset="100%" stop-color="#ff7a30" stop-opacity="0"></stop>
+              </linearGradient>
+            </defs>
+            <path id="preview-sparkline-line" d="M0,58 L80,54 L160,49 L240,44 L320,40 L400,34" fill="none" stroke="url(#previewLineGrad)" stroke-width="2.5" stroke-linecap="round"></path>
+            <path id="preview-sparkline-fill" d="M0,58 L80,54 L160,49 L240,44 L320,40 L400,34 L400,86 L0,86Z" fill="url(#previewFillGrad)"></path>
+            <g id="preview-sparkline-labels"></g>
+          </svg>
+          <div class="landing-preview-meta">Concentration · Drawdown · VaR95 · Volatility</div>
+          <div class="landing-preview-risk-track"><div class="landing-preview-risk-fill" id="preview-risk-fill"></div></div>
+        </div>
+        <div class="landing-preview-panel">
+          <div class="landing-preview-title">Allocation</div>
+          <div class="landing-preview-allocation">
+            <canvas id="preview-allocation-canvas" height="92"></canvas>
+            <div class="landing-preview-legend" id="preview-allocation-legend"></div>
+          </div>
+        </div>
+      </div>
     </div>
     <div class="kpi-row">
       <div class="kpi-card">
@@ -2236,6 +2445,66 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     });
   }
 
+  function drawPreviewSparkline(history) {
+    const lineEl = document.getElementById("preview-sparkline-line");
+    const fillEl = document.getElementById("preview-sparkline-fill");
+    const labelsEl = document.getElementById("preview-sparkline-labels");
+    if (!lineEl || !fillEl || !labelsEl) return;
+
+    const series = Array.isArray(history) && history.length > 0
+      ? history.slice(-6)
+      : [{ date: "", value: 1 }, { date: "", value: 1 }, { date: "", value: 1 }, { date: "", value: 1 }, { date: "", value: 1 }, { date: "", value: 1 }];
+
+    while (series.length < 6) {
+      series.unshift(series[0] || { date: "", value: 1 });
+    }
+
+    const values = series.map((item) => Number(item?.value) || 0);
+    const safeValues = values.some((value) => Number.isFinite(value) && value > 0) ? values : [1, 1, 1, 1, 1, 1];
+    const min = Math.min(...safeValues);
+    const max = Math.max(...safeValues);
+    const span = max - min || 1;
+
+    const points = safeValues.map((value, index) => {
+      const x = (400 / Math.max(safeValues.length - 1, 1)) * index;
+      const y = 20 + (1 - (value - min) / span) * 38;
+      return `${index === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`;
+    }).join(" ");
+
+    lineEl.setAttribute("d", points);
+    fillEl.setAttribute("d", `${points} L400,86 L0,86Z`);
+
+    labelsEl.innerHTML = series.map((item, index) => {
+      const date = toDate(item?.date);
+      const label = date
+        ? new Intl.DateTimeFormat("en-AU", { month: "short" }).format(date)
+        : index === series.length - 1
+          ? "Now"
+          : "";
+      const x = (400 / Math.max(series.length - 1, 1)) * index;
+      return label ? `<text x="${x.toFixed(1)}" y="78" text-anchor="${index === 0 ? "start" : index === series.length - 1 ? "end" : "middle"}">${escapeHtml(label)}</text>` : "";
+    }).join("");
+  }
+
+  function renderPreviewAllocation(items) {
+    const legend = document.getElementById("preview-allocation-legend");
+    if (!legend) return;
+
+    const safeItems = Array.isArray(items) && items.length > 0
+      ? items.slice(0, 4)
+      : [{ label: "No data", pct: 100, color: "rgba(255,255,255,.2)" }];
+
+    legend.innerHTML = safeItems.map((item) => `
+      <div class="landing-preview-legend-item">
+        <span class="landing-preview-legend-dot" style="background:${item.color}"></span>
+        <span>${escapeHtml(String(item.label || "—"))}</span>
+        <span class="landing-preview-legend-value">${formatPercent(Number(item.pct) || 0, { decimals: 0 })}</span>
+      </div>
+    `).join("");
+
+    drawDonut("preview-allocation-canvas", safeItems);
+  }
+
   function renderLegend(container, items) {
     if (!container) return;
     container.innerHTML = items
@@ -2600,6 +2869,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     const goldCost = sum(goldHoldings.map((holding) => Number(holding.costBase) || 0));
     const silverValue = sum(silverHoldings.map((holding) => Number(holding.value) || 0));
     const silverCost = sum(silverHoldings.map((holding) => Number(holding.costBase) || 0));
+    const sourceCount = new Set(holdings.map((holding) => String(holding.source || "other"))).size;
     const withPrice = holdings.filter((holding) => Number.isFinite(holding.price) && holding.price > 0).length;
     const withCost = holdings.filter((holding) => Number.isFinite(holding.costBase) && holding.costBase > 0).length;
     const stale = holdings.filter((holding) => !Number.isFinite(holding.price) || holding.price <= 0).length;
@@ -2619,6 +2889,21 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     setText("risk-bar-value", riskScore ? `${riskScore.score} / 100` : "—");
     const fill = document.getElementById("risk-bar-fill");
     if (fill) fill.style.width = `${riskScore ? riskScore.score : 0}%`;
+
+    setText("preview-total-value", formatCurrency(metrics.totalValue, { compact: metrics.totalValue >= 1000000, decimals: metrics.totalValue >= 1000000 ? 2 : 0 }));
+    setText("preview-total-sub", holdings.length > 0 ? `${formatPercent(metrics.pnlPct, { signed: true, decimals: 1 })} since entry` : "No holdings yet");
+    setClass("preview-total-sub", `landing-preview-sub ${metrics.pnl >= 0 ? "pos" : "neg"}`.trim());
+    setText("preview-holdings-count", String(holdings.length));
+    setText("preview-holdings-sub", `Across ${sourceCount} source${sourceCount === 1 ? "" : "s"}`);
+    setText("preview-var95", effectiveVar95Pct != null ? formatPercent(effectiveVar95Pct, { negative: true, decimals: 1 }) : "—");
+    setText("preview-var95-sub", usingYahooVar95 ? "Yahoo estimate fallback" : "Max expected loss");
+    setClass("preview-var95-sub", "landing-preview-sub neg");
+    setText("preview-max-drawdown", effectiveMaxDrawdownPct != null ? formatPercent(effectiveMaxDrawdownPct, { negative: true, decimals: 1 }) : "—");
+    setText("preview-max-drawdown-sub", `${state.riskWindow} window`);
+    setText("preview-trend-title", riskScore ? `Portfolio History — Risk ${riskScore.score} / 100 (${riskScore.label})` : "Portfolio History");
+    const previewRiskFill = document.getElementById("preview-risk-fill");
+    if (previewRiskFill) previewRiskFill.style.width = `${riskScore ? riskScore.score : 0}%`;
+    drawPreviewSparkline(metrics.history);
 
     setText("kpi-total-value", formatCurrency(metrics.totalValue));
     setText("kpi-total-cost", formatCurrency(metrics.totalCost));
@@ -2811,6 +3096,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     const normalizedSector = normalizeSlices(sectorSlices);
     drawDonut("c-account", normalizedAccount);
     drawDonut("c-sector", normalizedSector);
+    renderPreviewAllocation(normalizedAccount);
 
     const legends = document.querySelectorAll("#charts .chart-card .legend");
     renderLegend(legends[0], normalizedAccount);
