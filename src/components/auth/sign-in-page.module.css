@@ -409,17 +409,27 @@
   display: flex;
   gap: 18px;
   flex-wrap: wrap;
+  justify-content: center;
   margin-top: 20px;
 }
 
 .textButton {
   border: 0;
   background: transparent;
-  color: #9b8fbb;
+  color: #e3d7ff;
   font-size: 17px;
   font-weight: 600;
   line-height: 1.35;
   padding: 2px 0;
+  transition: color 0.2s ease, text-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.textButton:hover,
+.textButton:focus-visible {
+  color: #ffb27e;
+  text-shadow: 0 0 18px rgba(255, 122, 48, 0.24);
+  transform: translateY(-1px);
+  outline: 0;
 }
 
 .divider {
