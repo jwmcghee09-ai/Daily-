@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import styles from "./landing-page.module.css";
 
@@ -87,6 +87,34 @@ const features = [
   },
 ] as const;
 
+const riskSignals = [
+  { label: "Concentration", value: 82, tone: "purple" },
+  { label: "VaR 95%", value: 68, tone: "pink" },
+  { label: "Drawdown", value: 55, tone: "orange" },
+  { label: "Volatility", value: 47, tone: "amber" },
+  { label: "Data Quality", value: 91, tone: "soft" },
+] as const;
+
+const sectorConcentration = [
+  { label: "Materials", value: 28 },
+  { label: "Financials", value: 22 },
+  { label: "Healthcare", value: 16 },
+  { label: "Energy", value: 14 },
+  { label: "Consumer", value: 10 },
+  { label: "Other", value: 10 },
+] as const;
+
+const sessionMovers = [
+  { symbol: "BHP", change: "+1.2%", width: 78, tone: "up" },
+  { symbol: "MQG", change: "+1.4%", width: 92, tone: "up" },
+  { symbol: "RIO", change: "+0.9%", width: 58, tone: "up" },
+  { symbol: "CSL", change: "+0.7%", width: 44, tone: "up" },
+  { symbol: "WBC", change: "-0.2%", width: 14, tone: "down" },
+  { symbol: "CBA", change: "-0.4%", width: 28, tone: "down" },
+  { symbol: "WES", change: "-1.1%", width: 72, tone: "down" },
+  { symbol: "FMG", change: "-2.1%", width: 100, tone: "down" },
+] as const;
+
 const securityCards = [
   {
     title: "Privacy Promise",
@@ -151,6 +179,8 @@ export default function LandingPage({
   checkoutState: "success" | "cancelled" | null;
   checkoutPlan: CheckoutPlan;
 }) {
+  const [activeFaqIndex, setActiveFaqIndex] = useState(0);
+
   useEffect(() => {
     const reveals = document.querySelectorAll<HTMLElement>(
       `.${styles.reveal}, .${styles.revealLeft}, .${styles.revealRight}, .${styles.revealScale}`,
@@ -414,7 +444,7 @@ export default function LandingPage({
           <div className={styles.sectionLabel}>Features</div>
           <h2 className={styles.sectionTitle}>Designed for clarity, built for risk decisions.</h2>
           <p className={styles.sectionSub}>
-            Every feature is purpose-built for investors who need a clear, consolidated risk view across multiple account types.
+            Every feature is purpose-built for Australian investors who need a clear, consolidated risk view across multiple account types.
           </p>
 
           <div className={`${styles.featureGrid} ${styles.reveal}`}>
@@ -425,6 +455,140 @@ export default function LandingPage({
                 <p>{feature.copy}</p>
               </article>
             ))}
+          </div>
+        </div>
+      </section>
+
+      <Divider />
+
+      <section className={styles.section} id="charts">
+        <div className={styles.container}>
+          <div className={styles.sectionLabel}>Feature Preview</div>
+          <h2 className={styles.sectionTitle}>Concrete dashboard visuals, not abstract promises.</h2>
+          <p className={styles.sectionSub}>
+            These charts render from demo values and show the exact layout your real imported data produces.
+          </p>
+
+          <div className={`${styles.chartsGrid} ${styles.reveal}`}>
+            <article className={`${styles.chartCard} ${styles.chartTall}`}>
+              <div className={styles.chartCardHeader}>
+                <span className={styles.chartCardTitle}>Risk Signal Levels</span>
+                <span className={styles.chartBadge}>Live Metrics</span>
+              </div>
+
+              <div className={styles.metricBars}>
+                {riskSignals.map((metric) => (
+                  <div key={metric.label} className={styles.metricRow}>
+                    <div className={styles.metricLabel}>
+                      <span>{metric.label}</span>
+                      <span>{metric.value}</span>
+                    </div>
+                    <div className={styles.metricTrack}>
+                      <div
+                        className={`${styles.metricFill} ${styles[metric.tone]}`}
+                        style={{ width: `${metric.value}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className={styles.chartFooter}>
+                Higher bars indicate elevated risk in that dimension. Concentration and VaR95 are your primary signals to monitor.
+              </div>
+            </article>
+
+            <article className={`${styles.chartCard} ${styles.chartTall}`}>
+              <div className={styles.chartCardHeader}>
+                <span className={styles.chartCardTitle}>Portfolio Drawdown (12-Month)</span>
+                <span className={`${styles.chartBadge} ${styles.chartBadgeOrange}`}>Max -11%</span>
+              </div>
+
+              <div className={styles.drawdownChart}>
+                <svg className={styles.drawdownSvg} viewBox="0 0 420 220" aria-hidden="true">
+                  <defs>
+                    <linearGradient id="drawdownFill" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="rgba(248,113,113,0.28)" />
+                      <stop offset="100%" stopColor="rgba(248,113,113,0)" />
+                    </linearGradient>
+                  </defs>
+                  <line x1="22" y1="26" x2="22" y2="184" className={styles.chartAxis} />
+                  <line x1="22" y1="184" x2="398" y2="184" className={styles.chartAxis} />
+                  <path
+                    d="M22 44 H398 M22 84 H398 M22 124 H398 M22 164 H398"
+                    className={styles.chartGrid}
+                  />
+                  <path
+                    d="M36 62 C62 70, 76 94, 96 84 S136 140, 156 164 S196 140, 216 126 S256 116, 276 104 S316 98, 336 90 S366 78, 388 72 L388 184 L36 184 Z"
+                    fill="url(#drawdownFill)"
+                  />
+                  <path
+                    d="M36 62 C62 70, 76 94, 96 84 S136 140, 156 164 S196 140, 216 126 S256 116, 276 104 S316 98, 336 90 S366 78, 388 72"
+                    className={styles.drawdownLine}
+                  />
+                  {[["Mar", 36], ["May", 96], ["Jul", 156], ["Sep", 216], ["Nov", 276], ["Jan", 336]].map(([label, x]) => (
+                    <text key={label} x={x} y="206" className={styles.chartText}>
+                      {label}
+                    </text>
+                  ))}
+                </svg>
+              </div>
+
+              <div className={styles.chartFooter}>
+                Drawdown measures peak-to-trough decline. Your current max drawdown sits at -11% over the trailing 12 months.
+              </div>
+            </article>
+
+            <article className={styles.chartCard}>
+              <div className={styles.chartCardHeader}>
+                <span className={styles.chartCardTitle}>Sector Concentration</span>
+                <span className={styles.chartBadge}>Top-3 = 42%</span>
+              </div>
+
+              <div className={styles.concentrationList}>
+                {sectorConcentration.map((sector) => (
+                  <div key={sector.label} className={styles.concentrationRow}>
+                    <span className={styles.concentrationLabel}>{sector.label}</span>
+                    <div className={styles.concentrationTrack}>
+                      <div className={styles.concentrationFill} style={{ width: `${sector.value}%` }} />
+                    </div>
+                    <span className={styles.concentrationValue}>{sector.value}%</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className={styles.chartFooter}>
+                Hidden concentration is the most common risk for multi-source portfolios. Top-3 positions at 42% exceeds the 35% caution threshold.
+              </div>
+            </article>
+
+            <article className={styles.chartCard}>
+              <div className={styles.chartCardHeader}>
+                <span className={styles.chartCardTitle}>ASX Session Movers</span>
+                <span className={`${styles.chartBadge} ${styles.chartBadgeOrange}`}>Today</span>
+              </div>
+
+              <div className={styles.moversList}>
+                {sessionMovers.map((mover) => (
+                  <div key={mover.symbol} className={styles.moverRow}>
+                    <span className={styles.moverSymbol}>{mover.symbol}</span>
+                    <div className={styles.moverTrack}>
+                      <div
+                        className={`${styles.moverFill} ${mover.tone === "up" ? styles.moverUp : styles.moverDown}`}
+                        style={{ width: `${mover.width}%` }}
+                      />
+                    </div>
+                    <span className={`${styles.moverChange} ${mover.tone === "up" ? styles.up : styles.down}`}>
+                      {mover.change}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              <div className={styles.chartFooter}>
+                Holdings in your portfolio that moved today are highlighted. Dip alerts trigger on your configured thresholds.
+              </div>
+            </article>
           </div>
         </div>
       </section>
@@ -592,11 +756,26 @@ export default function LandingPage({
           <h2 className={styles.sectionTitle}>Got questions? We&apos;ve got answers.</h2>
 
           <div className={`${styles.faqList} ${styles.reveal}`}>
-            {faqs.map((faq) => (
-              <details key={faq.question} className={styles.faqItem}>
-                <summary>{faq.question}</summary>
-                <p>{faq.answer}</p>
-              </details>
+            {faqs.map((faq, index) => (
+              <div
+                key={faq.question}
+                className={`${styles.faqItem} ${activeFaqIndex === index ? styles.faqOpen : ""}`}
+              >
+                <button
+                  type="button"
+                  className={styles.faqButton}
+                  aria-expanded={activeFaqIndex === index}
+                  onClick={() => setActiveFaqIndex((current) => (current === index ? -1 : index))}
+                >
+                  <span>{faq.question}</span>
+                  <svg className={styles.faqChevron} viewBox="0 0 24 24" aria-hidden="true">
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </button>
+                <div className={styles.faqAnswer}>
+                  <p>{faq.answer}</p>
+                </div>
+              </div>
             ))}
           </div>
         </div>
