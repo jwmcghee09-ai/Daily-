@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
   if (!isDemo) {
     const user = await getAuthenticatedUser();
     if (!user) {
-      return NextResponse.redirect(new URL("/classic", request.url));
+      return NextResponse.redirect(new URL("/signin", request.url));
     }
   }
 

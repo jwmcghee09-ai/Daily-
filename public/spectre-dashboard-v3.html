@@ -494,7 +494,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   <div class="nav-inner">
     <a href="#" class="nav-logo">SPECTRE</a>
     <ul class="nav-links">
-      <li><a href="/spectre-settings-v3.html" id="nav-settings-link">Settings</a></li>
+      <li><a href="/settings" id="nav-settings-link">Settings</a></li>
       <li id="nav-platinum-link" style="display:none"><a href="/spectre-platinum">Platinum</a></li>
       <li><a href="#uploads">Uploads</a></li>
       <li><a href="#metrics">Metrics</a></li>
@@ -1503,7 +1503,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       setText("pro-console-badge", "Pro Demo");
       if (signOutButton) {
         signOutButton.textContent = "Create Account";
-        signOutButton.setAttribute("href", "/classic#access");
+        signOutButton.setAttribute("href", "/signin?mode=register&plan=starter");
       }
       if (clearDataButton) {
         clearDataButton.textContent = "Reset Demo";
@@ -1512,7 +1512,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
         refreshPricesButton.textContent = "Exit Demo";
       }
       if (settingsLink) {
-        settingsLink.setAttribute("href", "/spectre-settings-v3.html?demo=1");
+        settingsLink.setAttribute("href", "/settings?demo=1");
       }
       uploads.forEach((card) => {
         card.style.opacity = "0.72";
@@ -1534,7 +1534,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       refreshPricesButton.textContent = "Refresh Prices";
     }
     if (settingsLink) {
-      settingsLink.setAttribute("href", "/spectre-settings-v3.html");
+      settingsLink.setAttribute("href", "/settings");
     }
     uploads.forEach((card) => {
       card.style.opacity = "";
@@ -2222,7 +2222,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 
     if (response.status === 401) {
       state.redirecting = true;
-      window.location.href = "/classic";
+      window.location.href = "/signin";
       throw new Error("Please sign in first.");
     }
 
@@ -2259,7 +2259,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     const payload = await apiJson("/api/auth/session", { cache: "no-store" });
     if (!payload.authenticated || !payload.user) {
       state.redirecting = true;
-      window.location.href = "/classic";
+      window.location.href = "/signin";
       return;
     }
     state.sessionUser = payload.user;
@@ -2835,7 +2835,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   async function refreshPrices(options = {}) {
     const { silent = false, skipButtonState = false } = options;
     if (state.demoMode) {
-      window.location.assign("/classic");
+      window.location.assign("/");
       return;
     }
 
@@ -2920,7 +2920,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   async function signOut(event) {
     event.preventDefault();
     if (state.demoMode) {
-      window.location.href = "/classic#access";
+      window.location.href = "/";
       return;
     }
     try {
@@ -2928,7 +2928,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     } catch {
       // best effort
     }
-    window.location.href = "/classic";
+    window.location.href = "/";
   }
 
   async function addAlert() {
@@ -3221,4 +3221,3 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 </script>
 </body>
 </html>
-
