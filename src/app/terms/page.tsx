@@ -1,13 +1,17 @@
 ﻿import Link from "next/link";
+import { getAuthenticatedUser } from "@/lib/auth";
 
 export const metadata = {
   title: "Terms of Service | SPECTRE",
 };
 
-export default function TermsPage() {
+export default async function TermsPage() {
+  const user = await getAuthenticatedUser();
+  const backHref = user ? "/dashboard?mode=account" : "/";
+
   return (
     <main style={{ maxWidth: 840, margin: "0 auto", padding: "64px 24px 80px", lineHeight: 1.7 }}>
-      <p><Link href="/classic">Back to SPECTRE</Link></p>
+      <p><Link href={backHref}>Back to SPECTRE</Link></p>
       <h1>Terms of Service</h1>
       <p>SPECTRE provides portfolio analytics and workflow tools for informational purposes only. It does not provide personal financial advice, brokerage execution, tax advice, or legal advice.</p>
       <h2>Accounts</h2>

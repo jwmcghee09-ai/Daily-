@@ -1,13 +1,17 @@
 ﻿import Link from "next/link";
+import { getAuthenticatedUser } from "@/lib/auth";
 
 export const metadata = {
   title: "Privacy Policy | SPECTRE",
 };
 
-export default function PrivacyPage() {
+export default async function PrivacyPage() {
+  const user = await getAuthenticatedUser();
+  const backHref = user ? "/dashboard?mode=account" : "/";
+
   return (
     <main style={{ maxWidth: 840, margin: "0 auto", padding: "64px 24px 80px", lineHeight: 1.7 }}>
-      <p><Link href="/classic">Back to SPECTRE</Link></p>
+      <p><Link href={backHref}>Back to SPECTRE</Link></p>
       <h1>Privacy Policy</h1>
       <p>SPECTRE uses the information you provide to create and operate your private analytics workspace. We do not sell your portfolio data.</p>
       <h2>What We Collect</h2>
