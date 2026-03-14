@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
   if (!isDemo) {
     const user = await getAuthenticatedUser();
     if (!user) {
-      return NextResponse.redirect(new URL("/signin", request.url));
+      return NextResponse.redirect(buildRedirectUrl(request, "/signin"));
     }
   }
 
@@ -21,4 +21,38 @@ export async function GET(request: NextRequest) {
       "Cache-Control": "no-store",
     },
   });
+}
+
+function buildRedirectUrl(request: NextRequest, pathname: string): URL {
+  return new URL(pathname, resolvePublicBaseUrl(request));
+}
+
+function resolvePublicBaseUrl(request: NextRequest): string {
+  const configured = normalizeBaseUrl(process.env.APP_BASE_URL || "") || normalizeBaseUrl(process.env.RENDER_EXTERNAL_URL || "");
+  if (configured) {
+    return configured;
+  }
+
+  const forwardedHost = (request.headers.get("x-forwarded-host") || "").trim();
+  if (forwardedHost) {
+    const forwardedProto = (request.headers.get("x-forwarded-proto") || "https").trim() || "https";
+    return `${forwardedProto}://${forwardedHost}`;
+  }
+
+  return new URL(request.url).origin;
+}
+
+function normalizeBaseUrl(value: string): string {
+  const trimmed = value.trim().replace(/\/$/, "");
+
+  try {
+    const parsed = new URL(trimmed);
+    if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+      return parsed.origin;
+    }
+  } catch {
+    return "";
+  }
+
+  return "";
 }
