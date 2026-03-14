@@ -1025,14 +1025,17 @@
 
 .featuredPlan {
   position: relative;
+  overflow: visible;
+  padding-top: 44px;
   border-color: rgba(168, 85, 247, 0.3);
   background: rgba(168, 85, 247, 0.05);
 }
 
 .featuredBadge {
   position: absolute;
-  top: -12px;
+  top: -14px;
   left: 50%;
+  z-index: 2;
   transform: translateX(-50%);
   padding: 4px 14px;
   border-radius: 999px;
