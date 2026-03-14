@@ -430,6 +430,40 @@ canvas{width:100%!important;height:220px;display:block}
 .leg-line{width:18px;height:2px;border-radius:2px;flex-shrink:0}
 @media(max-width:700px){.chart-grid{grid-template-columns:1fr}.chart-card.full{grid-column:span 1}}
 
+/* ── LIVE SIGNALS ── */
+.signal-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.signal-card{position:relative;overflow:hidden;background:linear-gradient(165deg,rgba(22,16,42,.96) 0%,rgba(13,10,20,.95) 100%);border:1px solid var(--border);border-radius:16px;padding:1.6rem;box-shadow:var(--shadow)}
+.signal-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--purple),var(--orange))}
+.signal-card-head{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:1.2rem}
+.signal-card-title{font-family:var(--sans);font-size:.95rem;font-weight:700;color:var(--text)}
+.signal-badge{display:inline-flex;align-items:center;justify-content:center;padding:.22rem .62rem;border-radius:999px;background:rgba(168,85,247,.14);color:var(--purple-hi);font-family:var(--mono);font-size:.52rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}
+.signal-badge.orange{background:rgba(255,122,48,.12);color:var(--orange)}
+.signal-list{display:grid;gap:.95rem}
+.signal-row{display:grid;gap:.38rem}
+.signal-label{display:flex;align-items:center;justify-content:space-between;gap:.75rem;color:var(--muted2);font-family:var(--mono);font-size:.68rem}
+.signal-track{height:8px;overflow:hidden;border-radius:999px;background:rgba(255,255,255,.06)}
+.signal-fill{height:100%;border-radius:inherit}
+.signal-fill.purple{background:linear-gradient(90deg,var(--purple),rgba(168,85,247,.55))}
+.signal-fill.pink{background:linear-gradient(90deg,var(--purple-hi),rgba(217,70,239,.55))}
+.signal-fill.orange{background:linear-gradient(90deg,var(--orange),rgba(255,122,48,.55))}
+.signal-fill.amber{background:linear-gradient(90deg,var(--orange-dk),rgba(251,146,60,.55))}
+.signal-fill.soft{background:linear-gradient(90deg,rgba(168,85,247,.72),rgba(168,85,247,.35))}
+.signal-footer{margin-top:1rem;padding-top:.95rem;border-top:1px solid var(--border);color:var(--muted);font-family:var(--mono);font-size:.62rem;line-height:1.7}
+.signal-drawdown-svg{width:100%;height:auto;display:block}
+.signal-axis{stroke:rgba(255,255,255,.12);stroke-width:1}
+.signal-grid-line{stroke:rgba(160,100,255,.1);stroke-width:1}
+.signal-drawdown-line{fill:none;stroke:#ff7f79;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.signal-drawdown-fill{fill:url(#signalDrawdownFill)}
+.signal-drawdown-label{fill:var(--muted);font-family:var(--mono);font-size:10px}
+.signal-sector-row{display:grid;grid-template-columns:auto 1fr auto;gap:.7rem;align-items:center}
+.signal-sector-label,.signal-sector-value,.signal-mover-symbol,.signal-mover-change{font-family:var(--mono);font-size:.68rem}
+.signal-sector-label,.signal-mover-symbol{color:var(--muted2)}
+.signal-sector-value,.signal-mover-change{text-align:right}
+.signal-mover-change.pos{color:var(--purple-hi)}
+.signal-mover-change.neg{color:#ff8a65}
+.signal-mover-row{display:grid;grid-template-columns:44px 1fr 54px;gap:.7rem;align-items:center}
+@media(max-width:700px){.signal-grid{grid-template-columns:1fr}}
+
 /* ── ALERTS ── */
 .alert-row{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:1rem;box-shadow:var(--shadow)}
 .alert-card{background:linear-gradient(165deg,rgba(16,11,28,.96) 0%,rgba(10,7,18,.95) 100%);padding:1.4rem 1.6rem;display:flex;align-items:center;justify-content:space-between;gap:1rem}
@@ -1193,6 +1227,68 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
         <div class="risk-lbl">Tracking Error <button type="button" class="risk-help" aria-label="Tracking error help">?<span class="risk-help-tip">Standard deviation of active return (portfolio return minus ASX 200 return), annualised from daily data.</span></button></div>
         <div class="risk-val" id="risk-tracking-error">14.2%</div>
         <div class="risk-sub" id="risk-tracking-error-sub">vs benchmark</div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="divider"></div>
+
+<!-- LIVE SIGNALS -->
+<div class="wrap">
+  <section class="sec" id="live-signals">
+    <div class="sec-head">
+      <h2 class="sec-title">Live Signals</h2>
+      <div class="sec-line"></div>
+      <span class="sec-label">Portfolio-driven</span>
+    </div>
+    <div class="signal-grid">
+      <div class="signal-card">
+        <div class="signal-card-head">
+          <div class="signal-card-title">Risk Signal Levels</div>
+          <div class="signal-badge">Live Metrics</div>
+        </div>
+        <div class="signal-list" id="signal-risk-bars"></div>
+        <div class="signal-footer">Higher bars indicate elevated risk or weaker data confidence in that dimension. Concentration and VaR95 remain the primary portfolio signals to monitor.</div>
+      </div>
+      <div class="signal-card">
+        <div class="signal-card-head">
+          <div class="signal-card-title">Portfolio Drawdown (12-Month)</div>
+          <div class="signal-badge orange" id="signal-drawdown-badge">Max —</div>
+        </div>
+        <svg class="signal-drawdown-svg" viewBox="0 0 420 220" aria-hidden="true">
+          <defs>
+            <linearGradient id="signalDrawdownFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#f87171" stop-opacity="0.24"></stop>
+              <stop offset="100%" stop-color="#f87171" stop-opacity="0"></stop>
+            </linearGradient>
+          </defs>
+          <line class="signal-axis" x1="38" y1="18" x2="38" y2="184"></line>
+          <line class="signal-axis" x1="38" y1="184" x2="396" y2="184"></line>
+          <line class="signal-grid-line" x1="38" y1="40" x2="396" y2="40"></line>
+          <line class="signal-grid-line" x1="38" y1="92" x2="396" y2="92"></line>
+          <line class="signal-grid-line" x1="38" y1="144" x2="396" y2="144"></line>
+          <path class="signal-drawdown-fill" id="signal-drawdown-fill" d="M38,52 L98,78 L158,150 L218,106 L278,88 L338,70 L388,58 L388,184 L38,184Z"></path>
+          <path class="signal-drawdown-line" id="signal-drawdown-line" d="M38,52 L98,78 L158,150 L218,106 L278,88 L338,70 L388,58"></path>
+          <g id="signal-drawdown-labels"></g>
+        </svg>
+        <div class="signal-footer" id="signal-drawdown-footer">Drawdown measures peak-to-trough decline across the latest portfolio history window.</div>
+      </div>
+      <div class="signal-card">
+        <div class="signal-card-head">
+          <div class="signal-card-title">Sector Concentration</div>
+          <div class="signal-badge" id="signal-sector-badge">Top-3 —</div>
+        </div>
+        <div class="signal-list" id="signal-sector-bars"></div>
+        <div class="signal-footer" id="signal-sector-footer">Sector concentration highlights where your portfolio is clustered by category.</div>
+      </div>
+      <div class="signal-card">
+        <div class="signal-card-head">
+          <div class="signal-card-title">Session Movers</div>
+          <div class="signal-badge orange">Today</div>
+        </div>
+        <div class="signal-list" id="signal-movers-list"></div>
+        <div class="signal-footer">Movers in your portfolio are calculated from current price versus previous close. Dip alerts use the same live price context.</div>
       </div>
     </div>
   </section>
@@ -2506,6 +2602,83 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     drawDonut("preview-allocation-canvas", safeItems);
   }
 
+  function renderSignalRiskBars(items) {
+    const container = document.getElementById("signal-risk-bars");
+    if (!container) return;
+    container.innerHTML = items.map((item) => `
+      <div class="signal-row">
+        <div class="signal-label">
+          <span>${escapeHtml(item.label)}</span>
+          <span>${Math.round(Number(item.value) || 0)}</span>
+        </div>
+        <div class="signal-track"><div class="signal-fill ${item.tone}" style="width:${clamp(Number(item.value) || 0, 0, 100)}%"></div></div>
+      </div>
+    `).join("");
+  }
+
+  function renderSignalSectorBars(items) {
+    const container = document.getElementById("signal-sector-bars");
+    if (!container) return;
+    const safeItems = items.length > 0 ? items : [{ label: "No data", pct: 0 }];
+    container.innerHTML = safeItems.map((item) => `
+      <div class="signal-sector-row">
+        <div class="signal-sector-label">${escapeHtml(item.label)}</div>
+        <div class="signal-track"><div class="signal-fill orange" style="width:${clamp(Number(item.pct) || 0, 0, 100)}%"></div></div>
+        <div class="signal-sector-value">${formatPercent(Number(item.pct) || 0, { decimals: 0 })}</div>
+      </div>
+    `).join("");
+  }
+
+  function renderSignalMovers(items) {
+    const container = document.getElementById("signal-movers-list");
+    if (!container) return;
+    const safeItems = items.length > 0 ? items : [{ symbol: "—", pct: 0, width: 0, tone: "pos" }];
+    container.innerHTML = safeItems.map((item) => `
+      <div class="signal-mover-row">
+        <div class="signal-mover-symbol">${escapeHtml(item.symbol)}</div>
+        <div class="signal-track"><div class="signal-fill ${item.tone === "pos" ? "pink" : "orange"}" style="width:${clamp(Number(item.width) || 0, 0, 100)}%"></div></div>
+        <div class="signal-mover-change ${item.tone}">${formatPercent(Number(item.pct) || 0, { signed: true, decimals: 1 })}</div>
+      </div>
+    `).join("");
+  }
+
+  function drawSignalDrawdown(history) {
+    const lineEl = document.getElementById("signal-drawdown-line");
+    const fillEl = document.getElementById("signal-drawdown-fill");
+    const labelsEl = document.getElementById("signal-drawdown-labels");
+    if (!lineEl || !fillEl || !labelsEl) return;
+
+    const daily = Array.isArray(history) ? history.slice(-12) : [];
+    const values = daily.map((item) => Number(item?.value)).filter(Number.isFinite);
+    const base = values.length > 1 ? values : [1, 1, 1, 1, 1, 1];
+
+    let peak = base[0];
+    const drawdowns = base.map((value) => {
+      peak = Math.max(peak, value);
+      return peak > 0 ? ((peak - value) / peak) * 100 : 0;
+    });
+
+    const maxDrawdown = Math.max(...drawdowns, 0);
+    const maxScale = Math.max(maxDrawdown, 1);
+    const points = drawdowns.map((value, index) => {
+      const x = 38 + (350 / Math.max(drawdowns.length - 1, 1)) * index;
+      const y = 26 + (value / maxScale) * 132;
+      return `${index === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`;
+    }).join(" ");
+
+    lineEl.setAttribute("d", points);
+    fillEl.setAttribute("d", `${points} L388,184 L38,184Z`);
+
+    const labels = daily.length > 0 ? daily : Array.from({ length: 6 }, () => ({ date: "" }));
+    const sampled = labels.filter((_, index) => index === 0 || index === labels.length - 1 || index % 2 === 0).slice(-6);
+    labelsEl.innerHTML = sampled.map((item, index) => {
+      const date = toDate(item?.date);
+      const label = date ? new Intl.DateTimeFormat("en-AU", { month: "short" }).format(date) : "";
+      const x = 38 + (350 / Math.max(sampled.length - 1, 1)) * index;
+      return label ? `<text class="signal-drawdown-label" x="${x.toFixed(1)}" y="206" text-anchor="${index === 0 ? "start" : index === sampled.length - 1 ? "end" : "middle"}">${escapeHtml(label)}</text>` : "";
+    }).join("");
+  }
+
   function renderLegend(container, items) {
     if (!container) return;
     container.innerHTML = items
@@ -2875,6 +3048,36 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     const withCost = holdings.filter((holding) => Number.isFinite(holding.costBase) && holding.costBase > 0).length;
     const stale = holdings.filter((holding) => !Number.isFinite(holding.price) || holding.price <= 0).length;
     const confidence = metrics.dailyReturns.length >= 63 ? "High" : metrics.dailyReturns.length >= 20 ? "Medium" : "Low";
+    const signalRiskBars = [
+      { label: "Concentration", value: normalizePenalty(metrics.top3ConcentrationPct, 30, 75) * 100, tone: "purple" },
+      { label: "VaR 95%", value: normalizePenalty(effectiveVar95Pct, 0.7, 3.2) * 100, tone: "pink" },
+      { label: "Drawdown", value: normalizePenalty(effectiveMaxDrawdownPct, 6, 25) * 100, tone: "orange" },
+      { label: "Volatility", value: normalizePenalty(effectiveVolatilityPct, 8, 30) * 100, tone: "amber" },
+      { label: "Data Quality Risk", value: (1 - clamp(metrics.dailyReturns.length / 63, 0, 1)) * 100, tone: "soft" },
+    ];
+    const moverCandidates = holdings
+      .map((holding) => {
+        const price = Number(holding?.price);
+        const prevClose = Number(holding?.prevClose);
+        if (!Number.isFinite(price) || !Number.isFinite(prevClose) || price <= 0 || prevClose <= 0) return null;
+        const pct = ((price - prevClose) / prevClose) * 100;
+        return {
+          symbol: String(holding?.ticker || "—").slice(0, 8),
+          pct,
+          magnitude: Math.abs(pct),
+        };
+      })
+      .filter(Boolean)
+      .sort((a, b) => b.magnitude - a.magnitude)
+      .slice(0, 8);
+    const moverScale = Math.max(...moverCandidates.map((item) => item.magnitude), 1);
+    const signalMovers = moverCandidates.map((item) => ({
+      symbol: item.symbol,
+      pct: item.pct,
+      width: (item.magnitude / moverScale) * 100,
+      tone: item.pct >= 0 ? "pos" : "neg",
+    }));
+    const top3SectorPct = metrics.sectorAllocation.slice(0, 3).reduce((total, item) => total + (Number(item?.pct) || 0), 0);
 
     setText("meta-holdings-count", `${holdings.length} positions`);
     setText("meta-latest-report", latestReportDate ? formatDate(latestReportDate) : "—");
@@ -2905,6 +3108,22 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     const previewRiskFill = document.getElementById("preview-risk-fill");
     if (previewRiskFill) previewRiskFill.style.width = `${riskScore ? riskScore.score : 0}%`;
     drawPreviewSparkline(metrics.history);
+    renderSignalRiskBars(signalRiskBars);
+    drawSignalDrawdown(metrics.riskHistory);
+    setText("signal-drawdown-badge", `Max ${effectiveMaxDrawdownPct != null ? formatPercent(effectiveMaxDrawdownPct, { negative: true, decimals: 0 }) : "—"}`);
+    setText(
+      "signal-drawdown-footer",
+      effectiveMaxDrawdownPct != null
+        ? `Drawdown measures peak-to-trough decline. Your current max drawdown sits at ${formatPercent(effectiveMaxDrawdownPct, { negative: true, decimals: 1 })} over the selected window.`
+        : "Drawdown measures peak-to-trough decline across the latest portfolio history window.",
+    );
+    renderSignalSectorBars(metrics.sectorAllocation.slice(0, 6).map((item) => ({ label: String(item.name || "—"), pct: Number(item.pct) || 0 })));
+    setText("signal-sector-badge", `Top-3 = ${formatPercent(top3SectorPct, { decimals: 0 })}`);
+    setText(
+      "signal-sector-footer",
+      `Top-3 sectors currently represent ${formatPercent(top3SectorPct, { decimals: 1 })} of portfolio value across your imported holdings.`,
+    );
+    renderSignalMovers(signalMovers);
 
     setText("kpi-total-value", formatCurrency(metrics.totalValue));
     setText("kpi-total-cost", formatCurrency(metrics.totalCost));
