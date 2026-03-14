@@ -6,6 +6,15 @@ import type { ReactNode } from "react";
 import styles from "./landing-page.module.css";
 
 type CheckoutPlan = "starter" | "pro";
+type MarketingCard = {
+  title: string;
+  copy: string;
+  icon: ReactNode;
+  alt?: boolean;
+};
+type WorkflowStep = MarketingCard & {
+  number: string;
+};
 
 const tickerItems = [
   ["BHP", "45.82", "+1.2%", "up"],
@@ -20,7 +29,7 @@ const tickerItems = [
   ["WBC", "32.10", "-0.2%", "dn"],
 ] as const;
 
-const workflowSteps = [
+const workflowSteps: readonly WorkflowStep[] = [
   {
     number: "01 — IMPORT",
     title: "Import Reports",
@@ -45,7 +54,7 @@ const workflowSteps = [
   },
 ] as const;
 
-const features = [
+const features: readonly MarketingCard[] = [
   {
     title: "ASX + Crypto + Super Imports",
     copy:
@@ -115,7 +124,7 @@ const sessionMovers = [
   { symbol: "FMG", change: "-2.1%", width: 100, tone: "down" },
 ] as const;
 
-const securityCards = [
+const securityCards: readonly MarketingCard[] = [
   {
     title: "Privacy Promise",
     copy:
