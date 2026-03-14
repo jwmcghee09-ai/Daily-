@@ -6,6 +6,13 @@ import styles from "./page.module.css";
 
 const PLATINUM_EMAIL = "jwmcghee09@gmail.com";
 
+export const metadata = {
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
+
 export default async function SpectrePlatinumPage() {
   const user = await getAuthenticatedUser();
 

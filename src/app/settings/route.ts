@@ -24,6 +24,7 @@ export async function GET(request: NextRequest) {
     headers: {
       "Content-Type": "text/html; charset=utf-8",
       "Cache-Control": "no-store",
+      "X-Robots-Tag": "noindex, nofollow, noarchive",
     },
   });
 }

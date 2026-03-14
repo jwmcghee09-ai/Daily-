@@ -3,6 +3,13 @@ import SignInPage from "@/components/auth/sign-in-page";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
+export const metadata = {
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
+
 export default async function SignInRoute(props: { searchParams: SearchParams }) {
   const user = await getAuthenticatedUser();
   const searchParams = await props.searchParams;
