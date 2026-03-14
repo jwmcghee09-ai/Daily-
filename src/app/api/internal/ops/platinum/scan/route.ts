@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { findAuthUserByEmail } from "@/lib/db";
 import { assertCronTokenAuthorized } from "@/lib/internal-cron-auth";
+import { runProDipAlertBackgroundScan } from "@/lib/pro-dip-alert-scan";
 import { runPlatinumDailyScan } from "@/lib/platinum";
 
 export const runtime = "nodejs";
@@ -23,6 +24,7 @@ export async function POST(request: Request) {
       allowIntraday: isLiveMode,
       requireMarketOpen: isLiveMode,
     });
+    const proDipAlertScan = await runProDipAlertBackgroundScan();
 
     return NextResponse.json({
       ok: true,
@@ -43,6 +45,10 @@ export async function POST(request: Request) {
       dailyPnlAud: result.state.riskControls.dailyPnlAud,
       dailyLossCapAud: result.state.riskControls.dailyLossCapAud,
       killSwitchEnabled: result.state.riskControls.killSwitchEnabled,
+      proDipAlertCandidateUsers: proDipAlertScan.candidateUsers,
+      proDipAlertScannedUsers: proDipAlertScan.scannedUsers.length,
+      proDipAlertTriggered: proDipAlertScan.totalAlertsTriggered,
+      proDipAlertFailedUsers: proDipAlertScan.failedUsers.length,
     });
   } catch (error) {
     if (error instanceof Error && error.name === "UnauthorizedError") {
