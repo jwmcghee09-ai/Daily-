@@ -707,7 +707,7 @@ export default function LandingPage({
               <div className={styles.featuredBadge}>Most Popular</div>
               <div className={styles.planTier}>Pro</div>
               <div className={styles.planPrice}>
-                <span>$15</span>
+                <span>$9.99</span>
                 <small>/month</small>
               </div>
               <p>Advanced quant analytics and AI-powered holdings analysis for serious investors.</p>

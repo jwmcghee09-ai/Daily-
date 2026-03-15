@@ -71,7 +71,7 @@ Listen for events:
 - `customer.subscription.updated`
 - `customer.subscription.deleted`
 
-The landing page includes both `Starter ($3/mo)` and `Pro ($15/mo)` Stripe Checkout buttons.
+The landing page includes both `Starter ($3/mo)` and `Pro ($9.99/mo)` Stripe Checkout buttons.
 Pro analytics (Expected Shortfall, beta, tracking error) are gated by entitlement and unlock when a user's active subscription has `STRIPE_PRO_PRICE_ID`.
 
 ### Monitoring + Alerts
