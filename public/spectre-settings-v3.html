@@ -125,10 +125,9 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
       </article>
       <article class="settings-card">
         <div class="settings-title">Membership</div>
-        <p class="settings-note">Open Stripe billing to manage payment details, invoices, and cancel membership.</p>
+        <p class="settings-note">Open Stripe billing to manage payment details, invoices, change plans, or cancel membership.</p>
         <div class="settings-actions">
-          <button class="btn-pro" id="settings-upgrade-btn" hidden>Update Plan</button>
-          <button class="btn-primary" id="settings-billing-btn">Manage / Cancel Membership</button>
+          <button class="btn-primary" id="settings-billing-btn">Manage / Change Plan</button>
           <a class="btn-ghost" id="settings-back-link" href="/dashboard?mode=account">Back to Dashboard</a>
         </div>
       </article>
@@ -204,7 +203,6 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
     const dashboardLink = document.getElementById("nav-dashboard-link");
     const backLink = document.getElementById("settings-back-link");
     const billingButton = document.getElementById("settings-billing-btn");
-    const upgradeButton = document.getElementById("settings-upgrade-btn");
 
     if (state.demoMode) {
       if (signOutButton) {
@@ -221,9 +219,6 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
         billingButton.textContent = "Create Account to Manage Billing";
         billingButton.disabled = false;
       }
-      if (upgradeButton) {
-        upgradeButton.hidden = true;
-      }
       return;
     }
 
@@ -236,10 +231,6 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
     }
     if (backLink) {
       backLink.setAttribute("href", "/dashboard?mode=account");
-    }
-    if (upgradeButton) {
-      upgradeButton.textContent = "Update Plan";
-      upgradeButton.disabled = false;
     }
   }
 
@@ -293,17 +284,10 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
     setText("settings-account-status", membershipStatus);
     setText("settings-account-created", payload.user.createdAt ? formatDate(payload.user.createdAt) : "—");
     const billingButton = document.getElementById("settings-billing-btn");
-    const upgradeButton = document.getElementById("settings-upgrade-btn");
     if (billingButton) {
       const hasMembership = membershipStatus !== "NOT ACTIVE";
-      billingButton.textContent = hasMembership ? "Manage / Cancel Membership" : "No Active Membership";
+      billingButton.textContent = hasMembership ? "Manage / Change Plan" : "No Active Membership";
       billingButton.disabled = !hasMembership;
-    }
-    if (upgradeButton) {
-      const isStarter = payload.user.planTier === "starter" && !payload.user.proEnabled;
-      upgradeButton.hidden = !isStarter;
-      upgradeButton.textContent = "Update Plan";
-      upgradeButton.disabled = false;
     }
     const settingsEmailLink = document.getElementById("settings-contact-email");
     if (settingsEmailLink) {
@@ -320,7 +304,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
       return;
     }
     const billingButton = document.getElementById("settings-billing-btn");
-    const original = billingButton ? billingButton.textContent : "Manage / Cancel Membership";
+    const original = billingButton ? billingButton.textContent : "Manage / Change Plan";
     if (billingButton) {
       billingButton.textContent = "Opening...";
       billingButton.disabled = true;
@@ -334,35 +318,6 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
       if (billingButton) {
         billingButton.textContent = original;
         billingButton.disabled = false;
-      }
-    }
-  }
-
-  async function startProUpgradeCheckout() {
-    if (!state.sessionUser) return;
-    if (state.demoMode) {
-      window.location.assign("/signin?mode=register&plan=pro");
-      return;
-    }
-    const upgradeButton = document.getElementById("settings-upgrade-btn");
-    const original = upgradeButton ? upgradeButton.textContent : "Update Plan";
-    if (upgradeButton) {
-      upgradeButton.textContent = "Redirecting...";
-      upgradeButton.disabled = true;
-    }
-    try {
-      const payload = await apiJson("/api/billing/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan: "pro" }),
-      });
-      if (!payload || !payload.url) throw new Error("Stripe checkout URL was not generated.");
-      window.location.assign(payload.url);
-    } catch (error) {
-      showToast(error instanceof Error ? error.message : "Unable to start Pro checkout.", "error");
-      if (upgradeButton) {
-        upgradeButton.textContent = original;
-        upgradeButton.disabled = false;
       }
     }
   }
@@ -383,7 +338,6 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
 
   function bindEvents() {
     document.getElementById("settings-billing-btn")?.addEventListener("click", openBillingPortal);
-    document.getElementById("settings-upgrade-btn")?.addEventListener("click", startProUpgradeCheckout);
     document.getElementById("sign-out-btn")?.addEventListener("click", signOut);
   }
 

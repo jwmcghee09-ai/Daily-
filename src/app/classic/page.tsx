@@ -2629,7 +2629,7 @@ export default function Home() {
             ) : (
               <>
                 <p className="settings-note">
-                  Open Stripe billing to manage payment details, invoices, and cancel your membership without losing your workspace data.
+                  Open Stripe billing to manage payment details, invoices, change plans, or cancel your membership without losing your workspace data.
                 </p>
                 <div className="settings-actions">
                   {hasMembership ? (
@@ -2639,7 +2639,7 @@ export default function Home() {
                       onClick={() => void openBillingPortal()}
                       disabled={billingPortalWorking || working || refreshingPrices || checkoutWorking}
                     >
-                      {billingPortalWorking ? "Opening..." : "Manage / Cancel Membership"}
+                      {billingPortalWorking ? "Opening..." : "Manage / Change Plan"}
                     </button>
                   ) : (
                     <button
@@ -2651,16 +2651,6 @@ export default function Home() {
                       {checkoutWorking ? "Redirecting..." : "Start Membership ($3/mo)"}
                     </button>
                   )}
-                  {!sessionUser.proEnabled ? (
-                    <button
-                      type="button"
-                      className="template-btn"
-                      onClick={() => void startProCheckout(sessionUser.email)}
-                      disabled={billingPortalWorking || working || refreshingPrices || checkoutWorking}
-                    >
-                      {checkoutWorking ? "Redirecting..." : "Update Plan"}
-                    </button>
-                  ) : null}
                 </div>
               </>
             )}
