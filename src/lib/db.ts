@@ -55,6 +55,8 @@ interface HoldingRow {
   units: number;
   price: number;
   prev_close: number;
+  session_open: number;
+  session_date: string;
   value: number;
   cost_base: number;
   sector: string;
@@ -293,6 +295,8 @@ function initSchema(db: DatabaseSync): void {
       units REAL NOT NULL,
       price REAL NOT NULL,
       prev_close REAL NOT NULL DEFAULT 0,
+      session_open REAL NOT NULL DEFAULT 0,
+      session_date TEXT NOT NULL DEFAULT '',
       value REAL NOT NULL,
       cost_base REAL NOT NULL,
       sector TEXT NOT NULL,
@@ -373,6 +377,22 @@ function initSchema(db: DatabaseSync): void {
 
   if (!hasPrevCloseColumn) {
     db.exec("ALTER TABLE holdings ADD COLUMN prev_close REAL NOT NULL DEFAULT 0;");
+  }
+
+  const hasSessionOpenColumn = db
+    .prepare("SELECT 1 AS ok FROM pragma_table_info('holdings') WHERE name = 'session_open'")
+    .get() as { ok: number } | undefined;
+
+  if (!hasSessionOpenColumn) {
+    db.exec("ALTER TABLE holdings ADD COLUMN session_open REAL NOT NULL DEFAULT 0;");
+  }
+
+  const hasSessionDateColumn = db
+    .prepare("SELECT 1 AS ok FROM pragma_table_info('holdings') WHERE name = 'session_date'")
+    .get() as { ok: number } | undefined;
+
+  if (!hasSessionDateColumn) {
+    db.exec("ALTER TABLE holdings ADD COLUMN session_date TEXT NOT NULL DEFAULT '';");
   }
 
   const hasTermsAcceptedColumn = db
@@ -663,6 +683,27 @@ function normalizeTicker(value: string): string {
     .toUpperCase()
     .replace(/[^A-Z0-9._-]/g, "")
     .slice(0, 20);
+}
+
+function toSydneyDateKey(date: Date): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Australia/Sydney",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+}
+
+function resetSessionMoversForUserDate(db: DatabaseSync, userId: string, sessionDate: string): number {
+  const result = db.prepare(`
+    UPDATE holdings
+    SET
+      session_open = price,
+      session_date = ?
+    WHERE id LIKE ? AND price > 0 AND COALESCE(session_date, '') <> ?
+  `).run(sessionDate, userLikePattern(userId), sessionDate);
+
+  return Number(result.changes || 0);
 }
 
 function toPublicUser(row: UserRow): AuthPublicUser {
@@ -1036,7 +1077,7 @@ export function readPortfolioState(userId = LOCAL_USER_ID): PortfolioState {
 
   const holdingRows = db
     .prepare(`
-      SELECT id, source, account, ticker, name, units, price, prev_close, value, cost_base, sector, report_date, imported_at
+      SELECT id, source, account, ticker, name, units, price, prev_close, session_open, session_date, value, cost_base, sector, report_date, imported_at
       FROM holdings
       WHERE id LIKE ?
       ORDER BY value DESC, ticker ASC
@@ -1062,6 +1103,7 @@ export function readPortfolioState(userId = LOCAL_USER_ID): PortfolioState {
       units: sanitizeNumber(row.units),
       price: sanitizeNumber(row.price),
       prevClose: sanitizeNumber(row.prev_close),
+      sessionOpen: sanitizeNumber(row.session_open),
       value: sanitizeNumber(row.value),
       costBase: sanitizeNumber(row.cost_base),
       sector: row.sector,
@@ -1092,6 +1134,7 @@ export function saveImport(userId: string, source: DataSource, holdings: Portfol
 
   const latestReportDate = cleanedHoldings.map((holding) => holding.reportDate).sort((a, b) => b.localeCompare(a))[0];
   const nowIso = new Date().toISOString();
+  const sessionDate = toSydneyDateKey(new Date(nowIso));
   const snapshotAt = latestReportDate + "T" + nowIso.slice(11);
   const scopedSnapshotAt = scopeId(userId, snapshotAt);
 
@@ -1102,8 +1145,8 @@ export function saveImport(userId: string, source: DataSource, holdings: Portfol
 
     const insert = db.prepare(`
       INSERT INTO holdings (
-        id, source, account, ticker, name, units, price, prev_close, value, cost_base, sector, report_date, imported_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        id, source, account, ticker, name, units, price, prev_close, session_open, session_date, value, cost_base, sector, report_date, imported_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     for (const holding of cleanedHoldings) {
@@ -1116,6 +1159,8 @@ export function saveImport(userId: string, source: DataSource, holdings: Portfol
         holding.units,
         holding.price,
         sanitizeNumber(holding.prevClose, holding.price),
+        sanitizeNumber(holding.sessionOpen, holding.price),
+        sessionDate,
         holding.value,
         holding.costBase,
         holding.sector,
@@ -1150,6 +1195,9 @@ export function saveImport(userId: string, source: DataSource, holdings: Portfol
 export async function refreshAsxPrices(userId: string): Promise<PriceRefreshResult> {
   const db = getDb();
   const scopedPattern = userLikePattern(userId);
+  const now = new Date();
+  const nowIso = now.toISOString();
+  const sessionDate = toSydneyDateKey(now);
 
   const asxRows = db
     .prepare(`
@@ -1190,8 +1238,6 @@ export async function refreshAsxPrices(userId: string): Promise<PriceRefreshResu
         .filter((ticker) => ticker.length > 0),
     ),
   );
-
-  const nowIso = new Date().toISOString();
 
   if (uniqueAsxTickers.length === 0 && uniqueCryptoTickers.length === 0 && bullionRows.length === 0) {
     setScopedMetaValue(db, userId, LAST_PRICE_REFRESH_KEY, nowIso);
@@ -1270,7 +1316,17 @@ export async function refreshAsxPrices(userId: string): Promise<PriceRefreshResu
   }
 
   if (quoteUpdates.length === 0 && bullionUpdates.length === 0) {
-    setScopedMetaValue(db, userId, LAST_PRICE_REFRESH_KEY, nowIso);
+    db.exec("BEGIN IMMEDIATE");
+
+    try {
+      resetSessionMoversForUserDate(db, userId, sessionDate);
+      setScopedMetaValue(db, userId, LAST_PRICE_REFRESH_KEY, nowIso);
+      db.exec("COMMIT");
+    } catch (error) {
+      db.exec("ROLLBACK");
+      throw error;
+    }
+
     return {
       state: readPortfolioState(userId),
       updatedTickers: [],
@@ -1282,6 +1338,8 @@ export async function refreshAsxPrices(userId: string): Promise<PriceRefreshResu
   db.exec("BEGIN IMMEDIATE");
 
   try {
+    resetSessionMoversForUserDate(db, userId, sessionDate);
+
     const updateStmt = db.prepare(`
       UPDATE holdings
       SET
@@ -1333,6 +1391,36 @@ export async function refreshAsxPrices(userId: string): Promise<PriceRefreshResu
     failedTickers,
     fetchedAt: nowIso,
   };
+}
+
+/**
+ * Reset session movers by setting prev_close = price for all holdings.
+ * Intended to run daily at midnight Sydney time so the "Session Movers"
+ * panel starts each trading day from 0% change.
+ */
+export function resetSessionMovers(userId: string): { resetCount: number } {
+  const db = getDb();
+  const sessionDate = toSydneyDateKey(new Date());
+
+  return { resetCount: resetSessionMoversForUserDate(db, userId, sessionDate) };
+}
+
+/**
+ * Reset session movers for ALL users. Used by the scheduled midnight task.
+ */
+export function resetAllSessionMovers(): { resetCount: number } {
+  const db = getDb();
+  const sessionDate = toSydneyDateKey(new Date());
+
+  const result = db.prepare(`
+    UPDATE holdings
+    SET
+      session_open = price,
+      session_date = ?
+    WHERE price > 0 AND COALESCE(session_date, '') <> ?
+  `).run(sessionDate, sessionDate);
+
+  return { resetCount: result.changes };
 }
 
 export async function estimateHistoricalRiskFromYahoo(

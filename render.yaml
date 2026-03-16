@@ -75,3 +75,14 @@ services:
         sync: false
       - key: BACKUP_CRON_TOKEN
         sync: false
+  - type: cron
+    name: spectre-session-movers-reset
+    runtime: node
+    schedule: "*/15 * * * *"
+    buildCommand: npm ci
+    startCommand: 'curl -fsS -X POST -H "x-backup-cron-token: $BACKUP_CRON_TOKEN" "$SESSION_RESET_BASE_URL/api/prices/reset-session"'
+    envVars:
+      - key: SESSION_RESET_BASE_URL
+        sync: false
+      - key: BACKUP_CRON_TOKEN
+        sync: false

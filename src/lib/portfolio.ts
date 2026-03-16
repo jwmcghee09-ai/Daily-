@@ -13,6 +13,7 @@ export interface PortfolioHolding {
   units: number;
   price: number;
   prevClose: number;
+  sessionOpen?: number;
   value: number;
   costBase: number;
   sector: string;

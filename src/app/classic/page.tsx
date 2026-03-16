@@ -1068,12 +1068,16 @@ export default function Home() {
         continue;
       }
 
+      const sessionOpen = holding.sessionOpen ?? Number.NaN;
+      const moverBase = Number.isFinite(sessionOpen) && sessionOpen > 0
+        ? sessionOpen
+        : holding.prevClose;
       const quantity = resolveHoldingUnits(holding.units, holding.value, holding.price);
-      if (quantity <= 0 || !Number.isFinite(holding.price) || !Number.isFinite(holding.prevClose) || holding.price <= 0 || holding.prevClose <= 0) {
+      if (quantity <= 0 || !Number.isFinite(holding.price) || !Number.isFinite(moverBase) || holding.price <= 0 || moverBase <= 0) {
         continue;
       }
 
-      const previousValue = quantity * holding.prevClose;
+      const previousValue = quantity * moverBase;
       const currentValue = quantity * holding.price;
       const changeAmount = currentValue - previousValue;
       const ticker = holding.ticker.toUpperCase();
@@ -1132,13 +1136,17 @@ export default function Home() {
     let currentTotal = 0;
 
     for (const holding of preExistingHoldings) {
+      const sessionOpen = holding.sessionOpen ?? Number.NaN;
+      const changeBase = Number.isFinite(sessionOpen) && sessionOpen > 0
+        ? sessionOpen
+        : holding.prevClose;
       const quantity = resolveHoldingUnits(holding.units, holding.value, holding.price);
       if (
         quantity <= 0 ||
         !Number.isFinite(holding.price) ||
-        !Number.isFinite(holding.prevClose) ||
+        !Number.isFinite(changeBase) ||
         holding.price <= 0 ||
-        holding.prevClose <= 0
+        changeBase <= 0
       ) {
         if (Number.isFinite(holding.value) && holding.value > 0) {
           previousTotal += holding.value;
@@ -1147,7 +1155,7 @@ export default function Home() {
         continue;
       }
 
-      previousTotal += quantity * holding.prevClose;
+      previousTotal += quantity * changeBase;
       currentTotal += quantity * holding.price;
     }
 
@@ -2136,12 +2144,6 @@ export default function Home() {
               <h2 className="spectre-section-title">Concrete dashboard visuals, not abstract promises.</h2>
               <p className="spectre-section-sub">These demo values show the exact dashboard style. Your real data loads from your own imported portfolio exports.</p>
               <div className="spectre-db-frame">
-                <div className="spectre-db-top">
-                  <span />
-                  <span />
-                  <span />
-                  <p>spectre-assets.com / dashboard</p>
-                </div>
                 <div className="spectre-db-grid">
                   <article className="spectre-db-card">
                     <p>Example Portfolio Risk Score</p>
