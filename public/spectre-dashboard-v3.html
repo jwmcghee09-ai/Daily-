@@ -1255,7 +1255,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
           <div class="signal-badge">Live Metrics</div>
         </div>
         <div class="signal-list" id="signal-risk-bars"></div>
-        <div class="signal-footer">Higher bars indicate elevated risk or weaker data confidence in that dimension. Concentration and VaR95 remain the primary portfolio signals to monitor.</div>
+        <div class="signal-footer">Higher bars indicate elevated risk or weaker data confidence in that dimension. Concentration, VaR95, HHI, and account mix are the primary portfolio signals to monitor.</div>
       </div>
       <div class="signal-card">
         <div class="signal-card-head">
@@ -3108,6 +3108,9 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       { label: "VaR 95%", value: normalizePenalty(effectiveVar95Pct, 0.7, 3.2) * 100, tone: "pink" },
       { label: "Drawdown", value: normalizePenalty(effectiveMaxDrawdownPct, 6, 25) * 100, tone: "orange" },
       { label: "Volatility", value: normalizePenalty(effectiveVolatilityPct, 8, 30) * 100, tone: "amber" },
+      { label: "HHI", value: normalizePenalty(metrics.hhi, 1500, 4000) * 100, tone: "purple" },
+      { label: "Largest Account", value: normalizePenalty(metrics.largestAccountPct, 45, 85) * 100, tone: "pink" },
+      { label: "Source Mix", value: normalizePenalty(metrics.sourceRiskLoad, 0.55, 1.35) * 100, tone: "amber" },
       { label: "Data Quality Risk", value: (1 - clamp(metrics.dailyReturns.length / 63, 0, 1)) * 100, tone: "soft" },
     ];
     const moverCandidates = holdings
