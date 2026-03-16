@@ -301,20 +301,37 @@
 .planPicker {
   border: 1px solid rgba(160, 100, 255, 0.12);
   border-radius: 14px;
-  padding: 14px;
+  padding: 18px;
+  gap: 12px;
+}
+
+.planPicker legend {
+  font-size: 15px;
 }
 
 .planPicker label {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   align-items: center;
   color: #f4f0ff;
+  padding: 4px 0;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.planPicker label span {
+  line-height: 1.25;
 }
 
 .planPicker input,
 .termsRow input {
   width: auto;
   height: auto;
+}
+
+.planPicker input {
+  transform: scale(1.18);
 }
 
 .termsRow {
