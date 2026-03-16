@@ -1420,7 +1420,7 @@ export function resetAllSessionMovers(): { resetCount: number } {
     WHERE price > 0 AND COALESCE(session_date, '') <> ?
   `).run(sessionDate, sessionDate) as { changes?: number };
 
-  return { resetCount: result.changes };
+  return { resetCount: Number(result.changes || 0) };
 }
 
 export async function estimateHistoricalRiskFromYahoo(
