@@ -358,11 +358,6 @@ export default function SignInPage({
 
           <section className={styles.formCard}>
             <div className={styles.cardTop}>
-              <div className={styles.cardDots}>
-                <span />
-                <span />
-                <span />
-              </div>
               <div className={styles.cardUrl}>secure.spectre-assets.com / sign-in</div>
             </div>
 

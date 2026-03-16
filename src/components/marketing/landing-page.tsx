@@ -334,11 +334,6 @@ export default function LandingPage({
 
           <div className={`${styles.dashboardCard} ${styles.reveal}`}>
             <div className={styles.dashboardHeader}>
-              <div className={styles.dashboardDots}>
-                <span />
-                <span />
-                <span />
-              </div>
               <div className={styles.dashboardUrl}>spectre-assets.com / dashboard</div>
             </div>
 
