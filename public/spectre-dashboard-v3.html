@@ -348,6 +348,8 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
 .risk-grid.starter-layout{grid-template-columns:repeat(3,1fr)}
 .risk-card{background:linear-gradient(180deg,rgba(21,16,34,.96) 0%,rgba(14,11,24,.95) 100%);padding:1.4rem 1.6rem;transition:all .24s;position:relative}
 .risk-card:hover{background:linear-gradient(180deg,rgba(25,19,40,.97),rgba(16,12,28,.96))}
+.risk-card.locked{opacity:.72}
+.risk-card.locked .risk-val,.risk-card.locked .risk-sub{filter:saturate(.82)}
 .risk-lbl{font-family:var(--mono);font-size:.52rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:.35rem;display:flex;align-items:center;justify-content:space-between}
 .risk-help{
   appearance:none;
@@ -1908,7 +1910,9 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     if (riskWindowTabs) riskWindowTabs.style.display = hasProAccess ? "" : "none";
     if (riskGrid) riskGrid.classList.toggle("starter-layout", !hasProAccess);
     proRiskCards.forEach((card) => {
-      card.style.display = hasProAccess ? "" : "none";
+      card.style.display = "";
+      card.classList.toggle("locked", !hasProAccess);
+      card.setAttribute("aria-disabled", hasProAccess ? "false" : "true");
     });
   }
 
