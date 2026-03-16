@@ -2290,7 +2290,7 @@ export default function Home() {
               <div className="spectre-pricing-grid">
                 <article className="spectre-plan">
                   <p className="tier">Starter</p>
-                  <h3>$3<span>/month</span></h3>
+                  <h3>$2.99<span>/month</span></h3>
                   <p className="sub">Live now</p>
                   <ul>
                     <li>One private investor workspace</li>
@@ -2416,7 +2416,7 @@ export default function Home() {
                             checked={registerCheckoutPlan === "starter"}
                             onChange={() => setRegisterCheckoutPlan("starter")}
                           />
-                          <span>Starter ($3/mo)</span>
+                          <span>Starter ($2.99/mo)</span>
                         </label>
                         <label>
                           <input
@@ -2465,7 +2465,7 @@ export default function Home() {
                   </button>
                   <button type="button" className="spectre-checkout-btn" onClick={() => openCreateAccountForPlan("starter")} disabled={authWorking || checkoutWorking}>
                     <span>Create account for Starter</span>
-                    <strong>$3/mo</strong>
+                    <strong>$2.99/mo</strong>
                   </button>
                 </div>
               </article>
@@ -2648,7 +2648,7 @@ export default function Home() {
                       onClick={() => void startStarterCheckout(sessionUser.email)}
                       disabled={billingPortalWorking || working || refreshingPrices || checkoutWorking}
                     >
-                      {checkoutWorking ? "Redirecting..." : "Start Membership ($3/mo)"}
+                      {checkoutWorking ? "Redirecting..." : "Start Membership ($2.99/mo)"}
                     </button>
                   )}
                 </div>

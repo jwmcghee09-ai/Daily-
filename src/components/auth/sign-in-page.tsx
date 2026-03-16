@@ -330,7 +330,7 @@ export default function SignInPage({
             </p>
             <div className={styles.planCallout}>
               Flow: <strong>{accessFlowLabel}</strong>
-              <span>{selectedPlan === "pro" ? "$9.99/month" : "$3/month"}</span>
+              <span>{selectedPlan === "pro" ? "$9.99/month" : "$2.99/month"}</span>
             </div>
 
             <ul className={styles.pointList}>
@@ -442,7 +442,7 @@ export default function SignInPage({
                               setHasRequestedCheckout(true);
                             }}
                           />
-                          <span>Starter ($3/mo)</span>
+                          <span>Starter ($2.99/mo)</span>
                         </label>
                         <label>
                           <input
