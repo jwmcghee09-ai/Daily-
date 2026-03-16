@@ -288,7 +288,7 @@ export default function LandingPage({
               Sign In
             </Link>
             <Link href="/signin?mode=register&plan=starter" className={`${styles.button} ${styles.primaryButton}`}>
-              Start for $3/mo
+              Start for $2.99/mo
             </Link>
           </div>
         </div>
@@ -324,7 +324,7 @@ export default function LandingPage({
             </p>
             <div className={`${styles.heroActions} ${styles.reveal}`}>
               <Link href="/signin?mode=register&plan=starter" className={`${styles.button} ${styles.primaryButton} ${styles.heroButton}`}>
-                Start for $3 / Month
+                Start for $2.99 / Month
               </Link>
               <Link href="/dashboard?demo=1" className={`${styles.button} ${styles.outlineButton} ${styles.heroButton}`}>
                 See Live Demo →
@@ -683,7 +683,7 @@ export default function LandingPage({
             <article className={`${styles.planCard} ${styles.reveal}`}>
               <div className={styles.planTier}>Starter</div>
               <div className={styles.planPrice}>
-                <span>$3</span>
+                <span>$2.99</span>
                 <small>/month</small>
               </div>
               <p>Everything you need to get a clear picture of your investment risk across all account types.</p>
@@ -792,10 +792,10 @@ export default function LandingPage({
           <div className={styles.ctaPanel}>
             <div className={styles.heroBadge}>Start today — no commitment</div>
             <h2>Ready to see your portfolio risk clearly?</h2>
-            <p>It takes minutes to import your first CSV and get a risk score. Start for $3/month.</p>
+            <p>It takes minutes to import your first CSV and get a risk score. Start for $2.99/month.</p>
             <div className={styles.heroActions}>
               <Link href="/signin?mode=register&plan=starter" className={`${styles.button} ${styles.primaryButton} ${styles.heroButton}`}>
-                Start for $3 / Month
+                Start for $2.99 / Month
               </Link>
               <Link href="/dashboard?demo=1" className={`${styles.button} ${styles.outlineButton} ${styles.heroButton}`}>
                 See Live Demo

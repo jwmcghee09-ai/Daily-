@@ -2020,7 +2020,7 @@ export default function Home() {
                 SPECTRE consolidates every holding into one portfolio view with concentration, VaR, drawdown, and Pro AI analysis.
               </p>
               <div className="spectre-hero-actions">
-                <a href="#access" className="spectre-btn spectre-btn-primary">Start For $3 / Month</a>
+                <a href="#access" className="spectre-btn spectre-btn-primary">Start For $2.99 / Month</a>
                 <a href="/classic?demo=1" className="spectre-btn spectre-btn-demo">Try Live Demo Portfolio</a>
               </div>
               <div className="spectre-hero-panels">
