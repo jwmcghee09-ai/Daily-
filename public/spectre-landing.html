@@ -575,10 +575,6 @@ a { text-decoration: none; color: inherit; }
           <input id="auth-terms" type="checkbox" />
           <span>I agree to the <a href="/terms" style="color:#fff;">Terms</a> and <a href="/privacy" style="color:#fff;">Privacy Policy</a>.</span>
         </label>
-        <div class="auth-field" id="totp-field" hidden>
-          <label for="auth-totp">Authenticator Code</label>
-          <input id="auth-totp" name="totpCode" type="text" placeholder="6-digit code or recovery code" autocomplete="one-time-code" inputmode="numeric" maxlength="20" />
-        </div>
         <button type="submit" id="auth-submit" class="btn btn-pri auth-submit">Sign In</button>
       </form>
       <div class="utility-row">
@@ -640,14 +636,11 @@ a { text-decoration: none; color: inherit; }
   const resendButton = document.getElementById('resend-verification');
   const forgotButton = document.getElementById('forgot-password');
   const resetModeButton = document.getElementById('mode-reset');
-  const totpField = document.getElementById('totp-field');
-  const totpInput = document.getElementById('auth-totp');
   const checkoutLinks = Array.from(document.querySelectorAll('[data-checkout-plan]'));
   const accessLinks = Array.from(document.querySelectorAll('.js-access-link'));
 
   let mode = 'login';
   let selectedPlan = 'starter';
-  let pendingChallengeToken = null;
 
   function setMessage(text, tone) {
     if (!text) {
@@ -661,29 +654,21 @@ a { text-decoration: none; color: inherit; }
 
   function setMode(nextMode) {
     mode = nextMode;
-    pendingChallengeToken = null;
     const isRegister = nextMode === 'register';
     const isReset = nextMode === 'reset';
-    const isTotp = nextMode === 'totp';
 
-    title.textContent = isTotp ? 'Two-Factor Authentication' : isRegister ? 'Create Account' : isReset ? 'Reset Password' : 'Sign In';
+    title.textContent = isRegister ? 'Create Account' : isReset ? 'Reset Password' : 'Sign In';
     nameField.hidden = !isRegister;
     termsField.hidden = !isRegister;
     tokenField.hidden = !isReset;
-    if (totpField) totpField.hidden = !isTotp;
-    if (isTotp) {
-      emailInput.parentElement.hidden = true;
-      document.querySelector('.password-row').hidden = true;
-    } else {
-      emailInput.parentElement.hidden = false;
-      document.querySelector('.password-row').hidden = false;
-    }
-    submitButton.textContent = isTotp ? 'Verify' : isRegister ? 'Create Account' : isReset ? 'Reset Password' : 'Sign In';
+    emailInput.parentElement.hidden = false;
+    document.querySelector('.password-row').hidden = false;
+    submitButton.textContent = isRegister ? 'Create Account' : isReset ? 'Reset Password' : 'Sign In';
     passwordInput.autocomplete = isRegister ? 'new-password' : 'current-password';
 
     registerButton.classList.toggle('active', isRegister);
     resetModeButton.classList.toggle('active', isReset);
-    if (!isTotp) setMessage('', 'info');
+    setMessage('', 'info');
   }
 
   function setPlan(plan) {
@@ -776,31 +761,13 @@ a { text-decoration: none; color: inherit; }
     const displayName = nameInput.value.trim();
     const acceptsTerms = Boolean(termsInput.checked);
     const token = tokenInput.value.trim();
-    const totpCode = totpInput ? totpInput.value.trim() : '';
 
     submitButton.disabled = true;
     submitButton.style.opacity = '0.7';
 
     try {
-      if (mode === 'totp' && pendingChallengeToken) {
-        if (!totpCode) {
-          setMessage('Please enter your authenticator code or a recovery code.', 'error');
-          return;
-        }
-        await postJson('/api/auth/login', { challengeToken: pendingChallengeToken, totpCode: totpCode });
-        window.location.href = '/dashboard?mode=account';
-        return;
-      }
-
       if (mode === 'login') {
-        const payload = await postJson('/api/auth/login', { email, password });
-        if (payload.totpRequired && payload.challengeToken) {
-          pendingChallengeToken = payload.challengeToken;
-          setMode('totp');
-          setMessage('Enter the 6-digit code from your authenticator app, or use a recovery code.', 'info');
-          if (totpInput) totpInput.focus();
-          return;
-        }
+        await postJson('/api/auth/login', { email, password });
         window.location.href = '/dashboard?mode=account';
         return;
       }
