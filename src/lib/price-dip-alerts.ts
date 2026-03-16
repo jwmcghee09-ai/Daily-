@@ -1,4 +1,4 @@
-import { markPriceDipAlertTriggered, readPriceDipAlerts, readUserEntitlements, refreshAsxPrices, type AuthPublicUser } from "@/lib/db";
+import { createNotification, markPriceDipAlertTriggered, readPriceDipAlerts, readUserEntitlements, refreshAsxPrices, type AuthPublicUser } from "@/lib/db";
 import { sendPriceDipAlertEmail } from "@/lib/mailer";
 
 const ALERT_TRIGGER_COOLDOWN_MS = 12 * 60 * 60 * 1000;
@@ -91,6 +91,12 @@ export async function refreshPricesAndTriggerDipAlertsForUser(
         thresholdPct: alert.dropPctThreshold,
       });
       markPriceDipAlertTriggered(user.id, alert.ticker, nowIso);
+      createNotification(
+        user.id,
+        "price_dip",
+        `${alert.ticker} dropped ${dropPct.toFixed(1)}%`,
+        `${alert.ticker} fell ${dropPct.toFixed(1)}% from the previous close (threshold: ${alert.dropPctThreshold}%).`,
+      );
       triggeredAlerts.push({
         ticker: alert.ticker,
         dropPct,

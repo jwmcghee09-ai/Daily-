@@ -7,8 +7,6 @@ export const runtime = "nodejs";
 
 const HOLDINGS_AI_MODEL = (
   process.env.PRO_HOLDINGS_AI_MODEL ||
-  process.env.PLATINUM_ANALYSIS_MODEL ||
-  process.env.PLATINUM_AI_MODEL ||
   "gpt-4.1-mini"
 ).trim();
 const HOLDINGS_AI_TIMEOUT_MS = clampInteger(process.env.PRO_HOLDINGS_AI_TIMEOUT_MS, 22000, 5000, 45000);

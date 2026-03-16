@@ -163,8 +163,67 @@ a { text-decoration: none; color: inherit; }
 .fc { max-width: 600px; font-family: var(--mono); font-size: 0.58rem; line-height: 1.78; color: rgba(180,176,204,0.7); }
 .fco { font-size: 0.61rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
 .fco a { color: var(--muted2); }
-@media (max-width: 900px) { .wrap { padding-inline: 1.1rem; } .nav-links { display: none; } .hero-layout, .dbf-grid { grid-template-columns: 1fr; } .hero-right { display: none; } .pro-card ul, .pro-facts { grid-template-columns: 1fr; } }
-@media (max-width: 640px) { .ops, .callouts, .feat, .steps, .safety, .pricing, .hero-panels { grid-template-columns: 1fr; } }
+/* --- Skip link --- */
+.skip-link { position: absolute; top: -100%; left: 1rem; z-index: 9999; background: var(--purple); color: #fff; padding: 0.6rem 1.2rem; border-radius: 4px; font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.skip-link:focus { top: 0.5rem; }
+/* --- Focus visible --- */
+:focus-visible { outline: 2px solid var(--purple-hi); outline-offset: 2px; }
+/* --- Hamburger menu --- */
+.nav-toggle { display: none; background: none; border: 1px solid var(--border2); border-radius: 4px; color: var(--text); width: 40px; height: 40px; cursor: pointer; position: relative; flex-shrink: 0; }
+.nav-toggle span, .nav-toggle span::before, .nav-toggle span::after { display: block; width: 18px; height: 2px; background: var(--text); border-radius: 2px; position: absolute; left: 50%; transform: translateX(-50%); transition: transform 0.25s, opacity 0.2s; }
+.nav-toggle span { top: 50%; transform: translate(-50%, -50%); }
+.nav-toggle span::before { content: ""; position: absolute; top: -6px; left: 0; width: 18px; height: 2px; background: var(--text); }
+.nav-toggle span::after { content: ""; position: absolute; top: 6px; left: 0; width: 18px; height: 2px; background: var(--text); }
+.nav-toggle[aria-expanded="true"] span { background: transparent; }
+.nav-toggle[aria-expanded="true"] span::before { transform: rotate(45deg); top: 0; }
+.nav-toggle[aria-expanded="true"] span::after { transform: rotate(-45deg); top: 0; }
+
+@media (max-width: 900px) {
+  .wrap { padding-inline: 1.1rem; }
+  .nav-toggle { display: flex; align-items: center; justify-content: center; }
+  .nav-links { display: none; position: fixed; top: 60px; left: 0; right: 0; background: rgba(10,6,20,0.96); backdrop-filter: blur(24px); flex-direction: column; padding: 1.5rem 2rem; gap: 0.2rem; border-bottom: 1px solid var(--border); z-index: 899; }
+  .nav-links.nav-open { display: flex; }
+  .nav-links a { font-size: 0.75rem; padding: 0.7rem 0; min-height: 44px; display: flex; align-items: center; }
+  .nav-links .demo { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0.6rem 1.2rem; margin-top: 0.5rem; }
+  .nav-cta { min-height: 44px; display: inline-flex; align-items: center; padding: 0.6rem 1.2rem; font-size: 0.7rem; }
+  .hero-layout, .dbf-grid { grid-template-columns: 1fr; }
+  .hero-right { display: flex; margin-top: 1rem; }
+  .live-panel { max-width: 100%; }
+  .pro-card ul, .pro-facts { grid-template-columns: 1fr; }
+  .sec { padding: 2.5rem 0; }
+  .kicker { font-size: 0.7rem; }
+  .hero-eye { font-size: 0.72rem; }
+  .hero-sys { font-size: 0.72rem; }
+  .lp-label { font-size: 0.65rem; }
+  .lp-kpi p { font-size: 0.65rem; }
+  .lp-risk-top span { font-size: 0.65rem; }
+  .btn { min-height: 44px; }
+  .utility-pill { min-height: 44px; display: inline-flex; align-items: center; }
+  .checkout-link { min-height: 44px; }
+  .show-password { min-height: 44px; }
+}
+@media (max-width: 768px) {
+  .access-shell { grid-template-columns: 1fr; gap: 2rem; }
+  .access-copy { padding-top: 0; }
+  .pricing { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  .ops, .callouts, .feat, .steps, .safety, .hero-panels { grid-template-columns: 1fr; }
+  .password-row { grid-template-columns: 1fr; }
+  .show-password { width: 100%; }
+  .utility-row { gap: 0.45rem; }
+  .auth-card { padding: 1.35rem; }
+  .fc { font-size: 0.68rem; }
+  .callout .ck { font-size: 0.7rem; }
+}
+@media (max-width: 480px) {
+  .wrap { padding-inline: 0.75rem; }
+  .sec { padding: 1.5rem 0; }
+  .hero-panels { gap: 0.5rem; }
+  .hero { padding-top: 88px; }
+  .hero-title { font-size: clamp(1.8rem, 7vw, 2.5rem); }
+  .h2 { font-size: clamp(1.6rem, 6vw, 2.4rem); }
+}
 .access-shell { display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 4rem; align-items: start; }
 .access-copy { padding-top: 1rem; }
 .access-copy p { max-width: 560px; }
@@ -203,15 +262,15 @@ a { text-decoration: none; color: inherit; }
 .checkout-link.active { border-color: rgba(255,106,61,0.6); box-shadow: 0 0 0 1px rgba(255,106,61,0.08); }
 .checkout-link:hover { border-color: rgba(255,255,255,0.22); transform: translateY(-1px); }
 .muted-note { font-family: var(--mono); font-size: 0.58rem; line-height: 1.7; color: var(--muted); margin-top: 0.15rem; }
-@media (max-width: 900px) { .access-shell { grid-template-columns: 1fr; gap: 2rem; } .access-copy { padding-top: 0; } }
-@media (max-width: 640px) { .password-row { grid-template-columns: 1fr; } .show-password { width: 100%; } .utility-row { gap: 0.45rem; } .auth-card { padding: 1.35rem; } }
+/* access-shell and auth-card responsive rules are in the main breakpoints above */
 </style>
 </head>
 <body>
-<nav class="nav">
+<a href="#hero" class="skip-link">Skip to content</a>
+<nav class="nav" role="navigation" aria-label="Main navigation">
   <div class="wrap nav-in">
     <a href="/spectre-landing.html" class="logo">SPECTRE</a>
-    <div class="nav-links">
+    <div class="nav-links" id="nav-links">
       <a href="#capabilities">Capabilities</a>
       <a href="#workflow">Workflow</a>
       <a href="#pro-ai">Pro AI</a>
@@ -220,10 +279,11 @@ a { text-decoration: none; color: inherit; }
       <a href="#data-safety">Data Safety</a>
       <a href="#pricing">Pricing</a>
     </div>
+    <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links"><span></span></button>
     <a href="#access" class="nav-cta js-access-link">Sign In</a>
   </div>
 </nav>
-<div class="ticker" style="margin-top:60px">
+<div class="ticker" style="margin-top:60px" aria-hidden="true">
   <div class="ticker-track">
     <span class="ti"><span class="ts">BHP</span>45.82<span class="tu">+1.2%</span></span>
     <span class="ti"><span class="ts">CBA</span>131.44<span class="td">-0.4%</span></span>
@@ -247,7 +307,7 @@ a { text-decoration: none; color: inherit; }
     <span class="ti"><span class="ts">WBC</span>32.10<span class="td">-0.2%</span></span>
   </div>
 </div>
-<section class="hero">
+<section class="hero" id="hero">
   <div class="hero-gl" aria-hidden="true"></div>
   <div class="hero-glow" aria-hidden="true"></div>
   <div class="wrap hero-layout">
@@ -283,7 +343,7 @@ a { text-decoration: none; color: inherit; }
           </div>
           <div class="lp-track"><span class="lp-fill"></span></div>
         </div>
-        <svg class="lp-spark" viewBox="0 0 440 48" fill="none">
+        <svg class="lp-spark" viewBox="0 0 440 48" fill="none" aria-hidden="true">
           <polyline points="0,38 73,32 146,24 219,28 292,18 365,10 440,6" stroke="#d0b3ff" stroke-width="1.6" fill="none"/>
           <polyline points="0,44 440,44" stroke="rgba(255,255,255,0.06)" stroke-width="1" fill="none"/>
         </svg>
@@ -490,7 +550,7 @@ a { text-decoration: none; color: inherit; }
         <h3 id="auth-title">Sign In</h3>
         <p class="auth-subtitle">Access your private SPECTRE workspace</p>
       </div>
-      <div id="auth-message" class="auth-message"></div>
+      <div id="auth-message" class="auth-message" role="alert" aria-live="polite"></div>
       <form id="auth-form" class="auth-form">
         <div class="auth-field" id="name-field" hidden>
           <label for="auth-name">Display Name</label>
@@ -515,6 +575,10 @@ a { text-decoration: none; color: inherit; }
           <input id="auth-terms" type="checkbox" />
           <span>I agree to the <a href="/terms" style="color:#fff;">Terms</a> and <a href="/privacy" style="color:#fff;">Privacy Policy</a>.</span>
         </label>
+        <div class="auth-field" id="totp-field" hidden>
+          <label for="auth-totp">Authenticator Code</label>
+          <input id="auth-totp" name="totpCode" type="text" placeholder="6-digit code or recovery code" autocomplete="one-time-code" inputmode="numeric" maxlength="20" />
+        </div>
         <button type="submit" id="auth-submit" class="btn btn-pri auth-submit">Sign In</button>
       </form>
       <div class="utility-row">
@@ -541,6 +605,24 @@ a { text-decoration: none; color: inherit; }
 </footer>
 <script>
 (() => {
+  /* --- Hamburger menu toggle --- */
+  const navToggle = document.getElementById('nav-toggle');
+  const navLinksEl = document.getElementById('nav-links');
+  if (navToggle && navLinksEl) {
+    navToggle.addEventListener('click', () => {
+      const isOpen = navLinksEl.classList.toggle('nav-open');
+      navToggle.setAttribute('aria-expanded', String(isOpen));
+      navToggle.setAttribute('aria-label', isOpen ? 'Close menu' : 'Open menu');
+    });
+    navLinksEl.querySelectorAll('a').forEach((link) => {
+      link.addEventListener('click', () => {
+        navLinksEl.classList.remove('nav-open');
+        navToggle.setAttribute('aria-expanded', 'false');
+        navToggle.setAttribute('aria-label', 'Open menu');
+      });
+    });
+  }
+
   const title = document.getElementById('auth-title');
   const message = document.getElementById('auth-message');
   const form = document.getElementById('auth-form');
@@ -558,11 +640,14 @@ a { text-decoration: none; color: inherit; }
   const resendButton = document.getElementById('resend-verification');
   const forgotButton = document.getElementById('forgot-password');
   const resetModeButton = document.getElementById('mode-reset');
+  const totpField = document.getElementById('totp-field');
+  const totpInput = document.getElementById('auth-totp');
   const checkoutLinks = Array.from(document.querySelectorAll('[data-checkout-plan]'));
   const accessLinks = Array.from(document.querySelectorAll('.js-access-link'));
 
   let mode = 'login';
   let selectedPlan = 'starter';
+  let pendingChallengeToken = null;
 
   function setMessage(text, tone) {
     if (!text) {
@@ -576,19 +661,29 @@ a { text-decoration: none; color: inherit; }
 
   function setMode(nextMode) {
     mode = nextMode;
+    pendingChallengeToken = null;
     const isRegister = nextMode === 'register';
     const isReset = nextMode === 'reset';
+    const isTotp = nextMode === 'totp';
 
-    title.textContent = isRegister ? 'Create Account' : isReset ? 'Reset Password' : 'Sign In';
+    title.textContent = isTotp ? 'Two-Factor Authentication' : isRegister ? 'Create Account' : isReset ? 'Reset Password' : 'Sign In';
     nameField.hidden = !isRegister;
     termsField.hidden = !isRegister;
     tokenField.hidden = !isReset;
-    submitButton.textContent = isRegister ? 'Create Account' : isReset ? 'Reset Password' : 'Sign In';
+    if (totpField) totpField.hidden = !isTotp;
+    if (isTotp) {
+      emailInput.parentElement.hidden = true;
+      document.querySelector('.password-row').hidden = true;
+    } else {
+      emailInput.parentElement.hidden = false;
+      document.querySelector('.password-row').hidden = false;
+    }
+    submitButton.textContent = isTotp ? 'Verify' : isRegister ? 'Create Account' : isReset ? 'Reset Password' : 'Sign In';
     passwordInput.autocomplete = isRegister ? 'new-password' : 'current-password';
 
     registerButton.classList.toggle('active', isRegister);
     resetModeButton.classList.toggle('active', isReset);
-    setMessage('', 'info');
+    if (!isTotp) setMessage('', 'info');
   }
 
   function setPlan(plan) {
@@ -681,13 +776,31 @@ a { text-decoration: none; color: inherit; }
     const displayName = nameInput.value.trim();
     const acceptsTerms = Boolean(termsInput.checked);
     const token = tokenInput.value.trim();
+    const totpCode = totpInput ? totpInput.value.trim() : '';
 
     submitButton.disabled = true;
     submitButton.style.opacity = '0.7';
 
     try {
+      if (mode === 'totp' && pendingChallengeToken) {
+        if (!totpCode) {
+          setMessage('Please enter your authenticator code or a recovery code.', 'error');
+          return;
+        }
+        await postJson('/api/auth/login', { challengeToken: pendingChallengeToken, totpCode: totpCode });
+        window.location.href = '/dashboard?mode=account';
+        return;
+      }
+
       if (mode === 'login') {
-        await postJson('/api/auth/login', { email, password });
+        const payload = await postJson('/api/auth/login', { email, password });
+        if (payload.totpRequired && payload.challengeToken) {
+          pendingChallengeToken = payload.challengeToken;
+          setMode('totp');
+          setMessage('Enter the 6-digit code from your authenticator app, or use a recovery code.', 'info');
+          if (totpInput) totpInput.focus();
+          return;
+        }
         window.location.href = '/dashboard?mode=account';
         return;
       }
