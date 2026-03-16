@@ -701,7 +701,7 @@ function resetSessionMoversForUserDate(db: DatabaseSync, userId: string, session
       session_open = price,
       session_date = ?
     WHERE id LIKE ? AND price > 0 AND COALESCE(session_date, '') <> ?
-  `).run(sessionDate, userLikePattern(userId), sessionDate);
+  `).run(sessionDate, userLikePattern(userId), sessionDate) as { changes?: number };
 
   return Number(result.changes || 0);
 }
@@ -1418,7 +1418,7 @@ export function resetAllSessionMovers(): { resetCount: number } {
       session_open = price,
       session_date = ?
     WHERE price > 0 AND COALESCE(session_date, '') <> ?
-  `).run(sessionDate, sessionDate);
+  `).run(sessionDate, sessionDate) as { changes?: number };
 
   return { resetCount: result.changes };
 }
