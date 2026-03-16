@@ -89,7 +89,6 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
     <a href="/spectre-dashboard-v3.html?mode=account" class="nav-logo">SPECTRE</a>
     <ul class="nav-links">
       <li><a href="/spectre-dashboard-v3.html?mode=account" id="nav-dashboard-link">Dashboard</a></li>
-      <li id="nav-platinum-link" style="display:none"><a href="/spectre-platinum">Platinum</a></li>
       <li><a href="/spectre-settings-v3.html" class="active">Settings</a></li>
     </ul>
     <div class="nav-right">
@@ -135,6 +134,58 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
         </p>
       </article>
     </div>
+
+    <!-- Two-Factor Authentication -->
+    <div class="settings-grid" style="margin-top:1px;grid-template-columns:1fr">
+      <article class="settings-card" id="totp-section">
+        <div class="settings-title">Two-Factor Authentication</div>
+        <div id="totp-status">
+          <p class="settings-note" id="totp-status-text">Loading 2FA status...</p>
+        </div>
+
+        <!-- State: 2FA not enabled -->
+        <div id="totp-setup-idle" hidden>
+          <p class="settings-note">Protect your account with a time-based one-time password (TOTP) from an authenticator app.</p>
+          <div class="settings-actions">
+            <button class="btn-primary" id="totp-enable-btn">Enable 2FA</button>
+          </div>
+        </div>
+
+        <!-- State: Setup in progress -->
+        <div id="totp-setup-pending" hidden>
+          <p class="settings-note">Copy this URI into your authenticator app (Google Authenticator, Authy, 1Password, etc.):</p>
+          <div class="settings-row" style="margin:.6rem 0;flex-direction:column;align-items:flex-start;gap:.4rem">
+            <span style="font-size:.5rem;letter-spacing:.12em">OTPAUTH URI</span>
+            <strong id="totp-uri" style="font-size:.62rem;word-break:break-all;text-align:left;user-select:all">—</strong>
+          </div>
+          <div id="totp-recovery-section" hidden>
+            <p class="settings-note" style="margin-top:.6rem">Save these recovery codes in a secure location. Each code can only be used once:</p>
+            <div class="settings-row" style="margin:.4rem 0;flex-direction:column;align-items:flex-start;gap:.3rem">
+              <span style="font-size:.5rem;letter-spacing:.12em">RECOVERY CODES</span>
+              <strong id="totp-recovery-codes" style="font-size:.7rem;font-family:var(--mono);letter-spacing:.08em;user-select:all">—</strong>
+            </div>
+          </div>
+          <p class="settings-note" style="margin-top:.6rem">Enter the 6-digit code from your authenticator app to verify:</p>
+          <div style="display:flex;gap:.55rem;align-items:center;margin-top:.5rem;flex-wrap:wrap">
+            <input type="text" id="totp-verify-input" placeholder="000000" maxlength="6" inputmode="numeric" autocomplete="one-time-code"
+              style="font-family:var(--mono);font-size:.8rem;letter-spacing:.2em;text-align:center;width:120px;padding:.5rem .6rem;background:rgba(8,5,16,.56);border:1px solid var(--border2);border-radius:7px;color:var(--text);outline:none" />
+            <button class="btn-primary" id="totp-verify-btn">Verify &amp; Enable</button>
+            <button class="btn-ghost" id="totp-cancel-btn">Cancel</button>
+          </div>
+        </div>
+
+        <!-- State: 2FA enabled -->
+        <div id="totp-enabled-section" hidden>
+          <p class="settings-note" style="color:#6ee7b7">Two-factor authentication is active. Your account is protected with TOTP verification.</p>
+          <p class="settings-note" style="margin-top:.5rem">To disable 2FA, enter your account password:</p>
+          <div style="display:flex;gap:.55rem;align-items:center;margin-top:.5rem;flex-wrap:wrap">
+            <input type="password" id="totp-disable-password" placeholder="Your password" autocomplete="current-password"
+              style="font-family:var(--mono);font-size:.7rem;width:200px;padding:.5rem .6rem;background:rgba(8,5,16,.56);border:1px solid var(--border2);border-radius:7px;color:var(--text);outline:none" />
+            <button class="btn-ghost" id="totp-disable-btn" style="border-color:rgba(255,77,26,.4);color:var(--orange)">Disable 2FA</button>
+          </div>
+        </div>
+      </article>
+    </div>
   </section>
 </div>
 
@@ -153,7 +204,6 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
 <script>
 (() => {
   const ADMIN_CONTACT_EMAIL = "admin@spectre-assets.com";
-  const PLATINUM_EMAIL = "jwmcghee09@gmail.com";
   const DEMO_SESSION_USER = {
     id: "demo-portfolio",
     email: "demo@spectre-assets.com",
@@ -186,9 +236,6 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
     return new URLSearchParams(window.location.search).get("demo") === "1";
   }
 
-  function isPlatinumUser(email) {
-    return (email || "").trim().toLowerCase() === PLATINUM_EMAIL;
-  }
 
   function formatDate(value) {
     if (!value) return "—";
@@ -263,10 +310,6 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
     if (state.demoMode) {
       state.sessionUser = DEMO_SESSION_USER;
       setText("nav-user-email", "Demo workspace");
-      const navPlatinumLink = document.getElementById("nav-platinum-link");
-      if (navPlatinumLink) {
-        navPlatinumLink.style.display = isPlatinumUser(DEMO_SESSION_USER.email) ? "" : "none";
-      }
       setText("settings-account-name", DEMO_SESSION_USER.displayName);
       setText("settings-account-email", DEMO_SESSION_USER.email);
       setText("settings-account-plan", "Pro Demo");
@@ -283,10 +326,6 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
     }
     state.sessionUser = payload.user;
     setText("nav-user-email", payload.user.email || "—");
-    const navPlatinumLink = document.getElementById("nav-platinum-link");
-    if (navPlatinumLink) {
-      navPlatinumLink.style.display = isPlatinumUser(payload.user.email) ? "" : "none";
-    }
     setText("settings-account-name", payload.user.displayName || payload.user.email || "—");
     setText("settings-account-email", payload.user.email || "—");
     const planLabel = payload.user.proEnabled ? "Pro Active" : "Starter";
@@ -387,10 +426,157 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
     window.location.href = "/classic";
   }
 
+  /* ---------------------------------------------------------------- */
+  /*  Two-Factor Authentication UI                                     */
+  /* ---------------------------------------------------------------- */
+
+  const totpState = { setupUri: null, challengeToken: null, recoveryCodes: null };
+
+  function showTotpSection(section) {
+    const sections = ["totp-setup-idle", "totp-setup-pending", "totp-enabled-section"];
+    sections.forEach(function(id) {
+      const el = document.getElementById(id);
+      if (el) el.hidden = true;
+    });
+    const target = document.getElementById(section);
+    if (target) target.hidden = false;
+  }
+
+  async function refreshTotpStatus() {
+    const statusText = document.getElementById("totp-status-text");
+    if (state.demoMode) {
+      if (statusText) statusText.textContent = "2FA is not available in demo mode.";
+      return;
+    }
+
+    try {
+      const payload = await apiJson("/api/auth/totp/setup", { cache: "no-store" });
+
+      if (payload.enabled) {
+        if (statusText) statusText.textContent = "2FA is enabled for your account.";
+        showTotpSection("totp-enabled-section");
+      } else {
+        if (statusText) statusText.textContent = "2FA is not enabled.";
+        showTotpSection("totp-setup-idle");
+      }
+    } catch {
+      if (statusText) statusText.textContent = "2FA is not enabled.";
+      showTotpSection("totp-setup-idle");
+    }
+  }
+
+  async function startTotpSetup() {
+    const enableBtn = document.getElementById("totp-enable-btn");
+    if (enableBtn) { enableBtn.disabled = true; enableBtn.textContent = "Setting up..."; }
+
+    try {
+      const payload = await apiJson("/api/auth/totp/setup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      totpState.setupUri = payload.uri;
+      totpState.recoveryCodes = payload.recoveryCodes;
+
+      const uriEl = document.getElementById("totp-uri");
+      if (uriEl) uriEl.textContent = payload.uri;
+
+      if (payload.recoveryCodes && payload.recoveryCodes.length > 0) {
+        const codesEl = document.getElementById("totp-recovery-codes");
+        if (codesEl) codesEl.textContent = payload.recoveryCodes.join("  ");
+        const recoverySection = document.getElementById("totp-recovery-section");
+        if (recoverySection) recoverySection.hidden = false;
+      }
+
+      showTotpSection("totp-setup-pending");
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : "Failed to start 2FA setup.", "error");
+    } finally {
+      if (enableBtn) { enableBtn.disabled = false; enableBtn.textContent = "Enable 2FA"; }
+    }
+  }
+
+  async function verifyTotpSetup() {
+    const codeInput = document.getElementById("totp-verify-input");
+    const verifyBtn = document.getElementById("totp-verify-btn");
+    const code = codeInput ? codeInput.value.trim() : "";
+
+    if (!code || code.length !== 6) {
+      showToast("Please enter a valid 6-digit code.", "error");
+      return;
+    }
+
+    if (verifyBtn) { verifyBtn.disabled = true; verifyBtn.textContent = "Verifying..."; }
+
+    try {
+      await apiJson("/api/auth/totp/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: code }),
+      });
+
+      showToast("Two-factor authentication enabled successfully.");
+      await refreshTotpStatus();
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : "Failed to verify code.", "error");
+    } finally {
+      if (verifyBtn) { verifyBtn.disabled = false; verifyBtn.textContent = "Verify & Enable"; }
+    }
+  }
+
+  function cancelTotpSetup() {
+    totpState.setupUri = null;
+    totpState.recoveryCodes = null;
+    showTotpSection("totp-setup-idle");
+  }
+
+  async function disableTotp() {
+    const passwordInput = document.getElementById("totp-disable-password");
+    const disableBtn = document.getElementById("totp-disable-btn");
+    const password = passwordInput ? passwordInput.value : "";
+
+    if (!password) {
+      showToast("Please enter your password.", "error");
+      return;
+    }
+
+    if (disableBtn) { disableBtn.disabled = true; disableBtn.textContent = "Disabling..."; }
+
+    try {
+      await apiJson("/api/auth/totp/disable", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: password }),
+      });
+
+      showToast("Two-factor authentication disabled.");
+      if (passwordInput) passwordInput.value = "";
+      await refreshTotpStatus();
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : "Failed to disable 2FA.", "error");
+    } finally {
+      if (disableBtn) { disableBtn.disabled = false; disableBtn.textContent = "Disable 2FA"; }
+    }
+  }
+
+  function bindTotpEvents() {
+    document.getElementById("totp-enable-btn")?.addEventListener("click", startTotpSetup);
+    document.getElementById("totp-verify-btn")?.addEventListener("click", verifyTotpSetup);
+    document.getElementById("totp-cancel-btn")?.addEventListener("click", cancelTotpSetup);
+    document.getElementById("totp-disable-btn")?.addEventListener("click", disableTotp);
+    const verifyInput = document.getElementById("totp-verify-input");
+    if (verifyInput) {
+      verifyInput.addEventListener("keydown", function(e) {
+        if (e.key === "Enter") { e.preventDefault(); verifyTotpSetup(); }
+      });
+    }
+  }
+
   function bindEvents() {
     document.getElementById("settings-billing-btn")?.addEventListener("click", openBillingPortal);
     document.getElementById("settings-upgrade-btn")?.addEventListener("click", startProUpgradeCheckout);
     document.getElementById("sign-out-btn")?.addEventListener("click", signOut);
+    bindTotpEvents();
   }
 
   async function boot() {
@@ -399,6 +585,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
     applyModeChrome();
     try {
       await loadSession();
+      await refreshTotpStatus();
     } catch (error) {
       showToast(error instanceof Error ? error.message : "Failed to load settings.", "error");
     }

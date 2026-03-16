@@ -1,3 +1,5 @@
+import { getDb } from "@/lib/db";
+
 interface RateLimitBucket {
   count: number;
   windowStart: number;
@@ -8,6 +10,8 @@ interface RateLimitResult {
   retryAfterSec: number;
   remaining: number;
 }
+
+/* ── In-memory fallback for development mode ── */
 
 type RateLimitStore = Map<string, RateLimitBucket>;
 
@@ -23,7 +27,7 @@ function getStore(): RateLimitStore {
   return global.__spectreRateLimitStore;
 }
 
-export function consumeRateLimit(key: string, limit: number, windowMs: number): RateLimitResult {
+function consumeRateLimitInMemory(key: string, limit: number, windowMs: number): RateLimitResult {
   const now = Date.now();
   const store = getStore();
   const existing = store.get(key);
@@ -54,4 +58,72 @@ export function consumeRateLimit(key: string, limit: number, windowMs: number): 
     retryAfterSec: 0,
     remaining: Math.max(0, limit - existing.count),
   };
+}
+
+/* ── SQLite-backed implementation ── */
+
+interface RateLimitRow {
+  count: number;
+  window_start: number;
+}
+
+function consumeRateLimitSqlite(key: string, limit: number, windowMs: number): RateLimitResult {
+  const now = Date.now();
+  const db = getDb();
+
+  const row = db
+    .prepare("SELECT count, window_start FROM rate_limits WHERE key = ?")
+    .get(key) as RateLimitRow | undefined;
+
+  if (!row || now - row.window_start >= windowMs) {
+    db.prepare("INSERT OR REPLACE INTO rate_limits (key, count, window_start) VALUES (?, 1, ?)")
+      .run(key, now);
+
+    // Probabilistic cleanup: ~1% of calls
+    if (Math.random() < 0.01) {
+      db.prepare("DELETE FROM rate_limits WHERE window_start + ? < ?")
+        .run(windowMs, now);
+    }
+
+    return {
+      allowed: true,
+      retryAfterSec: 0,
+      remaining: Math.max(0, limit - 1),
+    };
+  }
+
+  const newCount = row.count + 1;
+  db.prepare("UPDATE rate_limits SET count = ? WHERE key = ?")
+    .run(newCount, key);
+
+  // Probabilistic cleanup: ~1% of calls
+  if (Math.random() < 0.01) {
+    db.prepare("DELETE FROM rate_limits WHERE window_start + ? < ?")
+      .run(windowMs, now);
+  }
+
+  if (newCount > limit) {
+    const retryAfterMs = Math.max(0, windowMs - (now - row.window_start));
+    return {
+      allowed: false,
+      retryAfterSec: Math.ceil(retryAfterMs / 1000),
+      remaining: 0,
+    };
+  }
+
+  return {
+    allowed: true,
+    retryAfterSec: 0,
+    remaining: Math.max(0, limit - newCount),
+  };
+}
+
+/* ── Public API ── */
+
+export function consumeRateLimit(key: string, limit: number, windowMs: number): RateLimitResult {
+  if (process.env.NODE_ENV === "development") {
+    return consumeRateLimitInMemory(key, limit, windowMs);
+  }
+
+  return consumeRateLimitSqlite(key, limit, windowMs);
 }

@@ -271,7 +271,7 @@ const RISK_WINDOW_SETTINGS: Record<RiskWindow, { label: string; yahooRange: stri
   "1Y": { label: "1Y", yahooRange: "2y", maxPoints: 252 },
 };
 
-function getDb(): DatabaseSync {
+export function getDb(): DatabaseSync {
   if (!dbInstance) {
     fs.mkdirSync(DATA_DIR, { recursive: true });
     dbInstance = new DatabaseSync(DB_FILE);
@@ -410,6 +410,51 @@ function initSchema(db: DatabaseSync): void {
     CREATE UNIQUE INDEX IF NOT EXISTS idx_pre_signup_billing_subscription
       ON pre_signup_billing (stripe_subscription_id)
       WHERE stripe_subscription_id IS NOT NULL;
+  `);
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS rate_limits (
+      key TEXT PRIMARY KEY,
+      count INTEGER NOT NULL,
+      window_start INTEGER NOT NULL
+    );
+  `);
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS notifications (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      type TEXT NOT NULL,
+      title TEXT NOT NULL,
+      body TEXT NOT NULL,
+      read_at TEXT,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY(user_id) REFERENCES users(id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications (user_id, read_at);
+  `);
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS user_totp (
+      user_id TEXT PRIMARY KEY,
+      encrypted_secret TEXT NOT NULL,
+      enabled INTEGER NOT NULL DEFAULT 0,
+      verified_at TEXT,
+      recovery_codes TEXT,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY(user_id) REFERENCES users(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS totp_challenges (
+      token_hash TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      expires_at TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY(user_id) REFERENCES users(id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_totp_challenges_expires_at ON totp_challenges (expires_at);
   `);
 
 }
@@ -1633,6 +1678,20 @@ export function createAuthUser(
   return toPublicUser(row as UserRow);
 }
 
+export function findAuthUserById(userId: string): AuthPublicUser | null {
+  const db = getDb();
+
+  const row = db
+    .prepare("SELECT id, email, display_name, password_hash, created_at FROM users WHERE id = ? LIMIT 1")
+    .get(userId) as UserRow | undefined;
+
+  if (!row) {
+    return null;
+  }
+
+  return toPublicUser(row);
+}
+
 export function findAuthUserByEmail(email: string): AuthUserWithPassword | null {
   const db = getDb();
   const normalizedEmail = normalizeEmail(email);
@@ -2477,4 +2536,226 @@ function clampNumber(value: number, min: number, max: number): number {
   }
 
   return Math.min(max, Math.max(min, value));
+}
+
+/* ── Notifications ────────────────────────────────────────────────── */
+
+interface NotificationRow {
+  id: string;
+  user_id: string;
+  type: string;
+  title: string;
+  body: string;
+  read_at: string | null;
+  created_at: string;
+}
+
+export interface Notification {
+  id: string;
+  userId: string;
+  type: string;
+  title: string;
+  body: string;
+  readAt: string | null;
+  createdAt: string;
+}
+
+function toNotification(row: NotificationRow): Notification {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    type: row.type,
+    title: row.title,
+    body: row.body,
+    readAt: row.read_at,
+    createdAt: row.created_at,
+  };
+}
+
+export function createNotification(userId: string, type: string, title: string, body: string): Notification {
+  const db = getDb();
+  const id = crypto.randomUUID();
+  const createdAt = new Date().toISOString();
+
+  db.prepare(
+    "INSERT INTO notifications (id, user_id, type, title, body, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+  ).run(id, userId, type, title, body, createdAt);
+
+  return { id, userId, type, title, body, readAt: null, createdAt };
+}
+
+export function readNotifications(userId: string, limit?: number): Notification[] {
+  const db = getDb();
+  const effectiveLimit = typeof limit === "number" && Number.isFinite(limit) && limit > 0 ? limit : 50;
+
+  const rows = db
+    .prepare(
+      "SELECT id, user_id, type, title, body, read_at, created_at FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT ?",
+    )
+    .all(userId, effectiveLimit) as NotificationRow[];
+
+  return rows.map(toNotification);
+}
+
+export function markNotificationRead(userId: string, notificationId: string): void {
+  const db = getDb();
+  const readAt = new Date().toISOString();
+
+  db.prepare(
+    "UPDATE notifications SET read_at = ? WHERE id = ? AND user_id = ?",
+  ).run(readAt, notificationId, userId);
+}
+
+export function countUnreadNotifications(userId: string): number {
+  const db = getDb();
+
+  const row = db
+    .prepare("SELECT COUNT(*) AS cnt FROM notifications WHERE user_id = ? AND read_at IS NULL")
+    .get(userId) as { cnt: number } | undefined;
+
+  return row?.cnt ?? 0;
+}
+
+/* ------------------------------------------------------------------ */
+/*  TOTP / Two-Factor Authentication                                   */
+/* ------------------------------------------------------------------ */
+
+interface TotpRow {
+  user_id: string;
+  encrypted_secret: string;
+  enabled: number;
+  verified_at: string | null;
+  recovery_codes: string | null;
+  created_at: string;
+}
+
+export interface TotpRecord {
+  userId: string;
+  encryptedSecret: string;
+  enabled: boolean;
+  verifiedAt: string | null;
+  recoveryCodes: string | null;
+  createdAt: string;
+}
+
+function toTotpRecord(row: TotpRow): TotpRecord {
+  return {
+    userId: row.user_id,
+    encryptedSecret: row.encrypted_secret,
+    enabled: row.enabled === 1,
+    verifiedAt: row.verified_at ?? null,
+    recoveryCodes: row.recovery_codes ?? null,
+    createdAt: row.created_at,
+  };
+}
+
+export function saveTotpSecret(userId: string, encryptedSecret: string): void {
+  const db = getDb();
+  const nowIso = new Date().toISOString();
+
+  db.prepare(`
+    INSERT INTO user_totp (user_id, encrypted_secret, enabled, verified_at, recovery_codes, created_at)
+    VALUES (?, ?, 0, NULL, NULL, ?)
+    ON CONFLICT(user_id) DO UPDATE SET
+      encrypted_secret = excluded.encrypted_secret,
+      enabled = 0,
+      verified_at = NULL,
+      recovery_codes = NULL,
+      created_at = excluded.created_at
+  `).run(userId, encryptedSecret, nowIso);
+}
+
+export function getTotpRecord(userId: string): TotpRecord | null {
+  const db = getDb();
+
+  const row = db
+    .prepare("SELECT user_id, encrypted_secret, enabled, verified_at, recovery_codes, created_at FROM user_totp WHERE user_id = ?")
+    .get(userId) as TotpRow | undefined;
+
+  if (!row) {
+    return null;
+  }
+
+  return toTotpRecord(row);
+}
+
+export function enableTotp(userId: string): void {
+  const db = getDb();
+  const nowIso = new Date().toISOString();
+
+  db.prepare("UPDATE user_totp SET enabled = 1, verified_at = ? WHERE user_id = ?").run(nowIso, userId);
+}
+
+export function disableTotp(userId: string): void {
+  const db = getDb();
+  db.prepare("DELETE FROM user_totp WHERE user_id = ?").run(userId);
+}
+
+export function saveRecoveryCodes(userId: string, hashedCodes: string): void {
+  const db = getDb();
+  db.prepare("UPDATE user_totp SET recovery_codes = ? WHERE user_id = ?").run(hashedCodes, userId);
+}
+
+export function isUserTotpEnabled(userId: string): boolean {
+  const db = getDb();
+
+  const row = db
+    .prepare("SELECT enabled FROM user_totp WHERE user_id = ?")
+    .get(userId) as { enabled: number } | undefined;
+
+  return row?.enabled === 1;
+}
+
+/* ------------------------------------------------------------------ */
+/*  TOTP Challenge Tokens                                              */
+/* ------------------------------------------------------------------ */
+
+const TOTP_CHALLENGE_TTL_MS = 5 * 60 * 1000;
+
+export function createTotpChallenge(userId: string): string {
+  const db = getDb();
+  const nowIso = new Date().toISOString();
+  const expiresAt = new Date(Date.now() + TOTP_CHALLENGE_TTL_MS).toISOString();
+  const token = crypto.randomBytes(32).toString("hex");
+  const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+
+  // Clean up expired challenges
+  db.prepare("DELETE FROM totp_challenges WHERE expires_at < ?").run(nowIso);
+
+  db.prepare(`
+    INSERT INTO totp_challenges (token_hash, user_id, expires_at, created_at)
+    VALUES (?, ?, ?, ?)
+  `).run(tokenHash, userId, expiresAt, nowIso);
+
+  return token;
+}
+
+export function consumeTotpChallenge(tokenRaw: string): { userId: string } | null {
+  const db = getDb();
+  const nowIso = new Date().toISOString();
+  const tokenHash = crypto.createHash("sha256").update(tokenRaw).digest("hex");
+
+  db.exec("BEGIN IMMEDIATE");
+
+  try {
+    const row = db
+      .prepare("SELECT user_id, expires_at FROM totp_challenges WHERE token_hash = ? LIMIT 1")
+      .get(tokenHash) as { user_id: string; expires_at: string } | undefined;
+
+    if (!row || row.expires_at < nowIso) {
+      if (row) {
+        db.prepare("DELETE FROM totp_challenges WHERE token_hash = ?").run(tokenHash);
+      }
+      db.exec("COMMIT");
+      return null;
+    }
+
+    db.prepare("DELETE FROM totp_challenges WHERE token_hash = ?").run(tokenHash);
+    db.exec("COMMIT");
+
+    return { userId: row.user_id };
+  } catch (error) {
+    db.exec("ROLLBACK");
+    throw error;
+  }
 }

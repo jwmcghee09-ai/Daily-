@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
-import { markPriceDipAlertTriggered, readPriceDipAlerts, readUserEntitlements, refreshAsxPrices } from "@/lib/db";
+import { createNotification, markPriceDipAlertTriggered, readPriceDipAlerts, readUserEntitlements, refreshAsxPrices } from "@/lib/db";
 import { sendPriceDipAlertEmail } from "@/lib/mailer";
 
 export const runtime = "nodejs";
@@ -88,6 +88,12 @@ export async function POST() {
           thresholdPct: alert.dropPctThreshold,
         });
         markPriceDipAlertTriggered(sessionUser.id, alert.ticker, nowIso);
+        createNotification(
+          sessionUser.id,
+          "price_dip",
+          `${alert.ticker} dropped ${dropPct.toFixed(1)}%`,
+          `${alert.ticker} fell ${dropPct.toFixed(1)}% from the previous close (threshold: ${alert.dropPctThreshold}%).`,
+        );
         triggeredAlerts.push({
           ticker: alert.ticker,
           dropPct,
