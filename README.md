@@ -81,6 +81,14 @@ Set these environment variables in Render to enable monitoring:
 - `NEXT_PUBLIC_SENTRY_DSN=https://...@o....ingest.sentry.io/...`
 - `ALERT_EMAIL_TO=ops@your-domain.com` (comma-separated allowed)
 
+### Cloudflare Web Analytics
+
+To enable Cloudflare Web Analytics, add this environment variable in Render:
+- `NEXT_PUBLIC_CF_WEB_ANALYTICS_TOKEN=your-cloudflare-token`
+
+Once set, the app loads Cloudflare's official `beacon.min.js` script on every page.
+If you use the manual setup flow in Cloudflare, paste only the token value into the env var, not the full script tag.
+
 What this enables:
 - Sentry captures server/client runtime errors.
 - `GET /api/health` returns service health for uptime checks.

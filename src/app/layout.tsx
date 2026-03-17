@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { DM_Mono, DM_Sans, Geist, Geist_Mono, Sora, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 
@@ -41,6 +42,11 @@ export const metadata: Metadata = {
   description: "SPECTRE portfolio dashboard for consolidated holdings and risk analytics.",
 };
 
+const cloudflareAnalyticsToken = process.env.NEXT_PUBLIC_CF_WEB_ANALYTICS_TOKEN?.trim();
+const cloudflareBeaconConfig = cloudflareAnalyticsToken
+  ? JSON.stringify({ token: cloudflareAnalyticsToken })
+  : null;
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -53,6 +59,14 @@ export default function RootLayout({
       >
         {children}
       </body>
+      {cloudflareBeaconConfig ? (
+        <Script
+          defer
+          src="https://static.cloudflareinsights.com/beacon.min.js"
+          data-cf-beacon={cloudflareBeaconConfig}
+          strategy="afterInteractive"
+        />
+      ) : null}
     </html>
   );
 }

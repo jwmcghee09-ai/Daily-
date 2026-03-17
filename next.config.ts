@@ -8,12 +8,12 @@ const contentSecurityPolicy = [
   "frame-ancestors 'none'",
   "object-src 'none'",
   "form-action 'self' https://checkout.stripe.com",
-  `script-src 'self' 'unsafe-inline'${isProd ? "" : " 'unsafe-eval'"}`,
+  `script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com${isProd ? "" : " 'unsafe-eval'"}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
   isProd
-    ? "connect-src 'self' https://api.stripe.com https://checkout.stripe.com https://*.ingest.sentry.io https://*.sentry.io"
+    ? "connect-src 'self' https://api.stripe.com https://checkout.stripe.com https://*.ingest.sentry.io https://*.sentry.io https://cloudflareinsights.com"
     : "connect-src 'self' http: https: ws: wss:",
   "frame-src https://checkout.stripe.com",
   "upgrade-insecure-requests",
