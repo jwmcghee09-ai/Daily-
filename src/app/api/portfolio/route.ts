@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { clearPortfolioData, readPortfolioState } from "@/lib/db";
-import { getDemoGuestContext, resetDemoGuestPortfolio } from "@/lib/demo-guest";
+import { clearDemoGuestCookie, clearDemoGuestWorkspace, getDemoGuestContext, resetDemoGuestPortfolio } from "@/lib/demo-guest";
 
 export const runtime = "nodejs";
 
@@ -37,11 +37,19 @@ export async function DELETE(request: Request) {
   try {
     const sessionUser = await getAuthenticatedUser();
     const isDemo = new URL(request.url).searchParams.get("demo") === "1";
+    const purgeDemo = new URL(request.url).searchParams.get("purge") === "1";
 
     if (!sessionUser && isDemo) {
       const demoGuest = await getDemoGuestContext();
       if (!demoGuest) {
         return NextResponse.json({ state: null, demoGuest: null });
+      }
+
+      if (purgeDemo) {
+        clearDemoGuestWorkspace(demoGuest.userId);
+        const response = NextResponse.json({ state: null, demoGuest: null });
+        clearDemoGuestCookie(response);
+        return response;
       }
 
       const state = resetDemoGuestPortfolio(demoGuest.userId);

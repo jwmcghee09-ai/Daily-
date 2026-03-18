@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import { clearPortfolioData, getDb, readPortfolioState } from "@/lib/db";
 
 export const DEMO_GUEST_COOKIE_NAME = "spectre_demo_guest";
-export const DEMO_GUEST_TTL_MS = 60 * 60 * 1000;
+export const DEMO_GUEST_TTL_MS = 30 * 60 * 1000;
 export const DEMO_GUEST_MAX_UPLOADS = 2;
 
 const DEMO_GUEST_EXPIRES_KEY = "demo_guest_expires_at";

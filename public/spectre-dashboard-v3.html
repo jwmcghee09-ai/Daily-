@@ -3547,6 +3547,11 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   async function refreshPrices(options = {}) {
     const { silent = false, skipButtonState = false } = options;
     if (state.demoMode) {
+      try {
+        await apiJson("/api/portfolio?demo=1&purge=1", { method: "DELETE" });
+      } catch {
+        // best effort for demo cleanup
+      }
       window.location.assign("/");
       return;
     }
@@ -3639,7 +3644,15 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   async function signOut(event) {
     event.preventDefault();
     if (state.demoMode) {
-      window.location.href = "/";
+      const targetHref = event?.currentTarget instanceof HTMLAnchorElement
+        ? event.currentTarget.getAttribute("href") || "/"
+        : "/";
+      try {
+        await apiJson("/api/portfolio?demo=1&purge=1", { method: "DELETE" });
+      } catch {
+        // best effort for demo cleanup
+      }
+      window.location.href = targetHref;
       return;
     }
     try {

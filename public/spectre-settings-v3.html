@@ -325,7 +325,15 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
   async function signOut(event) {
     event.preventDefault();
     if (state.demoMode) {
-      window.location.href = "/";
+      const targetHref = event?.currentTarget instanceof HTMLAnchorElement
+        ? event.currentTarget.getAttribute("href") || "/"
+        : "/";
+      try {
+        await apiJson("/api/portfolio?demo=1&purge=1", { method: "DELETE" });
+      } catch {
+        // best effort for demo cleanup
+      }
+      window.location.href = targetHref;
       return;
     }
     try {
