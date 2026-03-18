@@ -1615,6 +1615,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     },
   ];
   const DEMO_PORTFOLIO_STATE = createDemoPortfolioState();
+  const EMPTY_DEMO_PORTFOLIO_STATE = { holdings: [], snapshots: [], updatedAt: "", lastPriceRefreshAt: "" };
 
   const state = {
     demoMode: false,
@@ -2881,11 +2882,11 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
           };
           state.demoGuest = payload.demoGuest || null;
         } else {
-          state.portfolio = cloneData(DEMO_PORTFOLIO_STATE);
+          state.portfolio = cloneData(EMPTY_DEMO_PORTFOLIO_STATE);
           state.demoGuest = null;
         }
       } catch {
-        state.portfolio = cloneData(DEMO_PORTFOLIO_STATE);
+        state.portfolio = cloneData(EMPTY_DEMO_PORTFOLIO_STATE);
         state.demoGuest = null;
       }
       applyUploadChrome();
@@ -2900,8 +2901,8 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
         state.alerts = [];
         state.availableAlertTickers = getDemoAvailableTickers();
       } else {
-        state.alerts = cloneData(DEMO_DIP_ALERTS);
-        state.availableAlertTickers = [...DEMO_AVAILABLE_TICKERS];
+        state.alerts = [];
+        state.availableAlertTickers = [];
       }
       renderAlerts();
       return;
@@ -3593,9 +3594,9 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
         // best effort for guest workspace cleanup
       }
       state.demoGuest = null;
-      state.portfolio = cloneData(DEMO_PORTFOLIO_STATE);
-      state.alerts = cloneData(DEMO_DIP_ALERTS);
-      state.availableAlertTickers = [...DEMO_AVAILABLE_TICKERS];
+      state.portfolio = cloneData(EMPTY_DEMO_PORTFOLIO_STATE);
+      state.alerts = [];
+      state.availableAlertTickers = [];
       state.historicalRiskEstimate = null;
       state.holdingsAi = null;
       state.holdingsAiError = "";
