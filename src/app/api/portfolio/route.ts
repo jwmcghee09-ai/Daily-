@@ -1,12 +1,27 @@
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { clearPortfolioData, readPortfolioState } from "@/lib/db";
+import { getDemoGuestContext, resetDemoGuestPortfolio } from "@/lib/demo-guest";
 
 export const runtime = "nodejs";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const sessionUser = await getAuthenticatedUser();
+    const isDemo = new URL(request.url).searchParams.get("demo") === "1";
+
+    if (!sessionUser && isDemo) {
+      const demoGuest = await getDemoGuestContext();
+      if (!demoGuest) {
+        return NextResponse.json({ state: null, demoGuest: null });
+      }
+
+      return NextResponse.json({
+        ...readPortfolioState(demoGuest.userId),
+        demoGuest,
+      });
+    }
+
     if (!sessionUser) {
       return NextResponse.json({ error: "Please sign in first." }, { status: 401 });
     }
@@ -18,9 +33,24 @@ export async function GET() {
   }
 }
 
-export async function DELETE() {
+export async function DELETE(request: Request) {
   try {
     const sessionUser = await getAuthenticatedUser();
+    const isDemo = new URL(request.url).searchParams.get("demo") === "1";
+
+    if (!sessionUser && isDemo) {
+      const demoGuest = await getDemoGuestContext();
+      if (!demoGuest) {
+        return NextResponse.json({ state: null, demoGuest: null });
+      }
+
+      const state = resetDemoGuestPortfolio(demoGuest.userId);
+      return NextResponse.json({
+        ...state,
+        demoGuest,
+      });
+    }
+
     if (!sessionUser) {
       return NextResponse.json({ error: "Please sign in first." }, { status: 401 });
     }

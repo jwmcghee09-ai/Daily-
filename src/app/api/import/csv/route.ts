@@ -3,6 +3,13 @@ import * as XLSX from "xlsx";
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { saveImport } from "@/lib/db";
+import {
+  attachDemoGuestCookie,
+  createDemoGuestContext,
+  DEMO_GUEST_MAX_UPLOADS,
+  getDemoGuestContext,
+  incrementDemoGuestUploadCount,
+} from "@/lib/demo-guest";
 import { CsvRow, DataSource, extractCsvDataSection, parseRowsToHoldings, PortfolioHolding } from "@/lib/portfolio";
 
 export const runtime = "nodejs";
@@ -215,8 +222,32 @@ function parseCandidateRows(text: string): { rows: CsvRow[]; parsedAny: boolean 
 export async function POST(request: Request) {
   try {
     const sessionUser = await getAuthenticatedUser();
-    if (!sessionUser) {
+    const url = new URL(request.url);
+    const allowDemoGuest = url.searchParams.get("demo") === "1";
+    let demoGuest = !sessionUser && allowDemoGuest ? await getDemoGuestContext() : null;
+    let createdDemoGuest = false;
+
+    if (!sessionUser && allowDemoGuest && !demoGuest) {
+      demoGuest = createDemoGuestContext();
+      createdDemoGuest = true;
+    }
+
+    if (!sessionUser && !demoGuest) {
       return NextResponse.json({ error: "Please sign in first." }, { status: 401 });
+    }
+
+    if (demoGuest && demoGuest.uploadCount >= DEMO_GUEST_MAX_UPLOADS) {
+      const response = NextResponse.json(
+        {
+          error: `Demo upload limit reached. You can import up to ${DEMO_GUEST_MAX_UPLOADS} files per guest session.`,
+          demoGuest,
+        },
+        { status: 403 },
+      );
+      if (createdDemoGuest) {
+        attachDemoGuestCookie(response, demoGuest.userId, demoGuest.expiresAt);
+      }
+      return response;
     }
 
     const declaredLength = Number(request.headers.get("content-length") || "0");
@@ -272,8 +303,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No valid holdings were found in this file." }, { status: 400 });
     }
 
-    const state = saveImport(sessionUser.id, payload.source, bestHoldings);
-    return NextResponse.json(state);
+    const userId = sessionUser?.id || demoGuest?.userId || "";
+    const state = saveImport(userId, payload.source, bestHoldings);
+
+    if (!demoGuest) {
+      return NextResponse.json(state);
+    }
+
+    const updatedGuest = incrementDemoGuestUploadCount(demoGuest.userId);
+    const response = NextResponse.json({
+      ...state,
+      demoGuest: updatedGuest,
+    });
+    attachDemoGuestCookie(response, updatedGuest.userId, updatedGuest.expiresAt);
+    return response;
   } catch {
     return NextResponse.json({ error: "Failed to import report file." }, { status: 500 });
   }

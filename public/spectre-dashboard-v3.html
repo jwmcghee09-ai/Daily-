@@ -1620,6 +1620,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     demoMode: false,
     redirecting: false,
     sessionUser: null,
+    demoGuest: null,
     portfolio: { holdings: [], snapshots: [], updatedAt: "", lastPriceRefreshAt: "" },
     alerts: [],
     availableAlertTickers: [],
@@ -1673,6 +1674,62 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     if (params.get("demo") === "1" || params.get("mode") === "demo") return true;
     if (params.get("mode") === "account") return false;
     return true;
+  }
+
+  function getDemoUploadsRemaining() {
+    const remaining = Number(state.demoGuest?.uploadsRemaining);
+    if (!Number.isFinite(remaining)) return 2;
+    return Math.max(remaining, 0);
+  }
+
+  function hasDemoGuestWorkspace() {
+    return state.demoMode && Number(state.demoGuest?.uploadCount || 0) > 0;
+  }
+
+  function getDemoAvailableTickers() {
+    if (!hasDemoGuestWorkspace()) {
+      return [...DEMO_AVAILABLE_TICKERS];
+    }
+
+    return Array.from(new Set(
+      (state.portfolio?.holdings || [])
+        .filter((holding) => ["asx", "crypto", "gold"].includes(String(holding?.source || "")))
+        .map((holding) => String(holding?.ticker || "").trim().toUpperCase())
+        .filter((ticker) => ticker.length > 0),
+    ));
+  }
+
+  function applyUploadChrome() {
+    const sourceCount = document.getElementById("uploads-source-count");
+
+    if (state.demoMode) {
+      const remaining = getDemoUploadsRemaining();
+      if (sourceCount) {
+        sourceCount.textContent = hasDemoGuestWorkspace()
+          ? `8 sources · ${remaining} guest upload${remaining === 1 ? "" : "s"} left`
+          : "8 sources · Try up to 2 guest uploads";
+      }
+      uploads.forEach((card) => {
+        const disabled = remaining <= 0;
+        card.style.opacity = disabled ? "0.6" : "";
+        card.setAttribute("aria-disabled", disabled ? "true" : "false");
+        const action = card.querySelector(".upload-action");
+        if (action) {
+          action.textContent = disabled ? "Demo Limit Reached" : "Upload File";
+        }
+      });
+      return;
+    }
+
+    if (sourceCount) {
+      sourceCount.textContent = "8 sources";
+    }
+    uploads.forEach((card) => {
+      card.style.opacity = "";
+      card.removeAttribute("aria-disabled");
+      const action = card.querySelector(".upload-action");
+      if (action) action.textContent = "Upload File";
+    });
   }
 
 
@@ -1861,12 +1918,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       if (settingsLink) {
         settingsLink.setAttribute("href", "/settings?demo=1");
       }
-      uploads.forEach((card) => {
-        card.style.opacity = "0.72";
-        card.setAttribute("aria-disabled", "true");
-        const action = card.querySelector(".upload-action");
-        if (action) action.textContent = "Create Account to Upload";
-      });
+      applyUploadChrome();
       return;
     }
 
@@ -1883,12 +1935,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     if (settingsLink) {
       settingsLink.setAttribute("href", "/settings");
     }
-    uploads.forEach((card) => {
-      card.style.opacity = "";
-      card.removeAttribute("aria-disabled");
-      const action = card.querySelector(".upload-action");
-      if (action) action.textContent = "Upload File";
-    });
+    applyUploadChrome();
   }
 
   function applyPlanVisibility() {
@@ -2823,7 +2870,25 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 
   async function loadPortfolio() {
     if (state.demoMode) {
-      state.portfolio = cloneData(DEMO_PORTFOLIO_STATE);
+      try {
+        const payload = await apiJson("/api/portfolio?demo=1", { cache: "no-store" });
+        if (payload && Array.isArray(payload.holdings)) {
+          state.portfolio = {
+            holdings: payload.holdings || [],
+            snapshots: payload.snapshots || [],
+            updatedAt: payload.updatedAt || "",
+            lastPriceRefreshAt: payload.lastPriceRefreshAt || "",
+          };
+          state.demoGuest = payload.demoGuest || null;
+        } else {
+          state.portfolio = cloneData(DEMO_PORTFOLIO_STATE);
+          state.demoGuest = null;
+        }
+      } catch {
+        state.portfolio = cloneData(DEMO_PORTFOLIO_STATE);
+        state.demoGuest = null;
+      }
+      applyUploadChrome();
       return;
     }
     state.portfolio = await apiJson("/api/portfolio", { cache: "no-store" });
@@ -2831,8 +2896,13 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 
   async function loadAlerts() {
     if (state.demoMode) {
-      state.alerts = cloneData(DEMO_DIP_ALERTS);
-      state.availableAlertTickers = [...DEMO_AVAILABLE_TICKERS];
+      if (hasDemoGuestWorkspace()) {
+        state.alerts = [];
+        state.availableAlertTickers = getDemoAvailableTickers();
+      } else {
+        state.alerts = cloneData(DEMO_DIP_ALERTS);
+        state.availableAlertTickers = [...DEMO_AVAILABLE_TICKERS];
+      }
       renderAlerts();
       return;
     }
@@ -2850,7 +2920,16 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 
   async function loadHistoricalRisk() {
     if (state.demoMode) {
-      state.historicalRiskEstimate = null;
+      if (!hasDemoGuestWorkspace()) {
+        state.historicalRiskEstimate = null;
+        return;
+      }
+      const apiWindow = RISK_API_WINDOW_MAP[state.riskWindow] || "3M";
+      try {
+        state.historicalRiskEstimate = await apiJson(`/api/risk/estimate?demo=1&window=${apiWindow}`, { method: "POST" });
+      } catch {
+        state.historicalRiskEstimate = null;
+      }
       return;
     }
     const apiWindow = RISK_API_WINDOW_MAP[state.riskWindow] || "3M";
@@ -3508,6 +3587,12 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 
   async function clearData() {
     if (state.demoMode) {
+      try {
+        await apiJson("/api/portfolio?demo=1", { method: "DELETE" });
+      } catch {
+        // best effort for guest workspace cleanup
+      }
+      state.demoGuest = null;
       state.portfolio = cloneData(DEMO_PORTFOLIO_STATE);
       state.alerts = cloneData(DEMO_DIP_ALERTS);
       state.availableAlertTickers = [...DEMO_AVAILABLE_TICKERS];
@@ -3521,6 +3606,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       }
       renderAlerts();
       renderPortfolio();
+      applyUploadChrome();
       showToast("Demo portfolio reset.");
       return;
     }
@@ -3679,12 +3765,11 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   }
 
   async function uploadReportFile(file) {
-    if (state.demoMode) {
-      showToast("Create an account to upload live portfolio files.", "error", INVALID_UPLOAD_MESSAGE_TTL_MS);
+    if (!file || !state.uploadSource) return;
+    if (state.demoMode && getDemoUploadsRemaining() <= 0) {
+      showToast("Demo upload limit reached. Create an account for unlimited imports.", "error", INVALID_UPLOAD_MESSAGE_TTL_MS);
       return;
     }
-
-    if (!file || !state.uploadSource) return;
     const extension = getFileExtension(file.name);
     if (!SUPPORTED_UPLOAD_EXTENSIONS.has(extension)) {
       showToast(INVALID_UPLOAD_FORMAT_MESSAGE, "error", INVALID_UPLOAD_MESSAGE_TTL_MS);
@@ -3712,14 +3797,30 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 
     showToast("Uploading report...");
     try {
-      state.portfolio = await apiJson("/api/import/csv", {
+      const payloadResponse = await apiJson(state.demoMode ? "/api/import/csv?demo=1" : "/api/import/csv", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+      state.portfolio = {
+        holdings: payloadResponse.holdings || [],
+        snapshots: payloadResponse.snapshots || [],
+        updatedAt: payloadResponse.updatedAt || "",
+        lastPriceRefreshAt: payloadResponse.lastPriceRefreshAt || "",
+      };
+      if (state.demoMode) {
+        state.demoGuest = payloadResponse.demoGuest || state.demoGuest;
+        await loadAlerts();
+      }
       await loadHistoricalRisk();
       renderPortfolio();
-      showToast(`${state.uploadSource.toUpperCase()} report imported.`);
+      if (state.demoMode) {
+        const remaining = getDemoUploadsRemaining();
+        applyUploadChrome();
+        showToast(`${state.uploadSource.toUpperCase()} report imported. ${remaining} guest upload${remaining === 1 ? "" : "s"} left.`);
+      } else {
+        showToast(`${state.uploadSource.toUpperCase()} report imported.`);
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : "Upload failed.";
       const isInvalidTypeMessage =
@@ -3760,8 +3861,8 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 
     uploads.forEach((card) => {
       card.addEventListener("click", () => {
-        if (state.demoMode) {
-          showToast("Create an account to upload live portfolio files.", "error", INVALID_UPLOAD_MESSAGE_TTL_MS);
+        if (state.demoMode && getDemoUploadsRemaining() <= 0) {
+          showToast("Demo upload limit reached. Create an account for unlimited imports.", "error", INVALID_UPLOAD_MESSAGE_TTL_MS);
           return;
         }
         const source = card.getAttribute("data-source");
