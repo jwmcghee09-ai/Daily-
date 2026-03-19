@@ -1132,11 +1132,9 @@ export function saveImport(userId: string, source: DataSource, holdings: Portfol
     throw new Error("No valid holdings to save.");
   }
 
-  const latestReportDate = cleanedHoldings.map((holding) => holding.reportDate).sort((a, b) => b.localeCompare(a))[0];
   const nowIso = new Date().toISOString();
   const sessionDate = toSydneyDateKey(new Date(nowIso));
-  const snapshotAt = latestReportDate + "T" + nowIso.slice(11);
-  const scopedSnapshotAt = scopeId(userId, snapshotAt);
+  const scopedSnapshotAt = scopeId(userId, nowIso);
 
   db.exec("BEGIN IMMEDIATE");
 
