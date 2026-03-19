@@ -65,17 +65,6 @@ services:
       - key: BACKUP_CRON_TOKEN
         sync: false
   - type: cron
-    name: spectre-platinum-live-scan
-    runtime: node
-    schedule: "*/5 * * * *"
-    buildCommand: npm ci
-    startCommand: 'curl -fsS -X POST -H "Authorization: Bearer $BACKUP_CRON_TOKEN" "$PLATINUM_SCAN_BASE_URL/api/internal/ops/platinum/scan?mode=live"'
-    envVars:
-      - key: PLATINUM_SCAN_BASE_URL
-        sync: false
-      - key: BACKUP_CRON_TOKEN
-        sync: false
-  - type: cron
     name: spectre-session-movers-reset
     runtime: node
     schedule: "*/15 * * * *"

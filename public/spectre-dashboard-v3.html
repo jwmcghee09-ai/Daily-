@@ -3196,9 +3196,10 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     const moverCandidates = holdings
       .map((holding) => {
         const price = Number(holding?.price);
-        const prevClose = Number(holding?.prevClose);
-        if (!Number.isFinite(price) || !Number.isFinite(prevClose) || price <= 0 || prevClose <= 0) return null;
-        const pct = ((price - prevClose) / prevClose) * 100;
+        // Use sessionOpen (reset daily at midnight Sydney) when available, fall back to prevClose
+        const base = Number(holding?.sessionOpen) > 0 ? Number(holding.sessionOpen) : Number(holding?.prevClose);
+        if (!Number.isFinite(price) || !Number.isFinite(base) || price <= 0 || base <= 0) return null;
+        const pct = ((price - base) / base) * 100;
         return {
           symbol: String(holding?.ticker || "—").slice(0, 8),
           pct,
