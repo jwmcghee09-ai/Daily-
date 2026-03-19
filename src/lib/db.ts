@@ -852,14 +852,20 @@ async function fetchYahooQuoteBySymbol(symbol: string): Promise<AsxQuoteData | n
   const url = `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=5d`;
 
   try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10_000);
+
     const response = await fetch(url, {
       method: "GET",
       cache: "no-store",
+      signal: controller.signal,
       headers: {
         "User-Agent": "Mozilla/5.0 (compatible; SPECTRE/1.0)",
         Accept: "application/json",
       },
     });
+
+    clearTimeout(timeout);
 
     if (!response.ok) {
       return null;
@@ -880,14 +886,20 @@ async function fetchYahooSeriesBySymbol(symbol: string, range: string): Promise<
   const url = `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=${encodeURIComponent(range)}`;
 
   try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15_000);
+
     const response = await fetch(url, {
       method: "GET",
       cache: "no-store",
+      signal: controller.signal,
       headers: {
         "User-Agent": "Mozilla/5.0 (compatible; SPECTRE/1.0)",
         Accept: "application/json",
       },
     });
+
+    clearTimeout(timeout);
 
     if (!response.ok) {
       return null;
@@ -1197,13 +1209,15 @@ export async function refreshAsxPrices(userId: string): Promise<PriceRefreshResu
   const nowIso = now.toISOString();
   const sessionDate = toSydneyDateKey(now);
 
-  const asxRows = db
+  // Fetch all equity-like sources: ASX stocks, index ETFs, managed funds, and super funds
+  // are all ASX-listed and can be fetched from Yahoo Finance with the .AX suffix.
+  const asxLikeRows = db
     .prepare(`
-      SELECT ticker, units
+      SELECT ticker, units, source
       FROM holdings
-      WHERE source = 'asx' AND id LIKE ?
+      WHERE source IN ('asx', 'index', 'fund', 'super') AND id LIKE ?
     `)
-    .all(scopedPattern) as HoldingTickerRow[];
+    .all(scopedPattern) as (HoldingTickerRow & { source: string })[];
 
   const cryptoRows = db
     .prepare(`
@@ -1221,13 +1235,17 @@ export async function refreshAsxPrices(userId: string): Promise<PriceRefreshResu
     `)
     .all(scopedPattern) as BullionHoldingRow[];
 
-  const uniqueAsxTickers = Array.from(
-    new Set(
-      asxRows
-        .map((row) => sanitizeString(row.ticker, "").toUpperCase())
-        .filter((ticker) => ticker.length > 0),
-    ),
-  );
+  // Build a map of ticker -> sources so we know which sources to update for each ticker
+  const asxLikeTickerSources = new Map<string, Set<string>>();
+  for (const row of asxLikeRows) {
+    const ticker = sanitizeString(row.ticker, "").toUpperCase();
+    if (ticker.length === 0) continue;
+    if (!asxLikeTickerSources.has(ticker)) {
+      asxLikeTickerSources.set(ticker, new Set());
+    }
+    asxLikeTickerSources.get(ticker)!.add(row.source);
+  }
+  const uniqueAsxLikeTickers = Array.from(asxLikeTickerSources.keys());
 
   const uniqueCryptoTickers = Array.from(
     new Set(
@@ -1237,7 +1255,7 @@ export async function refreshAsxPrices(userId: string): Promise<PriceRefreshResu
     ),
   );
 
-  if (uniqueAsxTickers.length === 0 && uniqueCryptoTickers.length === 0 && bullionRows.length === 0) {
+  if (uniqueAsxLikeTickers.length === 0 && uniqueCryptoTickers.length === 0 && bullionRows.length === 0) {
     setScopedMetaValue(db, userId, LAST_PRICE_REFRESH_KEY, nowIso);
     return {
       state: readPortfolioState(userId),
@@ -1247,32 +1265,46 @@ export async function refreshAsxPrices(userId: string): Promise<PriceRefreshResu
     };
   }
 
-  const quoteUpdates: Array<{ source: "asx" | "crypto"; ticker: string; price: number; prevClose: number }> = [];
+  const quoteUpdates: Array<{ source: string; ticker: string; price: number; prevClose: number }> = [];
   const bullionUpdates: Array<{ id: string; price: number; prevClose: number; metal: "gold" | "silver" }> = [];
   const updatedLabels = new Set<string>();
   const failedTickers: string[] = [];
 
   // Sequential fetch reduces the chance of upstream rate limiting.
-  for (const ticker of uniqueAsxTickers) {
-    const quote = await fetchAsxQuoteFromYahoo(ticker);
+  // ASX-like sources (asx, index, fund, super) all use Yahoo .AX suffix.
+  for (const ticker of uniqueAsxLikeTickers) {
+    let quote: AsxQuoteData | null = null;
+    // Retry once on failure
+    quote = await fetchAsxQuoteFromYahoo(ticker);
+    if (!quote) {
+      quote = await fetchAsxQuoteFromYahoo(ticker);
+    }
     const price = sanitizeNumber(quote?.price, Number.NaN);
     const prevClose = sanitizeNumber(quote?.prevClose, price);
 
     if (Number.isFinite(price) && price > 0) {
-      quoteUpdates.push({
-        source: "asx",
-        ticker,
-        price,
-        prevClose: Number.isFinite(prevClose) && prevClose > 0 ? prevClose : price,
-      });
-      updatedLabels.add(ticker);
+      // Push an update for each source that holds this ticker
+      const sources = asxLikeTickerSources.get(ticker) ?? new Set(["asx"]);
+      for (const source of sources) {
+        quoteUpdates.push({
+          source,
+          ticker,
+          price,
+          prevClose: Number.isFinite(prevClose) && prevClose > 0 ? prevClose : price,
+        });
+      }
+      const sourceLabel = sources.size > 1 ? `${ticker} (${Array.from(sources).join(",")})` : ticker;
+      updatedLabels.add(sourceLabel);
     } else {
       failedTickers.push(ticker);
     }
   }
 
   for (const ticker of uniqueCryptoTickers) {
-    const quote = await fetchCryptoQuoteFromYahoo(ticker);
+    let quote = await fetchCryptoQuoteFromYahoo(ticker);
+    if (!quote) {
+      quote = await fetchCryptoQuoteFromYahoo(ticker);
+    }
     const price = sanitizeNumber(quote?.price, Number.NaN);
     const prevClose = sanitizeNumber(quote?.prevClose, price);
 

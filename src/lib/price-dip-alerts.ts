@@ -36,7 +36,7 @@ export async function refreshPricesAndTriggerDipAlertsForUser(
 
   const quoteByTicker = new Map<string, { price: number; prevClose: number }>();
   for (const holding of refreshedState.state.holdings) {
-    if (holding.source !== "asx" && holding.source !== "crypto" && holding.source !== "gold") {
+    if (holding.source === "tax" || holding.source === "savings") {
       continue;
     }
 
