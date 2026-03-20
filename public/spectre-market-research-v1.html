@@ -322,6 +322,65 @@ h3 { font-size: 1.15rem; }
   margin: 24px 0;
 }
 
+.hero-intro {
+  margin: 28px 0 20px;
+  padding: 28px 32px;
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(19, 13, 33, 0.88) 0%, rgba(13, 9, 22, 0.82) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28), 0 0 32px rgba(155, 93, 229, 0.08);
+}
+
+.hero-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(155, 93, 229, 0.32);
+  background: rgba(155, 93, 229, 0.12);
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #f3d6ff;
+}
+
+.hero-kicker::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--sl-purple-hi), var(--accent));
+  box-shadow: 0 0 12px rgba(255, 75, 51, 0.35);
+}
+
+.hero-heading {
+  margin: 16px 0 12px;
+  font-size: clamp(2.6rem, 5vw, 4.9rem);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 0.96;
+  color: #fff9ff;
+  text-shadow:
+    0 0 22px rgba(192, 132, 252, 0.18),
+    0 0 40px rgba(255, 75, 51, 0.08);
+}
+
+.hero-heading .gradient {
+  background: linear-gradient(90deg, #f5efff 0%, #dfccff 20%, #c084fc 48%, #ff7a68 78%, #ffb547 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-copy {
+  max-width: 760px;
+  font-size: 0.95rem;
+  line-height: 1.8;
+  color: #c8c0e6;
+}
+
 .hero-card { padding: 20px 24px; }
 
 .hero-card .label {
@@ -1202,6 +1261,14 @@ h3 { font-size: 1.15rem; }
 </div>
 
 <div class="container" id="terminal">
+
+  <section class="hero-intro reveal">
+    <div class="hero-kicker">Starter + Pro Market Research</div>
+    <h1 class="hero-heading">See the market backdrop behind your <span class="gradient">portfolio decisions.</span></h1>
+    <p class="hero-copy">
+      SPECTRE Research gives paid workspaces a dedicated market-research view for ASX leadership, macro context, sector pressure, earnings snapshots, and cross-asset sentiment, so portfolio decisions are made with broader market context instead of isolated holdings alone.
+    </p>
+  </section>
 
   <!-- ===== HERO METRICS ===== -->
   <section class="hero-grid reveal">

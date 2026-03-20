@@ -1053,6 +1053,33 @@
   width: 100%;
 }
 
+.planResearchCallout {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 14px;
+  align-items: center;
+  margin: -4px 0 20px;
+  padding: 14px 16px;
+  border: 1px solid var(--borderStrong);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(168, 85, 247, 0.05));
+}
+
+.planResearchCallout strong {
+  display: block;
+  margin-bottom: 4px;
+  font-family: var(--font-dm-sans), sans-serif;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.planResearchCallout span {
+  display: block;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
 .compareColumn {
   overflow: hidden;
   background: var(--surface);
@@ -1412,5 +1439,13 @@
   .planCard {
     padding-left: 20px;
     padding-right: 20px;
+  }
+
+  .planResearchCallout {
+    grid-template-columns: 1fr;
+  }
+
+  .planResearchCallout .button {
+    width: 100%;
   }
 }

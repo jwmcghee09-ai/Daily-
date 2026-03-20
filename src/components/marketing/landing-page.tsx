@@ -69,6 +69,12 @@ const features: readonly MarketingCard[] = [
     alt: true,
   },
   {
+    title: "Market Research Terminal",
+    copy:
+      "Open a dedicated research view for ASX leadership, macro context, earnings snapshots, sector pressure, and cross-asset sentiment.",
+    icon: <BarsIcon />,
+  },
+  {
     title: "Session Movers",
     copy:
       "Surface ASX top movers and trigger dip alert emails using refreshed market prices each session.",
@@ -690,9 +696,18 @@ export default function LandingPage({
               <ul>
                 <li>One private investor workspace</li>
                 <li>CSV/XLSX import for super, savings, ASX, crypto, index, funds, bullion</li>
-                <li>Risk score, dashboard charts, and snapshots</li>
+                <li>Risk score, dashboard charts, snapshots, and market research</li>
                 <li>Email verification and password reset</li>
               </ul>
+              <div className={styles.planResearchCallout}>
+                <div>
+                  <strong>See Research</strong>
+                  <span>Starter includes the market research terminal for ASX, macro, and sector context.</span>
+                </div>
+                <Link href="/research?demo=1" className={`${styles.button} ${styles.ghostButton}`}>
+                  Preview Research
+                </Link>
+              </div>
               <Link href="/signin?mode=register&plan=starter" className={`${styles.button} ${styles.outlineButton} ${styles.blockButton}`}>
                 Get Starter
               </Link>
@@ -712,8 +727,18 @@ export default function LandingPage({
                 <li>Beta &amp; tracking error vs ASX 200</li>
                 <li>Date-aligned benchmark analytics</li>
                 <li>Ask AI holdings analysis for portfolio drivers</li>
+                <li>Market research terminal with broader ASX and macro context</li>
                 <li>Advanced reporting and team workflows</li>
               </ul>
+              <div className={styles.planResearchCallout}>
+                <div>
+                  <strong>See Research</strong>
+                  <span>Pro pairs the research terminal with advanced analytics and Ask AI holdings analysis.</span>
+                </div>
+                <Link href="/research?demo=1" className={`${styles.button} ${styles.ghostButton}`}>
+                  Preview Research
+                </Link>
+              </div>
               <Link href="/signin?mode=register&plan=pro" className={`${styles.button} ${styles.primaryButton} ${styles.blockButton}`}>
                 Get Pro
               </Link>
