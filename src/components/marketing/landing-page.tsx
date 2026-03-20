@@ -57,7 +57,7 @@ const workflowSteps: readonly WorkflowStep[] = [
 const researchSteps: readonly WorkflowStep[] = [
   {
     number: "01 — SCAN",
-    title: "Read Market Pulse",
+    title: "Read ASX Market Pulse",
     copy:
       "Start with ASX leadership, sector pressure, macro backdrop, and cross-asset sentiment before drilling into your holdings.",
     icon: <PulseIcon />,
@@ -434,10 +434,10 @@ export default function LandingPage({
 
       <section className={styles.section} id="research">
         <div className={styles.container}>
-          <div className={styles.sectionLabel}>Research Terminal</div>
-          <h2 className={styles.sectionTitle}>From market context to portfolio conviction.</h2>
+          <div className={styles.sectionLabel}>ASX Market Research</div>
+          <h2 className={styles.sectionTitle}>From ASX market context to portfolio conviction.</h2>
           <p className={styles.sectionSub}>
-            SPECTRE Research gives Starter and Pro members a dedicated market view for ASX leadership, earnings snapshots, macro context, sector pressure, and cross-asset sentiment.
+            SPECTRE Research gives Starter and Pro members a dedicated ASX market research view for leadership, earnings snapshots, macro context, sector pressure, and cross-asset sentiment.
           </p>
 
           <div className={styles.steps}>
