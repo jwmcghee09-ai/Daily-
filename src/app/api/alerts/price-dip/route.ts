@@ -16,9 +16,13 @@ interface UpsertAlertBody {
   enabled?: unknown;
 }
 
-function toPlanAlertLimit(planTier: "none" | "starter" | "pro", proEnabled: boolean): number {
+function toPlanAlertLimit(planTier: "none" | "free" | "plus" | "pro", proEnabled: boolean): number {
   if (proEnabled || planTier === "pro") {
     return 10;
+  }
+
+  if (planTier === "plus") {
+    return 3;
   }
 
   return 0;

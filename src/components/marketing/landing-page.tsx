@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import styles from "./landing-page.module.css";
 
-type CheckoutPlan = "starter" | "pro";
+type CheckoutPlan = "free" | "plus" | "pro";
 type MarketingCard = {
   title: string;
   copy: string;
@@ -203,7 +203,7 @@ const faqs = [
   {
     question: "How is Pro AI different from the base dashboard?",
     answer:
-      "Starter gives you the quantitative dashboard. Pro AI adds a natural-language console where you can ask questions about your holdings and get plain-English analysis tied to your imported portfolio.",
+      "Plus gives you the full quantitative dashboard and research terminal. Pro AI adds a natural-language console where you can ask questions about your holdings and get plain-English analysis tied to your imported portfolio.",
   },
   {
     question: "Can I cancel anytime?",
@@ -289,7 +289,7 @@ export default function LandingPage({
 
   const checkoutMessage =
     checkoutState === "success"
-      ? `${checkoutPlan === "pro" ? "Pro" : "Starter"} plan checkout complete. Your subscription will activate shortly.`
+      ? `${checkoutPlan === "pro" ? "Pro" : "Plus"} plan checkout complete. Your subscription will activate shortly.`
       : checkoutState === "cancelled"
         ? "Stripe checkout was cancelled."
         : null;
@@ -318,8 +318,8 @@ export default function LandingPage({
             <Link href="/signin" className={`${styles.button} ${styles.ghostButton}`}>
               Sign In
             </Link>
-            <Link href="/signin?mode=register&plan=starter" className={`${styles.button} ${styles.primaryButton}`}>
-              Start for $2.99/mo
+            <Link href="/signin?mode=register&plan=free" className={`${styles.button} ${styles.primaryButton}`}>
+              Get Started Free
             </Link>
           </div>
         </div>
@@ -354,8 +354,8 @@ export default function LandingPage({
               System for Portfolio Exposure, Correlation, Threat &amp; Risk Evaluation. Turn CSV exports from super, ASX, crypto, and funds into one clear risk view.
             </p>
             <div className={`${styles.heroActions} ${styles.reveal}`}>
-              <Link href="/signin?mode=register&plan=starter" className={`${styles.button} ${styles.primaryButton} ${styles.heroButton}`}>
-                Start for $2.99 / Month
+              <Link href="/signin?mode=register&plan=free" className={`${styles.button} ${styles.primaryButton} ${styles.heroButton}`}>
+                Get Started Free
               </Link>
               <Link href="/dashboard?demo=1" className={`${styles.button} ${styles.outlineButton} ${styles.heroButton}`}>
                 See Live Demo →
@@ -437,7 +437,7 @@ export default function LandingPage({
           <div className={styles.sectionLabel}>ASX Market Research</div>
           <h2 className={styles.sectionTitle}>From ASX market context to portfolio conviction.</h2>
           <p className={styles.sectionSub}>
-            SPECTRE Research gives Starter and Pro members a dedicated ASX market research view for leadership, earnings snapshots, macro context, sector pressure, and cross-asset sentiment.
+            SPECTRE Research gives Plus and Pro members a dedicated ASX market research view for leadership, earnings snapshots, macro context, sector pressure, and cross-asset sentiment.
           </p>
 
           <div className={styles.steps}>
@@ -459,8 +459,8 @@ export default function LandingPage({
             <Link href="/research?demo=1" className={`${styles.button} ${styles.primaryButton}`}>
               See Research Demo
             </Link>
-            <Link href="/signin?mode=register&plan=starter" className={`${styles.button} ${styles.outlineButton}`}>
-              Included in Starter
+            <Link href="/signin?mode=register&plan=plus" className={`${styles.button} ${styles.outlineButton}`}>
+              Included in Plus
             </Link>
           </div>
         </div>
@@ -685,7 +685,7 @@ export default function LandingPage({
                 <li>Highlights both upside drivers and downside pressure</li>
               </ul>
               <Link href="/signin?mode=register&plan=pro" className={`${styles.button} ${styles.primaryButton}`}>
-                See Pro Plan
+                See Pro Plan →
               </Link>
             </div>
 
@@ -748,34 +748,52 @@ export default function LandingPage({
 
           <div className={styles.pricingGrid}>
             <article className={`${styles.planCard} ${styles.reveal}`}>
-              <div className={styles.planTier}>Starter</div>
+              <div className={styles.planTier}>Free</div>
               <div className={styles.planPrice}>
-                <span>$2.99</span>
+                <span>$0</span>
                 <small>/month</small>
               </div>
-              <p>Everything you need to get a clear picture of your investment risk across all account types.</p>
+              <p>Get started at no cost with a private workspace and core dashboard for tracking your portfolio.</p>
               <ul>
                 <li>One private investor workspace</li>
                 <li>CSV/XLSX import for super, savings, ASX, crypto, index, funds, bullion</li>
-                <li>Risk score, dashboard charts, snapshots, and market research</li>
+                <li>Basic risk score and dashboard charts</li>
                 <li>Email verification and password reset</li>
               </ul>
-              <div className={styles.planResearchCallout}>
-                <div>
-                  <strong>See Research</strong>
-                  <span>Starter includes the market research terminal for ASX, macro, and sector context.</span>
-                </div>
-                <Link href="/research?demo=1" className={`${styles.button} ${styles.ghostButton}`}>
-                  Preview Research
-                </Link>
-              </div>
-              <Link href="/signin?mode=register&plan=starter" className={`${styles.button} ${styles.outlineButton} ${styles.blockButton}`}>
-                Get Starter
+              <Link href="/signin?mode=register&plan=free" className={`${styles.button} ${styles.outlineButton} ${styles.blockButton}`}>
+                Get Started Free
               </Link>
             </article>
 
             <article className={`${styles.planCard} ${styles.featuredPlan} ${styles.reveal}`} style={{ transitionDelay: "0.1s" }}>
               <div className={styles.featuredBadge}>Most Popular</div>
+              <div className={styles.planTier}>Plus</div>
+              <div className={styles.planPrice}>
+                <span>$2.99</span>
+                <small>/month</small>
+              </div>
+              <p>Everything in Free, plus the market research terminal and full snapshot history.</p>
+              <ul>
+                <li>Everything in Free</li>
+                <li>Market research terminal for ASX, macro, and sector context</li>
+                <li>Price dip alerts and dip email notifications</li>
+                <li>Snapshots and historical risk tracking</li>
+              </ul>
+              <div className={styles.planResearchCallout}>
+                <div>
+                  <strong>See Research</strong>
+                  <span>Plus includes the market research terminal for ASX, macro, and sector context.</span>
+                </div>
+                <Link href="/research?demo=1" className={`${styles.button} ${styles.ghostButton}`}>
+                  Preview Research
+                </Link>
+              </div>
+              <Link href="/signin?mode=register&plan=plus" className={`${styles.button} ${styles.primaryButton} ${styles.blockButton}`}>
+                Get Plus
+              </Link>
+            </article>
+
+            <article className={`${styles.planCard} ${styles.reveal}`} style={{ transitionDelay: "0.2s" }}>
               <div className={styles.planTier}>Pro</div>
               <div className={styles.planPrice}>
                 <span>$9.99</span>
@@ -783,13 +801,11 @@ export default function LandingPage({
               </div>
               <p>Advanced quant analytics and AI-powered holdings analysis for serious investors.</p>
               <ul>
-                <li>Everything in Starter</li>
+                <li>Everything in Plus</li>
                 <li>Expected Shortfall (ES 95) tail risk</li>
                 <li>Beta &amp; tracking error vs ASX 200</li>
                 <li>Date-aligned benchmark analytics</li>
                 <li>Ask AI holdings analysis for portfolio drivers</li>
-                <li>Market research terminal with broader ASX and macro context</li>
-                <li>Advanced reporting and team workflows</li>
               </ul>
               <div className={styles.planResearchCallout}>
                 <div>
@@ -800,7 +816,7 @@ export default function LandingPage({
                   Preview Research
                 </Link>
               </div>
-              <Link href="/signin?mode=register&plan=pro" className={`${styles.button} ${styles.primaryButton} ${styles.blockButton}`}>
+              <Link href="/signin?mode=register&plan=pro" className={`${styles.button} ${styles.outlineButton} ${styles.blockButton}`}>
                 Get Pro
               </Link>
             </article>
@@ -878,10 +894,10 @@ export default function LandingPage({
           <div className={styles.ctaPanel}>
             <div className={styles.heroBadge}>Start today — no commitment</div>
             <h2>Ready to see your portfolio risk clearly?</h2>
-            <p>It takes minutes to import your first CSV and get a risk score. Start for $2.99/month.</p>
+            <p>It takes minutes to import your first CSV and get a risk score. Start free, upgrade anytime.</p>
             <div className={styles.heroActions}>
-              <Link href="/signin?mode=register&plan=starter" className={`${styles.button} ${styles.primaryButton} ${styles.heroButton}`}>
-                Start for $2.99 / Month
+              <Link href="/signin?mode=register&plan=free" className={`${styles.button} ${styles.primaryButton} ${styles.heroButton}`}>
+                Get Started Free
               </Link>
               <Link href="/dashboard?demo=1" className={`${styles.button} ${styles.outlineButton} ${styles.heroButton}`}>
                 See Live Demo

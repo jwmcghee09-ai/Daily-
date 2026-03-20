@@ -2082,7 +2082,7 @@ export interface PreSignupBillingUpsertInput extends PreSignupBillingPatchInput 
   email: string;
 }
 
-export type PlanTier = "none" | "starter" | "pro";
+export type PlanTier = "none" | "free" | "plus" | "pro";
 
 export interface UserEntitlements {
   planTier: PlanTier;
@@ -2383,7 +2383,7 @@ export function readUserEntitlements(userId: string): UserEntitlements {
     return { planTier: "pro", proEnabled: true, subscriptionStatus: subscription.status };
   }
 
-  return { planTier: "starter", proEnabled: false, subscriptionStatus: subscription.status };
+  return { planTier: "plus", proEnabled: false, subscriptionStatus: subscription.status };
 }
 
 export function upsertBillingSubscriptionForUser(input: BillingSubscriptionUpsertInput): void {

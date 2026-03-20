@@ -222,7 +222,7 @@ interface SessionUser {
   email: string;
   displayName: string;
   createdAt?: string;
-  planTier: "none" | "starter" | "pro";
+  planTier: "none" | "free" | "plus" | "pro";
   proEnabled: boolean;
   subscriptionStatus: string | null;
 }
@@ -263,7 +263,7 @@ interface PriceDipAlertSetting {
 interface PriceDipAlertsPayload {
   alerts: PriceDipAlertSetting[];
   maxAlerts: number;
-  planTier: "none" | "starter" | "pro";
+  planTier: "none" | "free" | "plus" | "pro";
   proEnabled: boolean;
   availableTickers: string[];
 }
@@ -298,7 +298,7 @@ interface HoldingsAiApiPayload {
   error?: string;
 }
 
-type CheckoutPlan = "starter" | "pro";
+type CheckoutPlan = "free" | "plus" | "pro";
 
 const HOLDINGS_AI_DEFAULT_PROMPT = "What may be influencing the value of my current holdings?";
 const DEMO_USER_ID = "demo-portfolio";
@@ -351,7 +351,7 @@ export default function Home() {
   const [showAuthPassword, setShowAuthPassword] = useState(false);
   const [authDisplayName, setAuthDisplayName] = useState("");
   const [authAcceptsTerms, setAuthAcceptsTerms] = useState(false);
-  const [registerCheckoutPlan, setRegisterCheckoutPlan] = useState<CheckoutPlan>("starter");
+  const [registerCheckoutPlan, setRegisterCheckoutPlan] = useState<CheckoutPlan>("free");
   const [authWorking, setAuthWorking] = useState(false);
   const [authError, setAuthError] = useState("");
   const [checkoutWorking, setCheckoutWorking] = useState(false);
@@ -1681,8 +1681,8 @@ export default function Home() {
     }
   }, [authEmail, demoMode, sessionUser]);
 
-  const startStarterCheckout = async (guestEmail?: string) => {
-    await startCheckout("starter", guestEmail);
+  const startPlusCheckout = async (guestEmail?: string) => {
+    await startCheckout("plus", guestEmail);
   };
 
   const startProCheckout = async (guestEmail?: string) => {
@@ -2286,20 +2286,34 @@ export default function Home() {
             <div className="spectre-wrap">
               <p className="spectre-section-label">Pricing</p>
               <h2 className="spectre-section-title">Create your account first, then activate the plan that fits.</h2>
-              <p className="spectre-section-sub">Create your workspace, verify your email, then start Starter or Pro when you are ready. Cancel anytime through Stripe.</p>
+              <p className="spectre-section-sub">Create your workspace, verify your email, then upgrade to Plus or Pro anytime. Free plan available with no payment needed.</p>
               <div className="spectre-pricing-grid">
                 <article className="spectre-plan">
-                  <p className="tier">Starter</p>
+                  <p className="tier">Free</p>
+                  <h3>$0<span>/month</span></h3>
+                  <p className="sub">No card required</p>
+                  <ul>
+                    <li>One private investor workspace</li>
+                    <li>CSV/XLSX import for super, savings, ASX, crypto, index, funds, and bullion</li>
+                    <li>Basic risk score and dashboard charts</li>
+                    <li>Email verification and password reset</li>
+                  </ul>
+                  <button type="button" className="spectre-btn spectre-btn-primary" onClick={() => openCreateAccountForPlan("free")} disabled={checkoutWorking}>
+                    {checkoutWorking ? "Redirecting..." : sessionUser ? "You&apos;re on Free" : "Create Free Account"}
+                  </button>
+                </article>
+
+                <article className="spectre-plan">
+                  <p className="tier">Plus</p>
                   <h3>$2.99<span>/month</span></h3>
                   <p className="sub">Live now</p>
                   <ul>
-                    <li>One private investor workspace</li>
-                    <li>CSV/XLSX import for super, savings, tax reports, ASX, crypto, index, funds, and bullion</li>
-                    <li>Risk score, dashboard charts, and snapshots</li>
-                    <li>Email verification and password reset</li>
+                    <li>Everything in Free</li>
+                    <li>Market research terminal for ASX, macro, and sector context</li>
+                    <li>Snapshots, dip alerts, and email notifications</li>
                   </ul>
-                  <button type="button" className="spectre-btn spectre-btn-primary" onClick={() => openCreateAccountForPlan("starter")} disabled={checkoutWorking}>
-                    {checkoutWorking ? "Redirecting..." : sessionUser ? "Start Starter" : "Create Account for Starter"}
+                  <button type="button" className="spectre-btn spectre-btn-primary" onClick={() => openCreateAccountForPlan("plus")} disabled={checkoutWorking}>
+                    {checkoutWorking ? "Redirecting..." : sessionUser ? "Start Plus" : "Create Account for Plus"}
                   </button>
                 </article>
 
@@ -2412,11 +2426,21 @@ export default function Home() {
                           <input
                             type="radio"
                             name="register-checkout-plan"
-                            value="starter"
-                            checked={registerCheckoutPlan === "starter"}
-                            onChange={() => setRegisterCheckoutPlan("starter")}
+                            value="free"
+                            checked={registerCheckoutPlan === "free"}
+                            onChange={() => setRegisterCheckoutPlan("free")}
                           />
-                          <span>Starter ($2.99/mo)</span>
+                          <span>Free ($0)</span>
+                        </label>
+                        <label>
+                          <input
+                            type="radio"
+                            name="register-checkout-plan"
+                            value="plus"
+                            checked={registerCheckoutPlan === "plus"}
+                            onChange={() => setRegisterCheckoutPlan("plus")}
+                          />
+                          <span>Plus ($2.99/mo)</span>
                         </label>
                         <label>
                           <input
@@ -2463,8 +2487,8 @@ export default function Home() {
                     <span>Create account for Pro</span>
                     <strong>$9.99/mo</strong>
                   </button>
-                  <button type="button" className="spectre-checkout-btn" onClick={() => openCreateAccountForPlan("starter")} disabled={authWorking || checkoutWorking}>
-                    <span>Create account for Starter</span>
+                  <button type="button" className="spectre-checkout-btn" onClick={() => openCreateAccountForPlan("plus")} disabled={authWorking || checkoutWorking}>
+                    <span>Create account for Plus</span>
                     <strong>$2.99/mo</strong>
                   </button>
                 </div>
@@ -2547,7 +2571,7 @@ export default function Home() {
           <span className="meta-item">
             Plan:
             {" "}
-            <span className={`plan-chip ${sessionUser.proEnabled ? "pro" : "starter"}`}>
+            <span className={`plan-chip ${sessionUser.proEnabled ? "pro" : sessionUser.planTier === "plus" ? "starter" : sessionUser.planTier}`}>
               {demoMode ? "PRO DEMO" : sessionUser.proEnabled ? "PRO ACTIVE" : sessionUser.planTier.toUpperCase()}
             </span>
           </span>
@@ -2645,7 +2669,7 @@ export default function Home() {
                     <button
                       type="button"
                       className="refresh-btn"
-                      onClick={() => void startStarterCheckout(sessionUser.email)}
+                      onClick={() => void startPlusCheckout(sessionUser.email)}
                       disabled={billingPortalWorking || working || refreshingPrices || checkoutWorking}
                     >
                       {checkoutWorking ? "Redirecting..." : "Start Membership ($2.99/mo)"}
@@ -3815,7 +3839,7 @@ function getAccountChipStyle(account: string): CSSProperties {
 }
 
 function normalizeSessionUser(user: SessionUser): SessionUser {
-  const planTier = user.planTier === "pro" ? "pro" : user.planTier === "starter" ? "starter" : "none";
+  const planTier = user.planTier === "pro" ? "pro" : user.planTier === "plus" ? "plus" : user.planTier === "free" ? "free" : "none";
   const proEnabled = user.proEnabled === true || planTier === "pro";
   const subscriptionStatus = typeof user.subscriptionStatus === "string" && user.subscriptionStatus.length > 0 ? user.subscriptionStatus : null;
   const createdAt = typeof user.createdAt === "string" && user.createdAt.length > 0 ? user.createdAt : undefined;
@@ -3834,7 +3858,11 @@ function toCheckoutPlan(value: string | null): CheckoutPlan {
     return "pro";
   }
 
-  return "starter";
+  if (value === "plus") {
+    return "plus";
+  }
+
+  return "free";
 }
 
 function getFileExtension(fileName: string): string {

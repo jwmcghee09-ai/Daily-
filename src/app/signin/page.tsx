@@ -19,7 +19,7 @@ export default async function SignInRoute(props: { searchParams: SearchParams })
     <SignInPage
       authenticatedUser={user ? { email: user.email, displayName: user.displayName } : null}
       initialMode={readSingleParam(searchParams.mode) === "register" ? "register" : "login"}
-      initialPlan={plan === "pro" ? "pro" : plan === "starter" ? "starter" : null}
+      initialPlan={plan === "pro" ? "pro" : plan === "plus" ? "plus" : plan === "free" ? "free" : null}
       verificationState={readSingleParam(searchParams.verified)}
     />
   );

@@ -9,8 +9,8 @@ export default async function Home(props: { searchParams: SearchParams }) {
   const user = await getAuthenticatedUser();
   if (user) {
     const entitlements = readUserEntitlements(user.id);
-    if (entitlements.planTier === "none" && !entitlements.proEnabled) {
-      redirect("/signin?mode=login&plan=starter");
+    if ((entitlements.planTier === "none" || entitlements.planTier === "free") && !entitlements.proEnabled) {
+      redirect("/signin?mode=login&plan=plus");
     }
     redirect("/dashboard?mode=account");
   }
@@ -22,7 +22,7 @@ export default async function Home(props: { searchParams: SearchParams }) {
   return (
     <LandingPage
       checkoutState={checkout === "success" || checkout === "cancelled" ? checkout : null}
-      checkoutPlan={plan === "pro" ? "pro" : "starter"}
+      checkoutPlan={plan === "pro" ? "pro" : plan === "plus" ? "plus" : "free"}
     />
   );
 }
