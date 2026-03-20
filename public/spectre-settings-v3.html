@@ -50,6 +50,25 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
 .nav-links a::after{content:'';position:absolute;left:0;right:100%;bottom:-4px;height:1.5px;background:linear-gradient(90deg,var(--purple),var(--orange));transition:right .25s ease}
 .nav-links a.active,.nav-links a:hover{color:var(--text)}
 .nav-links a.active::after,.nav-links a:hover::after{right:0}
+.nav-links a#nav-research-link{
+  padding:.5rem .95rem;
+  border-radius:999px;
+  font-size:.64rem;
+  font-weight:700;
+  letter-spacing:.16em;
+  color:#f8f1ff;
+  background:linear-gradient(135deg,rgba(168,85,247,.2),rgba(255,122,48,.12));
+  border:1px solid rgba(168,85,247,.3);
+  box-shadow:0 0 0 1px rgba(255,255,255,.02) inset,0 10px 24px rgba(168,85,247,.12);
+}
+.nav-links a#nav-research-link::after{display:none}
+.nav-links a#nav-research-link:hover,
+.nav-links a#nav-research-link.active{
+  color:#fff;
+  border-color:rgba(255,122,48,.4);
+  background:linear-gradient(135deg,rgba(168,85,247,.3),rgba(255,122,48,.18));
+  transform:translateY(-1px);
+}
 .nav-right{display:flex;align-items:center;gap:1rem}
 .nav-user{font-family:var(--mono);font-size:.56rem;letter-spacing:.1em;color:var(--muted);text-transform:uppercase}
 .nav-btn{font-family:var(--mono);font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted2);background:transparent;border:1px solid var(--border2);border-radius:999px;padding:.45rem .95rem;cursor:pointer;text-decoration:none;transition:all .2s}
