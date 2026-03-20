@@ -114,7 +114,7 @@ function toBillingPlan(value: unknown): BillingPlan {
     return "pro";
   }
 
-  return "starter";
+  return "plus";
 }
 
 const ACTIVE_OR_RECOVERABLE_STATUSES = new Set(["active", "trialing", "past_due", "unpaid"]);

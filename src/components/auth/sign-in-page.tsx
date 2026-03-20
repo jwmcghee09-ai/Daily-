@@ -7,14 +7,14 @@ import { useRouter } from "next/navigation";
 import styles from "./sign-in-page.module.css";
 
 type AuthMode = "login" | "register";
-type CheckoutPlan = "starter" | "pro";
+type CheckoutPlan = "free" | "plus" | "pro";
 
 interface SessionUser {
   id: string;
   email: string;
   displayName: string;
   createdAt?: string;
-  planTier: "none" | "starter" | "pro";
+  planTier: "none" | "free" | "plus" | "pro";
   proEnabled: boolean;
   subscriptionStatus: string | null;
 }
@@ -43,7 +43,7 @@ export default function SignInPage({
 }) {
   const router = useRouter();
   const [authMode, setAuthMode] = useState<AuthMode>(initialMode);
-  const [selectedPlan, setSelectedPlan] = useState<CheckoutPlan>(initialPlan ?? "starter");
+  const [selectedPlan, setSelectedPlan] = useState<CheckoutPlan>(initialPlan ?? "free");
   const [hasRequestedCheckout, setHasRequestedCheckout] = useState(Boolean(initialPlan));
   const [email, setEmail] = useState(authenticatedUser?.email ?? "");
   const [password, setPassword] = useState("");
@@ -97,7 +97,7 @@ export default function SignInPage({
     };
   }, []);
 
-  const planLabel = selectedPlan === "pro" ? "Pro" : "Starter";
+  const planLabel = selectedPlan === "pro" ? "Pro" : selectedPlan === "plus" ? "Plus" : "Free";
   const accessFlowLabel =
     authMode === "register" || !activeSessionHasPaidAccess
       ? `Create account + ${planLabel} checkout`
@@ -153,6 +153,12 @@ export default function SignInPage({
       setPassword("");
       setAcceptTerms(false);
       setBanner({ tone: "success", message: `Signed in as ${normalizedUser.displayName}.` });
+
+      if (selectedPlan === "free") {
+        router.push("/dashboard");
+        router.refresh();
+        return;
+      }
 
       if (authMode === "register" || hasRequestedCheckout || !userHasPaidAccess(normalizedUser)) {
         await startCheckout(selectedPlan, normalizedUser.email);
@@ -330,12 +336,12 @@ export default function SignInPage({
             </p>
             <div className={styles.planCallout}>
               Flow: <strong>{accessFlowLabel}</strong>
-              <span>{selectedPlan === "pro" ? "$9.99/month" : "$2.99/month"}</span>
+              <span>{selectedPlan === "pro" ? "$9.99/month" : selectedPlan === "plus" ? "$2.99/month" : "Free"}</span>
             </div>
 
             <ul className={styles.pointList}>
               <li>Login, registration, verification resend, and password reset use the existing auth APIs.</li>
-              <li>Starter and Pro buttons post to the live Stripe checkout route already configured in this repo.</li>
+              <li>Plus and Pro buttons post to the live Stripe checkout route already configured in this repo.</li>
               <li>Live demo, privacy, terms, and contact links are all wired to current routes.</li>
               <li>Creating a new account continues directly into the selected paid checkout flow.</li>
             </ul>
@@ -436,13 +442,25 @@ export default function SignInPage({
                           <input
                             type="radio"
                             name="register-plan"
-                            checked={selectedPlan === "starter"}
+                            checked={selectedPlan === "free"}
                             onChange={() => {
-                              setSelectedPlan("starter");
+                              setSelectedPlan("free");
+                              setHasRequestedCheckout(false);
+                            }}
+                          />
+                          <span>Free (basic dashboard)</span>
+                        </label>
+                        <label>
+                          <input
+                            type="radio"
+                            name="register-plan"
+                            checked={selectedPlan === "plus"}
+                            onChange={() => {
+                              setSelectedPlan("plus");
                               setHasRequestedCheckout(true);
                             }}
                           />
-                          <span>Starter ($2.99/mo)</span>
+                          <span>Plus ($2.99/mo)</span>
                         </label>
                         <label>
                           <input
@@ -540,7 +558,7 @@ export default function SignInPage({
 }
 
 function normalizeSessionUser(user: SessionUser): SessionUser {
-  const planTier = user.planTier === "pro" ? "pro" : user.planTier === "starter" ? "starter" : "none";
+  const planTier = user.planTier === "pro" ? "pro" : user.planTier === "plus" ? "plus" : user.planTier === "free" ? "free" : "none";
   const proEnabled = user.proEnabled === true || planTier === "pro";
   const subscriptionStatus =
     typeof user.subscriptionStatus === "string" && user.subscriptionStatus.length > 0
@@ -558,7 +576,7 @@ function normalizeSessionUser(user: SessionUser): SessionUser {
 }
 
 function userHasPaidAccess(user: SessionUser): boolean {
-  return user.proEnabled || user.planTier !== "none";
+  return user.proEnabled || user.planTier === "plus" || user.planTier === "pro";
 }
 
 async function parseApiError(response: Response, fallback: string): Promise<string> {

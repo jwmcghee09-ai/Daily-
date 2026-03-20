@@ -15,8 +15,8 @@ export async function GET(request: NextRequest) {
     }
 
     const entitlements = readUserEntitlements(user.id);
-    if (entitlements.planTier === "none" && !entitlements.proEnabled) {
-      return NextResponse.redirect(buildRedirectUrl(request, "/signin?mode=login&plan=starter"));
+    if ((entitlements.planTier === "none" || entitlements.planTier === "free") && !entitlements.proEnabled) {
+      return NextResponse.redirect(buildRedirectUrl(request, "/signin?mode=login&plan=plus"));
     }
   }
 

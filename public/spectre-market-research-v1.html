@@ -1256,7 +1256,7 @@ h3 { font-size: 1.15rem; }
     </ul>
     <div class="nav-right">
       <span style="font-family:var(--font-mono); font-size:0.7rem;">20 MAR 2026</span>
-      <div class="nav-status">
+      <div id="nav-market-status" class="nav-status">
         <span class="status-dot" style="width:6px;height:6px;animation-duration:2.5s;background:var(--sl-amber);box-shadow:0 0 6px var(--sl-amber);"></span>
         ASX CLOSED
       </div>
@@ -1286,8 +1286,8 @@ h3 { font-size: 1.15rem; }
     <!-- ASX 200 -->
     <div class="card hero-card card-glow">
       <div class="label">S&P/ASX 200</div>
-      <div class="value"><span class="countup" data-target="8443.4" data-decimals="1">0</span></div>
-      <div class="change neg">
+      <div class="value"><span id="hero-asx200-price" class="countup" data-target="8443.4" data-decimals="1">0</span></div>
+      <div id="hero-asx200-chg" class="change neg">
         <span class="mono">−54.40 (−0.64%)</span>
       </div>
       <div class="hero-sparkline">
@@ -1318,9 +1318,9 @@ h3 { font-size: 1.15rem; }
 
     <!-- Gold -->
     <div class="card hero-card card-glow">
-      <div class="label">Gold (XAU/USD)</div>
-      <div class="value">$<span class="countup" data-target="4637" data-decimals="0">0</span></div>
-      <div class="change neg">
+      <div class="label">Gold (XAU/AUD)</div>
+      <div class="value">$<span id="hero-gold-price" class="countup" data-target="4637" data-decimals="0">0</span></div>
+      <div id="hero-gold-chg" class="change neg">
         <span class="mono">−$13.52 (−0.29%)</span>
       </div>
     </div>
@@ -1328,8 +1328,8 @@ h3 { font-size: 1.15rem; }
     <!-- Bitcoin -->
     <div class="card hero-card card-glow">
       <div class="label">Bitcoin (BTC/USD)</div>
-      <div class="value">$<span class="countup" data-target="70695" data-decimals="0">0</span></div>
-      <div class="change pos">
+      <div class="value">$<span id="hero-btc-price" class="countup" data-target="70695" data-decimals="0">0</span></div>
+      <div id="hero-btc-chg" class="change pos">
         <span class="mono">+$776.82 (+1.11%)</span>
       </div>
     </div>
@@ -1346,8 +1346,8 @@ h3 { font-size: 1.15rem; }
         <div class="section-label">ASX 200 Index</div>
         <div class="chart-header">
           <div class="chart-title-group">
-            <div class="chart-val"><span class="countup" data-target="8443.4" data-decimals="1">0</span></div>
-            <div class="chart-sub">−54.40 (−0.64%) today &nbsp;·&nbsp; 6M: −8.25%</div>
+            <div class="chart-val"><span id="chart-asx200-price" class="countup" data-target="8443.4" data-decimals="1">0</span></div>
+            <div id="chart-asx200-sub" class="chart-sub">−54.40 (−0.64%) today &nbsp;·&nbsp; 6M: −8.25%</div>
           </div>
           <div class="time-pills">
             <button class="time-pill" onclick="setTimePill(this)">1D</button>
@@ -1716,8 +1716,8 @@ h3 { font-size: 1.15rem; }
           <div class="crypto-sub">BTC/USD</div>
         </div>
         <div class="crypto-price">
-          <div class="cprice mono">$70,695</div>
-          <div class="cchange pos mono">+1.11%</div>
+          <div id="live-btc-price" class="cprice mono">$70,695</div>
+          <div id="live-btc-chg" class="cchange pos mono">+1.11%</div>
         </div>
       </div>
       <div class="crypto-row">
@@ -1727,8 +1727,8 @@ h3 { font-size: 1.15rem; }
           <div class="crypto-sub">ETH/USD</div>
         </div>
         <div class="crypto-price">
-          <div class="cprice mono">$2,146</div>
-          <div class="cchange pos mono">+0.39%</div>
+          <div id="live-eth-price" class="cprice mono">$2,146</div>
+          <div id="live-eth-chg" class="cchange pos mono">+0.39%</div>
         </div>
       </div>
       <div class="crypto-row">
@@ -1738,8 +1738,8 @@ h3 { font-size: 1.15rem; }
           <div class="crypto-sub">XAU/USD</div>
         </div>
         <div class="crypto-price">
-          <div class="cprice mono">$4,637</div>
-          <div class="cchange neg mono">−0.29%</div>
+          <div id="live-gold-price" class="cprice mono">$4,637</div>
+          <div id="live-gold-chg" class="cchange neg mono">−0.29%</div>
         </div>
       </div>
     </div>
@@ -2129,6 +2129,123 @@ async function signOut(event) {
   window.location.href = '/';
 }
 
+// ===== LIVE QUOTES =====
+function fmtChgSpan(price, prevClose, prefix) {
+  const chg = price - prevClose;
+  const pct = (chg / prevClose) * 100;
+  const sign = chg >= 0 ? '+' : '';
+  const abs = Math.abs(chg);
+  const absFmt = prefix ? `${sign}${prefix}${abs < 10 ? abs.toFixed(2) : Math.round(abs).toLocaleString('en-AU')}` : `${sign}${abs.toFixed(2)}`;
+  return { html: `<span class="mono">${absFmt} (${sign}${pct.toFixed(2)}%)</span>`, isPos: chg >= 0 };
+}
+
+function updateCryptoEl(priceId, chgId, quote, decimals) {
+  if (!quote || !quote.price) return;
+  const priceEl = document.getElementById(priceId);
+  const chgEl = document.getElementById(chgId);
+  if (priceEl) {
+    priceEl.textContent = '$' + (decimals === 0 ? Math.round(quote.price).toLocaleString('en-AU') : quote.price.toFixed(decimals));
+  }
+  if (chgEl && quote.prevClose && quote.prevClose > 0) {
+    const pct = ((quote.price - quote.prevClose) / quote.prevClose) * 100;
+    const sign = pct >= 0 ? '+' : '';
+    chgEl.className = `cchange ${pct >= 0 ? 'pos' : 'neg'} mono`;
+    chgEl.textContent = `${sign}${pct.toFixed(2)}%`;
+  }
+}
+
+async function fetchLiveQuotes() {
+  const url = '/api/research/quotes' + (state.demoMode ? '?demo=1' : '');
+  try {
+    const data = await apiJson(url);
+    if (!data) return;
+
+    // --- Nav status: show "LIVE DATA" ---
+    const statusEl = document.getElementById('nav-market-status');
+    if (statusEl) {
+      const dot = statusEl.querySelector('.status-dot');
+      const now = new Date();
+      const hhmm = now.toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit', hour12: false });
+      if (dot) { dot.style.background = 'var(--green)'; dot.style.boxShadow = '0 0 6px var(--green)'; }
+      statusEl.style.background = 'rgba(34,197,94,0.1)';
+      statusEl.style.borderColor = 'rgba(34,197,94,0.2)';
+      statusEl.style.color = 'var(--green)';
+      statusEl.childNodes[statusEl.childNodes.length - 1].textContent = ` LIVE · ${hhmm}`;
+    }
+
+    // --- ASX 200 hero + chart header ---
+    const asx200 = data.indices?.asx200;
+    if (asx200?.price) {
+      const fmtPrice = asx200.price.toLocaleString('en-AU', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+      const heroEl = document.getElementById('hero-asx200-price');
+      if (heroEl) heroEl.textContent = fmtPrice;
+      const chartEl = document.getElementById('chart-asx200-price');
+      if (chartEl) chartEl.textContent = fmtPrice;
+      if (asx200.prevClose && asx200.prevClose > 0) {
+        const { html, isPos } = fmtChgSpan(asx200.price, asx200.prevClose, null);
+        const heroChg = document.getElementById('hero-asx200-chg');
+        if (heroChg) { heroChg.className = `change ${isPos ? 'pos' : 'neg'}`; heroChg.innerHTML = html; }
+        const chg = asx200.price - asx200.prevClose;
+        const pct = (chg / asx200.prevClose) * 100;
+        const sign = chg >= 0 ? '+' : '';
+        const chartSub = document.getElementById('chart-asx200-sub');
+        if (chartSub) chartSub.textContent = `${sign}${chg.toFixed(2)} (${sign}${pct.toFixed(2)}%) today`;
+      }
+    }
+
+    // --- Gold hero ---
+    const gold = data.crypto?.gold;
+    if (gold?.price) {
+      const heroGold = document.getElementById('hero-gold-price');
+      if (heroGold) heroGold.textContent = Math.round(gold.price).toLocaleString('en-AU');
+      if (gold.prevClose && gold.prevClose > 0) {
+        const { html, isPos } = fmtChgSpan(gold.price, gold.prevClose, '$');
+        const heroGoldChg = document.getElementById('hero-gold-chg');
+        if (heroGoldChg) { heroGoldChg.className = `change ${isPos ? 'pos' : 'neg'}`; heroGoldChg.innerHTML = html; }
+      }
+    }
+
+    // --- BTC hero ---
+    const btc = data.crypto?.btc;
+    if (btc?.price) {
+      const heroBtc = document.getElementById('hero-btc-price');
+      if (heroBtc) heroBtc.textContent = Math.round(btc.price).toLocaleString('en-AU');
+      if (btc.prevClose && btc.prevClose > 0) {
+        const { html, isPos } = fmtChgSpan(btc.price, btc.prevClose, '$');
+        const heroBtcChg = document.getElementById('hero-btc-chg');
+        if (heroBtcChg) { heroBtcChg.className = `change ${isPos ? 'pos' : 'neg'}`; heroBtcChg.innerHTML = html; }
+      }
+    }
+
+    // --- Crypto sidebar ---
+    updateCryptoEl('live-btc-price', 'live-btc-chg', btc, 0);
+    updateCryptoEl('live-eth-price', 'live-eth-chg', data.crypto?.eth, 0);
+    updateCryptoEl('live-gold-price', 'live-gold-chg', gold, 0);
+
+    // --- ASX stocks table + ticker ---
+    const asxData = data.asx;
+    if (asxData) {
+      for (const stock of DATA.stocks) {
+        const ticker = stock.symbol.replace('.AX', '');
+        const q = asxData[ticker];
+        if (!q || !q.price) continue;
+        const prevClose = q.prevClose && q.prevClose > 0 ? q.prevClose : stock.price;
+        stock.marketCap = stock.marketCap * (q.price / prevClose);
+        stock.price = q.price;
+        stock.change = q.price - prevClose;
+        stock.changePct = ((q.price - prevClose) / prevClose) * 100;
+        if (q.yearHigh && q.yearHigh > 0) stock.yearHigh = q.yearHigh;
+        if (q.yearLow && q.yearLow > 0) stock.yearLow = q.yearLow;
+      }
+      buildTicker();
+      buildStockTable();
+      buildSectorBars();
+    }
+  } catch (err) {
+    console.warn('Live quotes fetch failed:', err);
+  }
+}
+
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', () => {
   state.demoMode = isDemoMode();
@@ -2144,6 +2261,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('sign-out-btn')?.addEventListener('click', signOut);
   void loadSession();
+  void fetchLiveQuotes();
+  setInterval(() => { void fetchLiveQuotes(); }, 5 * 60 * 1000);
 });
 </script>
 
