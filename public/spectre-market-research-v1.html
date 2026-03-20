@@ -1,0 +1,2073 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!--
+   ______                            __
+  / ____/___  ____ ___  ____  __  __/ /____  _____
+ / /   / __ \/ __ `__ \/ __ \/ / / / __/ _ \/ ___/
+/ /___/ /_/ / / / / / / /_/ / /_/ / /_/  __/ /
+\____/\____/_/ /_/ /_/ .___/\__,_/\__/\___/_/
+                    /_/
+        Created with Perplexity Computer
+        https://www.perplexity.ai/computer
+-->
+
+<!-- Perplexity Computer Attribution — SEO Meta Tags -->
+<meta name="generator" content="Perplexity Computer">
+<meta name="author" content="Perplexity Computer">
+<meta property="og:see_also" content="https://www.perplexity.ai/computer">
+<link rel="author" href="https://www.perplexity.ai/computer">
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>SPECTRE — ASX Market Terminal</title>
+<meta name="description" content="SPECTRE ASX Market Terminal V4 — Premium real-time market intelligence dashboard for the Australian Securities Exchange">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@400;600;700;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+
+<style>
+/* ===== RESET & BASE ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --accent: #ff4b33;
+  --accent-strong: #ff2f14;
+  --accent-mid: #ff7a68;
+  --accent-soft: #ff4b3324;
+  --sl-bg: #0c0817;
+  --sl-card: #120c20eb;
+  --sl-border: #ffffff12;
+  --sl-text: #f2eeff;
+  --sl-muted: #8a86a8;
+  --sl-purple: #9b5de5;
+  --sl-purple-hi: #c084fc;
+  --sl-orange: #ff4d1a;
+  --sl-amber: #ffb547;
+  --green: #22c55e;
+  --green-dim: #22c55e44;
+  --red: #ef4444;
+  --red-dim: #ef444444;
+  --font-display: 'Sora', sans-serif;
+  --font-body: 'Space Grotesk', sans-serif;
+  --font-mono: 'DM Mono', monospace;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --radius-pill: 100px;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-body);
+  color: var(--sl-text);
+  background-color: var(--sl-bg);
+  background-image:
+    radial-gradient(circle at 16% 14%, #8354ff3d 0%, #0000 40%),
+    radial-gradient(circle at 86% 78%, #ff4b3342 0%, #0000 42%),
+    linear-gradient(158deg, #090810f2 0%, #1e0e2ae0 52%, #140a12f0 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* Subtle grid overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(#ffffff06 1px, transparent 1px),
+    linear-gradient(90deg, #ffffff06 1px, transparent 1px);
+  background-size: 42px 42px;
+  opacity: 0.35;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, #000 20%, transparent 80%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, #000 20%, transparent 80%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ===== TYPOGRAPHY ===== */
+h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 700; line-height: 1.2; }
+h2 { font-size: 1.5rem; }
+h3 { font-size: 1.15rem; }
+
+.section-label {
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: #ffc9c0;
+  margin-bottom: 16px;
+}
+
+.mono { font-family: var(--font-mono); }
+
+/* ===== LAYOUT CONTAINER ===== */
+.container {
+  max-width: 1520px;
+  margin: 0 auto;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ===== STICKY NAV ===== */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(12, 8, 23, 0.72);
+  backdrop-filter: blur(16px) saturate(1.5);
+  -webkit-backdrop-filter: blur(16px) saturate(1.5);
+  border-bottom: 1px solid var(--sl-border);
+}
+
+.nav-inner {
+  max-width: 1520px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+}
+
+.logo {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.25rem;
+  letter-spacing: 0.06em;
+  background: linear-gradient(135deg, #fff 30%, var(--accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--sl-amber);
+  box-shadow: 0 0 8px var(--sl-amber);
+  animation: pulse-dot 2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
+}
+
+.nav-links {
+  display: flex;
+  gap: 8px;
+  list-style: none;
+}
+
+.nav-links a {
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--sl-muted);
+  text-decoration: none;
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  transition: all 0.2s;
+}
+
+.nav-links a:hover, .nav-links a.active {
+  color: var(--sl-text);
+  background: rgba(155, 93, 229, 0.15);
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 0.75rem;
+  color: var(--sl-muted);
+}
+
+.nav-user {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  color: var(--sl-muted);
+  text-transform: uppercase;
+}
+
+.nav-btn {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  color: var(--sl-text);
+  text-decoration: none;
+  padding: 7px 14px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--sl-border);
+  transition: all 0.2s;
+}
+
+.nav-btn:hover {
+  border-color: var(--sl-purple);
+  background: rgba(155, 93, 229, 0.12);
+}
+
+.nav-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 181, 71, 0.1);
+  border: 1px solid rgba(255, 181, 71, 0.2);
+  color: var(--sl-amber);
+}
+
+/* ===== TICKER TAPE ===== */
+.ticker-wrap {
+  overflow: hidden;
+  background: rgba(12, 8, 23, 0.5);
+  border-bottom: 1px solid var(--sl-border);
+  position: relative;
+  z-index: 1;
+}
+
+.ticker-track {
+  display: flex;
+  animation: ticker-scroll 40s linear infinite;
+  width: max-content;
+}
+
+.ticker-track:hover { animation-play-state: paused; }
+
+@keyframes ticker-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.ticker-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 24px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  white-space: nowrap;
+  border-right: 1px solid var(--sl-border);
+}
+
+.ticker-item .sym { color: var(--sl-text); font-weight: 500; }
+.ticker-item .price { color: var(--sl-muted); }
+.ticker-item .chg.pos { color: var(--green); }
+.ticker-item .chg.neg { color: var(--accent); }
+
+/* ===== CARDS ===== */
+.card {
+  background: rgba(18, 12, 32, 0.65);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  padding: 24px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+.card-glow:hover {
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), 0 0 30px rgba(155, 93, 229, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+.card-accent {
+  position: relative;
+  overflow: hidden;
+}
+
+.card-accent::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius);
+  padding: 1px;
+  background: linear-gradient(135deg, var(--sl-purple), var(--accent));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* ===== HERO METRICS ROW ===== */
+.hero-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin: 24px 0;
+}
+
+.hero-card { padding: 20px 24px; }
+
+.hero-card .label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--sl-muted);
+  margin-bottom: 8px;
+}
+
+.hero-card .value {
+  font-family: var(--font-mono);
+  font-size: 1.75rem;
+  font-weight: 500;
+  color: var(--sl-text);
+  line-height: 1.1;
+}
+
+.hero-card .change {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  margin-top: 6px;
+}
+
+.change.pos { color: var(--green); }
+.change.neg { color: var(--accent); }
+
+.hero-sparkline { margin-top: 12px; }
+
+/* Market Pulse specific */
+.pulse-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.pulse-ring {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent);
+  position: relative;
+}
+
+.pulse-ring::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  animation: pulse-ring-anim 1.5s ease-out infinite;
+}
+
+@keyframes pulse-ring-anim {
+  0% { transform: scale(1); opacity: 0.8; }
+  100% { transform: scale(2); opacity: 0; }
+}
+
+/* ===== MAIN BENTO GRID ===== */
+.main-grid {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+.left-col { display: flex; flex-direction: column; gap: 20px; }
+.right-col { display: flex; flex-direction: column; gap: 20px; }
+
+/* ===== CHART PANEL ===== */
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.chart-title-group .chart-val {
+  font-family: var(--font-mono);
+  font-size: 2rem;
+  font-weight: 500;
+  color: var(--sl-text);
+}
+
+.chart-title-group .chart-sub {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--sl-muted);
+  margin-top: 4px;
+}
+
+.time-pills {
+  display: flex;
+  gap: 4px;
+}
+
+.time-pill {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  padding: 5px 12px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--sl-border);
+  background: transparent;
+  color: var(--sl-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.time-pill:hover { border-color: var(--sl-purple); color: var(--sl-text); }
+.time-pill.active {
+  background: var(--sl-purple);
+  color: #fff;
+  border-color: var(--sl-purple);
+}
+
+.chart-svg {
+  width: 100%;
+  height: 240px;
+  display: block;
+}
+
+/* ===== TABLE ===== */
+.data-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.78rem;
+}
+
+.data-table thead th {
+  font-family: var(--font-body);
+  font-size: 0.65rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--sl-muted);
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--sl-border);
+  position: sticky;
+  top: 0;
+  background: rgba(18, 12, 32, 0.95);
+}
+
+.data-table thead th:last-child,
+.data-table tbody td:last-child { text-align: right; }
+
+.data-table tbody tr { transition: background 0.15s; }
+.data-table tbody tr:hover { background: rgba(155, 93, 229, 0.06); }
+
+.data-table tbody td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  vertical-align: middle;
+}
+
+.data-table .sym-cell {
+  font-weight: 500;
+  color: var(--sl-text);
+  font-family: var(--font-mono);
+}
+
+/* Sector badges */
+.badge {
+  display: inline-block;
+  font-family: var(--font-body);
+  font-size: 0.6rem;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.badge-materials { background: rgba(155, 93, 229, 0.15); color: var(--sl-purple-hi); }
+.badge-financials { background: rgba(34, 197, 94, 0.12); color: #4ade80; }
+.badge-healthcare { background: rgba(56, 189, 248, 0.12); color: #38bdf8; }
+.badge-consumer { background: rgba(251, 191, 36, 0.12); color: #fbbf24; }
+.badge-energy { background: rgba(255, 77, 26, 0.12); color: var(--accent-mid); }
+.badge-comms { background: rgba(167, 139, 250, 0.12); color: #a78bfa; }
+.badge-realestate { background: rgba(45, 212, 191, 0.12); color: #2dd4bf; }
+
+/* 52W range bar */
+.range-bar {
+  width: 80px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  position: relative;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.range-bar .marker {
+  position: absolute;
+  top: -3px;
+  width: 6px;
+  height: 10px;
+  background: var(--sl-purple);
+  border-radius: 2px;
+}
+
+/* ===== TAB SYSTEM ===== */
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+}
+
+.tab-btn {
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  font-weight: 500;
+  padding: 6px 16px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--sl-border);
+  background: transparent;
+  color: var(--sl-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tab-btn:hover { border-color: var(--sl-purple); color: var(--sl-text); }
+.tab-btn.active {
+  background: rgba(155, 93, 229, 0.18);
+  border-color: var(--sl-purple);
+  color: var(--sl-text);
+}
+
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* ===== EARNINGS ===== */
+.result-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 14px;
+  border-radius: var(--radius-pill);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.result-beat { background: var(--green-dim); color: var(--green); }
+.result-inline { background: rgba(255, 181, 71, 0.18); color: var(--sl-amber); }
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.metric-item {
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.metric-item .metric-label {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--sl-muted);
+  margin-bottom: 4px;
+}
+
+.metric-item .metric-val {
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--sl-text);
+}
+
+/* ===== BHP SEGMENTS ===== */
+.seg-chart-row {
+  display: flex;
+  gap: 24px;
+  align-items: flex-end;
+  height: 200px;
+  margin: 16px 0;
+  justify-content: center;
+  padding: 0 40px;
+}
+
+.seg-bar-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.seg-bar-stack {
+  width: 100%;
+  max-width: 140px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  border-radius: 6px 6px 0 0;
+  overflow: hidden;
+}
+
+.seg-bar-stack .seg-piece {
+  width: 100%;
+  transition: height 0.6s ease;
+}
+
+.seg-bar-label {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--sl-muted);
+}
+
+.seg-legend {
+  display: flex;
+  gap: 16px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.seg-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.7rem;
+  color: var(--sl-muted);
+}
+
+.seg-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.kpi-row {
+  display: flex;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.kpi-box {
+  flex: 1;
+  padding: 14px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  text-align: center;
+}
+
+.kpi-box .kpi-val {
+  font-family: var(--font-mono);
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: var(--sl-purple-hi);
+}
+
+.kpi-box .kpi-label {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--sl-muted);
+  margin-top: 4px;
+}
+
+/* ===== SENTIMENT ===== */
+.sentiment-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.sentiment-col {
+  padding: 16px;
+  border-radius: var(--radius-sm);
+}
+
+.sentiment-col.bull {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.06) 0%, transparent 100%);
+  border: 1px solid rgba(34, 197, 94, 0.12);
+}
+
+.sentiment-col.bear {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.06) 0%, transparent 100%);
+  border: 1px solid rgba(239, 68, 68, 0.12);
+}
+
+.sentiment-col h4 {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 12px;
+}
+
+.sentiment-col.bull h4 { color: var(--green); }
+.sentiment-col.bear h4 { color: var(--red); }
+
+.sentiment-col ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sentiment-col li {
+  font-size: 0.75rem;
+  color: var(--sl-muted);
+  line-height: 1.5;
+  padding-left: 16px;
+  position: relative;
+}
+
+.sentiment-col.bull li::before { content: '▲'; position: absolute; left: 0; color: var(--green); font-size: 0.6rem; top: 2px; }
+.sentiment-col.bear li::before { content: '▼'; position: absolute; left: 0; color: var(--red); font-size: 0.6rem; top: 2px; }
+
+/* ===== FUNDAMENTALS TABLE ===== */
+.fund-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.75rem;
+}
+
+.fund-table th {
+  font-family: var(--font-body);
+  font-size: 0.62rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--sl-muted);
+  padding: 8px 12px;
+  text-align: right;
+  border-bottom: 1px solid var(--sl-border);
+}
+
+.fund-table th:first-child { text-align: left; }
+
+.fund-table td {
+  font-family: var(--font-mono);
+  padding: 8px 12px;
+  text-align: right;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  color: var(--sl-text);
+}
+
+.fund-table td:first-child {
+  font-family: var(--font-body);
+  text-align: left;
+  color: var(--sl-muted);
+  font-size: 0.72rem;
+}
+
+/* ===== SIDEBAR CARDS ===== */
+.company-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.company-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--sl-purple), var(--accent));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.company-header h3 { font-size: 1.05rem; }
+.company-header .company-sub {
+  font-size: 0.72rem;
+  color: var(--sl-muted);
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px 16px;
+  font-size: 0.75rem;
+  margin: 16px 0;
+}
+
+.info-grid .info-label { color: var(--sl-muted); }
+.info-grid .info-val { color: var(--sl-text); font-family: var(--font-mono); font-size: 0.72rem; }
+
+.consensus-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--sl-border);
+}
+
+.consensus-badge {
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 4px 14px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 181, 71, 0.15);
+  color: var(--sl-amber);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Peer pills */
+.peer-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.peer-pill {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--sl-muted);
+  transition: all 0.2s;
+}
+
+.peer-pill:hover {
+  background: rgba(155, 93, 229, 0.12);
+  border-color: var(--sl-purple);
+  color: var(--sl-text);
+}
+
+/* News */
+.news-list { display: flex; flex-direction: column; gap: 12px; }
+
+.news-item {
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  transition: background 0.2s;
+}
+
+.news-item:hover { background: rgba(255, 255, 255, 0.04); }
+
+.news-tag {
+  font-family: var(--font-body);
+  font-size: 0.55rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  display: inline-block;
+  margin-bottom: 6px;
+}
+
+.tag-rba { background: rgba(239, 68, 68, 0.15); color: #f87171; }
+.tag-inflation { background: rgba(255, 181, 71, 0.15); color: var(--sl-amber); }
+.tag-rate { background: rgba(34, 197, 94, 0.15); color: #4ade80; }
+.tag-asx { background: rgba(155, 93, 229, 0.15); color: var(--sl-purple-hi); }
+.tag-china { background: rgba(255, 77, 26, 0.15); color: var(--accent-mid); }
+
+.news-headline {
+  font-size: 0.75rem;
+  color: var(--sl-text);
+  line-height: 1.4;
+  margin-bottom: 4px;
+}
+
+.news-meta {
+  font-size: 0.62rem;
+  color: var(--sl-muted);
+}
+
+/* Risk bars */
+.risk-list { display: flex; flex-direction: column; gap: 14px; }
+
+.risk-item-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  margin-bottom: 6px;
+}
+
+.risk-item-label span:first-child { color: var(--sl-muted); }
+.risk-item-label span:last-child { font-family: var(--font-mono); color: var(--sl-text); }
+
+.risk-bar {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.risk-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 1s ease;
+  width: 0;
+}
+
+.risk-bar-fill.high { background: linear-gradient(90deg, #ff4b33, #ef4444); }
+.risk-bar-fill.medium { background: linear-gradient(90deg, #f59e0b, #ff4d1a); }
+.risk-bar-fill.low { background: linear-gradient(90deg, #22c55e, #4ade80); }
+
+/* ===== BOTTOM SECTION ===== */
+.bottom-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+/* Sector bars */
+.sector-bar-list { display: flex; flex-direction: column; gap: 10px; }
+
+.sector-bar-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sector-bar-name {
+  width: 90px;
+  font-size: 0.68rem;
+  color: var(--sl-muted);
+  flex-shrink: 0;
+}
+
+.sector-bar-track {
+  flex: 1;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.sector-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 1s ease;
+  width: 0;
+}
+
+.sector-bar-val {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--sl-text);
+  width: 65px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* Crypto card */
+.crypto-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.crypto-row:last-child { border-bottom: none; }
+
+.crypto-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.72rem;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.crypto-icon.btc { background: linear-gradient(135deg, #f7931a, #e8820e); }
+.crypto-icon.eth { background: linear-gradient(135deg, #627eea, #4a65d4); }
+.crypto-icon.gold { background: linear-gradient(135deg, #ffd700, #daa520); }
+
+.crypto-info { flex: 1; }
+.crypto-info .crypto-name {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--sl-text);
+}
+.crypto-info .crypto-sub {
+  font-size: 0.62rem;
+  color: var(--sl-muted);
+}
+
+.crypto-price {
+  text-align: right;
+}
+.crypto-price .cprice {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--sl-text);
+}
+
+.crypto-price .cchange {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+}
+
+/* US Movers */
+.mover-list { display: flex; flex-direction: column; gap: 0; }
+
+.mover-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.mover-item:last-child { border-bottom: none; }
+
+.mover-sym {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--sl-text);
+  width: 60px;
+}
+
+.mover-name {
+  font-size: 0.7rem;
+  color: var(--sl-muted);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mover-price {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--sl-text);
+}
+
+.mover-chg {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  width: 80px;
+  text-align: right;
+}
+
+.mover-chg.pos { color: var(--green); }
+.mover-chg.neg { color: var(--accent); }
+
+/* ===== FOOTER ===== */
+.footer {
+  text-align: center;
+  padding: 32px 24px;
+  border-top: 1px solid var(--sl-border);
+  margin-top: 12px;
+}
+
+.footer-text {
+  font-size: 0.65rem;
+  color: var(--sl-muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.footer a {
+  color: var(--sl-muted);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.footer a:hover { color: var(--sl-text); }
+
+/* ===== COUNTUP ANIMATION ===== */
+.countup { display: inline-block; }
+
+/* ===== SPARKLINE INLINE ===== */
+.sparkline-svg {
+  width: 72px;
+  height: 24px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* ===== SCROLL REVEAL ===== */
+.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1200px) {
+  .main-grid { grid-template-columns: 1fr; }
+  .right-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+}
+
+@media (max-width: 900px) {
+  .hero-grid { grid-template-columns: 1fr 1fr; }
+  .bottom-grid { grid-template-columns: 1fr; }
+  .right-col { grid-template-columns: 1fr; }
+  .nav-links { display: none; }
+  .sentiment-cols { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 600px) {
+  .hero-grid { grid-template-columns: 1fr; }
+  .container { padding: 0 12px; }
+}
+
+/* Table wrapper */
+.table-wrap {
+  overflow-x: auto;
+  margin: 0 -24px;
+  padding: 0 24px;
+}
+</style>
+</head>
+<body>
+
+<!-- ===== STICKY NAV ===== -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="/dashboard?mode=account" class="logo" id="nav-dashboard-logo" style="text-decoration:none;">
+      SPECTRE
+      <span class="status-dot"></span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="/dashboard?mode=account" id="nav-dashboard-link">Dashboard</a></li>
+      <li><a href="/research" class="active">Research</a></li>
+      <li><a href="/settings" id="nav-settings-link">Settings</a></li>
+    </ul>
+    <div class="nav-right">
+      <span style="font-family:var(--font-mono); font-size:0.7rem;">20 MAR 2026</span>
+      <div class="nav-status">
+        <span class="status-dot" style="width:6px;height:6px;animation-duration:2.5s;background:var(--sl-amber);box-shadow:0 0 6px var(--sl-amber);"></span>
+        ASX CLOSED
+      </div>
+      <span class="nav-user" id="nav-user-email">—</span>
+      <a href="#" class="nav-btn" id="sign-out-btn">Sign Out</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ===== TICKER TAPE ===== -->
+<div class="ticker-wrap">
+  <div class="ticker-track" id="tickerTrack"></div>
+</div>
+
+<div class="container" id="terminal">
+
+  <!-- ===== HERO METRICS ===== -->
+  <section class="hero-grid reveal">
+    <!-- ASX 200 -->
+    <div class="card hero-card card-glow">
+      <div class="label">S&P/ASX 200</div>
+      <div class="value"><span class="countup" data-target="8443.4" data-decimals="1">0</span></div>
+      <div class="change neg">
+        <span class="mono">−54.40 (−0.64%)</span>
+      </div>
+      <div class="hero-sparkline">
+        <svg class="sparkline-svg" viewBox="0 0 72 24" fill="none" style="width:100%;height:40px;">
+          <defs>
+            <linearGradient id="asx-grad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#9b5de5" stop-opacity="0.4"/>
+              <stop offset="100%" stop-color="#9b5de5" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <path d="M0,20 L6,18 L12,16 L18,14 L24,10 L30,8 L36,6 L42,4 L48,6 L54,8 L60,12 L66,16 L72,18" stroke="#9b5de5" stroke-width="1.5" fill="none"/>
+          <path d="M0,20 L6,18 L12,16 L18,14 L24,10 L30,8 L36,6 L42,4 L48,6 L54,8 L60,12 L66,16 L72,18 L72,24 L0,24Z" fill="url(#asx-grad)"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Market Pulse -->
+    <div class="card hero-card card-glow">
+      <div class="label">Market Pulse</div>
+      <div class="pulse-badge">
+        <span class="pulse-ring"></span>
+        BEARISH
+      </div>
+      <p style="font-size:0.72rem;color:var(--sl-muted);margin-top:10px;line-height:1.5;">
+        RBA hiked to 4.10% · ASX 200 down 54pts · Iron ore under pressure
+      </p>
+    </div>
+
+    <!-- Gold -->
+    <div class="card hero-card card-glow">
+      <div class="label">Gold (XAU/USD)</div>
+      <div class="value">$<span class="countup" data-target="4637" data-decimals="0">0</span></div>
+      <div class="change neg">
+        <span class="mono">−$13.52 (−0.29%)</span>
+      </div>
+    </div>
+
+    <!-- Bitcoin -->
+    <div class="card hero-card card-glow">
+      <div class="label">Bitcoin (BTC/USD)</div>
+      <div class="value">$<span class="countup" data-target="70695" data-decimals="0">0</span></div>
+      <div class="change pos">
+        <span class="mono">+$776.82 (+1.11%)</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== MAIN BENTO GRID ===== -->
+  <div class="main-grid">
+
+    <!-- LEFT COLUMN -->
+    <div class="left-col">
+
+      <!-- A. PRICE CHART -->
+      <div class="card card-glow reveal" id="watchlist">
+        <div class="section-label">ASX 200 Index</div>
+        <div class="chart-header">
+          <div class="chart-title-group">
+            <div class="chart-val"><span class="countup" data-target="8443.4" data-decimals="1">0</span></div>
+            <div class="chart-sub">−54.40 (−0.64%) today &nbsp;·&nbsp; 6M: −8.25%</div>
+          </div>
+          <div class="time-pills">
+            <button class="time-pill" onclick="setTimePill(this)">1D</button>
+            <button class="time-pill" onclick="setTimePill(this)">1W</button>
+            <button class="time-pill" onclick="setTimePill(this)">1M</button>
+            <button class="time-pill" onclick="setTimePill(this)">3M</button>
+            <button class="time-pill active" onclick="setTimePill(this)">6M</button>
+            <button class="time-pill" onclick="setTimePill(this)">1Y</button>
+          </div>
+        </div>
+        <svg class="chart-svg" viewBox="0 0 900 240" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="chart-fill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#9b5de5" stop-opacity="0.35"/>
+              <stop offset="100%" stop-color="#9b5de5" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <!-- Grid lines -->
+          <line x1="0" y1="60" x2="900" y2="60" stroke="#ffffff08" stroke-width="1"/>
+          <line x1="0" y1="120" x2="900" y2="120" stroke="#ffffff08" stroke-width="1"/>
+          <line x1="0" y1="180" x2="900" y2="180" stroke="#ffffff08" stroke-width="1"/>
+          <!-- Area fill -->
+          <path d="M0,180 C50,175 100,160 150,140 C200,120 250,100 300,80 C350,60 400,40 450,30 C500,20 550,25 600,50 C650,75 700,100 750,130 C800,155 850,170 900,180 L900,240 L0,240Z" fill="url(#chart-fill)"/>
+          <!-- Line -->
+          <path d="M0,180 C50,175 100,160 150,140 C200,120 250,100 300,80 C350,60 400,40 450,30 C500,20 550,25 600,50 C650,75 700,100 750,130 C800,155 850,170 900,180" fill="none" stroke="#9b5de5" stroke-width="2.5" stroke-linecap="round"/>
+          <!-- Current point -->
+          <circle cx="900" cy="180" r="4" fill="#9b5de5"/>
+          <circle cx="900" cy="180" r="8" fill="#9b5de5" opacity="0.3"/>
+          <!-- Labels -->
+          <text x="8" y="55" fill="#8a86a8" font-size="10" font-family="DM Mono">9,200</text>
+          <text x="8" y="115" fill="#8a86a8" font-size="10" font-family="DM Mono">8,800</text>
+          <text x="8" y="175" fill="#8a86a8" font-size="10" font-family="DM Mono">8,400</text>
+          <text x="80" y="235" fill="#8a86a860" font-size="9" font-family="DM Mono">Oct</text>
+          <text x="230" y="235" fill="#8a86a860" font-size="9" font-family="DM Mono">Nov</text>
+          <text x="380" y="235" fill="#8a86a860" font-size="9" font-family="DM Mono">Dec</text>
+          <text x="530" y="235" fill="#8a86a860" font-size="9" font-family="DM Mono">Jan</text>
+          <text x="680" y="235" fill="#8a86a860" font-size="9" font-family="DM Mono">Feb</text>
+          <text x="830" y="235" fill="#8a86a860" font-size="9" font-family="DM Mono">Mar</text>
+        </svg>
+      </div>
+
+      <!-- B. ASX TOP HOLDINGS TABLE -->
+      <div class="card reveal">
+        <div class="section-label">ASX Top Holdings</div>
+        <div class="table-wrap">
+          <table class="data-table" id="stockTable">
+            <thead>
+              <tr>
+                <th>Symbol</th>
+                <th>Sector</th>
+                <th>Price</th>
+                <th>Chg%</th>
+                <th>Mkt Cap</th>
+                <th>P/E</th>
+                <th>Div Yield</th>
+                <th>52W Range</th>
+                <th>Trend</th>
+              </tr>
+            </thead>
+            <tbody id="stockTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- C. EARNINGS RESULTS -->
+      <div class="card reveal" id="earnings-section">
+        <div class="section-label">Latest Earnings</div>
+        <div class="tabs">
+          <button class="tab-btn active" onclick="switchTab('earnings', 'bhp', this)">BHP</button>
+          <button class="tab-btn" onclick="switchTab('earnings', 'cba', this)">CBA</button>
+        </div>
+        <div id="earnings-bhp" class="tab-content active">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+            <span class="result-badge result-beat">● BEAT</span>
+            <span style="font-size:0.72rem;color:var(--sl-muted);">H1 FY2026 (Dec 2025 half)</span>
+          </div>
+          <div class="metrics-grid">
+            <div class="metric-item"><div class="metric-label">Revenue</div><div class="metric-val">US$25.2B</div></div>
+            <div class="metric-item"><div class="metric-label">EBITDA</div><div class="metric-val">US$15.5B</div></div>
+            <div class="metric-item"><div class="metric-label">EBITDA Margin</div><div class="metric-val">58%</div></div>
+            <div class="metric-item"><div class="metric-label">Net Profit</div><div class="metric-val">US$6.2B</div></div>
+            <div class="metric-item"><div class="metric-label">YoY NPAT</div><div class="metric-val" style="color:var(--green);">+20%</div></div>
+            <div class="metric-item"><div class="metric-label">Op Cash Flow</div><div class="metric-val">US$9.4B</div></div>
+            <div class="metric-item"><div class="metric-label">Net Debt</div><div class="metric-val">US$14.7B</div></div>
+            <div class="metric-item"><div class="metric-label">Interim Div</div><div class="metric-val">US$0.73/sh</div></div>
+            <div class="metric-item"><div class="metric-label">Payout Ratio</div><div class="metric-val">60%</div></div>
+            <div class="metric-item"><div class="metric-label">Copper % EBITDA</div><div class="metric-val" style="color:var(--sl-purple-hi);">51%</div></div>
+            <div class="metric-item" style="grid-column:span 2;"><div class="metric-label">Guidance</div><div class="metric-val">FY26 guidance 1.9-2.0Mt copper</div></div>
+          </div>
+        </div>
+        <div id="earnings-cba" class="tab-content">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+            <span class="result-badge result-inline">● IN LINE</span>
+            <span style="font-size:0.72rem;color:var(--sl-muted);">H1 FY2026 (Dec 2025 half)</span>
+          </div>
+          <div class="metrics-grid">
+            <div class="metric-item"><div class="metric-label">Cash NPAT</div><div class="metric-val">A$5,445M</div></div>
+            <div class="metric-item"><div class="metric-label">YoY Cash NPAT</div><div class="metric-val" style="color:var(--green);">+6%</div></div>
+            <div class="metric-item"><div class="metric-label">Stat NPAT</div><div class="metric-val">A$5,412M</div></div>
+            <div class="metric-item"><div class="metric-label">Op Income</div><div class="metric-val">A$15.0B</div></div>
+            <div class="metric-item"><div class="metric-label">NIM</div><div class="metric-val">2.04% (−4bps)</div></div>
+            <div class="metric-item"><div class="metric-label">CET1 Ratio</div><div class="metric-val">12.3%</div></div>
+            <div class="metric-item"><div class="metric-label">Interim Div</div><div class="metric-val">A$2.35/sh FF</div></div>
+            <div class="metric-item"><div class="metric-label">Payout Ratio</div><div class="metric-val">74%</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- D. BHP SEGMENT BREAKDOWN -->
+      <div class="card reveal">
+        <div class="section-label">BHP Segment Revenue Breakdown</div>
+        <div class="seg-chart-row">
+          <div class="seg-bar-group">
+            <div class="seg-bar-stack" style="height:100%;">
+              <div class="seg-piece" style="height:3.7%;background:#8a86a8;" title="Other $2.0B"></div>
+              <div class="seg-piece" style="height:20.4%;background:#ff4b33;" title="Coal $11.0B"></div>
+              <div class="seg-piece" style="height:46.1%;background:#9b5de5;" title="Iron Ore $24.8B"></div>
+              <div class="seg-piece" style="height:29.7%;background:#c084fc;" title="Copper $16.0B"></div>
+            </div>
+            <div class="seg-bar-label">FY23</div>
+          </div>
+          <div class="seg-bar-group">
+            <div class="seg-bar-stack" style="height:100%;">
+              <div class="seg-piece" style="height:2.7%;background:#8a86a8;" title="Other $1.5B"></div>
+              <div class="seg-piece" style="height:13.8%;background:#ff4b33;" title="Coal $7.7B"></div>
+              <div class="seg-piece" style="height:50.2%;background:#9b5de5;" title="Iron Ore $28.0B"></div>
+              <div class="seg-piece" style="height:33.3%;background:#c084fc;" title="Copper $18.6B"></div>
+            </div>
+            <div class="seg-bar-label">FY24</div>
+          </div>
+          <div class="seg-bar-group">
+            <div class="seg-bar-stack" style="height:100%;">
+              <div class="seg-piece" style="height:1.6%;background:#8a86a8;" title="Other $0.8B"></div>
+              <div class="seg-piece" style="height:9.8%;background:#ff4b33;" title="Coal $5.0B"></div>
+              <div class="seg-piece" style="height:44.7%;background:#9b5de5;" title="Iron Ore $22.9B"></div>
+              <div class="seg-piece" style="height:43.9%;background:#c084fc;" title="Copper $22.5B"></div>
+            </div>
+            <div class="seg-bar-label">FY25</div>
+          </div>
+        </div>
+        <div class="seg-legend">
+          <div class="seg-legend-item"><div class="seg-legend-dot" style="background:#c084fc;"></div> Copper</div>
+          <div class="seg-legend-item"><div class="seg-legend-dot" style="background:#9b5de5;"></div> Iron Ore</div>
+          <div class="seg-legend-item"><div class="seg-legend-dot" style="background:#ff4b33;"></div> Coal</div>
+          <div class="seg-legend-item"><div class="seg-legend-dot" style="background:#8a86a8;"></div> Other</div>
+        </div>
+        <div class="kpi-row">
+          <div class="kpi-box">
+            <div class="kpi-val"><span class="countup" data-target="2016.7" data-decimals="1">0</span><span style="font-size:0.7rem;color:var(--sl-muted);"> kt</span></div>
+            <div class="kpi-label">Copper Production (FY25)</div>
+          </div>
+          <div class="kpi-box">
+            <div class="kpi-val"><span class="countup" data-target="263" data-decimals="0">0</span><span style="font-size:0.7rem;color:var(--sl-muted);"> Mt</span></div>
+            <div class="kpi-label">Iron Ore Production (FY25)</div>
+          </div>
+          <div class="kpi-box">
+            <div class="kpi-val" style="color:var(--green);">51%</div>
+            <div class="kpi-label">Copper % of EBITDA</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- E. ANALYST SENTIMENT -->
+      <div class="card reveal">
+        <div class="section-label">Analyst Sentiment — Bulls vs Bears</div>
+        <div class="tabs">
+          <button class="tab-btn active" onclick="switchTab('sentiment', 'bhp', this)">BHP</button>
+          <button class="tab-btn" onclick="switchTab('sentiment', 'cba', this)">CBA</button>
+        </div>
+        <div id="sentiment-bhp" class="tab-content active">
+          <div class="sentiment-cols">
+            <div class="sentiment-col bull">
+              <h4>Bull Case</h4>
+              <ul>
+                <li>Argus raised BHP target to US$90 (Buy) — long-term fundamentals strong. China stabilization favors iron ore</li>
+                <li>Strategic copper pivot (Antamina deal) positions for decarbonization demand. Target $95-$105 through 2026</li>
+                <li>Forward P/E of 6.7 and PEG of 0.2B — significantly undervalued with 20.2% net margin</li>
+              </ul>
+            </div>
+            <div class="sentiment-col bear">
+              <h4>Bear Case</h4>
+              <ul>
+                <li>China's CMRG expanded ban on BHP iron ore imports — port inventory buildup creates volume uncertainty</li>
+                <li>Aborted £40B Anglo American bid raises M&A execution concerns. Multiple analyst downgrades</li>
+                <li>Berenberg reiterates Sell — current price may reflect overly optimistic expectations</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div id="sentiment-cba" class="tab-content">
+          <div class="sentiment-cols">
+            <div class="sentiment-col bull">
+              <h4>Bull Case</h4>
+              <ul>
+                <li>Dominant retail banking franchise with highest NIM among big four — 2.04% in H1 FY26</li>
+                <li>CET1 at 12.3% provides buffer for buybacks and dividend growth; 74% payout ratio sustainable</li>
+                <li>Digital-first strategy reduces cost-to-income; CommBank app has 8.4M+ active users</li>
+              </ul>
+            </div>
+            <div class="sentiment-col bear">
+              <h4>Bear Case</h4>
+              <ul>
+                <li>P/E of 28.4x is historically elevated — trading at significant premium to sector average</li>
+                <li>NIM compression of 4bps signals margin pressure as competition for deposits intensifies</li>
+                <li>RBA hike cycle risks higher provisions; household debt-to-income ratio near record levels</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- F. 3-YEAR FUNDAMENTALS -->
+      <div class="card reveal">
+        <div class="section-label">3-Year Fundamentals</div>
+        <div class="tabs">
+          <button class="tab-btn active" onclick="switchTab('fundamentals', 'bhp', this)">BHP</button>
+          <button class="tab-btn" onclick="switchTab('fundamentals', 'cba', this)">CBA</button>
+          <button class="tab-btn" onclick="switchTab('fundamentals', 'csl', this)">CSL</button>
+        </div>
+        <div id="fundamentals-bhp" class="tab-content active">
+          <table class="fund-table">
+            <thead><tr><th>Metric</th><th>FY2023</th><th>FY2024</th><th>FY2025</th></tr></thead>
+            <tbody>
+              <tr><td>Revenue</td><td>$53.8B</td><td>$56.0B</td><td>$51.3B</td></tr>
+              <tr><td>EBITDA</td><td>$28.6B</td><td>$23.5B</td><td>$25.8B</td></tr>
+              <tr><td>Net Income</td><td>$12.9B</td><td>$7.9B</td><td>$9.0B</td></tr>
+              <tr><td>EPS</td><td>$2.55</td><td>$1.56</td><td>$1.78</td></tr>
+              <tr><td>Total Debt</td><td>$24.1B</td><td>$20.2B</td><td>$24.5B</td></tr>
+              <tr><td>Cash</td><td>$12.4B</td><td>$12.4B</td><td>$11.8B</td></tr>
+              <tr><td>Free Cash Flow</td><td>$11.6B</td><td>$11.8B</td><td>$9.3B</td></tr>
+              <tr><td>Dividends Paid</td><td>$13.3B</td><td>$7.7B</td><td>$6.4B</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div id="fundamentals-cba" class="tab-content">
+          <table class="fund-table">
+            <thead><tr><th>Metric</th><th>FY2023</th><th>FY2024</th><th>FY2025</th></tr></thead>
+            <tbody>
+              <tr><td>Revenue</td><td>A$28.1B</td><td>A$27.6B</td><td>A$28.9B</td></tr>
+              <tr><td>Net Income</td><td>A$10.2B</td><td>A$9.8B</td><td>A$10.5B</td></tr>
+              <tr><td>EPS</td><td>A$6.01</td><td>A$5.84</td><td>A$6.21</td></tr>
+              <tr><td>NIM</td><td>1.99%</td><td>1.95%</td><td>2.04%</td></tr>
+              <tr><td>CET1 Ratio</td><td>12.2%</td><td>12.3%</td><td>12.3%</td></tr>
+              <tr><td>ROA</td><td>0.87%</td><td>0.82%</td><td>0.85%</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div id="fundamentals-csl" class="tab-content">
+          <table class="fund-table">
+            <thead><tr><th>Metric</th><th>FY2023</th><th>FY2024</th><th>FY2025</th></tr></thead>
+            <tbody>
+              <tr><td>Revenue</td><td>US$14.8B</td><td>US$15.4B</td><td>US$16.5B</td></tr>
+              <tr><td>Net Income</td><td>US$2.1B</td><td>US$2.8B</td><td>US$3.4B</td></tr>
+              <tr><td>EPS</td><td>A$5.99</td><td>A$7.34</td><td>A$8.74</td></tr>
+              <tr><td>R&D Expense</td><td>US$1.3B</td><td>US$1.4B</td><td>US$1.5B</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN (SIDEBAR) -->
+    <div class="right-col">
+
+      <!-- G. COMPANY OVERVIEW -->
+      <div class="card card-glow reveal">
+        <div class="company-header">
+          <div class="company-icon">BHP</div>
+          <div>
+            <h3>BHP Group Limited</h3>
+            <div class="company-sub">ASX: BHP · Materials · Mining</div>
+          </div>
+        </div>
+        <p style="font-size:0.72rem;color:var(--sl-muted);line-height:1.55;margin-bottom:14px;">
+          World's largest mining company by market cap. Diversified across iron ore, copper, coal, and nickel. Headquartered in Melbourne with operations across six continents.
+        </p>
+        <div class="info-grid">
+          <span class="info-label">CEO</span><span class="info-val">Mike Henry</span>
+          <span class="info-label">Employees</span><span class="info-val">~80,000</span>
+          <span class="info-label">Sector</span><span class="info-val">Basic Materials</span>
+          <span class="info-label">Industry</span><span class="info-val">Diversified Mining</span>
+          <span class="info-label">IPO Date</span><span class="info-val">1885</span>
+          <span class="info-label">HQ</span><span class="info-val">Melbourne, Australia</span>
+          <span class="info-label">Website</span><span class="info-val">bhp.com</span>
+        </div>
+        <div class="consensus-row">
+          <span class="consensus-badge">HOLD</span>
+          <span style="font-size:0.72rem;color:var(--sl-muted);">Target: <strong style="color:var(--sl-text);" class="mono">$48.00</strong></span>
+          <span style="font-size:0.65rem;color:var(--sl-muted);margin-left:auto;">Bernstein, 9 Mar</span>
+        </div>
+      </div>
+
+      <!-- H. PEER COMPANIES -->
+      <div class="card reveal">
+        <div class="section-label">Peer Companies</div>
+        <h4 style="font-size:0.78rem;margin-bottom:8px;color:var(--sl-muted);">BHP Peers</h4>
+        <div class="peer-pills">
+          <div class="peer-pill">RIO.AX</div>
+          <div class="peer-pill">VALE</div>
+          <div class="peer-pill">GLEN.L</div>
+          <div class="peer-pill">AAL.L</div>
+          <div class="peer-pill">TECK</div>
+          <div class="peer-pill">FMG.AX</div>
+          <div class="peer-pill">FCX</div>
+          <div class="peer-pill">NEM</div>
+        </div>
+        <h4 style="font-size:0.78rem;margin:16px 0 8px;color:var(--sl-muted);">CBA Peers</h4>
+        <div class="peer-pills">
+          <div class="peer-pill">NAB.AX</div>
+          <div class="peer-pill">WBC.AX</div>
+          <div class="peer-pill">ANZ.AX</div>
+          <div class="peer-pill">MQG.AX</div>
+          <div class="peer-pill">BOQ.AX</div>
+          <div class="peer-pill">JPM</div>
+          <div class="peer-pill">RY</div>
+        </div>
+      </div>
+
+      <!-- I. NEWS -->
+      <div class="card reveal">
+        <div class="section-label">News & Market Context</div>
+        <div class="news-list" id="newsList"></div>
+      </div>
+
+      <!-- J. RISK INDICATORS -->
+      <div class="card reveal" id="risk-section">
+        <div class="section-label">Market Risk Indicators</div>
+        <div class="risk-list">
+          <div class="risk-item">
+            <div class="risk-item-label"><span>Iron Ore Risk</span><span>72/100</span></div>
+            <div class="risk-bar"><div class="risk-bar-fill high" data-width="72"></div></div>
+          </div>
+          <div class="risk-item">
+            <div class="risk-item-label"><span>Rate Sensitivity</span><span>81/100</span></div>
+            <div class="risk-bar"><div class="risk-bar-fill high" data-width="81"></div></div>
+          </div>
+          <div class="risk-item">
+            <div class="risk-item-label"><span>China Exposure</span><span>68/100</span></div>
+            <div class="risk-bar"><div class="risk-bar-fill medium" data-width="68"></div></div>
+          </div>
+          <div class="risk-item">
+            <div class="risk-item-label"><span>Energy Sector</span><span>54/100</span></div>
+            <div class="risk-bar"><div class="risk-bar-fill medium" data-width="54"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== BOTTOM SECTION ===== -->
+  <section class="bottom-grid" id="macro-section">
+
+    <!-- K. SECTOR BREAKDOWN -->
+    <div class="card reveal">
+      <div class="section-label">Sector Breakdown by Market Cap</div>
+      <div class="sector-bar-list" id="sectorBars"></div>
+    </div>
+
+    <!-- L. CRYPTO & COMMODITIES -->
+    <div class="card reveal">
+      <div class="section-label">Crypto & Commodities</div>
+      <div class="crypto-row">
+        <div class="crypto-icon btc">₿</div>
+        <div class="crypto-info">
+          <div class="crypto-name">Bitcoin</div>
+          <div class="crypto-sub">BTC/USD</div>
+        </div>
+        <div class="crypto-price">
+          <div class="cprice mono">$70,695</div>
+          <div class="cchange pos mono">+1.11%</div>
+        </div>
+      </div>
+      <div class="crypto-row">
+        <div class="crypto-icon eth">Ξ</div>
+        <div class="crypto-info">
+          <div class="crypto-name">Ethereum</div>
+          <div class="crypto-sub">ETH/USD</div>
+        </div>
+        <div class="crypto-price">
+          <div class="cprice mono">$2,146</div>
+          <div class="cchange pos mono">+0.39%</div>
+        </div>
+      </div>
+      <div class="crypto-row">
+        <div class="crypto-icon gold">Au</div>
+        <div class="crypto-info">
+          <div class="crypto-name">Gold</div>
+          <div class="crypto-sub">XAU/USD</div>
+        </div>
+        <div class="crypto-price">
+          <div class="cprice mono">$4,637</div>
+          <div class="cchange neg mono">−0.29%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- M. US MARKET MOVERS -->
+    <div class="card reveal">
+      <div class="section-label">US Market Movers</div>
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('usmovers', 'gainers', this)">Top Gainers</button>
+        <button class="tab-btn" onclick="switchTab('usmovers', 'losers', this)">Top Losers</button>
+        <button class="tab-btn" onclick="switchTab('usmovers', 'active', this)">Most Active</button>
+      </div>
+      <div id="usmovers-gainers" class="tab-content active"></div>
+      <div id="usmovers-losers" class="tab-content"></div>
+      <div id="usmovers-active" class="tab-content"></div>
+    </div>
+  </section>
+
+</div>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <p class="footer-text">
+    SPECTRE Market Research · Demo market dataset as of 20 Mar 2026 · Built for Starter and Pro workspaces
+  </p>
+</footer>
+
+<script>
+const state = {
+  demoMode: false,
+  sessionUser: null,
+};
+
+const DEMO_SESSION_USER = {
+  id: "demo-portfolio",
+  email: "demo@spectre-assets.com",
+  displayName: "Demo Portfolio",
+  planTier: "pro",
+  proEnabled: true,
+  subscriptionStatus: "active",
+};
+
+// ===== EMBEDDED DATA =====
+const DATA = {
+  stocks: [
+    { symbol:"BHP.AX", name:"BHP Group", sector:"Materials", price:47.54, change:-0.81, changePct:-1.68, marketCap:241418181984, pe:16.8, divYield:4.0, yearLow:33.25, yearHigh:59.39 },
+    { symbol:"CBA.AX", name:"Commonwealth Bank", sector:"Financials", price:176.16, change:-1.2, changePct:-0.68, marketCap:294560899482, pe:28.37, divYield:3.0, yearLow:140.21, yearHigh:192 },
+    { symbol:"CSL.AX", name:"CSL Limited", sector:"Healthcare", price:138.04, change:3.42, changePct:2.54, marketCap:66970298428, pe:15.79, divYield:3.0, yearLow:133.35, yearHigh:275.79 },
+    { symbol:"WES.AX", name:"Wesfarmers", sector:"Consumer", price:73.25, change:-0.39, changePct:-0.53, marketCap:83159260000, pe:27.13, divYield:5.0, yearLow:67.7, yearHigh:95.17 },
+    { symbol:"ANZ.AX", name:"ANZ Group", sector:"Financials", price:36.74, change:-0.28, changePct:-0.76, marketCap:109623042014, pe:18.65, divYield:5.0, yearLow:26.22, yearHigh:41 },
+    { symbol:"NAB.AX", name:"National Aust. Bank", sector:"Financials", price:45.51, change:-1.11, changePct:-2.38, marketCap:139058917338, pe:20.59, divYield:4.0, yearLow:31.13, yearHigh:49.45 },
+    { symbol:"FMG.AX", name:"Fortescue Ltd", sector:"Materials", price:18.97, change:-0.07, changePct:-0.37, marketCap:58399828906, pe:11.09, divYield:6.0, yearLow:13.18, yearHigh:23.38 },
+    { symbol:"RIO.AX", name:"Rio Tinto", sector:"Materials", price:147.58, change:-3.77, changePct:-2.49, marketCap:239672475495, pe:17.26, divYield:5.0, yearLow:100.75, yearHigh:170.71 },
+    { symbol:"MQG.AX", name:"Macquarie Group", sector:"Financials", price:195.5, change:-0.59, changePct:-0.30, marketCap:71492436251, pe:20.13, divYield:3.0, yearLow:160, yearHigh:231.83 },
+    { symbol:"WBC.AX", name:"Westpac Banking", sector:"Financials", price:40.8, change:-0.33, changePct:-0.80, marketCap:139493177751, pe:20.5, divYield:4.0, yearLow:28.44, yearHigh:43.32 },
+    { symbol:"WDS.AX", name:"Woodside Energy", sector:"Energy", price:33.97, change:0.27, changePct:0.80, marketCap:64400890518, pe:16.9, divYield:5.0, yearLow:18.61, yearHigh:34.31 },
+    { symbol:"TLS.AX", name:"Telstra Group", sector:"Comms", price:5.29, change:-0.02, changePct:-0.28, marketCap:59482343488, pe:26.43, divYield:4.0, yearLow:4.12, yearHigh:5.35 },
+    { symbol:"ALL.AX", name:"Aristocrat Leisure", sector:"Consumer", price:45.46, change:0.73, changePct:1.63, marketCap:27854581512, pe:24.05, divYield:2.0, yearLow:44.18, yearHigh:73.29 },
+    { symbol:"GMG.AX", name:"Goodman Group", sector:"Real Estate", price:25.57, change:-0.02, changePct:-0.08, marketCap:52285280300, pe:30.44, divYield:1.0, yearLow:25.01, yearHigh:37.31 },
+    { symbol:"STO.AX", name:"Santos Ltd", sector:"Energy", price:8.03, change:0.01, changePct:0.12, marketCap:26019349543, pe:22.94, divYield:4.0, yearLow:5.2, yearHigh:8.19 }
+  ],
+  usMovers: {
+    gainers: [
+      { symbol:"ANGIV", name:"Angi Inc.", price:15.76, changePct:100.0 },
+      { symbol:"IPEXR", name:"Inflection Point Acq V", price:0.49, changePct:48.48 },
+      { symbol:"DLTH", name:"Duluth Holdings", price:3.14, changePct:44.7 },
+      { symbol:"LIDR", name:"AEye Inc.", price:2.59, changePct:38.5 },
+      { symbol:"ELA", name:"Envela Corp", price:15.23, changePct:31.18 }
+    ],
+    losers: [
+      { symbol:"YRD", name:"Yiren Digital", price:2.03, changePct:-44.84 },
+      { symbol:"ZKH", name:"ZKH Group", price:2.27, changePct:-30.64 },
+      { symbol:"CSIQ", name:"Canadian Solar", price:13.53, changePct:-26.94 },
+      { symbol:"PICS", name:"PicS N.V.", price:12.27, changePct:-22.49 },
+      { symbol:"NPT", name:"Texxon Holding", price:6.32, changePct:-21.49 }
+    ],
+    mostActive: [
+      { symbol:"TZA", name:"Direxion Small Cap Bear 3X", price:7.23, changePct:-1.9 },
+      { symbol:"BITO", name:"Bitcoin ETF", price:9.67, changePct:-1.12 },
+      { symbol:"NVDA", name:"NVIDIA", price:178.56, changePct:-1.02 },
+      { symbol:"TQQQ", name:"UltraPro QQQ", price:45.69, changePct:-0.89 },
+      { symbol:"SPDN", name:"S&P 500 Bear 1X", price:9.87, changePct:0.2 }
+    ]
+  },
+  news: [
+    { tag:"RBA DECISION", cls:"tag-rba", headline:"RBA raises cash rate to 4.10% in 5-4 vote — 2nd hike of 2026", date:"17 Mar 2026", source:"Reserve Bank of Australia" },
+    { tag:"INFLATION", cls:"tag-inflation", headline:"CPI 3.8%, trimmed mean 3.4% — above RBA 2-3% target band", date:"Q4 2025", source:"ABS Data Release" },
+    { tag:"RATE OUTLOOK", cls:"tag-rate", headline:"57% market expectation for another hold/hike at May RBA meeting", date:"Mar 2026", source:"ASX Rate Futures" },
+    { tag:"ASX PERFORMANCE", cls:"tag-asx", headline:"ASX 200 +9.5% over past year despite 2 rate hikes in 2026", date:"Mar 2026", source:"ASX Market Data" },
+    { tag:"CHINA TRADE", cls:"tag-china", headline:"China's CMRG expands BHP iron ore import restrictions — port inventories rising", date:"Mar 2026", source:"Reuters" }
+  ]
+};
+
+// ===== SPARKLINE GENERATOR =====
+function generateSparkline(yearLow, yearHigh, price, changePct) {
+  // Generate a plausible mini path based on position within range
+  const range = yearHigh - yearLow;
+  const pos = (price - yearLow) / range;
+  const isUp = changePct > 0;
+  const pts = [];
+  const w = 72, h = 24;
+  const steps = 12;
+  let y = isUp ? h * 0.7 : h * 0.3;
+  for (let i = 0; i <= steps; i++) {
+    const x = (i / steps) * w;
+    const noise = (Math.sin(i * 2.3 + price) * 0.15 + Math.cos(i * 1.7 + yearLow) * 0.1) * h;
+    const trend = isUp ? -((i / steps) * h * 0.4) : ((i / steps) * h * 0.4);
+    y = Math.max(2, Math.min(h - 2, h * 0.5 + trend + noise));
+    pts.push(`${x.toFixed(1)},${y.toFixed(1)}`);
+  }
+  const color = changePct >= 0 ? '#22c55e' : '#ef4444';
+  return `<svg class="sparkline-svg" viewBox="0 0 72 24" fill="none"><polyline points="${pts.join(' ')}" stroke="${color}" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+
+// ===== BADGE MAPPING =====
+function sectorBadge(sector) {
+  const map = {
+    'Materials': 'badge-materials',
+    'Financials': 'badge-financials',
+    'Healthcare': 'badge-healthcare',
+    'Consumer': 'badge-consumer',
+    'Energy': 'badge-energy',
+    'Comms': 'badge-comms',
+    'Real Estate': 'badge-realestate'
+  };
+  return `<span class="badge ${map[sector] || ''}">${sector}</span>`;
+}
+
+// ===== FORMAT MARKET CAP =====
+function fmtCap(n) {
+  if (n >= 1e12) return '$' + (n / 1e12).toFixed(1) + 'T';
+  if (n >= 1e9) return '$' + (n / 1e9).toFixed(1) + 'B';
+  return '$' + (n / 1e6).toFixed(0) + 'M';
+}
+
+// ===== BUILD STOCK TABLE =====
+function buildStockTable() {
+  const tbody = document.getElementById('stockTableBody');
+  tbody.innerHTML = DATA.stocks.map(s => {
+    const chgClass = s.changePct >= 0 ? 'pos' : 'neg';
+    const chgSign = s.changePct >= 0 ? '+' : '';
+    const rangePos = ((s.price - s.yearLow) / (s.yearHigh - s.yearLow)) * 100;
+    const spark = generateSparkline(s.yearLow, s.yearHigh, s.price, s.changePct);
+    return `<tr>
+      <td class="sym-cell">${s.symbol.replace('.AX','')}</td>
+      <td>${sectorBadge(s.sector)}</td>
+      <td>$${s.price.toFixed(2)}</td>
+      <td class="change ${chgClass}">${chgSign}${s.changePct.toFixed(2)}%</td>
+      <td>${fmtCap(s.marketCap)}</td>
+      <td>${s.pe.toFixed(1)}</td>
+      <td>${s.divYield.toFixed(1)}%</td>
+      <td><div class="range-bar"><div class="marker" style="left:${rangePos}%"></div></div></td>
+      <td>${spark}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ===== BUILD TICKER TAPE =====
+function buildTicker() {
+  const track = document.getElementById('tickerTrack');
+  const items = DATA.stocks.map(s => {
+    const cls = s.changePct >= 0 ? 'pos' : 'neg';
+    const sign = s.changePct >= 0 ? '+' : '';
+    return `<div class="ticker-item"><span class="sym">${s.symbol.replace('.AX','')}</span><span class="price">$${s.price.toFixed(2)}</span><span class="chg ${cls}">${sign}${s.changePct.toFixed(2)}%</span></div>`;
+  }).join('');
+  track.innerHTML = items + items; // Duplicate for seamless loop
+}
+
+// ===== BUILD NEWS =====
+function buildNews() {
+  const list = document.getElementById('newsList');
+  list.innerHTML = DATA.news.map(n => `
+    <div class="news-item">
+      <span class="news-tag ${n.cls}">${n.tag}</span>
+      <div class="news-headline">${n.headline}</div>
+      <div class="news-meta">${n.date} · ${n.source}</div>
+    </div>
+  `).join('');
+}
+
+// ===== BUILD US MOVERS =====
+function buildMovers() {
+  ['gainers', 'losers', 'active'].forEach(type => {
+    const key = type === 'active' ? 'mostActive' : type;
+    const container = document.getElementById(`usmovers-${type}`);
+    const items = DATA.usMovers[key];
+    container.innerHTML = '<div class="mover-list">' + items.map(m => {
+      const cls = m.changePct >= 0 ? 'pos' : 'neg';
+      const sign = m.changePct >= 0 ? '+' : '';
+      return `<div class="mover-item">
+        <span class="mover-sym">${m.symbol}</span>
+        <span class="mover-name">${m.name}</span>
+        <span class="mover-price mono">$${m.price.toFixed(2)}</span>
+        <span class="mover-chg ${cls}">${sign}${m.changePct.toFixed(2)}%</span>
+      </div>`;
+    }).join('') + '</div>';
+  });
+}
+
+// ===== BUILD SECTOR BARS =====
+function buildSectorBars() {
+  const sectors = {};
+  DATA.stocks.forEach(s => {
+    if (!sectors[s.sector]) sectors[s.sector] = 0;
+    sectors[s.sector] += s.marketCap;
+  });
+  const sorted = Object.entries(sectors).sort((a, b) => b[1] - a[1]);
+  const max = sorted[0][1];
+  const colors = {
+    'Financials': 'linear-gradient(90deg, #22c55e, #4ade80)',
+    'Materials': 'linear-gradient(90deg, #9b5de5, #c084fc)',
+    'Consumer': 'linear-gradient(90deg, #fbbf24, #f59e0b)',
+    'Energy': 'linear-gradient(90deg, #ff4b33, #ff7a68)',
+    'Healthcare': 'linear-gradient(90deg, #38bdf8, #0ea5e9)',
+    'Comms': 'linear-gradient(90deg, #a78bfa, #8b5cf6)',
+    'Real Estate': 'linear-gradient(90deg, #2dd4bf, #14b8a6)'
+  };
+  const container = document.getElementById('sectorBars');
+  container.innerHTML = sorted.map(([name, cap]) => {
+    const pct = (cap / max) * 100;
+    const bg = colors[name] || 'linear-gradient(90deg, #8a86a8, #a78bfa)';
+    return `<div class="sector-bar-item">
+      <span class="sector-bar-name">${name}</span>
+      <div class="sector-bar-track"><div class="sector-bar-fill" style="background:${bg};" data-width="${pct}"></div></div>
+      <span class="sector-bar-val">${fmtCap(cap)}</span>
+    </div>`;
+  }).join('');
+}
+
+// ===== TAB SWITCHING =====
+function switchTab(group, id, btn) {
+  // Deactivate all in group
+  const parent = btn.parentElement;
+  parent.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  // Show/hide content
+  const card = parent.parentElement;
+  card.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+  const target = card.querySelector(`#${group}-${id}`);
+  if (target) target.classList.add('active');
+}
+
+// ===== TIME PILL SWITCHING =====
+function setTimePill(btn) {
+  btn.parentElement.querySelectorAll('.time-pill').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ===== COUNTUP ANIMATION =====
+function animateCountups() {
+  document.querySelectorAll('.countup').forEach(el => {
+    const target = parseFloat(el.dataset.target);
+    const decimals = parseInt(el.dataset.decimals) || 0;
+    const duration = 1500;
+    const start = performance.now();
+    function step(now) {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3); // easeOutCubic
+      const current = target * eased;
+      el.textContent = current.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+      if (progress < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  });
+}
+
+// ===== ANIMATED BARS =====
+function animateBars() {
+  document.querySelectorAll('.risk-bar-fill').forEach(el => {
+    const w = el.dataset.width;
+    setTimeout(() => { el.style.width = w + '%'; }, 300);
+  });
+  document.querySelectorAll('.sector-bar-fill').forEach(el => {
+    const w = el.dataset.width;
+    setTimeout(() => { el.style.width = w + '%'; }, 400);
+  });
+}
+
+// ===== SCROLL REVEAL =====
+function initReveal() {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.08 });
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+}
+
+function setText(id, value) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.textContent = value;
+  }
+}
+
+function isDemoMode() {
+  if (typeof window === 'undefined') return false;
+  return new URLSearchParams(window.location.search).get('demo') === '1';
+}
+
+async function apiJson(url, options = {}) {
+  const response = await fetch(url, options);
+  let payload = null;
+  try {
+    payload = await response.json();
+  } catch {
+    payload = null;
+  }
+  if (response.status === 401) {
+    window.location.href = '/signin';
+    throw new Error('Please sign in first.');
+  }
+  if (!response.ok) {
+    throw new Error(payload && payload.error ? payload.error : `Request failed (${response.status}).`);
+  }
+  return payload;
+}
+
+function applyModeChrome() {
+  const signOutButton = document.getElementById('sign-out-btn');
+  const dashboardLink = document.getElementById('nav-dashboard-link');
+  const dashboardLogo = document.getElementById('nav-dashboard-logo');
+  const settingsLink = document.getElementById('nav-settings-link');
+
+  if (state.demoMode) {
+    setText('nav-user-email', 'Demo workspace');
+    if (signOutButton) {
+      signOutButton.textContent = 'Create Account';
+      signOutButton.setAttribute('href', '/signin?mode=register&plan=starter');
+    }
+    if (dashboardLink) dashboardLink.setAttribute('href', '/dashboard?demo=1');
+    if (dashboardLogo) dashboardLogo.setAttribute('href', '/dashboard?demo=1');
+    if (settingsLink) settingsLink.setAttribute('href', '/settings?demo=1');
+    return;
+  }
+
+  if (signOutButton) {
+    signOutButton.textContent = 'Sign Out';
+    signOutButton.setAttribute('href', '#');
+  }
+  if (dashboardLink) dashboardLink.setAttribute('href', '/dashboard?mode=account');
+  if (dashboardLogo) dashboardLogo.setAttribute('href', '/dashboard?mode=account');
+  if (settingsLink) settingsLink.setAttribute('href', '/settings');
+}
+
+async function loadSession() {
+  if (state.demoMode) {
+    state.sessionUser = DEMO_SESSION_USER;
+    applyModeChrome();
+    return;
+  }
+
+  const payload = await apiJson('/api/auth/session', { cache: 'no-store' });
+  if (!payload.authenticated || !payload.user) {
+    window.location.href = '/signin';
+    return;
+  }
+
+  state.sessionUser = payload.user;
+  setText('nav-user-email', payload.user.email || '—');
+  applyModeChrome();
+}
+
+async function signOut(event) {
+  event.preventDefault();
+  if (state.demoMode) {
+    const targetHref = event?.currentTarget instanceof HTMLAnchorElement
+      ? event.currentTarget.getAttribute('href') || '/'
+      : '/';
+    try {
+      await apiJson('/api/portfolio?demo=1&purge=1', { method: 'DELETE' });
+    } catch {
+      // best effort cleanup
+    }
+    window.location.href = targetHref;
+    return;
+  }
+  try {
+    await apiJson('/api/auth/logout', { method: 'POST' });
+  } catch {
+    // best effort
+  }
+  window.location.href = '/';
+}
+
+// ===== INIT =====
+document.addEventListener('DOMContentLoaded', () => {
+  state.demoMode = isDemoMode();
+  buildTicker();
+  buildStockTable();
+  buildNews();
+  buildMovers();
+  buildSectorBars();
+  animateCountups();
+  animateBars();
+  initReveal();
+  applyModeChrome();
+
+  document.getElementById('sign-out-btn')?.addEventListener('click', signOut);
+  void loadSession();
+});
+</script>
+
+</body>
+</html>

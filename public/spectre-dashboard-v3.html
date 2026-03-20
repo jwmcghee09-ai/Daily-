@@ -707,8 +707,9 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 <!-- NAV -->
 <nav>
   <div class="nav-inner">
-    <a href="#" class="nav-logo">SPECTRE</a>
+    <a href="/dashboard?mode=account" class="nav-logo" id="nav-dashboard-logo">SPECTRE</a>
     <ul class="nav-links">
+      <li><a href="/research" id="nav-research-link">Research</a></li>
       <li><a href="/settings" id="nav-settings-link">Settings</a></li>
       <li id="nav-platinum-link" style="display:none"><a href="/spectre-platinum">Platinum</a></li>
       <li><a href="#uploads">Uploads</a></li>
@@ -1898,6 +1899,8 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     const signOutButton = document.getElementById("sign-out-btn");
     const clearDataButton = document.getElementById("clear-data-btn");
     const refreshPricesButton = document.getElementById("refresh-prices-btn");
+    const dashboardLogo = document.getElementById("nav-dashboard-logo");
+    const researchLink = document.getElementById("nav-research-link");
     const settingsLink = document.getElementById("nav-settings-link");
 
     if (state.demoMode) {
@@ -1919,6 +1922,12 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       if (settingsLink) {
         settingsLink.setAttribute("href", "/settings?demo=1");
       }
+      if (researchLink) {
+        researchLink.setAttribute("href", "/research?demo=1");
+      }
+      if (dashboardLogo) {
+        dashboardLogo.setAttribute("href", "/dashboard?demo=1");
+      }
       applyUploadChrome();
       return;
     }
@@ -1935,6 +1944,12 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     }
     if (settingsLink) {
       settingsLink.setAttribute("href", "/settings");
+    }
+    if (researchLink) {
+      researchLink.setAttribute("href", "/research");
+    }
+    if (dashboardLogo) {
+      dashboardLogo.setAttribute("href", "/dashboard?mode=account");
     }
     applyUploadChrome();
   }

@@ -95,6 +95,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
     <a href="/dashboard?mode=account" class="nav-logo">SPECTRE</a>
     <ul class="nav-links">
       <li><a href="/dashboard?mode=account" id="nav-dashboard-link">Dashboard</a></li>
+      <li><a href="/research" id="nav-research-link">Research</a></li>
       <li id="nav-platinum-link" style="display:none"><a href="/spectre-platinum">Platinum</a></li>
       <li><a href="/settings" class="active">Settings</a></li>
     </ul>
@@ -201,6 +202,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
   function applyModeChrome() {
     const signOutButton = document.getElementById("sign-out-btn");
     const dashboardLink = document.getElementById("nav-dashboard-link");
+    const researchLink = document.getElementById("nav-research-link");
     const backLink = document.getElementById("settings-back-link");
     const billingButton = document.getElementById("settings-billing-btn");
 
@@ -211,6 +213,9 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
       }
       if (dashboardLink) {
         dashboardLink.setAttribute("href", "/dashboard?demo=1");
+      }
+      if (researchLink) {
+        researchLink.setAttribute("href", "/research?demo=1");
       }
       if (backLink) {
         backLink.setAttribute("href", "/dashboard?demo=1");
@@ -228,6 +233,9 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
     }
     if (dashboardLink) {
       dashboardLink.setAttribute("href", "/dashboard?mode=account");
+    }
+    if (researchLink) {
+      researchLink.setAttribute("href", "/research");
     }
     if (backLink) {
       backLink.setAttribute("href", "/dashboard?mode=account");
