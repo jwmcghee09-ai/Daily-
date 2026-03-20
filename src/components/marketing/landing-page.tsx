@@ -54,6 +54,31 @@ const workflowSteps: readonly WorkflowStep[] = [
   },
 ] as const;
 
+const researchSteps: readonly WorkflowStep[] = [
+  {
+    number: "01 — SCAN",
+    title: "Read Market Pulse",
+    copy:
+      "Start with ASX leadership, sector pressure, macro backdrop, and cross-asset sentiment before drilling into your holdings.",
+    icon: <PulseIcon />,
+  },
+  {
+    number: "02 — COMPARE",
+    title: "Review Earnings & Peers",
+    copy:
+      "Check earnings snapshots, peer sets, and operating context so a holding is judged against its market environment, not in isolation.",
+    icon: <GridIcon />,
+    alt: true,
+  },
+  {
+    number: "03 — ACT",
+    title: "Bring Context Into Risk Decisions",
+    copy:
+      "Move from research into your dashboard with clearer conviction around concentration, downside pressure, and what is driving current market moves.",
+    icon: <BarsIcon />,
+  },
+] as const;
+
 const features: readonly MarketingCard[] = [
   {
     title: "ASX + Crypto + Super Imports",
@@ -401,6 +426,42 @@ export default function LandingPage({
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <Divider />
+
+      <section className={styles.section} id="research">
+        <div className={styles.container}>
+          <div className={styles.sectionLabel}>Research Terminal</div>
+          <h2 className={styles.sectionTitle}>From market context to portfolio conviction.</h2>
+          <p className={styles.sectionSub}>
+            SPECTRE Research gives Starter and Pro members a dedicated market view for ASX leadership, earnings snapshots, macro context, sector pressure, and cross-asset sentiment.
+          </p>
+
+          <div className={styles.steps}>
+            {researchSteps.map((step, index) => (
+              <article
+                key={step.title}
+                className={`${styles.stepCard} ${styles.reveal}`}
+                style={{ transitionDelay: `${index * 0.1}s` }}
+              >
+                <span className={styles.stepNumber}>{step.number}</span>
+                <div className={`${styles.iconWrap} ${step.alt ? styles.iconAlt : ""}`}>{step.icon}</div>
+                <h3>{step.title}</h3>
+                <p>{step.copy}</p>
+              </article>
+            ))}
+          </div>
+
+          <div className={styles.researchCtaRow}>
+            <Link href="/research?demo=1" className={`${styles.button} ${styles.primaryButton}`}>
+              See Research Demo
+            </Link>
+            <Link href="/signin?mode=register&plan=starter" className={`${styles.button} ${styles.outlineButton}`}>
+              Included in Starter
+            </Link>
           </div>
         </div>
       </section>
