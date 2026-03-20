@@ -113,12 +113,6 @@ const features: readonly MarketingCard[] = [
     alt: true,
   },
   {
-    title: "Security Controls",
-    copy:
-      "Email verification, scrypt hashed passwords, encrypted backups, and hardened HSTS/CSP headers in production.",
-    icon: <LockIcon />,
-  },
-  {
     title: "Dip Alert Emails",
     copy:
       "Set price thresholds and receive email alerts when holdings reach dip levels worth reviewing.",
