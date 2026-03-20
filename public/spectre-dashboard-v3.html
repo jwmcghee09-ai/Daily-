@@ -520,6 +520,10 @@ td.accent{color:var(--orange)}
 .chip{font-family:var(--mono);font-size:.5rem;letter-spacing:.1em;text-transform:uppercase;padding:.14rem .4rem;border-radius:3px}
 .chip.pos{background:rgba(255,255,255,.06);color:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.1)}
 .chip.neg{background:rgba(255,77,26,.08);color:var(--orange);border:1px solid rgba(255,77,26,.18)}
+.pricing-tag{display:inline-flex;align-items:center;font-family:var(--mono);font-size:.49rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.14rem .45rem;border-radius:999px;border:1px solid var(--border2)}
+.pricing-tag.live{background:rgba(168,85,247,.12);color:var(--purple-hi);border-color:rgba(168,85,247,.28)}
+.pricing-tag.daily{background:rgba(255,122,48,.1);color:#ffb38e;border-color:rgba(255,122,48,.22)}
+.pricing-tag.file{background:rgba(255,255,255,.05);color:var(--muted2);border-color:rgba(255,255,255,.12)}
 @media(max-width:760px){.table-wrap{overflow-x:auto}}
 
 /* ── BULLION ── */
@@ -893,7 +897,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     <div class="sec-head">
       <h2 class="sec-title">Portfolio Metrics</h2>
       <div class="sec-line"></div>
-      <span class="sec-label">Live pricing</span>
+      <span class="sec-label">Mixed pricing</span>
     </div>
     <div class="landing-preview-shell">
       <div class="landing-preview-stats">
@@ -1438,6 +1442,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
             <th>Name</th>
             <th>Source</th>
             <th>Account</th>
+            <th>Pricing</th>
             <th>Units</th>
             <th>Price</th>
             <th>Value</th>
@@ -3548,7 +3553,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       tbody.innerHTML = `
         <tr>
           <td class="ticker">—</td>
-          <td colspan="8">No holdings loaded. Upload a CSV report to begin.</td>
+          <td colspan="9">No holdings loaded. Upload a CSV report to begin.</td>
         </tr>
       `;
       return;
@@ -3562,12 +3567,15 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
         const badgeClass = SOURCE_BADGE[source] || "fund";
         const sourceLabel = SOURCE_LABEL[source] || source.toUpperCase();
         const chipTone = pnl >= 0 ? "pos" : "neg";
+        const pricingMode = String(holding.pricingMode || "file").toLowerCase();
+        const pricingLabel = escapeHtml(holding.pricingLabel || "From uploaded report");
         return `
           <tr>
             <td class="ticker">${escapeHtml(holding.ticker || "—")}</td>
             <td>${escapeHtml(holding.name || "Unnamed")}</td>
             <td><span class="badge ${badgeClass}">${sourceLabel}</span></td>
             <td><span class="chip ${chipTone}">${escapeHtml(holding.account || "Account")}</span></td>
+            <td><span class="pricing-tag ${pricingMode}">${pricingLabel}</span></td>
             <td>${Number.isFinite(holding.units) && holding.units > 0 ? Number(holding.units).toLocaleString("en-AU", { maximumFractionDigits: 4 }) : "—"}</td>
             <td class="val">${Number.isFinite(holding.price) && holding.price > 0 ? formatCurrency(holding.price, { decimals: 2 }) : "—"}</td>
             <td class="val">${formatCurrency(holding.value || 0)}</td>

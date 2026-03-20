@@ -685,6 +685,108 @@ function normalizeTicker(value: string): string {
     .slice(0, 20);
 }
 
+const ASX_SYMBOL_ALIASES: Record<string, string> = {
+  XJO: "^AXJO",
+  AXJO: "^AXJO",
+  ASX200: "^AXJO",
+  AORD: "^AORD",
+  ALLORDS: "^AORD",
+};
+
+function normalizeListedTicker(rawTicker: string): string {
+  let clean = sanitizeString(rawTicker, "").toUpperCase();
+  if (!clean) {
+    return "";
+  }
+
+  clean = clean
+    .replace(/^ASXCODE[:/\s-]+/, "")
+    .replace(/^ASX[:/\s-]+/, "")
+    .replace(/^AU[:/\s-]+/, "")
+    .replace(/\s+/g, "")
+    .replace(/\.AX$/, "");
+
+  const alias = ASX_SYMBOL_ALIASES[clean];
+  if (alias) {
+    return alias;
+  }
+
+  if (clean.startsWith("^")) {
+    return clean;
+  }
+
+  if (clean.includes("-") || clean.includes("=")) {
+    return "";
+  }
+
+  if (["UNKNOWN", "CASH", "AUD", "SUPERCASH"].includes(clean)) {
+    return "";
+  }
+
+  return clean.replace(/[^A-Z0-9.]/g, "");
+}
+
+function isLikelyAsxListedTicker(ticker: string): boolean {
+  const normalized = normalizeListedTicker(ticker);
+  if (!normalized) {
+    return false;
+  }
+
+  if (normalized.startsWith("^")) {
+    return true;
+  }
+
+  return /^[A-Z0-9]{2,6}$/.test(normalized);
+}
+
+function getHoldingPricingDescriptor(holding: {
+  source: string;
+  ticker: string;
+  name?: string;
+  sector?: string;
+}): { mode: "live" | "daily" | "file"; label: string; refreshableTicker: string | null } {
+  const source = normalizeSource(holding.source);
+  const listedTicker = normalizeListedTicker(holding.ticker);
+  const isListed = isLikelyAsxListedTicker(holding.ticker);
+
+  switch (source) {
+    case "asx":
+      return {
+        mode: isListed ? "live" : "file",
+        label: isListed ? "Live" : "From uploaded report",
+        refreshableTicker: isListed ? listedTicker : null,
+      };
+    case "index":
+    case "fund":
+    case "super":
+      return {
+        mode: isListed ? "live" : "daily",
+        label: isListed ? "Live" : "Daily priced",
+        refreshableTicker: isListed ? listedTicker : null,
+      };
+    case "crypto":
+      return {
+        mode: holding.ticker ? "live" : "file",
+        label: holding.ticker ? "Live" : "From uploaded report",
+        refreshableTicker: holding.ticker ? sanitizeString(holding.ticker, "").toUpperCase() : null,
+      };
+    case "gold":
+      return {
+        mode: "live",
+        label: "Live",
+        refreshableTicker: sanitizeString(holding.ticker, "").toUpperCase() || "XAU",
+      };
+    case "savings":
+    case "tax":
+    default:
+      return {
+        mode: "file",
+        label: "From uploaded report",
+        refreshableTicker: null,
+      };
+  }
+}
+
 function toSydneyDateKey(date: Date): string {
   return new Intl.DateTimeFormat("en-CA", {
     timeZone: "Australia/Sydney",
@@ -716,12 +818,12 @@ function toPublicUser(row: UserRow): AuthPublicUser {
 }
 
 function toYahooSymbol(ticker: string): string {
-  const clean = ticker.trim().toUpperCase();
+  const clean = normalizeListedTicker(ticker);
   if (clean.length === 0) {
     return clean;
   }
 
-  if (clean.includes(".")) {
+  if (clean.startsWith("^") || clean.includes(".")) {
     return clean;
   }
 
@@ -1106,22 +1208,33 @@ export function readPortfolioState(userId = LOCAL_USER_ID): PortfolioState {
     .all(scopedPattern) as SnapshotRow[];
 
   return {
-    holdings: holdingRows.map((row) => ({
-      id: unscopeValue(userId, row.id),
-      source: normalizeSource(row.source),
-      account: row.account,
-      ticker: row.ticker,
-      name: row.name,
-      units: sanitizeNumber(row.units),
-      price: sanitizeNumber(row.price),
-      prevClose: sanitizeNumber(row.prev_close),
-      sessionOpen: sanitizeNumber(row.session_open),
-      value: sanitizeNumber(row.value),
-      costBase: sanitizeNumber(row.cost_base),
-      sector: row.sector,
-      reportDate: row.report_date,
-      importedAt: row.imported_at,
-    })),
+    holdings: holdingRows.map((row) => {
+      const pricing = getHoldingPricingDescriptor({
+        source: row.source,
+        ticker: row.ticker,
+        name: row.name,
+        sector: row.sector,
+      });
+
+      return {
+        id: unscopeValue(userId, row.id),
+        source: normalizeSource(row.source),
+        account: row.account,
+        ticker: row.ticker,
+        name: row.name,
+        units: sanitizeNumber(row.units),
+        price: sanitizeNumber(row.price),
+        prevClose: sanitizeNumber(row.prev_close),
+        sessionOpen: sanitizeNumber(row.session_open),
+        value: sanitizeNumber(row.value),
+        costBase: sanitizeNumber(row.cost_base),
+        sector: row.sector,
+        reportDate: row.report_date,
+        importedAt: row.imported_at,
+        pricingMode: pricing.mode,
+        pricingLabel: pricing.label,
+      };
+    }),
     snapshots: snapshotRows.map((row) => ({
       date: unscopeValue(userId, row.date),
       value: sanitizeNumber(row.value),
@@ -1209,15 +1322,13 @@ export async function refreshAsxPrices(userId: string): Promise<PriceRefreshResu
   const nowIso = now.toISOString();
   const sessionDate = toSydneyDateKey(now);
 
-  // Fetch all equity-like sources: ASX stocks, index ETFs, managed funds, and super funds
-  // are all ASX-listed and can be fetched from Yahoo Finance with the .AX suffix.
   const asxLikeRows = db
     .prepare(`
-      SELECT ticker, units, source
+      SELECT ticker, units, source, name, sector
       FROM holdings
       WHERE source IN ('asx', 'index', 'fund', 'super') AND id LIKE ?
     `)
-    .all(scopedPattern) as (HoldingTickerRow & { source: string })[];
+    .all(scopedPattern) as (HoldingTickerRow & { source: string; name: string; sector: string })[];
 
   const cryptoRows = db
     .prepare(`
@@ -1235,17 +1346,23 @@ export async function refreshAsxPrices(userId: string): Promise<PriceRefreshResu
     `)
     .all(scopedPattern) as BullionHoldingRow[];
 
-  // Build a map of ticker -> sources so we know which sources to update for each ticker
-  const asxLikeTickerSources = new Map<string, Set<string>>();
+  const asxLikeTickerRows = new Map<string, Array<{ source: DataSource; rawTicker: string }>>();
   for (const row of asxLikeRows) {
-    const ticker = sanitizeString(row.ticker, "").toUpperCase();
-    if (ticker.length === 0) continue;
-    if (!asxLikeTickerSources.has(ticker)) {
-      asxLikeTickerSources.set(ticker, new Set());
+    const pricing = getHoldingPricingDescriptor(row);
+    const ticker = pricing.refreshableTicker;
+    if (pricing.mode !== "live" || !ticker) {
+      continue;
     }
-    asxLikeTickerSources.get(ticker)!.add(row.source);
+
+    if (!asxLikeTickerRows.has(ticker)) {
+      asxLikeTickerRows.set(ticker, []);
+    }
+    asxLikeTickerRows.get(ticker)!.push({
+      source: normalizeSource(row.source),
+      rawTicker: row.ticker,
+    });
   }
-  const uniqueAsxLikeTickers = Array.from(asxLikeTickerSources.keys());
+  const uniqueAsxLikeTickers = Array.from(asxLikeTickerRows.keys());
 
   const uniqueCryptoTickers = Array.from(
     new Set(
@@ -1271,7 +1388,6 @@ export async function refreshAsxPrices(userId: string): Promise<PriceRefreshResu
   const failedTickers: string[] = [];
 
   // Sequential fetch reduces the chance of upstream rate limiting.
-  // ASX-like sources (asx, index, fund, super) all use Yahoo .AX suffix.
   for (const ticker of uniqueAsxLikeTickers) {
     let quote: AsxQuoteData | null = null;
     // Retry once on failure
@@ -1284,16 +1400,17 @@ export async function refreshAsxPrices(userId: string): Promise<PriceRefreshResu
 
     if (Number.isFinite(price) && price > 0) {
       // Push an update for each source that holds this ticker
-      const sources = asxLikeTickerSources.get(ticker) ?? new Set(["asx"]);
-      for (const source of sources) {
+      const rowsForTicker = asxLikeTickerRows.get(ticker) ?? [{ source: "asx" as DataSource, rawTicker: ticker }];
+      for (const row of rowsForTicker) {
         quoteUpdates.push({
-          source,
-          ticker,
+          source: row.source,
+          ticker: row.rawTicker,
           price,
           prevClose: Number.isFinite(prevClose) && prevClose > 0 ? prevClose : price,
         });
       }
-      const sourceLabel = sources.size > 1 ? `${ticker} (${Array.from(sources).join(",")})` : ticker;
+      const distinctSources = Array.from(new Set(rowsForTicker.map((row) => row.source)));
+      const sourceLabel = distinctSources.length > 1 ? `${ticker} (${distinctSources.join(",")})` : ticker;
       updatedLabels.add(sourceLabel);
     } else {
       failedTickers.push(ticker);
@@ -1465,11 +1582,11 @@ export async function estimateHistoricalRiskFromYahoo(
 
   const rows = db
     .prepare(`
-      SELECT source, ticker, value
+      SELECT source, ticker, name, sector, value
       FROM holdings
       WHERE value > 0 AND id LIKE ?
     `)
-    .all(scopedPattern) as HoldingRiskRow[];
+    .all(scopedPattern) as (HoldingRiskRow & { name?: string; sector?: string })[];
 
   const totalPortfolioValue = rows.reduce((acc, row) => acc + sanitizeNumber(row.value, 0), 0);
 
@@ -1501,15 +1618,22 @@ export async function estimateHistoricalRiskFromYahoo(
   }
 
   const valueByTicker = new Map<string, { ticker: string; source: DataSource; value: number; label: string }>();
+  const nonLiveLabels = new Set<string>();
   for (const row of rows) {
     const source = normalizeSource(row.source);
     if (source === "tax" || source === "savings") {
       continue;
     }
 
-    const ticker = sanitizeString(row.ticker, "").toUpperCase();
+    const pricing = getHoldingPricingDescriptor(row);
+    const ticker = sanitizeString(pricing.refreshableTicker || row.ticker, "").toUpperCase();
     const value = sanitizeNumber(row.value, 0);
     if (!ticker || value <= 0) {
+      continue;
+    }
+
+    if (pricing.mode !== "live") {
+      nonLiveLabels.add(sanitizeString(row.ticker, sanitizeString(row.name, source)).toUpperCase());
       continue;
     }
 
@@ -1524,7 +1648,7 @@ export async function estimateHistoricalRiskFromYahoo(
   }
 
   const returnsByTicker = new Map<string, Map<string, number>>();
-  const failedTickers: string[] = [];
+  const failedTickers: string[] = Array.from(nonLiveLabels);
   let outlierReturnsRemoved = 0;
 
   for (const [key, holding] of valueByTicker.entries()) {

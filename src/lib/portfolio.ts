@@ -19,6 +19,8 @@ export interface PortfolioHolding {
   sector: string;
   reportDate: string;
   importedAt: string;
+  pricingMode?: "live" | "daily" | "file";
+  pricingLabel?: string;
 }
 
 export interface PortfolioSnapshot {
