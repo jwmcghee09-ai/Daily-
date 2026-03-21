@@ -458,6 +458,7 @@ export default function SignInPage({
                         value={resetToken}
                         onChange={(e) => setResetToken(e.target.value)}
                         placeholder="Paste token from email"
+                        maxLength={128}
                         required
                       />
                     </label>

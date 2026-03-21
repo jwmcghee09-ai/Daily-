@@ -71,51 +71,47 @@ function consumeRateLimitSqlite(key: string, limit: number, windowMs: number): R
   const now = Date.now();
   const db = getDb();
 
-  const row = db
-    .prepare("SELECT count, window_start FROM rate_limits WHERE key = ?")
-    .get(key) as RateLimitRow | undefined;
+  // BEGIN IMMEDIATE acquires a write lock upfront so the read-then-write
+  // is atomic — prevents two concurrent requests both seeing count=N and
+  // both deciding they are allowed.
+  db.exec("BEGIN IMMEDIATE");
 
-  if (!row || now - row.window_start >= windowMs) {
-    db.prepare("INSERT OR REPLACE INTO rate_limits (key, count, window_start) VALUES (?, 1, ?)")
-      .run(key, now);
+  let result: RateLimitResult;
+  try {
+    const row = db
+      .prepare("SELECT count, window_start FROM rate_limits WHERE key = ?")
+      .get(key) as RateLimitRow | undefined;
 
-    // Probabilistic cleanup: ~1% of calls
-    if (Math.random() < 0.01) {
-      db.prepare("DELETE FROM rate_limits WHERE window_start + ? < ?")
-        .run(windowMs, now);
+    if (!row || now - row.window_start >= windowMs) {
+      db.prepare("INSERT OR REPLACE INTO rate_limits (key, count, window_start) VALUES (?, 1, ?)")
+        .run(key, now);
+      result = { allowed: true, retryAfterSec: 0, remaining: Math.max(0, limit - 1) };
+    } else {
+      const newCount = row.count + 1;
+      db.prepare("UPDATE rate_limits SET count = ? WHERE key = ?")
+        .run(newCount, key);
+
+      if (newCount > limit) {
+        const retryAfterMs = Math.max(0, windowMs - (now - row.window_start));
+        result = { allowed: false, retryAfterSec: Math.ceil(retryAfterMs / 1000), remaining: 0 };
+      } else {
+        result = { allowed: true, retryAfterSec: 0, remaining: Math.max(0, limit - newCount) };
+      }
     }
 
-    return {
-      allowed: true,
-      retryAfterSec: 0,
-      remaining: Math.max(0, limit - 1),
-    };
+    db.exec("COMMIT");
+  } catch (e) {
+    db.exec("ROLLBACK");
+    throw e;
   }
 
-  const newCount = row.count + 1;
-  db.prepare("UPDATE rate_limits SET count = ? WHERE key = ?")
-    .run(newCount, key);
-
-  // Probabilistic cleanup: ~1% of calls
+  // Probabilistic cleanup: ~1% of calls (outside transaction to keep it short)
   if (Math.random() < 0.01) {
     db.prepare("DELETE FROM rate_limits WHERE window_start + ? < ?")
       .run(windowMs, now);
   }
 
-  if (newCount > limit) {
-    const retryAfterMs = Math.max(0, windowMs - (now - row.window_start));
-    return {
-      allowed: false,
-      retryAfterSec: Math.ceil(retryAfterMs / 1000),
-      remaining: 0,
-    };
-  }
-
-  return {
-    allowed: true,
-    retryAfterSec: 0,
-    remaining: Math.max(0, limit - newCount),
-  };
+  return result;
 }
 
 /* ── Public API ── */

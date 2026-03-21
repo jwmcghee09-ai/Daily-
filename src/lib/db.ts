@@ -978,12 +978,11 @@ async function fetchYahooQuoteBySymbol(symbol: string): Promise<AsxQuoteData | n
   }
 
   const url = `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=5d`;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10_000);
 
   try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 10_000);
     const response = await yahooFetchWithRetry(url, controller.signal);
-    clearTimeout(timeout);
     if (!response) {
       return null;
     }
@@ -991,6 +990,8 @@ async function fetchYahooQuoteBySymbol(symbol: string): Promise<AsxQuoteData | n
     return extractAsxQuote(payload.chart?.result?.[0]);
   } catch {
     return null;
+  } finally {
+    clearTimeout(timeout);
   }
 }
 
@@ -1000,12 +1001,11 @@ async function fetchYahooSeriesBySymbol(symbol: string, range: string): Promise<
   }
 
   const url = `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=${encodeURIComponent(range)}`;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15_000);
 
   try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 15_000);
     const response = await yahooFetchWithRetry(url, controller.signal);
-    clearTimeout(timeout);
     if (!response) {
       return null;
     }
@@ -1014,6 +1014,8 @@ async function fetchYahooSeriesBySymbol(symbol: string, range: string): Promise<
     return series.length >= 2 ? series : null;
   } catch {
     return null;
+  } finally {
+    clearTimeout(timeout);
   }
 }
 
@@ -1075,6 +1077,9 @@ function cleanReturnsForRisk(returns: DatedReturnPoint[]): DatedReturnPoint[] {
 }
 
 function percentile(values: number[], p: number): number {
+  if (values.length === 0) {
+    return 0;
+  }
   const sorted = [...values].sort((a, b) => a - b);
   const index = (sorted.length - 1) * p;
   const lower = Math.floor(index);
@@ -1095,7 +1100,7 @@ function stdDev(values: number[]): number {
 
   const mean = values.reduce((acc, value) => acc + value, 0) / values.length;
   const variance = values.reduce((acc, value) => acc + (value - mean) ** 2, 0) / (values.length - 1);
-  return Math.sqrt(variance);
+  return Math.sqrt(Math.max(0, variance));
 }
 
 function expectedShortfall95(returns: number[]): number | null {

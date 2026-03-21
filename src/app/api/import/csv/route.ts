@@ -352,7 +352,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ ...state, rejectedRows });
     }
 
+    // Atomic check-and-increment — returns null if already at the limit
+    // (guards against TOCTOU race when concurrent requests slip past the
+    // earlier uploadCount check while async file processing is in flight)
     const updatedGuest = incrementDemoGuestUploadCount(demoGuest.userId);
+    if (!updatedGuest) {
+      return NextResponse.json(
+        { error: "Demo upload limit reached. Sign up for a free account to continue.", demoGuest },
+        { status: 403 },
+      );
+    }
     const response = NextResponse.json({
       ...state,
       rejectedRows,

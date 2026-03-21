@@ -82,7 +82,7 @@ export function attachDemoGuestCookie(response: NextResponse, userId: string, ex
     name: DEMO_GUEST_COOKIE_NAME,
     value: userId,
     httpOnly: true,
-    sameSite: "lax",
+    sameSite: "strict",
     secure: process.env.NODE_ENV === "production",
     expires: new Date(expiresAt),
     path: "/",
@@ -94,7 +94,7 @@ export function clearDemoGuestCookie(response: NextResponse): void {
     name: DEMO_GUEST_COOKIE_NAME,
     value: "",
     httpOnly: true,
-    sameSite: "lax",
+    sameSite: "strict",
     secure: process.env.NODE_ENV === "production",
     expires: new Date(0),
     path: "/",
@@ -141,9 +141,28 @@ export function createDemoGuestContext(): DemoGuestContext {
   return toContext(userId, expiresAt);
 }
 
-export function incrementDemoGuestUploadCount(userId: string): DemoGuestContext {
-  const expiresAt = getMeta(scopeKey(userId, DEMO_GUEST_EXPIRES_KEY));
-  const nextCount = Math.min(readUploadCount(userId) + 1, DEMO_GUEST_MAX_UPLOADS);
-  setMeta(scopeKey(userId, DEMO_GUEST_UPLOAD_COUNT_KEY), String(nextCount));
-  return toContext(userId, expiresAt);
+/**
+ * Atomically check-and-increment the upload count for a demo guest.
+ * Returns null if the guest has already reached DEMO_GUEST_MAX_UPLOADS,
+ * preventing a TOCTOU race between the check in the route handler and the
+ * increment here (the async file-processing in between creates a window).
+ */
+export function incrementDemoGuestUploadCount(userId: string): DemoGuestContext | null {
+  const db = getDb();
+  db.exec("BEGIN IMMEDIATE");
+  try {
+    const currentCount = readUploadCount(userId);
+    if (currentCount >= DEMO_GUEST_MAX_UPLOADS) {
+      db.exec("ROLLBACK");
+      return null;
+    }
+    const nextCount = currentCount + 1;
+    setMeta(scopeKey(userId, DEMO_GUEST_UPLOAD_COUNT_KEY), String(nextCount));
+    const expiresAt = getMeta(scopeKey(userId, DEMO_GUEST_EXPIRES_KEY));
+    db.exec("COMMIT");
+    return toContext(userId, expiresAt);
+  } catch (e) {
+    db.exec("ROLLBACK");
+    throw e;
+  }
 }

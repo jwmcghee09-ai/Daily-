@@ -11,7 +11,6 @@ export async function GET() {
     ok: true,
     service: "spectre-web",
     timestamp: new Date().toISOString(),
-    version: process.env.RENDER_GIT_COMMIT || process.env.VERCEL_GIT_COMMIT_SHA || "unknown",
     uptimeSeconds: Math.floor(process.uptime()),
     checks: {
       databaseFileExists: dbExists,
