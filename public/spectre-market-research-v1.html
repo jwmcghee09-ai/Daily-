@@ -1739,7 +1739,11 @@ const MCAP_MAP = {
 const ASX_ORDER = ['BHP','CBA','CSL','WES','ANZ','NAB','FMG','RIO','MQG','WBC','WDS','TLS','ALL','GMG','STO'];
 
 // Live data — populated by API calls
-const DATA = { stocks: [], usMovers: { gainers: [], losers: [], mostActive: [] } };
+const DATA = { stocks: [], news: [], usMovers: { gainers: [], losers: [], mostActive: [] } };
+
+function escapeHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
 
 // ===== SPARKLINE GENERATOR =====
 function generateSparkline(yearLow, yearHigh, price, changePct) {
@@ -1825,13 +1829,34 @@ function buildTicker() {
 // ===== BUILD NEWS =====
 function buildNews() {
   const list = document.getElementById('newsList');
-  list.innerHTML = DATA.news.map(n => `
-    <div class="news-item">
-      <span class="news-tag ${n.cls}">${n.tag}</span>
-      <div class="news-headline">${n.headline}</div>
-      <div class="news-meta">${n.date} · ${n.source}</div>
-    </div>
-  `).join('');
+  if (!list) return;
+  if (!DATA.news.length) {
+    list.innerHTML = '<div class="news-item" style="color:var(--sl-muted);font-size:0.75rem;">Loading news…</div>';
+    return;
+  }
+  list.innerHTML = DATA.news.map(n => {
+    const tagCls = n.tag ? `news-tag-${n.tag.toLowerCase().replace(/\s+/g,'-')}` : '';
+    const headline = n.url
+      ? `<a href="${escapeHtml(n.url)}" target="_blank" rel="noopener" class="news-headline-link">${escapeHtml(n.headline)}</a>`
+      : `<span class="news-headline">${escapeHtml(n.headline)}</span>`;
+    return `<div class="news-item">
+      <span class="news-tag ${tagCls}">${escapeHtml(n.tag || '')}</span>
+      <div class="news-headline">${headline}</div>
+      <div class="news-meta">${escapeHtml(n.date || '')} · ${escapeHtml(n.source || '')}</div>
+    </div>`;
+  }).join('');
+}
+
+async function fetchLiveNews() {
+  const url = '/api/research/news' + (state.demoMode ? '?demo=1' : '');
+  try {
+    const data = await apiJson(url);
+    if (!data || !Array.isArray(data.news)) return;
+    DATA.news = data.news;
+    buildNews();
+  } catch (err) {
+    console.warn('Live news fetch failed:', err);
+  }
 }
 
 // ===== BUILD US MOVERS =====
@@ -2208,8 +2233,10 @@ document.addEventListener('DOMContentLoaded', () => {
   void loadSession();
   void fetchLiveQuotes();
   void fetchLiveMovers();
+  void fetchLiveNews();
   setInterval(() => { void fetchLiveQuotes(); }, 5 * 60 * 1000);
   setInterval(() => { void fetchLiveMovers(); }, 10 * 60 * 1000);
+  setInterval(() => { void fetchLiveNews(); }, 15 * 60 * 1000);
 });
 </script>
 
