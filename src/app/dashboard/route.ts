@@ -2,7 +2,6 @@
 import path from "node:path";
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
-import { readUserEntitlements } from "@/lib/db";
 
 export const runtime = "nodejs";
 
@@ -12,10 +11,6 @@ export async function GET(request: NextRequest) {
     const user = await getAuthenticatedUser();
     if (!user) {
       return NextResponse.redirect(buildRedirectUrl(request, "/signin"));
-    }
-    const entitlements = readUserEntitlements(user.id);
-    if (entitlements.planTier === "none" && !entitlements.proEnabled) {
-      return NextResponse.redirect(buildRedirectUrl(request, "/signin?mode=login&plan=starter"));
     }
   }
 
