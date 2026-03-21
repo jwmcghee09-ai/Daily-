@@ -419,6 +419,7 @@ export default function SignInPage({
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="you@example.com"
                         autoComplete="email"
+                        maxLength={254}
                         required
                       />
                     </label>
@@ -469,6 +470,7 @@ export default function SignInPage({
                         placeholder="Minimum 8 characters"
                         autoComplete="new-password"
                         minLength={8}
+                        maxLength={128}
                         required
                       />
                     </label>
@@ -517,6 +519,7 @@ export default function SignInPage({
                           onChange={(e) => setEmail(e.target.value)}
                           placeholder="you@example.com"
                           autoComplete="email"
+                          maxLength={254}
                           required
                         />
                       </label>
@@ -531,6 +534,7 @@ export default function SignInPage({
                             placeholder="Minimum 8 characters"
                             autoComplete={authMode === "register" ? "new-password" : "current-password"}
                             minLength={8}
+                            maxLength={128}
                             required
                           />
                           <button
@@ -553,6 +557,7 @@ export default function SignInPage({
                               onChange={(e) => setDisplayName(e.target.value)}
                               placeholder="Your name"
                               autoComplete="name"
+                              maxLength={80}
                             />
                           </label>
 

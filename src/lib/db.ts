@@ -946,6 +946,32 @@ async function fetchBullionSpotFromYahoo(metal: "gold" | "silver"): Promise<AsxQ
   };
 }
 
+async function yahooFetchWithRetry(url: string, signal: AbortSignal): Promise<Response | null> {
+  const delays = [1000, 2000];
+  let attempt = 0;
+  while (true) {
+    const response = await fetch(url, {
+      method: "GET",
+      cache: "no-store",
+      signal,
+      headers: {
+        "User-Agent": "Mozilla/5.0 (compatible; SPECTRE/1.0)",
+        Accept: "application/json",
+      },
+    });
+    if (response.ok) {
+      return response;
+    }
+    // Retry on rate-limit or server errors
+    if ((response.status === 429 || response.status >= 500) && attempt < delays.length) {
+      await new Promise((resolve) => setTimeout(resolve, delays[attempt]));
+      attempt++;
+      continue;
+    }
+    return null;
+  }
+}
+
 async function fetchYahooQuoteBySymbol(symbol: string): Promise<AsxQuoteData | null> {
   if (!symbol) {
     return null;
@@ -956,23 +982,11 @@ async function fetchYahooQuoteBySymbol(symbol: string): Promise<AsxQuoteData | n
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 10_000);
-
-    const response = await fetch(url, {
-      method: "GET",
-      cache: "no-store",
-      signal: controller.signal,
-      headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; SPECTRE/1.0)",
-        Accept: "application/json",
-      },
-    });
-
+    const response = await yahooFetchWithRetry(url, controller.signal);
     clearTimeout(timeout);
-
-    if (!response.ok) {
+    if (!response) {
       return null;
     }
-
     const payload = (await response.json()) as YahooChartResponse;
     return extractAsxQuote(payload.chart?.result?.[0]);
   } catch {
@@ -990,23 +1004,11 @@ async function fetchYahooSeriesBySymbol(symbol: string, range: string): Promise<
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 15_000);
-
-    const response = await fetch(url, {
-      method: "GET",
-      cache: "no-store",
-      signal: controller.signal,
-      headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; SPECTRE/1.0)",
-        Accept: "application/json",
-      },
-    });
-
+    const response = await yahooFetchWithRetry(url, controller.signal);
     clearTimeout(timeout);
-
-    if (!response.ok) {
+    if (!response) {
       return null;
     }
-
     const payload = (await response.json()) as YahooChartResponse;
     const series = extractDatedCloseSeries(payload.chart?.result?.[0]);
     return series.length >= 2 ? series : null;

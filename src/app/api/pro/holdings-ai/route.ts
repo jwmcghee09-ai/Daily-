@@ -32,6 +32,8 @@ interface HoldingPromptSummary {
   lastPrice: number;
   prevClose: number;
   weightPct: number;
+  /** Running sum of (units × prevClose) across all aggregated lots — used to correctly compute dayChangePct. Not included in output. */
+  _prevBase: number;
 }
 
 interface AiHoldingBreakdown {
@@ -217,6 +219,7 @@ function buildHoldingsSummary(userId: string) {
         lastPrice: holding.price,
         prevClose,
         weightPct: 0,
+        _prevBase: baseForDayPct,
       });
       continue;
     }
@@ -225,7 +228,8 @@ function buildHoldingsSummary(userId: string) {
     const nextMarketValue = existing.marketValue + holding.value;
     const nextCostBase = existing.costBase + holding.costBase;
     const nextDayChangeAmount = existing.dayChangeAmount + dayChangeAmount;
-    const nextPrevBase = nextUnits > 0 && prevClose > 0 ? nextUnits * prevClose : 0;
+    // Sum prevBase across all lots so dayChangePct is weighted correctly
+    const nextPrevBase = existing._prevBase + baseForDayPct;
 
     existing.units = nextUnits;
     existing.marketValue = nextMarketValue;
@@ -234,9 +238,10 @@ function buildHoldingsSummary(userId: string) {
     existing.unrealizedPnlPct = nextCostBase > 0 ? ((nextMarketValue - nextCostBase) / nextCostBase) * 100 : 0;
     existing.dayChangeAmount = nextDayChangeAmount;
     existing.dayChangePct = nextPrevBase > 0 ? (nextDayChangeAmount / nextPrevBase) * 100 : existing.dayChangePct;
+    existing._prevBase = nextPrevBase;
     existing.avgCost = nextUnits > 0 ? nextCostBase / nextUnits : 0;
     existing.lastPrice = holding.price;
-    existing.prevClose = prevClose || existing.prevClose;
+    existing.prevClose = prevClose > 0 ? prevClose : existing.prevClose;
     if (existing.source !== holding.source) {
       existing.source = "mixed";
     }

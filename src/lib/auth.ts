@@ -78,7 +78,7 @@ export function applySessionCookie(response: NextResponse, token: string, expire
     name: SESSION_COOKIE_NAME,
     value: token,
     httpOnly: true,
-    sameSite: "lax",
+    sameSite: "strict",
     secure: process.env.NODE_ENV === "production",
     expires: new Date(expiresAt),
     path: "/",
@@ -90,7 +90,7 @@ export function clearSessionCookie(response: NextResponse): void {
     name: SESSION_COOKIE_NAME,
     value: "",
     httpOnly: true,
-    sameSite: "lax",
+    sameSite: "strict",
     secure: process.env.NODE_ENV === "production",
     expires: new Date(0),
     path: "/",
@@ -125,14 +125,18 @@ export async function getAuthenticatedUser(): Promise<AuthSessionUser | null> {
 }
 
 export function getClientAddress(request: Request): string {
+  // Use the LAST entry in X-Forwarded-For — the one appended by the
+  // trusted reverse proxy — so clients cannot spoof their IP by injecting
+  // a fake first entry.  Fall back to X-Real-IP then "unknown".
   const forwardedFor = request.headers.get("x-forwarded-for") || "";
   const xRealIp = request.headers.get("x-real-ip") || "";
 
-  const firstForwarded = forwardedFor
+  const lastForwarded = forwardedFor
     .split(",")
     .map((value) => value.trim())
-    .filter((value) => value.length > 0)[0];
+    .filter((value) => value.length > 0)
+    .at(-1);
 
-  const candidate = firstForwarded || xRealIp.trim() || "unknown";
+  const candidate = lastForwarded || xRealIp.trim() || "unknown";
   return candidate.slice(0, 128);
 }

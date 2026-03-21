@@ -237,6 +237,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Please sign in first." }, { status: 401 });
     }
 
+    // Rate limit demo guests by IP to prevent resource abuse
+    if (demoGuest) {
+      const { getClientAddress } = await import("@/lib/auth");
+      const ip = getClientAddress(request);
+      const demoRate = consumeRateLimit(`import:demo:${ip}`, 10, 60 * 1000);
+      if (!demoRate.allowed) {
+        return NextResponse.json(
+          { error: "Too many import requests. Please wait a moment." },
+          { status: 429, headers: { "Retry-After": String(demoRate.retryAfterSec) } },
+        );
+      }
+    }
+
     if (sessionUser) {
       const { getClientAddress } = await import("@/lib/auth");
       const ip = getClientAddress(request);
@@ -305,6 +318,7 @@ export async function POST(request: Request) {
     }
 
     let bestHoldings: PortfolioHolding[] = [];
+    let bestTotalRows = 0;
     let parsedAnyCandidate = false;
 
     for (const candidate of normalizedInput.candidates) {
@@ -318,6 +332,7 @@ export async function POST(request: Request) {
       const holdings = parseRowsToHoldings(parsed.rows, payload.source).filter(isValidParsedHolding);
       if (holdings.length > bestHoldings.length) {
         bestHoldings = holdings;
+        bestTotalRows = parsed.rows.length;
       }
     }
 
@@ -331,14 +346,16 @@ export async function POST(request: Request) {
 
     const userId = sessionUser?.id || demoGuest?.userId || "";
     const state = saveImport(userId, payload.source, bestHoldings);
+    const rejectedRows = Math.max(0, bestTotalRows - bestHoldings.length);
 
     if (!demoGuest) {
-      return NextResponse.json(state);
+      return NextResponse.json({ ...state, rejectedRows });
     }
 
     const updatedGuest = incrementDemoGuestUploadCount(demoGuest.userId);
     const response = NextResponse.json({
       ...state,
+      rejectedRows,
       demoGuest: updatedGuest,
     });
     attachDemoGuestCookie(response, updatedGuest.userId, updatedGuest.expiresAt);
