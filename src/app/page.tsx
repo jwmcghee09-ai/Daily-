@@ -9,7 +9,7 @@ export default async function Home(props: { searchParams: SearchParams }) {
   const user = await getAuthenticatedUser();
   if (user) {
     const entitlements = readUserEntitlements(user.id);
-    if ((entitlements.planTier === "none" || entitlements.planTier === "free") && !entitlements.proEnabled) {
+    if (entitlements.planTier === "none" && !entitlements.proEnabled) {
       redirect("/signin?mode=login&plan=plus");
     }
     redirect("/dashboard?mode=account");
