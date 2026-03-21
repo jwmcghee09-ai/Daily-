@@ -1083,6 +1083,14 @@ function calcMaxDrawdownFromReturns(returns: number[]): number {
   return maxDrawdown;
 }
 
+export function countUserHoldings(userId: string): number {
+  const db = getDb();
+  const row = db
+    .prepare("SELECT COUNT(*) AS cnt FROM holdings WHERE id LIKE ?")
+    .get(userLikePattern(userId)) as { cnt: number };
+  return row?.cnt ?? 0;
+}
+
 export function readPortfolioState(userId = LOCAL_USER_ID): PortfolioState {
   const db = getDb();
   const scopedPattern = userLikePattern(userId);
