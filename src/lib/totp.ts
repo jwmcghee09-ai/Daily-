@@ -1,7 +1,13 @@
 import { TOTP, Secret } from "otpauth";
 import crypto from "node:crypto";
 
-const TOTP_ENCRYPTION_KEY = process.env.TOTP_ENCRYPTION_KEY || "default-dev-key-change-in-prod-32ch";
+const TOTP_ENCRYPTION_KEY = (() => {
+  const key = process.env.TOTP_ENCRYPTION_KEY;
+  if (!key && process.env.NODE_ENV === "production") {
+    throw new Error("TOTP_ENCRYPTION_KEY environment variable must be set in production");
+  }
+  return key || "default-dev-key-change-in-prod-32ch";
+})();
 
 export function generateTotpSecret(): { secret: string; uri: string } {
   const totp = new TOTP({

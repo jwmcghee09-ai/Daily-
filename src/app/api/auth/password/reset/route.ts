@@ -40,6 +40,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "New password must be at least 8 characters." }, { status: 400 });
     }
 
+    if (newPassword.length > 128) {
+      return NextResponse.json({ error: "New password must be at most 128 characters." }, { status: 400 });
+    }
+
+    if (newPassword.trim().length === 0) {
+      return NextResponse.json({ error: "Password must contain non-whitespace characters." }, { status: 400 });
+    }
+
     const tokenHash = hashPasswordResetToken(token);
     const reset = consumePasswordResetRecord(tokenHash);
 

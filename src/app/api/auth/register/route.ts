@@ -56,8 +56,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Please enter a valid email address." }, { status: 400 });
     }
 
+    if (email.length > 254) {
+      return NextResponse.json({ error: "Please enter a valid email address." }, { status: 400 });
+    }
+
     if (password.length < 8) {
       return NextResponse.json({ error: "Password must be at least 8 characters." }, { status: 400 });
+    }
+
+    if (password.length > 128) {
+      return NextResponse.json({ error: "Password must be at most 128 characters." }, { status: 400 });
+    }
+
+    if (password.trim().length === 0) {
+      return NextResponse.json({ error: "Password must contain non-whitespace characters." }, { status: 400 });
     }
 
     if (!isEmailDeliveryConfigured()) {

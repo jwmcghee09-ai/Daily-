@@ -60,7 +60,7 @@ export async function POST(request: Request) {
     const email = normalizeEmail(payload.email || "");
     const password = payload.password || "";
 
-    if (!isLikelyEmail(email) || password.length === 0) {
+    if (!isLikelyEmail(email) || email.length > 254 || password.length === 0 || password.length > 128) {
       return NextResponse.json({ error: "Invalid email or password." }, { status: 400 });
     }
 

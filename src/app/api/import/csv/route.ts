@@ -11,6 +11,7 @@ import {
   incrementDemoGuestUploadCount,
 } from "@/lib/demo-guest";
 import { CsvRow, DataSource, extractCsvDataSection, parseRowsToHoldings, PortfolioHolding } from "@/lib/portfolio";
+import { consumeRateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 
@@ -234,6 +235,18 @@ export async function POST(request: Request) {
 
     if (!sessionUser && !demoGuest) {
       return NextResponse.json({ error: "Please sign in first." }, { status: 401 });
+    }
+
+    if (sessionUser) {
+      const { getClientAddress } = await import("@/lib/auth");
+      const ip = getClientAddress(request);
+      const importRate = consumeRateLimit(`import:${sessionUser.id}:${ip}`, 20, 60 * 1000);
+      if (!importRate.allowed) {
+        return NextResponse.json(
+          { error: "Too many import requests. Please wait a moment." },
+          { status: 429, headers: { "Retry-After": String(importRate.retryAfterSec) } },
+        );
+      }
     }
 
     if (sessionUser) {

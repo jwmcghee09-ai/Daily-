@@ -1064,7 +1064,7 @@ function calcMaxDrawdown(values: number[]): number {
       peak = value;
     }
 
-    const drawdown = (peak - value) / peak;
+    const drawdown = peak > 0 ? (peak - value) / peak : 0;
     if (drawdown > maxDrawdown) {
       maxDrawdown = drawdown;
     }
@@ -1094,7 +1094,7 @@ function stdDev(values: number[]): number {
 
   const mean = sum(values) / values.length;
   const variance = sum(values.map((value) => (value - mean) ** 2)) / (values.length - 1);
-  return Math.sqrt(variance);
+  return Math.sqrt(Math.max(0, variance));
 }
 
 function expectedShortfall95(returns: number[]): number | null {

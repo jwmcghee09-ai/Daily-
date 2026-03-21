@@ -58,7 +58,7 @@ export async function POST(request: Request) {
     }
 
     if (user.emailVerifiedAt) {
-      return NextResponse.json({ ok: true, message: "This email is already verified. You can sign in." });
+      return NextResponse.json({ ok: true, message: "If an account exists, a verification email was sent." });
     }
 
     const verificationToken = generateEmailVerificationToken();

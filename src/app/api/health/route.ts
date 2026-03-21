@@ -23,7 +23,6 @@ export async function GET() {
     uptimeSeconds: Math.floor(process.uptime()),
     checks: {
       databaseFileExists: dbExists,
-      databasePath: dbPath,
       emailDeliveryConfigured: isEmailDeliveryConfigured(),
       webhookAlertingConfigured: isOperationalAlertConfigured(),
       stripeConfigured,
