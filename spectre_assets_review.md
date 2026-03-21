@@ -137,13 +137,40 @@
 
 ---
 
-## 8. Recommended Next Actions (Prioritised)
+## 8. Live Dashboard Bug — Gold Price Loading State
+
+**Observed:** The GOLD (XAU/AUD) market data card displays `$Loading...` instead of either a price or a neutral loading indicator.
+
+**Root cause (inferred):** The price display is formatted as `$${price}` (or equivalent template literal) without first checking whether `price` is a resolved value. When the async fetch is still in-flight, `price` holds the string `"Loading..."`, so the rendered output becomes `$Loading...`.
+
+**Fix:** Guard the currency prefix behind a value check before rendering:
+
+```js
+// Before (broken)
+<span>${price}</span>
+
+// After (fixed) — show prefix only when price is a real value
+<span>{price != null && price !== 'Loading...' ? `$${price}` : 'Loading…'}</span>
+```
+
+Or, if using a dedicated loading state flag (preferred):
+
+```js
+{isLoading ? <span>Loading…</span> : <span>${price}</span>}
+```
+
+**Priority:** Medium — visible to all users on the market research / dashboard page; damages trust in live data accuracy.
+
+---
+
+## 9. Recommended Next Actions (Prioritised)
 
 1. **[High]** Add captions to `spectre-facebook-instagram-30s.mp4` (burned-in or SRT).
 2. **[High]** Verify the compliance disclaimer (`informational analytics only, not financial advice`) is visible on any ad creative showing performance/risk metrics.
-3. **[Medium]** Convert `<text>` elements in wordmark SVGs to `<path>` for rendering reliability.
-4. **[Medium]** Resolve colour token inconsistency between landing page CSS and brand SVGs — document a single canonical palette.
-5. **[Medium]** Standardise on one display typeface across all surfaces (landing page, app, ad creative, logo).
-6. **[Medium]** Document Meta Pixel / Conversions API event setup in AD_PLAYBOOK.
-7. **[Low]** Compress all 2× PNG ad files (target < 2 MB each) before uploading to Meta.
-8. **[Low]** Re-encode the MP4 at CRF 24 to reduce from 12 MB to ~6–8 MB.
+3. **[Medium]** Fix `$Loading...` bug on GOLD (XAU/AUD) card — guard the `$` prefix behind a resolved-value check (see §8).
+4. **[Medium]** Convert `<text>` elements in wordmark SVGs to `<path>` for rendering reliability.
+5. **[Medium]** Resolve colour token inconsistency between landing page CSS and brand SVGs — document a single canonical palette.
+6. **[Medium]** Standardise on one display typeface across all surfaces (landing page, app, ad creative, logo).
+7. **[Medium]** Document Meta Pixel / Conversions API event setup in AD_PLAYBOOK.
+8. **[Low]** Compress all 2× PNG ad files (target < 2 MB each) before uploading to Meta.
+9. **[Low]** Re-encode the MP4 at CRF 24 to reduce from 12 MB to ~6–8 MB.
