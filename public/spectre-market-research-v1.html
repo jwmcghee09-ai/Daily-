@@ -944,45 +944,55 @@ h3 { font-size: 1.15rem; }
 }
 
 /* News */
-.news-list { display: flex; flex-direction: column; gap: 12px; }
+.news-list { display: flex; flex-direction: column; }
 
 .news-item {
-  padding: 12px;
-  border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.04);
-  transition: background 0.2s;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 8px;
+  row-gap: 3px;
+  padding: 9px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  transition: background 0.15s;
 }
-
-.news-item:hover { background: rgba(255, 255, 255, 0.04); }
+.news-item:last-child { border-bottom: none; padding-bottom: 2px; }
+.news-item:hover { opacity: 0.85; }
 
 .news-tag {
+  grid-row: 1;
+  grid-column: 1;
   font-family: var(--font-body);
-  font-size: 0.55rem;
+  font-size: 0.5rem;
   font-weight: 700;
-  padding: 2px 8px;
+  padding: 2px 7px;
   border-radius: var(--radius-pill);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.07em;
   display: inline-block;
-  margin-bottom: 6px;
+  white-space: nowrap;
+  align-self: start;
+  margin-top: 1px;
 }
-
-.tag-rba { background: rgba(239, 68, 68, 0.15); color: #f87171; }
-.tag-inflation { background: rgba(255, 181, 71, 0.15); color: var(--sl-amber); }
-.tag-rate { background: rgba(34, 197, 94, 0.15); color: #4ade80; }
-.tag-asx { background: rgba(155, 93, 229, 0.15); color: var(--sl-purple-hi); }
-.tag-china { background: rgba(255, 77, 26, 0.15); color: var(--accent-mid); }
 
 .news-headline {
-  font-size: 0.75rem;
+  grid-row: 1;
+  grid-column: 2;
+  font-size: 0.73rem;
   color: var(--sl-text);
-  line-height: 1.4;
-  margin-bottom: 4px;
+  line-height: 1.38;
 }
 
+.news-headline-link {
+  color: var(--sl-text);
+  text-decoration: none;
+}
+.news-headline-link:hover { color: var(--sl-purple-hi); }
+
 .news-meta {
-  font-size: 0.62rem;
+  grid-row: 2;
+  grid-column: 2;
+  font-size: 0.6rem;
   color: var(--sl-muted);
 }
 
@@ -1826,21 +1836,45 @@ function buildTicker() {
   track.innerHTML = items + items; // Duplicate for seamless loop
 }
 
+// ===== TAG COLOUR MAP =====
+const TAG_COLORS = {
+  'rba':        ['rgba(239,68,68,0.18)',    '#f87171'],
+  'inflation':  ['rgba(255,181,71,0.18)',   '#ffb547'],
+  'rate':       ['rgba(34,197,94,0.18)',    '#4ade80'],
+  'rates':      ['rgba(34,197,94,0.18)',    '#4ade80'],
+  'asx':        ['rgba(155,93,229,0.18)',   '#c084fc'],
+  'china':      ['rgba(255,77,26,0.18)',    '#ff7a68'],
+  'energy':     ['rgba(255,181,71,0.18)',   '#ffb547'],
+  'earnings':   ['rgba(56,189,248,0.18)',   '#38bdf8'],
+  'markets':    ['rgba(155,93,229,0.18)',   '#c084fc'],
+  'banks':      ['rgba(34,197,94,0.18)',    '#4ade80'],
+  'tech':       ['rgba(56,189,248,0.18)',   '#38bdf8'],
+  'crypto':     ['rgba(251,191,36,0.18)',   '#fbbf24'],
+  'fed':        ['rgba(239,68,68,0.18)',    '#f87171'],
+  'commodities':['rgba(255,181,71,0.18)',   '#ffb547'],
+  'macro':      ['rgba(139,92,246,0.18)',   '#a78bfa'],
+  'default':    ['rgba(138,134,168,0.18)',  '#8a86a8'],
+};
+function tagStyle(tag) {
+  const key = (tag || '').toLowerCase().trim();
+  const [bg, color] = TAG_COLORS[key] || TAG_COLORS['default'];
+  return `background:${bg};color:${color};`;
+}
+
 // ===== BUILD NEWS =====
 function buildNews() {
   const list = document.getElementById('newsList');
   if (!list) return;
   if (!DATA.news.length) {
-    list.innerHTML = '<div class="news-item" style="color:var(--sl-muted);font-size:0.75rem;">Loading news…</div>';
+    list.innerHTML = '<div style="color:var(--sl-muted);font-size:0.73rem;padding:8px 0;">Loading news…</div>';
     return;
   }
   list.innerHTML = DATA.news.map(n => {
-    const tagCls = n.tag ? `news-tag-${n.tag.toLowerCase().replace(/\s+/g,'-')}` : '';
     const headline = n.url
       ? `<a href="${escapeHtml(n.url)}" target="_blank" rel="noopener" class="news-headline-link">${escapeHtml(n.headline)}</a>`
-      : `<span class="news-headline">${escapeHtml(n.headline)}</span>`;
+      : escapeHtml(n.headline);
     return `<div class="news-item">
-      <span class="news-tag ${tagCls}">${escapeHtml(n.tag || '')}</span>
+      <span class="news-tag" style="${tagStyle(n.tag)}">${escapeHtml(n.tag || 'NEWS')}</span>
       <div class="news-headline">${headline}</div>
       <div class="news-meta">${escapeHtml(n.date || '')} · ${escapeHtml(n.source || '')}</div>
     </div>`;
@@ -2151,6 +2185,48 @@ async function fetchLiveQuotes() {
         const sign = chg >= 0 ? '+' : '';
         const chartSub = document.getElementById('chart-asx200-sub');
         if (chartSub) chartSub.textContent = `${sign}${chg.toFixed(2)} (${sign}${pct.toFixed(2)}%) today`;
+      }
+    }
+
+    // --- AUD/USD hero ---
+    const audUsd = data.indices?.audUsd;
+    if (audUsd?.price) {
+      const heroAud = document.getElementById('hero-audusd-price');
+      if (heroAud) heroAud.textContent = audUsd.price.toFixed(4);
+      const heroAudChg = document.getElementById('hero-audusd-chg');
+      if (heroAudChg && audUsd.prevClose && audUsd.prevClose > 0) {
+        const pct = ((audUsd.price - audUsd.prevClose) / audUsd.prevClose) * 100;
+        const sign = pct >= 0 ? '+' : '';
+        heroAudChg.className = `change ${pct >= 0 ? 'pos' : 'neg'}`;
+        heroAudChg.innerHTML = `<span class="mono">${sign}${pct.toFixed(3)}%</span>`;
+      }
+    }
+
+    // --- VIX hero ---
+    const vix = data.indices?.vix;
+    if (vix?.price) {
+      const heroVix = document.getElementById('hero-vix-price');
+      if (heroVix) heroVix.textContent = vix.price.toFixed(2);
+      const heroVixLabel = document.getElementById('hero-vix-label');
+      if (heroVixLabel) {
+        const level = vix.price < 15 ? 'LOW VOLATILITY' : vix.price < 20 ? 'MODERATE' : vix.price < 30 ? 'ELEVATED' : 'EXTREME FEAR';
+        const col = vix.price < 15 ? 'var(--green)' : vix.price < 20 ? 'var(--sl-amber)' : vix.price < 30 ? 'var(--sl-orange)' : 'var(--red)';
+        heroVixLabel.style.color = col;
+        heroVixLabel.textContent = level;
+      }
+    }
+
+    // --- ETH hero ---
+    const eth = data.crypto?.eth;
+    if (eth?.price) {
+      const heroEth = document.getElementById('hero-eth-price');
+      if (heroEth) heroEth.textContent = Math.round(eth.price).toLocaleString('en-AU');
+      const heroEthChg = document.getElementById('hero-eth-chg');
+      if (heroEthChg && eth.prevClose && eth.prevClose > 0) {
+        const pct = ((eth.price - eth.prevClose) / eth.prevClose) * 100;
+        const sign = pct >= 0 ? '+' : '';
+        heroEthChg.className = `change ${pct >= 0 ? 'pos' : 'neg'}`;
+        heroEthChg.innerHTML = `<span class="mono">${sign}${pct.toFixed(2)}%</span>`;
       }
     }
 
