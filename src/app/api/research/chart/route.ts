@@ -69,7 +69,7 @@ export async function GET(req: NextRequest) {
   }
 
   if (!demo) {
-    const sessionUser = await getAuthenticatedUser(req);
+    const sessionUser = await getAuthenticatedUser();
     if (!sessionUser) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
