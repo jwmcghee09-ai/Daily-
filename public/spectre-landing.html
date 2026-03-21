@@ -217,12 +217,46 @@ a { text-decoration: none; color: inherit; }
   .callout .ck { font-size: 0.7rem; }
 }
 @media (max-width: 480px) {
-  .wrap { padding-inline: 0.75rem; }
+  /* Container */
+  .wrap { padding-inline: 0.85rem; }
   .sec { padding: 1.5rem 0; }
-  .hero-panels { gap: 0.5rem; }
-  .hero { padding-top: 88px; }
-  .hero-title { font-size: clamp(1.8rem, 7vw, 2.5rem); }
-  .h2 { font-size: clamp(1.6rem, 6vw, 2.4rem); }
+
+  /* Hero */
+  .hero { padding-top: 80px; }
+  .hero-title { font-size: clamp(1.75rem, 8vw, 2.4rem); }
+  .hero-sub { font-size: 0.8rem; line-height: 1.7; margin-bottom: 1.4rem; }
+  .hero-panels { gap: 0.45rem; }
+  .hero-actions { gap: 0.5rem; }
+
+  /* Section headings */
+  .h2 { font-size: clamp(1.5rem, 7vw, 2.2rem); }
+  .kicker { font-size: 0.6rem; }
+
+  /* Live panel (hero right side, shows on mobile) */
+  .live-panel { padding: 1rem; }
+  .lp-kpis { gap: 0.45rem; }
+  .lp-kpi p { font-size: 0.65rem; }
+  .lp-kpi h4 { font-size: 1.05rem; }
+
+  /* Auth card */
+  .auth-card { padding: 1.1rem 1.1rem 1.3rem; }
+  /* Prevent iOS from zooming on input focus */
+  .auth-field input,
+  .auth-field select,
+  .auth-field textarea { font-size: 16px; }
+
+  /* Utility pills row */
+  .utility-row { gap: 0.35rem; }
+  .utility-pill { font-size: 0.6rem; padding: 0.5rem 0.75rem; }
+
+  /* Access section */
+  .access-copy .h2 { font-size: clamp(1.5rem, 7vw, 2rem); }
+
+  /* Pro card feature list */
+  .pro-card ul, .pro-facts { grid-template-columns: 1fr; }
+
+  /* Footer */
+  .footer { padding: 1.5rem 0; font-size: 0.65rem; }
 }
 .access-shell { display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 4rem; align-items: start; }
 .access-copy { padding-top: 1rem; }

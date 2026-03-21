@@ -717,6 +717,57 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   table{min-width:760px}
 }
 
+/* ===== iPHONE / MOBILE (≤480px) ===== */
+@media(max-width:480px){
+  /* Nav */
+  .nav-inner{padding:0 0.85rem}
+  .nav-right{gap:.5rem;margin-left:auto}
+
+  /* Wrap */
+  .wrap{padding:0 .85rem}
+
+  /* Hero */
+  .hero{padding:80px 0 2rem;gap:1rem}
+  .hero-eyebrow{font-size:.52rem;padding:.4rem .8rem}
+  .hero-title{font-size:clamp(1.6rem,8vw,2.2rem) !important}
+  .hero-sub{font-size:.78rem;line-height:1.7;margin-bottom:1.2rem}
+  .hero-actions{justify-content:center;gap:.5rem}
+  .meta-panel{padding:1rem}
+
+  /* Section spacing */
+  .sec{padding:2rem 0}
+  .sec-head{gap:.4rem}
+
+  /* Cards - generic padding reduction */
+  .card,.panel,.upload-card,.signal-card,.chart-card,.alert-card,.bullion-card,.quality-card,.console-card{padding:.9rem 1rem !important}
+
+  /* Upload grid: already 1-col at 560px — keep */
+
+  /* KPI row - already 2-col at 560px */
+  .kpi-row .kpi-val{font-size:1.2rem}
+
+  /* Risk grid */
+  .risk-grid{grid-template-columns:1fr !important}
+
+  /* Chart grid already 1-col at 700px */
+
+  /* Signal grid already 1-col at 700px */
+
+  /* Alert form */
+  .alert-row,.alert-form{grid-template-columns:1fr}
+
+  /* Console grid already 1-col at 600px */
+
+  /* Footer */
+  .foot-inner{flex-direction:column;align-items:center;text-align:center;gap:.5rem}
+
+  /* Table */
+  table{min-width:640px}
+
+  /* Prevent iOS zoom on input focus */
+  input,select,textarea{font-size:16px !important}
+}
+
 /* ===== UPGRADE MODAL ===== */
 .upgrade-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:9999;opacity:0;pointer-events:none;transition:opacity .2s}
 .upgrade-overlay.open{opacity:1;pointer-events:all}
