@@ -1763,7 +1763,7 @@ h3 { font-size: 1.15rem; }
 <!-- FOOTER -->
 <footer class="footer">
   <p class="footer-text">
-    SPECTRE Market Research · Demo market dataset as of 20 Mar 2026 · Built for Starter and Pro workspaces
+    SPECTRE Market Research · Live market data · Built for Plus and Pro workspaces
   </p>
 </footer>
 
@@ -1782,56 +1782,23 @@ const DEMO_SESSION_USER = {
   subscriptionStatus: "active",
 };
 
-// ===== EMBEDDED DATA =====
-const DATA = {
-  stocks: [
-    { symbol:"BHP.AX", name:"BHP Group", sector:"Materials", price:47.54, change:-0.81, changePct:-1.68, marketCap:241418181984, pe:16.8, divYield:4.0, yearLow:33.25, yearHigh:59.39 },
-    { symbol:"CBA.AX", name:"Commonwealth Bank", sector:"Financials", price:176.16, change:-1.2, changePct:-0.68, marketCap:294560899482, pe:28.37, divYield:3.0, yearLow:140.21, yearHigh:192 },
-    { symbol:"CSL.AX", name:"CSL Limited", sector:"Healthcare", price:138.04, change:3.42, changePct:2.54, marketCap:66970298428, pe:15.79, divYield:3.0, yearLow:133.35, yearHigh:275.79 },
-    { symbol:"WES.AX", name:"Wesfarmers", sector:"Consumer", price:73.25, change:-0.39, changePct:-0.53, marketCap:83159260000, pe:27.13, divYield:5.0, yearLow:67.7, yearHigh:95.17 },
-    { symbol:"ANZ.AX", name:"ANZ Group", sector:"Financials", price:36.74, change:-0.28, changePct:-0.76, marketCap:109623042014, pe:18.65, divYield:5.0, yearLow:26.22, yearHigh:41 },
-    { symbol:"NAB.AX", name:"National Aust. Bank", sector:"Financials", price:45.51, change:-1.11, changePct:-2.38, marketCap:139058917338, pe:20.59, divYield:4.0, yearLow:31.13, yearHigh:49.45 },
-    { symbol:"FMG.AX", name:"Fortescue Ltd", sector:"Materials", price:18.97, change:-0.07, changePct:-0.37, marketCap:58399828906, pe:11.09, divYield:6.0, yearLow:13.18, yearHigh:23.38 },
-    { symbol:"RIO.AX", name:"Rio Tinto", sector:"Materials", price:147.58, change:-3.77, changePct:-2.49, marketCap:239672475495, pe:17.26, divYield:5.0, yearLow:100.75, yearHigh:170.71 },
-    { symbol:"MQG.AX", name:"Macquarie Group", sector:"Financials", price:195.5, change:-0.59, changePct:-0.30, marketCap:71492436251, pe:20.13, divYield:3.0, yearLow:160, yearHigh:231.83 },
-    { symbol:"WBC.AX", name:"Westpac Banking", sector:"Financials", price:40.8, change:-0.33, changePct:-0.80, marketCap:139493177751, pe:20.5, divYield:4.0, yearLow:28.44, yearHigh:43.32 },
-    { symbol:"WDS.AX", name:"Woodside Energy", sector:"Energy", price:33.97, change:0.27, changePct:0.80, marketCap:64400890518, pe:16.9, divYield:5.0, yearLow:18.61, yearHigh:34.31 },
-    { symbol:"TLS.AX", name:"Telstra Group", sector:"Comms", price:5.29, change:-0.02, changePct:-0.28, marketCap:59482343488, pe:26.43, divYield:4.0, yearLow:4.12, yearHigh:5.35 },
-    { symbol:"ALL.AX", name:"Aristocrat Leisure", sector:"Consumer", price:45.46, change:0.73, changePct:1.63, marketCap:27854581512, pe:24.05, divYield:2.0, yearLow:44.18, yearHigh:73.29 },
-    { symbol:"GMG.AX", name:"Goodman Group", sector:"Real Estate", price:25.57, change:-0.02, changePct:-0.08, marketCap:52285280300, pe:30.44, divYield:1.0, yearLow:25.01, yearHigh:37.31 },
-    { symbol:"STO.AX", name:"Santos Ltd", sector:"Energy", price:8.03, change:0.01, changePct:0.12, marketCap:26019349543, pe:22.94, divYield:4.0, yearLow:5.2, yearHigh:8.19 }
-  ],
-  usMovers: {
-    gainers: [
-      { symbol:"ANGIV", name:"Angi Inc.", price:15.76, changePct:100.0 },
-      { symbol:"IPEXR", name:"Inflection Point Acq V", price:0.49, changePct:48.48 },
-      { symbol:"DLTH", name:"Duluth Holdings", price:3.14, changePct:44.7 },
-      { symbol:"LIDR", name:"AEye Inc.", price:2.59, changePct:38.5 },
-      { symbol:"ELA", name:"Envela Corp", price:15.23, changePct:31.18 }
-    ],
-    losers: [
-      { symbol:"YRD", name:"Yiren Digital", price:2.03, changePct:-44.84 },
-      { symbol:"ZKH", name:"ZKH Group", price:2.27, changePct:-30.64 },
-      { symbol:"CSIQ", name:"Canadian Solar", price:13.53, changePct:-26.94 },
-      { symbol:"PICS", name:"PicS N.V.", price:12.27, changePct:-22.49 },
-      { symbol:"NPT", name:"Texxon Holding", price:6.32, changePct:-21.49 }
-    ],
-    mostActive: [
-      { symbol:"TZA", name:"Direxion Small Cap Bear 3X", price:7.23, changePct:-1.9 },
-      { symbol:"BITO", name:"Bitcoin ETF", price:9.67, changePct:-1.12 },
-      { symbol:"NVDA", name:"NVIDIA", price:178.56, changePct:-1.02 },
-      { symbol:"TQQQ", name:"UltraPro QQQ", price:45.69, changePct:-0.89 },
-      { symbol:"SPDN", name:"S&P 500 Bear 1X", price:9.87, changePct:0.2 }
-    ]
-  },
-  news: [
-    { tag:"RBA DECISION", cls:"tag-rba", headline:"RBA raises cash rate to 4.10% in 5-4 vote — 2nd hike of 2026", date:"17 Mar 2026", source:"Reserve Bank of Australia" },
-    { tag:"INFLATION", cls:"tag-inflation", headline:"CPI 3.8%, trimmed mean 3.4% — above RBA 2-3% target band", date:"Q4 2025", source:"ABS Data Release" },
-    { tag:"RATE OUTLOOK", cls:"tag-rate", headline:"57% market expectation for another hold/hike at May RBA meeting", date:"Mar 2026", source:"ASX Rate Futures" },
-    { tag:"ASX PERFORMANCE", cls:"tag-asx", headline:"ASX 200 +9.5% over past year despite 2 rate hikes in 2026", date:"Mar 2026", source:"ASX Market Data" },
-    { tag:"CHINA TRADE", cls:"tag-china", headline:"China's CMRG expands BHP iron ore import restrictions — port inventories rising", date:"Mar 2026", source:"Reuters" }
-  ]
+// ===== SECTOR MAP (static — company sector classifications don't change) =====
+const SECTOR_MAP = {
+  "BHP.AX":"Materials","CBA.AX":"Financials","CSL.AX":"Healthcare","WES.AX":"Consumer",
+  "ANZ.AX":"Financials","NAB.AX":"Financials","FMG.AX":"Materials","RIO.AX":"Materials",
+  "MQG.AX":"Financials","WBC.AX":"Financials","WDS.AX":"Energy","TLS.AX":"Comms",
+  "ALL.AX":"Consumer","GMG.AX":"Real Estate","STO.AX":"Energy"
 };
+
+// Approximate market caps in AUD (used for sector bar proportions — static reference values)
+const MCAP_MAP = {
+  BHP:220e9, CBA:195e9, CSL:118e9, WES:82e9, ANZ:68e9, NAB:92e9, FMG:52e9,
+  RIO:175e9, MQG:74e9, WBC:88e9, WDS:47e9, TLS:40e9, ALL:27e9, GMG:58e9, STO:21e9
+};
+const ASX_ORDER = ['BHP','CBA','CSL','WES','ANZ','NAB','FMG','RIO','MQG','WBC','WDS','TLS','ALL','GMG','STO'];
+
+// Live data — populated by API calls
+const DATA = { stocks: [], usMovers: { gainers: [], losers: [], mostActive: [] } };
 
 // ===== SPARKLINE GENERATOR =====
 function generateSparkline(yearLow, yearHigh, price, changePct) {
@@ -1878,19 +1845,25 @@ function fmtCap(n) {
 // ===== BUILD STOCK TABLE =====
 function buildStockTable() {
   const tbody = document.getElementById('stockTableBody');
+  if (!DATA.stocks.length) {
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--sl-muted);font-size:0.75rem;padding:16px;">Loading live data…</td></tr>';
+    return;
+  }
   tbody.innerHTML = DATA.stocks.map(s => {
     const chgClass = s.changePct >= 0 ? 'pos' : 'neg';
     const chgSign = s.changePct >= 0 ? '+' : '';
-    const rangePos = ((s.price - s.yearLow) / (s.yearHigh - s.yearLow)) * 100;
+    const rangePos = s.yearHigh > s.yearLow ? ((s.price - s.yearLow) / (s.yearHigh - s.yearLow)) * 100 : 50;
     const spark = generateSparkline(s.yearLow, s.yearHigh, s.price, s.changePct);
+    const peStr = s.pe != null && s.pe > 0 ? s.pe.toFixed(1) : '—';
+    const yldStr = s.divYield != null && s.divYield > 0 ? s.divYield.toFixed(1) + '%' : '—';
     return `<tr>
       <td class="sym-cell">${s.symbol.replace('.AX','')}</td>
       <td>${sectorBadge(s.sector)}</td>
       <td>$${s.price.toFixed(2)}</td>
       <td class="change ${chgClass}">${chgSign}${s.changePct.toFixed(2)}%</td>
       <td>${fmtCap(s.marketCap)}</td>
-      <td>${s.pe.toFixed(1)}</td>
-      <td>${s.divYield.toFixed(1)}%</td>
+      <td>${peStr}</td>
+      <td>${yldStr}</td>
       <td><div class="range-bar"><div class="marker" style="left:${rangePos}%"></div></div></td>
       <td>${spark}</td>
     </tr>`;
@@ -1925,18 +1898,39 @@ function buildMovers() {
   ['gainers', 'losers', 'active'].forEach(type => {
     const key = type === 'active' ? 'mostActive' : type;
     const container = document.getElementById(`usmovers-${type}`);
-    const items = DATA.usMovers[key];
+    if (!container) return;
+    const items = DATA.usMovers[key] ?? [];
+    if (!items.length) {
+      container.innerHTML = '<div class="mover-list"><div style="font-size:0.72rem;color:var(--sl-muted);padding:8px 0;">Loading…</div></div>';
+      return;
+    }
     container.innerHTML = '<div class="mover-list">' + items.map(m => {
       const cls = m.changePct >= 0 ? 'pos' : 'neg';
       const sign = m.changePct >= 0 ? '+' : '';
       return `<div class="mover-item">
         <span class="mover-sym">${m.symbol}</span>
-        <span class="mover-name">${m.name}</span>
+        <span class="mover-name">${escapeHtml(m.name)}</span>
         <span class="mover-price mono">$${m.price.toFixed(2)}</span>
         <span class="mover-chg ${cls}">${sign}${m.changePct.toFixed(2)}%</span>
       </div>`;
     }).join('') + '</div>';
   });
+}
+
+async function fetchLiveMovers() {
+  const url = '/api/research/movers' + (state.demoMode ? '?demo=1' : '');
+  try {
+    const data = await apiJson(url);
+    if (!data) return;
+    DATA.usMovers = {
+      gainers: data.gainers ?? [],
+      losers: data.losers ?? [],
+      mostActive: data.mostActive ?? [],
+    };
+    buildMovers();
+  } catch (err) {
+    console.warn('Live movers fetch failed:', err);
+  }
 }
 
 // ===== BUILD SECTOR BARS =====
@@ -1947,6 +1941,7 @@ function buildSectorBars() {
     sectors[s.sector] += s.marketCap;
   });
   const sorted = Object.entries(sectors).sort((a, b) => b[1] - a[1]);
+  if (!sorted.length) return;
   const max = sorted[0][1];
   const colors = {
     'Financials': 'linear-gradient(90deg, #22c55e, #4ade80)',
@@ -2225,17 +2220,26 @@ async function fetchLiveQuotes() {
     // --- ASX stocks table + ticker ---
     const asxData = data.asx;
     if (asxData) {
-      for (const stock of DATA.stocks) {
-        const ticker = stock.symbol.replace('.AX', '');
+      DATA.stocks = [];
+      for (const ticker of ASX_ORDER) {
+        const sym = `${ticker}.AX`;
         const q = asxData[ticker];
         if (!q || !q.price) continue;
-        const prevClose = q.prevClose && q.prevClose > 0 ? q.prevClose : stock.price;
-        stock.marketCap = stock.marketCap * (q.price / prevClose);
-        stock.price = q.price;
-        stock.change = q.price - prevClose;
-        stock.changePct = ((q.price - prevClose) / prevClose) * 100;
-        if (q.yearHigh && q.yearHigh > 0) stock.yearHigh = q.yearHigh;
-        if (q.yearLow && q.yearLow > 0) stock.yearLow = q.yearLow;
+        const prevClose = q.prevClose && q.prevClose > 0 ? q.prevClose : q.price;
+        const changePct = ((q.price - prevClose) / prevClose) * 100;
+        DATA.stocks.push({
+          symbol: sym,
+          sector: SECTOR_MAP[sym] ?? 'Other',
+          price: q.price,
+          change: q.price - prevClose,
+          changePct,
+          marketCap: MCAP_MAP[ticker] ?? 10e9,
+          yearHigh: q.yearHigh && q.yearHigh > 0 ? q.yearHigh : q.price * 1.1,
+          yearLow: q.yearLow && q.yearLow > 0 ? q.yearLow : q.price * 0.9,
+          pe: q.pe ?? null,
+          divYield: q.divYield ?? null,
+          name: q.name ?? ticker,
+        });
       }
       buildTicker();
       buildStockTable();
@@ -2262,7 +2266,9 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('sign-out-btn')?.addEventListener('click', signOut);
   void loadSession();
   void fetchLiveQuotes();
+  void fetchLiveMovers();
   setInterval(() => { void fetchLiveQuotes(); }, 5 * 60 * 1000);
+  setInterval(() => { void fetchLiveMovers(); }, 10 * 60 * 1000);
 });
 </script>
 
