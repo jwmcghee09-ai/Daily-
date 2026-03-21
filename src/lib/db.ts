@@ -1960,6 +1960,22 @@ export function findAuthUserByEmail(email: string): AuthUserWithPassword | null 
   };
 }
 
+export function listAllUsers(): { id: string; email: string; displayName: string; createdAt: string; emailVerifiedAt: string | null }[] {
+  const db = getDb();
+  const rows = db
+    .prepare(
+      "SELECT id, email, display_name, created_at, email_verified_at FROM users ORDER BY created_at DESC",
+    )
+    .all() as { id: string; email: string; display_name: string; created_at: string; email_verified_at: string | null }[];
+  return rows.map((r) => ({
+    id: r.id,
+    email: r.email,
+    displayName: r.display_name,
+    createdAt: r.created_at,
+    emailVerifiedAt: r.email_verified_at ?? null,
+  }));
+}
+
 export function listUsersWithEnabledDipAlerts(): AuthPublicUser[] {
   const db = getDb();
 
