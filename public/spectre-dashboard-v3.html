@@ -1763,7 +1763,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       if (sourceCount) {
         sourceCount.textContent = hasDemoGuestWorkspace()
           ? `8 sources · ${remaining} guest upload${remaining === 1 ? "" : "s"} left`
-          : "8 sources · Try up to 2 guest uploads";
+          : "8 sources · Sample portfolio loaded";
       }
       uploads.forEach((card) => {
         const disabled = remaining <= 0;
@@ -1889,8 +1889,9 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   }
 
   function createDemoPortfolioState() {
-    const importedAt = "2026-03-05T22:00:00.000Z";
-    const reportDate = "2026-03-06";
+    const now = new Date();
+    const reportDate = now.toISOString().slice(0, 10);
+    const importedAt = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString();
     const holdings = [
       { id: "demo-super-balanced", source: "super", account: "AustralianSuper", ticker: "SUPBAL", name: "Balanced Super Option", units: 1, price: 112000, prevClose: 112000, value: 112000, costBase: 104500, sector: "Super", reportDate, importedAt },
       { id: "demo-asx-cba", source: "asx", account: "CommSec", ticker: "CBA", name: "Commonwealth Bank", units: 120, price: 131.44, prevClose: 130.92, value: 15772.8, costBase: 14820, sector: "Banks", reportDate, importedAt },
@@ -1908,15 +1909,16 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     return {
       holdings,
       snapshots: createDemoSnapshots(totalValue),
-      updatedAt: "2026-03-06T06:10:00.000Z",
-      lastPriceRefreshAt: "2026-03-06T06:05:00.000Z",
+      updatedAt: now.toISOString(),
+      lastPriceRefreshAt: new Date(now.getTime() - 30 * 60 * 1000).toISOString(),
     };
   }
 
   function createDemoSnapshots(finalValue) {
     const snapshots = [];
-    const days = 92;
     const startMs = Date.UTC(2025, 11, 5, 6, 0, 0);
+    const endMs = Date.now();
+    const days = Math.max(1, Math.floor((endMs - startMs) / (24 * 60 * 60 * 1000)));
     let value = finalValue * 0.88;
 
     for (let index = 0; index < days; index += 1) {
@@ -1940,11 +1942,6 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
         value: Number(value.toFixed(2)),
       });
     }
-
-    snapshots.push({
-      date: "2026-03-06T14:10:00.000Z",
-      value: Number(finalValue.toFixed(2)),
-    });
 
     return snapshots;
   }
@@ -2944,20 +2941,22 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     if (state.demoMode) {
       try {
         const payload = await apiJson("/api/portfolio?demo=1", { cache: "no-store" });
-        if (payload && Array.isArray(payload.holdings)) {
+        if (payload && Array.isArray(payload.holdings) && payload.holdings.length > 0) {
+          // Guest has uploaded custom data — use that
           state.portfolio = {
-            holdings: payload.holdings || [],
+            holdings: payload.holdings,
             snapshots: payload.snapshots || [],
             updatedAt: payload.updatedAt || "",
             lastPriceRefreshAt: payload.lastPriceRefreshAt || "",
           };
           state.demoGuest = payload.demoGuest || null;
         } else {
-          state.portfolio = cloneData(EMPTY_DEMO_PORTFOLIO_STATE);
-          state.demoGuest = null;
+          // No uploads yet — show built-in sample portfolio
+          state.portfolio = cloneData(DEMO_PORTFOLIO_STATE);
+          state.demoGuest = payload?.demoGuest || null;
         }
       } catch {
-        state.portfolio = cloneData(EMPTY_DEMO_PORTFOLIO_STATE);
+        state.portfolio = cloneData(DEMO_PORTFOLIO_STATE);
         state.demoGuest = null;
       }
       applyUploadChrome();
@@ -2968,13 +2967,9 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 
   async function loadAlerts() {
     if (state.demoMode) {
-      if (hasDemoGuestWorkspace()) {
-        state.alerts = [];
-        state.availableAlertTickers = getDemoAvailableTickers();
-      } else {
-        state.alerts = [];
-        state.availableAlertTickers = [];
-      }
+      // Always show demo alerts — use uploaded tickers if available, else sample portfolio tickers
+      state.alerts = hasDemoGuestWorkspace() ? [] : cloneData(DEMO_DIP_ALERTS);
+      state.availableAlertTickers = getDemoAvailableTickers();
       renderAlerts();
       return;
     }
@@ -3671,9 +3666,9 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
         // best effort for guest workspace cleanup
       }
       state.demoGuest = null;
-      state.portfolio = cloneData(EMPTY_DEMO_PORTFOLIO_STATE);
-      state.alerts = [];
-      state.availableAlertTickers = [];
+      state.portfolio = cloneData(DEMO_PORTFOLIO_STATE);
+      state.alerts = cloneData(DEMO_DIP_ALERTS);
+      state.availableAlertTickers = [...DEMO_AVAILABLE_TICKERS];
       state.historicalRiskEstimate = null;
       state.holdingsAi = null;
       state.holdingsAiError = "";
