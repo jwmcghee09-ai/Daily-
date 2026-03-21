@@ -30,7 +30,8 @@ function extractText(xml: string, tag: string): string {
   const contentStart = xml.indexOf(">", start) + 1;
   const end = xml.indexOf(close, contentStart);
   if (end === -1) return "";
-  return xml.slice(contentStart, end).replace(/<!\[CDATA\[(.*?)\]\]>/gs, "$1").trim();
+  // Use [\s\S]*? instead of .*? with /s flag — compatible with ES2017 target
+  return xml.slice(contentStart, end).replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1").trim();
 }
 
 function extractAttr(xml: string, tag: string, attr: string): string {
@@ -61,10 +62,8 @@ function parseItems(xml: string, source: string): NewsItem[] {
 
     if (!title) continue;
 
-    // Derive a short tag from the headline keywords
     const tag = deriveTag(title);
 
-    // Format date
     let dateStr = "";
     if (pubDate) {
       try {
@@ -131,7 +130,6 @@ async function fetchAllNews(): Promise<NewsItem[]> {
   const results = await Promise.all(FEEDS.map((f) => fetchFeed(f.url, f.source)));
   const all = results.flat();
 
-  // Deduplicate by headline similarity, limit to 12
   const seen = new Set<string>();
   const deduped: NewsItem[] = [];
   for (const item of all) {

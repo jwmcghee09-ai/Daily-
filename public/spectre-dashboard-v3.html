@@ -716,6 +716,20 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   .table-wrap{padding-bottom:.35rem}
   table{min-width:760px}
 }
+
+/* ===== UPGRADE MODAL ===== */
+.upgrade-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:9999;opacity:0;pointer-events:none;transition:opacity .2s}
+.upgrade-overlay.open{opacity:1;pointer-events:all}
+.upgrade-modal{background:var(--card2,#12101a);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:2rem 1.75rem;max-width:380px;width:calc(100% - 2rem);text-align:center;transform:translateY(12px) scale(.97);transition:transform .2s}
+.upgrade-overlay.open .upgrade-modal{transform:none}
+.upgrade-modal-icon{font-size:2rem;margin-bottom:.75rem}
+.upgrade-modal-title{font-family:var(--display,sans-serif);font-size:1.2rem;font-weight:700;margin-bottom:.5rem}
+.upgrade-modal-body{font-size:.82rem;color:var(--muted2,#888);line-height:1.6;margin-bottom:1.5rem}
+.upgrade-modal-actions{display:flex;gap:.75rem;justify-content:center}
+.upgrade-modal-actions a,.upgrade-modal-actions button{display:inline-flex;align-items:center;justify-content:center;padding:.55rem 1.2rem;border-radius:8px;font-size:.82rem;font-weight:600;cursor:pointer;text-decoration:none;transition:opacity .15s}
+.upgrade-modal-actions a:hover,.upgrade-modal-actions button:hover{opacity:.85}
+.upgrade-btn-primary{background:var(--accent,#ff4b33);color:#fff;border:none}
+.upgrade-btn-secondary{background:transparent;color:var(--muted2,#888);border:1px solid rgba(255,255,255,.15)}
 </style>
 </head>
 <body class="boot-pending">
@@ -1558,6 +1572,20 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 
 <div id="system-toast" class="system-toast" role="status" aria-live="polite"></div>
 
+<div id="upgrade-overlay" class="upgrade-overlay" role="dialog" aria-modal="true" aria-labelledby="upgrade-modal-title">
+  <div class="upgrade-modal">
+    <div class="upgrade-modal-icon">🔒</div>
+    <div class="upgrade-modal-title" id="upgrade-modal-title">Investment Limit Reached</div>
+    <div class="upgrade-modal-body">
+      Starter plan supports up to <strong>4 investments</strong>. Upgrade to Plus to import unlimited holdings and unlock full portfolio analytics.
+    </div>
+    <div class="upgrade-modal-actions">
+      <a href="/signin?mode=login&plan=plus" class="upgrade-btn-primary">Upgrade to Plus</a>
+      <button class="upgrade-btn-secondary" onclick="document.getElementById('upgrade-overlay').classList.remove('open')">Not now</button>
+    </div>
+  </div>
+</div>
+
 <script>
 (() => {
   const O = "#ff7a30";
@@ -1673,6 +1701,13 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     }, durationMs);
   }
 
+  function showUpgradeModal() {
+    const overlay = document.getElementById("upgrade-overlay");
+    if (!overlay) return;
+    overlay.classList.add("open");
+    overlay.onclick = (e) => { if (e.target === overlay) overlay.classList.remove("open"); };
+  }
+
   function setText(id, value) {
     const el = document.getElementById(id);
     if (el) el.textContent = value;
@@ -1733,7 +1768,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       if (sourceCount) {
         sourceCount.textContent = hasDemoGuestWorkspace()
           ? `8 sources · ${remaining} guest upload${remaining === 1 ? "" : "s"} left`
-          : "8 sources · Try up to 2 guest uploads";
+          : "8 sources · Sample portfolio loaded";
       }
       uploads.forEach((card) => {
         const disabled = remaining <= 0;
@@ -1859,8 +1894,9 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   }
 
   function createDemoPortfolioState() {
-    const importedAt = "2026-03-05T22:00:00.000Z";
-    const reportDate = "2026-03-06";
+    const now = new Date();
+    const reportDate = now.toISOString().slice(0, 10);
+    const importedAt = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString();
     const holdings = [
       { id: "demo-super-balanced", source: "super", account: "AustralianSuper", ticker: "SUPBAL", name: "Balanced Super Option", units: 1, price: 112000, prevClose: 112000, value: 112000, costBase: 104500, sector: "Super", reportDate, importedAt },
       { id: "demo-asx-cba", source: "asx", account: "CommSec", ticker: "CBA", name: "Commonwealth Bank", units: 120, price: 131.44, prevClose: 130.92, value: 15772.8, costBase: 14820, sector: "Banks", reportDate, importedAt },
@@ -1878,15 +1914,16 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     return {
       holdings,
       snapshots: createDemoSnapshots(totalValue),
-      updatedAt: "2026-03-06T06:10:00.000Z",
-      lastPriceRefreshAt: "2026-03-06T06:05:00.000Z",
+      updatedAt: now.toISOString(),
+      lastPriceRefreshAt: new Date(now.getTime() - 30 * 60 * 1000).toISOString(),
     };
   }
 
   function createDemoSnapshots(finalValue) {
     const snapshots = [];
-    const days = 92;
     const startMs = Date.UTC(2025, 11, 5, 6, 0, 0);
+    const endMs = Date.now();
+    const days = Math.max(1, Math.floor((endMs - startMs) / (24 * 60 * 60 * 1000)));
     let value = finalValue * 0.88;
 
     for (let index = 0; index < days; index += 1) {
@@ -1910,11 +1947,6 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
         value: Number(value.toFixed(2)),
       });
     }
-
-    snapshots.push({
-      date: "2026-03-06T14:10:00.000Z",
-      value: Number(finalValue.toFixed(2)),
-    });
 
     return snapshots;
   }
@@ -2856,7 +2888,9 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 
     if (!response.ok) {
       const message = payload && payload.error ? payload.error : `Request failed (${response.status}).`;
-      throw new Error(message);
+      const err = new Error(message);
+      if (payload && payload.upgradeRequired) err.upgradeRequired = true;
+      throw err;
     }
 
     return payload;
@@ -2912,20 +2946,22 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     if (state.demoMode) {
       try {
         const payload = await apiJson("/api/portfolio?demo=1", { cache: "no-store" });
-        if (payload && Array.isArray(payload.holdings)) {
+        if (payload && Array.isArray(payload.holdings) && payload.holdings.length > 0) {
+          // Guest has uploaded custom data — use that
           state.portfolio = {
-            holdings: payload.holdings || [],
+            holdings: payload.holdings,
             snapshots: payload.snapshots || [],
             updatedAt: payload.updatedAt || "",
             lastPriceRefreshAt: payload.lastPriceRefreshAt || "",
           };
           state.demoGuest = payload.demoGuest || null;
         } else {
-          state.portfolio = cloneData(EMPTY_DEMO_PORTFOLIO_STATE);
-          state.demoGuest = null;
+          // No uploads yet — show built-in sample portfolio
+          state.portfolio = cloneData(DEMO_PORTFOLIO_STATE);
+          state.demoGuest = payload?.demoGuest || null;
         }
       } catch {
-        state.portfolio = cloneData(EMPTY_DEMO_PORTFOLIO_STATE);
+        state.portfolio = cloneData(DEMO_PORTFOLIO_STATE);
         state.demoGuest = null;
       }
       applyUploadChrome();
@@ -2936,13 +2972,9 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 
   async function loadAlerts() {
     if (state.demoMode) {
-      if (hasDemoGuestWorkspace()) {
-        state.alerts = [];
-        state.availableAlertTickers = getDemoAvailableTickers();
-      } else {
-        state.alerts = [];
-        state.availableAlertTickers = [];
-      }
+      // Always show demo alerts — use uploaded tickers if available, else sample portfolio tickers
+      state.alerts = hasDemoGuestWorkspace() ? [] : cloneData(DEMO_DIP_ALERTS);
+      state.availableAlertTickers = getDemoAvailableTickers();
       renderAlerts();
       return;
     }
@@ -3642,9 +3674,9 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
         // best effort for guest workspace cleanup
       }
       state.demoGuest = null;
-      state.portfolio = cloneData(EMPTY_DEMO_PORTFOLIO_STATE);
-      state.alerts = [];
-      state.availableAlertTickers = [];
+      state.portfolio = cloneData(DEMO_PORTFOLIO_STATE);
+      state.alerts = cloneData(DEMO_DIP_ALERTS);
+      state.availableAlertTickers = [...DEMO_AVAILABLE_TICKERS];
       state.historicalRiskEstimate = null;
       state.holdingsAi = null;
       state.holdingsAiError = "";
@@ -3879,11 +3911,15 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
         showToast(`${state.uploadSource.toUpperCase()} report imported.`);
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Upload failed.";
-      const isInvalidTypeMessage =
-        message.toLowerCase().includes("unsupported file type") ||
-        message.toLowerCase().includes("does not accept this file type");
-      showToast(message, "error", isInvalidTypeMessage ? INVALID_UPLOAD_MESSAGE_TTL_MS : 2600);
+      if (error instanceof Error && error.upgradeRequired) {
+        showUpgradeModal();
+      } else {
+        const message = error instanceof Error ? error.message : "Upload failed.";
+        const isInvalidTypeMessage =
+          message.toLowerCase().includes("unsupported file type") ||
+          message.toLowerCase().includes("does not accept this file type");
+        showToast(message, "error", isInvalidTypeMessage ? INVALID_UPLOAD_MESSAGE_TTL_MS : 2600);
+      }
     } finally {
       state.uploadSource = null;
       uploadInput.value = "";
@@ -3920,6 +3956,10 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       card.addEventListener("click", () => {
         if (state.demoMode && getDemoUploadsRemaining() <= 0) {
           showToast("Demo upload limit reached. Create an account for unlimited imports.", "error", INVALID_UPLOAD_MESSAGE_TTL_MS);
+          return;
+        }
+        if (!state.demoMode && state.sessionUser?.planTier === "none" && (state.portfolio?.holdings?.length ?? 0) >= 4) {
+          showUpgradeModal();
           return;
         }
         const source = card.getAttribute("data-source");

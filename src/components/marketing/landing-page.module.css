@@ -676,6 +676,68 @@
   background: var(--surface);
 }
 
+.researchHighlights {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 40px;
+}
+
+.researchTile {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  transition: border-color 0.2s;
+}
+
+.researchTile:hover {
+  border-color: rgba(255, 75, 51, 0.3);
+}
+
+.researchTileIcon {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--accentDim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.researchTileIcon svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+
+.researchTileIconAlt {
+  background: var(--accent2Dim);
+}
+
+.researchTileIconAlt svg {
+  stroke: var(--accent2);
+}
+
+.researchTileName {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 3px;
+  color: var(--text);
+}
+
+.researchTileSub {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
 .researchCtaRow {
   display: flex;
   gap: 14px;
@@ -1373,6 +1435,10 @@
     grid-template-columns: 1fr;
   }
 
+  .researchHighlights {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .navInner {
     flex-direction: column;
     align-items: center;
@@ -1436,7 +1502,8 @@
   .securityGrid,
   .pricingGrid,
   .compareGrid,
-  .footerGrid {
+  .footerGrid,
+  .researchHighlights {
     grid-template-columns: 1fr;
   }
 

@@ -2,7 +2,7 @@ import Papa from "papaparse";
 import * as XLSX from "xlsx";
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
-import { saveImport } from "@/lib/db";
+import { countUserHoldings, readUserEntitlements, saveImport } from "@/lib/db";
 import {
   attachDemoGuestCookie,
   createDemoGuestContext,
@@ -234,6 +234,19 @@ export async function POST(request: Request) {
 
     if (!sessionUser && !demoGuest) {
       return NextResponse.json({ error: "Please sign in first." }, { status: 401 });
+    }
+
+    if (sessionUser) {
+      const entitlements = readUserEntitlements(sessionUser.id);
+      if (entitlements.planTier === "none") {
+        const existing = countUserHoldings(sessionUser.id);
+        if (existing >= 4) {
+          return NextResponse.json(
+            { error: "Starter plan is limited to 4 investments. Upgrade to Plus to import unlimited holdings.", upgradeRequired: true },
+            { status: 403 },
+          );
+        }
+      }
     }
 
     if (demoGuest && demoGuest.uploadCount >= DEMO_GUEST_MAX_UPLOADS) {
