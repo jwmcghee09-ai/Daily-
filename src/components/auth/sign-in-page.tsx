@@ -175,6 +175,12 @@ export default function SignInPage({
   }
 
   async function startCheckout(plan: CheckoutPlan, guestEmail?: string) {
+    if (plan === "free") {
+      router.push("/dashboard");
+      router.refresh();
+      return;
+    }
+
     const checkoutEmail = (sessionUser?.email || guestEmail || email).trim().toLowerCase();
     if (!sessionUser && !checkoutEmail) {
       setAuthError("Enter a valid email address to start checkout.");

@@ -1627,6 +1627,11 @@ export default function Home() {
       return;
     }
 
+    if (plan === "free") {
+      window.location.assign("/dashboard");
+      return;
+    }
+
     let checkoutEmail = sessionUser?.email || "";
     const planLabel = plan === "pro" ? "Pro" : "Starter";
 
