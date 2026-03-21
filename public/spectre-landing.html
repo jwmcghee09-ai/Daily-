@@ -192,8 +192,8 @@ a { text-decoration: none; color: inherit; }
   .pro-card ul, .pro-facts { grid-template-columns: 1fr; }
   .sec { padding: 2.5rem 0; }
   .kicker { font-size: 0.7rem; }
-  .hero-eye { font-size: 0.72rem; }
-  .hero-sys { font-size: 0.72rem; }
+  .hero-eye { font-size: 0.58rem; }
+  .hero-sys { font-size: 0.58rem; }
   .lp-label { font-size: 0.65rem; }
   .lp-kpi p { font-size: 0.65rem; }
   .lp-risk-top span { font-size: 0.65rem; }
@@ -223,7 +223,12 @@ a { text-decoration: none; color: inherit; }
 
   /* Hero */
   .hero { padding-top: 80px; }
-  .hero-title { font-size: clamp(1.75rem, 8vw, 2.4rem); }
+  .hero-left { gap: 0.65rem; }
+  .hero-eye { font-size: 0.56rem; letter-spacing: 0.18em; gap: 0.45rem; }
+  .hero-eye::before { width: 18px; }
+  .hero-title { font-size: clamp(1.6rem, 7.5vw, 2.2rem); line-height: 1.06; }
+  .hero-sys { font-size: 0.56rem; letter-spacing: 0.12em; }
+  .hero-desc { font-size: 0.82rem; line-height: 1.72; max-width: 100%; }
   .hero-sub { font-size: 0.8rem; line-height: 1.7; margin-bottom: 1.4rem; }
   .hero-panels { gap: 0.45rem; }
   .hero-actions { gap: 0.5rem; }
