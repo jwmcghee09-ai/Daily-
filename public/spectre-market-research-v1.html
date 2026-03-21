@@ -328,7 +328,7 @@ h3 { font-size: 1.15rem; }
 /* ===== HERO METRICS ROW ===== */
 .hero-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 16px;
   margin: 24px 0;
 }
@@ -1220,7 +1220,7 @@ h3 { font-size: 1.15rem; }
 }
 
 @media (max-width: 900px) {
-  .hero-grid { grid-template-columns: 1fr 1fr; }
+  .hero-grid { grid-template-columns: 1fr 1fr 1fr; }
   .bottom-grid { grid-template-columns: 1fr; }
   .right-col { grid-template-columns: 1fr; }
   .nav-links { display: none; }
@@ -1255,7 +1255,7 @@ h3 { font-size: 1.15rem; }
       <li><a href="/settings" id="nav-settings-link">Settings</a></li>
     </ul>
     <div class="nav-right">
-      <span style="font-family:var(--font-mono); font-size:0.7rem;">20 MAR 2026</span>
+      <span style="font-family:var(--font-mono); font-size:0.7rem;" id="nav-date">—</span>
       <div id="nav-market-status" class="nav-status">
         <span class="status-dot" style="width:6px;height:6px;animation-duration:2.5s;background:var(--sl-amber);box-shadow:0 0 6px var(--sl-amber);"></span>
         ASX CLOSED
@@ -1286,52 +1286,43 @@ h3 { font-size: 1.15rem; }
     <!-- ASX 200 -->
     <div class="card hero-card card-glow">
       <div class="label">S&P/ASX 200</div>
-      <div class="value"><span id="hero-asx200-price" class="countup" data-target="8443.4" data-decimals="1">0</span></div>
-      <div id="hero-asx200-chg" class="change neg">
-        <span class="mono">−54.40 (−0.64%)</span>
-      </div>
-      <div class="hero-sparkline">
-        <svg class="sparkline-svg" viewBox="0 0 72 24" fill="none" style="width:100%;height:40px;">
-          <defs>
-            <linearGradient id="asx-grad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#9b5de5" stop-opacity="0.4"/>
-              <stop offset="100%" stop-color="#9b5de5" stop-opacity="0"/>
-            </linearGradient>
-          </defs>
-          <path d="M0,20 L6,18 L12,16 L18,14 L24,10 L30,8 L36,6 L42,4 L48,6 L54,8 L60,12 L66,16 L72,18" stroke="#9b5de5" stroke-width="1.5" fill="none"/>
-          <path d="M0,20 L6,18 L12,16 L18,14 L24,10 L30,8 L36,6 L42,4 L48,6 L54,8 L60,12 L66,16 L72,18 L72,24 L0,24Z" fill="url(#asx-grad)"/>
-        </svg>
-      </div>
+      <div class="value" id="hero-asx200-price">—</div>
+      <div id="hero-asx200-chg" class="change" style="color:var(--sl-muted);"><span class="mono">Loading…</span></div>
     </div>
 
-    <!-- Market Pulse -->
+    <!-- AUD/USD -->
     <div class="card hero-card card-glow">
-      <div class="label">Market Pulse</div>
-      <div class="pulse-badge">
-        <span class="pulse-ring"></span>
-        BEARISH
-      </div>
-      <p style="font-size:0.72rem;color:var(--sl-muted);margin-top:10px;line-height:1.5;">
-        RBA hiked to 4.10% · ASX 200 down 54pts · Iron ore under pressure
-      </p>
+      <div class="label">AUD / USD</div>
+      <div class="value" id="hero-audusd-price">—</div>
+      <div id="hero-audusd-chg" class="change" style="color:var(--sl-muted);"><span class="mono">Loading…</span></div>
+    </div>
+
+    <!-- VIX -->
+    <div class="card hero-card card-glow">
+      <div class="label">VIX · Fear Index</div>
+      <div class="value" id="hero-vix-price">—</div>
+      <div id="hero-vix-label" style="font-size:0.72rem;color:var(--sl-muted);margin-top:6px;">Loading…</div>
     </div>
 
     <!-- Gold -->
     <div class="card hero-card card-glow">
       <div class="label">Gold (XAU/AUD)</div>
-      <div class="value">$<span id="hero-gold-price" class="countup" data-target="4637" data-decimals="0">0</span></div>
-      <div id="hero-gold-chg" class="change neg">
-        <span class="mono">−$13.52 (−0.29%)</span>
-      </div>
+      <div class="value">$<span id="hero-gold-price">—</span></div>
+      <div id="hero-gold-chg" class="change" style="color:var(--sl-muted);"><span class="mono">Loading…</span></div>
     </div>
 
     <!-- Bitcoin -->
     <div class="card hero-card card-glow">
       <div class="label">Bitcoin (BTC/USD)</div>
-      <div class="value">$<span id="hero-btc-price" class="countup" data-target="70695" data-decimals="0">0</span></div>
-      <div id="hero-btc-chg" class="change pos">
-        <span class="mono">+$776.82 (+1.11%)</span>
-      </div>
+      <div class="value">$<span id="hero-btc-price">—</span></div>
+      <div id="hero-btc-chg" class="change" style="color:var(--sl-muted);"><span class="mono">Loading…</span></div>
+    </div>
+
+    <!-- Ethereum -->
+    <div class="card hero-card card-glow">
+      <div class="label">Ethereum (ETH/USD)</div>
+      <div class="value">$<span id="hero-eth-price">—</span></div>
+      <div id="hero-eth-chg" class="change" style="color:var(--sl-muted);"><span class="mono">Loading…</span></div>
     </div>
   </section>
 
@@ -2072,7 +2063,7 @@ function applyModeChrome() {
     setText('nav-user-email', 'Demo workspace');
     if (signOutButton) {
       signOutButton.textContent = 'Create Account';
-      signOutButton.setAttribute('href', '/signin?mode=register&plan=starter');
+      signOutButton.setAttribute('href', '/signin?mode=register&plan=plus');
     }
     if (dashboardLink) dashboardLink.setAttribute('href', '/dashboard?demo=1');
     if (dashboardLogo) dashboardLogo.setAttribute('href', '/dashboard?demo=1');
@@ -2193,6 +2184,32 @@ async function fetchLiveQuotes() {
       }
     }
 
+    // --- AUD/USD hero ---
+    const audUsd = data.indices?.audUsd;
+    if (audUsd?.price) {
+      const heroEl = document.getElementById('hero-audusd-price');
+      if (heroEl) heroEl.textContent = audUsd.price.toFixed(4);
+      if (audUsd.prevClose && audUsd.prevClose > 0) {
+        const { html, isPos } = fmtChgSpan(audUsd.price, audUsd.prevClose, null);
+        const heroChg = document.getElementById('hero-audusd-chg');
+        if (heroChg) { heroChg.className = `change ${isPos ? 'pos' : 'neg'}`; heroChg.innerHTML = html; }
+      }
+    }
+
+    // --- VIX hero ---
+    const vix = data.indices?.vix;
+    if (vix?.price) {
+      const heroEl = document.getElementById('hero-vix-price');
+      if (heroEl) heroEl.textContent = vix.price.toFixed(2);
+      const label = document.getElementById('hero-vix-label');
+      if (label) {
+        const sentiment = vix.price < 15 ? 'Low fear · calm market' : vix.price < 25 ? 'Moderate uncertainty' : vix.price < 35 ? 'Elevated fear' : 'Extreme fear';
+        const color = vix.price < 15 ? 'var(--green)' : vix.price < 25 ? 'var(--sl-amber)' : 'var(--accent)';
+        label.textContent = sentiment;
+        label.style.color = color;
+      }
+    }
+
     // --- Gold hero ---
     const gold = data.crypto?.gold;
     if (gold?.price) {
@@ -2217,9 +2234,21 @@ async function fetchLiveQuotes() {
       }
     }
 
+    // --- ETH hero ---
+    const eth = data.crypto?.eth;
+    if (eth?.price) {
+      const heroEth = document.getElementById('hero-eth-price');
+      if (heroEth) heroEth.textContent = Math.round(eth.price).toLocaleString('en-AU');
+      if (eth.prevClose && eth.prevClose > 0) {
+        const { html, isPos } = fmtChgSpan(eth.price, eth.prevClose, '$');
+        const heroEthChg = document.getElementById('hero-eth-chg');
+        if (heroEthChg) { heroEthChg.className = `change ${isPos ? 'pos' : 'neg'}`; heroEthChg.innerHTML = html; }
+      }
+    }
+
     // --- Crypto sidebar ---
     updateCryptoEl('live-btc-price', 'live-btc-chg', btc, 0);
-    updateCryptoEl('live-eth-price', 'live-eth-chg', data.crypto?.eth, 0);
+    updateCryptoEl('live-eth-price', 'live-eth-chg', eth, 0);
     updateCryptoEl('live-gold-price', 'live-gold-chg', gold, 0);
 
     // --- ASX stocks table + ticker ---
@@ -2249,6 +2278,13 @@ async function fetchLiveQuotes() {
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', () => {
   state.demoMode = isDemoMode();
+
+  // Dynamic date
+  const dateEl = document.getElementById('nav-date');
+  if (dateEl) {
+    dateEl.textContent = new Date().toLocaleDateString('en-AU', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase();
+  }
+
   buildTicker();
   buildStockTable();
   buildNews();
