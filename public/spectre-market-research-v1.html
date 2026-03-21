@@ -421,7 +421,115 @@ h3 { font-size: 1.15rem; }
 
 .hero-sparkline { margin-top: 12px; }
 
-/* Market Pulse specific */
+/* ===== MARKET PULSE STRIP ===== */
+.market-pulse-strip {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 24px;
+  padding: 18px 24px;
+  margin-bottom: 0;
+}
+
+.pulse-verdict-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 160px;
+}
+
+.pulse-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--sl-muted);
+  flex-shrink: 0;
+  box-shadow: 0 0 8px currentColor;
+  transition: background 0.5s, box-shadow 0.5s;
+}
+
+.pulse-verdict {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1;
+  transition: color 0.5s;
+}
+
+.pulse-sub {
+  font-size: 0.65rem;
+  color: var(--sl-muted);
+  margin-top: 3px;
+}
+
+.pulse-meter-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pulse-pole {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+.bear-pole { color: var(--red); }
+.bull-pole { color: var(--green); }
+
+.pulse-meter {
+  flex: 1;
+  min-width: 160px;
+  height: 8px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--red) 0%, rgba(255,255,255,0.1) 40%, rgba(255,255,255,0.1) 60%, var(--green) 100%);
+  position: relative;
+  overflow: visible;
+}
+
+.pulse-marker {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(255,255,255,0.2), 0 2px 8px rgba(0,0,0,0.5);
+  transition: left 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.pulse-signals {
+  display: flex;
+  gap: 16px;
+}
+
+.pulse-signal {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.sig-label {
+  font-size: 0.58rem;
+  color: var(--sl-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.sig-val {
+  font-size: 0.78rem;
+  color: var(--sl-text);
+}
+
+@media (max-width: 768px) {
+  .market-pulse-strip { grid-template-columns: 1fr; gap: 14px; }
+  .pulse-signals { justify-content: space-between; }
+  .pulse-signal { align-items: flex-start; }
+}
+
+/* Legacy pulse classes */
 .pulse-badge {
   display: inline-flex;
   align-items: center;
@@ -431,7 +539,6 @@ h3 { font-size: 1.15rem; }
   font-weight: 700;
   color: var(--accent);
 }
-
 .pulse-ring {
   width: 12px;
   height: 12px;
@@ -1340,6 +1447,31 @@ h3 { font-size: 1.15rem; }
     </div>
   </section>
 
+  <!-- ===== MARKET PULSE STRIP ===== -->
+  <div class="market-pulse-strip card reveal" id="market-pulse">
+    <div class="pulse-verdict-wrap">
+      <div class="pulse-dot" id="pulse-dot"></div>
+      <div>
+        <div class="pulse-verdict" id="pulse-verdict">Loading…</div>
+        <div class="pulse-sub" id="pulse-sub">Fetching live signals</div>
+      </div>
+    </div>
+    <div class="pulse-meter-wrap">
+      <span class="pulse-pole bear-pole">BEAR</span>
+      <div class="pulse-meter">
+        <div class="pulse-meter-fill" id="pulse-meter-fill"></div>
+        <div class="pulse-marker" id="pulse-marker" style="left:50%"></div>
+      </div>
+      <span class="pulse-pole bull-pole">BULL</span>
+    </div>
+    <div class="pulse-signals" id="pulse-signals">
+      <div class="pulse-signal"><span class="sig-label">VIX</span><span class="sig-val mono" id="sig-vix">—</span></div>
+      <div class="pulse-signal"><span class="sig-label">ASX 200</span><span class="sig-val mono" id="sig-asx">—</span></div>
+      <div class="pulse-signal"><span class="sig-label">AUD/USD</span><span class="sig-val mono" id="sig-aud">—</span></div>
+      <div class="pulse-signal"><span class="sig-label">BTC</span><span class="sig-val mono" id="sig-btc">—</span></div>
+    </div>
+  </div>
+
   <!-- ===== MAIN BENTO GRID ===== -->
   <div class="main-grid">
 
@@ -1355,42 +1487,33 @@ h3 { font-size: 1.15rem; }
             <div id="chart-asx200-sub" class="chart-sub">−54.40 (−0.64%) today &nbsp;·&nbsp; 6M: −8.25%</div>
           </div>
           <div class="time-pills">
-            <button class="time-pill" onclick="setTimePill(this)">1D</button>
-            <button class="time-pill" onclick="setTimePill(this)">1W</button>
-            <button class="time-pill" onclick="setTimePill(this)">1M</button>
-            <button class="time-pill" onclick="setTimePill(this)">3M</button>
-            <button class="time-pill active" onclick="setTimePill(this)">6M</button>
-            <button class="time-pill" onclick="setTimePill(this)">1Y</button>
+            <button class="time-pill" onclick="loadChart('1d',this)">1D</button>
+            <button class="time-pill" onclick="loadChart('1w',this)">1W</button>
+            <button class="time-pill" onclick="loadChart('1m',this)">1M</button>
+            <button class="time-pill" onclick="loadChart('3m',this)">3M</button>
+            <button class="time-pill active" onclick="loadChart('6m',this)">6M</button>
+            <button class="time-pill" onclick="loadChart('1y',this)">1Y</button>
           </div>
         </div>
-        <svg class="chart-svg" viewBox="0 0 900 240" preserveAspectRatio="none">
+        <svg class="chart-svg" id="asx-chart-svg" viewBox="0 0 900 240" preserveAspectRatio="none">
           <defs>
             <linearGradient id="chart-fill" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stop-color="#9b5de5" stop-opacity="0.35"/>
               <stop offset="100%" stop-color="#9b5de5" stop-opacity="0"/>
             </linearGradient>
           </defs>
-          <!-- Grid lines -->
           <line x1="0" y1="60" x2="900" y2="60" stroke="#ffffff08" stroke-width="1"/>
           <line x1="0" y1="120" x2="900" y2="120" stroke="#ffffff08" stroke-width="1"/>
           <line x1="0" y1="180" x2="900" y2="180" stroke="#ffffff08" stroke-width="1"/>
-          <!-- Area fill -->
-          <path d="M0,180 C50,175 100,160 150,140 C200,120 250,100 300,80 C350,60 400,40 450,30 C500,20 550,25 600,50 C650,75 700,100 750,130 C800,155 850,170 900,180 L900,240 L0,240Z" fill="url(#chart-fill)"/>
-          <!-- Line -->
-          <path d="M0,180 C50,175 100,160 150,140 C200,120 250,100 300,80 C350,60 400,40 450,30 C500,20 550,25 600,50 C650,75 700,100 750,130 C800,155 850,170 900,180" fill="none" stroke="#9b5de5" stroke-width="2.5" stroke-linecap="round"/>
-          <!-- Current point -->
-          <circle cx="900" cy="180" r="4" fill="#9b5de5"/>
-          <circle cx="900" cy="180" r="8" fill="#9b5de5" opacity="0.3"/>
-          <!-- Labels -->
-          <text x="8" y="55" fill="#8a86a8" font-size="10" font-family="DM Mono">9,200</text>
-          <text x="8" y="115" fill="#8a86a8" font-size="10" font-family="DM Mono">8,800</text>
-          <text x="8" y="175" fill="#8a86a8" font-size="10" font-family="DM Mono">8,400</text>
-          <text x="80" y="235" fill="#8a86a860" font-size="9" font-family="DM Mono">Oct</text>
-          <text x="230" y="235" fill="#8a86a860" font-size="9" font-family="DM Mono">Nov</text>
-          <text x="380" y="235" fill="#8a86a860" font-size="9" font-family="DM Mono">Dec</text>
-          <text x="530" y="235" fill="#8a86a860" font-size="9" font-family="DM Mono">Jan</text>
-          <text x="680" y="235" fill="#8a86a860" font-size="9" font-family="DM Mono">Feb</text>
-          <text x="830" y="235" fill="#8a86a860" font-size="9" font-family="DM Mono">Mar</text>
+          <text id="chart-label-0" x="8" y="55" fill="#8a86a8" font-size="10" font-family="DM Mono"></text>
+          <text id="chart-label-1" x="8" y="115" fill="#8a86a8" font-size="10" font-family="DM Mono"></text>
+          <text id="chart-label-2" x="8" y="175" fill="#8a86a8" font-size="10" font-family="DM Mono"></text>
+          <g id="chart-time-labels"></g>
+          <path id="chart-area" fill="url(#chart-fill)"/>
+          <path id="chart-line" fill="none" stroke="#9b5de5" stroke-width="2.5" stroke-linecap="round"/>
+          <circle id="chart-dot-outer" r="8" fill="#9b5de5" opacity="0.3"/>
+          <circle id="chart-dot-inner" r="4" fill="#9b5de5"/>
+          <text id="chart-loading" x="450" y="125" fill="#8a86a8" font-size="13" font-family="DM Mono" text-anchor="middle">Loading chart…</text>
         </svg>
       </div>
 
@@ -1933,6 +2056,62 @@ async function fetchLiveMovers() {
   }
 }
 
+// ===== MARKET PULSE =====
+function updateMarketPulse(vixPrice, asxPct, audPct, btcPct) {
+  // Score: 0 = extreme bear, 100 = extreme bull, 50 = neutral
+  let score = 50;
+  // VIX contribution (lower VIX = more bullish)
+  if (vixPrice !== null) {
+    if (vixPrice < 12) score += 25;
+    else if (vixPrice < 16) score += 15;
+    else if (vixPrice < 20) score += 5;
+    else if (vixPrice < 25) score -= 10;
+    else if (vixPrice < 35) score -= 20;
+    else score -= 30;
+  }
+  // ASX200 day change contribution
+  if (asxPct !== null) {
+    score += Math.max(-15, Math.min(15, asxPct * 5));
+  }
+  // AUD/USD as risk appetite proxy
+  if (audPct !== null) {
+    score += Math.max(-8, Math.min(8, audPct * 3));
+  }
+  // BTC as risk-on/off proxy
+  if (btcPct !== null) {
+    score += Math.max(-7, Math.min(7, btcPct * 1.5));
+  }
+  score = Math.max(2, Math.min(98, score));
+
+  const dot = document.getElementById('pulse-dot');
+  const verdict = document.getElementById('pulse-verdict');
+  const sub = document.getElementById('pulse-sub');
+  const marker = document.getElementById('pulse-marker');
+
+  let label, color, description;
+  if (score >= 70) {
+    label = 'BULL MARKET'; color = 'var(--green)';
+    description = 'Risk appetite strong · equities favoured';
+  } else if (score >= 57) {
+    label = 'RISK ON'; color = '#4ade80';
+    description = 'Mild bullish bias · positive breadth';
+  } else if (score >= 43) {
+    label = 'NEUTRAL'; color = 'var(--sl-amber)';
+    description = 'Mixed signals · cautious positioning';
+  } else if (score >= 30) {
+    label = 'RISK OFF'; color = 'var(--sl-orange)';
+    description = 'Defensive rotation · elevated caution';
+  } else {
+    label = 'BEAR MARKET'; color = 'var(--red)';
+    description = 'High volatility · risk-off conditions';
+  }
+
+  if (verdict) { verdict.textContent = label; verdict.style.color = color; }
+  if (dot) { dot.style.background = color; dot.style.boxShadow = `0 0 10px ${color}`; }
+  if (sub) sub.textContent = description;
+  if (marker) marker.style.left = score + '%';
+}
+
 // ===== BUILD SECTOR BARS =====
 function buildSectorBars() {
   const sectors = {};
@@ -1962,6 +2141,8 @@ function buildSectorBars() {
       <span class="sector-bar-val">${fmtCap(cap)}</span>
     </div>`;
   }).join('');
+  // Trigger animation on newly created bars
+  requestAnimationFrame(() => animateBars());
 }
 
 // ===== TAB SWITCHING =====
@@ -1975,6 +2156,120 @@ function switchTab(group, id, btn) {
   card.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
   const target = card.querySelector(`#${group}-${id}`);
   if (target) target.classList.add('active');
+}
+
+// ===== LIVE ASX CHART =====
+function renderChart(data) {
+  const W = 900, H = 240, PAD_L = 52, PAD_B = 28, PAD_T = 10;
+  const { closes, timestamps, high, low } = data;
+  const n = closes.length;
+  if (!n) return;
+
+  const priceRange = high - low || 1;
+  const toY = (p) => PAD_T + (H - PAD_T - PAD_B) * (1 - (p - low) / priceRange);
+  const toX = (i) => PAD_L + (i / (n - 1)) * (W - PAD_L);
+
+  // Build smooth path
+  let linePath = `M${toX(0).toFixed(1)},${toY(closes[0]).toFixed(1)}`;
+  for (let i = 1; i < n; i++) {
+    const x0 = toX(i - 1), y0 = toY(closes[i - 1]);
+    const x1 = toX(i), y1 = toY(closes[i]);
+    const cx = (x0 + x1) / 2;
+    linePath += ` C${cx.toFixed(1)},${y0.toFixed(1)} ${cx.toFixed(1)},${y1.toFixed(1)} ${x1.toFixed(1)},${y1.toFixed(1)}`;
+  }
+  const lastX = toX(n - 1).toFixed(1);
+  const lastY = toY(closes[n - 1]).toFixed(1);
+  const areaPath = `${linePath} L${lastX},${H} L${toX(0).toFixed(1)},${H}Z`;
+
+  const isUp = closes[n - 1] >= closes[0];
+  const color = isUp ? '#22c55e' : '#ef4444';
+  const fillId = isUp ? 'chart-fill-up' : 'chart-fill-dn';
+
+  // Update or create gradient for colour
+  const svg = document.getElementById('asx-chart-svg');
+  let grad = document.getElementById(fillId);
+  if (!grad) {
+    const defs = svg.querySelector('defs');
+    grad = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
+    grad.id = fillId;
+    grad.setAttribute('x1', '0'); grad.setAttribute('y1', '0');
+    grad.setAttribute('x2', '0'); grad.setAttribute('y2', '1');
+    const s1 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+    s1.setAttribute('offset', '0%'); s1.setAttribute('stop-color', color); s1.setAttribute('stop-opacity', '0.3');
+    const s2 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+    s2.setAttribute('offset', '100%'); s2.setAttribute('stop-color', color); s2.setAttribute('stop-opacity', '0');
+    grad.appendChild(s1); grad.appendChild(s2);
+    defs.appendChild(grad);
+  }
+
+  const area = document.getElementById('chart-area');
+  const line = document.getElementById('chart-line');
+  const dotO = document.getElementById('chart-dot-outer');
+  const dotI = document.getElementById('chart-dot-inner');
+  const loading = document.getElementById('chart-loading');
+
+  if (area) { area.setAttribute('d', areaPath); area.setAttribute('fill', `url(#${fillId})`); }
+  if (line) { line.setAttribute('d', linePath); line.setAttribute('stroke', color); }
+  if (dotO) { dotO.setAttribute('cx', lastX); dotO.setAttribute('cy', lastY); dotO.setAttribute('fill', color); }
+  if (dotI) { dotI.setAttribute('cx', lastX); dotI.setAttribute('cy', lastY); dotI.setAttribute('fill', color); }
+  if (loading) loading.setAttribute('display', 'none');
+
+  // Price labels (Y axis)
+  const step = priceRange / 3;
+  [0, 1, 2].forEach(i => {
+    const el = document.getElementById(`chart-label-${i}`);
+    if (el) el.textContent = Math.round(low + step * (3 - i)).toLocaleString('en-AU');
+  });
+
+  // Time labels (X axis)
+  const tlGroup = document.getElementById('chart-time-labels');
+  if (tlGroup) {
+    tlGroup.innerHTML = '';
+    const labelCount = Math.min(6, n);
+    for (let i = 0; i < labelCount; i++) {
+      const idx = Math.round(i * (n - 1) / (labelCount - 1));
+      const x = toX(idx);
+      const ts = timestamps[idx] * 1000;
+      const d = new Date(ts);
+      let label;
+      const range = data.range;
+      if (range === '1d') {
+        label = d.toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit', hour12: false });
+      } else if (range === '1w') {
+        label = d.toLocaleDateString('en-AU', { weekday: 'short' });
+      } else {
+        label = d.toLocaleDateString('en-AU', { month: 'short', day: 'numeric' });
+      }
+      const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      t.setAttribute('x', x.toFixed(1)); t.setAttribute('y', H - 2);
+      t.setAttribute('fill', '#8a86a860'); t.setAttribute('font-size', '9');
+      t.setAttribute('font-family', 'DM Mono'); t.setAttribute('text-anchor', 'middle');
+      t.textContent = label;
+      tlGroup.appendChild(t);
+    }
+  }
+}
+
+let chartLoading = false;
+async function loadChart(range, btn) {
+  if (btn) {
+    btn.closest('.time-pills').querySelectorAll('.time-pill').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+  if (chartLoading) return;
+  chartLoading = true;
+  const loading = document.getElementById('chart-loading');
+  if (loading) { loading.textContent = 'Loading…'; loading.removeAttribute('display'); }
+  const url = `/api/research/chart?range=${range}` + (state.demoMode ? '&demo=1' : '');
+  try {
+    const data = await apiJson(url);
+    if (data?.closes?.length) renderChart(data);
+  } catch (e) {
+    if (loading) loading.textContent = 'Chart unavailable';
+    console.warn('Chart fetch failed:', e);
+  } finally {
+    chartLoading = false;
+  }
 }
 
 // ===== TIME PILL SWITCHING =====
@@ -2259,6 +2554,39 @@ async function fetchLiveQuotes() {
     updateCryptoEl('live-eth-price', 'live-eth-chg', data.crypto?.eth, 0);
     updateCryptoEl('live-gold-price', 'live-gold-chg', gold, 0);
 
+    // --- Market pulse strip ---
+    const asxPct = asx200?.price && asx200?.prevClose && asx200.prevClose > 0
+      ? ((asx200.price - asx200.prevClose) / asx200.prevClose) * 100 : null;
+    const audPct = audUsd?.price && audUsd?.prevClose && audUsd.prevClose > 0
+      ? ((audUsd.price - audUsd.prevClose) / audUsd.prevClose) * 100 : null;
+    const btcPctVal = btc?.price && btc?.prevClose && btc.prevClose > 0
+      ? ((btc.price - btc.prevClose) / btc.prevClose) * 100 : null;
+    updateMarketPulse(vix?.price ?? null, asxPct, audPct, btcPctVal);
+
+    // --- Pulse signal chips ---
+    const sigVix = document.getElementById('sig-vix');
+    const sigAsx = document.getElementById('sig-asx');
+    const sigAud = document.getElementById('sig-aud');
+    const sigBtc = document.getElementById('sig-btc');
+    if (sigVix && vix?.price) {
+      sigVix.textContent = vix.price.toFixed(1);
+      sigVix.style.color = vix.price < 20 ? 'var(--green)' : vix.price < 30 ? 'var(--sl-amber)' : 'var(--red)';
+    }
+    if (sigAsx && asxPct !== null) {
+      const sign = asxPct >= 0 ? '+' : '';
+      sigAsx.textContent = `${sign}${asxPct.toFixed(2)}%`;
+      sigAsx.style.color = asxPct >= 0 ? 'var(--green)' : 'var(--red)';
+    }
+    if (sigAud && audUsd?.price) {
+      sigAud.textContent = audUsd.price.toFixed(4);
+      sigAud.style.color = audPct !== null ? (audPct >= 0 ? 'var(--green)' : 'var(--red)') : 'var(--sl-text)';
+    }
+    if (sigBtc && btcPctVal !== null) {
+      const sign = btcPctVal >= 0 ? '+' : '';
+      sigBtc.textContent = `${sign}${btcPctVal.toFixed(2)}%`;
+      sigBtc.style.color = btcPctVal >= 0 ? 'var(--green)' : 'var(--red)';
+    }
+
     // --- ASX stocks table + ticker ---
     const asxData = data.asx;
     if (asxData) {
@@ -2309,6 +2637,7 @@ document.addEventListener('DOMContentLoaded', () => {
   void loadSession();
   void fetchLiveQuotes();
   void fetchLiveMovers();
+  void loadChart('6m', null);
   void fetchLiveNews();
   setInterval(() => { void fetchLiveQuotes(); }, 5 * 60 * 1000);
   setInterval(() => { void fetchLiveMovers(); }, 10 * 60 * 1000);
