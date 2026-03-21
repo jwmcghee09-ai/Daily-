@@ -1542,7 +1542,10 @@ h3 { font-size: 1.15rem; }
 
       <!-- C. EARNINGS RESULTS -->
       <div class="card reveal" id="earnings-section">
-        <div class="section-label">Latest Earnings</div>
+        <div class="section-label" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>Latest Earnings</span>
+          <span style="font-size:0.6rem;color:var(--sl-muted);font-family:var(--font-mono);font-weight:400;">Last reported: H1 FY2026 · Feb 2026</span>
+        </div>
         <div class="tabs">
           <button class="tab-btn active" onclick="switchTab('earnings', 'bhp', this)">BHP</button>
           <button class="tab-btn" onclick="switchTab('earnings', 'cba', this)">CBA</button>
@@ -1586,7 +1589,10 @@ h3 { font-size: 1.15rem; }
 
       <!-- E. ANALYST SENTIMENT -->
       <div class="card reveal">
-        <div class="section-label">Analyst Sentiment — Bulls vs Bears</div>
+        <div class="section-label" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>Analyst Sentiment — Bulls vs Bears</span>
+          <span style="font-size:0.6rem;color:var(--sl-muted);font-family:var(--font-mono);font-weight:400;">Last updated: Mar 2026</span>
+        </div>
         <div class="tabs">
           <button class="tab-btn active" onclick="switchTab('sentiment', 'bhp', this)">BHP</button>
           <button class="tab-btn" onclick="switchTab('sentiment', 'cba', this)">CBA</button>
@@ -1635,7 +1641,10 @@ h3 { font-size: 1.15rem; }
 
       <!-- F. 3-YEAR FUNDAMENTALS -->
       <div class="card reveal">
-        <div class="section-label">3-Year Fundamentals</div>
+        <div class="section-label" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>3-Year Fundamentals</span>
+          <span style="font-size:0.6rem;color:var(--sl-muted);font-family:var(--font-mono);font-weight:400;">FY2023 – FY2025 · annual reports</span>
+        </div>
         <div class="tabs">
           <button class="tab-btn active" onclick="switchTab('fundamentals', 'bhp', this)">BHP</button>
           <button class="tab-btn" onclick="switchTab('fundamentals', 'cba', this)">CBA</button>
@@ -2214,6 +2223,16 @@ function renderChart(data) {
   if (dotI) { dotI.setAttribute('cx', lastX); dotI.setAttribute('cy', lastY); dotI.setAttribute('fill', color); }
   if (loading) loading.setAttribute('display', 'none');
 
+  // Period return subtitle
+  const RANGE_LABELS = { '1d':'day','1w':'week','1m':'month','3m':'3 months','6m':'6 months','1y':'year' };
+  const periodPct = ((closes[n-1] - closes[0]) / closes[0]) * 100;
+  const pSign = periodPct >= 0 ? '+' : '';
+  const pColor = periodPct >= 0 ? 'var(--green)' : 'var(--red)';
+  const chartSub = document.getElementById('chart-asx200-sub');
+  if (chartSub) {
+    chartSub.innerHTML = `<span style="color:${pColor};font-family:var(--font-mono);">${pSign}${periodPct.toFixed(2)}%</span> <span style="color:var(--sl-muted);">this ${RANGE_LABELS[data.range] ?? data.range}</span>`;
+  }
+
   // Price labels (Y axis)
   const step = priceRange / 3;
   [0, 1, 2].forEach(i => {
@@ -2475,11 +2494,6 @@ async function fetchLiveQuotes() {
         const { html, isPos } = fmtChgSpan(asx200.price, asx200.prevClose, null);
         const heroChg = document.getElementById('hero-asx200-chg');
         if (heroChg) { heroChg.className = `change ${isPos ? 'pos' : 'neg'}`; heroChg.innerHTML = html; }
-        const chg = asx200.price - asx200.prevClose;
-        const pct = (chg / asx200.prevClose) * 100;
-        const sign = chg >= 0 ? '+' : '';
-        const chartSub = document.getElementById('chart-asx200-sub');
-        if (chartSub) chartSub.textContent = `${sign}${chg.toFixed(2)} (${sign}${pct.toFixed(2)}%) today`;
       }
     }
 
