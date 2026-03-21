@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import { getAuthenticatedUser } from "@/lib/auth";
-import { readUserEntitlements } from "@/lib/db";
 import LandingPage from "@/components/marketing/landing-page";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
@@ -8,10 +7,6 @@ type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 export default async function Home(props: { searchParams: SearchParams }) {
   const user = await getAuthenticatedUser();
   if (user) {
-    const entitlements = readUserEntitlements(user.id);
-    if (entitlements.planTier === "none" && !entitlements.proEnabled) {
-      redirect("/signin?mode=login&plan=plus");
-    }
     redirect("/dashboard?mode=account");
   }
 

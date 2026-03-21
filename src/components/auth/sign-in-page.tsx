@@ -184,7 +184,7 @@ export default function SignInPage({
       setBanner({ tone: "success", message: `Welcome, ${normalizedUser.displayName}.` });
 
       if (selectedPlan === "free") {
-        router.push("/dashboard");
+        router.push("/dashboard?mode=account");
         router.refresh();
         return;
       }
@@ -205,7 +205,7 @@ export default function SignInPage({
 
   async function startCheckout(plan: CheckoutPlan, guestEmail?: string) {
     if (plan === "free") {
-      router.push("/dashboard");
+      router.push("/dashboard?mode=account");
       router.refresh();
       return;
     }

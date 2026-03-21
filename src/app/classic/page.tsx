@@ -1628,7 +1628,7 @@ export default function Home() {
     }
 
     if (plan === "free") {
-      window.location.assign("/dashboard");
+      window.location.assign("/dashboard?mode=account");
       return;
     }
 
