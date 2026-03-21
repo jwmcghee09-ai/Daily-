@@ -57,24 +57,24 @@ const workflowSteps: readonly WorkflowStep[] = [
 const researchSteps: readonly WorkflowStep[] = [
   {
     number: "01 — SCAN",
-    title: "Read ASX Market Pulse",
+    title: "Get the Full Market Picture",
     copy:
-      "Start with ASX leadership, sector pressure, macro backdrop, and cross-asset sentiment before drilling into your holdings.",
+      "Open the terminal to see live ASX 200, AUD/USD, VIX fear index, Gold, BTC and ETH side by side. Scan sector pressure, US movers and a live news feed tagged by theme before touching your portfolio.",
     icon: <PulseIcon />,
   },
   {
     number: "02 — COMPARE",
-    title: "Review Earnings & Peers",
+    title: "Drill Into Stocks & Earnings",
     copy:
-      "Check earnings snapshots, peer sets, and operating context so a holding is judged against its market environment, not in isolation.",
+      "Review 15 ASX blue chips with live PE ratios, dividend yields and 52-week ranges. Compare against the latest earnings snapshots and analyst bull/bear cases so each holding is judged against its actual operating context.",
     icon: <GridIcon />,
     alt: true,
   },
   {
     number: "03 — ACT",
-    title: "Bring Context Into Risk Decisions",
+    title: "Trade With Market Conviction",
     copy:
-      "Move from research into your dashboard with clearer conviction around concentration, downside pressure, and what is driving current market moves.",
+      "Return to your risk dashboard with a clear view of what is driving the market. Make concentration, rebalancing and dip alert decisions backed by the same macro data that professional analysts use.",
     icon: <BarsIcon />,
   },
 ] as const;
@@ -437,7 +437,7 @@ export default function LandingPage({
           <div className={styles.sectionLabel}>ASX Market Research</div>
           <h2 className={styles.sectionTitle}>From ASX market context to portfolio conviction.</h2>
           <p className={styles.sectionSub}>
-            SPECTRE Research gives Plus and Pro members a dedicated ASX market research view for leadership, earnings snapshots, macro context, sector pressure, and cross-asset sentiment.
+            SPECTRE Research gives Plus and Pro members a full-page terminal with live indices, blue-chip fundamentals, earnings snapshots, analyst sentiment, sector pressure, and cross-asset data — all updated in real time so portfolio decisions are made with the full market backdrop in view.
           </p>
 
           <div className={styles.steps}>
@@ -452,6 +452,27 @@ export default function LandingPage({
                 <h3>{step.title}</h3>
                 <p>{step.copy}</p>
               </article>
+            ))}
+          </div>
+
+          <div className={`${styles.researchHighlights} ${styles.reveal}`}>
+            {[
+              { name: "6 Live Market Cards", sub: "ASX 200, AUD/USD, VIX, Gold, BTC, ETH refreshing every 5 minutes", alt: false },
+              { name: "15 ASX Blue Chips", sub: "Price, daily change, P/E, dividend yield, 52-week range and trend sparklines", alt: false },
+              { name: "Earnings Snapshots", sub: "BHP & CBA H1 FY26 results with beat/miss status and key metrics", alt: false },
+              { name: "Bull & Bear Sentiment", sub: "Analyst bull and bear cases with price targets for major ASX holdings", alt: true },
+              { name: "US Market Movers", sub: "Live gainers, losers and most active from US markets via Yahoo Finance screener", alt: true },
+              { name: "Live News Feed", sub: "Yahoo Finance and ABC Business headlines tagged by theme: RBA, inflation, ASX, crypto and more", alt: true },
+            ].map((tile) => (
+              <div key={tile.name} className={styles.researchTile}>
+                <div className={`${styles.researchTileIcon} ${tile.alt ? styles.researchTileIconAlt : ""}`}>
+                  <BarsIcon />
+                </div>
+                <div>
+                  <div className={styles.researchTileName}>{tile.name}</div>
+                  <div className={styles.researchTileSub}>{tile.sub}</div>
+                </div>
+              </div>
             ))}
           </div>
 

@@ -328,7 +328,7 @@ h3 { font-size: 1.15rem; }
 /* ===== HERO METRICS ROW ===== */
 .hero-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 16px;
   margin: 24px 0;
 }
@@ -457,7 +457,7 @@ h3 { font-size: 1.15rem; }
 /* ===== MAIN BENTO GRID ===== */
 .main-grid {
   display: grid;
-  grid-template-columns: 1fr 380px;
+  grid-template-columns: 1fr 400px;
   gap: 20px;
   margin-bottom: 32px;
 }
@@ -1020,7 +1020,7 @@ h3 { font-size: 1.15rem; }
 /* ===== BOTTOM SECTION ===== */
 .bottom-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1.4fr;
   gap: 20px;
   margin-bottom: 32px;
 }
@@ -1227,7 +1227,11 @@ h3 { font-size: 1.15rem; }
   .sentiment-cols { grid-template-columns: 1fr; }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 640px) {
+  .hero-grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 420px) {
   .hero-grid { grid-template-columns: 1fr; }
   .container { padding: 0 12px; }
 }
@@ -1286,52 +1290,43 @@ h3 { font-size: 1.15rem; }
     <!-- ASX 200 -->
     <div class="card hero-card card-glow">
       <div class="label">S&P/ASX 200</div>
-      <div class="value"><span id="hero-asx200-price" class="countup" data-target="8443.4" data-decimals="1">0</span></div>
-      <div id="hero-asx200-chg" class="change neg">
-        <span class="mono">−54.40 (−0.64%)</span>
-      </div>
-      <div class="hero-sparkline">
-        <svg class="sparkline-svg" viewBox="0 0 72 24" fill="none" style="width:100%;height:40px;">
-          <defs>
-            <linearGradient id="asx-grad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#9b5de5" stop-opacity="0.4"/>
-              <stop offset="100%" stop-color="#9b5de5" stop-opacity="0"/>
-            </linearGradient>
-          </defs>
-          <path d="M0,20 L6,18 L12,16 L18,14 L24,10 L30,8 L36,6 L42,4 L48,6 L54,8 L60,12 L66,16 L72,18" stroke="#9b5de5" stroke-width="1.5" fill="none"/>
-          <path d="M0,20 L6,18 L12,16 L18,14 L24,10 L30,8 L36,6 L42,4 L48,6 L54,8 L60,12 L66,16 L72,18 L72,24 L0,24Z" fill="url(#asx-grad)"/>
-        </svg>
-      </div>
+      <div class="value"><span id="hero-asx200-price" class="mono" style="font-size:1.8rem;font-weight:600;">Loading…</span></div>
+      <div id="hero-asx200-chg" class="change" style="margin-top:6px;">—</div>
     </div>
 
-    <!-- Market Pulse -->
+    <!-- AUD/USD -->
     <div class="card hero-card card-glow">
-      <div class="label">Market Pulse</div>
-      <div class="pulse-badge">
-        <span class="pulse-ring"></span>
-        BEARISH
-      </div>
-      <p style="font-size:0.72rem;color:var(--sl-muted);margin-top:10px;line-height:1.5;">
-        RBA hiked to 4.10% · ASX 200 down 54pts · Iron ore under pressure
-      </p>
+      <div class="label">AUD / USD</div>
+      <div class="value"><span id="hero-audusd-price" class="mono" style="font-size:1.8rem;font-weight:600;">Loading…</span></div>
+      <div id="hero-audusd-chg" class="change" style="margin-top:6px;">—</div>
+    </div>
+
+    <!-- VIX -->
+    <div class="card hero-card card-glow">
+      <div class="label">CBOE VIX</div>
+      <div class="value"><span id="hero-vix-price" class="mono" style="font-size:1.8rem;font-weight:600;">Loading…</span></div>
+      <div id="hero-vix-label" style="font-size:0.72rem;margin-top:6px;color:var(--sl-muted);">Loading…</div>
     </div>
 
     <!-- Gold -->
     <div class="card hero-card card-glow">
       <div class="label">Gold (XAU/AUD)</div>
-      <div class="value">$<span id="hero-gold-price" class="countup" data-target="4637" data-decimals="0">0</span></div>
-      <div id="hero-gold-chg" class="change neg">
-        <span class="mono">−$13.52 (−0.29%)</span>
-      </div>
+      <div class="value">$<span id="hero-gold-price" class="mono" style="font-size:1.8rem;font-weight:600;">Loading…</span></div>
+      <div id="hero-gold-chg" class="change" style="margin-top:6px;">—</div>
     </div>
 
     <!-- Bitcoin -->
     <div class="card hero-card card-glow">
       <div class="label">Bitcoin (BTC/USD)</div>
-      <div class="value">$<span id="hero-btc-price" class="countup" data-target="70695" data-decimals="0">0</span></div>
-      <div id="hero-btc-chg" class="change pos">
-        <span class="mono">+$776.82 (+1.11%)</span>
-      </div>
+      <div class="value">$<span id="hero-btc-price" class="mono" style="font-size:1.8rem;font-weight:600;">Loading…</span></div>
+      <div id="hero-btc-chg" class="change" style="margin-top:6px;">—</div>
+    </div>
+
+    <!-- Ethereum -->
+    <div class="card hero-card card-glow">
+      <div class="label">Ethereum (ETH/USD)</div>
+      <div class="value">$<span id="hero-eth-price" class="mono" style="font-size:1.8rem;font-weight:600;">Loading…</span></div>
+      <div id="hero-eth-chg" class="change" style="margin-top:6px;">—</div>
     </div>
   </section>
 
@@ -1452,60 +1447,6 @@ h3 { font-size: 1.15rem; }
             <div class="metric-item"><div class="metric-label">CET1 Ratio</div><div class="metric-val">12.3%</div></div>
             <div class="metric-item"><div class="metric-label">Interim Div</div><div class="metric-val">A$2.35/sh FF</div></div>
             <div class="metric-item"><div class="metric-label">Payout Ratio</div><div class="metric-val">74%</div></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- D. BHP SEGMENT BREAKDOWN -->
-      <div class="card reveal">
-        <div class="section-label">BHP Segment Revenue Breakdown</div>
-        <div class="seg-chart-row">
-          <div class="seg-bar-group">
-            <div class="seg-bar-stack" style="height:100%;">
-              <div class="seg-piece" style="height:3.7%;background:#8a86a8;" title="Other $2.0B"></div>
-              <div class="seg-piece" style="height:20.4%;background:#ff4b33;" title="Coal $11.0B"></div>
-              <div class="seg-piece" style="height:46.1%;background:#9b5de5;" title="Iron Ore $24.8B"></div>
-              <div class="seg-piece" style="height:29.7%;background:#c084fc;" title="Copper $16.0B"></div>
-            </div>
-            <div class="seg-bar-label">FY23</div>
-          </div>
-          <div class="seg-bar-group">
-            <div class="seg-bar-stack" style="height:100%;">
-              <div class="seg-piece" style="height:2.7%;background:#8a86a8;" title="Other $1.5B"></div>
-              <div class="seg-piece" style="height:13.8%;background:#ff4b33;" title="Coal $7.7B"></div>
-              <div class="seg-piece" style="height:50.2%;background:#9b5de5;" title="Iron Ore $28.0B"></div>
-              <div class="seg-piece" style="height:33.3%;background:#c084fc;" title="Copper $18.6B"></div>
-            </div>
-            <div class="seg-bar-label">FY24</div>
-          </div>
-          <div class="seg-bar-group">
-            <div class="seg-bar-stack" style="height:100%;">
-              <div class="seg-piece" style="height:1.6%;background:#8a86a8;" title="Other $0.8B"></div>
-              <div class="seg-piece" style="height:9.8%;background:#ff4b33;" title="Coal $5.0B"></div>
-              <div class="seg-piece" style="height:44.7%;background:#9b5de5;" title="Iron Ore $22.9B"></div>
-              <div class="seg-piece" style="height:43.9%;background:#c084fc;" title="Copper $22.5B"></div>
-            </div>
-            <div class="seg-bar-label">FY25</div>
-          </div>
-        </div>
-        <div class="seg-legend">
-          <div class="seg-legend-item"><div class="seg-legend-dot" style="background:#c084fc;"></div> Copper</div>
-          <div class="seg-legend-item"><div class="seg-legend-dot" style="background:#9b5de5;"></div> Iron Ore</div>
-          <div class="seg-legend-item"><div class="seg-legend-dot" style="background:#ff4b33;"></div> Coal</div>
-          <div class="seg-legend-item"><div class="seg-legend-dot" style="background:#8a86a8;"></div> Other</div>
-        </div>
-        <div class="kpi-row">
-          <div class="kpi-box">
-            <div class="kpi-val"><span class="countup" data-target="2016.7" data-decimals="1">0</span><span style="font-size:0.7rem;color:var(--sl-muted);"> kt</span></div>
-            <div class="kpi-label">Copper Production (FY25)</div>
-          </div>
-          <div class="kpi-box">
-            <div class="kpi-val"><span class="countup" data-target="263" data-decimals="0">0</span><span style="font-size:0.7rem;color:var(--sl-muted);"> Mt</span></div>
-            <div class="kpi-label">Iron Ore Production (FY25)</div>
-          </div>
-          <div class="kpi-box">
-            <div class="kpi-val" style="color:var(--green);">51%</div>
-            <div class="kpi-label">Copper % of EBITDA</div>
           </div>
         </div>
       </div>
@@ -1667,7 +1608,7 @@ h3 { font-size: 1.15rem; }
       </div>
 
       <!-- I. NEWS -->
-      <div class="card reveal">
+      <div class="card reveal" style="flex:1;min-height:260px;">
         <div class="section-label">News & Market Context</div>
         <div class="news-list" id="newsList"></div>
       </div>
