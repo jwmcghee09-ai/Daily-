@@ -15,7 +15,7 @@ import {
   normalizeDisplayName,
   normalizeEmail,
 } from "@/lib/auth";
-import { isEmailDeliveryConfigured, sendAccountVerificationEmail } from "@/lib/mailer";
+import { isEmailDeliveryConfigured, isOperationalAlertConfigured, sendAccountVerificationEmail, sendOperationalAlertEmail } from "@/lib/mailer";
 import { consumeRateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
@@ -94,6 +94,17 @@ export async function POST(request: Request) {
         { error: "Account created, but verification email failed to send. Use resend verification." },
         { status: 502 },
       );
+    }
+
+    if (isOperationalAlertConfigured()) {
+      sendOperationalAlertEmail({
+        subject: "New SPECTRE signup",
+        lines: [
+          `Name: ${user.displayName}`,
+          `Email: ${user.email}`,
+          `Signed up: ${new Date().toUTCString()}`,
+        ],
+      }).catch((err) => console.error("New user alert email failed", err));
     }
 
     return NextResponse.json({
