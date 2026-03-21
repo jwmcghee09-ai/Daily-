@@ -974,6 +974,18 @@ h3 { font-size: 1.15rem; }
 .tag-asx { background: rgba(155, 93, 229, 0.15); color: var(--sl-purple-hi); }
 .tag-china { background: rgba(255, 77, 26, 0.15); color: var(--accent-mid); }
 
+.news-headline-link {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--sl-text);
+  text-decoration: none;
+  line-height: 1.4;
+  margin: 4px 0;
+  transition: color 0.15s;
+}
+.news-headline-link:hover { color: var(--sl-purple-hi); }
+
 .news-headline {
   font-size: 0.75rem;
   color: var(--sl-text);
@@ -1900,15 +1912,35 @@ function buildTicker() {
 }
 
 // ===== BUILD NEWS =====
-function buildNews() {
+function buildNews(items) {
   const list = document.getElementById('newsList');
-  list.innerHTML = DATA.news.map(n => `
-    <div class="news-item">
-      <span class="news-tag ${n.cls}">${n.tag}</span>
-      <div class="news-headline">${n.headline}</div>
-      <div class="news-meta">${n.date} · ${n.source}</div>
-    </div>
-  `).join('');
+  if (!list) return;
+  if (!items || items.length === 0) {
+    list.innerHTML = '<div style="font-size:0.72rem;color:var(--sl-muted);padding:8px 0;">No news available.</div>';
+    return;
+  }
+  list.innerHTML = items.map(n => {
+    const headline = n.url
+      ? `<a href="${escapeHtml(n.url)}" target="_blank" rel="noopener noreferrer" class="news-headline-link">${escapeHtml(n.headline)}</a>`
+      : `<div class="news-headline">${escapeHtml(n.headline)}</div>`;
+    return `<div class="news-item">
+      <span class="news-tag">${escapeHtml(n.tag)}</span>
+      ${headline}
+      <div class="news-meta">${escapeHtml(n.date)} · ${escapeHtml(n.source)}</div>
+    </div>`;
+  }).join('');
+}
+
+async function fetchLiveNews() {
+  const list = document.getElementById('newsList');
+  if (list) list.innerHTML = '<div style="font-size:0.72rem;color:var(--sl-muted);padding:8px 0;">Loading news…</div>';
+  const url = '/api/research/news' + (state.demoMode ? '?demo=1' : '');
+  try {
+    const data = await apiJson(url);
+    buildNews(data?.news ?? []);
+  } catch {
+    buildNews([]);
+  }
 }
 
 // ===== BUILD US MOVERS =====
@@ -2287,8 +2319,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   buildTicker();
   buildStockTable();
-  buildNews();
   buildMovers();
+  void fetchLiveNews();
   buildSectorBars();
   animateCountups();
   animateBars();
