@@ -1344,13 +1344,91 @@ h3 { font-size: 1.15rem; }
   .sentiment-cols { grid-template-columns: 1fr; }
 }
 
-@media (max-width: 640px) {
-  .hero-grid { grid-template-columns: 1fr 1fr; }
-}
+/* ===== iPHONE / MOBILE (≤480px) ===== */
+@media (max-width: 480px) {
 
-@media (max-width: 420px) {
-  .hero-grid { grid-template-columns: 1fr; }
-  .container { padding: 0 12px; }
+  /* --- Nav --- */
+  .nav-inner { padding: 0 14px; height: 52px; }
+  .nav-right { gap: 6px; }
+  .nav-right > span:first-child { display: none; } /* hide date */
+  .nav-user { display: none; }
+  .nav-btn { padding: 5px 10px; font-size: 0.6rem; }
+  .nav-status { font-size: 0.58rem; padding: 3px 8px; gap: 4px; }
+
+  /* --- Ticker tape --- */
+  .ticker-item { padding: 8px 16px; font-size: 0.66rem; }
+
+  /* --- Container --- */
+  .container { padding: 0 14px; }
+
+  /* --- Hero intro --- */
+  .hero-intro { padding: 18px; border-radius: 16px; margin: 20px 0 16px; }
+  .hero-heading { font-size: clamp(1.7rem, 9vw, 2.4rem); line-height: 1.08; margin: 12px 0 10px; }
+  .hero-copy { font-size: 0.8rem; line-height: 1.7; }
+
+  /* --- Hero metrics grid --- */
+  .hero-grid { grid-template-columns: 1fr 1fr; gap: 10px; margin: 16px 0; }
+  .hero-card { padding: 14px 16px; }
+  .hero-card .label { font-size: 0.58rem; margin-bottom: 6px; }
+  .hero-card .value { font-size: 1.3rem; }
+  .hero-card .value span { font-size: 1.3rem !important; }
+  .hero-card .change { font-size: 0.68rem; margin-top: 4px; }
+
+  /* --- Cards --- */
+  .card { padding: 16px; border-radius: 14px; }
+  .card:hover { transform: none; } /* disable lift on touch */
+
+  /* --- Section labels with last-reported --- */
+  .section-label { display: flex !important; flex-direction: column !important;
+    align-items: flex-start !important; gap: 3px; }
+
+  /* --- Chart --- */
+  .chart-title-group .chart-val { font-size: 1.55rem; }
+  .chart-title-group .chart-sub { font-size: 0.68rem; }
+  .time-pills { gap: 3px; flex-wrap: wrap; justify-content: flex-end; }
+  .time-pill { font-size: 0.58rem; padding: 4px 8px; }
+  .chart-svg { height: 180px; }
+
+  /* --- ASX 200 table --- */
+  .table-wrap { margin: 0 -16px; padding: 0; }
+  .data-table thead th { font-size: 0.55rem; padding: 8px 7px; }
+  .data-table tbody td { font-size: 0.66rem; padding: 8px 7px; }
+  .range-bar { width: 44px; }
+
+  /* --- Tabs --- */
+  .tabs { gap: 4px; flex-wrap: wrap; }
+  .tab-btn { font-size: 0.62rem; padding: 5px 11px; }
+
+  /* --- Earnings metrics grid --- */
+  .metrics-grid { grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+  .metric-item { padding: 10px 12px; }
+  .metric-item .metric-val { font-size: 0.85rem; }
+
+  /* --- BHP segment bars --- */
+  .seg-chart-row { height: 130px; padding: 0 8px; gap: 10px; }
+  .seg-bar-label { font-size: 0.58rem; }
+
+  /* --- KPI boxes --- */
+  .kpi-row { gap: 8px; flex-wrap: wrap; }
+  .kpi-box { flex: 1 1 calc(50% - 4px); min-width: 0; padding: 10px 8px; }
+  .kpi-box .kpi-val { font-size: 1rem; }
+  .kpi-box .kpi-label { font-size: 0.55rem; }
+
+  /* --- Fundamentals table --- */
+  .fund-table { font-size: 0.66rem; }
+  .fund-table th, .fund-table td { padding: 7px 8px; }
+
+  /* --- Sector performance bars --- */
+  .sector-bar-name { width: 68px; font-size: 0.6rem; }
+  .sector-bar-val { font-size: 0.6rem; width: 52px; }
+  .sector-bar-track { height: 16px; }
+
+  /* --- Market pulse strip --- */
+  .market-pulse-strip { grid-template-columns: 1fr; gap: 10px; }
+
+  /* --- Footer --- */
+  .footer { padding: 24px 14px; }
+  .footer-text { font-size: 0.58rem; }
 }
 
 /* Table wrapper */
