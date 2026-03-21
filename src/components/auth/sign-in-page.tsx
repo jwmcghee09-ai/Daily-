@@ -8,6 +8,7 @@ import styles from "./sign-in-page.module.css";
 
 type AuthMode = "login" | "register";
 type CheckoutPlan = "free" | "plus" | "pro";
+type SubMode = "default" | "forgot" | "reset";
 
 interface SessionUser {
   id: string;
@@ -43,6 +44,7 @@ export default function SignInPage({
 }) {
   const router = useRouter();
   const [authMode, setAuthMode] = useState<AuthMode>(initialMode);
+  const [subMode, setSubMode] = useState<SubMode>("default");
   const [selectedPlan, setSelectedPlan] = useState<CheckoutPlan>(initialPlan ?? "free");
   const [hasRequestedCheckout, setHasRequestedCheckout] = useState(Boolean(initialPlan));
   const [email, setEmail] = useState(authenticatedUser?.email ?? "");
@@ -50,11 +52,14 @@ export default function SignInPage({
   const [displayName, setDisplayName] = useState(authenticatedUser?.displayName ?? "");
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [resetToken, setResetToken] = useState("");
+  const [newPassword, setNewPassword] = useState("");
   const [working, setWorking] = useState(false);
   const [checkoutWorking, setCheckoutWorking] = useState(false);
   const [authError, setAuthError] = useState("");
   const [banner, setBanner] = useState<{ tone: "success" | "info" | "error"; message: string } | null>(null);
   const [sessionUser, setSessionUser] = useState<SessionUser | null>(null);
+  const [showVerificationLinks, setShowVerificationLinks] = useState(false);
   const activeSessionHasPaidAccess = sessionUser ? userHasPaidAccess(sessionUser) : false;
 
   useEffect(() => {
@@ -62,7 +67,8 @@ export default function SignInPage({
       setAuthMode("login");
       setBanner({ tone: "success", message: "Email verified. You can now sign in." });
     } else if (verificationState === "invalid") {
-      setBanner({ tone: "error", message: "Verification link is invalid or expired. Click Resend Verification." });
+      setBanner({ tone: "error", message: "Verification link is invalid or expired." });
+      setShowVerificationLinks(true);
     } else if (verificationState === "rate_limited") {
       setBanner({ tone: "error", message: "Too many verification attempts. Please wait and try again." });
     }
@@ -74,14 +80,10 @@ export default function SignInPage({
     const loadSession = async () => {
       try {
         const response = await fetch("/api/auth/session", { cache: "no-store" });
-        if (!response.ok) {
-          return;
-        }
+        if (!response.ok) return;
 
         const payload = (await response.json()) as AuthSessionPayload;
-        if (cancelled || !payload.authenticated || !payload.user) {
-          return;
-        }
+        if (cancelled || !payload.authenticated || !payload.user) return;
 
         setSessionUser(normalizeSessionUser(payload.user));
         setEmail(payload.user.email);
@@ -92,16 +94,42 @@ export default function SignInPage({
     };
 
     void loadSession();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, []);
 
   const planLabel = selectedPlan === "pro" ? "Pro" : selectedPlan === "plus" ? "Plus" : "Free";
-  const accessFlowLabel =
-    authMode === "register" || !activeSessionHasPaidAccess
-      ? `Create account + ${planLabel} checkout`
-      : "Existing account access";
+
+  function switchToLogin() {
+    setAuthMode("login");
+    setSubMode("default");
+    setHasRequestedCheckout(false);
+    setAcceptTerms(false);
+    setShowPassword(false);
+    setAuthError("");
+    setBanner(null);
+  }
+
+  function switchToRegister() {
+    setAuthMode("register");
+    setSubMode("default");
+    setHasRequestedCheckout(true);
+    setAcceptTerms(false);
+    setShowPassword(false);
+    setAuthError("");
+    setBanner(null);
+  }
+
+  function openForgot() {
+    setSubMode("forgot");
+    setAuthError("");
+    setBanner(null);
+  }
+
+  function openReset() {
+    setSubMode("reset");
+    setAuthError("");
+    setBanner(null);
+  }
 
   async function submitAuth(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -137,9 +165,10 @@ export default function SignInPage({
         setAuthMode("login");
         setPassword("");
         setAcceptTerms(false);
+        setShowVerificationLinks(true);
         setBanner({
           tone: "info",
-          message: payload.message || `Account created. Check your email to verify before signing in, then continue with ${planLabel}.`,
+          message: payload.message || `Account created! Check your email to verify, then sign in to continue with ${planLabel}.`,
         });
         return;
       }
@@ -152,7 +181,7 @@ export default function SignInPage({
       setSessionUser(normalizedUser);
       setPassword("");
       setAcceptTerms(false);
-      setBanner({ tone: "success", message: `Signed in as ${normalizedUser.displayName}.` });
+      setBanner({ tone: "success", message: `Welcome, ${normalizedUser.displayName}.` });
 
       if (selectedPlan === "free") {
         router.push("/dashboard");
@@ -219,7 +248,7 @@ export default function SignInPage({
   async function resendVerificationEmail() {
     const emailInput = email.trim();
     if (!emailInput) {
-      setAuthError("Enter your email, then click Resend Verification.");
+      setAuthError("Enter your email address above, then click Resend.");
       return;
     }
 
@@ -246,9 +275,11 @@ export default function SignInPage({
     }
   }
 
-  async function requestPasswordReset() {
-    const emailInput = window.prompt("Enter your account email for password reset:", email);
+  async function submitForgotPassword(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const emailInput = email.trim();
     if (!emailInput) {
+      setAuthError("Enter your account email.");
       return;
     }
 
@@ -267,11 +298,8 @@ export default function SignInPage({
       }
 
       const payload = (await response.json()) as { message?: string };
-      setEmail(emailInput);
-      setBanner({
-        tone: "info",
-        message: payload.message || "If an account exists, reset instructions were generated.",
-      });
+      setBanner({ tone: "info", message: payload.message || "If an account exists, reset instructions were sent." });
+      setSubMode("reset");
     } catch (error) {
       setAuthError(error instanceof Error ? error.message : "Could not start password reset.");
     } finally {
@@ -279,14 +307,10 @@ export default function SignInPage({
     }
   }
 
-  async function completePasswordReset() {
-    const token = window.prompt("Paste your reset token:", "");
-    if (!token) {
-      return;
-    }
-
-    const newPassword = window.prompt("Enter new password (min 8 chars):", "");
-    if (!newPassword) {
+  async function submitResetPassword(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!resetToken.trim() || !newPassword.trim()) {
+      setAuthError("Enter your reset token and new password.");
       return;
     }
 
@@ -297,16 +321,19 @@ export default function SignInPage({
       const response = await fetch("/api/auth/password/reset", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, newPassword }),
+        body: JSON.stringify({ token: resetToken.trim(), newPassword }),
       });
 
       if (!response.ok) {
         throw new Error(await parseApiError(response, "Password reset failed."));
       }
 
+      setSubMode("default");
       setAuthMode("login");
       setPassword("");
-      setBanner({ tone: "success", message: "Password reset complete. Please sign in with your new password." });
+      setResetToken("");
+      setNewPassword("");
+      setBanner({ tone: "success", message: "Password reset. Sign in with your new password." });
     } catch (error) {
       setAuthError(error instanceof Error ? error.message : "Password reset failed.");
     } finally {
@@ -323,7 +350,7 @@ export default function SignInPage({
           </Link>
           <div className={styles.topbarActions}>
             <Link href="/" className={`${styles.button} ${styles.ghostButton}`}>
-              Back to Landing
+              Back
             </Link>
             <Link href="/dashboard?demo=1" className={`${styles.button} ${styles.demoButton}`}>
               Live Demo
@@ -333,29 +360,25 @@ export default function SignInPage({
 
         <div className={styles.grid}>
           <aside className={styles.sideCard}>
-            <div className={styles.pill}>Secure Access</div>
+            <div className={styles.pill}>Portfolio Intelligence</div>
             <h1>
-              Access your portfolio risk workspace <span>without losing context.</span>
+              Know your real risk <span>before the market does.</span>
             </h1>
             <p>
-              Use the same SPECTRE theme, pricing, and live auth and billing routes already wired into this app.
+              SPECTRE scores your ASX, crypto, and super holdings against live risk signals — concentration, drawdown, volatility, and more — in one unified dashboard.
             </p>
-            <div className={styles.planCallout}>
-              Flow: <strong>{accessFlowLabel}</strong>
-              <span>{selectedPlan === "pro" ? "$9.99/month" : selectedPlan === "plus" ? "$2.99/month" : "Free"}</span>
-            </div>
 
             <ul className={styles.pointList}>
-              <li>Login, registration, verification resend, and password reset use the existing auth APIs.</li>
-              <li>Plus and Pro buttons post to the live Stripe checkout route already configured in this repo.</li>
-              <li>Live demo, privacy, terms, and contact links are all wired to current routes.</li>
-              <li>Creating a new account continues directly into the selected paid checkout flow.</li>
+              <li>Import from any broker, exchange, or super fund in minutes.</li>
+              <li>One clear risk score with VaR95, drawdown, and sector breakdown.</li>
+              <li>Dip alerts delivered to your inbox when prices hit your threshold.</li>
+              <li>Your data is encrypted, never sold, and deletable at any time.</li>
             </ul>
 
             <div className={styles.sideMeta}>
               <div>
                 <span>Live demo</span>
-                <Link href="/dashboard?demo=1">Open demo</Link>
+                <Link href="/dashboard?demo=1">Explore</Link>
               </div>
               <div>
                 <span>Terms</span>
@@ -370,191 +393,264 @@ export default function SignInPage({
 
           <section className={styles.formCard}>
             <div className={styles.cardTop}>
-              <div className={styles.cardUrl}>secure.spectre-assets.com / sign-in</div>
+              <div className={styles.cardUrl}>spectre-assets.com / sign-in</div>
             </div>
 
             <div className={styles.cardBody}>
-              <div className={styles.sectionLabel}>Account Access</div>
-              <h2>{authMode === "register" ? "Create your SPECTRE workspace" : "Sign in to SPECTRE"}</h2>
-              <p>
-                {sessionUser
-                  ? activeSessionHasPaidAccess
-                    ? `Signed in as ${sessionUser.displayName}. Open your dashboard directly.`
-                    : `Signed in as ${sessionUser.displayName}. Continue with ${planLabel} checkout to activate access.`
-                  : authMode === "register"
-                    ? "Create your account, then continue with the paid plan you selected."
-                    : "Sign in to your paid SPECTRE workspace, or create a new account and continue through checkout."}
-              </p>
+              {subMode === "forgot" ? (
+                <>
+                  <div className={styles.sectionLabel}>Password Reset</div>
+                  <h2>Forgot your password?</h2>
+                  <p>Enter your account email and we&apos;ll send reset instructions.</p>
 
-              {banner ? (
-                <div className={`${styles.banner} ${banner.tone === "success" ? styles.bannerSuccess : banner.tone === "error" ? styles.bannerError : styles.bannerInfo}`}>
-                  {banner.message}
-                </div>
-              ) : null}
-              {authError ? <div className={`${styles.banner} ${styles.bannerError}`}>{authError}</div> : null}
+                  {banner ? (
+                    <div className={`${styles.banner} ${banner.tone === "success" ? styles.bannerSuccess : banner.tone === "error" ? styles.bannerError : styles.bannerInfo}`}>
+                      {banner.message}
+                    </div>
+                  ) : null}
+                  {authError ? <div className={`${styles.banner} ${styles.bannerError}`}>{authError}</div> : null}
 
-              {!sessionUser ? (
-                <form className={styles.formGrid} onSubmit={submitAuth}>
-                  <label>
-                    <span>Email</span>
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(event) => setEmail(event.target.value)}
-                      placeholder="you@example.com"
-                      autoComplete="email"
-                      required
-                    />
-                  </label>
-
-                  <label>
-                    <span>Password</span>
-                    <div className={styles.passwordRow}>
+                  <form className={styles.formGrid} onSubmit={submitForgotPassword}>
+                    <label>
+                      <span>Email</span>
                       <input
-                        type={showPassword ? "text" : "password"}
-                        value={password}
-                        onChange={(event) => setPassword(event.target.value)}
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="you@example.com"
+                        autoComplete="email"
+                        required
+                      />
+                    </label>
+                    <button type="submit" className={`${styles.button} ${styles.primaryButton} ${styles.fullButton}`} disabled={working}>
+                      {working ? "Sending..." : "Send Reset Link"}
+                    </button>
+                  </form>
+
+                  <div className={styles.linkRow}>
+                    <button type="button" className={styles.textButton} onClick={() => openReset()}>
+                      I have a reset token
+                    </button>
+                    <button type="button" className={styles.textButton} onClick={switchToLogin}>
+                      Back to sign in
+                    </button>
+                  </div>
+                </>
+              ) : subMode === "reset" ? (
+                <>
+                  <div className={styles.sectionLabel}>New Password</div>
+                  <h2>Reset your password</h2>
+                  <p>Paste the token from your email and choose a new password.</p>
+
+                  {banner ? (
+                    <div className={`${styles.banner} ${banner.tone === "success" ? styles.bannerSuccess : banner.tone === "error" ? styles.bannerError : styles.bannerInfo}`}>
+                      {banner.message}
+                    </div>
+                  ) : null}
+                  {authError ? <div className={`${styles.banner} ${styles.bannerError}`}>{authError}</div> : null}
+
+                  <form className={styles.formGrid} onSubmit={submitResetPassword}>
+                    <label>
+                      <span>Reset Token</span>
+                      <input
+                        type="text"
+                        value={resetToken}
+                        onChange={(e) => setResetToken(e.target.value)}
+                        placeholder="Paste token from email"
+                        required
+                      />
+                    </label>
+                    <label>
+                      <span>New Password</span>
+                      <input
+                        type="password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
                         placeholder="Minimum 8 characters"
-                        autoComplete={authMode === "register" ? "new-password" : "current-password"}
+                        autoComplete="new-password"
                         minLength={8}
                         required
                       />
-                      <button
-                        type="button"
-                        className={styles.toggleButton}
-                        onClick={() => setShowPassword((current) => !current)}
-                      >
-                        {showPassword ? "Hide" : "Show"}
-                      </button>
-                    </div>
-                  </label>
+                    </label>
+                    <button type="submit" className={`${styles.button} ${styles.primaryButton} ${styles.fullButton}`} disabled={working}>
+                      {working ? "Resetting..." : "Set New Password"}
+                    </button>
+                  </form>
 
-                  {authMode === "register" ? (
-                    <>
-                      <label>
-                        <span>Display Name</span>
-                        <input
-                          type="text"
-                          value={displayName}
-                          onChange={(event) => setDisplayName(event.target.value)}
-                          placeholder="How your account appears"
-                          autoComplete="name"
-                        />
-                      </label>
-
-                      <fieldset className={styles.planPicker}>
-                        <legend>Preferred Plan</legend>
-                        <label>
-                          <input
-                            type="radio"
-                            name="register-plan"
-                            checked={selectedPlan === "free"}
-                            onChange={() => {
-                              setSelectedPlan("free");
-                              setHasRequestedCheckout(false);
-                            }}
-                          />
-                          <span>Free (basic dashboard)</span>
-                        </label>
-                        <label>
-                          <input
-                            type="radio"
-                            name="register-plan"
-                            checked={selectedPlan === "plus"}
-                            onChange={() => {
-                              setSelectedPlan("plus");
-                              setHasRequestedCheckout(true);
-                            }}
-                          />
-                          <span>Plus ($2.99/mo)</span>
-                        </label>
-                        <label>
-                          <input
-                            type="radio"
-                            name="register-plan"
-                            checked={selectedPlan === "pro"}
-                            onChange={() => {
-                              setSelectedPlan("pro");
-                              setHasRequestedCheckout(true);
-                            }}
-                          />
-                          <span>Pro ($9.99/mo)</span>
-                        </label>
-                      </fieldset>
-
-                      <label className={styles.termsRow}>
-                        <input
-                          type="checkbox"
-                          checked={acceptTerms}
-                          onChange={(event) => setAcceptTerms(event.target.checked)}
-                        />
-                        <span>
-                          I agree to the <Link href="/terms">Terms of Service</Link> and <Link href="/privacy">Privacy Policy</Link>.
-                        </span>
-                      </label>
-                    </>
-                  ) : null}
-
-                  <button type="submit" className={`${styles.button} ${styles.primaryButton} ${styles.fullButton}`} disabled={working}>
-                    {working
-                      ? "Please wait..."
-                      : authMode === "register"
-                        ? `Create Account for ${planLabel}`
-                        : "Sign In"}
-                  </button>
-                </form>
+                  <div className={styles.linkRow}>
+                    <button type="button" className={styles.textButton} onClick={openForgot}>
+                      Resend reset link
+                    </button>
+                    <button type="button" className={styles.textButton} onClick={switchToLogin}>
+                      Back to sign in
+                    </button>
+                  </div>
+                </>
               ) : (
-                <div className={styles.sessionActions}>
-                  {!activeSessionHasPaidAccess ? (
+                <>
+                  <div className={styles.sectionLabel}>Account Access</div>
+                  <h2>{authMode === "register" ? "Create your workspace" : "Welcome back"}</h2>
+                  <p>
+                    {sessionUser
+                      ? activeSessionHasPaidAccess
+                        ? `Signed in as ${sessionUser.displayName}.`
+                        : `Signed in as ${sessionUser.displayName}. Continue to activate your plan.`
+                      : authMode === "register"
+                        ? "Create an account and start tracking your portfolio risk."
+                        : "Sign in to your SPECTRE workspace."}
+                  </p>
+
+                  {banner ? (
+                    <div className={`${styles.banner} ${banner.tone === "success" ? styles.bannerSuccess : banner.tone === "error" ? styles.bannerError : styles.bannerInfo}`}>
+                      {banner.message}
+                    </div>
+                  ) : null}
+                  {authError ? <div className={`${styles.banner} ${styles.bannerError}`}>{authError}</div> : null}
+
+                  {!sessionUser ? (
+                    <form className={styles.formGrid} onSubmit={submitAuth}>
+                      <label>
+                        <span>Email</span>
+                        <input
+                          type="email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="you@example.com"
+                          autoComplete="email"
+                          required
+                        />
+                      </label>
+
+                      <label>
+                        <span>Password</span>
+                        <div className={styles.passwordRow}>
+                          <input
+                            type={showPassword ? "text" : "password"}
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder="Minimum 8 characters"
+                            autoComplete={authMode === "register" ? "new-password" : "current-password"}
+                            minLength={8}
+                            required
+                          />
+                          <button
+                            type="button"
+                            className={styles.toggleButton}
+                            onClick={() => setShowPassword((v) => !v)}
+                          >
+                            {showPassword ? "Hide" : "Show"}
+                          </button>
+                        </div>
+                      </label>
+
+                      {authMode === "register" ? (
+                        <>
+                          <label>
+                            <span>Display Name</span>
+                            <input
+                              type="text"
+                              value={displayName}
+                              onChange={(e) => setDisplayName(e.target.value)}
+                              placeholder="Your name"
+                              autoComplete="name"
+                            />
+                          </label>
+
+                          <fieldset className={styles.planPicker}>
+                            <legend>Choose your plan</legend>
+                            {(["free", "plus", "pro"] as CheckoutPlan[]).map((plan) => (
+                              <label
+                                key={plan}
+                                className={`${styles.planOption} ${selectedPlan === plan ? styles.planOptionActive : ""}`}
+                              >
+                                <input
+                                  type="radio"
+                                  name="register-plan"
+                                  checked={selectedPlan === plan}
+                                  onChange={() => {
+                                    setSelectedPlan(plan);
+                                    setHasRequestedCheckout(plan !== "free");
+                                  }}
+                                />
+                                <div className={styles.planOptionInner}>
+                                  <span className={styles.planOptionName}>
+                                    {plan === "free" ? "Free" : plan === "plus" ? "Plus" : "Pro"}
+                                  </span>
+                                  <span className={styles.planOptionPrice}>
+                                    {plan === "free" ? "No cost" : plan === "plus" ? "$2.99 / mo" : "$9.99 / mo"}
+                                  </span>
+                                </div>
+                              </label>
+                            ))}
+                          </fieldset>
+
+                          <label className={styles.termsRow}>
+                            <input
+                              type="checkbox"
+                              checked={acceptTerms}
+                              onChange={(e) => setAcceptTerms(e.target.checked)}
+                            />
+                            <span>
+                              I agree to the <Link href="/terms">Terms of Service</Link> and <Link href="/privacy">Privacy Policy</Link>.
+                            </span>
+                          </label>
+                        </>
+                      ) : null}
+
+                      <button type="submit" className={`${styles.button} ${styles.primaryButton} ${styles.fullButton}`} disabled={working}>
+                        {working
+                          ? "Please wait..."
+                          : authMode === "register"
+                            ? `Create Account${selectedPlan !== "free" ? ` — ${planLabel}` : ""}`
+                            : "Sign In"}
+                      </button>
+
+                      {authMode === "login" ? (
+                        <button type="button" className={styles.forgotLink} onClick={openForgot}>
+                          Forgot password?
+                        </button>
+                      ) : null}
+                    </form>
+                  ) : (
+                    <div className={styles.sessionActions}>
+                      {!activeSessionHasPaidAccess ? (
+                        <button
+                          type="button"
+                          className={`${styles.button} ${styles.primaryButton} ${styles.fullButton}`}
+                          onClick={() => {
+                            setHasRequestedCheckout(true);
+                            void startCheckout(selectedPlan);
+                          }}
+                          disabled={checkoutWorking}
+                        >
+                          {checkoutWorking ? "Redirecting..." : `Continue with ${planLabel}`}
+                        </button>
+                      ) : null}
+                      {activeSessionHasPaidAccess ? (
+                        <Link href="/dashboard?mode=account" className={`${styles.button} ${styles.outlineButton} ${styles.fullButton}`}>
+                          Open Dashboard
+                        </Link>
+                      ) : null}
+                    </div>
+                  )}
+
+                  <div className={styles.linkRow}>
                     <button
                       type="button"
-                      className={`${styles.button} ${styles.primaryButton} ${styles.fullButton}`}
-                      onClick={() => {
-                        setHasRequestedCheckout(true);
-                        void startCheckout(selectedPlan);
-                      }}
-                      disabled={checkoutWorking}
+                      className={styles.textButton}
+                      onClick={authMode === "register" ? switchToLogin : switchToRegister}
+                      disabled={working}
                     >
-                      {checkoutWorking ? "Redirecting..." : `Continue with ${planLabel}`}
+                      {authMode === "register" ? "Already have an account?" : "Create new account"}
                     </button>
-                  ) : null}
-                  {activeSessionHasPaidAccess ? (
-                    <Link href="/dashboard?mode=account" className={`${styles.button} ${styles.outlineButton} ${styles.fullButton}`}>
-                      Open Dashboard
-                    </Link>
-                  ) : null}
-                </div>
+                    {showVerificationLinks ? (
+                      <button type="button" className={styles.textButton} onClick={() => void resendVerificationEmail()} disabled={working}>
+                        Resend verification email
+                      </button>
+                    ) : null}
+                  </div>
+                </>
               )}
-
-              <div className={styles.linkRow}>
-                <button
-                  type="button"
-                  className={styles.textButton}
-                  onClick={() => {
-                    setAuthMode((current) => {
-                      const next = current === "register" ? "login" : "register";
-                      setHasRequestedCheckout(next === "register");
-                      return next;
-                    });
-                    setAcceptTerms(false);
-                    setShowPassword(false);
-                    setAuthError("");
-                  }}
-                  disabled={working}
-                >
-                  {authMode === "register" ? "Already have an account?" : "Create new account"}
-                </button>
-                <button type="button" className={styles.textButton} onClick={() => void resendVerificationEmail()} disabled={working}>
-                  Resend Verification
-                </button>
-                <button type="button" className={styles.textButton} onClick={() => void requestPasswordReset()} disabled={working}>
-                  Forgot Password
-                </button>
-                <button type="button" className={styles.textButton} onClick={() => void completePasswordReset()} disabled={working}>
-                  Reset With Token
-                </button>
-              </div>
-
             </div>
           </section>
         </div>
