@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { clearSessionCookie, getAuthenticatedUser } from "@/lib/auth";
-import { readUserEntitlements } from "@/lib/db";
+import { readUserEntitlements, getAiUsageThisMonth } from "@/lib/db";
+
+const AI_MONTHLY_LIMITS: Record<string, number> = { none: 3, free: 3, plus: 20, pro: -1 };
 
 export const runtime = "nodejs";
 
@@ -14,6 +16,8 @@ export async function GET() {
   }
 
   const entitlements = readUserEntitlements(sessionUser.id);
+  const aiUsed = getAiUsageThisMonth(sessionUser.id);
+  const aiLimit = AI_MONTHLY_LIMITS[entitlements.planTier] ?? 3;
 
   return NextResponse.json({
     authenticated: true,
@@ -25,6 +29,8 @@ export async function GET() {
       planTier: entitlements.planTier,
       proEnabled: entitlements.proEnabled,
       subscriptionStatus: entitlements.subscriptionStatus,
+      aiUsedThisMonth: aiUsed,
+      aiMonthlyLimit: aiLimit,
     },
   });
 }

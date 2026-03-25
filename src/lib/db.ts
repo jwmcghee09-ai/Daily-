@@ -477,6 +477,16 @@ function initSchema(db: DatabaseSync): void {
     CREATE INDEX IF NOT EXISTS idx_totp_challenges_expires_at ON totp_challenges (expires_at);
   `);
 
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS ai_usage (
+      user_id TEXT NOT NULL,
+      month TEXT NOT NULL,
+      call_count INTEGER NOT NULL DEFAULT 0,
+      PRIMARY KEY (user_id, month),
+      FOREIGN KEY(user_id) REFERENCES users(id)
+    );
+  `);
+
 }
 
 function normalizeSource(value: unknown): DataSource {
@@ -3047,4 +3057,30 @@ export function consumeTotpChallenge(tokenRaw: string): { userId: string } | nul
     db.exec("ROLLBACK");
     throw error;
   }
+}
+
+
+// ── AI usage tracking ──────────────────────────────────────────────────────────
+
+function currentYearMonth(): string {
+  const now = new Date();
+  const y = now.getUTCFullYear();
+  const m = String(now.getUTCMonth() + 1).padStart(2, "0");
+  return `${y}-${m}`;
+}
+
+export function getAiUsageThisMonth(userId: string): number {
+  const db = getDb();
+  const row = db
+    .prepare("SELECT call_count FROM ai_usage WHERE user_id = ? AND month = ? LIMIT 1")
+    .get(userId, currentYearMonth()) as { call_count: number } | undefined;
+  return row?.call_count ?? 0;
+}
+
+export function incrementAiUsage(userId: string): void {
+  const db = getDb();
+  db.prepare(
+    "INSERT INTO ai_usage (user_id, month, call_count) VALUES (?, ?, 1) " +
+      "ON CONFLICT(user_id, month) DO UPDATE SET call_count = call_count + 1",
+  ).run(userId, currentYearMonth());
 }

@@ -123,6 +123,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
 .plan-chip{font-family:var(--mono);font-size:.5rem;letter-spacing:.14em;text-transform:uppercase;padding:.18rem .55rem;border-radius:3px;font-weight:600}
 .plan-chip.pro{background:var(--accent-dim);color:var(--purple-hi);border:1px solid rgba(217,70,239,.22)}
 .plan-chip.starter{background:rgba(255,255,255,.05);color:var(--muted2);border:1px solid var(--border2)}
+.plan-chip.plus{background:rgba(251,191,36,.07);color:#fbbf24;border:1px solid rgba(251,191,36,.25)}
 .hero-actions{display:flex;gap:.65rem;flex-wrap:wrap;margin-bottom:2rem}
 .btn-primary{font-family:var(--mono);font-size:.64rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#fff;background:linear-gradient(135deg,var(--purple) 0%,var(--purple-hi) 54%,var(--orange) 100%);border:1px solid rgba(217,70,239,.2);border-radius:999px;padding:.8rem 1.7rem;cursor:pointer;transition:all .2s;box-shadow:0 10px 22px rgba(168,85,247,.18);text-decoration:none;display:inline-block}
 .btn-primary:hover{transform:translateY(-1px);filter:brightness(1.07)}
@@ -634,6 +635,12 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 .console-ai-title{font-family:var(--mono);font-size:.58rem;letter-spacing:.16em;text-transform:uppercase;color:var(--purple-hi)}
 .console-ai-meta{font-family:var(--mono);font-size:.52rem;color:var(--muted)}
 .console-ai-note{font-size:.76rem;color:var(--muted2);line-height:1.6;margin:.55rem 0 .7rem}
+.console-ai-chips{display:flex;flex-wrap:wrap;gap:.35rem;margin-bottom:.75rem}
+.ai-chip{font-family:var(--mono);font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted2);background:rgba(255,255,255,.04);border:1px solid var(--border2);border-radius:999px;padding:.3rem .75rem;cursor:pointer;transition:all .15s}
+.ai-chip:hover{color:var(--purple-hi);border-color:rgba(217,70,239,.4);background:rgba(217,70,239,.07)}
+.stream-text{white-space:pre-wrap;opacity:.9}
+.stream-cursor::after{content:"▋";animation:blink .8s step-end infinite;color:var(--purple-hi)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
 .console-ai-form{display:grid;gap:.6rem}
 .console-ai-textarea{width:100%;min-height:82px;resize:vertical;background:rgba(7,4,15,.9);border:1px solid rgba(192,132,252,.22);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:.66rem;line-height:1.6;padding:.7rem .75rem}
 .console-ai-textarea:focus-visible{outline:1px solid rgba(192,132,252,.65);outline-offset:1px}
@@ -781,6 +788,52 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 .upgrade-modal-actions a:hover,.upgrade-modal-actions button:hover{opacity:.85}
 .upgrade-btn-primary{background:var(--accent,#ff4b33);color:#fff;border:none}
 .upgrade-btn-secondary{background:transparent;color:var(--muted2,#888);border:1px solid rgba(255,255,255,.15)}
+
+/* ── AI HERO ─────────────────────────────────────────────────────────────── */
+.ai-hero-wrap{position:relative;overflow:hidden;padding:100px 0 48px;background:var(--bg)}
+.ai-hero-dots{position:absolute;inset:0;background-image:radial-gradient(rgba(178,154,233,.13) 1px,transparent 1px);background-size:28px 28px;pointer-events:none}
+.ai-hero-glow{position:absolute;width:600px;height:600px;border-radius:50%;filter:blur(120px);pointer-events:none;opacity:.35}
+.ai-hero-glow-l{top:-120px;left:-160px;background:radial-gradient(circle,rgba(168,85,247,.7) 0%,rgba(99,44,180,.4) 50%,transparent 70%)}
+.ai-hero-glow-r{top:-80px;right:-160px;background:radial-gradient(circle,rgba(217,70,239,.55) 0%,rgba(59,130,246,.35) 50%,transparent 70%)}
+.ai-hero-inner{position:relative;max-width:820px;margin:0 auto;padding:0 24px;display:flex;flex-direction:column;align-items:center;text-align:center}
+.ai-hero-strip{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;justify-content:center;margin-bottom:2rem;font-family:var(--mono);font-size:.56rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.ai-strip-name{color:var(--muted2)}
+.ai-strip-meta{color:var(--muted)}
+.ai-strip-sep{color:rgba(255,255,255,.2)}
+.ai-hero-title{font-size:clamp(2.2rem,5vw,3.6rem);font-weight:700;letter-spacing:-.02em;line-height:1.1;margin:0 0 .75rem;background:linear-gradient(160deg,#f4f0ff 0%,#d4c9ff 40%,var(--purple-hi) 70%,var(--orange) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.ai-hero-sub{font-size:.92rem;color:var(--muted);margin:0 0 2.2rem;max-width:500px;line-height:1.7}
+
+/* Input card */
+.ai-input-card{width:100%;background:rgba(255,255,255,.055);border:1px solid rgba(178,154,233,.2);border-radius:18px;padding:20px 20px 16px;backdrop-filter:blur(12px);box-shadow:0 8px 40px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.06);transition:border-color .25s,box-shadow .25s}
+.ai-input-card:focus-within{border-color:rgba(217,70,239,.35);box-shadow:0 8px 40px rgba(0,0,0,.4),0 0 0 1px rgba(217,70,239,.12),inset 0 1px 0 rgba(255,255,255,.07)}
+.ai-input-textarea{width:100%;min-height:90px;background:transparent;border:none;outline:none;resize:none;color:var(--text);font-family:var(--sans);font-size:1rem;line-height:1.6;padding:0;caret-color:var(--purple-hi)}
+.ai-input-textarea::placeholder{color:rgba(157,151,183,.5)}
+.ai-input-footer{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding-top:12px;border-top:1px solid rgba(178,154,233,.1);flex-wrap:wrap}
+.ai-input-chips{display:flex;flex-wrap:wrap;gap:.3rem}
+.ai-input-actions{display:flex;align-items:center;gap:.5rem;flex-shrink:0}
+.ai-refresh-btn{font-family:var(--mono);font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);background:transparent;border:1px solid var(--border2);border-radius:999px;padding:.4rem .85rem;cursor:pointer;transition:all .15s;white-space:nowrap}
+.ai-refresh-btn:hover{color:var(--text);border-color:rgba(255,255,255,.3)}
+.ai-send-btn{display:flex;align-items:center;gap:.4rem;font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:#fff;background:linear-gradient(135deg,var(--purple) 0%,var(--purple-hi) 50%,var(--orange) 100%);border:none;border-radius:999px;padding:.55rem 1.1rem;cursor:pointer;transition:all .2s;white-space:nowrap}
+.ai-send-btn:hover{transform:translateY(-1px);filter:brightness(1.08)}
+.ai-send-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;filter:none}
+.ai-send-arrow{font-size:.75rem;line-height:1}
+
+/* Hero output */
+.ai-hero-output{width:100%;text-align:left;margin-top:1.5rem}
+.console-ai-footer-note{padding:.6rem 0;font-size:.68rem;text-align:center;color:var(--muted)}
+
+/* KPI strip */
+.ai-kpi-strip{display:flex;align-items:center;gap:0;width:100%;margin-top:2rem;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.ai-kpi{display:flex;flex-direction:column;gap:.2rem;padding:.85rem 1.2rem;flex:1;min-width:90px}
+.ai-kpi-divider{width:1px;height:40px;background:var(--border);flex-shrink:0}
+.ai-kpi-lbl{font-family:var(--mono);font-size:.5rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.ai-kpi-val{font-family:var(--mono);font-size:.8rem;font-weight:600;color:var(--text)}
+.ai-kpi-actions{flex-direction:row;align-items:center;justify-content:flex-end;padding:.6rem 1rem}
+.ai-clear-btn{font-size:.52rem;padding:.35rem .7rem}
+
+/* Usage counter */
+.ai-usage-counter{font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;color:var(--muted);text-align:center;margin-top:.6rem;min-height:1.2em}
+.ai-usage-counter.ai-usage-limit{color:var(--orange)}
 </style>
 </head>
 <body class="boot-pending">
@@ -824,70 +877,92 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   </div>
 </nav>
 
-<!-- HERO HEADER -->
-<div class="wrap">
-  <section class="hero" id="dashboard-top">
-    <div class="hero-glow"></div>
-    <div class="hero-left">
-      <div class="hero-eyebrow">System for Portfolio Exposure, Correlation, Threat &amp; Risk Evaluation</div>
-      <h1 class="hero-title">SPECTRE</h1>
-      <p class="hero-sub">New: Pro Ask AI holdings analysis is live, plus savings and tax report uploads. Upload super, savings, tax report, ASX, crypto, index, mutual fund, and ABC Bullion reports to track exposure, concentration, and downside risk in one private workspace.</p>
-      <div class="hero-actions">
-        <button class="btn-primary" id="refresh-prices-btn">Refresh Prices</button>
-        <button class="btn-ghost" id="clear-data-btn">Clear Data</button>
-      </div>
-      <div class="hero-meta">
-        <div class="meta-row">
-          <span class="meta-lbl">Account</span>
-          <span class="meta-val" id="meta-account-name">James Smith</span>
+<!-- AI HERO -->
+<div class="ai-hero-wrap" id="dashboard-top">
+  <div class="ai-hero-glow ai-hero-glow-l"></div>
+  <div class="ai-hero-glow ai-hero-glow-r"></div>
+  <div class="ai-hero-dots"></div>
+  <div class="ai-hero-inner">
+
+    <!-- Account strip -->
+    <div class="ai-hero-strip">
+      <span id="meta-account-name" class="ai-strip-name">—</span>
+      <span class="ai-strip-sep">·</span>
+      <span class="plan-chip pro" id="meta-plan-chip">Pro Active</span>
+      <span class="ai-strip-sep">·</span>
+      <span id="meta-holdings-count" class="ai-strip-meta">—</span>
+      <span class="ai-strip-sep">·</span>
+      <span id="meta-latest-report" class="ai-strip-meta"></span>
+      <span class="ai-strip-sep" id="ai-strip-sep-prices">·</span>
+      <span id="meta-prices-updated" class="ai-strip-meta"></span>
+    </div>
+
+    <!-- Headline -->
+    <h1 class="ai-hero-title">Ask your portfolio anything.</h1>
+    <p class="ai-hero-sub">Grounded in your live holdings, real-time market data, and risk metrics.</p>
+
+    <!-- Big input card -->
+    <div class="ai-input-card" id="ai-hero-card">
+      <textarea class="ai-input-textarea" id="pro-ai-question" maxlength="700" placeholder="What may be influencing the value of my current holdings?">What may be influencing the value of my current holdings?</textarea>
+      <div class="ai-input-footer">
+        <div class="ai-input-chips" id="pro-ai-chips">
+          <button type="button" class="ai-chip" data-q="What are my biggest concentration risks right now?">Concentration</button>
+          <button type="button" class="ai-chip" data-q="Which holdings are most exposed to AUD/USD weakness?">AUD exposure</button>
+          <button type="button" class="ai-chip" data-q="What is driving my portfolio volatility?">Volatility</button>
+          <button type="button" class="ai-chip" data-q="Where should I consider reducing risk?">Reduce risk</button>
+          <button type="button" class="ai-chip" data-q="How does my crypto exposure affect overall portfolio risk?">Crypto risk</button>
+          <button type="button" class="ai-chip" data-q="Which sectors are over or underweight in my portfolio?">Sectors</button>
         </div>
-        <div class="meta-row">
-          <span class="meta-lbl">Plan</span>
-          <span class="plan-chip pro" id="meta-plan-chip">Pro Active</span>
-        </div>
-        <div class="meta-row">
-          <span class="meta-lbl">Holdings</span>
-          <span class="meta-val" id="meta-holdings-count">24 positions</span>
-        </div>
-        <div class="meta-row">
-          <span class="meta-lbl">Latest Report</span>
-          <span class="meta-val" id="meta-latest-report">2026-03-01</span>
-        </div>
-        <div class="meta-row">
-          <span class="meta-lbl">Prices Updated</span>
-          <span class="meta-val" id="meta-prices-updated">04/03/2026, 9:41 AM</span>
+        <div class="ai-input-actions">
+          <button type="button" id="refresh-prices-btn" class="ai-refresh-btn" title="Refresh live prices">↻ Refresh</button>
+          <button type="button" class="ai-send-btn" id="pro-ai-ask-btn">
+            <span id="pro-ai-ask-label">Ask AI</span>
+            <span class="ai-send-arrow">↑</span>
+          </button>
         </div>
       </div>
     </div>
-    <div class="meta-panel">
-      <div class="meta-panel-title">Portfolio Snapshot</div>
-      <div class="kpi-grid-mini">
-        <div class="kpi-mini">
-          <div class="kpi-mini-lbl">Total Value</div>
-          <div class="kpi-mini-val" id="mini-total-value">$4K</div>
-        </div>
-        <div class="kpi-mini">
-          <div class="kpi-mini-lbl">Unrealised P/L</div>
-          <div class="kpi-mini-val accent" id="mini-unrealised-pnl">+$559</div>
-        </div>
-        <div class="kpi-mini">
-          <div class="kpi-mini-lbl">Today's Change</div>
-          <div class="kpi-mini-val" id="mini-day-change">+$6</div>
-        </div>
-        <div class="kpi-mini">
-          <div class="kpi-mini-lbl">1-Day VaR 95%</div>
-          <div class="kpi-mini-val accent" id="mini-var95">−0.7%</div>
-        </div>
+
+    <div class="console-ai-error" id="pro-ai-error" hidden></div>
+    <div class="ai-hero-output" id="pro-ai-output"></div>
+
+    <!-- KPI strip -->
+    <div class="ai-kpi-strip">
+      <div class="ai-kpi">
+        <span class="ai-kpi-lbl">Total Value</span>
+        <span class="ai-kpi-val" id="mini-total-value">—</span>
       </div>
-      <div class="risk-bar-wrap">
-        <div class="risk-bar-top">
-          <span class="risk-bar-lbl">Risk Score</span>
-          <span class="risk-bar-val" id="risk-bar-value">8 / 100</span>
-        </div>
-        <div class="risk-track"><div class="risk-fill" id="risk-bar-fill"></div></div>
+      <div class="ai-kpi-divider"></div>
+      <div class="ai-kpi">
+        <span class="ai-kpi-lbl">Unrealised P/L</span>
+        <span class="ai-kpi-val" id="mini-unrealised-pnl">—</span>
+      </div>
+      <div class="ai-kpi-divider"></div>
+      <div class="ai-kpi">
+        <span class="ai-kpi-lbl">Today</span>
+        <span class="ai-kpi-val" id="mini-day-change">—</span>
+      </div>
+      <div class="ai-kpi-divider"></div>
+      <div class="ai-kpi">
+        <span class="ai-kpi-lbl">VaR 95%</span>
+        <span class="ai-kpi-val" id="mini-var95">—</span>
+      </div>
+      <div class="ai-kpi-divider"></div>
+      <div class="ai-kpi">
+        <span class="ai-kpi-lbl">Risk Score</span>
+        <span class="ai-kpi-val" id="risk-bar-value">—</span>
+      </div>
+      <div class="ai-kpi-divider"></div>
+      <div class="ai-kpi" style="flex-grow:1;min-width:120px">
+        <span class="ai-kpi-lbl">Risk Bar</span>
+        <div class="risk-track" style="margin-top:.3rem"><div class="risk-fill" id="risk-bar-fill"></div></div>
+      </div>
+      <div class="ai-kpi ai-kpi-actions">
+        <button class="btn-ghost ai-clear-btn" id="clear-data-btn">Clear Data</button>
       </div>
     </div>
-  </section>
+
+  </div>
 </div>
 
 <div class="divider"></div>
@@ -1075,20 +1150,8 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
             <div class="console-val" id="pro-ai-risk-adjustment">+0 pts</div>
           </div>
         </div>
-        <div class="console-ai" id="pro-ai-panel">
-          <div class="console-ai-head">
-            <div class="console-ai-title">Ask AI Holdings Drivers</div>
-            <div class="console-ai-meta" id="pro-ai-meta">No analysis yet</div>
-          </div>
-          <p class="console-ai-note">Ask what may be influencing your holdings value, momentum, and risk right now.</p>
-          <div class="console-ai-form">
-            <textarea class="console-ai-textarea" id="pro-ai-question" maxlength="700" placeholder="What may be influencing the value of my current holdings?">What may be influencing the value of my current holdings?</textarea>
-            <div class="console-ai-actions">
-              <button type="button" class="console-ai-btn" id="pro-ai-ask-btn">Ask AI</button>
-            </div>
-          </div>
-          <div class="console-ai-error" id="pro-ai-error" hidden></div>
-          <div class="console-ai-output" id="pro-ai-output"></div>
+        <div class="console-ai-footer-note" id="pro-ai-panel">
+          <span class="console-ai-meta" id="pro-ai-meta">Ask AI is in the header — scroll up or <a href="#dashboard-top" style="color:var(--purple-hi);text-decoration:none">jump to top</a>.</span>
         </div>
       </div>
     </div>
@@ -1733,6 +1796,9 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     holdingsAi: null,
     holdingsAiError: "",
     holdingsAiLoading: false,
+    holdingsAiStreamText: "",
+    aiUsedThisMonth: 0,
+    aiMonthlyLimit: -1,
     riskWindow: "6M",
     uploadSource: null,
   };
@@ -2972,10 +3038,12 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       return;
     }
     state.sessionUser = payload.user;
+    state.aiUsedThisMonth = payload.user.aiUsedThisMonth ?? 0;
+    state.aiMonthlyLimit = payload.user.aiMonthlyLimit ?? -1;
     setText("nav-user-email", payload.user.email);
     setText("meta-account-name", payload.user.displayName || payload.user.email);
-    const chipClass = payload.user.proEnabled ? "plan-chip pro" : "plan-chip starter";
-    const chipLabel = payload.user.proEnabled ? "Pro Active" : "Starter";
+    const chipClass = payload.user.proEnabled ? "plan-chip pro" : payload.user.planTier === "plus" ? "plan-chip plus" : "plan-chip starter";
+    const chipLabel = payload.user.proEnabled ? "Pro Active" : payload.user.planTier === "plus" ? "Plus" : "Starter";
     setClass("meta-plan-chip", chipClass);
     setText("meta-plan-chip", chipLabel);
     setText("pro-console-badge", chipLabel);
@@ -3122,10 +3190,39 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     }
 
     const hasHoldings = Array.isArray(state.portfolio?.holdings) && state.portfolio.holdings.length > 0;
-    const isPro = Boolean(state.sessionUser?.proEnabled);
+    const limit = state.aiMonthlyLimit;
+    const used = state.aiUsedThisMonth;
+    const atLimit = limit !== -1 && used >= limit;
 
-    askButton.disabled = state.holdingsAiLoading || !isPro || !hasHoldings;
-    askButton.textContent = state.holdingsAiLoading ? "Analyzing..." : "Ask AI";
+    askButton.disabled = state.holdingsAiLoading || !hasHoldings || atLimit;
+
+    const labelEl = document.getElementById("pro-ai-ask-label");
+    if (state.holdingsAiLoading) {
+      if (labelEl) labelEl.textContent = "Analyzing...";
+      else askButton.textContent = "Analyzing...";
+    } else {
+      if (labelEl) labelEl.textContent = "Ask AI";
+      else askButton.textContent = "Ask AI";
+    }
+
+    // Show usage counter below the card
+    let usageEl = document.getElementById("ai-usage-counter");
+    if (!usageEl) {
+      usageEl = document.createElement("div");
+      usageEl.id = "ai-usage-counter";
+      usageEl.className = "ai-usage-counter";
+      const card = document.getElementById("ai-hero-card");
+      if (card?.parentNode) card.parentNode.insertBefore(usageEl, card.nextSibling);
+    }
+    if (limit === -1) {
+      usageEl.textContent = "";
+    } else if (atLimit) {
+      usageEl.textContent = `You've used all ${limit} Ask AI sessions for this month.`;
+      usageEl.className = "ai-usage-counter ai-usage-limit";
+    } else {
+      usageEl.textContent = `${used} / ${limit} Ask AI sessions used this month`;
+      usageEl.className = "ai-usage-counter";
+    }
 
     if (questionInput.value.trim().length === 0) {
       questionInput.value = HOLDINGS_AI_DEFAULT_QUESTION;
@@ -3137,6 +3234,13 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     } else {
       errorEl.hidden = true;
       errorEl.textContent = "";
+    }
+
+    // Show streaming text while response is arriving
+    if (state.holdingsAiLoading && state.holdingsAiStreamText) {
+      metaEl.textContent = "Analyzing…";
+      outputEl.innerHTML = `<div class="console-ai-block"><h4>Answer</h4><p id="pro-ai-stream-text" class="stream-text stream-cursor">${escapeHtml(state.holdingsAiStreamText)}</p></div>`;
+      return;
     }
 
     const analysis = state.holdingsAi;
@@ -3203,6 +3307,13 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     `;
   }
 
+  function renderHoldingsAiStream() {
+    const streamEl = document.getElementById("pro-ai-stream-text");
+    if (streamEl) {
+      streamEl.textContent = state.holdingsAiStreamText || "";
+    }
+  }
+
   async function runHoldingsAi() {
     if (state.demoMode) {
       const questionInput = document.getElementById("pro-ai-question");
@@ -3214,20 +3325,13 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       state.holdingsAiError = "";
       renderHoldingsAi();
 
-      await new Promise((resolve) => {
-        window.setTimeout(resolve, 350);
-      });
+      await new Promise((resolve) => { window.setTimeout(resolve, 350); });
 
       state.holdingsAi = buildDemoHoldingsAiAnalysis(question);
       state.holdingsAiLoading = false;
       renderHoldingsAi();
       renderPortfolio();
       showToast("Demo Ask AI analysis updated.");
-      return;
-    }
-
-    if (!state.sessionUser?.proEnabled) {
-      showToast("Ask AI is available on Pro only.", "error");
       return;
     }
 
@@ -3242,28 +3346,87 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       : HOLDINGS_AI_DEFAULT_QUESTION;
 
     state.holdingsAiLoading = true;
+    state.holdingsAiStreamText = "";
     state.holdingsAiError = "";
     renderHoldingsAi();
 
     try {
-      const payload = await apiJson("/api/pro/holdings-ai", {
+      const response = await fetch("/api/pro/holdings-ai", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question }),
       });
 
-      if (!payload || !payload.analysis) {
-        throw new Error("AI analysis response was empty.");
+      if (!response.ok || !response.body) {
+        let message = `Request failed (${response.status})`;
+        try {
+          const errPayload = await response.json();
+          if (errPayload?.error) message = errPayload.error;
+        } catch {}
+        throw new Error(message);
       }
 
-      state.holdingsAi = payload.analysis;
-      state.holdingsAiError = "";
-      showToast("Ask AI analysis updated.");
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let sseBuffer = "";
+      let fullAccumulated = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        sseBuffer += decoder.decode(value, { stream: true });
+        const parts = sseBuffer.split("\n\n");
+        sseBuffer = parts.pop() ?? "";
+
+        for (const part of parts) {
+          const line = part.trim();
+          if (!line.startsWith("data: ")) continue;
+          const raw = line.slice(6).trim();
+          if (raw === "[DONE]") continue;
+
+          let evt;
+          try { evt = JSON.parse(raw); } catch { continue; }
+
+          if (typeof evt.t === "string") {
+            fullAccumulated += evt.t;
+            // Extract partial answer field as it streams — schema puts it first
+            const partialMatch = fullAccumulated.match(/"answer"\s*:\s*"((?:[^"\\]|\\.)*)/);
+            if (partialMatch) {
+              state.holdingsAiStreamText = partialMatch[1]
+                .replace(/\\n/g, "\n")
+                .replace(/\\"/g, '"')
+                .replace(/\\t/g, "\t");
+              renderHoldingsAiStream();
+              if (!document.getElementById("pro-ai-stream-text")) {
+                // Stream container not yet rendered — trigger full render
+                renderHoldingsAi();
+              }
+            }
+          }
+
+          if (evt.done === true) {
+            if (evt.error) throw new Error(evt.error);
+            if (evt.analysis) {
+              state.holdingsAi = evt.analysis;
+              state.holdingsAiStreamText = "";
+              state.holdingsAiError = "";
+              if (typeof evt.aiUsed === "number") state.aiUsedThisMonth = evt.aiUsed;
+              if (typeof evt.aiLimit === "number") state.aiMonthlyLimit = evt.aiLimit;
+              showToast("Ask AI analysis updated.");
+            }
+            return;
+          }
+        }
+      }
+
+      throw new Error("AI stream ended without a complete response.");
     } catch (error) {
       state.holdingsAiError = error instanceof Error ? error.message : "Failed to run Ask AI analysis.";
       showToast(state.holdingsAiError, "error");
     } finally {
       state.holdingsAiLoading = false;
+      state.holdingsAiStreamText = "";
       renderHoldingsAi();
       renderPortfolio();
     }
@@ -3732,6 +3895,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       state.holdingsAi = null;
       state.holdingsAiError = "";
       state.holdingsAiLoading = false;
+      state.holdingsAiStreamText = "";
       const questionInput = document.getElementById("pro-ai-question");
       if (questionInput instanceof HTMLTextAreaElement) {
         questionInput.value = HOLDINGS_AI_DEFAULT_QUESTION;
@@ -3993,6 +4157,14 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     document.getElementById("sign-out-btn")?.addEventListener("click", signOut);
     document.getElementById("add-alert-btn")?.addEventListener("click", addAlert);
     document.getElementById("pro-ai-ask-btn")?.addEventListener("click", runHoldingsAi);
+    document.getElementById("pro-ai-chips")?.addEventListener("click", (e) => {
+      const chip = e.target instanceof HTMLElement ? e.target.closest(".ai-chip") : null;
+      if (!(chip instanceof HTMLElement)) return;
+      const q = chip.dataset.q;
+      if (!q) return;
+      const input = document.getElementById("pro-ai-question");
+      if (input instanceof HTMLTextAreaElement) input.value = q;
+    });
 
     document.getElementById("alerts-list")?.addEventListener("click", (event) => {
       const target = event.target;
