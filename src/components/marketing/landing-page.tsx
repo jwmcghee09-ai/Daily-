@@ -1086,7 +1086,6 @@ function CompareItem({ children, tone }: { children: ReactNode; tone: "good" | "
   );
 }
 
-
 function AITeaser() {
   const [query, setQuery] = useState("");
   const router = useRouter();
@@ -1102,8 +1101,9 @@ function AITeaser() {
           <span className={styles.aiPulseDot} />
           <span>Ask SPECTRE AI</span>
         </div>
-        <span className={styles.proTag}>AI Analysis</span>
+        <span className={styles.proTag}>Pro AI</span>
       </div>
+
       <div className={styles.aiTeaserInput}>
         <input
           type="text"
@@ -1127,9 +1127,15 @@ function AITeaser() {
           </svg>
         </button>
       </div>
+
       <div className={styles.aiSuggestions}>
-        {["What\'s my top risk?", "BHP concentration?", "VaR impact", "Sector exposure"].map((s) => (
-          <button key={s} type="button" className={styles.aiChip} onClick={() => goToSignIn(s)}>
+        {["What's my top risk?", "BHP concentration?", "VaR impact", "Sector exposure"].map((s) => (
+          <button
+            key={s}
+            type="button"
+            className={styles.aiChip}
+            onClick={() => goToSignIn(s)}
+          >
             {s}
           </button>
         ))}
