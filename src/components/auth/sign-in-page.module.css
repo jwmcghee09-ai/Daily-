@@ -1,39 +1,40 @@
+/* ============================================================
+   SPECTRE Sign-In Page — Minimalist v3
+   Matches dashboard overhaul direction
+   ============================================================ */
+
 .page {
   min-height: 100vh;
-  padding: 40px 0;
-  background:
-    radial-gradient(ellipse at 50% 0%, rgba(168, 85, 247, 0.14), transparent 38%),
-    radial-gradient(circle at 85% 15%, rgba(255, 122, 48, 0.09), transparent 26%),
-    radial-gradient(circle at 8% 80%, rgba(168, 85, 247, 0.06), transparent 20%),
-    #08060f;
-  color: #f4f0ff;
+  padding: 48px 20px;
+  background: #06060a;
+  color: #f0f0f4;
   font-family: var(--font-geist-sans), "Avenir Next", sans-serif;
 }
 
 .shell {
   position: relative;
-  width: min(1200px, calc(100% - 40px));
+  width: min(1120px, 100%);
   margin: 0 auto;
-  padding: 28px 28px 32px;
-  border: 1px solid rgba(160, 100, 255, 0.18);
-  border-radius: 20px;
-  background: rgba(14, 10, 26, 0.97);
+  padding: 36px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 22px;
+  background: #0c0b12;
   overflow: hidden;
-  backdrop-filter: blur(12px);
 }
 
 .shell::before {
   content: "";
   position: absolute;
-  right: -100px;
-  top: -100px;
-  width: 400px;
-  height: 400px;
+  right: -80px;
+  top: -80px;
+  width: 280px;
+  height: 280px;
   border-radius: 999px;
-  background: radial-gradient(circle, rgba(255, 122, 48, 0.08) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(255, 75, 51, 0.09) 0%, transparent 72%);
   pointer-events: none;
 }
 
+/* --- Topbar --- */
 .topbar {
   position: relative;
   z-index: 1;
@@ -41,19 +42,17 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 28px;
+  margin-bottom: 32px;
 }
 
 .brand {
-  font-family: var(--font-space-grotesk), sans-serif;
-  font-size: 18px;
+  font-family: var(--font-geist-sans), sans-serif;
+  font-size: 16px;
   font-weight: 700;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
   text-decoration: none;
-  background: linear-gradient(90deg, #a855f7 0%, #d946ef 35%, #ff7a30 72%, #ffb347 100%);
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
+  color: #ff4b33;
 }
 
 .topbarActions {
@@ -62,76 +61,78 @@
   flex-wrap: wrap;
 }
 
+/* --- Grid layout --- */
 .grid {
   position: relative;
   z-index: 1;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 24px;
+  gap: 20px;
 }
 
+/* --- Side & Form cards --- */
 .sideCard,
 .formCard {
   position: relative;
-  border: 1px solid rgba(160, 100, 255, 0.12);
-  border-radius: 16px;
-  background: #1a1230;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.02);
   overflow: hidden;
 }
 
 .sideCard {
-  padding: 28px;
-  background: linear-gradient(160deg, rgba(26, 18, 48, 0.98), rgba(16, 11, 30, 0.98));
+  padding: 32px;
+  border-left: 2px solid rgba(255, 75, 51, 0.35);
 }
 
 .sideCard::before {
   content: "";
   position: absolute;
   inset: 0 0 auto;
-  height: 2px;
-  background: linear-gradient(90deg, #a855f7, #ff7a30, transparent);
+  height: 1px;
+  background: linear-gradient(90deg, rgba(255, 75, 51, 0.45), transparent);
 }
 
+/* --- Pill / section label --- */
 .pill,
 .sectionLabel {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 16px;
+  padding: 5px 14px;
   border-radius: 999px;
-  border: 1px solid transparent;
-  background:
-    linear-gradient(#0d0a14, #0d0a14) padding-box,
-    linear-gradient(90deg, #a855f7, #ff7a30) border-box;
+  border: 1px solid rgba(255, 75, 51, 0.3);
+  background: rgba(255, 75, 51, 0.07);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-size: 12px;
+  letter-spacing: 0.1em;
+  font-size: 11px;
   font-weight: 700;
+  color: rgba(255, 75, 51, 0.9);
 }
 
 .pill::before,
 .sectionLabel::before {
   content: "";
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
   border-radius: 999px;
-  background: linear-gradient(135deg, #a855f7, #ff7a30);
+  background: rgba(255, 75, 51, 0.8);
 }
 
+/* --- Side card headings --- */
 .sideCard h1 {
-  margin: 18px 0 12px;
-  font-family: var(--font-space-grotesk), sans-serif;
-  font-size: clamp(34px, 5vw, 54px);
+  margin: 20px 0 14px;
+  font-family: var(--font-geist-sans), sans-serif;
+  font-size: clamp(30px, 4vw, 48px);
   font-weight: 700;
-  line-height: 1.08;
-  letter-spacing: -0.03em;
+  line-height: 1.06;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #ff4b33;
 }
 
 .sideCard h1 span {
-  background: linear-gradient(90deg, #a855f7, #d946ef 42%, #ff7a30 82%, #ffb347);
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
+  color: #ff4b33;
 }
 
 .sideCard p,
@@ -139,9 +140,11 @@
 .banner,
 .cardBody p,
 .sideMeta span {
-  color: #9b8fbb;
+  color: rgba(255, 255, 255, 0.45);
+  line-height: 1.55;
 }
 
+/* --- Plan callout --- */
 .planCallout {
   display: inline-flex;
   gap: 10px;
@@ -151,13 +154,16 @@
   padding: 8px 14px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .planCallout strong {
-  color: #ff7a30;
+  color: #ff4b33;
 }
 
+/* --- Point list --- */
 .pointList {
   list-style: none;
   display: grid;
@@ -169,14 +175,17 @@
   display: flex;
   gap: 10px;
   padding: 8px 0;
-  border-bottom: 1px solid rgba(160, 100, 255, 0.12);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.45);
 }
 
 .pointList li::before {
   content: "→";
-  color: #ff7a30;
+  color: rgba(255, 75, 51, 0.7);
+  flex-shrink: 0;
 }
 
+/* --- Side meta --- */
 .sideMeta {
   display: grid;
   gap: 12px;
@@ -190,65 +199,73 @@
 }
 
 .sideMeta a {
-  color: #f4f0ff;
+  color: #f0f0f4;
   text-decoration: none;
 }
 
+/* --- Card top bar (form card) --- */
 .cardTop {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 14px 20px;
-  border-bottom: 1px solid rgba(160, 100, 255, 0.12);
+  padding: 12px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .cardUrl {
   text-align: center;
-  color: #9b8fbb;
-  font-size: 12px;
+  color: rgba(255, 255, 255, 0.28);
+  font-size: 11px;
   font-family: var(--font-geist-mono), monospace;
+  letter-spacing: 0.04em;
 }
 
+/* --- Card body --- */
 .cardBody {
   padding: 32px;
 }
 
 .cardBody h2 {
   margin: 14px 0 12px;
-  font-family: var(--font-space-grotesk), sans-serif;
-  font-size: 30px;
+  font-family: var(--font-geist-sans), sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #f0f0f4;
 }
 
+/* --- Banners --- */
 .banner {
-  padding: 14px 16px;
-  border-radius: 12px;
-  border: 1px solid rgba(160, 100, 255, 0.12);
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.03);
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .bannerSuccess {
-  background: rgba(168, 85, 247, 0.08);
-  border-color: rgba(168, 85, 247, 0.3);
-  color: #f4f0ff;
+  background: rgba(255, 75, 51, 0.07);
+  border-color: rgba(255, 75, 51, 0.25);
+  color: #ffddd8;
 }
 
 .bannerInfo {
-  background: rgba(255, 122, 48, 0.08);
-  border-color: rgba(255, 122, 48, 0.3);
-  color: #f4f0ff;
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #e8e8ef;
 }
 
 .bannerError {
-  background: rgba(248, 113, 113, 0.08);
-  border-color: rgba(248, 113, 113, 0.3);
-  color: #ffd5d5;
+  background: rgba(255, 75, 51, 0.1);
+  border-color: rgba(255, 75, 51, 0.35);
+  color: #ffcbc4;
 }
 
+/* --- Form --- */
 .formGrid {
   display: grid;
-  gap: 18px;
-  margin-top: 24px;
+  gap: 16px;
+  margin-top: 22px;
 }
 
 .formGrid label,
@@ -259,31 +276,37 @@
 
 .formGrid span,
 .planPicker legend {
-  color: #9b8fbb;
-  font-size: 13px;
+  color: rgba(255, 255, 255, 0.38);
+  font-size: 11px;
   font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 .formGrid input {
   width: 100%;
-  height: 48px;
+  height: 46px;
   padding: 0 14px;
-  border: 1px solid rgba(160, 100, 255, 0.24);
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.02);
-  color: #f4f0ff;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  color: #f0f0f4;
+  font-family: inherit;
+  font-size: 14px;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
 .formGrid input:focus {
   outline: 0;
-  border-color: rgba(255, 122, 48, 0.55);
-  box-shadow: 0 0 0 3px rgba(255, 122, 48, 0.12);
+  border-color: rgba(255, 75, 51, 0.55);
+  box-shadow: 0 0 0 2px rgba(255, 75, 51, 0.12);
 }
 
+/* --- Password row --- */
 .passwordRow {
   display: grid;
   grid-template-columns: 1fr auto;
-  gap: 10px;
+  gap: 8px;
 }
 
 .toggleButton,
@@ -294,81 +317,59 @@
 
 .toggleButton {
   padding: 0 14px;
-  border: 1px solid rgba(160, 100, 255, 0.24);
-  border-radius: 12px;
-  background: transparent;
-  color: #f4f0ff;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  color: #f0f0f4;
+  font-family: inherit;
+  font-size: 13px;
+  transition: border-color 0.18s ease;
 }
 
+.toggleButton:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* --- Plan picker --- */
 .planPicker {
-  border: none;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 16px;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.02);
 }
 
 .planPicker legend {
-  font-size: 13px;
-  font-weight: 600;
-  color: #9b8fbb;
-  margin-bottom: 10px;
-  width: 100%;
+  font-size: 11px;
 }
 
-.planOption {
-  position: relative;
+.planPicker label {
   display: flex;
+  gap: 12px;
+  align-items: center;
+  color: #f0f0f4;
+  padding: 4px 0;
+  font-size: 16px;
+  font-weight: 600;
   cursor: pointer;
 }
 
-.planOption input {
-  position: absolute;
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.planOptionInner {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 14px 10px;
-  border: 1px solid rgba(160, 100, 255, 0.18);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.02);
-  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
-}
-
-.planOptionActive .planOptionInner {
-  border-color: rgba(255, 122, 48, 0.55);
-  background: rgba(255, 122, 48, 0.06);
-  box-shadow: 0 0 0 3px rgba(255, 122, 48, 0.1);
-}
-
-.planOptionName {
-  font-size: 15px;
-  font-weight: 700;
-  color: #f4f0ff;
-}
-
-.planOptionPrice {
-  font-size: 12px;
-  color: #9b8fbb;
-}
-
-.planOptionActive .planOptionPrice {
-  color: #ff7a30;
+.planPicker label span {
+  line-height: 1.25;
 }
 
 .planPicker input,
 .termsRow input {
   width: auto;
   height: auto;
+  accent-color: #ff4b33;
 }
 
+.planPicker input {
+  transform: scale(1.18);
+}
+
+/* --- Terms row --- */
 .termsRow {
   display: flex;
   gap: 10px;
@@ -376,28 +377,33 @@
 }
 
 .termsRow span {
-  font-size: 13px;
+  font-size: 12px;
   line-height: 1.6;
-  color: #9b8fbb;
+  color: rgba(255, 255, 255, 0.38);
 }
 
 .termsRow a {
-  color: #f4f0ff;
+  color: rgba(255, 255, 255, 0.6);
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
+/* --- Buttons --- */
 .button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  height: 48px;
-  padding: 0 18px;
+  height: 46px;
+  padding: 0 20px;
   border: 1px solid transparent;
   border-radius: 999px;
   text-decoration: none;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  font-family: inherit;
+  letter-spacing: 0.04em;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
 }
 
 .button:hover {
@@ -406,142 +412,78 @@
 
 .primaryButton {
   color: #fff;
-  background: linear-gradient(135deg, #a855f7 0%, #d946ef 46%, #ff7a30 100%);
-  box-shadow: 0 6px 24px rgba(255, 122, 48, 0.24);
+  background: linear-gradient(135deg, #ff4b33 0%, #d8301a 100%);
+  border-color: rgba(255, 120, 100, 0.5);
+  box-shadow: 0 6px 20px -10px rgba(255, 75, 51, 0.65);
+}
+
+.primaryButton:hover {
+  box-shadow: 0 10px 26px -12px rgba(255, 75, 51, 0.8);
 }
 
 .ghostButton,
 .outlineButton {
-  border-color: rgba(160, 100, 255, 0.24);
-  color: #f4f0ff;
-  background: transparent;
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #e8e8ef;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.ghostButton:hover,
+.outlineButton:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.07);
 }
 
 .demoButton {
-  border-color: rgba(255, 122, 48, 0.35);
-  color: #ff7a30;
-  background: rgba(255, 122, 48, 0.1);
+  border-color: rgba(255, 75, 51, 0.3);
+  color: rgba(255, 120, 80, 0.9);
+  background: rgba(255, 75, 51, 0.08);
+}
+
+.demoButton:hover {
+  border-color: rgba(255, 75, 51, 0.5);
+  background: rgba(255, 75, 51, 0.13);
 }
 
 .fullButton {
   width: 100%;
 }
 
+/* --- Session actions & link row --- */
 .sessionActions {
   display: grid;
-  gap: 14px;
-  margin-top: 24px;
-}
-
-.forgotLink {
-  border: 0;
-  background: transparent;
-  color: #9b8fbb;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  text-align: center;
-  padding: 2px 0;
-  margin-top: -8px;
-  transition: color 0.15s;
-}
-
-.forgotLink:hover {
-  color: #f4f0ff;
+  gap: 12px;
+  margin-top: 22px;
 }
 
 .linkRow {
   display: flex;
-  gap: 18px;
+  gap: 16px;
   flex-wrap: wrap;
   justify-content: center;
-  margin-top: 20px;
+  margin-top: 18px;
 }
 
 .textButton {
   border: 0;
   background: transparent;
-  color: #e3d7ff;
-  font-size: 17px;
-  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 14px;
+  font-weight: 500;
   line-height: 1.35;
   padding: 2px 0;
-  transition: color 0.2s ease, text-shadow 0.2s ease, transform 0.2s ease;
+  font-family: inherit;
+  transition: color 0.18s ease, transform 0.18s ease;
 }
 
 .textButton:hover,
 .textButton:focus-visible {
-  color: #ffb27e;
-  text-shadow: 0 0 18px rgba(255, 122, 48, 0.24);
+  color: rgba(255, 255, 255, 0.85);
   transform: translateY(-1px);
   outline: 0;
 }
 
-/* ── AI prompt box ── */
-.aiBox {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  margin-bottom: 22px;
-  padding: 0 20px;
-  height: 56px;
-  border: 1px solid rgba(168, 85, 247, 0.3);
-  border-radius: 16px;
-  background: rgba(168, 85, 247, 0.05);
-  cursor: text;
-  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
-}
-
-.aiBox:focus-within {
-  border-color: rgba(255, 122, 48, 0.5);
-  background: rgba(255, 122, 48, 0.04);
-  box-shadow: 0 0 0 3px rgba(255, 122, 48, 0.08);
-}
-
-.aiBoxGlyph {
-  font-size: 16px;
-  background: linear-gradient(135deg, #a855f7, #ff7a30);
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
-  flex-shrink: 0;
-  line-height: 1;
-}
-
-.aiBoxInput {
-  flex: 1;
-  height: 100%;
-  border: 0;
-  background: transparent;
-  color: #f4f0ff;
-  font-size: 15px;
-  font-family: inherit;
-}
-
-.aiBoxInput::placeholder {
-  color: rgba(155, 143, 187, 0.65);
-}
-
-.aiBoxInput:focus {
-  outline: 0;
-}
-
-.aiBoxCta {
-  flex-shrink: 0;
-  font-size: 12px;
-  font-weight: 600;
-  color: #9b8fbb;
-  letter-spacing: 0.02em;
-  white-space: nowrap;
-  transition: color 0.15s;
-}
-
-.aiBox:focus-within .aiBoxCta {
-  color: #ff7a30;
-}
-
+/* --- Responsive --- */
 @media (max-width: 960px) {
   .grid {
     grid-template-columns: 1fr;
@@ -569,7 +511,15 @@
 }
 
 @media (max-width: 640px) {
-  .shell,
+  .page {
+    padding: 24px 14px;
+  }
+
+  .shell {
+    padding: 20px;
+    border-radius: 16px;
+  }
+
   .sideCard,
   .cardBody {
     padding-left: 20px;
