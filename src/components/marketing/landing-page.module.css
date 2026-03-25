@@ -1,27 +1,28 @@
 .page {
-  --bg: #05050a;
-  --surface: #0b0a14;
-  --surface2: #100f1e;
-  --surface3: rgba(255, 255, 255, 0.025);
-  --border: rgba(255, 255, 255, 0.07);
-  --borderStrong: rgba(255, 255, 255, 0.13);
-  --text: #f0eeff;
-  --muted: #8a8098;
+  --bg: #07040d;
+  --surface: #16102a;
+  --surface2: #1e1538;
+  --surface3: rgba(255, 255, 255, 0.03);
+  --border: rgba(160, 100, 255, 0.12);
+  --borderStrong: rgba(160, 100, 255, 0.24);
+  --text: #f4f0ff;
+  --muted: #9b8fbb;
   --accent: #a855f7;
   --accent2: #ff7a30;
-  --accentDim: rgba(168, 85, 247, 0.12);
-  --accent2Dim: rgba(255, 122, 48, 0.10);
+  --accentDim: rgba(168, 85, 247, 0.14);
+  --accent2Dim: rgba(255, 122, 48, 0.12);
   --danger: #f87171;
-  --dangerDim: rgba(248, 113, 113, 0.10);
-  --radius: 14px;
-  --radiusLg: 22px;
-  --navHeight: 56px;
-  --tickerHeight: 32px;
+  --dangerDim: rgba(248, 113, 113, 0.12);
+  --radius: 16px;
+  --radiusLg: 24px;
+  --navHeight: 60px;
+  --tickerHeight: 34px;
   min-height: 100vh;
   color: var(--text);
   background:
-    radial-gradient(ellipse 80% 40% at 50% -5%, rgba(168, 85, 247, 0.11) 0%, transparent 100%),
-    #05050a;
+    radial-gradient(circle at 50% -8%, rgba(168, 85, 247, 0.16), transparent 22%),
+    radial-gradient(circle at 80% 8%, rgba(255, 122, 48, 0.12), transparent 18%),
+    linear-gradient(180deg, #090510 0%, #05030a 100%);
   font-family: var(--font-geist-sans), "Avenir Next", sans-serif;
 }
 
@@ -35,17 +36,16 @@
   inset: 0 0 auto;
   z-index: 50;
   height: var(--navHeight);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  background: rgba(5, 5, 10, 0.85);
+  border-bottom: 1px solid rgba(160, 100, 255, 0.1);
+  background: rgba(9, 6, 16, 0.94);
   backdrop-filter: blur(28px) saturate(1.4);
-  -webkit-backdrop-filter: blur(28px) saturate(1.4);
   transition: height 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
 }
 
 .navScrolled {
-  height: 48px;
-  background: rgba(5, 5, 10, 0.96);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05), 0 8px 32px rgba(0, 0, 0, 0.4);
+  height: 52px;
+  background: rgba(13, 10, 20, 0.98);
+  box-shadow: 0 4px 40px rgba(0, 0, 0, 0.45);
 }
 
 .navInner {
@@ -142,8 +142,8 @@
 
 .primaryButton {
   color: #fff;
-  background: linear-gradient(135deg, #a855f7 0%, #d946ef 46%, #ff7a30 100%);
-  box-shadow: 0 6px 24px rgba(255, 122, 48, 0.24);
+  background: linear-gradient(135deg, #9333ea 0%, #c026d3 46%, #f97316 100%);
+  box-shadow: 0 4px 18px rgba(168, 85, 247, 0.28), 0 1px 0 rgba(255, 255, 255, 0.1) inset;
 }
 
 .ghostButton,
@@ -180,8 +180,8 @@
   z-index: 45;
   overflow: hidden;
   height: var(--tickerHeight);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  background: rgba(8, 7, 14, 0.95);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
 }
 
 .ticker::before,
@@ -248,15 +248,15 @@
 .hero::before {
   content: "";
   position: absolute;
-  top: -200px;
+  top: -160px;
   left: 50%;
-  width: min(1000px, 100vw);
-  height: 600px;
+  width: min(900px, 100vw);
+  height: 700px;
   transform: translateX(-50%);
   border-radius: 999px;
   background:
-    radial-gradient(ellipse at 38% 50%, rgba(168, 85, 247, 0.13) 0%, transparent 55%),
-    radial-gradient(ellipse at 62% 50%, rgba(255, 122, 48, 0.08) 0%, transparent 50%);
+    radial-gradient(ellipse at 35% 50%, rgba(168, 85, 247, 0.2) 0%, rgba(168, 85, 247, 0.06) 28%, transparent 58%),
+    radial-gradient(ellipse at 66% 50%, rgba(255, 122, 48, 0.15) 0%, rgba(255, 122, 48, 0.05) 24%, transparent 56%);
   pointer-events: none;
 }
 
@@ -264,7 +264,7 @@
   content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 50% 30%, rgba(5, 5, 10, 0) 0%, rgba(5, 5, 10, 0.25) 55%, rgba(5, 5, 10, 0.88) 100%);
+  background: radial-gradient(circle at 50% 28%, rgba(7, 4, 13, 0) 0%, rgba(7, 4, 13, 0.3) 52%, rgba(4, 2, 8, 0.84) 100%);
   pointer-events: none;
 }
 
@@ -364,17 +364,13 @@
 .dashboardCard {
   position: relative;
   z-index: 1;
-  margin-top: 52px;
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 18px;
+  margin-top: 60px;
+  border: 1px solid var(--borderStrong);
+  border-radius: 20px;
   overflow: hidden;
-  background: rgba(8, 7, 16, 0.92);
-  box-shadow:
-    0 0 0 1px rgba(168, 85, 247, 0.08) inset,
-    0 48px 100px rgba(0, 0, 0, 0.55),
-    0 8px 32px rgba(168, 85, 247, 0.06);
-  animation: floatCard 7s ease-in-out infinite;
-  backdrop-filter: blur(12px);
+  background: rgba(22, 16, 42, 0.94);
+  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.45);
+  animation: floatCard 6s ease-in-out infinite;
 }
 
 .dashboardHeader {
@@ -410,9 +406,10 @@
 .proPanel,
 .faqItem,
 .ctaPanel {
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface);
+  border: 1px solid rgba(160, 100, 255, 0.1);
+  border-radius: 14px;
+  background: rgba(26, 18, 48, 0.72);
+  backdrop-filter: blur(8px);
 }
 
 .statCard,
@@ -522,7 +519,7 @@
 }
 
 .section {
-  padding: 100px 0;
+  padding: 88px 0;
 }
 
 .sectionLabel {
@@ -554,8 +551,8 @@
 .securityGrid,
 .compareGrid {
   display: grid;
-  gap: 24px;
-  margin-top: 56px;
+  gap: 18px;
+  margin-top: 48px;
 }
 
 .steps {
@@ -563,9 +560,12 @@
 }
 
 .beforeAfter,
-.pricingGrid,
 .compareGrid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.pricingGrid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .stepCard,
@@ -575,8 +575,20 @@
 .planCard {
   position: relative;
   overflow: hidden;
-  padding: 32px;
+  padding: 26px;
   transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.stepCard::before,
+.featureItem::before,
+.securityCard::before,
+.planCard::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 10%, rgba(168, 85, 247, 0.4) 50%, transparent 90%);
+  pointer-events: none;
 }
 
 .stepCard::before,
@@ -587,8 +599,8 @@
   left: 0;
   right: 0;
   top: 0;
-  height: 1px;
-  background: linear-gradient(90deg, rgba(168, 85, 247, 0.6), rgba(255, 122, 48, 0.4), transparent 80%);
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--accent2), transparent);
 }
 
 .stepCard:hover,
@@ -659,8 +671,8 @@
 }
 
 .afterCard {
-  border-color: rgba(168, 85, 247, 0.18);
-  background: rgba(168, 85, 247, 0.04);
+  border-color: rgba(168, 85, 247, 0.25);
+  background: rgba(168, 85, 247, 0.05);
 }
 
 .featureGrid {
@@ -675,7 +687,68 @@
 
 .featureItem {
   background: var(--surface);
-  backdrop-filter: blur(8px);
+}
+
+.researchHighlights {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 40px;
+}
+
+.researchTile {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  transition: border-color 0.2s;
+}
+
+.researchTile:hover {
+  border-color: rgba(255, 75, 51, 0.3);
+}
+
+.researchTileIcon {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--accentDim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.researchTileIcon svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+
+.researchTileIconAlt {
+  background: var(--accent2Dim);
+}
+
+.researchTileIconAlt svg {
+  stroke: var(--accent2);
+}
+
+.researchTileName {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 3px;
+  color: var(--text);
+}
+
+.researchTileSub {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
 }
 
 .researchCtaRow {
@@ -707,8 +780,8 @@
   content: "";
   position: absolute;
   inset: 0 0 auto;
-  height: 1px;
-  background: linear-gradient(90deg, rgba(168, 85, 247, 0.55), rgba(255, 122, 48, 0.35), transparent 80%);
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
 }
 
 .chartCard:hover {
@@ -908,9 +981,8 @@
   gap: 48px;
   padding: 48px;
   border-radius: var(--radiusLg);
-  background: rgba(10, 9, 18, 0.96);
-  border-color: rgba(168, 85, 247, 0.15);
-  box-shadow: 0 0 60px rgba(168, 85, 247, 0.05) inset;
+  background: rgba(22, 16, 42, 0.96);
+  border-color: var(--borderStrong);
 }
 
 .proTag {
@@ -1025,9 +1097,8 @@
   position: relative;
   overflow: visible;
   padding-top: 44px;
-  border-color: rgba(168, 85, 247, 0.2);
-  background: rgba(168, 85, 247, 0.04);
-  box-shadow: 0 0 40px rgba(168, 85, 247, 0.05) inset;
+  border-color: rgba(168, 85, 247, 0.3);
+  background: rgba(168, 85, 247, 0.05);
 }
 
 .featuredBadge {
@@ -1101,8 +1172,7 @@
 }
 
 .compareHighlight {
-  border-color: rgba(168, 85, 247, 0.2);
-  background: rgba(168, 85, 247, 0.03);
+  border-color: rgba(168, 85, 247, 0.3);
 }
 
 .compareHead {
@@ -1182,7 +1252,7 @@
 }
 
 .faqButton:hover {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--surface2);
 }
 
 .faqChevron {
@@ -1207,8 +1277,8 @@
 }
 
 .faqOpen {
-  border-left: 1px solid rgba(255, 122, 48, 0.45);
-  background: rgba(255, 122, 48, 0.03);
+  border-left: 2px solid var(--accent2);
+  background: var(--surface2);
 }
 
 .faqOpen .faqChevron {
@@ -1223,20 +1293,18 @@
 
 .ctaSection {
   padding: 100px 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
   background:
-    radial-gradient(ellipse at 40% 50%, rgba(168, 85, 247, 0.05) 0%, transparent 55%),
-    radial-gradient(ellipse at 60% 50%, rgba(255, 122, 48, 0.04) 0%, transparent 55%);
+    radial-gradient(ellipse at 40% 50%, rgba(168, 85, 247, 0.07) 0%, transparent 60%),
+    radial-gradient(ellipse at 60% 50%, rgba(255, 122, 48, 0.07) 0%, transparent 60%);
 }
 
 .ctaPanel {
-  padding: 56px 32px;
+  padding: 44px 28px;
   border-radius: var(--radiusLg);
   text-align: center;
-  background: rgba(10, 9, 18, 0.96);
-  border-color: rgba(168, 85, 247, 0.12);
-  box-shadow: 0 0 80px rgba(168, 85, 247, 0.04) inset;
+  background: rgba(22, 16, 42, 0.96);
 }
 
 .ctaPanel h2 {
@@ -1380,6 +1448,10 @@
     grid-template-columns: 1fr;
   }
 
+  .researchHighlights {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .navInner {
     flex-direction: column;
     align-items: center;
@@ -1443,7 +1515,8 @@
   .securityGrid,
   .pricingGrid,
   .compareGrid,
-  .footerGrid {
+  .footerGrid,
+  .researchHighlights {
     grid-template-columns: 1fr;
   }
 
@@ -1465,180 +1538,5 @@
 
   .planResearchCallout .button {
     width: 100%;
-  }
-}
-
-/* ─── AI Teaser Box ─────────────────────────────────────────── */
-
-.aiTeaser {
-  position: relative;
-  z-index: 1;
-  width: min(600px, 100%);
-  margin: 36px auto 0;
-  border: 1px solid rgba(168, 85, 247, 0.2);
-  border-radius: 18px;
-  overflow: hidden;
-  background: rgba(8, 7, 16, 0.72);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.04) inset,
-    0 32px 72px rgba(0, 0, 0, 0.45),
-    0 0 40px rgba(168, 85, 247, 0.06);
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
-}
-
-.aiTeaser:focus-within {
-  border-color: rgba(168, 85, 247, 0.35);
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.05) inset,
-    0 32px 72px rgba(0, 0, 0, 0.45),
-    0 0 50px rgba(168, 85, 247, 0.1);
-}
-
-.aiTeaserHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
-.aiTeaserHeaderLeft {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.aiPulseDot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 6px rgba(168, 85, 247, 0.8);
-  animation: pulseDotPurple 2s infinite;
-}
-
-.aiTeaserInput {
-  display: flex;
-  align-items: center;
-  padding: 14px 16px;
-  gap: 10px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.aiInput {
-  flex: 1;
-  background: none;
-  border: none;
-  outline: none;
-  color: var(--text);
-  font-size: 14px;
-  font-family: inherit;
-  line-height: 1.5;
-}
-
-.aiInput::placeholder {
-  color: rgba(138, 128, 152, 0.55);
-}
-
-.aiSendButton {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 32px;
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: rgba(168, 85, 247, 0.12);
-  border: 1px solid rgba(168, 85, 247, 0.25);
-  color: var(--accent);
-  cursor: pointer;
-  transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
-}
-
-.aiSendButton:hover {
-  background: rgba(168, 85, 247, 0.22);
-  transform: scale(1.06);
-  box-shadow: 0 0 14px rgba(168, 85, 247, 0.25);
-}
-
-.aiSendButton svg {
-  width: 14px;
-  height: 14px;
-  stroke: currentColor;
-  fill: none;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.aiSuggestions {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 10px 16px;
-  flex-wrap: wrap;
-}
-
-.aiChip {
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  background: rgba(255, 255, 255, 0.025);
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
-  font-family: inherit;
-  white-space: nowrap;
-}
-
-.aiChip:hover {
-  border-color: rgba(168, 85, 247, 0.3);
-  color: var(--text);
-  background: rgba(168, 85, 247, 0.06);
-}
-
-.aiLockNote {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  margin-left: auto;
-  color: rgba(138, 128, 152, 0.4);
-  font-size: 10px;
-  letter-spacing: 0.04em;
-  white-space: nowrap;
-}
-
-.aiLockNote svg {
-  flex: 0 0 11px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
-  stroke-linecap: round;
-}
-
-@keyframes pulseDotPurple {
-  0%   { box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.7); }
-  60%  { box-shadow: 0 0 0 5px rgba(168, 85, 247, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(168, 85, 247, 0); }
-}
-
-@media (max-width: 640px) {
-  .aiTeaser {
-    border-radius: 14px;
-  }
-
-  .aiLockNote {
-    display: none;
   }
 }
