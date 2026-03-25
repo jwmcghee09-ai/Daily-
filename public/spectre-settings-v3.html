@@ -330,7 +330,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
     setText("nav-user-email", payload.user.email || "—");
     setText("settings-account-name", payload.user.displayName || payload.user.email || "—");
     setText("settings-account-email", payload.user.email || "—");
-    const planLabel = payload.user.proEnabled ? "Pro Active" : "Starter";
+    const planLabel = payload.user.proEnabled ? "Pro Active" : payload.user.planTier === "plus" ? "Plus" : "Starter";
     setText("settings-account-plan", planLabel);
     const membershipStatus = payload.user.subscriptionStatus
       ? String(payload.user.subscriptionStatus).toUpperCase()

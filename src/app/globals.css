@@ -1604,7 +1604,8 @@ tr:hover td {
   box-shadow: 0 0 0 1px rgba(255, 75, 51, 0.34);
 }
 
-.plan-chip.starter {
+.plan-chip.starter,
+.plan-chip.plus {
   border-color: #7b7b86;
   background: #1a1a1f;
   color: #e6e6eb;
@@ -4911,7 +4912,8 @@ td {
   color: #e3def9;
 }
 
-.spectre-app .plan-chip.starter {
+.spectre-app .plan-chip.starter,
+.spectre-app .plan-chip.plus {
   background: rgba(255, 77, 26, 0.12);
   border-color: rgba(255, 77, 26, 0.35);
   color: #ffb7a0;
@@ -5477,7 +5479,8 @@ td {
   padding: 0.45rem 0.7rem;
 }
 
-.spectre-app .plan-chip.starter {
+.spectre-app .plan-chip.starter,
+.spectre-app .plan-chip.plus {
   background: rgba(255, 77, 26, 0.1);
   border: 1px solid rgba(255, 77, 26, 0.3);
   color: #ffb7a0;

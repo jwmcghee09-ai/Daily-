@@ -39,11 +39,11 @@ export async function runProDipAlertBackgroundScan(): Promise<ProDipAlertBackgro
 
   for (const user of candidates) {
     const entitlements = readUserEntitlements(user.id);
-    if (!entitlements.proEnabled) {
+    if (!entitlements.proEnabled && entitlements.planTier !== "plus") {
       skippedUsers.push({
         userId: user.id,
         email: user.email,
-        reason: "No paid Pro access",
+        reason: "No active Plus or Pro subscription",
       });
       continue;
     }

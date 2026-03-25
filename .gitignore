@@ -54,3 +54,7 @@ aladdin.sqlite
 backups/
 
 *.spectre-backup.json
+
+# Screenshots and local captures
+screenshots/
+public/*.png

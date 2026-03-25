@@ -483,7 +483,7 @@ export default function Home() {
     const verifiedState = params.get("verified");
 
     if (checkoutState === "success") {
-      const planLabel = checkoutPlan === "pro" ? "Pro" : "Starter";
+      const planLabel = checkoutPlan === "pro" ? "Pro" : "Plus";
       setBanner({ type: "success", message: `${planLabel} plan checkout complete. Your subscription will activate shortly.` });
     } else if (checkoutState === "cancelled") {
       setBanner({ type: "info", message: "Stripe checkout was cancelled." });
@@ -1633,7 +1633,7 @@ export default function Home() {
     }
 
     let checkoutEmail = sessionUser?.email || "";
-    const planLabel = plan === "pro" ? "Pro" : "Starter";
+    const planLabel = plan === "pro" ? "Pro" : "Plus";
 
     if (!checkoutEmail) {
       const fromGuestEmail = (guestEmail || "").trim().toLowerCase();
@@ -2576,7 +2576,7 @@ export default function Home() {
           <span className="meta-item">
             Plan:
             {" "}
-            <span className={`plan-chip ${sessionUser.proEnabled ? "pro" : sessionUser.planTier === "plus" ? "starter" : sessionUser.planTier}`}>
+            <span className={`plan-chip ${sessionUser.proEnabled ? "pro" : sessionUser.planTier}`}>
               {demoMode ? "PRO DEMO" : sessionUser.proEnabled ? "PRO ACTIVE" : sessionUser.planTier.toUpperCase()}
             </span>
           </span>
