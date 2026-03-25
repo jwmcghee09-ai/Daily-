@@ -53,11 +53,11 @@ body {
 .hero {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(148deg, #0a0a0e 0%, #111118 45%, #0f0c14 100%);
+  background: linear-gradient(148deg, #0b0b0f 0%, #131318 45%, #141015 100%);
   color: var(--text);
-  padding: 22px 24px;
-  border: 1px solid rgba(255, 75, 51, 0.22);
-  border-radius: 14px;
+  padding: 24px;
+  border: 1px solid #6b2e25;
+  border-radius: 16px;
   box-shadow: var(--shadow);
   display: flex;
   justify-content: space-between;
@@ -1586,133 +1586,28 @@ tr:hover td {
 .plan-chip {
   display: inline-flex;
   align-items: center;
-  padding: 3px 10px;
+  padding: 2px 8px;
   border-radius: 999px;
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   font-weight: 800;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.05);
-  color: #c8c8d2;
+  border: 1px solid #5a5a64;
+  background: #1a1a1f;
+  color: #f4f4f6;
 }
 
 .plan-chip.pro {
-  border-color: rgba(255, 75, 51, 0.6);
-  background: linear-gradient(130deg, rgba(255, 75, 51, 0.22) 0%, rgba(255, 47, 20, 0.18) 100%);
-  color: #ffb8ad;
-  box-shadow: 0 0 0 1px rgba(255, 75, 51, 0.18) inset;
+  border-color: #ff9e90;
+  background: linear-gradient(130deg, #ff4b33 0%, #ff2f14 100%);
+  color: #fff;
+  box-shadow: 0 0 0 1px rgba(255, 75, 51, 0.34);
 }
 
-.plan-chip.starter,
-.plan-chip.plus {
-  border-color: rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.04);
-  color: #b0b0ba;
-}
-
-/* ── Upgrade CTAs ── */
-.upgrade-cta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-  padding: 16px 20px;
-  border-radius: 14px;
-  border: 1px solid rgba(255, 75, 51, 0.28);
-  background: linear-gradient(135deg, rgba(255, 75, 51, 0.1) 0%, rgba(255, 75, 51, 0.04) 100%);
-  position: relative;
-  overflow: hidden;
-}
-
-.upgrade-cta::before {
-  content: "";
-  position: absolute;
-  inset: 0 0 auto;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 75, 51, 0.5), transparent);
-}
-
-.upgrade-cta-pro {
-  border-color: rgba(168, 85, 247, 0.3);
-  background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(168, 85, 247, 0.04) 100%);
-}
-
-.upgrade-cta-pro::before {
-  background: linear-gradient(90deg, transparent, rgba(168, 85, 247, 0.5), transparent);
-}
-
-.upgrade-cta-content {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.upgrade-cta-badge {
-  padding: 3px 10px;
-  border-radius: 999px;
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  border: 1px solid rgba(255, 75, 51, 0.4);
-  background: rgba(255, 75, 51, 0.12);
-  color: #ffc4b8;
-}
-
-.upgrade-cta-badge-pro {
-  border-color: rgba(168, 85, 247, 0.4);
-  background: rgba(168, 85, 247, 0.12);
-  color: #d4b4ff;
-}
-
-.upgrade-cta-title {
-  font-size: 0.94rem;
-  font-weight: 700;
-  color: #f3f3f6;
-}
-
-.upgrade-cta-desc {
-  font-size: 0.85rem;
-  color: #a1a1aa;
-}
-
-.upgrade-cta-btn {
-  flex-shrink: 0;
-  padding: 9px 18px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 75, 51, 0.5);
-  background: linear-gradient(135deg, rgba(255, 75, 51, 0.2), rgba(255, 75, 51, 0.1));
-  color: #ffd0c8;
-  font-size: 0.88rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
-}
-
-.upgrade-cta-btn:hover {
-  transform: translateY(-1px);
-  background: linear-gradient(135deg, rgba(255, 75, 51, 0.32), rgba(255, 75, 51, 0.18));
-  box-shadow: 0 4px 20px rgba(255, 75, 51, 0.22);
-}
-
-.upgrade-cta-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.upgrade-cta-btn-pro {
-  border-color: rgba(168, 85, 247, 0.5);
-  background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(168, 85, 247, 0.1));
-  color: #ddc8ff;
-}
-
-.upgrade-cta-btn-pro:hover {
-  background: linear-gradient(135deg, rgba(168, 85, 247, 0.32), rgba(168, 85, 247, 0.18));
-  box-shadow: 0 4px 20px rgba(168, 85, 247, 0.22);
+.plan-chip.starter {
+  border-color: #7b7b86;
+  background: #1a1a1f;
+  color: #e6e6eb;
 }
 
 .pro-analytics-section {
@@ -5016,8 +4911,7 @@ td {
   color: #e3def9;
 }
 
-.spectre-app .plan-chip.starter,
-.spectre-app .plan-chip.plus {
+.spectre-app .plan-chip.starter {
   background: rgba(255, 77, 26, 0.12);
   border-color: rgba(255, 77, 26, 0.35);
   color: #ffb7a0;
@@ -5583,8 +5477,7 @@ td {
   padding: 0.45rem 0.7rem;
 }
 
-.spectre-app .plan-chip.starter,
-.spectre-app .plan-chip.plus {
+.spectre-app .plan-chip.starter {
   background: rgba(255, 77, 26, 0.1);
   border: 1px solid rgba(255, 77, 26, 0.3);
   color: #ffb7a0;
@@ -7509,4 +7402,590 @@ td {
 .spectre-landing--sleek .spectre-plan .badge,
 .spectre-landing--sleek .spectre-db-card p {
   font-family: "DM Mono", "Azeret Mono", var(--font-geist-mono), monospace;
+}
+
+
+/* ============================================================
+   SPECTRE DASHBOARD OVERHAUL — Minimalist v3
+   Clean dark surfaces · Neutral borders · Generous spacing
+   ============================================================ */
+
+/* --- Global background: flat deep black, no noise stripes --- */
+body {
+  background: #06060a !important;
+}
+
+body::before,
+body::after {
+  display: none !important;
+}
+
+/* --- Shell: more breathing room --- */
+.shell {
+  max-width: 1360px !important;
+  gap: 24px !important;
+  padding: 36px 28px 60px !important;
+}
+
+/* --- Hero panel: clean card, no diagonal lines --- */
+.hero {
+  background: #0c0b12 !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  border-left: 2px solid rgba(255, 75, 51, 0.45) !important;
+  border-radius: 18px !important;
+  box-shadow: 0 20px 40px -28px rgba(0, 0, 0, 0.8) !important;
+  padding: 32px !important;
+  gap: 24px !important;
+}
+
+.hero::before {
+  width: 300px !important;
+  height: 300px !important;
+  inset: -40% -8% auto auto !important;
+  background: radial-gradient(circle, rgba(255, 75, 51, 0.12) 0%, transparent 70%) !important;
+}
+
+/* Remove diagonal stripe noise from hero */
+.hero::after {
+  display: none !important;
+}
+
+.hero h1 {
+  letter-spacing: 0.14em !important;
+  text-shadow: none !important;
+}
+
+.hero-tagline {
+  color: rgba(255, 255, 255, 0.45) !important;
+  letter-spacing: 0.08em !important;
+}
+
+.hero p,
+.hero-description {
+  color: #a1a1aa !important;
+}
+
+/* --- Meta side-card --- */
+.meta {
+  background: rgba(255, 255, 255, 0.025) !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  border-radius: 14px !important;
+  box-shadow: none !important;
+  padding: 16px !important;
+}
+
+.meta-item {
+  background: transparent !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  color: #e2e2e8 !important;
+}
+
+/* --- Buttons --- */
+.refresh-btn {
+  background: linear-gradient(135deg, #ff4b33 0%, #e03520 100%) !important;
+  border: 1px solid rgba(255, 120, 100, 0.5) !important;
+  box-shadow: none !important;
+}
+
+.refresh-btn:hover {
+  box-shadow: 0 8px 20px -12px rgba(255, 75, 51, 0.7) !important;
+}
+
+.clear-btn {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #e8e8ef !important;
+}
+
+.clear-btn:hover {
+  background: rgba(255, 255, 255, 0.07) !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  box-shadow: none !important;
+}
+
+/* --- Upload buttons --- */
+.file-input span,
+.template-btn {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #e2e2e8 !important;
+}
+
+.file-input:hover span,
+.template-btn:hover {
+  background: rgba(255, 255, 255, 0.07) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  box-shadow: none !important;
+}
+
+/* --- All main cards: clean flat surface --- */
+.upload-card,
+.kpi-card,
+.chart-card,
+.risk-section,
+.table-section,
+.gold-section,
+.insights-section,
+.quality-section,
+.dip-alerts-section {
+  background: #0c0b12 !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 12px 28px -20px rgba(0, 0, 0, 0.6) !important;
+}
+
+/* Remove red orb glow from upload-card corners */
+.upload-card::after {
+  display: none !important;
+}
+
+.upload-card {
+  border-top: 1px solid rgba(255, 75, 51, 0.3) !important;
+  border-left: none !important;
+}
+
+/* Card hover: very subtle lift, no red border flash */
+.upload-card:hover,
+.kpi-card:hover,
+.chart-card:hover,
+.insight-card:hover,
+.stress-card:hover,
+.quality-card:hover,
+.risk-card:hover,
+.gold-card:hover,
+.dip-alert-card:hover {
+  transform: translateY(-2px) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 20px 38px -26px rgba(0, 0, 0, 0.8) !important;
+}
+
+/* --- KPI cards --- */
+.kpi-card {
+  padding: 20px !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+.kpi-card.kpi-positive {
+  border-top: 1px solid rgba(255, 255, 255, 0.55) !important;
+  background: #0c0b12 !important;
+}
+
+.kpi-card.kpi-negative {
+  border-top: 1px solid rgba(255, 75, 51, 0.65) !important;
+  background: #0c0b12 !important;
+}
+
+.kpi-card p {
+  color: rgba(255, 255, 255, 0.4) !important;
+  letter-spacing: 0.09em !important;
+  font-size: 0.73rem !important;
+  text-transform: uppercase !important;
+}
+
+.kpi-card strong {
+  margin-top: 10px !important;
+  font-size: 1.22rem !important;
+  color: #f4f4f5 !important;
+}
+
+/* --- Insight / stress / quality / risk / dip sub-cards --- */
+.insight-card,
+.stress-card,
+.quality-card,
+.risk-card,
+.gold-card,
+.gold-card.silver,
+.dip-alert-card {
+  background: rgba(255, 255, 255, 0.02) !important;
+  border: 1px solid rgba(255, 255, 255, 0.07) !important;
+  border-radius: 12px !important;
+}
+
+/* Stress card left borders: keep accent but softer */
+.stress-card.down {
+  border-left: 3px solid rgba(255, 75, 51, 0.6) !important;
+  background: rgba(255, 75, 51, 0.03) !important;
+}
+
+.stress-card.up {
+  border-left: 3px solid rgba(255, 255, 255, 0.25) !important;
+  background: rgba(255, 255, 255, 0.015) !important;
+}
+
+/* Quality / risk left borders */
+.quality-card.good,
+.risk-card.green {
+  border-left: 3px solid rgba(255, 255, 255, 0.35) !important;
+}
+
+.quality-card.warn,
+.risk-card.yellow {
+  border-left: 3px solid rgba(255, 160, 80, 0.65) !important;
+}
+
+.risk-card.red {
+  border-left: 3px solid rgba(255, 75, 51, 0.7) !important;
+}
+
+/* Gold cards */
+.gold-card {
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background: rgba(255, 255, 255, 0.02) !important;
+}
+
+.gold-card.silver {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  background: rgba(255, 255, 255, 0.02) !important;
+}
+
+.gold-card p {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.gold-card.silver p {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+/* --- Chart cards --- */
+.chart-card {
+  padding: 22px !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.chart-card.chart-portfolio {
+  border-top-color: rgba(255, 255, 255, 0.28) !important;
+}
+
+.chart-card.chart-exposure {
+  border-top-color: rgba(255, 75, 51, 0.45) !important;
+}
+
+.chart-card.chart-history {
+  border-top-color: rgba(255, 140, 120, 0.4) !important;
+}
+
+/* --- Section headings inside cards --- */
+.insights-section > h2,
+.gold-section > h2,
+.quality-section > h2,
+.dip-alerts-head h2,
+.risk-section > .risk-head > h2,
+.table-section > h2,
+.chart-card > h2,
+.upload-card h2,
+.risk-section h2,
+.table-section h2,
+.chart-card h2,
+.gold-section h2,
+.insights-section h2,
+.quality-section h2,
+.dip-alerts-section h2,
+.pro-analytics-head h2 {
+  color: #f0f0f2 !important;
+  letter-spacing: 0.07em !important;
+  font-size: 0.88rem !important;
+  text-transform: uppercase !important;
+}
+
+/* Dot accent before section h2: keep but use neutral */
+.insights-section > h2::before,
+.gold-section > h2::before,
+.quality-section > h2::before,
+.dip-alerts-head h2::before,
+.risk-section > .risk-head > h2::before,
+.table-section > h2::before,
+.chart-card > h2::before {
+  background: rgba(255, 75, 51, 0.7) !important;
+  box-shadow: 0 0 0 3px rgba(255, 75, 51, 0.12) !important;
+}
+
+/* --- Table --- */
+.table-section::before {
+  display: none !important;
+}
+
+.table-wrap {
+  border: 1px solid rgba(255, 255, 255, 0.07) !important;
+  border-radius: 10px !important;
+}
+
+th {
+  background: rgba(255, 255, 255, 0.03) !important;
+  color: rgba(255, 255, 255, 0.45) !important;
+  font-size: 0.7rem !important;
+  letter-spacing: 0.1em !important;
+}
+
+th,
+td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+  padding: 11px 10px !important;
+}
+
+td {
+  color: #dcdce3 !important;
+}
+
+tr:nth-child(even) td {
+  background: transparent !important;
+}
+
+tr:hover td {
+  background: rgba(255, 255, 255, 0.025) !important;
+}
+
+/* --- Risk window controls --- */
+.risk-window-btn {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #d0d0d8 !important;
+  border-radius: 8px !important;
+}
+
+.risk-window-btn:hover {
+  border-color: rgba(255, 255, 255, 0.22) !important;
+}
+
+.risk-window-btn.active {
+  background: linear-gradient(135deg, rgba(255, 75, 51, 0.9) 0%, rgba(220, 45, 20, 0.9) 100%) !important;
+  border-color: rgba(255, 120, 100, 0.5) !important;
+  color: #fff !important;
+  box-shadow: 0 4px 14px -8px rgba(255, 75, 51, 0.7) !important;
+}
+
+/* --- Banners --- */
+.banner.success,
+.banner.error,
+.banner.info {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: #e8e8ef !important;
+}
+
+.banner.error {
+  border-color: rgba(255, 75, 51, 0.4) !important;
+  color: #ffd0c8 !important;
+}
+
+.estimate-note {
+  background: rgba(255, 75, 51, 0.06) !important;
+  border-color: rgba(255, 75, 51, 0.25) !important;
+  color: #ffcfc6 !important;
+}
+
+/* --- Pro analytics section --- */
+.pro-analytics-section {
+  background: #0c0b12 !important;
+  border: 1px solid rgba(255, 255, 255, 0.07) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 12px 28px -20px rgba(0, 0, 0, 0.6) !important;
+}
+
+.pro-analytics-section.unlocked {
+  border-color: rgba(255, 75, 51, 0.2) !important;
+  box-shadow: 0 0 0 1px rgba(255, 75, 51, 0.08) inset, 0 12px 28px -20px rgba(0, 0, 0, 0.6) !important;
+}
+
+.pro-analytics-card {
+  background: rgba(255, 255, 255, 0.02) !important;
+  border: 1px solid rgba(255, 255, 255, 0.07) !important;
+}
+
+.pro-analytics-section.unlocked .pro-analytics-card {
+  border-color: rgba(255, 75, 51, 0.18) !important;
+  background: rgba(255, 75, 51, 0.04) !important;
+}
+
+.pro-analytics-status {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.pro-analytics-section.unlocked .pro-analytics-status {
+  background: linear-gradient(130deg, rgba(255, 75, 51, 0.9) 0%, rgba(220, 45, 20, 0.9) 100%) !important;
+  border-color: rgba(255, 120, 100, 0.5) !important;
+  color: #fff !important;
+}
+
+/* --- AI panel --- */
+.holdings-ai-panel {
+  border: 1px solid rgba(255, 255, 255, 0.07) !important;
+  background: rgba(255, 255, 255, 0.015) !important;
+  border-radius: 12px !important;
+}
+
+.holdings-ai-form textarea {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #f0f0f4 !important;
+}
+
+.holdings-ai-form textarea:focus-visible {
+  outline: 1px solid rgba(255, 75, 51, 0.5) !important;
+}
+
+.holdings-ai-block {
+  background: rgba(255, 255, 255, 0.02) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.holdings-ai-breakdown-card {
+  background: rgba(255, 255, 255, 0.02) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+/* --- Plan chip --- */
+.plan-chip {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+.plan-chip.pro {
+  background: linear-gradient(130deg, #ff4b33 0%, #d8301a 100%) !important;
+  border-color: rgba(255, 120, 100, 0.5) !important;
+  box-shadow: 0 0 0 1px rgba(255, 75, 51, 0.2) !important;
+}
+
+/* --- Source badges: keep colorful but slightly more neutral --- */
+.source-badge {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* --- Dip alert cards --- */
+.dip-alert-card {
+  background: rgba(255, 255, 255, 0.02) !important;
+  border: 1px solid rgba(255, 255, 255, 0.07) !important;
+}
+
+.dip-alert-status.enabled {
+  background: rgba(255, 75, 51, 0.12) !important;
+  border-color: rgba(255, 75, 51, 0.4) !important;
+}
+
+/* --- Dip alert form inputs --- */
+.dip-alerts-form input,
+.auth-form-grid input {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #f0f0f4 !important;
+}
+
+.dip-alerts-form input:focus,
+.auth-form-grid input:focus {
+  border-color: rgba(255, 75, 51, 0.55) !important;
+  box-shadow: 0 0 0 2px rgba(255, 75, 51, 0.12) !important;
+}
+
+/* --- Empty state --- */
+.empty {
+  background: rgba(255, 255, 255, 0.02) !important;
+  border: 1px dashed rgba(255, 255, 255, 0.1) !important;
+  color: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* --- Asset & performer rows --- */
+.asset-row,
+.performer-row {
+  background: rgba(255, 255, 255, 0.015) !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+/* --- PnL chips --- */
+.pnl-chip.up {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  color: #f0f0f4 !important;
+}
+
+.pnl-chip.down {
+  background: rgba(255, 75, 51, 0.12) !important;
+  border-color: rgba(255, 75, 51, 0.45) !important;
+  color: #ffd5ce !important;
+}
+
+/* --- Footer --- */
+.footer-note {
+  border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
+  color: rgba(255, 255, 255, 0.3) !important;
+  padding-top: 20px !important;
+}
+
+.footer-disclaimer,
+.footer-contact,
+.footer-legal {
+  color: rgba(255, 255, 255, 0.25) !important;
+}
+
+.footer-contact a {
+  color: rgba(255, 255, 255, 0.4) !important;
+}
+
+.footer-contact a:hover {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* --- Recharts styling: cleaner chart look --- */
+.recharts-cartesian-grid line {
+  stroke: rgba(255, 255, 255, 0.04) !important;
+}
+
+.recharts-text,
+.recharts-legend-item-text {
+  fill: rgba(255, 255, 255, 0.42) !important;
+  font-size: 0.72rem !important;
+}
+
+/* --- Auth screen overhaul (sign-in page) --- */
+body:has(.auth-shell) {
+  background: #06060a !important;
+}
+
+.auth-brand {
+  background: #0c0b12 !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  border-left: 2px solid rgba(255, 75, 51, 0.4) !important;
+  border-radius: 18px !important;
+}
+
+.auth-brand::before {
+  background: radial-gradient(circle, rgba(255, 75, 51, 0.1) 0%, transparent 72%) !important;
+}
+
+.auth-login-card {
+  background: #0c0b12 !important;
+  border: 1px solid rgba(255, 255, 255, 0.07) !important;
+  border-radius: 18px !important;
+}
+
+.auth-terms {
+  background: rgba(255, 255, 255, 0.02) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+/* --- Metric help popup --- */
+.metric-help {
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  background: rgba(255, 255, 255, 0.03) !important;
+}
+
+/* --- Upload grid: 4-col compact style --- */
+@media (max-width: 900px) {
+  .upload-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .upload-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .shell {
+    padding: 18px 14px 36px !important;
+    gap: 16px !important;
+  }
+
+  .hero {
+    padding: 20px !important;
+  }
 }
