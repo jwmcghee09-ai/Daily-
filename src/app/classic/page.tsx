@@ -2615,6 +2615,42 @@ export default function Home() {
       ) : null}
       {banner ? <div className={`banner ${banner.type}`}>{banner.message}</div> : null}
 
+      {!demoMode && sessionUser.planTier === "none" && !sessionUser.proEnabled ? (
+        <div className="upgrade-cta upgrade-cta-plus">
+          <div className="upgrade-cta-content">
+            <span className="upgrade-cta-badge">Free Plan</span>
+            <strong className="upgrade-cta-title">Unlock Plus — $2.99/mo</strong>
+            <span className="upgrade-cta-desc">20 AI queries/month, dip alerts, and full portfolio analytics.</span>
+          </div>
+          <button
+            type="button"
+            className="upgrade-cta-btn"
+            onClick={() => void startPlusCheckout(sessionUser.email)}
+            disabled={checkoutWorking}
+          >
+            {checkoutWorking ? "Redirecting..." : "Upgrade to Plus →"}
+          </button>
+        </div>
+      ) : null}
+
+      {!demoMode && sessionUser.planTier === "plus" && !sessionUser.proEnabled ? (
+        <div className="upgrade-cta upgrade-cta-pro">
+          <div className="upgrade-cta-content">
+            <span className="upgrade-cta-badge upgrade-cta-badge-pro">Plus Plan</span>
+            <strong className="upgrade-cta-title">Upgrade to Pro — $9.99/mo</strong>
+            <span className="upgrade-cta-desc">Unlimited AI, Holdings AI analysis, advanced risk analytics.</span>
+          </div>
+          <button
+            type="button"
+            className="upgrade-cta-btn upgrade-cta-btn-pro"
+            onClick={() => void startProCheckout(sessionUser.email)}
+            disabled={checkoutWorking}
+          >
+            {checkoutWorking ? "Redirecting..." : "Upgrade to Pro →"}
+          </button>
+        </div>
+      ) : null}
+
       <section id="settings" className="settings-section">
         <div className="settings-head">
           <h2>Settings</h2>

@@ -53,11 +53,11 @@ body {
 .hero {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(148deg, #0b0b0f 0%, #131318 45%, #141015 100%);
+  background: linear-gradient(148deg, #0a0a0e 0%, #111118 45%, #0f0c14 100%);
   color: var(--text);
-  padding: 24px;
-  border: 1px solid #6b2e25;
-  border-radius: 16px;
+  padding: 22px 24px;
+  border: 1px solid rgba(255, 75, 51, 0.22);
+  border-radius: 14px;
   box-shadow: var(--shadow);
   display: flex;
   justify-content: space-between;
@@ -1586,29 +1586,133 @@ tr:hover td {
 .plan-chip {
   display: inline-flex;
   align-items: center;
-  padding: 2px 8px;
+  padding: 3px 10px;
   border-radius: 999px;
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 800;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  border: 1px solid #5a5a64;
-  background: #1a1a1f;
-  color: #f4f4f6;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: #c8c8d2;
 }
 
 .plan-chip.pro {
-  border-color: #ff9e90;
-  background: linear-gradient(130deg, #ff4b33 0%, #ff2f14 100%);
-  color: #fff;
-  box-shadow: 0 0 0 1px rgba(255, 75, 51, 0.34);
+  border-color: rgba(255, 75, 51, 0.6);
+  background: linear-gradient(130deg, rgba(255, 75, 51, 0.22) 0%, rgba(255, 47, 20, 0.18) 100%);
+  color: #ffb8ad;
+  box-shadow: 0 0 0 1px rgba(255, 75, 51, 0.18) inset;
 }
 
 .plan-chip.starter,
 .plan-chip.plus {
-  border-color: #7b7b86;
-  background: #1a1a1f;
-  color: #e6e6eb;
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.04);
+  color: #b0b0ba;
+}
+
+/* ── Upgrade CTAs ── */
+.upgrade-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 16px 20px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 75, 51, 0.28);
+  background: linear-gradient(135deg, rgba(255, 75, 51, 0.1) 0%, rgba(255, 75, 51, 0.04) 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.upgrade-cta::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 75, 51, 0.5), transparent);
+}
+
+.upgrade-cta-pro {
+  border-color: rgba(168, 85, 247, 0.3);
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(168, 85, 247, 0.04) 100%);
+}
+
+.upgrade-cta-pro::before {
+  background: linear-gradient(90deg, transparent, rgba(168, 85, 247, 0.5), transparent);
+}
+
+.upgrade-cta-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.upgrade-cta-badge {
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border: 1px solid rgba(255, 75, 51, 0.4);
+  background: rgba(255, 75, 51, 0.12);
+  color: #ffc4b8;
+}
+
+.upgrade-cta-badge-pro {
+  border-color: rgba(168, 85, 247, 0.4);
+  background: rgba(168, 85, 247, 0.12);
+  color: #d4b4ff;
+}
+
+.upgrade-cta-title {
+  font-size: 0.94rem;
+  font-weight: 700;
+  color: #f3f3f6;
+}
+
+.upgrade-cta-desc {
+  font-size: 0.85rem;
+  color: #a1a1aa;
+}
+
+.upgrade-cta-btn {
+  flex-shrink: 0;
+  padding: 9px 18px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 75, 51, 0.5);
+  background: linear-gradient(135deg, rgba(255, 75, 51, 0.2), rgba(255, 75, 51, 0.1));
+  color: #ffd0c8;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+}
+
+.upgrade-cta-btn:hover {
+  transform: translateY(-1px);
+  background: linear-gradient(135deg, rgba(255, 75, 51, 0.32), rgba(255, 75, 51, 0.18));
+  box-shadow: 0 4px 20px rgba(255, 75, 51, 0.22);
+}
+
+.upgrade-cta-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.upgrade-cta-btn-pro {
+  border-color: rgba(168, 85, 247, 0.5);
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(168, 85, 247, 0.1));
+  color: #ddc8ff;
+}
+
+.upgrade-cta-btn-pro:hover {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.32), rgba(168, 85, 247, 0.18));
+  box-shadow: 0 4px 20px rgba(168, 85, 247, 0.22);
 }
 
 .pro-analytics-section {

@@ -1,10 +1,11 @@
 .page {
   min-height: 100vh;
-  padding: 48px 0;
+  padding: 40px 0;
   background:
-    radial-gradient(circle at top, rgba(168, 85, 247, 0.12), transparent 28%),
-    radial-gradient(circle at 80% 10%, rgba(255, 122, 48, 0.1), transparent 24%),
-    #0d0a14;
+    radial-gradient(ellipse at 50% 0%, rgba(168, 85, 247, 0.14), transparent 38%),
+    radial-gradient(circle at 85% 15%, rgba(255, 122, 48, 0.09), transparent 26%),
+    radial-gradient(circle at 8% 80%, rgba(168, 85, 247, 0.06), transparent 20%),
+    #08060f;
   color: #f4f0ff;
   font-family: var(--font-geist-sans), "Avenir Next", sans-serif;
 }
@@ -13,11 +14,12 @@
   position: relative;
   width: min(1200px, calc(100% - 40px));
   margin: 0 auto;
-  padding: 32px;
-  border: 1px solid rgba(160, 100, 255, 0.24);
-  border-radius: 24px;
-  background: rgba(22, 16, 42, 0.96);
+  padding: 28px 28px 32px;
+  border: 1px solid rgba(160, 100, 255, 0.18);
+  border-radius: 20px;
+  background: rgba(14, 10, 26, 0.97);
   overflow: hidden;
+  backdrop-filter: blur(12px);
 }
 
 .shell::before {
@@ -71,15 +73,15 @@
 .sideCard,
 .formCard {
   position: relative;
-  border: 1px solid rgba(160, 100, 255, 0.14);
-  border-radius: 20px;
-  background: #1e1538;
+  border: 1px solid rgba(160, 100, 255, 0.12);
+  border-radius: 16px;
+  background: #1a1230;
   overflow: hidden;
 }
 
 .sideCard {
-  padding: 32px;
-  background: linear-gradient(180deg, rgba(30, 21, 56, 0.96), rgba(20, 14, 38, 0.96));
+  padding: 28px;
+  background: linear-gradient(160deg, rgba(26, 18, 48, 0.98), rgba(16, 11, 30, 0.98));
 }
 
 .sideCard::before {
@@ -473,6 +475,71 @@
   text-shadow: 0 0 18px rgba(255, 122, 48, 0.24);
   transform: translateY(-1px);
   outline: 0;
+}
+
+/* ── AI prompt box ── */
+.aiBox {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 22px;
+  padding: 0 20px;
+  height: 56px;
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  border-radius: 16px;
+  background: rgba(168, 85, 247, 0.05);
+  cursor: text;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+
+.aiBox:focus-within {
+  border-color: rgba(255, 122, 48, 0.5);
+  background: rgba(255, 122, 48, 0.04);
+  box-shadow: 0 0 0 3px rgba(255, 122, 48, 0.08);
+}
+
+.aiBoxGlyph {
+  font-size: 16px;
+  background: linear-gradient(135deg, #a855f7, #ff7a30);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.aiBoxInput {
+  flex: 1;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  color: #f4f0ff;
+  font-size: 15px;
+  font-family: inherit;
+}
+
+.aiBoxInput::placeholder {
+  color: rgba(155, 143, 187, 0.65);
+}
+
+.aiBoxInput:focus {
+  outline: 0;
+}
+
+.aiBoxCta {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: #9b8fbb;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  transition: color 0.15s;
+}
+
+.aiBox:focus-within .aiBoxCta {
+  color: #ff7a30;
 }
 
 @media (max-width: 960px) {

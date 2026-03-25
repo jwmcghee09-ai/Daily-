@@ -358,6 +358,23 @@ export default function SignInPage({
           </div>
         </div>
 
+        {authMode === "login" && subMode === "default" && !sessionUser ? (
+          <div className={styles.aiBox}>
+            <span className={styles.aiBoxGlyph}>✦</span>
+            <input
+              type="text"
+              className={styles.aiBoxInput}
+              placeholder="Ask SPECTRE anything about your portfolio risk..."
+              onChange={(e) => {
+                if (e.target.value.length > 0) {
+                  switchToRegister();
+                }
+              }}
+            />
+            <span className={styles.aiBoxCta}>Create account to use AI →</span>
+          </div>
+        ) : null}
+
         <div className={styles.grid}>
           <aside className={styles.sideCard}>
             <div className={styles.pill}>Portfolio Intelligence</div>
