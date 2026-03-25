@@ -686,6 +686,22 @@ export default function LandingPage({
 
       <Divider />
 
+      <section className={styles.section} id="ask-ai-hero">
+        <div className={styles.container}>
+          <div className={`${styles.heroBadge} ${styles.reveal}`} style={{ marginBottom: "1.5rem" }}>
+            ★ Available on all plans
+          </div>
+          <h2 className={`${styles.heroTitle} ${styles.centered} ${styles.reveal}`}>
+            Ask your portfolio <span>anything.</span>
+          </h2>
+          <p className={`${styles.heroSub} ${styles.centeredSub} ${styles.reveal}`}>
+            Grounded in your live holdings, real-time market data, and risk metrics.
+          </p>
+        </div>
+      </section>
+
+      <Divider />
+
       <section className={styles.section} id="pro-ai">
         <div className={`${styles.container} ${styles.revealScale}`}>
           <div className={styles.proPanel}>
