@@ -196,9 +196,9 @@ const faqs = [
       "The risk score is a 0 to 100 composite metric built from concentration, VaR95, maximum drawdown, historical volatility, and data quality confidence.",
   },
   {
-    question: "How is Pro AI different from the base dashboard?",
+    question: "How is AI analysis different on Pro vs Free?",
     answer:
-      "Plus gives you the full quantitative dashboard and research terminal. Pro AI adds a natural-language console where you can ask questions about your holdings and get plain-English analysis tied to your imported portfolio.",
+      "AI holdings analysis is available on all plans including Free. Every tier gets a natural-language console where you can ask questions about your holdings. Pro unlocks unlimited AI queries, while Free and Plus include a daily allowance.",
   },
   {
     question: "Can I cancel anytime?",
@@ -300,7 +300,7 @@ export default function LandingPage({
           <div className={styles.navLinks}>
             <a href="#workflow">Workflow</a>
             <a href="#features">Features</a>
-            <a href="#pro-ai">Pro AI</a>
+            <a href="#pro-ai">AI Analysis</a>
             <a href="#pricing">Pricing</a>
             <a href="#security">Security</a>
           </div>
@@ -690,10 +690,10 @@ export default function LandingPage({
         <div className={`${styles.container} ${styles.revealScale}`}>
           <div className={styles.proPanel}>
             <div>
-              <div className={styles.proTag}>★ Pro AI — Premium Only</div>
-              <h2 className={styles.sectionTitle}>Ask AI about your holdings in plain English.</h2>
+              <div className={styles.proTag}>★ AI Analysis — All Plans</div>
+              <h2 className={styles.sectionTitle}>Ask AI about your holdings — on every plan.</h2>
               <p className={styles.sectionSub}>
-                Upgrade to Pro to ask direct questions about what is influencing the value of your current holdings, powered by your imported portfolio data.
+                AI holdings analysis is available at every tier. Ask direct questions about what is influencing the value of your current holdings. Pro unlocks unlimited queries.
               </p>
               <ul className={styles.proList}>
                 <li>Ask AI about drivers behind your current holdings</li>
@@ -702,13 +702,13 @@ export default function LandingPage({
                 <li>Includes trend, ROC, breakout, and pattern signal tags</li>
                 <li>Highlights both upside drivers and downside pressure</li>
               </ul>
-              <Link href="/signin?mode=register&plan=pro" className={`${styles.button} ${styles.primaryButton}`}>
-                See Pro Plan →
+              <Link href="/signin?mode=register&plan=free" className={`${styles.button} ${styles.primaryButton}`}>
+                Get Started Free →
               </Link>
             </div>
 
             <div>
-              <div className={styles.smallLabel}>Pro AI Console</div>
+              <div className={styles.smallLabel}>AI Console</div>
               <div className={styles.aiConsole}>
                 <div className={styles.aiPrompt}>› What&apos;s driving BHP&apos;s recent price action in my portfolio?</div>
                 <div className={styles.aiResponse}>
@@ -776,6 +776,7 @@ export default function LandingPage({
                 <li>One private investor workspace</li>
                 <li>CSV/XLSX import for super, savings, ASX, crypto, index, funds, bullion</li>
                 <li>Basic risk score and dashboard charts</li>
+                <li>AI holdings analysis — daily queries included</li>
                 <li>Email verification and password reset</li>
               </ul>
               <Link href="/signin?mode=register&plan=free" className={`${styles.button} ${styles.outlineButton} ${styles.blockButton}`}>
@@ -817,13 +818,12 @@ export default function LandingPage({
                 <span>$9.99</span>
                 <small>/month</small>
               </div>
-              <p>Advanced quant analytics and AI-powered holdings analysis for serious investors.</p>
+              <p>Advanced quant analytics with unlimited AI queries for serious investors.</p>
               <ul>
-                <li>Everything in Plus</li>
+                <li>Everything in Plus, plus unlimited AI queries</li>
                 <li>Expected Shortfall (ES 95) tail risk</li>
                 <li>Beta &amp; tracking error vs ASX 200</li>
                 <li>Date-aligned benchmark analytics</li>
-                <li>Ask AI holdings analysis for portfolio drivers</li>
               </ul>
               <div className={styles.planResearchCallout}>
                 <div>
@@ -939,7 +939,7 @@ export default function LandingPage({
               <ul>
                 <li><a href="#workflow">How It Works</a></li>
                 <li><a href="#features">Features</a></li>
-                <li><a href="#pro-ai">Pro AI</a></li>
+                <li><a href="#pro-ai">AI Analysis</a></li>
                 <li><a href="#pricing">Pricing</a></li>
                 <li><Link href="/dashboard?demo=1">Live Demo</Link></li>
               </ul>
@@ -1027,7 +1027,7 @@ function AITeaser() {
           <span className={styles.aiPulseDot} />
           <span>Ask SPECTRE AI</span>
         </div>
-        <span className={styles.proTag}>Pro AI</span>
+        <span className={styles.proTag}>AI Analysis</span>
       </div>
       <div className={styles.aiTeaserInput}>
         <input
