@@ -2576,8 +2576,8 @@ export default function Home() {
           <span className="meta-item">
             Plan:
             {" "}
-            <span className={`plan-chip ${sessionUser.proEnabled ? "pro" : sessionUser.planTier}`}>
-              {demoMode ? "PRO DEMO" : sessionUser.proEnabled ? "PRO ACTIVE" : sessionUser.planTier.toUpperCase()}
+            <span className={`plan-chip ${sessionUser.proEnabled ? "pro" : sessionUser.planTier === "none" ? "starter" : sessionUser.planTier}`}>
+              {demoMode ? "PRO DEMO" : sessionUser.proEnabled ? "PRO ACTIVE" : sessionUser.planTier === "none" ? "FREE" : sessionUser.planTier.toUpperCase()}
             </span>
           </span>
           <span className="meta-item">Holdings: {state.holdings.length}</span>
