@@ -830,6 +830,10 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 .ai-kpi-val{font-family:var(--mono);font-size:.8rem;font-weight:600;color:var(--text)}
 .ai-kpi-actions{flex-direction:row;align-items:center;justify-content:flex-end;padding:.6rem 1rem}
 .ai-clear-btn{font-size:.52rem;padding:.35rem .7rem}
+
+/* Usage counter */
+.ai-usage-counter{font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;color:var(--muted);text-align:center;margin-top:.6rem;min-height:1.2em}
+.ai-usage-counter.ai-usage-limit{color:var(--orange)}
 </style>
 </head>
 <body class="boot-pending">
@@ -1793,6 +1797,8 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     holdingsAiError: "",
     holdingsAiLoading: false,
     holdingsAiStreamText: "",
+    aiUsedThisMonth: 0,
+    aiMonthlyLimit: -1,
     riskWindow: "6M",
     uploadSource: null,
   };
@@ -3032,6 +3038,8 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       return;
     }
     state.sessionUser = payload.user;
+    state.aiUsedThisMonth = payload.user.aiUsedThisMonth ?? 0;
+    state.aiMonthlyLimit = payload.user.aiMonthlyLimit ?? -1;
     setText("nav-user-email", payload.user.email);
     setText("meta-account-name", payload.user.displayName || payload.user.email);
     const chipClass = payload.user.proEnabled ? "plan-chip pro" : payload.user.planTier === "plus" ? "plan-chip plus" : "plan-chip starter";
@@ -3182,10 +3190,39 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     }
 
     const hasHoldings = Array.isArray(state.portfolio?.holdings) && state.portfolio.holdings.length > 0;
-    const hasAiAccess = Boolean(state.sessionUser?.proEnabled || (state.sessionUser?.planTier && state.sessionUser.planTier !== "none"));
+    const limit = state.aiMonthlyLimit;
+    const used = state.aiUsedThisMonth;
+    const atLimit = limit !== -1 && used >= limit;
 
-    askButton.disabled = state.holdingsAiLoading || !hasAiAccess || !hasHoldings;
-    askButton.textContent = state.holdingsAiLoading ? "Analyzing..." : "Ask AI";
+    askButton.disabled = state.holdingsAiLoading || !hasHoldings || atLimit;
+
+    const labelEl = document.getElementById("pro-ai-ask-label");
+    if (state.holdingsAiLoading) {
+      if (labelEl) labelEl.textContent = "Analyzing...";
+      else askButton.textContent = "Analyzing...";
+    } else {
+      if (labelEl) labelEl.textContent = "Ask AI";
+      else askButton.textContent = "Ask AI";
+    }
+
+    // Show usage counter below the card
+    let usageEl = document.getElementById("ai-usage-counter");
+    if (!usageEl) {
+      usageEl = document.createElement("div");
+      usageEl.id = "ai-usage-counter";
+      usageEl.className = "ai-usage-counter";
+      const card = document.getElementById("ai-hero-card");
+      if (card?.parentNode) card.parentNode.insertBefore(usageEl, card.nextSibling);
+    }
+    if (limit === -1) {
+      usageEl.textContent = "";
+    } else if (atLimit) {
+      usageEl.textContent = `You've used all ${limit} Ask AI sessions for this month.`;
+      usageEl.className = "ai-usage-counter ai-usage-limit";
+    } else {
+      usageEl.textContent = `${used} / ${limit} Ask AI sessions used this month`;
+      usageEl.className = "ai-usage-counter";
+    }
 
     if (questionInput.value.trim().length === 0) {
       questionInput.value = HOLDINGS_AI_DEFAULT_QUESTION;
@@ -3298,12 +3335,6 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       return;
     }
 
-    const hasAiAccess = state.sessionUser?.proEnabled || (state.sessionUser?.planTier && state.sessionUser.planTier !== "none");
-    if (!hasAiAccess) {
-      showToast("Ask AI requires a Plus or Pro plan.", "error");
-      return;
-    }
-
     if (!Array.isArray(state.portfolio?.holdings) || state.portfolio.holdings.length === 0) {
       showToast("Import holdings first, then run Ask AI.", "error");
       return;
@@ -3380,6 +3411,8 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
               state.holdingsAi = evt.analysis;
               state.holdingsAiStreamText = "";
               state.holdingsAiError = "";
+              if (typeof evt.aiUsed === "number") state.aiUsedThisMonth = evt.aiUsed;
+              if (typeof evt.aiLimit === "number") state.aiMonthlyLimit = evt.aiLimit;
               showToast("Ask AI analysis updated.");
             }
             return;
