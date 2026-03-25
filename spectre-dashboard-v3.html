@@ -635,6 +635,12 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 .console-ai-title{font-family:var(--mono);font-size:.58rem;letter-spacing:.16em;text-transform:uppercase;color:var(--purple-hi)}
 .console-ai-meta{font-family:var(--mono);font-size:.52rem;color:var(--muted)}
 .console-ai-note{font-size:.76rem;color:var(--muted2);line-height:1.6;margin:.55rem 0 .7rem}
+.console-ai-chips{display:flex;flex-wrap:wrap;gap:.35rem;margin-bottom:.75rem}
+.ai-chip{font-family:var(--mono);font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted2);background:rgba(255,255,255,.04);border:1px solid var(--border2);border-radius:999px;padding:.3rem .75rem;cursor:pointer;transition:all .15s}
+.ai-chip:hover{color:var(--purple-hi);border-color:rgba(217,70,239,.4);background:rgba(217,70,239,.07)}
+.stream-text{white-space:pre-wrap;opacity:.9}
+.stream-cursor::after{content:"▋";animation:blink .8s step-end infinite;color:var(--purple-hi)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
 .console-ai-form{display:grid;gap:.6rem}
 .console-ai-textarea{width:100%;min-height:82px;resize:vertical;background:rgba(7,4,15,.9);border:1px solid rgba(192,132,252,.22);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:.66rem;line-height:1.6;padding:.7rem .75rem}
 .console-ai-textarea:focus-visible{outline:1px solid rgba(192,132,252,.65);outline-offset:1px}
@@ -1081,7 +1087,15 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
             <div class="console-ai-title">Ask AI Holdings Drivers</div>
             <div class="console-ai-meta" id="pro-ai-meta">No analysis yet</div>
           </div>
-          <p class="console-ai-note">Ask what may be influencing your holdings value, momentum, and risk right now.</p>
+          <p class="console-ai-note">Grounded in your live holdings, portfolio risk metrics, and current market conditions.</p>
+          <div class="console-ai-chips" id="pro-ai-chips">
+            <button type="button" class="ai-chip" data-q="What are my biggest concentration risks right now?">Concentration risks</button>
+            <button type="button" class="ai-chip" data-q="Which holdings are most exposed to AUD/USD weakness?">AUD exposure</button>
+            <button type="button" class="ai-chip" data-q="What is driving my portfolio volatility?">Volatility drivers</button>
+            <button type="button" class="ai-chip" data-q="Where should I consider reducing risk?">Reduce risk</button>
+            <button type="button" class="ai-chip" data-q="How does my crypto exposure affect overall portfolio risk?">Crypto risk</button>
+            <button type="button" class="ai-chip" data-q="Which sectors are over or underweight in my portfolio?">Sector balance</button>
+          </div>
           <div class="console-ai-form">
             <textarea class="console-ai-textarea" id="pro-ai-question" maxlength="700" placeholder="What may be influencing the value of my current holdings?">What may be influencing the value of my current holdings?</textarea>
             <div class="console-ai-actions">
@@ -1734,6 +1748,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     holdingsAi: null,
     holdingsAiError: "",
     holdingsAiLoading: false,
+    holdingsAiStreamText: "",
     riskWindow: "6M",
     uploadSource: null,
   };
@@ -3123,9 +3138,9 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     }
 
     const hasHoldings = Array.isArray(state.portfolio?.holdings) && state.portfolio.holdings.length > 0;
-    const isPro = Boolean(state.sessionUser?.proEnabled);
+    const hasAiAccess = Boolean(state.sessionUser?.proEnabled || (state.sessionUser?.planTier && state.sessionUser.planTier !== "none"));
 
-    askButton.disabled = state.holdingsAiLoading || !isPro || !hasHoldings;
+    askButton.disabled = state.holdingsAiLoading || !hasAiAccess || !hasHoldings;
     askButton.textContent = state.holdingsAiLoading ? "Analyzing..." : "Ask AI";
 
     if (questionInput.value.trim().length === 0) {
@@ -3138,6 +3153,13 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     } else {
       errorEl.hidden = true;
       errorEl.textContent = "";
+    }
+
+    // Show streaming text while response is arriving
+    if (state.holdingsAiLoading && state.holdingsAiStreamText) {
+      metaEl.textContent = "Analyzing…";
+      outputEl.innerHTML = `<div class="console-ai-block"><h4>Answer</h4><p id="pro-ai-stream-text" class="stream-text stream-cursor">${escapeHtml(state.holdingsAiStreamText)}</p></div>`;
+      return;
     }
 
     const analysis = state.holdingsAi;
@@ -3204,6 +3226,13 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     `;
   }
 
+  function renderHoldingsAiStream() {
+    const streamEl = document.getElementById("pro-ai-stream-text");
+    if (streamEl) {
+      streamEl.textContent = state.holdingsAiStreamText || "";
+    }
+  }
+
   async function runHoldingsAi() {
     if (state.demoMode) {
       const questionInput = document.getElementById("pro-ai-question");
@@ -3215,9 +3244,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       state.holdingsAiError = "";
       renderHoldingsAi();
 
-      await new Promise((resolve) => {
-        window.setTimeout(resolve, 350);
-      });
+      await new Promise((resolve) => { window.setTimeout(resolve, 350); });
 
       state.holdingsAi = buildDemoHoldingsAiAnalysis(question);
       state.holdingsAiLoading = false;
@@ -3227,8 +3254,9 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       return;
     }
 
-    if (!state.sessionUser?.proEnabled) {
-      showToast("Ask AI is available on Pro only.", "error");
+    const hasAiAccess = state.sessionUser?.proEnabled || (state.sessionUser?.planTier && state.sessionUser.planTier !== "none");
+    if (!hasAiAccess) {
+      showToast("Ask AI requires a Plus or Pro plan.", "error");
       return;
     }
 
@@ -3243,28 +3271,85 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       : HOLDINGS_AI_DEFAULT_QUESTION;
 
     state.holdingsAiLoading = true;
+    state.holdingsAiStreamText = "";
     state.holdingsAiError = "";
     renderHoldingsAi();
 
     try {
-      const payload = await apiJson("/api/pro/holdings-ai", {
+      const response = await fetch("/api/pro/holdings-ai", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question }),
       });
 
-      if (!payload || !payload.analysis) {
-        throw new Error("AI analysis response was empty.");
+      if (!response.ok || !response.body) {
+        let message = `Request failed (${response.status})`;
+        try {
+          const errPayload = await response.json();
+          if (errPayload?.error) message = errPayload.error;
+        } catch {}
+        throw new Error(message);
       }
 
-      state.holdingsAi = payload.analysis;
-      state.holdingsAiError = "";
-      showToast("Ask AI analysis updated.");
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let sseBuffer = "";
+      let fullAccumulated = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        sseBuffer += decoder.decode(value, { stream: true });
+        const parts = sseBuffer.split("\n\n");
+        sseBuffer = parts.pop() ?? "";
+
+        for (const part of parts) {
+          const line = part.trim();
+          if (!line.startsWith("data: ")) continue;
+          const raw = line.slice(6).trim();
+          if (raw === "[DONE]") continue;
+
+          let evt;
+          try { evt = JSON.parse(raw); } catch { continue; }
+
+          if (typeof evt.t === "string") {
+            fullAccumulated += evt.t;
+            // Extract partial answer field as it streams — schema puts it first
+            const partialMatch = fullAccumulated.match(/"answer"\s*:\s*"((?:[^"\\]|\\.)*)/);
+            if (partialMatch) {
+              state.holdingsAiStreamText = partialMatch[1]
+                .replace(/\\n/g, "\n")
+                .replace(/\\"/g, '"')
+                .replace(/\\t/g, "\t");
+              renderHoldingsAiStream();
+              if (!document.getElementById("pro-ai-stream-text")) {
+                // Stream container not yet rendered — trigger full render
+                renderHoldingsAi();
+              }
+            }
+          }
+
+          if (evt.done === true) {
+            if (evt.error) throw new Error(evt.error);
+            if (evt.analysis) {
+              state.holdingsAi = evt.analysis;
+              state.holdingsAiStreamText = "";
+              state.holdingsAiError = "";
+              showToast("Ask AI analysis updated.");
+            }
+            return;
+          }
+        }
+      }
+
+      throw new Error("AI stream ended without a complete response.");
     } catch (error) {
       state.holdingsAiError = error instanceof Error ? error.message : "Failed to run Ask AI analysis.";
       showToast(state.holdingsAiError, "error");
     } finally {
       state.holdingsAiLoading = false;
+      state.holdingsAiStreamText = "";
       renderHoldingsAi();
       renderPortfolio();
     }
@@ -3733,6 +3818,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       state.holdingsAi = null;
       state.holdingsAiError = "";
       state.holdingsAiLoading = false;
+      state.holdingsAiStreamText = "";
       const questionInput = document.getElementById("pro-ai-question");
       if (questionInput instanceof HTMLTextAreaElement) {
         questionInput.value = HOLDINGS_AI_DEFAULT_QUESTION;
@@ -3994,6 +4080,14 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     document.getElementById("sign-out-btn")?.addEventListener("click", signOut);
     document.getElementById("add-alert-btn")?.addEventListener("click", addAlert);
     document.getElementById("pro-ai-ask-btn")?.addEventListener("click", runHoldingsAi);
+    document.getElementById("pro-ai-chips")?.addEventListener("click", (e) => {
+      const chip = e.target instanceof HTMLElement ? e.target.closest(".ai-chip") : null;
+      if (!(chip instanceof HTMLElement)) return;
+      const q = chip.dataset.q;
+      if (!q) return;
+      const input = document.getElementById("pro-ai-question");
+      if (input instanceof HTMLTextAreaElement) input.value = q;
+    });
 
     document.getElementById("alerts-list")?.addEventListener("click", (event) => {
       const target = event.target;
