@@ -1,7 +1,14 @@
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
-import { readPortfolioState, readUserEntitlements } from "@/lib/db";
+import { readPortfolioState, readUserEntitlements, getAiUsageThisMonth, incrementAiUsage, PlanTier } from "@/lib/db";
 import { computeMetrics } from "@/lib/portfolio";
+
+const AI_MONTHLY_LIMITS: Record<PlanTier, number> = {
+  none: 3,
+  free: 3,
+  plus: 20,
+  pro: -1, // unlimited
+};
 
 export const runtime = "nodejs";
 
@@ -435,9 +442,24 @@ export async function POST(request: Request) {
   }
 
   const entitlements = readUserEntitlements(sessionUser.id);
-  // Plus AND Pro can access Ask AI
-  if (entitlements.planTier === "none") {
-    return NextResponse.json({ error: "Plus or Pro plan required for Ask AI holdings analysis." }, { status: 403 });
+  const monthlyLimit = AI_MONTHLY_LIMITS[entitlements.planTier] ?? 3;
+  const usedThisMonth = getAiUsageThisMonth(sessionUser.id);
+
+  if (monthlyLimit !== -1 && usedThisMonth >= monthlyLimit) {
+    const upgradeHint =
+      entitlements.planTier === "none"
+        ? " Upgrade to Plus for 20/month, or Pro for unlimited."
+        : entitlements.planTier === "plus"
+          ? " Upgrade to Pro for unlimited Ask AI."
+          : "";
+    return NextResponse.json(
+      {
+        error: `You've used all ${monthlyLimit} Ask AI sessions for this month.${upgradeHint}`,
+        aiUsed: usedThisMonth,
+        aiLimit: monthlyLimit,
+      },
+      { status: 429 },
+    );
   }
 
   const state = readPortfolioState(sessionUser.id);
@@ -512,7 +534,7 @@ export async function POST(request: Request) {
 
   // Transform OpenAI SSE → our SSE format:
   //   data: {"t":"chunk text"}\n\n  — incremental content
-  //   data: {"done":true,"analysis":{...}}\n\n  — final parsed analysis
+  //   data: {"done":true,"analysis":{...},"aiUsed":N,"aiLimit":N}\n\n  — final parsed analysis
   let accumulated = "";
   const enc = new TextEncoder();
 
@@ -541,7 +563,13 @@ export async function POST(request: Request) {
       clearTimeout(timeoutId);
       const analysis = parseAiAnalysis(accumulated);
       if (analysis) {
-        controller.enqueue(enc.encode(`data: ${JSON.stringify({ done: true, analysis })}\n\n`));
+        incrementAiUsage(sessionUser.id);
+        const newUsed = usedThisMonth + 1;
+        controller.enqueue(
+          enc.encode(
+            `data: ${JSON.stringify({ done: true, analysis, aiUsed: newUsed, aiLimit: monthlyLimit })}\n\n`,
+          ),
+        );
       } else {
         controller.enqueue(
           enc.encode(`data: ${JSON.stringify({ done: true, error: "AI response could not be parsed." })}\n\n`),
