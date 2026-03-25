@@ -6,7 +6,7 @@ import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./landing-page.module.css";
 
-type CheckoutPlan = "starter" | "pro";
+type CheckoutPlan = "free" | "plus" | "pro";
 type MarketingCard = {
   title: string;
   copy: string;
