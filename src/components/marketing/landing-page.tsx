@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import styles from "./landing-page.module.css";
 
-type CheckoutPlan = "free" | "plus" | "pro";
+type CheckoutPlan = "starter" | "pro";
 type MarketingCard = {
   title: string;
   copy: string;
@@ -57,24 +58,24 @@ const workflowSteps: readonly WorkflowStep[] = [
 const researchSteps: readonly WorkflowStep[] = [
   {
     number: "01 — SCAN",
-    title: "Get the Full Market Picture",
+    title: "Read ASX Market Pulse",
     copy:
-      "Open the terminal to see live ASX 200, AUD/USD, VIX fear index, Gold, BTC and ETH side by side. Scan sector pressure, US movers and a live news feed tagged by theme before touching your portfolio.",
+      "Start with ASX leadership, sector pressure, macro backdrop, and cross-asset sentiment before drilling into your holdings.",
     icon: <PulseIcon />,
   },
   {
     number: "02 — COMPARE",
-    title: "Drill Into Stocks & Earnings",
+    title: "Review Earnings & Peers",
     copy:
-      "Review 15 ASX blue chips with live PE ratios, dividend yields and 52-week ranges. Compare against the latest earnings snapshots and analyst bull/bear cases so each holding is judged against its actual operating context.",
+      "Check earnings snapshots, peer sets, and operating context so a holding is judged against its market environment, not in isolation.",
     icon: <GridIcon />,
     alt: true,
   },
   {
     number: "03 — ACT",
-    title: "Trade With Market Conviction",
+    title: "Bring Context Into Risk Decisions",
     copy:
-      "Return to your risk dashboard with a clear view of what is driving the market. Make concentration, rebalancing and dip alert decisions backed by the same macro data that professional analysts use.",
+      "Move from research into your dashboard with clearer conviction around concentration, downside pressure, and what is driving current market moves.",
     icon: <BarsIcon />,
   },
 ] as const;
@@ -111,6 +112,12 @@ const features: readonly MarketingCard[] = [
       "Review portfolio trend history and data quality signals over time with automated snapshot captures.",
     icon: <ClockIcon />,
     alt: true,
+  },
+  {
+    title: "Security Controls",
+    copy:
+      "Email verification, scrypt hashed passwords, encrypted backups, and hardened HSTS/CSP headers in production.",
+    icon: <LockIcon />,
   },
   {
     title: "Dip Alert Emails",
@@ -197,7 +204,7 @@ const faqs = [
   {
     question: "How is Pro AI different from the base dashboard?",
     answer:
-      "Plus gives you the full quantitative dashboard and research terminal. Pro AI adds a natural-language console where you can ask questions about your holdings and get plain-English analysis tied to your imported portfolio.",
+      "Starter gives you the quantitative dashboard. Pro AI adds a natural-language console where you can ask questions about your holdings and get plain-English analysis tied to your imported portfolio.",
   },
   {
     question: "Can I cancel anytime?",
@@ -283,7 +290,7 @@ export default function LandingPage({
 
   const checkoutMessage =
     checkoutState === "success"
-      ? `${checkoutPlan === "pro" ? "Pro" : "Plus"} plan checkout complete. Your subscription will activate shortly.`
+      ? `${checkoutPlan === "pro" ? "Pro" : "Starter"} plan checkout complete. Your subscription will activate shortly.`
       : checkoutState === "cancelled"
         ? "Stripe checkout was cancelled."
         : null;
@@ -312,8 +319,8 @@ export default function LandingPage({
             <Link href="/signin" className={`${styles.button} ${styles.ghostButton}`}>
               Sign In
             </Link>
-            <Link href="/signin?mode=register&plan=free" className={`${styles.button} ${styles.primaryButton}`}>
-              Get Started Free
+            <Link href="/signin?mode=register&plan=starter" className={`${styles.button} ${styles.primaryButton}`}>
+              Start for $2.99/mo
             </Link>
           </div>
         </div>
@@ -348,13 +355,15 @@ export default function LandingPage({
               System for Portfolio Exposure, Correlation, Threat &amp; Risk Evaluation. Turn CSV exports from super, ASX, crypto, and funds into one clear risk view.
             </p>
             <div className={`${styles.heroActions} ${styles.reveal}`}>
-              <Link href="/signin?mode=register&plan=free" className={`${styles.button} ${styles.primaryButton} ${styles.heroButton}`}>
-                Get Started Free
+              <Link href="/signin?mode=register&plan=starter" className={`${styles.button} ${styles.primaryButton} ${styles.heroButton}`}>
+                Start for $2.99 / Month
               </Link>
               <Link href="/dashboard?demo=1" className={`${styles.button} ${styles.outlineButton} ${styles.heroButton}`}>
                 See Live Demo →
               </Link>
             </div>
+
+            <AITeaser />
           </div>
 
           <div className={`${styles.dashboardCard} ${styles.reveal}`}>
@@ -431,7 +440,7 @@ export default function LandingPage({
           <div className={styles.sectionLabel}>ASX Market Research</div>
           <h2 className={styles.sectionTitle}>From ASX market context to portfolio conviction.</h2>
           <p className={styles.sectionSub}>
-            SPECTRE Research gives Plus and Pro members a full-page terminal with live indices, blue-chip fundamentals, earnings snapshots, analyst sentiment, sector pressure, and cross-asset data — all updated in real time so portfolio decisions are made with the full market backdrop in view.
+            SPECTRE Research gives Starter and Pro members a dedicated ASX market research view for leadership, earnings snapshots, macro context, sector pressure, and cross-asset sentiment.
           </p>
 
           <div className={styles.steps}>
@@ -449,33 +458,12 @@ export default function LandingPage({
             ))}
           </div>
 
-          <div className={`${styles.researchHighlights} ${styles.reveal}`}>
-            {[
-              { name: "6 Live Market Cards", sub: "ASX 200, AUD/USD, VIX, Gold, BTC, ETH refreshing every 5 minutes", alt: false },
-              { name: "15 ASX Blue Chips", sub: "Price, daily change, P/E, dividend yield, 52-week range and trend sparklines", alt: false },
-              { name: "Earnings Snapshots", sub: "BHP & CBA H1 FY26 results with beat/miss status and key metrics", alt: false },
-              { name: "Bull & Bear Sentiment", sub: "Analyst bull and bear cases with price targets for major ASX holdings", alt: true },
-              { name: "US Market Movers", sub: "Live gainers, losers and most active from US markets via Yahoo Finance screener", alt: true },
-              { name: "Live News Feed", sub: "Yahoo Finance and ABC Business headlines tagged by theme: RBA, inflation, ASX, crypto and more", alt: true },
-            ].map((tile) => (
-              <div key={tile.name} className={styles.researchTile}>
-                <div className={`${styles.researchTileIcon} ${tile.alt ? styles.researchTileIconAlt : ""}`}>
-                  <BarsIcon />
-                </div>
-                <div>
-                  <div className={styles.researchTileName}>{tile.name}</div>
-                  <div className={styles.researchTileSub}>{tile.sub}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-
           <div className={styles.researchCtaRow}>
             <Link href="/research?demo=1" className={`${styles.button} ${styles.primaryButton}`}>
               See Research Demo
             </Link>
-            <Link href="/signin?mode=register&plan=plus" className={`${styles.button} ${styles.outlineButton}`}>
-              Included in Plus
+            <Link href="/signin?mode=register&plan=starter" className={`${styles.button} ${styles.outlineButton}`}>
+              Included in Starter
             </Link>
           </div>
         </div>
@@ -700,7 +688,7 @@ export default function LandingPage({
                 <li>Highlights both upside drivers and downside pressure</li>
               </ul>
               <Link href="/signin?mode=register&plan=pro" className={`${styles.button} ${styles.primaryButton}`}>
-                See Pro Plan →
+                See Pro Plan
               </Link>
             </div>
 
@@ -763,52 +751,34 @@ export default function LandingPage({
 
           <div className={styles.pricingGrid}>
             <article className={`${styles.planCard} ${styles.reveal}`}>
-              <div className={styles.planTier}>Free</div>
-              <div className={styles.planPrice}>
-                <span>$0</span>
-                <small>/month</small>
-              </div>
-              <p>Get started at no cost with a private workspace and core dashboard for tracking your portfolio.</p>
-              <ul>
-                <li>One private investor workspace</li>
-                <li>CSV/XLSX import for super, savings, ASX, crypto, index, funds, bullion</li>
-                <li>Basic risk score and dashboard charts</li>
-                <li>Email verification and password reset</li>
-              </ul>
-              <Link href="/signin?mode=register&plan=free" className={`${styles.button} ${styles.outlineButton} ${styles.blockButton}`}>
-                Get Started Free
-              </Link>
-            </article>
-
-            <article className={`${styles.planCard} ${styles.featuredPlan} ${styles.reveal}`} style={{ transitionDelay: "0.1s" }}>
-              <div className={styles.featuredBadge}>Most Popular</div>
-              <div className={styles.planTier}>Plus</div>
+              <div className={styles.planTier}>Starter</div>
               <div className={styles.planPrice}>
                 <span>$2.99</span>
                 <small>/month</small>
               </div>
-              <p>Everything in Free, plus the market research terminal and full snapshot history.</p>
+              <p>Everything you need to get a clear picture of your investment risk across all account types.</p>
               <ul>
-                <li>Everything in Free</li>
-                <li>Market research terminal for ASX, macro, and sector context</li>
-                <li>Price dip alerts and dip email notifications</li>
-                <li>Snapshots and historical risk tracking</li>
+                <li>One private investor workspace</li>
+                <li>CSV/XLSX import for super, savings, ASX, crypto, index, funds, bullion</li>
+                <li>Risk score, dashboard charts, snapshots, and market research</li>
+                <li>Email verification and password reset</li>
               </ul>
               <div className={styles.planResearchCallout}>
                 <div>
                   <strong>See Research</strong>
-                  <span>Plus includes the market research terminal for ASX, macro, and sector context.</span>
+                  <span>Starter includes the market research terminal for ASX, macro, and sector context.</span>
                 </div>
                 <Link href="/research?demo=1" className={`${styles.button} ${styles.ghostButton}`}>
                   Preview Research
                 </Link>
               </div>
-              <Link href="/signin?mode=register&plan=plus" className={`${styles.button} ${styles.primaryButton} ${styles.blockButton}`}>
-                Get Plus
+              <Link href="/signin?mode=register&plan=starter" className={`${styles.button} ${styles.outlineButton} ${styles.blockButton}`}>
+                Get Starter
               </Link>
             </article>
 
-            <article className={`${styles.planCard} ${styles.reveal}`} style={{ transitionDelay: "0.2s" }}>
+            <article className={`${styles.planCard} ${styles.featuredPlan} ${styles.reveal}`} style={{ transitionDelay: "0.1s" }}>
+              <div className={styles.featuredBadge}>Most Popular</div>
               <div className={styles.planTier}>Pro</div>
               <div className={styles.planPrice}>
                 <span>$9.99</span>
@@ -816,11 +786,13 @@ export default function LandingPage({
               </div>
               <p>Advanced quant analytics and AI-powered holdings analysis for serious investors.</p>
               <ul>
-                <li>Everything in Plus</li>
+                <li>Everything in Starter</li>
                 <li>Expected Shortfall (ES 95) tail risk</li>
                 <li>Beta &amp; tracking error vs ASX 200</li>
                 <li>Date-aligned benchmark analytics</li>
                 <li>Ask AI holdings analysis for portfolio drivers</li>
+                <li>Market research terminal with broader ASX and macro context</li>
+                <li>Advanced reporting and team workflows</li>
               </ul>
               <div className={styles.planResearchCallout}>
                 <div>
@@ -831,7 +803,7 @@ export default function LandingPage({
                   Preview Research
                 </Link>
               </div>
-              <Link href="/signin?mode=register&plan=pro" className={`${styles.button} ${styles.outlineButton} ${styles.blockButton}`}>
+              <Link href="/signin?mode=register&plan=pro" className={`${styles.button} ${styles.primaryButton} ${styles.blockButton}`}>
                 Get Pro
               </Link>
             </article>
@@ -909,10 +881,10 @@ export default function LandingPage({
           <div className={styles.ctaPanel}>
             <div className={styles.heroBadge}>Start today — no commitment</div>
             <h2>Ready to see your portfolio risk clearly?</h2>
-            <p>It takes minutes to import your first CSV and get a risk score. Start free, upgrade anytime.</p>
+            <p>It takes minutes to import your first CSV and get a risk score. Start for $2.99/month.</p>
             <div className={styles.heroActions}>
-              <Link href="/signin?mode=register&plan=free" className={`${styles.button} ${styles.primaryButton} ${styles.heroButton}`}>
-                Get Started Free
+              <Link href="/signin?mode=register&plan=starter" className={`${styles.button} ${styles.primaryButton} ${styles.heroButton}`}>
+                Start for $2.99 / Month
               </Link>
               <Link href="/dashboard?demo=1" className={`${styles.button} ${styles.outlineButton} ${styles.heroButton}`}>
                 See Live Demo
@@ -1004,6 +976,71 @@ function CompareItem({ children, tone }: { children: ReactNode; tone: "good" | "
         {tone === "good" ? "✓" : "✕"}
       </span>
       <span>{children}</span>
+    </div>
+  );
+}
+
+function AITeaser() {
+  const [query, setQuery] = useState("");
+  const router = useRouter();
+
+  const goToSignIn = (q?: string) => {
+    router.push(`/signin?mode=register&plan=pro${q ? `&q=${encodeURIComponent(q)}` : ""}`);
+  };
+
+  return (
+    <div className={styles.aiTeaser}>
+      <div className={styles.aiTeaserHeader}>
+        <div className={styles.aiTeaserHeaderLeft}>
+          <span className={styles.aiPulseDot} />
+          <span>Ask SPECTRE AI</span>
+        </div>
+        <span className={styles.proTag}>Pro AI</span>
+      </div>
+
+      <div className={styles.aiTeaserInput}>
+        <input
+          type="text"
+          className={styles.aiInput}
+          placeholder="e.g. What's my top concentration risk right now?"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && goToSignIn(query)}
+          autoComplete="off"
+          spellCheck={false}
+        />
+        <button
+          type="button"
+          className={styles.aiSendButton}
+          onClick={() => goToSignIn(query)}
+          aria-label="Ask AI"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <line x1="22" y1="2" x2="11" y2="13" />
+            <polygon points="22 2 15 22 11 13 2 9 22 2" />
+          </svg>
+        </button>
+      </div>
+
+      <div className={styles.aiSuggestions}>
+        {["What's my top risk?", "BHP concentration?", "VaR impact", "Sector exposure"].map((s) => (
+          <button
+            key={s}
+            type="button"
+            className={styles.aiChip}
+            onClick={() => goToSignIn(s)}
+          >
+            {s}
+          </button>
+        ))}
+        <span className={styles.aiLockNote}>
+          <svg viewBox="0 0 24 24" aria-hidden="true" width="11" height="11">
+            <rect x="3" y="11" width="18" height="11" rx="2" />
+            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+          </svg>
+          Sign in to use
+        </span>
+      </div>
     </div>
   );
 }
