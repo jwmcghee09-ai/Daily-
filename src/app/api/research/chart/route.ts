@@ -4,7 +4,7 @@ import { readUserEntitlements } from "@/lib/db";
 
 export const runtime = "nodejs";
 
-// Cache per range: { timestamps: number[], closes: number[], high: number, low: number }
+// Cache per range+symbol: { timestamps: number[], closes: number[], high: number, low: number }
 const cache: Record<string, { data: ChartPayload; expiresAt: number }> = {};
 
 interface ChartPayload {
@@ -13,6 +13,7 @@ interface ChartPayload {
   high: number;
   low: number;
   range: string;
+  symbol: string;
 }
 
 const RANGE_CONFIG: Record<string, { interval: string; range: string; ttlMs: number }> = {
@@ -24,11 +25,22 @@ const RANGE_CONFIG: Record<string, { interval: string; range: string; ttlMs: num
   "1y": { interval: "1wk", range: "1y",  ttlMs: 60 * 60 * 1000 },
 };
 
-async function fetchChart(range: string): Promise<ChartPayload | null> {
+// Allowed symbols mapped to Yahoo Finance tickers
+const SYMBOL_MAP: Record<string, string> = {
+  asx200:  "%5EAXJO",
+  btc:     "BTC-USD",
+  eth:     "ETH-USD",
+  sol:     "SOL-USD",
+  gold:    "GC%3DF",
+  aud:     "AUDUSD%3DX",
+  vix:     "%5EVIX",
+};
+
+async function fetchChart(range: string, yahooSymbol: string): Promise<ChartPayload | null> {
   const cfg = RANGE_CONFIG[range];
   if (!cfg) return null;
 
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/%5EAXJO?interval=${cfg.interval}&range=${cfg.range}&includePrePost=false`;
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${yahooSymbol}?interval=${cfg.interval}&range=${cfg.range}&includePrePost=false`;
   const res = await fetch(url, {
     headers: { "User-Agent": "Mozilla/5.0", Accept: "application/json" },
     signal: AbortSignal.timeout(8000),
@@ -56,6 +68,7 @@ async function fetchChart(range: string): Promise<ChartPayload | null> {
     high: Math.max(...allCloses),
     low: Math.min(...allCloses),
     range,
+    symbol: yahooSymbol,
   };
 }
 
@@ -63,9 +76,15 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const demo = searchParams.get("demo") === "1";
   const range = searchParams.get("range") ?? "6m";
+  const symbolKey = (searchParams.get("symbol") ?? "asx200").toLowerCase();
 
   if (!RANGE_CONFIG[range]) {
     return NextResponse.json({ error: "Invalid range" }, { status: 400 });
+  }
+
+  const yahooSymbol = SYMBOL_MAP[symbolKey];
+  if (!yahooSymbol) {
+    return NextResponse.json({ error: "Invalid symbol" }, { status: 400 });
   }
 
   if (!demo) {
@@ -79,18 +98,19 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  const cacheKey = `${symbolKey}:${range}`;
   const now = Date.now();
-  const cached = cache[range];
+  const cached = cache[cacheKey];
   if (cached && cached.expiresAt > now) {
     return NextResponse.json(cached.data, { headers: { "Cache-Control": "no-store" } });
   }
 
   try {
-    const data = await fetchChart(range);
+    const data = await fetchChart(range, yahooSymbol);
     if (!data) {
       return NextResponse.json({ error: "Failed to fetch chart data" }, { status: 502 });
     }
-    cache[range] = { data, expiresAt: now + RANGE_CONFIG[range].ttlMs };
+    cache[cacheKey] = { data, expiresAt: now + RANGE_CONFIG[range].ttlMs };
     return NextResponse.json(data, { headers: { "Cache-Control": "no-store" } });
   } catch {
     return NextResponse.json({ error: "Chart fetch failed" }, { status: 502 });

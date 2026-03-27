@@ -1801,8 +1801,110 @@ h3 { font-size: 1.15rem; }
 .news-meta { font-size: 0.6rem !important; margin-top: 3px !important; }
 .news-tag { font-size: 0.57rem !important; padding: 2px 7px !important; }
 
-/* ── Tab bar ─────────────────────────────────────────────────── */
+/* ── Tab bar (inner section tabs) ───────────────────────────── */
 .tab-btn { font-size: 0.6rem !important; padding: 5px 10px !important; }
+
+/* ── Research top-level tab navigation ──────────────────────── */
+.research-tab-nav {
+  display: flex;
+  gap: 2px;
+  padding: 12px 0 0;
+  border-bottom: 1px solid rgba(255,255,255,.07);
+  margin-bottom: 18px;
+}
+.rtab {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--sl-muted);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 8px 16px 10px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  margin-bottom: -1px;
+}
+.rtab:hover { color: var(--sl-text); }
+.rtab.active { color: var(--sl-purple); border-bottom-color: var(--sl-purple); }
+
+/* ── Tab panels ──────────────────────────────────────────────── */
+.rtab-panel { display: none; }
+.rtab-panel.active { display: block; }
+
+/* ── Equities tab ────────────────────────────────────────────── */
+.sector-chart-wrap {
+  position: relative;
+  height: 220px;
+  margin-bottom: 4px;
+}
+.eq-movers-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+/* ── Macro tab ───────────────────────────────────────────────── */
+.macro-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+.macro-rates-table { width: 100%; border-collapse: collapse; }
+.macro-rates-table td { padding: 8px 10px; font-size: 0.72rem; border-bottom: 1px solid rgba(255,255,255,.04); }
+.macro-rates-table td:last-child { text-align: right; font-family: var(--font-mono); }
+.macro-chart-wrap { position: relative; height: 180px; }
+
+/* ── Earnings tab ────────────────────────────────────────────── */
+.earnings-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+/* ── Crypto tab ──────────────────────────────────────────────── */
+.crypto-tab-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 14px;
+}
+.crypto-tab-charts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.crypto-tab-chart-wrap { position: relative; height: 200px; }
+.crypto-big-price {
+  font-family: var(--font-mono);
+  font-size: 1.7rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 6px 0 2px;
+}
+.crypto-big-chg { font-size: 0.75rem; font-family: var(--font-mono); }
+.crypto-tab-card { padding: 16px 20px !important; }
+.crypto-tab-symbol {
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sl-muted);
+  font-family: var(--font-mono);
+}
+
+/* ── FMP section full-width within tabs ─────────────────────── */
+.fmp-section.in-tab { display: grid !important; }
+.fmp-section.in-tab.cols-3 { grid-template-columns: repeat(3,1fr); gap: 14px; margin-bottom: 14px; }
+.fmp-section.in-tab.cols-2 { grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+
+@media (max-width: 900px) {
+  .macro-grid, .eq-movers-grid, .earnings-grid, .crypto-tab-charts { grid-template-columns: 1fr !important; }
+  .crypto-tab-grid { grid-template-columns: 1fr 1fr !important; }
+  .fmp-section.in-tab.cols-3, .fmp-section.in-tab.cols-2 { grid-template-columns: 1fr !important; }
+}
 
 /* ── Responsive ──────────────────────────────────────────────── */
 @media (max-width: 900px) {
@@ -1819,6 +1921,7 @@ h3 { font-size: 1.15rem; }
   .page-header { flex-direction: column; align-items: flex-start; gap: 4px; }
 }
 </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 </head>
 <body>
 
@@ -1860,6 +1963,18 @@ h3 { font-size: 1.15rem; }
     </div>
     <div class="page-header-right" id="page-last-updated">—</div>
   </div>
+
+  <!-- ===== RESEARCH TAB NAV ===== -->
+  <nav class="research-tab-nav" role="tablist">
+    <button class="rtab active" data-tab="overview" onclick="switchResearchTab('overview',this)">Overview</button>
+    <button class="rtab" data-tab="equities" onclick="switchResearchTab('equities',this)">Equities</button>
+    <button class="rtab" data-tab="macro" onclick="switchResearchTab('macro',this)">Macro</button>
+    <button class="rtab" data-tab="earnings" onclick="switchResearchTab('earnings',this)">Earnings</button>
+    <button class="rtab" data-tab="crypto" onclick="switchResearchTab('crypto',this)">Crypto</button>
+  </nav>
+
+  <!-- ===== TAB: OVERVIEW ===== -->
+  <div id="rtab-overview" class="rtab-panel active">
 
   <!-- ===== HERO METRICS ===== -->
   <section class="hero-grid reveal">
@@ -2371,6 +2486,281 @@ h3 { font-size: 1.15rem; }
 
   </div>
 
+  </div><!-- /rtab-overview -->
+
+  <!-- ===== TAB: EQUITIES ===== -->
+  <div id="rtab-equities" class="rtab-panel">
+
+    <!-- Sector performance bar chart -->
+    <div class="card reveal" style="margin-bottom:14px;">
+      <div class="section-label">Sector Performance (US Proxy — FMP)</div>
+      <div class="sector-chart-wrap">
+        <canvas id="eq-sector-chart"></canvas>
+      </div>
+    </div>
+
+    <!-- Movers row -->
+    <div class="eq-movers-grid">
+      <div class="card reveal">
+        <div class="section-label">Top Gainers</div>
+        <div id="eq-gainers-list"><div style="color:var(--sl-muted);font-size:0.72rem;">Loading…</div></div>
+      </div>
+      <div class="card reveal">
+        <div class="section-label">Top Losers</div>
+        <div id="eq-losers-list"><div style="color:var(--sl-muted);font-size:0.72rem;">Loading…</div></div>
+      </div>
+    </div>
+
+    <!-- Full ASX stocks table -->
+    <div class="card reveal">
+      <div class="section-label">ASX Top 15 Holdings — Live Quotes</div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Symbol</th>
+              <th>Name</th>
+              <th>Sector</th>
+              <th>Price</th>
+              <th>Chg%</th>
+              <th>Mkt Cap</th>
+              <th>P/E</th>
+              <th>Div Yield</th>
+              <th>52W High</th>
+              <th>52W Low</th>
+              <th>EPS</th>
+            </tr>
+          </thead>
+          <tbody id="eq-stocks-tbody"><tr><td colspan="11" style="color:var(--sl-muted);font-size:0.72rem;text-align:center;padding:20px;">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Analyst consensus -->
+    <div class="card reveal" style="margin-top:14px;">
+      <div class="section-label">Analyst Consensus — ASX Watchlist</div>
+      <div class="analyst-grid" id="eq-analyst-grid">
+        <div style="color:var(--sl-muted);font-size:0.72rem;">Loading…</div>
+      </div>
+    </div>
+
+  </div><!-- /rtab-equities -->
+
+  <!-- ===== TAB: MACRO ===== -->
+  <div id="rtab-macro" class="rtab-panel">
+
+    <!-- AUD/USD chart -->
+    <div class="card reveal" style="margin-bottom:14px;">
+      <div class="section-label" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>AUD / USD</span>
+        <div class="time-pills" style="margin-top:0;">
+          <button class="time-pill active" onclick="loadMacroChart('aud','1m',this)">1M</button>
+          <button class="time-pill" onclick="loadMacroChart('aud','3m',this)">3M</button>
+          <button class="time-pill" onclick="loadMacroChart('aud','6m',this)">6M</button>
+          <button class="time-pill" onclick="loadMacroChart('aud','1y',this)">1Y</button>
+        </div>
+      </div>
+      <div class="macro-chart-wrap"><canvas id="macro-aud-chart"></canvas></div>
+    </div>
+
+    <!-- Key rates + FX/commodities grid -->
+    <div class="macro-grid">
+      <div class="card reveal">
+        <div class="section-label">Key Central Bank Rates</div>
+        <table class="macro-rates-table">
+          <tbody>
+            <tr><td>🇦🇺 RBA Cash Rate</td><td id="macro-rba-rate">4.35%</td></tr>
+            <tr><td>🇺🇸 Fed Funds Rate</td><td id="macro-fed-rate">5.25–5.50%</td></tr>
+            <tr><td>🇬🇧 BoE Base Rate</td><td id="macro-boe-rate">5.25%</td></tr>
+            <tr><td>🇪🇺 ECB Deposit Rate</td><td id="macro-ecb-rate">4.00%</td></tr>
+            <tr><td>🇯🇵 BoJ Policy Rate</td><td id="macro-boj-rate">0.10%</td></tr>
+            <tr><td>🇨🇳 PBoC LPR (1yr)</td><td id="macro-pboc-rate">3.45%</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card reveal">
+        <div class="section-label">AUD Currency Pairs</div>
+        <div class="fx-grid" id="macro-fx-grid">
+          <div style="color:var(--sl-muted);font-size:0.72rem;">Loading…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Commodities chart + table -->
+    <div class="macro-grid">
+      <div class="card reveal">
+        <div class="section-label">Commodities</div>
+        <div class="comm-grid" id="macro-comm-grid">
+          <div style="color:var(--sl-muted);font-size:0.72rem;">Loading…</div>
+        </div>
+      </div>
+      <div class="card reveal">
+        <div class="section-label" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>Gold (XAU/USD)</span>
+          <div class="time-pills" style="margin-top:0;">
+            <button class="time-pill active" onclick="loadMacroChart('gold','1m',this)">1M</button>
+            <button class="time-pill" onclick="loadMacroChart('gold','3m',this)">3M</button>
+            <button class="time-pill" onclick="loadMacroChart('gold','6m',this)">6M</button>
+            <button class="time-pill" onclick="loadMacroChart('gold','1y',this)">1Y</button>
+          </div>
+        </div>
+        <div class="macro-chart-wrap"><canvas id="macro-gold-chart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Global indices -->
+    <div class="card reveal" style="margin-bottom:14px;">
+      <div class="section-label">Global Indices</div>
+      <div class="index-grid" id="macro-indices-grid">
+        <div style="color:var(--sl-muted);font-size:0.72rem;grid-column:span 3;">Loading…</div>
+      </div>
+    </div>
+
+    <!-- Economic calendar -->
+    <div class="card reveal">
+      <div class="section-label">Economic Calendar — Next 60 Days</div>
+      <div class="econ-list" id="macro-econ-list">
+        <div style="color:var(--sl-muted);font-size:0.72rem;">Loading…</div>
+      </div>
+    </div>
+
+  </div><!-- /rtab-macro -->
+
+  <!-- ===== TAB: EARNINGS ===== -->
+  <div id="rtab-earnings" class="rtab-panel">
+
+    <div class="earnings-grid">
+      <div class="card reveal">
+        <div class="section-label">Earnings Calendar — Watchlist</div>
+        <div class="earn-list" id="earn-tab-list">
+          <div style="color:var(--sl-muted);font-size:0.72rem;">Loading…</div>
+        </div>
+      </div>
+      <div class="card reveal">
+        <div class="section-label">Analyst Consensus — ASX</div>
+        <div class="analyst-grid" id="earn-analyst-grid">
+          <div style="color:var(--sl-muted);font-size:0.72rem;">Loading…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3-Year Fundamentals (moved from Overview) -->
+    <div class="card reveal" style="margin-top:14px;">
+      <div class="section-label" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>3-Year Fundamentals</span>
+        <span style="font-size:0.6rem;color:var(--sl-muted);font-family:var(--font-mono);font-weight:400;">FY2023 – FY2025 · annual reports</span>
+      </div>
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('earn-fund', 'bhp', this)">BHP</button>
+        <button class="tab-btn" onclick="switchTab('earn-fund', 'cba', this)">CBA</button>
+        <button class="tab-btn" onclick="switchTab('earn-fund', 'csl', this)">CSL</button>
+      </div>
+      <div id="earn-fund-bhp" class="tab-content active">
+        <table class="fund-table">
+          <thead><tr><th>Metric</th><th>FY2023</th><th>FY2024</th><th>FY2025</th></tr></thead>
+          <tbody>
+            <tr><td>Revenue</td><td>$53.8B</td><td>$56.0B</td><td>$51.3B</td></tr>
+            <tr><td>EBITDA</td><td>$28.6B</td><td>$23.5B</td><td>$25.8B</td></tr>
+            <tr><td>Net Income</td><td>$12.9B</td><td>$7.9B</td><td>$9.0B</td></tr>
+            <tr><td>EPS</td><td>$2.55</td><td>$1.56</td><td>$1.78</td></tr>
+            <tr><td>Free Cash Flow</td><td>$11.6B</td><td>$11.8B</td><td>$9.3B</td></tr>
+            <tr><td>Dividends Paid</td><td>$13.3B</td><td>$7.7B</td><td>$6.4B</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div id="earn-fund-cba" class="tab-content">
+        <table class="fund-table">
+          <thead><tr><th>Metric</th><th>FY2023</th><th>FY2024</th><th>FY2025</th></tr></thead>
+          <tbody>
+            <tr><td>Revenue</td><td>A$28.1B</td><td>A$27.6B</td><td>A$28.9B</td></tr>
+            <tr><td>Net Income</td><td>A$10.2B</td><td>A$9.8B</td><td>A$10.5B</td></tr>
+            <tr><td>EPS</td><td>A$6.01</td><td>A$5.84</td><td>A$6.21</td></tr>
+            <tr><td>NIM</td><td>1.99%</td><td>1.95%</td><td>2.04%</td></tr>
+            <tr><td>CET1 Ratio</td><td>12.2%</td><td>12.3%</td><td>12.3%</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div id="earn-fund-csl" class="tab-content">
+        <table class="fund-table">
+          <thead><tr><th>Metric</th><th>FY2023</th><th>FY2024</th><th>FY2025</th></tr></thead>
+          <tbody>
+            <tr><td>Revenue</td><td>US$14.8B</td><td>US$15.4B</td><td>US$16.5B</td></tr>
+            <tr><td>Net Income</td><td>US$2.1B</td><td>US$2.8B</td><td>US$3.4B</td></tr>
+            <tr><td>EPS</td><td>A$5.99</td><td>A$7.34</td><td>A$8.74</td></tr>
+            <tr><td>R&amp;D Expense</td><td>US$1.3B</td><td>US$1.4B</td><td>US$1.5B</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /rtab-earnings -->
+
+  <!-- ===== TAB: CRYPTO ===== -->
+  <div id="rtab-crypto" class="rtab-panel">
+
+    <!-- Price cards row -->
+    <div class="crypto-tab-grid">
+      <div class="card crypto-tab-card card-glow reveal">
+        <div class="crypto-tab-symbol">BTC / USD</div>
+        <div class="crypto-big-price" id="ct-btc-price">Loading…</div>
+        <div class="crypto-big-chg" id="ct-btc-chg">—</div>
+      </div>
+      <div class="card crypto-tab-card card-glow reveal">
+        <div class="crypto-tab-symbol">ETH / USD</div>
+        <div class="crypto-big-price" id="ct-eth-price">Loading…</div>
+        <div class="crypto-big-chg" id="ct-eth-chg">—</div>
+      </div>
+      <div class="card crypto-tab-card card-glow reveal">
+        <div class="crypto-tab-symbol">SOL / USD</div>
+        <div class="crypto-big-price" id="ct-sol-price">Loading…</div>
+        <div class="crypto-big-chg" id="ct-sol-chg">—</div>
+      </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="crypto-tab-charts">
+      <div class="card reveal">
+        <div class="section-label" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>Bitcoin (BTC/USD)</span>
+          <div class="time-pills" style="margin-top:0;">
+            <button class="time-pill active" onclick="loadCryptoChart('btc','1m',this)">1M</button>
+            <button class="time-pill" onclick="loadCryptoChart('btc','3m',this)">3M</button>
+            <button class="time-pill" onclick="loadCryptoChart('btc','6m',this)">6M</button>
+            <button class="time-pill" onclick="loadCryptoChart('btc','1y',this)">1Y</button>
+          </div>
+        </div>
+        <div class="crypto-tab-chart-wrap"><canvas id="ct-btc-chart"></canvas></div>
+      </div>
+      <div class="card reveal">
+        <div class="section-label" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>Ethereum (ETH/USD)</span>
+          <div class="time-pills" style="margin-top:0;">
+            <button class="time-pill active" onclick="loadCryptoChart('eth','1m',this)">1M</button>
+            <button class="time-pill" onclick="loadCryptoChart('eth','3m',this)">3M</button>
+            <button class="time-pill" onclick="loadCryptoChart('eth','6m',this)">6M</button>
+            <button class="time-pill" onclick="loadCryptoChart('eth','1y',this)">1Y</button>
+          </div>
+        </div>
+        <div class="crypto-tab-chart-wrap"><canvas id="ct-eth-chart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Solana chart full-width + market cap strip -->
+    <div class="card reveal" style="margin-top:14px;">
+      <div class="section-label" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>Solana (SOL/USD)</span>
+        <div class="time-pills" style="margin-top:0;">
+          <button class="time-pill active" onclick="loadCryptoChart('sol','1m',this)">1M</button>
+          <button class="time-pill" onclick="loadCryptoChart('sol','3m',this)">3M</button>
+          <button class="time-pill" onclick="loadCryptoChart('sol','6m',this)">6M</button>
+          <button class="time-pill" onclick="loadCryptoChart('sol','1y',this)">1Y</button>
+        </div>
+      </div>
+      <div style="position:relative;height:200px;"><canvas id="ct-sol-chart"></canvas></div>
+    </div>
+
+  </div><!-- /rtab-crypto -->
+
 </div>
 
 <!-- FOOTER -->
@@ -2590,6 +2980,9 @@ async function fetchLiveMovers() {
       mostActive: data.mostActive ?? [],
     };
     buildMovers();
+    if (document.querySelector('.rtab[data-tab="equities"]')?.classList.contains('active')) {
+      populateEquitiesMovers();
+    }
   } catch (err) {
     console.warn('Live movers fetch failed:', err);
   }
@@ -2999,6 +3392,17 @@ async function fetchLiveQuotes() {
     const data = await apiJson(url);
     if (!data) return;
 
+    // Store globally for tab reuse
+    window._liveQuotesData = data;
+
+    // Refresh crypto tab if it's open
+    if (document.querySelector('.rtab[data-tab="crypto"]')?.classList.contains('active')) {
+      populateCryptoTab();
+    }
+    if (document.querySelector('.rtab[data-tab="equities"]')?.classList.contains('active')) {
+      populateEquitiesTab();
+    }
+
     // --- Nav status: show "LIVE DATA" ---
     const statusEl = document.getElementById('nav-market-status');
     if (statusEl) {
@@ -3374,6 +3778,9 @@ async function fetchFmpData() {
       return;
     }
 
+    // Store globally for tab rendering
+    window._fmpData = data;
+
     // Always show sections
     ['fmp-global-section','fmp-calendars-section','fmp-analytics-section'].forEach(id => {
       const el = document.getElementById(id);
@@ -3389,6 +3796,12 @@ async function fetchFmpData() {
     renderSectorPerformance(data.sectorPerformance ?? []);
     renderAnalystRatings(data.analystRatings ?? []);
     renderFmpNews(data.news ?? []);
+
+    // Refresh any already-open secondary tabs
+    const activeTab = document.querySelector('.rtab.active')?.dataset?.tab;
+    if (activeTab === 'equities') populateEquitiesTab();
+    else if (activeTab === 'macro') populateMacroTab();
+    else if (activeTab === 'earnings') populateEarningsTab();
   } catch(err) {
     console.warn('FMP fetch failed:', err);
     ['fmp-global-section','fmp-calendars-section','fmp-analytics-section'].forEach(id => {
@@ -3397,6 +3810,365 @@ async function fetchFmpData() {
     });
   }
 }
+
+// ===================================================================
+// MULTI-TAB SYSTEM
+// ===================================================================
+
+// Track which tabs have been initialised (lazy load)
+const _tabInit = { overview: true, equities: false, macro: false, earnings: false, crypto: false };
+
+// Chart.js instances keyed by canvas id
+const _cjsCharts = {};
+
+function destroyCjsChart(id) {
+  if (_cjsCharts[id]) { try { _cjsCharts[id].destroy(); } catch(e){} delete _cjsCharts[id]; }
+}
+
+function makeCjsLineChart(canvasId, labels, values, color, label) {
+  destroyCjsChart(canvasId);
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  const gradient = ctx.createLinearGradient(0, 0, 0, canvas.offsetHeight || 200);
+  gradient.addColorStop(0, color + '44');
+  gradient.addColorStop(1, color + '00');
+
+  _cjsCharts[canvasId] = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label,
+        data: values,
+        borderColor: color,
+        borderWidth: 2,
+        backgroundColor: gradient,
+        fill: true,
+        tension: 0.3,
+        pointRadius: 0,
+        pointHoverRadius: 4,
+        pointHoverBackgroundColor: color,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 400 },
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(14,10,24,0.95)',
+          borderColor: 'rgba(255,255,255,0.1)',
+          borderWidth: 1,
+          titleColor: '#8a86a8',
+          bodyColor: '#f2eeff',
+          titleFont: { family: 'DM Mono', size: 10 },
+          bodyFont: { family: 'DM Mono', size: 12 },
+          callbacks: {
+            label: ctx => ' ' + ctx.parsed.y.toLocaleString('en-AU', { maximumFractionDigits: 4 }),
+          },
+        },
+      },
+      scales: {
+        x: {
+          display: true,
+          grid: { color: 'rgba(255,255,255,0.04)', drawTicks: false },
+          ticks: {
+            color: '#8a86a8',
+            font: { family: 'DM Mono', size: 9 },
+            maxTicksLimit: 6,
+            maxRotation: 0,
+          },
+          border: { display: false },
+        },
+        y: {
+          display: true,
+          position: 'right',
+          grid: { color: 'rgba(255,255,255,0.04)', drawTicks: false },
+          ticks: {
+            color: '#8a86a8',
+            font: { family: 'DM Mono', size: 9 },
+            maxTicksLimit: 5,
+            callback: v => v >= 1000 ? (v/1000).toFixed(1)+'k' : v.toLocaleString('en-AU',{maximumFractionDigits:4}),
+          },
+          border: { display: false },
+        },
+      },
+    },
+  });
+}
+
+function makeCjsBarChart(canvasId, labels, values, colors) {
+  destroyCjsChart(canvasId);
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  _cjsCharts[canvasId] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        backgroundColor: colors,
+        borderRadius: 4,
+        borderSkipped: false,
+      }],
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 400 },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(14,10,24,0.95)',
+          borderColor: 'rgba(255,255,255,0.1)',
+          borderWidth: 1,
+          titleColor: '#8a86a8',
+          bodyColor: '#f2eeff',
+          titleFont: { family: 'DM Mono', size: 10 },
+          bodyFont: { family: 'DM Mono', size: 12 },
+          callbacks: { label: ctx => ' ' + (ctx.parsed.x >= 0 ? '+' : '') + ctx.parsed.x.toFixed(2) + '%' },
+        },
+      },
+      scales: {
+        x: {
+          display: true,
+          grid: { color: 'rgba(255,255,255,0.04)' },
+          ticks: { color: '#8a86a8', font: { family: 'DM Mono', size: 9 }, callback: v => (v>=0?'+':'') + v.toFixed(1)+'%' },
+          border: { display: false },
+        },
+        y: {
+          display: true,
+          grid: { display: false },
+          ticks: { color: '#f2eeff', font: { family: 'DM Mono', size: 10 } },
+          border: { display: false },
+        },
+      },
+    },
+  });
+}
+
+// Parse chart API response into labels + values
+function parseChartData(data, range) {
+  if (!data?.closes?.length) return { labels: [], values: [] };
+  const ts = data.timestamps;
+  const closes = data.closes;
+  const labels = ts.map(t => {
+    const d = new Date(t * 1000);
+    if (range === '1d') return d.toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit', hour12: false });
+    if (range === '1w') return d.toLocaleDateString('en-AU', { weekday: 'short', hour: '2-digit', hour12: false });
+    return d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
+  });
+  return { labels, values: closes };
+}
+
+// ─── TAB SWITCHING ────────────────────────────────────────────────
+function switchResearchTab(name, btn) {
+  document.querySelectorAll('.rtab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.rtab-panel').forEach(p => p.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  const panel = document.getElementById('rtab-' + name);
+  if (panel) panel.classList.add('active');
+
+  if (!_tabInit[name]) {
+    _tabInit[name] = true;
+    if (name === 'equities') populateEquitiesTab();
+    else if (name === 'macro') { populateMacroTab(); loadMacroChart('aud', '1m', document.querySelector('#rtab-macro .time-pill.active')); }
+    else if (name === 'earnings') populateEarningsTab();
+    else if (name === 'crypto') { populateCryptoTab(); loadCryptoChart('btc', '1m', null); loadCryptoChart('eth', '1m', null); loadCryptoChart('sol', '1m', null); }
+  }
+}
+
+// ─── EQUITIES TAB ─────────────────────────────────────────────────
+function populateEquitiesTab() {
+  const fmp = window._fmpData;
+
+  // Sector bar chart
+  if (fmp?.sectorPerformance?.length) {
+    const sectors = fmp.sectorPerformance.slice(0, 11);
+    const labels = sectors.map(s => s.sector || s.name || '');
+    const values = sectors.map(s => parseFloat(s.changesPercentage ?? s.changePct ?? 0));
+    const colors = values.map(v => v >= 0 ? 'rgba(34,197,94,0.75)' : 'rgba(239,68,68,0.75)');
+    makeCjsBarChart('eq-sector-chart', labels, values, colors);
+  }
+
+  // Stocks table
+  const tbody = document.getElementById('eq-stocks-tbody');
+  if (tbody && window._liveQuotesData?.asx) {
+    const asx = window._liveQuotesData.asx;
+    const rows = ASX_ORDER.map(sym => {
+      const q = asx[sym];
+      if (!q) return '';
+      const chgPct = (q.price && q.prevClose && q.prevClose > 0) ? ((q.price - q.prevClose)/q.prevClose*100) : null;
+      const chgClass = chgPct == null ? '' : chgPct >= 0 ? 'pos' : 'neg';
+      const mcap = MCAP_MAP[sym] ? (MCAP_MAP[sym] >= 1e9 ? '$' + (MCAP_MAP[sym]/1e9).toFixed(1)+'B' : '$' + (MCAP_MAP[sym]/1e6).toFixed(0)+'M') : '—';
+      return `<tr>
+        <td class="mono" style="font-weight:600;">${escapeHtml(sym)}</td>
+        <td style="font-size:0.65rem;color:var(--sl-muted);">${escapeHtml(q.name || '')}</td>
+        <td><span class="badge ${sectorBadge(SECTOR_MAP[sym+'.AX'] || '')}">${escapeHtml(SECTOR_MAP[sym+'.AX'] || '—')}</span></td>
+        <td class="mono">$${q.price ? q.price.toFixed(2) : '—'}</td>
+        <td class="mono ${chgClass}">${chgPct != null ? (chgPct>=0?'+':'')+chgPct.toFixed(2)+'%' : '—'}</td>
+        <td class="mono">${mcap}</td>
+        <td class="mono">${q.pe ? q.pe.toFixed(1) : '—'}</td>
+        <td class="mono">${q.divYield ? q.divYield.toFixed(2)+'%' : '—'}</td>
+        <td class="mono">${q.yearHigh ? '$'+q.yearHigh.toFixed(2) : '—'}</td>
+        <td class="mono">${q.yearLow ? '$'+q.yearLow.toFixed(2) : '—'}</td>
+        <td class="mono">—</td>
+      </tr>`;
+    }).join('');
+    tbody.innerHTML = rows || '<tr><td colspan="11" style="color:var(--sl-muted);text-align:center;padding:20px;">No data</td></tr>';
+  }
+
+  // Analyst grid (duplicate from overview)
+  const agEl = document.getElementById('eq-analyst-grid');
+  const sourceEl = document.getElementById('fmp-analyst-grid');
+  if (agEl && sourceEl) agEl.innerHTML = sourceEl.innerHTML;
+
+  // Movers
+  populateEquitiesMovers();
+}
+
+function populateEquitiesMovers() {
+  const movers = DATA.usMovers;
+  const gainersEl = document.getElementById('eq-gainers-list');
+  const losersEl = document.getElementById('eq-losers-list');
+
+  function moverRow(m) {
+    const pct = parseFloat(m.changesPercentage ?? 0);
+    const cls = pct >= 0 ? 'pos' : 'neg';
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04);">
+      <div>
+        <span class="mono" style="font-weight:600;font-size:0.78rem;">${escapeHtml(m.ticker||m.symbol||'')}</span>
+        <span style="color:var(--sl-muted);font-size:0.62rem;margin-left:8px;">${escapeHtml((m.companyName||m.name||'').substring(0,28))}</span>
+      </div>
+      <div style="text-align:right;">
+        <div class="mono" style="font-size:0.75rem;">$${parseFloat(m.price||0).toFixed(2)}</div>
+        <div class="mono ${cls}" style="font-size:0.68rem;">${pct>=0?'+':''}${pct.toFixed(2)}%</div>
+      </div>
+    </div>`;
+  }
+
+  if (gainersEl) gainersEl.innerHTML = movers.gainers.length ? movers.gainers.slice(0,8).map(moverRow).join('') : '<div style="color:var(--sl-muted);font-size:0.72rem;">Loading…</div>';
+  if (losersEl) losersEl.innerHTML = movers.losers.length ? movers.losers.slice(0,8).map(moverRow).join('') : '<div style="color:var(--sl-muted);font-size:0.72rem;">Loading…</div>';
+}
+
+// ─── MACRO TAB ────────────────────────────────────────────────────
+function populateMacroTab() {
+  const fmp = window._fmpData;
+  if (!fmp) return;
+
+  // FX grid (macro)
+  const fxEl = document.getElementById('macro-fx-grid');
+  if (fxEl && fmp.fx?.length) {
+    const valid = fmp.fx.filter(f => f.rate);
+    fxEl.innerHTML = valid.map(f => `
+      <div class="fx-row">
+        <span class="fx-pair">${escapeHtml(f.label)}</span>
+        <span class="fx-rate">${fmtPrice(f.rate, 4)}</span>
+        <span class="fx-chg ${chgClass(f.change)}">${fmtPct(f.change)}</span>
+      </div>
+    `).join('') || '<div style="color:var(--sl-muted);font-size:0.72rem;">No data.</div>';
+  }
+
+  // Commodities (macro)
+  const commEl = document.getElementById('macro-comm-grid');
+  const sourceCommEl = document.getElementById('fmp-comm-grid');
+  if (commEl && sourceCommEl) commEl.innerHTML = sourceCommEl.innerHTML;
+
+  // Global indices (macro)
+  const idxEl = document.getElementById('macro-indices-grid');
+  const sourceIdxEl = document.getElementById('fmp-indices-grid');
+  if (idxEl && sourceIdxEl) idxEl.innerHTML = sourceIdxEl.innerHTML;
+
+  // Economic calendar (macro)
+  const econEl = document.getElementById('macro-econ-list');
+  const sourceEconEl = document.getElementById('fmp-econ-list');
+  if (econEl && sourceEconEl) econEl.innerHTML = sourceEconEl.innerHTML;
+}
+
+async function loadMacroChart(symbol, range, btn) {
+  if (btn) {
+    const siblings = btn.closest('.time-pills')?.querySelectorAll('.time-pill');
+    if (siblings) siblings.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+  const canvasId = symbol === 'gold' ? 'macro-gold-chart' : 'macro-aud-chart';
+  const color = symbol === 'gold' ? '#ffb547' : '#9b5de5';
+  const label = symbol === 'gold' ? 'Gold (USD)' : 'AUD/USD';
+  const demoParam = state.demoMode ? '&demo=1' : '';
+  try {
+    const data = await apiJson(`/api/research/chart?symbol=${symbol}&range=${range}${demoParam}`);
+    if (data?.closes?.length) {
+      const { labels, values } = parseChartData(data, range);
+      makeCjsLineChart(canvasId, labels, values, color, label);
+    }
+  } catch(e) { console.warn('Macro chart failed:', e); }
+}
+
+// ─── EARNINGS TAB ─────────────────────────────────────────────────
+function populateEarningsTab() {
+  const fmp = window._fmpData;
+
+  // Earnings calendar
+  const earnEl = document.getElementById('earn-tab-list');
+  const sourceEarnEl = document.getElementById('fmp-earn-list');
+  if (earnEl && sourceEarnEl) earnEl.innerHTML = sourceEarnEl.innerHTML;
+
+  // Analyst ratings
+  const analystEl = document.getElementById('earn-analyst-grid');
+  const sourceAnalystEl = document.getElementById('fmp-analyst-grid');
+  if (analystEl && sourceAnalystEl) analystEl.innerHTML = sourceAnalystEl.innerHTML;
+}
+
+// ─── CRYPTO TAB ───────────────────────────────────────────────────
+function populateCryptoTab() {
+  const quotes = window._liveQuotesData;
+  if (!quotes?.crypto) return;
+
+  function setCryptoCard(priceId, chgId, quote) {
+    const priceEl = document.getElementById(priceId);
+    const chgEl = document.getElementById(chgId);
+    if (!quote?.price) { if (priceEl) priceEl.textContent = '—'; return; }
+    if (priceEl) priceEl.textContent = '$' + Math.round(quote.price).toLocaleString('en-AU');
+    if (chgEl && quote.prevClose && quote.prevClose > 0) {
+      const pct = ((quote.price - quote.prevClose) / quote.prevClose) * 100;
+      const sign = pct >= 0 ? '+' : '';
+      chgEl.className = 'crypto-big-chg ' + (pct >= 0 ? 'pos' : 'neg');
+      chgEl.textContent = sign + pct.toFixed(2) + '%';
+    }
+  }
+
+  setCryptoCard('ct-btc-price', 'ct-btc-chg', quotes.crypto.btc);
+  setCryptoCard('ct-eth-price', 'ct-eth-chg', quotes.crypto.eth);
+  setCryptoCard('ct-sol-price', 'ct-sol-chg', quotes.crypto.sol);
+}
+
+async function loadCryptoChart(symbol, range, btn) {
+  if (btn) {
+    const siblings = btn.closest('.time-pills')?.querySelectorAll('.time-pill');
+    if (siblings) siblings.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+  const canvasId = `ct-${symbol}-chart`;
+  const colorMap = { btc: '#ff9500', eth: '#627eea', sol: '#9945ff' };
+  const labelMap = { btc: 'BTC/USD', eth: 'ETH/USD', sol: 'SOL/USD' };
+  const color = colorMap[symbol] || '#9b5de5';
+  const demoParam = state.demoMode ? '&demo=1' : '';
+  try {
+    const data = await apiJson(`/api/research/chart?symbol=${symbol}&range=${range}${demoParam}`);
+    if (data?.closes?.length) {
+      const { labels, values } = parseChartData(data, range);
+      makeCjsLineChart(canvasId, labels, values, color, labelMap[symbol]);
+    }
+  } catch(e) { console.warn('Crypto chart failed:', e); }
+}
+
+// Live quotes stored globally via window._liveQuotesData in fetchLiveQuotes()
 </script>
 
 </body>

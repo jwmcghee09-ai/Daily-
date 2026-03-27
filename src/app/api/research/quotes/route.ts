@@ -40,6 +40,7 @@ interface QuotesPayload {
   crypto: {
     btc: QuoteData;
     eth: QuoteData;
+    sol: QuoteData;
     gold: QuoteData;
   };
 }
@@ -128,15 +129,15 @@ async function fetchQuote(symbol: string): Promise<QuoteData> {
 }
 
 
-// CoinGecko free API — primary source for BTC/ETH
-async function fetchCryptoFromCoinGecko(): Promise<{ btc: QuoteData | null; eth: QuoteData | null }> {
+// CoinGecko free API — primary source for BTC/ETH/SOL
+async function fetchCryptoFromCoinGecko(): Promise<{ btc: QuoteData | null; eth: QuoteData | null; sol: QuoteData | null }> {
   try {
-    const url = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true";
+    const url = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd&include_24hr_change=true";
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 8_000);
     const response = await fetch(url, { cache: "no-store", signal: controller.signal });
     clearTimeout(timeout);
-    if (!response.ok) return { btc: null, eth: null };
+    if (!response.ok) return { btc: null, eth: null, sol: null };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const data = (await response.json()) as any;
 
@@ -152,9 +153,10 @@ async function fetchCryptoFromCoinGecko(): Promise<{ btc: QuoteData | null; eth:
     return {
       btc: makeQuote("BTC-USD", "bitcoin", "Bitcoin"),
       eth: makeQuote("ETH-USD", "ethereum", "Ethereum"),
+      sol: makeQuote("SOL-USD", "solana", "Solana"),
     };
   } catch {
-    return { btc: null, eth: null };
+    return { btc: null, eth: null, sol: null };
   }
 }
 
@@ -199,7 +201,7 @@ export async function GET(request: NextRequest) {
   }
 
   const fmpApiKey = process.env.FMP_API_KEY ?? "";
-  const extraSymbols = ["^AXJO", "^AORD", "AUDUSD=X", "^VIX", "BTC-USD", "ETH-USD", "XAUUSD=X", "XAUAUD=X"];
+  const extraSymbols = ["^AXJO", "^AORD", "AUDUSD=X", "^VIX", "BTC-USD", "ETH-USD", "SOL-USD", "XAUUSD=X", "GC=F"];
 
   const [fmpAsxResults, extraQuotes, coingecko, frankfurterAudUsd] = await Promise.all([
     // Use FMP profile as primary source for ASX stocks (more reliable than Yahoo for AU exchange)
@@ -232,9 +234,10 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // Use CoinGecko for BTC/ETH if available, fall back to Yahoo
+  // Use CoinGecko for BTC/ETH/SOL if available, fall back to Yahoo
   if (coingecko.btc) bySymbol["BTC-USD"] = coingecko.btc;
   if (coingecko.eth) bySymbol["ETH-USD"] = coingecko.eth;
+  if (coingecko.sol) bySymbol["SOL-USD"] = coingecko.sol;
 
   // Use FMP AUDUSD rate if available, else Frankfurter, else Yahoo
   const fmpAudUsd = await (async () => {
@@ -261,20 +264,16 @@ export async function GET(request: NextRequest) {
     };
   }
 
-  // Convert gold USD→AUD, with direct XAUAUD=X as fallback
-  const goldUsd = bySymbol["XAUUSD=X"];
+  // Convert gold USD→AUD; prefer XAUUSD=X, fall back to GC=F (COMEX futures)
+  const goldUsd = bySymbol["XAUUSD=X"]?.price ? bySymbol["XAUUSD=X"] : bySymbol["GC=F"];
   const audUsdQ = bySymbol["AUDUSD=X"];
-  const goldAudDirect = bySymbol["XAUAUD=X"];
   let goldAudPrice: number | null = null;
   let goldAudPrevClose: number | null = null;
-  if (goldUsd.price && audUsdQ.price && audUsdQ.price > 0) {
+  if (goldUsd?.price && audUsdQ?.price && audUsdQ.price > 0) {
     goldAudPrice = goldUsd.price / audUsdQ.price;
     if (goldUsd.prevClose && audUsdQ.prevClose && audUsdQ.prevClose > 0) {
       goldAudPrevClose = goldUsd.prevClose / audUsdQ.prevClose;
     }
-  } else if (goldAudDirect.price) {
-    goldAudPrice = goldAudDirect.price;
-    goldAudPrevClose = goldAudDirect.prevClose;
   }
 
   const payload: QuotesPayload = {
@@ -289,6 +288,7 @@ export async function GET(request: NextRequest) {
     crypto: {
       btc: bySymbol["BTC-USD"],
       eth: bySymbol["ETH-USD"],
+      sol: bySymbol["SOL-USD"] ?? nullQuote("SOL-USD"),
       gold: { symbol: "XAUAUD", price: goldAudPrice, prevClose: goldAudPrevClose, yearHigh: null, yearLow: null, pe: null, divYield: null, name: "Gold" },
     },
   };
