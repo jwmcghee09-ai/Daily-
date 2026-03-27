@@ -3994,14 +3994,144 @@ const _tabInit = { overview: true, equities: false, macro: false, earnings: fals
 // Chart.js instances keyed by canvas id
 const _cjsCharts = {};
 
+function setupCanvas(canvas) {
+  const dpr = window.devicePixelRatio || 1;
+  const width = Math.max(canvas.clientWidth || canvas.parentElement?.clientWidth || 320, 320);
+  const height = Math.max(canvas.clientHeight || canvas.parentElement?.clientHeight || 180, 180);
+  canvas.width = Math.round(width * dpr);
+  canvas.height = Math.round(height * dpr);
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, width, height);
+  return { ctx, width, height };
+}
+
+function drawFallbackGrid(ctx, width, height, pad) {
+  ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+  ctx.lineWidth = 1;
+  const rows = 4;
+  for (let i = 0; i < rows; i++) {
+    const y = pad.top + ((height - pad.top - pad.bottom) / (rows - 1)) * i;
+    ctx.beginPath();
+    ctx.moveTo(pad.left, y);
+    ctx.lineTo(width - pad.right, y);
+    ctx.stroke();
+  }
+}
+
+function drawFallbackLineChart(canvasId, labels, values, color) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const { ctx, width, height } = setupCanvas(canvas);
+  const pad = { top: 12, right: 16, bottom: 24, left: 14 };
+  drawFallbackGrid(ctx, width, height, pad);
+  if (!values.length) return;
+
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const range = max - min || 1;
+  const left = pad.left;
+  const right = width - pad.right;
+  const top = pad.top;
+  const bottom = height - pad.bottom;
+
+  ctx.beginPath();
+  values.forEach((value, index) => {
+    const x = left + (index / Math.max(values.length - 1, 1)) * (right - left);
+    const y = bottom - ((value - min) / range) * (bottom - top);
+    if (index === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  });
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  ctx.font = '10px "DM Mono", monospace';
+  ctx.fillStyle = '#8a86a8';
+  const tickCount = Math.min(labels.length, 4);
+  for (let i = 0; i < tickCount; i++) {
+    const idx = Math.round(i * (labels.length - 1) / Math.max(tickCount - 1, 1));
+    const x = left + (idx / Math.max(labels.length - 1, 1)) * (right - left);
+    const label = labels[idx] || '';
+    ctx.fillText(label, x - 12, height - 6);
+  }
+}
+
+function drawFallbackBarChart(canvasId, labels, values, colors) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const { ctx, width, height } = setupCanvas(canvas);
+  const pad = { top: 10, right: 16, bottom: 14, left: 110 };
+  drawFallbackGrid(ctx, width, height, pad);
+  if (!values.length) return;
+
+  const maxAbs = Math.max(...values.map(v => Math.abs(v)), 1);
+  const barAreaHeight = height - pad.top - pad.bottom;
+  const rowHeight = barAreaHeight / Math.max(values.length, 1);
+  const zeroX = pad.left + ((width - pad.left - pad.right) / 2);
+
+  ctx.font = '10px "DM Mono", monospace';
+  labels.forEach((label, index) => {
+    const value = values[index];
+    const y = pad.top + index * rowHeight + rowHeight * 0.2;
+    const barHeight = rowHeight * 0.6;
+    const barWidth = (Math.abs(value) / maxAbs) * ((width - pad.left - pad.right) / 2 - 8);
+    const x = value >= 0 ? zeroX : zeroX - barWidth;
+
+    ctx.fillStyle = colors[index] || 'rgba(155,93,229,0.75)';
+    ctx.fillRect(x, y, barWidth, barHeight);
+
+    ctx.fillStyle = '#f2eeff';
+    ctx.fillText(label, 10, y + barHeight - 2);
+    ctx.fillStyle = '#8a86a8';
+    ctx.fillText(`${value >= 0 ? '+' : ''}${value.toFixed(1)}%`, value >= 0 ? x + barWidth + 6 : x - 38, y + barHeight - 2);
+  });
+}
+
+function drawFallbackCompareBarChart(canvasId, labels, estimateValues, actualValues) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const { ctx, width, height } = setupCanvas(canvas);
+  const pad = { top: 10, right: 16, bottom: 26, left: 28 };
+  drawFallbackGrid(ctx, width, height, pad);
+  if (!labels.length) return;
+
+  const maxValue = Math.max(...estimateValues, ...actualValues, 1);
+  const chartWidth = width - pad.left - pad.right;
+  const groupWidth = chartWidth / labels.length;
+  const barWidth = Math.max(groupWidth * 0.24, 10);
+
+  labels.forEach((label, index) => {
+    const baseX = pad.left + index * groupWidth + groupWidth * 0.2;
+    const estHeight = ((estimateValues[index] || 0) / maxValue) * (height - pad.top - pad.bottom);
+    const actHeight = ((actualValues[index] || 0) / maxValue) * (height - pad.top - pad.bottom);
+    ctx.fillStyle = 'rgba(138,134,168,0.6)';
+    ctx.fillRect(baseX, height - pad.bottom - estHeight, barWidth, estHeight);
+    ctx.fillStyle = 'rgba(192,132,252,0.8)';
+    ctx.fillRect(baseX + barWidth + 4, height - pad.bottom - actHeight, barWidth, actHeight);
+    ctx.fillStyle = '#8a86a8';
+    ctx.font = '9px "DM Mono", monospace';
+    ctx.fillText(label.split(' ')[0], baseX, height - 6);
+  });
+}
+
 function destroyCjsChart(id) {
   if (_cjsCharts[id]) { try { _cjsCharts[id].destroy(); } catch(e){} delete _cjsCharts[id]; }
+  const canvas = document.getElementById(id);
+  if (canvas && canvas.getContext) {
+    const ctx = canvas.getContext('2d');
+    if (ctx) ctx.clearRect(0, 0, canvas.width || canvas.clientWidth || 0, canvas.height || canvas.clientHeight || 0);
+  }
 }
 
 function makeCjsLineChart(canvasId, labels, values, color, label) {
   destroyCjsChart(canvasId);
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
+  if (typeof Chart === 'undefined') {
+    drawFallbackLineChart(canvasId, labels, values, color);
+    return;
+  }
   const ctx = canvas.getContext('2d');
 
   const gradient = ctx.createLinearGradient(0, 0, 0, canvas.offsetHeight || 200);
@@ -4078,6 +4208,10 @@ function makeCjsBarChart(canvasId, labels, values, colors) {
   destroyCjsChart(canvasId);
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
+  if (typeof Chart === 'undefined') {
+    drawFallbackBarChart(canvasId, labels, values, colors);
+    return;
+  }
   const ctx = canvas.getContext('2d');
   _cjsCharts[canvasId] = new Chart(ctx, {
     type: 'bar',
@@ -4130,6 +4264,10 @@ function makeCjsCompareBarChart(canvasId, labels, estimateValues, actualValues) 
   destroyCjsChart(canvasId);
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
+  if (typeof Chart === 'undefined') {
+    drawFallbackCompareBarChart(canvasId, labels, estimateValues, actualValues);
+    return;
+  }
   const ctx = canvas.getContext('2d');
   _cjsCharts[canvasId] = new Chart(ctx, {
     type: 'bar',
