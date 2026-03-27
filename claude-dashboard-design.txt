@@ -1,0 +1,1904 @@
+# Logged-in dashboard JSX (from src/app/page.tsx)
+# Range: lines 2000-2738
+  return (
+    <div className="shell spectre-app">
+      <nav className="spectre-app-nav">
+        <div className="spectre-app-nav-inner">
+          <a href="#dashboard-top" className="spectre-app-nav-logo">SPECTRE</a>
+          <div className="spectre-app-nav-links">
+            <a href="#uploads">Uploads</a>
+            <a href="#alerts">Alerts</a>
+            <a href="#metrics">Metrics</a>
+            <a href="#risk">Risk</a>
+            <a href="#charts">Charts</a>
+            <a href="#holdings">Holdings</a>
+          </div>
+        </div>
+      </nav>
+      <header id="dashboard-top" className="hero">
+        <div className="hero-copy">
+          <h1><Image src="/spectre-wordmark-plain.svg" alt="SPECTRE" width={620} height={148} className="hero-wordmark-image" priority /></h1>
+          <p className="hero-tagline">System for Portfolio Exposure, Correlation, Threat & Risk Evaluation</p>
+          <p className="hero-description">Upload super, ASX, crypto, index, mutual fund, and ABC Bullion CSV reports to track exposure, concentration, and downside risk in one private workspace.</p>
+        </div>
+        <div className="meta">
+          <span className="meta-item">Account: {sessionUser.displayName} ({sessionUser.email})</span>
+          <span className="meta-item">
+            Plan:
+            {" "}
+            <span className={`plan-chip ${sessionUser.proEnabled ? "pro" : "starter"}`}>
+              {sessionUser.proEnabled ? "PRO ACTIVE" : sessionUser.planTier.toUpperCase()}
+            </span>
+          </span>
+          <span className="meta-item">Holdings: {state.holdings.length}</span>
+          <span className="meta-item">Latest report: {latestReportDate || "N/A"}</span>
+          <span className="meta-item">Last saved: {state.updatedAt ? new Date(state.updatedAt).toLocaleString("en-AU") : "N/A"}</span>
+          <span className="meta-item">Live prices: {state.lastPriceRefreshAt ? new Date(state.lastPriceRefreshAt).toLocaleString("en-AU") : "Not refreshed yet"}</span>
+          <div className="meta-actions">
+            <button type="button" onClick={() => void refreshPrices(true)} className="refresh-btn" disabled={loading || working || refreshingPrices}>
+              {refreshingPrices ? "Refreshing..." : "Refresh Prices"}
+            </button>
+            <button type="button" onClick={clearData} className="clear-btn" disabled={working || refreshingPrices || checkoutWorking}>
+              {working ? "Working..." : "Clear Data"}
+            </button>
+            <button type="button" onClick={logout} className="clear-btn" disabled={working || refreshingPrices || checkoutWorking}>
+              Sign Out
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {banner ? <div className={`banner ${banner.type}`}>{banner.message}</div> : null}
+
+      
+      <section id="uploads" className="upload-grid">
+        <UploadCard
+          title="Super Report (CSV)"
+          description="Upload your superannuation holdings export."
+          help="Imports super holdings into account, ticker, units, price, value, and cost base fields."
+          onUpload={(event) => onUpload(event, "super")}
+          template={superTemplateCsv()}
+          templateName="super-template.csv"
+          disabled={working || loading}
+        />
+        <UploadCard
+          title="ASX Report (CSV)"
+          description="Upload brokerage or watchlist holdings export."
+          help="Imports ASX holdings and enables live quote refresh for pricing and daily portfolio movement."
+          onUpload={(event) => onUpload(event, "asx")}
+          template={asxTemplateCsv()}
+          templateName="asx-template.csv"
+          disabled={working || loading}
+        />
+        <UploadCard
+          title="Index Report (CSV)"
+          description="Upload index holdings or benchmark positions."
+          help="Imports index or benchmark positions so they are included in value, allocation, and risk views."
+          onUpload={(event) => onUpload(event, "index")}
+          template={indexTemplateCsv()}
+          templateName="index-template.csv"
+          disabled={working || loading}
+        />
+        <UploadCard
+          title="Mutual Fund Report (CSV)"
+          description="Upload managed fund or mutual fund holdings."
+          help="Imports managed fund holdings and includes them in total value, cost base, and portfolio analytics."
+          onUpload={(event) => onUpload(event, "fund")}
+          template={fundTemplateCsv()}
+          templateName="mutual-fund-template.csv"
+          disabled={working || loading}
+        />
+        <UploadCard
+          title="Crypto Report (CSV)"
+          description="Upload crypto wallet or exchange holdings."
+          help="Imports crypto holdings and refreshes live prices using Yahoo crypto pairs (for example BTC-USD)."
+          onUpload={(event) => onUpload(event, "crypto")}
+          template={cryptoTemplateCsv()}
+          templateName="crypto-template.csv"
+          disabled={working || loading}
+        />
+        <UploadCard
+          title="ABC Bullion Report (Gold/Silver CSV)"
+          description="Upload ABC Bullion gold/silver holdings. Put metal weight in units/weight (oz or grams)."
+          help="Imports gold and silver holdings by metal weight and tracks bullion exposure alongside other assets."
+          onUpload={(event) => onUpload(event, "gold")}
+          template={goldTemplateCsv()}
+          templateName="bullion-template.csv"
+          disabled={working || loading}
+        />
+      </section>
+
+      <section id="alerts" className="dip-alerts-section">
+        <div className="dip-alerts-head">
+          <h2>Email Dip Alerts</h2>
+          <p>Send an email when a selected ASX or crypto holding drops past your threshold versus previous close.</p>
+          <p className="dip-alerts-plan-note">{dipAlertPlanMessage}</p>
+        </div>
+
+        <form className="dip-alerts-form" onSubmit={(event) => void saveDipAlert(event)}>
+          <label>
+            <span>Ticker</span>
+            <input
+              type="text"
+              list="dip-alert-tickers"
+              value={dipAlertTicker}
+              onChange={(event) => setDipAlertTicker(event.target.value.toUpperCase())}
+              placeholder={availableDipTickers[0] || "e.g. CBA or BTC"}
+              maxLength={20}
+              disabled={dipAlertSaving}
+            />
+            <datalist id="dip-alert-tickers">
+              {availableDipTickers.map((ticker) => (
+                <option key={ticker} value={ticker} />
+              ))}
+            </datalist>
+          </label>
+
+          <label>
+            <span>Drop threshold (%)</span>
+            <input
+              type="number"
+              min={0.1}
+              max={90}
+              step={0.1}
+              value={dipAlertThreshold}
+              onChange={(event) => setDipAlertThreshold(event.target.value)}
+              disabled={dipAlertSaving}
+            />
+          </label>
+
+          <button
+            type="submit"
+            className="refresh-btn"
+            disabled={dipAlertSaving || dipAlertMax <= 0 || (dipAlerts.length >= dipAlertMax && !dipAlerts.some((alert) => alert.ticker === dipAlertTicker.trim().toUpperCase()))}
+          >
+            {dipAlertSaving ? "Saving..." : "Save Alert"}
+          </button>
+        </form>
+
+        {dipAlertMax > 0 ? (
+          <p className="dip-alerts-slots">
+            {dipAlerts.length}/{dipAlertMax} alert slots in use ({dipAlertSlotsRemaining} remaining).
+          </p>
+        ) : (
+          <p className="dip-alerts-slots">Enable a paid plan to use dip alerts.</p>
+        )}
+
+        <div className="dip-alerts-grid">
+          {dipAlerts.length === 0 ? (
+            <div className="empty">No dip alerts yet. Add your first alert above.</div>
+          ) : (
+            dipAlerts.map((alert) => (
+              <article key={alert.id} className="dip-alert-card">
+                <div className="dip-alert-card-head">
+                  <h3>{alert.ticker}</h3>
+                  <span className={"dip-alert-status " + (alert.enabled ? "enabled" : "disabled")}>{alert.enabled ? "Enabled" : "Paused"}</span>
+                </div>
+                <p>Trigger when drop is at least <strong>{alert.dropPctThreshold.toFixed(2)}%</strong>.</p>
+                <p className="dip-alert-last">
+                  Last sent: {alert.lastTriggeredAt ? new Date(alert.lastTriggeredAt).toLocaleString("en-AU") : "Never"}
+                </p>
+                <div className="dip-alert-actions">
+                  <button
+                    type="button"
+                    className="template-btn"
+                    onClick={() => void toggleDipAlert(alert, !alert.enabled)}
+                    disabled={dipAlertSaving}
+                  >
+                    {alert.enabled ? "Pause" : "Resume"}
+                  </button>
+                  <button
+                    type="button"
+                    className="clear-btn"
+                    onClick={() => void deleteDipAlert(alert.ticker)}
+                    disabled={dipAlertSaving}
+                  >
+                    Remove
+                  </button>
+                </div>
+              </article>
+            ))
+          )}
+        </div>
+
+        {!proAnalyticsEnabled ? (
+          <div className="dip-alert-upgrade">
+            <button type="button" onClick={() => void startProCheckout(authEmail)} className="template-btn" disabled={checkoutWorking}>
+              {checkoutWorking ? "Redirecting..." : "Upgrade for More Alerts"}
+            </button>
+          </div>
+        ) : null}
+      </section>
+
+      
+      <section id="metrics" className="kpi-grid">
+        <KpiCard label="Total Portfolio" value={formatCurrency(metrics.totalValue)} help="Current market value across all imported holdings." />
+        <KpiCard label="Cost Base" value={formatCurrency(metrics.totalCost)} help="Total invested amount from imported cost-base values." />
+        <KpiCard
+          label="Risk Score"
+          value={portfolioRiskScore ? `${portfolioRiskScore.score}/100 (${portfolioRiskScore.label})` : "Need holdings"}
+          help={
+            portfolioRiskScore
+              ? `Composite score from volatility, VaR, drawdown, concentration, and sample confidence. Confidence: ${portfolioRiskScore.confidence} (${portfolioRiskScore.returnsUsed} daily returns).`
+              : "Composite score appears after holdings are imported."
+          }
+          tone={portfolioRiskScoreTone}
+        />
+        <KpiCard
+          label="Unrealized P/L"
+          value={(metrics.pnl >= 0 ? "▲ " : "▼ ") + formatCurrency(Math.abs(metrics.pnl)) + " (" + formatPercent(metrics.pnlPct) + ")"}
+          help="Unrealized profit or loss equals current portfolio value minus cost base."
+          tone={metrics.pnl >= 0 ? "positive" : "negative"}
+        />
+        <KpiCard
+          label={portfolioChangeLabel}
+          value={
+            todayPortfolioChangePct != null
+              ? (todayPortfolioChangeAmount >= 0 ? "▲ " : "▼ ") + formatCurrency(Math.abs(todayPortfolioChangeAmount)) + " (" + formatPercent(todayPortfolioChangePct) + ")"
+              : "Need live prices"
+          }
+          help="Change since the first Sydney-time snapshot today. Resets at midnight Sydney time."
+          tone={todayPortfolioChangePct == null ? "neutral" : todayPortfolioChangeAmount >= 0 ? "positive" : "negative"}
+        />
+        {proAnalyticsEnabled ? (
+          <>
+            <KpiCard
+              label={"1-Day VaR (95%, " + riskWindow + ")"}
+              value={
+                effectiveVar95Amount != null
+                  ? `${formatCurrency(effectiveVar95Amount)} (${formatPercent(effectiveVar95Pct)})${metrics.var95Amount == null ? " • Yahoo estimate" : ""}`
+                  : loadingHistoricalEstimate && metrics.var95Amount == null
+                    ? "Estimating from Yahoo..."
+                    : "Need 20+ daily snapshots"
+              }
+              help="Estimated one-day loss threshold at 95% confidence, based on the selected risk window."
+            />
+            <KpiCard
+              label={"1-Day ES (95%, " + riskWindow + ")"}
+              value={
+                effectiveCvar95Amount != null
+                  ? `${formatCurrency(effectiveCvar95Amount)} (${formatPercent(effectiveCvar95Pct)})${metrics.cvar95Amount == null ? " • Yahoo estimate" : ""}`
+                  : loadingHistoricalEstimate && metrics.cvar95Amount == null
+                    ? "Estimating from Yahoo..."
+                    : "Need 20+ daily snapshots"
+              }
+              help="Expected Shortfall is the average loss on the worst 5% of days in the selected window."
+            />
+          </>
+        ) : (
+          <KpiCard
+            label="Pro Quant Pack"
+            value="VaR, ES, beta, stress tests"
+            help="Starter keeps the dashboard simple. Upgrade to Pro for deeper quant risk analytics."
+          />
+        )}
+      </section>
+
+      <section className={`pro-analytics-section ${proAnalyticsEnabled ? "unlocked" : "locked"}`}>
+        <div className="pro-analytics-head">
+          <h2>Pro Quant Console</h2>
+          <span className="pro-analytics-status">{proAnalyticsEnabled ? "UNLOCKED" : "LOCKED • $15/MONTH"}</span>
+        </div>
+        <p className="pro-analytics-note">
+          {proAnalyticsEnabled
+            ? "Advanced quant analytics are active for this account."
+            : "Starter stays streamlined. Upgrade to Pro to unlock VaR, Expected Shortfall, benchmark beta, tracking error, and stress scenarios."}
+        </p>
+        <div className="pro-analytics-grid">
+          <article className="pro-analytics-card">
+            <p>Expected Shortfall (ES 95)</p>
+            <strong>
+              {proAnalyticsEnabled && effectiveCvar95Amount != null
+                ? `${formatCurrency(effectiveCvar95Amount)} (${formatPercent(effectiveCvar95Pct)})`
+                : "LOCKED"}
+            </strong>
+          </article>
+          <article className="pro-analytics-card">
+            <p>Beta vs ASX 200</p>
+            <strong>{proAnalyticsEnabled && benchmarkBeta != null ? benchmarkBeta.toFixed(2) : "LOCKED"}</strong>
+          </article>
+          <article className="pro-analytics-card">
+            <p>Tracking Error (Annualized)</p>
+            <strong>{proAnalyticsEnabled && benchmarkTrackingErrorAnnualPct != null ? formatPercent(benchmarkTrackingErrorAnnualPct) : "LOCKED"}</strong>
+          </article>
+        </div>
+        {!proAnalyticsEnabled ? (
+          <div className="pro-analytics-cta">
+            <button type="button" onClick={() => void startProCheckout(authEmail)} className="refresh-btn" disabled={checkoutWorking}>
+              {checkoutWorking ? "Redirecting..." : "Unlock Pro Analytics"}
+            </button>
+          </div>
+        ) : null}
+      </section>
+
+      
+      <section id="insights" className="insights-section">
+        <h2>{proAnalyticsEnabled ? "Performance & Stress" : "Performance"}</h2>
+        <div className="insights-grid">
+          <article className="insight-card">
+            <h3>Asset Split</h3>
+            {assetSplit.length === 0 ? (
+              <div className="empty">Import holdings to view asset split.</div>
+            ) : (
+              <div className="asset-list">
+                {assetSplit.map((item) => (
+                  <div className="asset-row" key={item.name}>
+                    <span>{item.name}</span>
+                    <strong>{formatCurrency(item.value)} ({formatPercent(item.pct)})</strong>
+                  </div>
+                ))}
+              </div>
+            )}
+          </article>
+
+          <article className="insight-card">
+            <h3>Best / Worst Performer</h3>
+            {bestPerformer == null || worstPerformer == null ? (
+              <div className="empty">Need holdings with cost base to calculate performance.</div>
+            ) : (
+              <div className="performer-list">
+                <div className="performer-row">
+                  <p>Best: {bestPerformer.ticker}</p>
+                  <strong className={bestPerformer.pnl >= 0 ? "positive" : "negative"}>
+                    {formatSignedCurrency(bestPerformer.pnl)} ({formatPercent(bestPerformer.pnlPct)})
+                  </strong>
+                </div>
+                <div className="performer-row">
+                  <p>Worst: {worstPerformer.ticker}</p>
+                  <strong className={worstPerformer.pnl >= 0 ? "positive" : "negative"}>
+                    {formatSignedCurrency(worstPerformer.pnl)} ({formatPercent(worstPerformer.pnlPct)})
+                  </strong>
+                </div>
+              </div>
+            )}
+          </article>
+
+          <article className="insight-card">
+            <h3>Top Gainer / Loser {moverPeriodLabel}</h3>
+            {todayTopGainer == null || todayTopLoser == null ? (
+              <div className="empty">Need live prices to calculate movers.</div>
+            ) : (
+              <div className="performer-list">
+                <div className="performer-row">
+                  <p>Gainer: {todayTopGainer.ticker}</p>
+                  <strong className={todayTopGainer.changeAmount >= 0 ? "positive" : "negative"}>
+                    {formatSignedCurrency(todayTopGainer.changeAmount)} ({formatPercent(todayTopGainer.changePct)})
+                  </strong>
+                </div>
+                <div className="performer-row">
+                  <p>Loser: {todayTopLoser.ticker}</p>
+                  <strong className={todayTopLoser.changeAmount >= 0 ? "positive" : "negative"}>
+                    {formatSignedCurrency(todayTopLoser.changeAmount)} ({formatPercent(todayTopLoser.changePct)})
+                  </strong>
+                </div>
+              </div>
+            )}
+          </article>
+        </div>
+
+        {proAnalyticsEnabled ? (
+          <div className="stress-grid">
+            {stressScenarios.length === 0 ? (
+              <div className="empty">Import holdings to run stress scenarios.</div>
+            ) : (
+              stressScenarios.map((scenario) => (
+                <article key={scenario.name} className={"stress-card " + (scenario.impactAmount <= 0 ? "down" : "up")}>
+                  <p>{scenario.name}</p>
+                  <strong>{formatSignedCurrency(scenario.impactAmount)} ({formatPercent(scenario.impactPct)})</strong>
+                  <span>Projected value: {formatCurrency(scenario.projectedValue)}</span>
+                </article>
+              ))
+            )}
+          </div>
+        ) : (
+          <div className="empty">Starter keeps this simple. Stress scenarios are available on Pro.</div>
+        )}
+      </section>
+
+      
+      <section className="gold-section">
+        <h2>Bullion Tracking (ABC Bullion)</h2>
+        {bullionHoldings.length === 0 ? (
+          <div className="empty">Upload an ABC Bullion CSV to track gold and silver weights and values.</div>
+        ) : (
+          <div className="gold-grid">
+            <article className="gold-card">
+              <p>Total gold weight (troy oz)</p>
+              <strong>{formatWeightOz(goldWeightOz)}</strong>
+            </article>
+            <article className="gold-card">
+              <p>Total gold value</p>
+              <strong>{formatCurrency(goldValue)}</strong>
+            </article>
+            <article className="gold-card">
+              <p>Gold unrealized P/L</p>
+              <strong className={goldValue - goldCostBase >= 0 ? "positive" : "negative"}>
+                {(goldValue - goldCostBase >= 0 ? "▲ " : "▼ ") + formatCurrency(Math.abs(goldValue - goldCostBase))}
+              </strong>
+            </article>
+            <article className="gold-card silver">
+              <p>Total silver weight (troy oz)</p>
+              <strong>{formatWeightOz(silverWeightOz)}</strong>
+            </article>
+            <article className="gold-card silver">
+              <p>Total silver value</p>
+              <strong>{formatCurrency(silverValue)}</strong>
+            </article>
+            <article className="gold-card silver">
+              <p>Silver unrealized P/L</p>
+              <strong className={silverValue - silverCostBase >= 0 ? "positive" : "negative"}>
+                {(silverValue - silverCostBase >= 0 ? "▲ " : "▼ ") + formatCurrency(Math.abs(silverValue - silverCostBase))}
+              </strong>
+            </article>
+          </div>
+        )}
+      </section>
+
+      
+      <section id="quality" className="quality-section">
+        <h2>Data Quality</h2>
+        <div className="quality-grid">
+          {dataQualityRows.map((row) => (
+            <article key={row.label} className={"quality-card " + row.status}>
+              <p>{row.label}</p>
+              <strong>{row.value}</strong>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      
+      <section id="risk" className="risk-section">
+        <div className="risk-head">
+          <h2>{proAnalyticsEnabled ? "Risk Signals" : "Risk Snapshot"}</h2>
+          {proAnalyticsEnabled ? (
+            <div className="risk-window-controls" role="group" aria-label="Select risk window">
+              {RISK_WINDOW_OPTIONS.map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  className={"risk-window-btn" + (riskWindow === option ? " active" : "")}
+                  onClick={() => setRiskWindow(option)}
+                >
+                  {option}
+                </button>
+              ))}
+            </div>
+          ) : null}
+        </div>
+        {proAnalyticsEnabled ? (
+          <p className="risk-window-note">
+            Window {riskWindow}: {metrics.riskPointsUsed} snapshot points
+            {metrics.riskStartDate ? " from " + formatRiskWindowDate(metrics.riskStartDate) : ""}
+            {metrics.riskEndDate ? " to " + formatRiskWindowDate(metrics.riskEndDate) : ""}
+            .
+          </p>
+        ) : (
+          <p className="risk-window-note">Starter focuses on core risk visibility (risk score + concentration). Upgrade to Pro for full quant risk windows.</p>
+        )}
+        {usingYahooFallback ? (
+          <p className="estimate-note">
+            {historicalRiskEstimate.note} ({historicalRiskEstimate.pointsUsed}/{historicalRiskEstimate.pointsTarget} points, {historicalRiskEstimate.usedTickers.length} tickers{proAnalyticsEnabled ? `, ${historicalRiskEstimate.benchmarkPointsUsed} benchmark overlap days` : ""})
+          </p>
+        ) : null}
+        <div className="risk-grid">
+          {riskFlags.length === 0 ? (
+            <div className="empty">Import reports over time to unlock drawdown/volatility/VaR/ES metrics.</div>
+          ) : (
+            riskFlags.map((flag) => (
+              <article key={flag.label} className={`risk-card ${flag.tone}`}>
+                <div className="risk-label-row">
+                  <p>{flag.label}</p>
+                  <span className="metric-help" tabIndex={0} aria-label={flag.help}>
+                    ?
+                    <span className="metric-help-popup">{flag.help}</span>
+                  </span>
+                </div>
+                <strong>{flag.value}</strong>
+              </article>
+            ))
+          )}
+        </div>
+      </section>
+
+      
+      <section id="charts" className="chart-grid">
+        <ChartCard title="Account Allocation" tone="portfolio" help="Value split by account. Percentages are based on total portfolio value.">
+          <PieAllocation data={metrics.accountAllocation} palette={PORTFOLIO_COLORS} />
+        </ChartCard>
+        <ChartCard title="Sector Allocation" tone="exposure" help="Value concentration by sector/category from your imported holdings.">
+          <PieAllocation data={metrics.sectorAllocation} palette={EXPOSURE_COLORS} />
+        </ChartCard>
+        <ChartCard title="Top Holdings" tone="holdings" help="Largest positions ranked by current market value.">
+          <ResponsiveContainer width="100%" height={420}>
+            <BarChart data={metrics.topHoldings.map((item) => ({ name: item.ticker, value: item.value }))} margin={{ top: 14, right: 24, left: 24, bottom: 8 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#303036" />
+              <XAxis dataKey="name" />
+              <YAxis tickFormatter={(value) => `$${Math.round(Number(value) / 1000)}k`} />
+              <Tooltip formatter={tooltipFormatter} contentStyle={TOOLTIP_CONTENT_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} itemStyle={TOOLTIP_ITEM_STYLE} />
+              <Bar dataKey="value" radius={[6, 6, 0, 0]}>
+                {metrics.topHoldings.map((item, index) => (
+                  <Cell key={item.id} fill={item.ticker.toUpperCase() === "ABC2" ? "#000000" : EXPOSURE_COLORS[index % EXPOSURE_COLORS.length]} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
+        <ChartCard title="Portfolio Snapshot History" tone="history" help="Total portfolio history from saved snapshots at import and live-price refresh times.">
+          <ResponsiveContainer width="100%" height={420}>
+            <AreaChart data={portfolioHistorySeries} margin={{ top: 14, right: 24, left: 24, bottom: 8 }}>
+              <defs>
+                <linearGradient id="portfolio-history-fill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={ACCENT_COLOR} stopOpacity={0.48} />
+                  <stop offset="70%" stopColor={ACCENT_COLOR} stopOpacity={0.14} />
+                  <stop offset="100%" stopColor={ACCENT_COLOR} stopOpacity={0.03} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#303036" />
+              <XAxis dataKey="date" tickFormatter={formatSnapshotTick} minTickGap={28} />
+              <YAxis tickFormatter={formatAxisValue} width={82} />
+              <Tooltip
+                formatter={tooltipFormatter}
+                labelFormatter={formatSnapshotLabel}
+                contentStyle={TOOLTIP_CONTENT_STYLE}
+                labelStyle={TOOLTIP_LABEL_STYLE}
+                itemStyle={TOOLTIP_ITEM_STYLE}
+                cursor={{ stroke: "#7d8290", strokeDasharray: "4 4" }}
+              />
+              <Area
+                type="monotone"
+                dataKey="value"
+                stroke={ACCENT_COLOR}
+                strokeWidth={2.2}
+                fill="url(#portfolio-history-fill)"
+                dot={false}
+                activeDot={{ r: 4, stroke: "#ffffff", strokeWidth: 1, fill: ACCENT_COLOR }}
+              />
+              {portfolioHistorySeries.length > 1 ? (
+                <Brush
+                  dataKey="date"
+                  height={30}
+                  stroke="#7d8290"
+                  travellerWidth={10}
+                  tickFormatter={formatSnapshotTick}
+                  fill="rgba(255, 255, 255, 0.04)"
+                />
+              ) : null}
+            </AreaChart>
+          </ResponsiveContainer>
+        </ChartCard>
+      </section>
+
+      
+      <section id="holdings" className="table-section">
+        <h2>Current Holdings</h2>
+        {loading ? (
+          <div className="empty">Loading stored data...</div>
+        ) : state.holdings.length === 0 ? (
+          <div className="empty">Upload super, ASX, crypto, index, mutual fund, and/or bullion CSVs to populate this dashboard.</div>
+        ) : (
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Source</th>
+                  <th>Account</th>
+                  <th>Ticker</th>
+                  <th>Name</th>
+                  <th>Value</th>
+                  <th>Cost Base</th>
+                  <th>P/L</th>
+                  <th>Sector</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[...state.holdings]
+                  .sort((a, b) => b.value - a.value)
+                  .map((holding) => {
+                    const pnl = holding.value - holding.costBase;
+                    return (
+                      <tr key={holding.id}>
+                        <td><span className={"source-badge " + holding.source}>{holding.source.toUpperCase()}</span></td>
+                        <td><span className="account-chip" style={getAccountChipStyle(holding.account)}>{holding.account}</span></td>
+                        <td>{holding.ticker}</td>
+                        <td>{holding.name}</td>
+                        <td>{formatCurrency(holding.value)}</td>
+                        <td>{formatCurrency(holding.costBase)}</td>
+                        <td><span className={"pnl-chip " + (pnl >= 0 ? "up" : "down")}>{(pnl >= 0 ? "▲ " : "▼ ") + formatCurrency(Math.abs(pnl))}</span></td>
+                        <td>{holding.sector}</td>
+                        <td>{holding.reportDate}</td>
+                      </tr>
+                    );
+                  })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      <footer className="footer-note">
+        <p className="footer-disclaimer">Disclaimer: SPECTRE provides informational analytics only. It is not financial, investment, tax, or legal advice, and no result is guaranteed to be complete, current, or accurate.</p>
+        <p className="footer-disclaimer">Use at your own risk. Always verify pricing, corporate actions, and holdings with official statements before making decisions. If this app is deployed online, database access and backups are your responsibility.</p>
+        <p className="footer-contact">Contact us: <a href={`mailto:${ADMIN_CONTACT_EMAIL}`}>{ADMIN_CONTACT_EMAIL}</a></p>
+        <p className="footer-legal">T&C apply. Copyright 2026 SPECTRE.</p>
+      </footer>
+    </div>
+  );
+}
+
+function UploadCard({
+  title,
+  description,
+  help,
+  onUpload,
+  template,
+  templateName,
+  disabled,
+}: {
+  title: string;
+  description: string;
+  help?: string;
+  onUpload: (event: ChangeEvent<HTMLInputElement>) => void;
+  template: string;
+  templateName: string;
+  disabled: boolean;
+}) {
+  const downloadTemplate = () => {
+    const blob = new Blob([template], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", templateName);
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <article className="upload-card card-with-help">
+      {help ? <InfoKey text={help} /> : null}
+      <h2>{title}</h2>
+      <p>{description}</p>
+      <label className="file-input">
+        <input type="file" accept=".csv,text/csv" onChange={onUpload} disabled={disabled} />
+        <span>{disabled ? "Please wait..." : "Select CSV"}</span>
+      </label>
+      <button type="button" onClick={downloadTemplate} className="template-btn" disabled={disabled}>
+        Download template
+      </button>
+    </article>
+  );
+}
+
+function KpiCard({
+  label,
+  value,
+  help,
+  tone = "neutral",
+}: {
+  label: string;
+  value: string;
+  help?: string;
+  tone?: "neutral" | "positive" | "negative";
+}) {
+  return (
+    <article className={"kpi-card card-with-help" + (tone !== "neutral" ? " kpi-" + tone : "")}>
+      {help ? <InfoKey text={help} /> : null}
+      <p>{label}</p>
+      <strong className={tone}>{value}</strong>
+    </article>
+  );
+}
+
+function PieAllocation({ data, palette }: { data: Array<{ name: string; value: number; pct: number }>; palette: string[] }) {
+  if (data.length === 0) {
+    return <div className="empty">No data yet</div>;
+  }
+
+  return (
+    <ResponsiveContainer width="100%" height={280}>
+      <PieChart>
+        <Pie data={data.slice(0, 7)} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90}>
+          {data.slice(0, 7).map((entry, index) => (
+            <Cell key={entry.name + "-" + entry.value} fill={palette[index % palette.length]} />
+          ))}
+        </Pie>
+        <Tooltip formatter={tooltipFormatter} contentStyle={TOOLTIP_CONTENT_STYLE} labelStyle={TOOLTIP_LABEL_STYLE} itemStyle={TOOLTIP_ITEM_STYLE} />
+        <Legend formatter={(value) => String(value)} />
+      </PieChart>
+    </ResponsiveContainer>
+  );
+}
+
+function ChartCard({
+  title,
+  children,
+  tone = "default",
+  help,
+}: {
+  title: string;
+  children: ReactNode;
+  tone?: "default" | "portfolio" | "exposure" | "history" | "holdings";
+  help?: string;
+}) {
+  return (
+    <article className={"chart-card chart-" + tone + " card-with-help"}>
+      {help ? <InfoKey text={help} /> : null}
+      <h2>{title}</h2>
+      {children}
+    </article>
+  );
+}
+
+function InfoKey({ text }: { text: string }) {
+  return (
+    <details className="card-help-toggle card-help-corner">
+      <summary className="metric-help" aria-label={text}>
+        i
+      </summary>
+      <span className="metric-help-popup">{text}</span>
+    </details>
+  );
+
+# Core logged-in dashboard CSS
+# Base visual/component styles: lines 1272-1905 from src/app/globals.css
+.hero {
+  border: 1px solid var(--panel-border-accent);
+  background: linear-gradient(145deg, rgba(12, 11, 18, 0.96) 0%, rgba(24, 16, 34, 0.96) 58%, rgba(20, 14, 18, 0.96) 100%);
+  border-radius: 20px;
+  box-shadow: var(--panel-shadow), 0 0 0 1px rgba(255, 75, 51, 0.1) inset;
+  padding: 28px;
+  gap: 20px;
+}
+
+.hero::before {
+  width: 460px;
+  height: 460px;
+  inset: -35% -12% auto auto;
+  background:
+    radial-gradient(circle at 70% 28%, rgba(255, 75, 51, 0.36) 0%, transparent 62%),
+    radial-gradient(circle at 34% 68%, rgba(130, 83, 255, 0.22) 0%, transparent 68%);
+}
+
+.hero h1 {
+  font-size: clamp(1.85rem, 5vw, 3rem);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.hero-tagline {
+  color: #ffbbb0;
+  font-size: 0.74rem;
+  letter-spacing: 0.12em;
+}
+
+.hero p {
+  color: #d8d8de;
+  max-width: 68ch;
+}
+
+.meta {
+  background: linear-gradient(150deg, rgba(12, 12, 16, 0.9) 0%, rgba(16, 16, 22, 0.92) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 14px;
+  min-width: 310px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.refresh-btn,
+.clear-btn,
+.template-btn,
+.file-input span {
+  border-radius: 12px;
+  font-weight: 650;
+}
+
+.refresh-btn {
+  background: linear-gradient(135deg, #ff5038 0%, #ff2d13 100%);
+  border-color: rgba(255, 197, 189, 0.7);
+}
+
+.clear-btn {
+  background: linear-gradient(135deg, #1a1a22 0%, #15151b 100%);
+}
+
+.upload-card,
+.kpi-card,
+.chart-card,
+.risk-section,
+.table-section,
+.gold-section,
+.insights-section,
+.quality-section,
+.dip-alerts-section {
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 16px;
+  box-shadow: var(--panel-shadow);
+}
+
+.upload-card,
+.kpi-card,
+.chart-card,
+.insight-card,
+.stress-card,
+.quality-card,
+.risk-card,
+.gold-card {
+  transition: transform 0.24s ease, border-color 0.24s ease, box-shadow 0.24s ease;
+}
+
+.upload-card:hover,
+.kpi-card:hover,
+.chart-card:hover,
+.insight-card:hover,
+.stress-card:hover,
+.quality-card:hover,
+.risk-card:hover,
+.gold-card:hover,
+.dip-alert-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 75, 51, 0.5);
+  box-shadow: 0 24px 38px -30px rgba(0, 0, 0, 0.88), 0 0 0 1px rgba(255, 75, 51, 0.14) inset;
+}
+
+.upload-card {
+  border-top: 2px solid rgba(255, 75, 51, 0.92);
+}
+
+.upload-card h2,
+.chart-card h2,
+.risk-section h2,
+.table-section h2,
+.gold-section h2,
+.insights-section h2,
+.quality-section h2 {
+  letter-spacing: 0.11em;
+  font-size: 0.96rem;
+  color: #f6f6f8;
+}
+
+.kpi-grid {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.kpi-card {
+  padding: 16px;
+  border-top: 2px solid rgba(255, 255, 255, 0.22);
+  background: linear-gradient(165deg, rgba(18, 18, 24, 0.96) 0%, rgba(13, 13, 18, 0.94) 100%);
+}
+
+.kpi-card p {
+  color: #c5c5ce;
+  letter-spacing: 0.08em;
+  font-size: 0.77rem;
+}
+
+.kpi-card strong {
+  font-size: 1.18rem;
+}
+
+.kpi-card.kpi-positive {
+  border-top-color: rgba(255, 255, 255, 0.72);
+}
+
+.kpi-card.kpi-negative {
+  border-top-color: rgba(255, 75, 51, 0.9);
+}
+
+.insight-card,
+.stress-card,
+.quality-card,
+.risk-card,
+.gold-card,
+.gold-card.silver {
+  border-radius: 14px;
+  background: linear-gradient(165deg, rgba(16, 16, 22, 0.95) 0%, rgba(10, 10, 14, 0.95) 100%);
+}
+
+.risk-window-btn {
+  border-radius: 10px;
+  padding: 7px 12px;
+}
+
+.risk-window-btn.active {
+  box-shadow: 0 0 0 1px rgba(255, 75, 51, 0.34), 0 8px 18px -12px rgba(255, 75, 51, 0.9);
+}
+
+.chart-card {
+  padding: 18px;
+  border-top-width: 3px;
+}
+
+.chart-card.chart-history {
+  min-height: 500px;
+}
+
+.recharts-text,
+.recharts-legend-item-text {
+  fill: #e4e4e8 !important;
+  font-size: 0.78rem;
+}
+
+.recharts-tooltip-wrapper {
+  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.35));
+}
+
+.table-wrap {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  overflow: auto;
+}
+
+table {
+  min-width: 900px;
+}
+
+th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: rgba(22, 22, 29, 0.96);
+  color: #ffc4bb;
+}
+
+tr:nth-child(even) td {
+  background: rgba(255, 255, 255, 0.01);
+}
+
+tr:hover td {
+  background: rgba(255, 75, 51, 0.08);
+}
+
+.auth-brand,
+.auth-login-card {
+  border-radius: 18px;
+}
+
+.auth-brand {
+  border-color: rgba(255, 75, 51, 0.66);
+}
+
+.auth-brand h1 {
+  letter-spacing: 0.18em;
+}
+
+.auth-login-card {
+  background: linear-gradient(165deg, rgba(15, 15, 21, 0.97) 0%, rgba(10, 10, 15, 0.95) 100%);
+}
+
+.footer-note {
+  color: #d7b2ab;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 16px;
+}
+
+@media (max-width: 900px) {
+  .hero {
+    padding: 20px;
+  }
+
+  .meta {
+    min-width: 100%;
+  }
+
+  .chart-card.chart-history {
+    min-height: 420px;
+  }
+
+  .upload-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .upload-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* === SPECTRE Visual Refresh V2 === */
+.hero-copy {
+  display: grid;
+  gap: 8px;
+  max-width: 760px;
+}
+
+.hero h1 {
+  margin: 0;
+}
+
+.hero-wordmark-image {
+  width: min(560px, 100%);
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 0 16px rgba(255, 75, 51, 0.2));
+}
+
+
+.hero-description {
+  margin-top: 12px;
+  font-size: 0.97rem;
+  line-height: 1.55;
+  color: #e2e2e7;
+}
+
+.meta {
+  gap: 10px;
+}
+
+.meta-item {
+  display: block;
+  padding: 7px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.02);
+  font-size: 0.84rem;
+  color: #ececf0;
+}
+
+.plan-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid #5a5a64;
+  background: #1a1a1f;
+  color: #f4f4f6;
+}
+
+.plan-chip.pro {
+  border-color: #ff9e90;
+  background: linear-gradient(130deg, #ff4b33 0%, #ff2f14 100%);
+  color: #fff;
+  box-shadow: 0 0 0 1px rgba(255, 75, 51, 0.34);
+}
+
+.plan-chip.starter {
+  border-color: #7b7b86;
+  background: #1a1a1f;
+  color: #e6e6eb;
+}
+
+.pro-analytics-section {
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px solid #4f4f58;
+  background: linear-gradient(160deg, #111116 0%, #0e0e12 100%);
+  box-shadow: var(--shadow);
+}
+
+.pro-analytics-section.unlocked {
+  border-color: #8a3d31;
+  box-shadow: 0 0 0 1px rgba(255, 75, 51, 0.22), var(--shadow);
+}
+
+.pro-analytics-section.locked {
+  border-color: #565660;
+}
+
+.pro-analytics-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.pro-analytics-head h2 {
+  margin: 0;
+  font-size: 1.02rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.pro-analytics-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  border: 1px solid #5d5d67;
+  background: #1a1a20;
+  color: #f0f0f4;
+}
+
+.pro-analytics-section.unlocked .pro-analytics-status {
+  border-color: #ff9e90;
+  background: linear-gradient(130deg, #ff4b33 0%, #ff2f14 100%);
+  color: #fff;
+}
+
+.pro-analytics-note {
+  margin-top: 10px;
+  color: #cfd0d7;
+  font-size: 0.9rem;
+}
+
+.pro-analytics-grid {
+  margin-top: 12px;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.pro-analytics-card {
+  border: 1px solid #474751;
+  border-radius: 12px;
+  padding: 12px;
+  background: #101015;
+  display: grid;
+  gap: 6px;
+}
+
+.pro-analytics-section.unlocked .pro-analytics-card {
+  border-color: #72342b;
+  background: linear-gradient(145deg, rgba(255, 75, 51, 0.13) 0%, rgba(255, 75, 51, 0.03) 100%);
+}
+
+.pro-analytics-card p {
+  color: #c0c0c8;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.pro-analytics-card strong {
+  font-size: 1.08rem;
+  color: #f5f5f7;
+}
+
+.pro-analytics-cta {
+  margin-top: 12px;
+}
+
+.upload-grid {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px;
+  margin-inline: 0;
+}
+
+.upload-grid .upload-card {
+  min-width: 0;
+  width: 100%;
+  justify-items: center;
+  text-align: center;
+  padding: 14px 12px;
+  gap: 10px;
+}
+
+.upload-grid .upload-card h2 {
+  font-size: 0.98rem;
+  line-height: 1.2;
+}
+
+.upload-grid .upload-card p {
+  max-width: 32ch;
+  margin-inline: auto;
+  font-size: 0.84rem;
+  line-height: 1.35;
+}
+
+.upload-grid .file-input,
+.upload-grid .template-btn {
+  justify-self: center;
+}
+
+.upload-grid .file-input span,
+.upload-grid .template-btn {
+  font-size: 0.84rem;
+  padding: 8px 10px;
+}
+
+.upload-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.upload-card::after {
+  content: "";
+  position: absolute;
+  top: -52px;
+  right: -52px;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 75, 51, 0.26) 0%, transparent 72%);
+  pointer-events: none;
+}
+
+.upload-card h2 {
+  font-size: 1.08rem;
+}
+
+.kpi-card strong {
+  font-family: var(--font-geist-mono), "Azeret Mono", monospace;
+  letter-spacing: -0.01em;
+}
+
+.insights-section > h2,
+.gold-section > h2,
+.quality-section > h2,
+.dip-alerts-head h2,
+.risk-section > .risk-head > h2,
+.table-section > h2,
+.chart-card > h2 {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.insights-section > h2::before,
+.gold-section > h2::before,
+.quality-section > h2::before,
+.dip-alerts-head h2::before,
+.risk-section > .risk-head > h2::before,
+.table-section > h2::before,
+.chart-card > h2::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--accent);
+  box-shadow: 0 0 0 4px rgba(255, 75, 51, 0.18);
+}
+
+.insights-grid {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.asset-row,
+.performer-row {
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.stress-grid {
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+.stress-card {
+  border-left-width: 6px;
+}
+
+.stress-card.down {
+  background: linear-gradient(160deg, rgba(24, 14, 16, 0.95) 0%, rgba(12, 10, 14, 0.95) 100%);
+}
+
+.stress-card.up {
+  background: linear-gradient(160deg, rgba(22, 22, 26, 0.95) 0%, rgba(10, 10, 14, 0.95) 100%);
+}
+
+.stress-card strong {
+  font-family: var(--font-geist-mono), "Azeret Mono", monospace;
+}
+
+.gold-grid {
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+}
+
+.quality-grid {
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+}
+
+.risk-grid {
+  grid-template-columns: repeat(auto-fit, minmax(225px, 1fr));
+}
+
+.risk-card strong {
+  font-family: var(--font-geist-mono), "Azeret Mono", monospace;
+}
+
+.metric-help {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.chart-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.chart-card.chart-history {
+  grid-column: 1 / -1;
+}
+
+.chart-card.chart-holdings {
+  grid-column: 1 / -1;
+  min-height: 560px;
+}
+
+.chart-card.chart-holdings > h2 {
+  width: 100%;
+  justify-content: center;
+  text-align: center;
+}
+
+.chart-card.chart-holdings .recharts-responsive-container {
+  max-width: 1060px;
+  margin: 0 auto;
+}
+
+.chart-card {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-top-width: 3px;
+}
+
+.table-section {
+  position: relative;
+}
+
+.table-section::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 75, 51, 0.18);
+  pointer-events: none;
+}
+
+td {
+  color: #e8e8ed;
+}
+
+@keyframes spectre-glow {
+  0%,
+  100% {
+    text-shadow: 0 0 26px rgba(255, 75, 51, 0.26);
+  }
+  50% {
+    text-shadow: 0 0 38px rgba(255, 75, 51, 0.5);
+  }
+}
+
+@media (max-width: 1100px) {
+  .chart-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .meta-item {
+    font-size: 0.8rem;
+  }
+
+  .hero-description {
+
+# Logged-in theme layers
+# Theme alignment + original blend/bright buttons: lines 4520-5042 from src/app/globals.css
+/* === Logged-In Dashboard Theme Alignment === */
+.spectre-app.shell {
+  --app-bg: #0c0817;
+  --app-card: rgba(18, 12, 32, 0.92);
+  --app-card-2: rgba(22, 15, 40, 0.95);
+  --app-border: rgba(255, 255, 255, 0.08);
+  --app-border-2: rgba(255, 255, 255, 0.13);
+  --app-text: #f2eeff;
+  --app-muted: #8a86a8;
+  --app-muted-2: #b4b0cc;
+  --app-purple: #9b5de5;
+  --app-purple-hi: #c084fc;
+  --app-orange: #ff4d1a;
+  --app-orange-dk: #e03800;
+  color: var(--app-text);
+  background: var(--app-bg);
+  padding-top: 80px;
+}
+
+.spectre-app.shell::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 70% 110% at -5% 50%, #2d1150 0%, #1c0c35 28%, transparent 60%),
+    radial-gradient(ellipse 60% 110% at 108% 50%, #3f0d0d 0%, #2b0808 26%, transparent 56%),
+    linear-gradient(140deg, #180b2c 0%, #12071c 38%, #1a0a11 65%, #2c0c0c 100%);
+}
+
+.spectre-app.shell::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.03) 0.6px, transparent 0.6px);
+  background-size: 3px 3px;
+  opacity: 0.38;
+}
+
+.spectre-app .hero,
+.spectre-app .upload-card,
+.spectre-app .kpi-card,
+.spectre-app .dip-alerts-section,
+.spectre-app .insights-section,
+.spectre-app .pro-analytics-section,
+.spectre-app .gold-section,
+.spectre-app .quality-section,
+.spectre-app .risk-section,
+.spectre-app .chart-card,
+.spectre-app .table-section {
+  background: var(--app-card);
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
+  box-shadow: 0 22px 48px -30px rgba(0, 0, 0, 0.85);
+}
+
+.spectre-app .hero {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 1.25rem;
+  margin-top: 0;
+  padding: 1.2rem;
+  background: linear-gradient(145deg, rgba(10, 10, 16, 0.94) 0%, rgba(17, 12, 24, 0.94) 54%, rgba(13, 10, 16, 0.95) 100%);
+}
+
+.spectre-app-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 950;
+  height: 60px;
+  border-bottom: 1px solid var(--app-border);
+  background: rgba(10, 6, 20, 0.9);
+  backdrop-filter: blur(22px);
+}
+
+.spectre-app-nav-inner {
+  max-width: 1320px;
+  margin: 0 auto;
+  height: 100%;
+  padding: 0 1.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.spectre-app-nav-logo {
+  text-decoration: none;
+  font-family: "Bebas Neue", "Avenir Next Condensed", var(--font-geist-sans), sans-serif;
+  font-size: 1.45rem;
+  letter-spacing: 0.14em;
+  background: linear-gradient(120deg, var(--app-purple-hi), var(--app-orange));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.spectre-app-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 1.45rem;
+}
+
+.spectre-app-nav-links a {
+  text-decoration: none;
+  font-family: "DM Mono", "Azeret Mono", var(--font-geist-mono), monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--app-muted-2);
+}
+
+.spectre-app-nav-links a:hover {
+  color: var(--app-text);
+}
+
+.spectre-app section[id] {
+  scroll-margin-top: 86px;
+}
+
+.spectre-app .hero-copy {
+  gap: 0.65rem;
+}
+
+.spectre-app .hero-tagline {
+  color: var(--app-purple-hi);
+  letter-spacing: 0.19em;
+  font-size: 0.62rem;
+  text-transform: uppercase;
+}
+
+.spectre-app .hero-description {
+  color: var(--app-muted-2);
+  max-width: 70ch;
+}
+
+.spectre-app .meta {
+  background: var(--app-card-2);
+  border: 1px solid var(--app-border);
+  border-radius: 10px;
+  gap: 0.55rem;
+}
+
+.spectre-app .meta-item {
+  background: rgba(7, 5, 14, 0.65);
+  border: 1px solid var(--app-border);
+  color: #e3def9;
+}
+
+.spectre-app .plan-chip.starter {
+  background: rgba(255, 77, 26, 0.12);
+  border-color: rgba(255, 77, 26, 0.35);
+  color: #ffb7a0;
+}
+
+.spectre-app .plan-chip.pro {
+  background: rgba(155, 93, 229, 0.14);
+  border-color: rgba(192, 132, 252, 0.36);
+  color: #d3b4ff;
+}
+
+.spectre-app .upload-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.spectre-app .upload-card {
+  padding: 1rem;
+}
+
+.spectre-app .upload-card h2,
+.spectre-app .kpi-card p,
+.spectre-app .risk-card p,
+.spectre-app .insight-card h3,
+.spectre-app .gold-card p,
+.spectre-app .quality-card p {
+  color: #d3cce6;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.62rem;
+}
+
+.spectre-app .upload-card p,
+.spectre-app .risk-window-note,
+.spectre-app .dip-alerts-head p,
+.spectre-app .empty {
+  color: var(--app-muted-2);
+}
+
+.spectre-app .dip-alerts-section,
+.spectre-app .insights-section,
+.spectre-app .gold-section,
+.spectre-app .quality-section,
+.spectre-app .risk-section,
+.spectre-app .table-section {
+  padding: 1rem;
+}
+
+.spectre-app .kpi-grid {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.spectre-app .kpi-card {
+  background: linear-gradient(160deg, rgba(7, 5, 14, 0.95) 0%, rgba(13, 8, 24, 0.95) 100%);
+  border: 1px solid var(--app-border);
+  min-height: 138px;
+}
+
+.spectre-app .kpi-card.positive,
+.spectre-app .kpi-card.kpi-positive {
+  border-color: rgba(255, 77, 26, 0.42);
+  background: linear-gradient(145deg, rgba(35, 16, 22, 0.95), rgba(59, 21, 21, 0.92));
+}
+
+.spectre-app .kpi-card.negative,
+.spectre-app .kpi-card.kpi-negative {
+  border-color: rgba(255, 77, 26, 0.42);
+  background: linear-gradient(145deg, rgba(35, 16, 22, 0.95), rgba(59, 21, 21, 0.92));
+}
+
+.spectre-app .kpi-card strong {
+  color: #f5f3ff;
+}
+
+.spectre-app .pro-analytics-section.locked {
+  border-color: rgba(255, 77, 26, 0.36);
+}
+
+.spectre-app .pro-analytics-status {
+  border: 1px solid var(--app-border);
+  background: rgba(10, 7, 18, 0.8);
+  color: var(--app-muted-2);
+}
+
+.spectre-app .insights-grid,
+.spectre-app .stress-grid,
+.spectre-app .gold-grid,
+.spectre-app .risk-grid,
+.spectre-app .quality-grid,
+.spectre-app .chart-grid {
+  gap: 0.85rem;
+}
+
+.spectre-app .insight-card,
+.spectre-app .stress-card,
+.spectre-app .gold-card,
+.spectre-app .risk-card,
+.spectre-app .quality-card {
+  background: linear-gradient(160deg, rgba(7, 5, 14, 0.95), rgba(13, 8, 24, 0.95));
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
+}
+
+.spectre-app .quality-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.spectre-app .quality-card {
+  min-height: 116px;
+}
+
+.spectre-app .quality-card strong,
+.spectre-app .risk-card strong {
+  color: #efeaff;
+}
+
+.spectre-app .risk-head {
+  align-items: center;
+}
+
+.spectre-app .risk-window-btn {
+  border: 1px solid var(--app-border);
+  background: rgba(9, 7, 16, 0.8);
+  color: var(--app-muted-2);
+}
+
+.spectre-app .risk-window-btn.active,
+.spectre-app .risk-window-btn:hover {
+  border-color: rgba(255, 77, 26, 0.4);
+  color: #fff;
+}
+
+.spectre-app .chart-grid {
+  grid-template-columns: 1fr 1fr;
+}
+
+.spectre-app .chart-card {
+  padding: 1rem;
+  background: var(--app-card-2);
+}
+
+.spectre-app .chart-card h2,
+.spectre-app .risk-section h2,
+.spectre-app .table-section h2,
+.spectre-app .dip-alerts-head h2,
+.spectre-app .quality-section h2,
+.spectre-app .insights-section h2,
+.spectre-app .gold-section h2,
+.spectre-app .pro-analytics-head h2 {
+  font-family: "Bebas Neue", "Avenir Next Condensed", var(--font-geist-sans), sans-serif;
+  font-size: 1.45rem;
+  letter-spacing: 0.08em;
+  color: #fff;
+}
+
+.spectre-app .table-wrap table {
+  border-collapse: collapse;
+}
+
+.spectre-app .table-wrap th,
+.spectre-app .table-wrap td {
+  border-color: var(--app-border);
+  color: #f1ecff;
+  background: rgba(10, 8, 18, 0.72);
+}
+
+.spectre-app .table-wrap th {
+  background: rgba(19, 13, 34, 0.88);
+  color: #d7cffe;
+}
+
+.spectre-app .file-input span,
+.spectre-app .template-btn,
+.spectre-app .refresh-btn,
+.spectre-app .clear-btn {
+  border-radius: 10px;
+  border: 1px solid var(--app-border);
+  font-family: "DM Mono", "Azeret Mono", var(--font-geist-mono), monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.spectre-app .refresh-btn {
+  background: linear-gradient(135deg, var(--app-orange), var(--app-orange-dk));
+  border-color: rgba(255, 77, 26, 0.5);
+}
+
+.spectre-app .template-btn,
+.spectre-app .clear-btn,
+.spectre-app .file-input span {
+  background: rgba(11, 8, 20, 0.86);
+  color: #d7d0ee;
+}
+
+.spectre-app .template-btn:hover,
+.spectre-app .clear-btn:hover,
+.spectre-app .file-input:hover span {
+  border-color: var(--app-border-2);
+  color: #fff;
+}
+
+.spectre-app .dip-alert-card {
+  background: linear-gradient(160deg, rgba(7, 5, 14, 0.95), rgba(13, 8, 24, 0.95));
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
+}
+
+.spectre-app .footer-note {
+  background: rgba(8, 5, 15, 0.9);
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
+}
+
+.spectre-app .footer-disclaimer,
+.spectre-app .footer-contact,
+.spectre-app .footer-legal {
+  color: var(--app-muted-2);
+}
+
+@media (max-width: 1200px) {
+  .spectre-app .upload-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .spectre-app .kpi-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .spectre-app .quality-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 980px) {
+  .spectre-app .hero {
+    grid-template-columns: 1fr;
+  }
+
+  .spectre-app .chart-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .spectre-app-nav-links {
+    gap: 0.85rem;
+  }
+
+  .spectre-app-nav-links a {
+    font-size: 0.56rem;
+    letter-spacing: 0.12em;
+  }
+}
+
+@media (max-width: 760px) {
+  .spectre-app.shell {
+    padding-top: 70px;
+  }
+
+  .spectre-app-nav-links {
+    display: none;
+  }
+
+  .spectre-app .upload-grid,
+  .spectre-app .kpi-grid,
+  .spectre-app .quality-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* === Logged-In Original Blend (Requested) === */
+.spectre-app-nav {
+  display: none;
+}
+
+.spectre-app.shell {
+  padding-top: 24px;
+}
+
+.spectre-app .hero,
+.spectre-app .upload-card,
+.spectre-app .kpi-card,
+.spectre-app .dip-alerts-section,
+.spectre-app .insights-section,
+.spectre-app .pro-analytics-section,
+.spectre-app .gold-section,
+.spectre-app .quality-section,
+.spectre-app .risk-section,
+.spectre-app .chart-card,
+.spectre-app .table-section {
+  background: linear-gradient(160deg, rgba(16, 16, 22, 0.95) 0%, rgba(10, 10, 16, 0.95) 100%);
+  border-color: rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+}
+
+.spectre-app .hero {
+  grid-template-columns: 1.1fr 1fr;
+}
+
+.spectre-app .upload-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.spectre-app .kpi-grid {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.spectre-app .chart-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.spectre-app .quality-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.spectre-app .refresh-btn,
+.spectre-app .template-btn,
+.spectre-app .file-input span {
+  background: linear-gradient(135deg, #ff4b33 0%, #ff2f14 100%);
+  border-color: rgba(255, 132, 113, 0.64);
+  color: #fff;
+  box-shadow: 0 10px 22px -14px rgba(255, 75, 51, 0.9);
+}
+
+.spectre-app .clear-btn {
+  border-color: rgba(255, 118, 96, 0.62);
+  color: #ffd7cf;
+  background: rgba(35, 16, 22, 0.9);
+}
+
+.spectre-app .refresh-btn:hover,
+.spectre-app .template-btn:hover,
+.spectre-app .file-input:hover span,
+.spectre-app .clear-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+}
+
+@media (max-width: 1200px) {
+  .spectre-app .upload-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .spectre-app .kpi-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 980px) {
+  .spectre-app .hero {
+    grid-template-columns: 1fr;
+  }
+
+  .spectre-app .upload-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .spectre-app.shell {
+    padding-top: 18px;
+  }
+
+  .spectre-app .upload-grid,
+  .spectre-app .kpi-grid,
+  .spectre-app .quality-grid,
+  .spectre-app .chart-grid {
+    grid-template-columns: 1fr;
+  }
+}

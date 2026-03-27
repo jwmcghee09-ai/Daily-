@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SPECTRE - Portfolio Risk Analysis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0c0817;
+  --card: rgba(17,11,30,0.92);
+  --card2: rgba(21,14,38,0.96);
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.12);
+  --text: #f2eeff;
+  --muted: #8a86a8;
+  --muted2: #b4b0cc;
+  --purple: #7c4dff;
+  --purple-hi: #d0b3ff;
+  --orange: #ff6a3d;
+  --orange-dk: #d94a1f;
+  --amber: #ffb547;
+  --disp: 'Bebas Neue', sans-serif;
+  --mono: 'DM Mono', monospace;
+  --sans: 'DM Sans', sans-serif;
+  --max: 1300px;
+  --r: 8px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { font-family: var(--sans); background: var(--bg); color: var(--text); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+body::before { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: -2; background: radial-gradient(ellipse 72% 110% at -8% 44%, #34145f 0%, #1c0c35 30%, transparent 62%), radial-gradient(ellipse 34% 74% at 102% 16%, rgba(255,106,61,0.18) 0%, rgba(255,106,61,0.04) 34%, transparent 62%), linear-gradient(140deg, #170a2b 0%, #11071d 42%, #120816 70%, #170b13 100%); }
+body::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: -1; background-image: radial-gradient(rgba(255,255,255,0.03) 0.6px, transparent 0.6px); background-size: 3px 3px; opacity: 0.42; }
+.wrap { width: 100%; max-width: var(--max); margin: 0 auto; padding-inline: 2.5rem; }
+a { text-decoration: none; color: inherit; }
+.nav { position: fixed; top: 0; left: 0; right: 0; z-index: 900; height: 60px; background: rgba(10,6,20,0.88); backdrop-filter: blur(24px); border-bottom: 1px solid var(--border); }
+.nav-in { height: 100%; display: grid; grid-template-columns: max-content 1fr max-content; align-items: center; gap: 1rem; }
+.logo { font-family: var(--disp); font-size: 1.45rem; letter-spacing: 0.14em; background: linear-gradient(120deg, var(--purple-hi), var(--orange)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.nav-links { display: flex; align-items: center; justify-self: center; gap: 1.4rem; }
+.nav-links a { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted2); transition: color 0.18s; }
+.nav-links a:hover { color: var(--text); }
+.nav-links .demo { color: #fff; background: linear-gradient(135deg, var(--purple), #6d3df5); border-radius: 3px; padding: 0.34rem 0.9rem; box-shadow: 0 8px 24px rgba(124,77,255,0.34); }
+.nav-cta { color: #fff; background: linear-gradient(135deg, var(--orange), var(--orange-dk)); border-radius: 3px; padding: 0.38rem 1rem; font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.14em; text-transform: uppercase; box-shadow: 0 10px 28px rgba(255,106,61,0.24); transition: filter 0.18s; }
+.nav-cta:hover { filter: brightness(1.08); }
+.ticker { position: sticky; top: 60px; z-index: 800; overflow: hidden; background: rgba(10,6,20,0.72); border-bottom: 1px solid var(--border); padding: 0.52rem 0; }
+.ticker-track { display: flex; gap: 2.5rem; white-space: nowrap; animation: tick 32s linear infinite; }
+.ti { font-family: var(--mono); font-size: 0.63rem; letter-spacing: 0.09em; color: var(--muted); display: inline-flex; gap: 0.4rem; }
+.ts { color: var(--text); font-weight: 500; }
+.tu { color: var(--purple-hi); }
+.td { color: var(--orange); }
+@keyframes tick { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.btn { display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; padding: 0.8rem 1.9rem; font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; border: 0; transition: filter 0.18s, transform 0.18s; }
+.btn:hover { filter: brightness(1.08); transform: translateY(-1px); }
+.btn-pri { color: #fff; background: linear-gradient(135deg, var(--orange), var(--orange-dk)); box-shadow: 0 12px 30px rgba(255,106,61,0.24); }
+.btn-demo, .btn-pro { color: #fff; background: linear-gradient(135deg, var(--purple), #6d3df5); box-shadow: 0 12px 30px rgba(124,77,255,0.28); }
+.sec { padding: 5.5rem 0; position: relative; }
+.sec-alt { background: rgba(10,6,20,0.52); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.kicker { font-family: var(--mono); font-size: 0.59rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--purple-hi); margin-bottom: 0.85rem; display: flex; align-items: center; gap: 0.6rem; }
+.kicker::before { content: ""; width: 20px; height: 1px; background: linear-gradient(90deg, var(--orange), var(--purple-hi)); border-radius: 1px; }
+.kicker.or { color: var(--purple-hi); }
+.h2 { font-family: var(--disp); font-size: clamp(2.1rem, 4vw, 3.6rem); line-height: 1.02; max-width: 740px; margin-bottom: 0.85rem; }
+.h2 span { background: linear-gradient(120deg, #f4eeff 0%, var(--purple-hi) 68%, var(--orange) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.sub { max-width: 520px; font-size: 0.94rem; color: var(--muted2); line-height: 1.8; margin-bottom: 2.75rem; }
+.hero { min-height: 100vh; padding-top: 108px; padding-bottom: 3rem; position: relative; overflow: hidden; }
+.hero-gl { position: absolute; inset: 0; pointer-events: none; background-image: linear-gradient(rgba(155,93,229,0.028) 1px, transparent 1px), linear-gradient(90deg, rgba(155,93,229,0.028) 1px, transparent 1px); background-size: 58px 58px; mask-image: radial-gradient(ellipse 90% 80% at 40% 45%, black 0%, transparent 100%); }
+.hero-glow { position: absolute; top: -180px; left: -120px; width: 800px; height: 700px; pointer-events: none; background: radial-gradient(ellipse, rgba(100,40,180,0.16) 0%, rgba(80,20,140,0.05) 45%, transparent 70%); }
+.hero-layout { position: relative; z-index: 2; display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; }
+.hero-left { display: grid; gap: 1rem; }
+.hero-eye { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--purple-hi); display: flex; align-items: center; gap: 0.65rem; }
+.hero-eye::before { content: ""; width: 26px; height: 2px; border-radius: 2px; background: linear-gradient(90deg, var(--purple), var(--purple-hi)); }
+.hero-title { font-family: var(--disp); font-size: clamp(2.2rem, 4vw, 4.5rem); line-height: 0.96; letter-spacing: 0.01em; color: #fff; }
+.hero-title span { background: linear-gradient(125deg, #fbf7ff 0%, var(--purple-hi) 58%, var(--orange) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.hero-sys { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.16em; color: var(--muted); text-transform: uppercase; }
+.hero-desc { font-size: 0.98rem; line-height: 1.78; color: var(--muted2); max-width: 460px; }
+.hero-btns { display: flex; flex-wrap: wrap; gap: 0.8rem; }
+.hero-div { height: 1px; background: var(--border); }
+.hero-panels { display: grid; grid-template-columns: repeat(3,1fr); gap: 0.8rem; }
+.hero-panels article { background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: var(--r); padding: 0.9rem 1rem; }
+.hero-panels h3 { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--purple-hi); margin-bottom: 0.4rem; }
+.hero-panels p { font-size: 0.8rem; color: var(--muted2); line-height: 1.55; }
+.hero-right { display: flex; align-items: center; justify-content: center; }
+.live-panel { width: 100%; max-width: 480px; background: var(--card2); border: 1px solid var(--border2); border-radius: 12px; padding: 1.3rem; box-shadow: 0 40px 100px rgba(0,0,0,0.65); animation: flt 5s ease-in-out infinite; }
+@keyframes flt { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+.lp-label { font-family: var(--mono); font-size: 0.55rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.85rem; }
+.lp-kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin-bottom: 0.65rem; }
+.lp-kpi { background: rgba(10,6,20,0.65); border: 1px solid var(--border); border-radius: 8px; padding: 0.8rem 0.9rem; }
+.lp-kpi p { font-family: var(--mono); font-size: 0.5rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.3rem; }
+.lp-kpi strong { font-family: var(--disp); font-size: 1.95rem; line-height: 1; color: var(--text); }
+.lp-kpi strong.ac, .lp-risk-top strong { color: var(--orange); }
+.lp-risk { background: rgba(10,6,20,0.65); border: 1px solid var(--border); border-radius: 8px; padding: 0.8rem 0.9rem; }
+.lp-risk-top { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 0.6rem; }
+.lp-risk-top span { font-family: var(--mono); font-size: 0.5rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.lp-track { height: 4px; background: rgba(255,255,255,0.08); border-radius: 999px; overflow: hidden; }
+.lp-fill { display: block; height: 100%; width: 72%; border-radius: 999px; background: linear-gradient(90deg, var(--purple-hi), var(--orange)); }
+.lp-spark { width: 100%; height: 48px; margin-top: 0.75rem; opacity: 0.82; }
+.ops, .steps { display: grid; grid-template-columns: repeat(3,1fr); background: var(--card); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; }
+.ops { margin-bottom: 2.5rem; }
+.ops article, .steps article { padding: 1.5rem 1.75rem; }
+.ops article + article { border-left: 1px solid var(--border); }
+.ops .n { font-family: var(--mono); font-size: 0.56rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--purple-hi); margin-bottom: 0.5rem; }
+.ops h3, .steps h3, .callout h3, .feat h3, .pro-card h3 { font-family: var(--disp); }
+.ops h3 { font-size: 1.2rem; margin-bottom: 0.4rem; }
+.ops p, .callout p, .feat p, .steps p, .safety p, .pro-facts p { font-size: 0.82rem; color: var(--muted2); line-height: 1.65; }
+.callouts { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; margin-bottom: 2.5rem; }
+.callout { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 1.5rem 1.8rem; }
+.callout.af { border-color: rgba(208,179,255,0.26); box-shadow: 0 0 28px rgba(124,77,255,0.14); }
+.callout .ck { font-family: var(--mono); font-size: 0.59rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.4rem; }
+.callout.af .ck { color: var(--purple-hi); }
+.callout h3 { font-size: 1.8rem; margin-bottom: 0.4rem; }
+.feat { display: grid; grid-template-columns: repeat(2,1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; }
+.feat article { background: var(--card); padding: 1.9rem; border-left: 2px solid transparent; transition: border-left-color 0.2s, background 0.2s; }
+.feat article:hover { border-left-color: var(--purple-hi); background: #17102c; }
+.feat h3 { font-size: 1.35rem; margin-bottom: 0.5rem; }
+.dbf { border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; background: var(--card2); box-shadow: 0 32px 80px rgba(0,0,0,0.6); }
+.dbf-bar { display: flex; align-items: center; gap: 0.42rem; padding: 0.7rem 1.15rem; background: rgba(10,6,20,0.92); border-bottom: 1px solid var(--border); }
+.dot { width: 9px; height: 9px; border-radius: 999px; }
+.dot:nth-child(1) { background: #ff5f57; }
+.dot:nth-child(2) { background: #febc2e; }
+.dot:nth-child(3) { background: #28c840; }
+.dbf-url { margin-left: 0.55rem; font-family: var(--mono); font-size: 0.59rem; color: var(--muted); }
+.dbf-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 0.85rem; padding: 1rem; }
+.dbc { background: rgba(8,4,18,0.75); border: 1px solid var(--border); border-radius: 6px; padding: 1rem 1.1rem; }
+.dbc-k, .plan .tier, .pro-card .tier, .plan .psub, .pro-card .psub, .pro-facts h4, .safety h3, .plan-note, .footer-in, .fco { font-family: var(--mono); }
+.dbc-k { font-size: 0.56rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.55rem; }
+.dbc-sc { font-family: var(--disp); font-size: 3.1rem; line-height: 1; color: var(--amber); }
+.dbc-sc span { font-family: var(--mono); font-size: 1rem; color: var(--muted); }
+.dbc-note { display: block; margin-top: 0.5rem; font-size: 0.8rem; color: var(--muted2); line-height: 1.6; }
+.steps { gap: 1px; background: var(--border); }
+.steps article { background: var(--card); padding: 2.1rem 1.65rem; }
+.sn { font-family: var(--disp); font-size: 3.5rem; line-height: 1; color: rgba(255,77,26,0.2); margin-bottom: 0.3rem; }
+.steps h3 { font-size: 1.45rem; margin-bottom: 0.4rem; }
+.pro-card { position: relative; background: var(--card); border: 1px solid rgba(208,179,255,0.24); border-radius: var(--r); padding: 2rem; box-shadow: 0 0 32px rgba(124,77,255,0.12), inset 0 0 0 1px rgba(208,179,255,0.08); }
+.pro-badge { position: absolute; top: -1px; right: 1.5rem; font-family: var(--mono); font-size: 0.54rem; letter-spacing: 0.18em; text-transform: uppercase; background: var(--orange); color: #fff; padding: 0.2rem 0.65rem; border-radius: 0 0 4px 4px; }
+.pro-card .tier, .plan .tier { font-size: 0.59rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.75rem; }
+.pro-card h3 { font-size: 2.7rem; line-height: 1; margin-bottom: 0.2rem; }
+.pro-card .psub, .plan .psub { font-size: 0.61rem; color: var(--purple-hi); letter-spacing: 0.08em; display: block; margin-bottom: 1.3rem; }
+.pro-copy { font-size: 0.9rem; line-height: 1.72; color: var(--muted2); margin-bottom: 1.1rem; }
+.pro-card ul { display: grid; grid-template-columns: repeat(3,1fr); gap: 0.8rem 1.1rem; list-style: none; margin-bottom: 1.3rem; }
+.pro-card li, .plan li { font-size: 0.85rem; color: var(--muted2); line-height: 1.55; padding-left: 0.9rem; position: relative; }
+.pro-card li::before { content: "â€”"; position: absolute; left: 0; color: var(--orange); font-size: 0.7rem; }
+.pro-facts { display: grid; grid-template-columns: repeat(3,1fr); gap: 0.8rem; margin-bottom: 1.3rem; }
+.pro-facts article { background: rgba(8,4,18,0.65); border: 1px solid var(--border); border-radius: 6px; padding: 0.8rem 0.9rem; }
+.pro-facts h4 { font-size: 0.56rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--purple-hi); margin-bottom: 0.4rem; }
+.safety { display: grid; grid-template-columns: repeat(2,1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; margin-bottom: 1rem; }
+.safety article { background: var(--card); padding: 1.65rem 1.9rem; border-top: 2px solid transparent; transition: border-top-color 0.2s; }
+.safety article:hover { border-top-color: var(--purple-hi); }
+.safety h3 { font-size: 0.61rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--purple-hi); margin-bottom: 0.55rem; }
+.safety-note { font-family: var(--mono); font-size: 0.69rem; color: var(--muted2); background: var(--card); border: 1px solid var(--border); border-radius: 5px; padding: 0.82rem 1.15rem; line-height: 1.65; }
+.pricing { display: grid; grid-template-columns: repeat(2,1fr); gap: 1.1rem; max-width: 760px; margin-inline: auto; }
+.plan { position: relative; background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 2rem; }
+.plan.feat-p { border-color: rgba(208,179,255,0.26); box-shadow: 0 0 32px rgba(124,77,255,0.12), inset 0 0 0 1px rgba(208,179,255,0.08); }
+.plan .badge { position: absolute; top: -1px; right: 1.5rem; font-family: var(--mono); font-size: 0.54rem; letter-spacing: 0.18em; text-transform: uppercase; background: var(--orange); color: #fff; padding: 0.2rem 0.65rem; border-radius: 0 0 4px 4px; }
+.plan h3 { font-family: var(--disp); font-size: 3.5rem; line-height: 1; }
+.plan h3 span { font-family: var(--mono); font-size: 0.68rem; color: var(--muted); }
+.plan ul { list-style: none; display: grid; gap: 0.55rem; margin-bottom: 1.3rem; }
+.plan li::before { content: "â€”"; position: absolute; left: 0; color: var(--border2); font-size: 0.7rem; }
+.plan-note { display: block; margin-top: 0.8rem; font-size: 0.59rem; color: var(--muted); }
+.footer { border-top: 1px solid var(--border); padding: 2.2rem 0; }
+.footer-in { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1.2rem; }
+.fl { font-family: var(--disp); font-size: 1.1rem; letter-spacing: 0.14em; color: var(--muted); }
+.fc { max-width: 600px; font-family: var(--mono); font-size: 0.58rem; line-height: 1.78; color: rgba(180,176,204,0.7); }
+.fco { font-size: 0.61rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.fco a { color: var(--muted2); }
+/* --- Skip link --- */
+.skip-link { position: absolute; top: -100%; left: 1rem; z-index: 9999; background: var(--purple); color: #fff; padding: 0.6rem 1.2rem; border-radius: 4px; font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.skip-link:focus { top: 0.5rem; }
+/* --- Focus visible --- */
+:focus-visible { outline: 2px solid var(--purple-hi); outline-offset: 2px; }
+/* --- Hamburger menu --- */
+.nav-toggle { display: none; background: none; border: 1px solid var(--border2); border-radius: 4px; color: var(--text); width: 40px; height: 40px; cursor: pointer; position: relative; flex-shrink: 0; }
+.nav-toggle span, .nav-toggle span::before, .nav-toggle span::after { display: block; width: 18px; height: 2px; background: var(--text); border-radius: 2px; position: absolute; left: 50%; transform: translateX(-50%); transition: transform 0.25s, opacity 0.2s; }
+.nav-toggle span { top: 50%; transform: translate(-50%, -50%); }
+.nav-toggle span::before { content: ""; position: absolute; top: -6px; left: 0; width: 18px; height: 2px; background: var(--text); }
+.nav-toggle span::after { content: ""; position: absolute; top: 6px; left: 0; width: 18px; height: 2px; background: var(--text); }
+.nav-toggle[aria-expanded="true"] span { background: transparent; }
+.nav-toggle[aria-expanded="true"] span::before { transform: rotate(45deg); top: 0; }
+.nav-toggle[aria-expanded="true"] span::after { transform: rotate(-45deg); top: 0; }
+
+@media (max-width: 900px) {
+  .wrap { padding-inline: 1.1rem; }
+  .nav-toggle { display: flex; align-items: center; justify-content: center; }
+  .nav-links { display: none; position: fixed; top: 60px; left: 0; right: 0; background: rgba(10,6,20,0.96); backdrop-filter: blur(24px); flex-direction: column; padding: 1.5rem 2rem; gap: 0.2rem; border-bottom: 1px solid var(--border); z-index: 899; }
+  .nav-links.nav-open { display: flex; }
+  .nav-links a { font-size: 0.75rem; padding: 0.7rem 0; min-height: 44px; display: flex; align-items: center; }
+  .nav-links .demo { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0.6rem 1.2rem; margin-top: 0.5rem; }
+  .nav-cta { min-height: 44px; display: inline-flex; align-items: center; padding: 0.6rem 1.2rem; font-size: 0.7rem; }
+  .hero-layout, .dbf-grid { grid-template-columns: 1fr; }
+  .hero-right { display: flex; margin-top: 1rem; }
+  .live-panel { max-width: 100%; }
+  .pro-card ul, .pro-facts { grid-template-columns: 1fr; }
+  .sec { padding: 2.5rem 0; }
+  .kicker { font-size: 0.7rem; }
+  .hero-eye { font-size: 0.58rem; }
+  .hero-sys { font-size: 0.58rem; }
+  .lp-label { font-size: 0.65rem; }
+  .lp-kpi p { font-size: 0.65rem; }
+  .lp-risk-top span { font-size: 0.65rem; }
+  .btn { min-height: 44px; }
+  .utility-pill { min-height: 44px; display: inline-flex; align-items: center; }
+  .checkout-link { min-height: 44px; }
+  .show-password { min-height: 44px; }
+}
+@media (max-width: 768px) {
+  .access-shell { grid-template-columns: 1fr; gap: 2rem; }
+  .access-copy { padding-top: 0; }
+  .pricing { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  .ops, .callouts, .feat, .steps, .safety, .hero-panels { grid-template-columns: 1fr; }
+  .password-row { grid-template-columns: 1fr; }
+  .show-password { width: 100%; }
+  .utility-row { gap: 0.45rem; }
+  .auth-card { padding: 1.35rem; }
+  .fc { font-size: 0.68rem; }
+  .callout .ck { font-size: 0.7rem; }
+}
+@media (max-width: 480px) {
+  /* Container */
+  .wrap { padding-inline: 0.85rem; }
+  .sec { padding: 1.5rem 0; }
+
+  /* Hero */
+  .hero { padding-top: 80px; }
+  .hero-left { gap: 0.65rem; }
+  .hero-eye { font-size: 0.56rem; letter-spacing: 0.18em; gap: 0.45rem; }
+  .hero-eye::before { width: 18px; }
+  .hero-title { font-size: clamp(1.6rem, 7.5vw, 2.2rem); line-height: 1.06; }
+  .hero-sys { font-size: 0.56rem; letter-spacing: 0.12em; }
+  .hero-desc { font-size: 0.82rem; line-height: 1.72; max-width: 100%; }
+  .hero-sub { font-size: 0.8rem; line-height: 1.7; margin-bottom: 1.4rem; }
+  .hero-panels { gap: 0.45rem; }
+  .hero-actions { gap: 0.5rem; }
+
+  /* Section headings */
+  .h2 { font-size: clamp(1.5rem, 7vw, 2.2rem); }
+  .kicker { font-size: 0.6rem; }
+
+  /* Live panel (hero right side, shows on mobile) */
+  .live-panel { padding: 1rem; }
+  .lp-kpis { gap: 0.45rem; }
+  .lp-kpi p { font-size: 0.65rem; }
+  .lp-kpi h4 { font-size: 1.05rem; }
+
+  /* Auth card */
+  .auth-card { padding: 1.1rem 1.1rem 1.3rem; }
+  /* Prevent iOS from zooming on input focus */
+  .auth-field input,
+  .auth-field select,
+  .auth-field textarea { font-size: 16px; }
+
+  /* Utility pills row */
+  .utility-row { gap: 0.35rem; }
+  .utility-pill { font-size: 0.6rem; padding: 0.5rem 0.75rem; }
+
+  /* Access section */
+  .access-copy .h2 { font-size: clamp(1.5rem, 7vw, 2rem); }
+
+  /* Pro card feature list */
+  .pro-card ul, .pro-facts { grid-template-columns: 1fr; }
+
+  /* Footer */
+  .footer { padding: 1.5rem 0; font-size: 0.65rem; }
+}
+.access-shell { display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 4rem; align-items: start; }
+.access-copy { padding-top: 1rem; }
+.access-copy p { max-width: 560px; }
+.access-copy .h2 { max-width: 540px; font-size: clamp(1.9rem, 3.8vw, 4rem); }
+.access-points { display: grid; gap: 0.9rem; margin-top: 2.25rem; }
+.access-points p { display: flex; gap: 0.7rem; color: var(--muted2); font-size: 0.88rem; line-height: 1.65; }
+.access-points p::before { content: "-"; color: var(--purple-hi); flex-shrink: 0; }
+.auth-card { background: rgba(8,5,18,0.98); border: 1px solid rgba(208,179,255,0.18); border-radius: 14px; padding: 2rem; box-shadow: 0 30px 80px rgba(0,0,0,0.45); }
+.auth-head { margin-bottom: 1.25rem; }
+.auth-head h3 { font-family: var(--sans); font-size: clamp(2rem, 3vw, 2.35rem); font-weight: 700; letter-spacing: -0.04em; line-height: 1; margin-bottom: 0.4rem; }
+.auth-subtitle { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.auth-message { display: none; margin-bottom: 1rem; border-radius: 8px; padding: 0.8rem 0.9rem; font-size: 0.82rem; line-height: 1.6; }
+.auth-message.show { display: block; }
+.auth-message.info { background: rgba(192,132,252,0.1); border: 1px solid rgba(192,132,252,0.24); color: #e9dbff; }
+.auth-message.success { background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.24); color: #d7ffef; }
+.auth-message.error { background: rgba(255,77,26,0.1); border: 1px solid rgba(255,77,26,0.24); color: #ffd8cf; }
+.auth-form { display: grid; gap: 0.9rem; }
+.auth-field { display: grid; gap: 0.32rem; }
+.auth-field label { font-family: var(--mono); font-size: 0.57rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.auth-field input { background: #dfe3eb; border: 1px solid rgba(255,255,255,0.06); border-radius: 5px; color: #11131a; font-family: var(--mono); font-size: 0.82rem; padding: 0.78rem 0.88rem; outline: none; width: 100%; }
+.auth-field input::placeholder { color: #596070; }
+.auth-field input:focus { border-color: rgba(255,255,255,0.2); }
+.password-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.5rem; align-items: end; }
+.show-password { min-width: 62px; height: 40px; align-self: end; border: 1px solid rgba(208,179,255,0.18); background: rgba(255,255,255,0.03); border-radius: 5px; color: var(--muted2); font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase; transition: border-color 0.18s, color 0.18s; }
+.show-password:hover { border-color: rgba(255,255,255,0.24); color: #fff; }
+.auth-inline { display: flex; align-items: flex-start; gap: 0.55rem; color: var(--muted2); font-size: 0.8rem; line-height: 1.5; }
+.auth-inline input { width: auto; margin-top: 0.1rem; accent-color: var(--orange); }
+.auth-submit { width: 100%; margin-top: 0.15rem; }
+.auth-divider { height: 1px; background: var(--border); margin: 1.2rem 0 1rem; }
+.utility-row { display: flex; flex-wrap: wrap; gap: 0.55rem; margin-bottom: 1.2rem; }
+.utility-pill { border: 1px solid rgba(255,106,61,0.6); background: rgba(255,255,255,0.02); border-radius: 999px; color: #fff; font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.04em; padding: 0.48rem 0.82rem; transition: background 0.18s, border-color 0.18s; }
+.utility-pill:hover, .utility-pill.active { background: rgba(255,106,61,0.12); border-color: rgba(255,106,61,0.9); }
+.checkout-actions { display: grid; gap: 0.6rem; }
+.checkout-link { display: flex; align-items: center; justify-content: space-between; gap: 1rem; width: 100%; border: 1px solid rgba(208,179,255,0.12); border-radius: 6px; background: rgba(255,255,255,0.015); color: var(--muted2); font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.09em; text-transform: uppercase; padding: 0.95rem 1rem; transition: border-color 0.18s, transform 0.18s; }
+.checkout-link strong { color: var(--orange); font-weight: 500; }
+.checkout-link.active { border-color: rgba(255,106,61,0.6); box-shadow: 0 0 0 1px rgba(255,106,61,0.08); }
+.checkout-link:hover { border-color: rgba(255,255,255,0.22); transform: translateY(-1px); }
+.muted-note { font-family: var(--mono); font-size: 0.58rem; line-height: 1.7; color: var(--muted); margin-top: 0.15rem; }
+/* access-shell and auth-card responsive rules are in the main breakpoints above */
+</style>
+</head>
+<body>
+<a href="#hero" class="skip-link">Skip to content</a>
+<nav class="nav" role="navigation" aria-label="Main navigation">
+  <div class="wrap nav-in">
+    <a href="/spectre-landing.html" class="logo">SPECTRE</a>
+    <div class="nav-links" id="nav-links">
+      <a href="#capabilities">Capabilities</a>
+      <a href="#workflow">Workflow</a>
+      <a href="#pro-ai">AI Analysis</a>
+      <a href="#preview">Preview</a>
+      <a href="/dashboard?demo=1" class="demo">Live Demo</a>
+      <a href="#data-safety">Data Safety</a>
+      <a href="#pricing">Pricing</a>
+    </div>
+    <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links"><span></span></button>
+    <a href="#access" class="nav-cta js-access-link">Sign In</a>
+  </div>
+</nav>
+<div class="ticker" style="margin-top:60px" aria-hidden="true">
+  <div class="ticker-track">
+    <span class="ti"><span class="ts">BHP</span>45.82<span class="tu">+1.2%</span></span>
+    <span class="ti"><span class="ts">CBA</span>131.44<span class="td">-0.4%</span></span>
+    <span class="ti"><span class="ts">CSL</span>288.10<span class="tu">+0.7%</span></span>
+    <span class="ti"><span class="ts">WES</span>77.30<span class="td">-1.1%</span></span>
+    <span class="ti"><span class="ts">ANZ</span>29.55<span class="tu">+0.3%</span></span>
+    <span class="ti"><span class="ts">NAB</span>38.20<span class="tu">+0.5%</span></span>
+    <span class="ti"><span class="ts">FMG</span>18.44<span class="td">-2.1%</span></span>
+    <span class="ti"><span class="ts">RIO</span>112.60<span class="tu">+0.9%</span></span>
+    <span class="ti"><span class="ts">MQG</span>218.75<span class="tu">+1.4%</span></span>
+    <span class="ti"><span class="ts">WBC</span>32.10<span class="td">-0.2%</span></span>
+    <span class="ti"><span class="ts">BHP</span>45.82<span class="tu">+1.2%</span></span>
+    <span class="ti"><span class="ts">CBA</span>131.44<span class="td">-0.4%</span></span>
+    <span class="ti"><span class="ts">CSL</span>288.10<span class="tu">+0.7%</span></span>
+    <span class="ti"><span class="ts">WES</span>77.30<span class="td">-1.1%</span></span>
+    <span class="ti"><span class="ts">ANZ</span>29.55<span class="tu">+0.3%</span></span>
+    <span class="ti"><span class="ts">NAB</span>38.20<span class="tu">+0.5%</span></span>
+    <span class="ti"><span class="ts">FMG</span>18.44<span class="td">-2.1%</span></span>
+    <span class="ti"><span class="ts">RIO</span>112.60<span class="tu">+0.9%</span></span>
+    <span class="ti"><span class="ts">MQG</span>218.75<span class="tu">+1.4%</span></span>
+    <span class="ti"><span class="ts">WBC</span>32.10<span class="td">-0.2%</span></span>
+  </div>
+</div>
+<section class="hero" id="hero">
+  <div class="hero-gl" aria-hidden="true"></div>
+  <div class="hero-glow" aria-hidden="true"></div>
+  <div class="wrap hero-layout">
+    <div class="hero-left">
+      <p class="hero-eye">SPECTRE OPS</p>
+      <h1 class="hero-title">See your investment portfolio risk <span>in one place.</span></h1>
+      <p class="hero-sys">System for Portfolio Exposure, Correlation, Threat &amp; Risk Evaluation</p>
+      <p class="hero-desc">SPECTRE turns CSV exports from super, ASX, crypto, index funds, mutual funds, and bullion into one clear risk view so you can act with confidence.</p>
+      <div class="hero-btns">
+        <a href="#access" class="btn btn-pri js-access-link" data-plan="starter">Start For $2.99 / Month</a>
+        <a href="/dashboard?demo=1" class="btn btn-demo">See Demo</a>
+      </div>
+      <div class="hero-div"></div>
+      <div class="hero-panels">
+        <article><h3>3-Step Workflow</h3><p>Upload CSV, normalize holdings, then review risk score and exposure metrics.</p></article>
+        <article><h3>SPECTRE Framework</h3><p>Exposure, Correlation, Threat &amp; Risk Evaluation in one workspace.</p></article>
+        <article><h3>Security Controls</h3><p>Email verification, hashed passwords, encrypted backups, hardened headers.</p></article>
+      </div>
+    </div>
+    <div class="hero-right">
+      <div class="live-panel">
+        <p class="lp-label">Live Risk Dashboard</p>
+        <div class="lp-kpis">
+          <div class="lp-kpi"><p>Portfolio Value</p><strong>$1.27M</strong></div>
+          <div class="lp-kpi"><p>Holdings</p><strong>24</strong></div>
+          <div class="lp-kpi"><p>VaR 95</p><strong class="ac">2.1%</strong></div>
+          <div class="lp-kpi"><p>Max Drawdown</p><strong class="ac">11%</strong></div>
+        </div>
+        <div class="lp-risk">
+          <div class="lp-risk-top">
+            <span>Risk Score</span>
+            <strong>72<span style="font-family:var(--mono);font-size:0.9rem;color:var(--muted)">/100</span></strong>
+          </div>
+          <div class="lp-track"><span class="lp-fill"></span></div>
+        </div>
+        <svg class="lp-spark" viewBox="0 0 440 48" fill="none" aria-hidden="true">
+          <polyline points="0,38 73,32 146,24 219,28 292,18 365,10 440,6" stroke="#d0b3ff" stroke-width="1.6" fill="none"/>
+          <polyline points="0,44 440,44" stroke="rgba(255,255,255,0.06)" stroke-width="1" fill="none"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="sec sec-alt" id="capabilities">
+  <div class="wrap">
+    <p class="kicker or">SPECTRE OPS</p>
+    <h2 class="h2">From CSV to <span>risk clarity.</span></h2>
+    <p class="sub">Upload files, normalize holdings, then review risk score and exposure metrics. Purpose-built for Australian investors managing multi-source portfolios.</p>
+    <div class="ops">
+      <article><p class="n">01</p><h3>Import</h3><p>Import super, savings, tax report, ASX, crypto, index, mutual fund, and bullion exports.</p></article>
+      <article><p class="n">02</p><h3>Normalize</h3><p>SPECTRE normalizes holdings by account, source, and sector in one workspace.</p></article>
+      <article><p class="n">03</p><h3>Review</h3><p>Review risk score, concentration, VaR, drawdown, and scenario stress outcomes.</p></article>
+    </div>
+    <div class="callouts">
+      <div class="callout"><p class="ck">Before: "Looks diversified"</p><h3>Many line items</h3><p>Investor sees many line items across multiple statements with no unified risk view.</p></div>
+      <div class="callout af"><p class="ck">After: Top-3 = 42% Exposure</p><h3>Hidden concentration</h3><p>SPECTRE surfaces hidden concentration and downside sensitivity in a single risk score.</p></div>
+    </div>
+    <div class="feat">
+      <article><h3>ASX + Crypto + Super Imports</h3><p>Ingest brokerage, crypto wallet, superannuation, savings, tax report, index, fund, and bullion exports in one workflow.</p></article>
+      <article><h3>Risk Score + Dashboard</h3><p>Track one clear risk score alongside VaR95, drawdown, volatility, and concentration.</p></article>
+      <article><h3>Session Movers</h3><p>Surface ASX top movers and trigger dip alert emails using refreshed market prices.</p></article>
+      <article><h3>Snapshot Audit Trail</h3><p>Review portfolio trend history and data quality signals over time.</p></article>
+    </div>
+  </div>
+</section>
+<section class="sec" id="preview">
+  <div class="wrap">
+    <p class="kicker">Feature Preview</p>
+    <h2 class="h2">Concrete dashboard visuals, not abstract promises.</h2>
+    <p class="sub">These demo values show the exact dashboard style. Your real data loads from your own imported portfolio exports.</p>
+    <div class="dbf">
+      <div class="dbf-bar">
+        <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        <span class="dbf-url">spectre-assets.com / dashboard</span>
+      </div>
+      <div class="dbf-grid">
+        <div class="dbc">
+          <p class="dbc-k">Example Portfolio Risk Score</p>
+          <div class="dbc-sc">72<span>/100</span></div>
+          <span class="dbc-note">Moderate risk profile based on concentration, VaR, drawdown, volatility, and data quality confidence.</span>
+        </div>
+        <div class="dbc">
+          <p class="dbc-k">Example Portfolio Snapshot Trend</p>
+          <svg viewBox="0 0 380 140" fill="none" style="width:100%;height:140px;">
+            <defs><linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ff6a3d" stop-opacity="0.18"/><stop offset="100%" stop-color="#ff6a3d" stop-opacity="0"/></linearGradient></defs>
+            <line x1="0" y1="120" x2="380" y2="120" stroke="rgba(43,36,56,1)" stroke-width="1"/>
+            <line x1="0" y1="80" x2="380" y2="80" stroke="rgba(43,36,56,0.7)" stroke-width="1"/>
+            <line x1="0" y1="40" x2="380" y2="40" stroke="rgba(43,36,56,0.5)" stroke-width="1"/>
+            <polygon points="0,95 76,100 152,78 228,86 304,64 380,50 380,120 0,120" fill="url(#g1)"/>
+            <polyline points="0,95 76,100 152,78 228,86 304,64 380,50" stroke="#ff6a3d" stroke-width="2.4" fill="none"/>
+            <polyline points="0,110 380,110" stroke="#9085a8" stroke-width="1.5" stroke-dasharray="5,5" fill="none"/>
+            <text x="0" y="136" fill="#8a86a8" font-size="9" font-family="monospace">Jan</text>
+            <text x="70" y="136" fill="#8a86a8" font-size="9" font-family="monospace">Feb</text>
+            <text x="145" y="136" fill="#8a86a8" font-size="9" font-family="monospace">Mar</text>
+            <text x="220" y="136" fill="#8a86a8" font-size="9" font-family="monospace">Apr</text>
+            <text x="295" y="136" fill="#8a86a8" font-size="9" font-family="monospace">May</text>
+            <text x="356" y="136" fill="#8a86a8" font-size="9" font-family="monospace">Jun</text>
+          </svg>
+        </div>
+        <div class="dbc">
+          <p class="dbc-k">Example Risk Signal Levels</p>
+          <svg viewBox="0 0 380 140" fill="none" style="width:100%;height:140px;">
+            <line x1="0" y1="120" x2="380" y2="120" stroke="rgba(43,36,56,1)" stroke-width="1"/>
+            <rect x="10" y="60" width="68" height="60" rx="4" fill="rgba(255,106,61,0.68)"/>
+            <rect x="108" y="96" width="68" height="24" rx="4" fill="rgba(255,106,61,0.46)"/>
+            <rect x="206" y="114" width="68" height="6" rx="4" fill="rgba(255,106,61,0.36)"/>
+            <rect x="304" y="78" width="68" height="42" rx="4" fill="rgba(255,106,61,0.5)"/>
+            <text x="28" y="136" fill="#8a86a8" font-size="8" font-family="monospace">Conc.</text>
+            <text x="120" y="136" fill="#8a86a8" font-size="8" font-family="monospace">Drawdn</text>
+            <text x="219" y="136" fill="#8a86a8" font-size="8" font-family="monospace">VaR95</text>
+            <text x="320" y="136" fill="#8a86a8" font-size="8" font-family="monospace">Vol.</text>
+          </svg>
+        </div>
+        <div class="dbc">
+          <p class="dbc-k">Example Allocation Breakdown</p>
+          <svg viewBox="0 0 380 140" fill="none" style="width:100%;height:140px;">
+            <circle cx="160" cy="70" r="48" fill="none" stroke="#ff4b33" stroke-width="22" stroke-dasharray="150 302" stroke-dashoffset="0"/>
+            <circle cx="160" cy="70" r="48" fill="none" stroke="#ff8f80" stroke-width="22" stroke-dasharray="90 362" stroke-dashoffset="-150"/>
+            <circle cx="160" cy="70" r="48" fill="none" stroke="#ffd0c9" stroke-width="22" stroke-dasharray="52 400" stroke-dashoffset="-240"/>
+            <circle cx="160" cy="70" r="48" fill="none" stroke="#6f7382" stroke-width="22" stroke-dasharray="34 418" stroke-dashoffset="-292"/>
+            <rect x="236" y="22" width="9" height="9" rx="2" fill="#ff4b33"/>
+            <text x="250" y="31" fill="#b4b0cc" font-size="9" font-family="monospace">Equities 46%</text>
+            <rect x="236" y="42" width="9" height="9" rx="2" fill="#ff8f80"/>
+            <text x="250" y="51" fill="#b4b0cc" font-size="9" font-family="monospace">Super 28%</text>
+            <rect x="236" y="62" width="9" height="9" rx="2" fill="#ffd0c9"/>
+            <text x="250" y="71" fill="#b4b0cc" font-size="9" font-family="monospace">Bullion 16%</text>
+            <rect x="236" y="82" width="9" height="9" rx="2" fill="#6f7382"/>
+            <text x="250" y="91" fill="#b4b0cc" font-size="9" font-family="monospace">Cash 10%</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="sec sec-alt" id="workflow">
+  <div class="wrap">
+    <p class="kicker">How It Works</p>
+    <h2 class="h2">One clear 3-step path from files to risk decisions.</h2>
+    <p class="sub">Start with existing statements, centralize exposure in SPECTRE, then monitor risk signals from one private dashboard.</p>
+    <div class="steps">
+      <article><p class="sn">01</p><h3>Import Reports</h3><p>Upload super, savings, tax report, ASX, crypto, index, mutual fund, and bullion files directly into SPECTRE.</p></article>
+      <article><p class="sn">02</p><h3>Normalize Exposure</h3><p>Aggregate positions by source, account, sector, and instrument in one structure.</p></article>
+      <article><p class="sn">03</p><h3>Act On Risk Signals</h3><p>Use risk score, drawdown, VaR, concentration metrics, and dip alert emails to monitor risk posture.</p></article>
+    </div>
+  </div>
+</section>
+<section class="sec" id="pro-ai">
+  <div class="wrap">
+    <p class="kicker or">AI Analysis</p>
+    <h2 class="h2">Ask AI about your holdings — on every plan.</h2>
+    <p class="sub">AI holdings analysis is available on every plan. Starter includes daily AI queries. Pro unlocks unlimited AI — plus deeper signal context and advanced quant analytics.</p>
+    <div class="pro-card">
+      <p class="tier">AI Console</p>
+      <h3>Included on All Plans</h3>
+      <span class="psub">Starter: daily queries &nbsp;·&nbsp; Pro: unlimited</span>
+      <p class="pro-copy">Ask direct questions about your holdings and get a plain-English read on what is driving changes in value, momentum, and risk posture.</p>
+      <ul>
+        <li>Ask AI about drivers behind your current holdings</li>
+        <li>Get plain-English analysis of momentum and risk signals</li>
+        <li>See AI reasoning alongside your portfolio context</li>
+        <li>Includes signal context like trend, ROC, breakout, and pattern tags</li>
+        <li>Highlights both upside drivers and downside pressure in one response</li>
+        <li>Built into your private workspace with your imported portfolio data</li>
+      </ul>
+      <div class="pro-facts">
+        <article><h4>What AI Reads</h4><p>Holdings, weights, live price context, technical signals, and portfolio concentration.</p></article>
+        <article><h4>What You Get</h4><p>Top drivers, confidence-aware explanation, and practical follow-up points to review.</p></article>
+        <article><h4>Access</h4><p>Starter includes daily AI queries. Pro unlocks unlimited queries with no cap, from $15/month.</p></article>
+      </div>
+      <a href="#access" class="btn btn-pri js-access-link" data-plan="starter">Get Started</a>
+    </div>
+  </div>
+</section>
+<section class="sec sec-alt" id="data-safety">
+  <div class="wrap">
+    <p class="kicker or">Data Safety</p>
+    <h2 class="h2">Plain-English security and privacy controls.</h2>
+    <p class="sub">These safeguards reflect controls active in the current release.</p>
+    <div class="safety">
+      <article><h3>Privacy Promise</h3><p><strong>We do not sell your data.</strong> Portfolio uploads are used only to generate your analytics workspace.</p></article>
+      <article><h3>Data Control and Deletion</h3><p>You can clear imported holdings, snapshots, and dip alerts anytime from the dashboard. Cancelling your account deletes all stored data.</p></article>
+      <article><h3>Account and Payment Security</h3><p>Email verification, scrypt password hashing, secure cookies, and Stripe-hosted checkout are enabled in production.</p></article>
+      <article><h3>Hosting and Hardening</h3><p>Production runs over HTTPS with CSP/HSTS/anti-framing headers, plus encrypted backups and restore checks.</p></article>
+    </div>
+    <p class="safety-note">No platform can guarantee zero risk. Use strong passwords and keep deployment secrets protected.</p>
+  </div>
+</section>
+<section class="sec" id="pricing">
+  <div class="wrap">
+    <p class="kicker" style="justify-content:center;">Pricing</p>
+    <h2 class="h2" style="text-align:center;max-width:100%;">Simple pricing, low barrier to start.</h2>
+    <p class="sub" style="max-width:100%;text-align:center;margin-inline:auto;">One private workspace per account. Cancel anytime through Stripe.</p>
+    <div class="pricing">
+      <div class="plan feat-p">
+        <p class="badge">Most Popular</p>
+        <p class="tier">Starter</p>
+        <h3>$3<span>/month</span></h3>
+        <span class="psub">Live now</span>
+        <ul>
+          <li>One private investor workspace</li>
+          <li>CSV/XLSX import for super, savings, tax reports, ASX, crypto, index, funds, and bullion</li>
+          <li>Risk score, dashboard charts, and snapshots</li>
+          <li>AI holdings analysis — daily queries included</li>
+          <li>Email verification and password reset</li>
+        </ul>
+        <a href="#access" class="btn btn-pri js-access-link" data-plan="starter" style="width:100%;display:flex;">Get Starter</a>
+      </div>
+      <div class="plan">
+        <p class="tier">Pro</p>
+        <h3>$15<span>/month</span></h3>
+        <span class="psub">Advanced quant analytics</span>
+        <ul>
+          <li>Everything in Starter, plus unlimited AI analysis</li>
+          <li>Expected Shortfall (ES 95) tail risk</li>
+          <li>Beta and tracking error vs ASX 200</li>
+          <li>Date-aligned benchmark analytics</li>
+          <li>Advanced reporting and team workflows</li>
+        </ul>
+        <a href="#access" class="btn btn-pro js-access-link" data-plan="pro" style="width:100%;display:flex;">Get Pro</a>
+        <span class="plan-note">Pro analytics unlock automatically when your subscription uses the Pro Stripe price.</span>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="sec sec-alt" id="access">
+  <div class="wrap access-shell">
+    <div class="access-copy">
+      <p class="kicker">Client Access</p>
+      <h2 class="h2">Enter your private SPECTRE workspace.</h2>
+      <p class="sub">Sign in to continue from your last snapshot, or create your account with Stripe checkout in one flow.</p>
+      <div class="access-points">
+        <p>System for Portfolio Exposure, Correlation, Threat &amp; Risk Evaluation.</p>
+        <p>Designed for retail investors who track portfolios.</p>
+        <p>Single interface for holdings, exposure, and risk posture.</p>
+      </div>
+    </div>
+    <div class="auth-card">
+      <div class="auth-head">
+        <h3 id="auth-title">Sign In</h3>
+        <p class="auth-subtitle">Access your private SPECTRE workspace</p>
+      </div>
+      <div id="auth-message" class="auth-message" role="alert" aria-live="polite"></div>
+      <form id="auth-form" class="auth-form">
+        <div class="auth-field" id="name-field" hidden>
+          <label for="auth-name">Display Name</label>
+          <input id="auth-name" name="displayName" type="text" placeholder="Your name" autocomplete="name" />
+        </div>
+        <div class="auth-field">
+          <label for="auth-email">Email</label>
+          <input id="auth-email" name="email" type="email" placeholder="you@example.com" autocomplete="email" required />
+        </div>
+        <div class="password-row">
+          <div class="auth-field">
+            <label for="auth-password">Password</label>
+            <input id="auth-password" name="password" type="password" placeholder="Minimum 8 characters" autocomplete="current-password" required />
+          </div>
+          <button type="button" class="show-password" id="show-password">Show</button>
+        </div>
+        <div class="auth-field" id="token-field" hidden>
+          <label for="auth-token">Reset Token</label>
+          <input id="auth-token" name="token" type="text" placeholder="Paste reset token" autocomplete="off" />
+        </div>
+        <label class="auth-inline" id="terms-field" hidden>
+          <input id="auth-terms" type="checkbox" />
+          <span>I agree to the <a href="/terms" style="color:#fff;">Terms</a> and <a href="/privacy" style="color:#fff;">Privacy Policy</a>.</span>
+        </label>
+        <button type="submit" id="auth-submit" class="btn btn-pri auth-submit">Sign In</button>
+      </form>
+      <div class="utility-row">
+        <button type="button" class="utility-pill" id="mode-register">Use Register</button>
+        <button type="button" class="utility-pill" id="resend-verification">Resend Verification</button>
+        <button type="button" class="utility-pill" id="forgot-password">Forgot Password</button>
+        <button type="button" class="utility-pill" id="mode-reset">Reset With Token</button>
+      </div>
+      <div class="auth-divider"></div>
+      <div class="checkout-actions">
+        <button type="button" class="checkout-link" data-checkout-plan="pro"><span>Create Pro Account</span><strong>$9.99/MO</strong></button>
+        <button type="button" class="checkout-link active" data-checkout-plan="starter"><span>Create Starter Account</span><strong>$2.99/MO</strong></button>
+      </div>
+      <p class="muted-note">Use the same email above for checkout if you are not signed in yet. After account creation, verify your email, sign in, then your paid access will follow your Stripe subscription.</p>
+    </div>
+  </div>
+</section>
+<footer class="footer">
+  <div class="wrap footer-in">
+    <p class="fl">SPECTRE</p>
+    <p class="fc">Disclaimer: SPECTRE provides informational analytics only. It is not financial, investment, tax, or legal advice, and no result is guaranteed to be complete, current, or accurate. Use at your own risk. T&amp;C apply. Copyright 2026 SPECTRE.</p>
+    <p class="fco">Contact: <a href="mailto:admin@spectre-assets.com">admin@spectre-assets.com</a></p>
+  </div>
+</footer>
+<script>
+(() => {
+  /* --- Hamburger menu toggle --- */
+  const navToggle = document.getElementById('nav-toggle');
+  const navLinksEl = document.getElementById('nav-links');
+  if (navToggle && navLinksEl) {
+    navToggle.addEventListener('click', () => {
+      const isOpen = navLinksEl.classList.toggle('nav-open');
+      navToggle.setAttribute('aria-expanded', String(isOpen));
+      navToggle.setAttribute('aria-label', isOpen ? 'Close menu' : 'Open menu');
+    });
+    navLinksEl.querySelectorAll('a').forEach((link) => {
+      link.addEventListener('click', () => {
+        navLinksEl.classList.remove('nav-open');
+        navToggle.setAttribute('aria-expanded', 'false');
+        navToggle.setAttribute('aria-label', 'Open menu');
+      });
+    });
+  }
+
+  const title = document.getElementById('auth-title');
+  const message = document.getElementById('auth-message');
+  const form = document.getElementById('auth-form');
+  const nameField = document.getElementById('name-field');
+  const termsField = document.getElementById('terms-field');
+  const tokenField = document.getElementById('token-field');
+  const submitButton = document.getElementById('auth-submit');
+  const emailInput = document.getElementById('auth-email');
+  const passwordInput = document.getElementById('auth-password');
+  const nameInput = document.getElementById('auth-name');
+  const tokenInput = document.getElementById('auth-token');
+  const termsInput = document.getElementById('auth-terms');
+  const showPasswordButton = document.getElementById('show-password');
+  const registerButton = document.getElementById('mode-register');
+  const resendButton = document.getElementById('resend-verification');
+  const forgotButton = document.getElementById('forgot-password');
+  const resetModeButton = document.getElementById('mode-reset');
+  const checkoutLinks = Array.from(document.querySelectorAll('[data-checkout-plan]'));
+  const accessLinks = Array.from(document.querySelectorAll('.js-access-link'));
+
+  let mode = 'login';
+  let selectedPlan = 'starter';
+
+  function setMessage(text, tone) {
+    if (!text) {
+      message.className = 'auth-message';
+      message.textContent = '';
+      return;
+    }
+    message.className = 'auth-message show ' + tone;
+    message.textContent = text;
+  }
+
+  function setMode(nextMode) {
+    mode = nextMode;
+    const isRegister = nextMode === 'register';
+    const isReset = nextMode === 'reset';
+
+    title.textContent = isRegister ? 'Create Account' : isReset ? 'Reset Password' : 'Sign In';
+    nameField.hidden = !isRegister;
+    termsField.hidden = !isRegister;
+    tokenField.hidden = !isReset;
+    emailInput.parentElement.hidden = false;
+    document.querySelector('.password-row').hidden = false;
+    submitButton.textContent = isRegister ? 'Create Account' : isReset ? 'Reset Password' : 'Sign In';
+    passwordInput.autocomplete = isRegister ? 'new-password' : 'current-password';
+
+    registerButton.classList.toggle('active', isRegister);
+    resetModeButton.classList.toggle('active', isReset);
+    setMessage('', 'info');
+  }
+
+  function setPlan(plan) {
+    selectedPlan = plan === 'pro' ? 'pro' : 'starter';
+    checkoutLinks.forEach((link) => link.classList.toggle('active', link.dataset.checkoutPlan === selectedPlan));
+  }
+
+  function togglePassword() {
+    const isHidden = passwordInput.type === 'password';
+    passwordInput.type = isHidden ? 'text' : 'password';
+    showPasswordButton.textContent = isHidden ? 'Hide' : 'Show';
+  }
+
+  async function postJson(url, body) {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload.error || payload.message || 'Request failed.');
+    }
+    return payload;
+  }
+
+  accessLinks.forEach((link) => {
+    link.addEventListener('click', () => {
+      const plan = link.dataset.plan;
+      if (plan) {
+        setPlan(plan);
+      }
+    });
+  });
+
+  checkoutLinks.forEach((link) => {
+    link.addEventListener('click', async () => {
+      setPlan(link.dataset.checkoutPlan);
+      const email = emailInput.value.trim();
+      setMessage('', 'info');
+      link.disabled = true;
+      link.style.opacity = '0.7';
+      try {
+        const payload = await postJson('/api/billing/checkout', { email, plan: selectedPlan });
+        if (!payload.url) {
+          throw new Error('Unable to start checkout.');
+        }
+        window.location.href = payload.url;
+      } catch (error) {
+        setMessage(error instanceof Error ? error.message : 'Checkout failed.', 'error');
+      } finally {
+        link.disabled = false;
+        link.style.opacity = '1';
+      }
+    });
+  });
+
+  showPasswordButton.addEventListener('click', togglePassword);
+  registerButton.addEventListener('click', () => setMode(mode === 'register' ? 'login' : 'register'));
+  resetModeButton.addEventListener('click', () => setMode(mode === 'reset' ? 'login' : 'reset'));
+
+  resendButton.addEventListener('click', async () => {
+    const email = emailInput.value.trim();
+    setMessage('', 'info');
+    try {
+      const payload = await postJson('/api/auth/verify/resend', { email });
+      setMessage(payload.message || 'Verification email sent.', 'success');
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Unable to resend verification.', 'error');
+    }
+  });
+
+  forgotButton.addEventListener('click', async () => {
+    const email = emailInput.value.trim();
+    setMessage('', 'info');
+    try {
+      const payload = await postJson('/api/auth/password/request', { email });
+      setMessage(payload.message || 'Password reset email sent if the account exists.', 'success');
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Unable to request password reset.', 'error');
+    }
+  });
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    setMessage('', 'info');
+
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+    const displayName = nameInput.value.trim();
+    const acceptsTerms = Boolean(termsInput.checked);
+    const token = tokenInput.value.trim();
+
+    submitButton.disabled = true;
+    submitButton.style.opacity = '0.7';
+
+    try {
+      if (mode === 'login') {
+        await postJson('/api/auth/login', { email, password });
+        window.location.href = '/dashboard?mode=account';
+        return;
+      }
+
+      if (mode === 'register') {
+        const payload = await postJson('/api/auth/register', { email, password, displayName, acceptsTerms });
+        setMode('login');
+        setMessage(payload.message || 'Account created. Check your email to verify it before signing in.', 'success');
+        return;
+      }
+
+      const payload = await postJson('/api/auth/password/reset', { token, newPassword: password });
+      setMode('login');
+      setMessage(payload.message || 'Password reset complete. You can now sign in.', 'success');
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Request failed.', 'error');
+    } finally {
+      submitButton.disabled = false;
+      submitButton.style.opacity = '1';
+    }
+  });
+
+  setMode('login');
+  setPlan('starter');
+
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('checkout') === 'success') {
+    setMessage((params.get('plan') === 'pro' ? 'Pro' : 'Starter') + ' checkout complete. Sign in or open your dashboard after Stripe finishes activating access.', 'success');
+  } else if (params.get('checkout') === 'cancelled') {
+    setMessage('Stripe checkout was cancelled.', 'info');
+  } else if (params.get('verified') === 'success') {
+    setMessage('Email verified. You can now sign in.', 'success');
+  } else if (params.get('verified') === 'invalid') {
+    setMessage('Verification link is invalid or expired.', 'error');
+  } else if (params.get('verified') === 'rate_limited') {
+    setMessage('Too many verification attempts. Please wait and try again.', 'error');
+  }
+})();
+</script>
+</body>
+</html>
+
+
+

@@ -1,0 +1,45 @@
+{
+    "name": "aladdin-web",
+    "version": "0.1.0",
+    "private": true,
+    "engines": {
+        "node": ">=22.11.0"
+    },
+    "scripts": {
+        "dev": "next dev",
+        "build": "next build",
+        "start": "next start",
+        "lint": "eslint",
+        "backup:db": "node scripts/backup-db.mjs",
+        "restore:test": "node scripts/restore-test.mjs",
+        "restore:db": "node scripts/restore-db.mjs",
+        "dev:local": "powershell -ExecutionPolicy Bypass -File scripts/dev-local.ps1",
+        "sync:push": "powershell -ExecutionPolicy Bypass -File scripts/save-and-push.ps1",
+        "dev:sync": "powershell -ExecutionPolicy Bypass -File scripts/dev-sync.ps1",
+        "launch:check": "node scripts/release-readiness.mjs"
+    },
+    "dependencies": {
+        "@aws-sdk/client-s3": "^3.1002.0",
+        "@sentry/nextjs": "^10.40.0",
+        "next": "16.1.6",
+        "nodemailer": "^8.0.1",
+        "otpauth": "^9.5.0",
+        "papaparse": "^5.5.3",
+        "react": "19.2.3",
+        "react-dom": "19.2.3",
+        "recharts": "^3.7.0",
+        "stripe": "^20.3.1",
+        "xlsx": "^0.18.5"
+    },
+    "devDependencies": {
+        "@types/node": "^20",
+        "@types/nodemailer": "^7.0.11",
+        "@types/papaparse": "^5.5.2",
+        "@types/react": "^19",
+        "@types/react-dom": "^19",
+        "eslint": "^9",
+        "eslint-config-next": "16.1.6",
+        "puppeteer": "^24.40.0",
+        "typescript": "^5"
+    }
+}

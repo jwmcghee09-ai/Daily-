@@ -1,0 +1,695 @@
+import crypto from "node:crypto";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import zlib from "node:zlib";
+import { DatabaseSync } from "node:sqlite";
+import { HeadObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { getDatabaseFilePath } from "@/lib/db";
+
+const BACKUP_FILE_SUFFIX = ".spectre-backup.json";
+const DEFAULT_BACKUP_RETENTION_DAYS = 60;
+
+interface BackupPayload {
+  version: 1;
+  algorithm: "aes-256-gcm";
+  kdf: "scrypt";
+  compression: "gzip";
+  createdAt: string;
+  saltB64: string;
+  ivB64: string;
+  tagB64: string;
+  ciphertextB64: string;
+  metadata?: {
+    dbPath?: string;
+    rawSizeBytes?: number;
+    compressedSizeBytes?: number;
+  };
+}
+
+interface OffsiteBackupConfig {
+  bucket: string;
+  region: string;
+  prefix: string;
+  endpoint: string | null;
+  forcePathStyle: boolean;
+  accessKeyId: string;
+  secretAccessKey: string;
+  serverSideEncryption: "AES256" | null;
+  verifyUpload: boolean;
+}
+
+const DEFAULT_OFFSITE_UPLOAD_MAX_ATTEMPTS = 3;
+
+function parseBackblazeRegionFromEndpoint(endpoint: string | null): string | null {
+  if (!endpoint) {
+    return null;
+  }
+
+  try {
+    const host = new URL(endpoint).hostname.toLowerCase();
+    const match = host.match(/^s3\.([a-z0-9-]+)\.backblazeb2\.com$/);
+    return match?.[1] || null;
+  } catch {
+    return null;
+  }
+}
+
+function resolveOffsiteRegion(endpoint: string | null): string {
+  const configured =
+    readNormalizedEnv("BACKUP_OFFSITE_REGION") ||
+    readNormalizedEnv("AWS_REGION") ||
+    readNormalizedEnv("AWS_DEFAULT_REGION");
+
+  if (configured) {
+    return configured;
+  }
+
+  const backblazeRegion = parseBackblazeRegionFromEndpoint(endpoint);
+  if (backblazeRegion) {
+    return backblazeRegion;
+  }
+
+  return "us-east-1";
+}
+
+function stripFlexibleChecksumMiddleware(client: S3Client): void {
+  try {
+    client.middlewareStack.remove("flexibleChecksumsMiddleware");
+  } catch {}
+
+  try {
+    client.middlewareStack.remove("flexibleChecksumsInputMiddleware");
+  } catch {}
+
+  try {
+    client.middlewareStack.remove("flexibleChecksumsResponseMiddleware");
+  } catch {}
+}
+
+function createOffsiteS3Client(config: OffsiteBackupConfig): S3Client {
+  const isBackblaze = Boolean(parseBackblazeRegionFromEndpoint(config.endpoint));
+  const client = new S3Client({
+    region: config.region,
+    endpoint: config.endpoint || undefined,
+    forcePathStyle: config.forcePathStyle,
+    requestChecksumCalculation: "WHEN_REQUIRED",
+    responseChecksumValidation: "WHEN_REQUIRED",
+    expectContinueHeader: isBackblaze ? false : undefined,
+    credentials: {
+      accessKeyId: config.accessKeyId,
+      secretAccessKey: config.secretAccessKey,
+    },
+  });
+
+  // Backblaze B2's S3-compatible endpoint can reject the AWS SDK v3 flexible
+  // checksum path and 100-continue handshake on buffered PutObject uploads.
+  if (isBackblaze) {
+    stripFlexibleChecksumMiddleware(client);
+  }
+
+  return client;
+}
+
+function readAwsStatusCode(error: unknown): number | null {
+  const raw = (error as { $metadata?: { httpStatusCode?: unknown } } | null)?.$metadata?.httpStatusCode;
+  if (typeof raw !== "number" || !Number.isFinite(raw)) {
+    return null;
+  }
+  return raw;
+}
+
+function readAwsErrorCode(error: unknown): string {
+  if (!error || typeof error !== "object") {
+    return "";
+  }
+
+  const known = error as { name?: unknown; Code?: unknown; code?: unknown };
+  const code = known.Code ?? known.code ?? known.name;
+  return typeof code === "string" ? code : "";
+}
+
+function readErrorMessage(error: unknown): string {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  if (error && typeof error === "object" && typeof (error as { message?: unknown }).message === "string") {
+    return (error as { message: string }).message;
+  }
+
+  return "Unknown error.";
+}
+
+function buildOffsiteErrorMessage(
+  operation: "PutObject" | "HeadObject",
+  error: unknown,
+  config: OffsiteBackupConfig,
+  objectKey: string,
+): string {
+  const code = readAwsErrorCode(error);
+  const statusCode = readAwsStatusCode(error);
+  const message = readErrorMessage(error);
+  const endpointInfo = config.endpoint ? `endpoint=${config.endpoint}` : "endpoint=AWS default";
+  const statusInfo = statusCode ? `, status=${statusCode}` : "";
+  const codeInfo = code ? `, code=${code}` : "";
+
+  const signatureRelated =
+    code === "SignatureDoesNotMatch" ||
+    code === "AuthorizationHeaderMalformed" ||
+    /signature/i.test(message);
+  const backblazeRelated = Boolean(parseBackblazeRegionFromEndpoint(config.endpoint));
+
+  if (signatureRelated && backblazeRelated) {
+    return `Offsite upload failed during ${operation}: ${message} (${endpointInfo}, region=${config.region}, bucket=${config.bucket}, key=${objectKey}${statusInfo}${codeInfo}). For Backblaze B2, ensure BACKUP_OFFSITE_REGION matches the endpoint region and BACKUP_OFFSITE_FORCE_PATH_STYLE=true.`;
+  }
+
+  return `Offsite upload failed during ${operation}: ${message} (${endpointInfo}, region=${config.region}, bucket=${config.bucket}, key=${objectKey}${statusInfo}${codeInfo}).`;
+}
+
+function readOffsiteUploadMaxAttempts(): number {
+  const raw = String(process.env.BACKUP_OFFSITE_UPLOAD_MAX_ATTEMPTS || "").trim();
+  if (!raw) {
+    return DEFAULT_OFFSITE_UPLOAD_MAX_ATTEMPTS;
+  }
+
+  const parsed = Number.parseInt(raw, 10);
+  if (!Number.isFinite(parsed)) {
+    return DEFAULT_OFFSITE_UPLOAD_MAX_ATTEMPTS;
+  }
+
+  return Math.min(8, Math.max(1, parsed));
+}
+
+function shouldRetryOffsiteError(error: unknown): boolean {
+  const code = readAwsErrorCode(error);
+  const statusCode = readAwsStatusCode(error);
+  const message = readErrorMessage(error).toLowerCase();
+
+  if (statusCode && [408, 425, 429, 500, 502, 503, 504].includes(statusCode)) {
+    return true;
+  }
+
+  if (
+    code === "IncompleteBody" ||
+    code === "RequestTimeout" ||
+    code === "TimeoutError" ||
+    code === "SlowDown" ||
+    code === "ServiceUnavailable" ||
+    code === "InternalError" ||
+    code === "InternalServerError" ||
+    code === "Throttling"
+  ) {
+    return true;
+  }
+
+  return (
+    message.includes("incompletebody") ||
+    message.includes("request body was too small") ||
+    message.includes("socket hang up") ||
+    message.includes("econnreset") ||
+    message.includes("etimedout") ||
+    message.includes("epipe")
+  );
+}
+
+function computeRetryDelayMs(attempt: number): number {
+  const base = 250 * 2 ** Math.max(0, attempt - 1);
+  const jitter = Math.floor(Math.random() * 200);
+  return Math.min(5000, base + jitter);
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function timestampForFile(date = new Date()): string {
+  return date.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
+}
+
+function createBackupFileName(date = new Date()): string {
+  return `spectre-db-${timestampForFile(date)}${BACKUP_FILE_SUFFIX}`;
+}
+
+function resolveBackupOutputDir(cwd = process.cwd()): string {
+  const configured = String(process.env.BACKUP_OUTPUT_DIR || "").trim();
+
+  if (!configured) {
+    return path.join(cwd, "backups");
+  }
+
+  if (path.isAbsolute(configured)) {
+    return configured;
+  }
+
+  return path.join(cwd, configured);
+}
+
+function requireBackupPassphrase(): string {
+  const passphrase = String(process.env.BACKUP_PASSPHRASE || "");
+
+  if (passphrase.length < 16) {
+    throw new Error("BACKUP_PASSPHRASE must be set and at least 16 characters.");
+  }
+
+  return passphrase;
+}
+
+function closeDatabase(db: DatabaseSync): void {
+  const maybeClosable = db as unknown as { close?: () => void };
+  maybeClosable.close?.();
+}
+
+function checkpointDatabase(dbPath: string): void {
+  const db = new DatabaseSync(dbPath);
+
+  try {
+    db.exec("PRAGMA busy_timeout = 5000;");
+    db.exec("PRAGMA wal_checkpoint(TRUNCATE);");
+  } finally {
+    closeDatabase(db);
+  }
+}
+
+function encryptPayload(plainBuffer: Buffer, passphrase: string, metadata: BackupPayload["metadata"]): BackupPayload {
+  const salt = crypto.randomBytes(16);
+  const iv = crypto.randomBytes(12);
+  const key = crypto.scryptSync(passphrase, salt, 32);
+
+  const cipher = crypto.createCipheriv("aes-256-gcm", key, iv);
+  const ciphertext = Buffer.concat([cipher.update(plainBuffer), cipher.final()]);
+  const tag = cipher.getAuthTag();
+
+  return {
+    version: 1,
+    algorithm: "aes-256-gcm",
+    kdf: "scrypt",
+    compression: "gzip",
+    createdAt: new Date().toISOString(),
+    saltB64: salt.toString("base64"),
+    ivB64: iv.toString("base64"),
+    tagB64: tag.toString("base64"),
+    ciphertextB64: ciphertext.toString("base64"),
+    metadata,
+  };
+}
+
+function parseBackupPayload(raw: unknown): BackupPayload {
+  const payload = raw as Partial<BackupPayload>;
+
+  if (!payload || payload.version !== 1 || payload.algorithm !== "aes-256-gcm") {
+    throw new Error("Unsupported backup format.");
+  }
+
+  if (!payload.saltB64 || !payload.ivB64 || !payload.tagB64 || !payload.ciphertextB64) {
+    throw new Error("Backup payload is missing encryption fields.");
+  }
+
+  return payload as BackupPayload;
+}
+
+function decryptPayload(payload: BackupPayload, passphrase: string): Buffer {
+  const salt = Buffer.from(payload.saltB64, "base64");
+  const iv = Buffer.from(payload.ivB64, "base64");
+  const tag = Buffer.from(payload.tagB64, "base64");
+  const ciphertext = Buffer.from(payload.ciphertextB64, "base64");
+  const key = crypto.scryptSync(passphrase, salt, 32);
+
+  const decipher = crypto.createDecipheriv("aes-256-gcm", key, iv);
+  decipher.setAuthTag(tag);
+
+  return Buffer.concat([decipher.update(ciphertext), decipher.final()]);
+}
+
+function readBackupPayload(filePath: string): BackupPayload {
+  const raw = JSON.parse(fs.readFileSync(filePath, "utf8")) as unknown;
+  return parseBackupPayload(raw);
+}
+
+function findLatestBackupFile(outputDir: string): string | null {
+  if (!fs.existsSync(outputDir)) {
+    return null;
+  }
+
+  const entries = fs
+    .readdirSync(outputDir)
+    .filter((entry) => entry.endsWith(BACKUP_FILE_SUFFIX))
+    .map((entry) => path.join(outputDir, entry));
+
+  if (entries.length === 0) {
+    return null;
+  }
+
+  entries.sort((a, b) => fs.statSync(b).mtimeMs - fs.statSync(a).mtimeMs);
+  return entries[0] || null;
+}
+
+function listBackupFiles(outputDir: string): string[] {
+  if (!fs.existsSync(outputDir)) {
+    return [];
+  }
+
+  return fs
+    .readdirSync(outputDir)
+    .filter((entry) => entry.endsWith(BACKUP_FILE_SUFFIX))
+    .map((entry) => path.join(outputDir, entry))
+    .sort((a, b) => fs.statSync(a).mtimeMs - fs.statSync(b).mtimeMs);
+}
+
+function readBackupRetentionDays(): number {
+  const raw = String(process.env.BACKUP_RETENTION_DAYS || "").trim();
+  if (!raw) {
+    return DEFAULT_BACKUP_RETENTION_DAYS;
+  }
+
+  const parsed = Number.parseInt(raw, 10);
+  if (!Number.isFinite(parsed) || parsed < 1) {
+    return DEFAULT_BACKUP_RETENTION_DAYS;
+  }
+
+  return Math.min(parsed, 3650);
+}
+
+function readBooleanEnv(name: string, fallback: boolean): boolean {
+  const raw = String(process.env[name] || "").trim().toLowerCase();
+  if (!raw) {
+    return fallback;
+  }
+
+  return raw === "1" || raw === "true" || raw === "yes" || raw === "on";
+}
+
+function normalizeObjectPrefix(prefix: string): string {
+  return prefix.replace(/^\/+/, "").replace(/\/+$/, "");
+}
+
+function readNormalizedEnv(name: string, fallback = ""): string {
+  const raw = String(process.env[name] || fallback || "").trim();
+  if (!raw) {
+    return "";
+  }
+
+  const withoutEdgeQuotes = raw.replace(/^['"`“”‘’]+|['"`“”‘’]+$/g, "");
+  return withoutEdgeQuotes.trim();
+}
+
+function readOffsiteBackupConfig(): OffsiteBackupConfig | null {
+  const enabled = readBooleanEnv("BACKUP_OFFSITE_ENABLED", false);
+  if (!enabled) {
+    return null;
+  }
+
+  const bucket = readNormalizedEnv("BACKUP_OFFSITE_BUCKET");
+  if (!bucket) {
+    throw new Error("BACKUP_OFFSITE_BUCKET is required when BACKUP_OFFSITE_ENABLED=true.");
+  }
+
+  const endpoint = readNormalizedEnv("BACKUP_OFFSITE_ENDPOINT") || null;
+  const region = resolveOffsiteRegion(endpoint);
+  const prefix = normalizeObjectPrefix(readNormalizedEnv("BACKUP_OFFSITE_PREFIX", "spectre") || "spectre");
+  const forcePathStyle = readBooleanEnv("BACKUP_OFFSITE_FORCE_PATH_STYLE", Boolean(endpoint));
+  const accessKeyId =
+    readNormalizedEnv("BACKUP_OFFSITE_ACCESS_KEY_ID") || readNormalizedEnv("AWS_ACCESS_KEY_ID");
+  const secretAccessKey =
+    readNormalizedEnv("BACKUP_OFFSITE_SECRET_ACCESS_KEY") || readNormalizedEnv("AWS_SECRET_ACCESS_KEY");
+  const sseRaw = readNormalizedEnv("BACKUP_OFFSITE_SSE").toUpperCase();
+  const verifyUpload = readBooleanEnv("BACKUP_OFFSITE_VERIFY_UPLOAD", true);
+
+  if (!accessKeyId || !secretAccessKey) {
+    throw new Error(
+      "BACKUP_OFFSITE_ACCESS_KEY_ID and BACKUP_OFFSITE_SECRET_ACCESS_KEY are required when BACKUP_OFFSITE_ENABLED=true.",
+    );
+  }
+
+  if (sseRaw && sseRaw !== "AES256") {
+    throw new Error("BACKUP_OFFSITE_SSE only supports AES256.");
+  }
+
+  return {
+    bucket,
+    region,
+    prefix,
+    endpoint,
+    forcePathStyle,
+    accessKeyId,
+    secretAccessKey,
+    serverSideEncryption: sseRaw === "AES256" ? "AES256" : null,
+    verifyUpload,
+  };
+}
+
+function createOffsiteObjectKey(prefix: string, backupPath: string): string {
+  const fileName = path.basename(backupPath);
+  return prefix ? `${prefix}/${fileName}` : fileName;
+}
+
+async function uploadBackupOffsite(
+  backupPath: string,
+): Promise<{ enabled: boolean; uploaded: boolean; bucket: string | null; objectKey: string | null; endpoint: string | null }> {
+  const config = readOffsiteBackupConfig();
+  if (!config) {
+    return {
+      enabled: false,
+      uploaded: false,
+      bucket: null,
+      objectKey: null,
+      endpoint: null,
+    };
+  }
+
+  const objectKey = createOffsiteObjectKey(config.prefix, backupPath);
+  const body = fs.readFileSync(backupPath);
+  const client = createOffsiteS3Client(config);
+
+  const maxAttempts = readOffsiteUploadMaxAttempts();
+  let putSucceeded = false;
+  let putLastError: unknown = null;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      await client.send(
+        new PutObjectCommand({
+          Bucket: config.bucket,
+          Key: objectKey,
+          Body: body,
+          ContentLength: body.length,
+          ContentType: "application/json",
+          ServerSideEncryption: config.serverSideEncryption || undefined,
+          Metadata: {
+            app: "spectre",
+            format: "spectre-backup-v1",
+            encrypted: "true",
+          },
+        }),
+      );
+      putSucceeded = true;
+      break;
+    } catch (error) {
+      putLastError = error;
+      if (attempt >= maxAttempts || !shouldRetryOffsiteError(error)) {
+        break;
+      }
+
+      await delay(computeRetryDelayMs(attempt));
+    }
+  }
+
+  if (!putSucceeded) {
+    const baseMessage = buildOffsiteErrorMessage("PutObject", putLastError, config, objectKey);
+    throw new Error(`${baseMessage} Attempts=${maxAttempts}.`);
+  }
+
+  if (config.verifyUpload) {
+    let head;
+    try {
+      head = await client.send(
+        new HeadObjectCommand({
+          Bucket: config.bucket,
+          Key: objectKey,
+        }),
+      );
+    } catch (error) {
+      const code = readAwsErrorCode(error);
+      const statusCode = readAwsStatusCode(error);
+      const message = readErrorMessage(error);
+      const denied = code === "AccessDenied" || statusCode === 401 || statusCode === 403 || /access denied/i.test(message);
+
+      if (denied) {
+        throw new Error(
+          "Offsite upload succeeded, but verification (HeadObject) was denied. For Backblaze B2, grant key read permissions or set BACKUP_OFFSITE_VERIFY_UPLOAD=false.",
+        );
+      }
+
+      throw new Error(buildOffsiteErrorMessage("HeadObject", error, config, objectKey));
+    }
+
+    if (!Number.isFinite(head.ContentLength) || Number(head.ContentLength) !== body.length) {
+      throw new Error("Offsite backup verification failed: uploaded object size mismatch.");
+    }
+  }
+
+  return {
+    enabled: true,
+    uploaded: true,
+    bucket: config.bucket,
+    objectKey,
+    endpoint: config.endpoint,
+  };
+}
+
+function pruneOldBackupFiles(outputDir: string, retentionDays: number): { deletedCount: number; remainingCount: number } {
+  const files = listBackupFiles(outputDir);
+  if (files.length === 0 || retentionDays < 1) {
+    return { deletedCount: 0, remainingCount: files.length };
+  }
+
+  const cutoff = Date.now() - retentionDays * 24 * 60 * 60 * 1000;
+  let deletedCount = 0;
+
+  for (const filePath of files) {
+    const stats = fs.statSync(filePath);
+    if (stats.mtimeMs >= cutoff) {
+      continue;
+    }
+    fs.rmSync(filePath, { force: true });
+    deletedCount += 1;
+  }
+
+  return { deletedCount, remainingCount: Math.max(0, files.length - deletedCount) };
+}
+
+function readDiskUsagePercent(targetPath: string): number | null {
+  try {
+    const stats = fs.statfsSync(targetPath);
+    const total = Number(stats.blocks) * Number(stats.bsize);
+    const free = Number(stats.bavail) * Number(stats.bsize);
+    if (!Number.isFinite(total) || total <= 0 || !Number.isFinite(free)) {
+      return null;
+    }
+    const used = Math.max(0, total - free);
+    return (used / total) * 100;
+  } catch {
+    return null;
+  }
+}
+
+function safeCount(db: DatabaseSync, tableName: string): number | null {
+  try {
+    const row = db.prepare(`SELECT COUNT(*) AS count FROM ${tableName}`).get() as { count?: unknown } | undefined;
+    return Number(row?.count || 0);
+  } catch {
+    return null;
+  }
+}
+
+export async function runEncryptedBackupNow(): Promise<{
+  backupPath: string;
+  databasePath: string;
+  rawSizeBytes: number;
+  compressedSizeBytes: number;
+  backupRetentionDays: number;
+  deletedBackupFiles: number;
+  remainingBackupFiles: number;
+  diskUsageUsedPct: number | null;
+  offsiteEnabled: boolean;
+  offsiteUploaded: boolean;
+  offsiteBucket: string | null;
+  offsiteObjectKey: string | null;
+  offsiteEndpoint: string | null;
+}> {
+  const dbPath = getDatabaseFilePath();
+  const passphrase = requireBackupPassphrase();
+  const outputDir = resolveBackupOutputDir();
+  const backupRetentionDays = readBackupRetentionDays();
+
+  if (!fs.existsSync(dbPath)) {
+    throw new Error(`SQLite database not found at ${dbPath}`);
+  }
+
+  checkpointDatabase(dbPath);
+
+  const raw = fs.readFileSync(dbPath);
+  const gzipped = zlib.gzipSync(raw, { level: 9 });
+  const payload = encryptPayload(gzipped, passphrase, {
+    dbPath,
+    rawSizeBytes: raw.length,
+    compressedSizeBytes: gzipped.length,
+  });
+
+  fs.mkdirSync(outputDir, { recursive: true });
+  const backupPath = path.join(outputDir, createBackupFileName());
+
+  fs.writeFileSync(backupPath, JSON.stringify(payload, null, 2), { mode: 0o600 });
+
+  const verifyPayload = readBackupPayload(backupPath);
+  const verifyDb = zlib.gunzipSync(decryptPayload(verifyPayload, passphrase));
+
+  if (verifyDb.length !== raw.length) {
+    throw new Error("Backup verification failed: byte length mismatch after decrypt/decompress.");
+  }
+
+  const offsite = await uploadBackupOffsite(backupPath);
+  const pruned = pruneOldBackupFiles(outputDir, backupRetentionDays);
+
+  return {
+    backupPath,
+    databasePath: dbPath,
+    rawSizeBytes: raw.length,
+    compressedSizeBytes: gzipped.length,
+    backupRetentionDays,
+    deletedBackupFiles: pruned.deletedCount,
+    remainingBackupFiles: pruned.remainingCount,
+    diskUsageUsedPct: readDiskUsagePercent(outputDir),
+    offsiteEnabled: offsite.enabled,
+    offsiteUploaded: offsite.uploaded,
+    offsiteBucket: offsite.bucket,
+    offsiteObjectKey: offsite.objectKey,
+    offsiteEndpoint: offsite.endpoint,
+  };
+}
+
+export function runRestoreIntegrityTestNow(): {
+  backupPath: string;
+  tables: string[];
+  usersCount: number | null;
+  holdingsCount: number | null;
+  snapshotsCount: number | null;
+} {
+  const passphrase = requireBackupPassphrase();
+  const outputDir = resolveBackupOutputDir();
+  const backupPath = findLatestBackupFile(outputDir);
+
+  if (!backupPath) {
+    throw new Error(`No backup file found in ${outputDir}`);
+  }
+
+  const payload = readBackupPayload(backupPath);
+  const dbBytes = zlib.gunzipSync(decryptPayload(payload, passphrase));
+  const tempDbPath = path.join(os.tmpdir(), `.restore-test-${timestampForFile()}.sqlite`);
+
+  fs.writeFileSync(tempDbPath, dbBytes, { mode: 0o600 });
+
+  const db = new DatabaseSync(tempDbPath);
+
+  try {
+    const integrityRow = db.prepare("PRAGMA integrity_check;").get() as { integrity_check?: unknown } | undefined;
+    const integrity = String(integrityRow?.integrity_check || "");
+
+    if (integrity.toLowerCase() !== "ok") {
+      throw new Error(`SQLite integrity_check failed: ${integrity}`);
+    }
+
+    const tableRows = db.prepare("SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name").all() as Array<{ name: string }>;
+
+    return {
+      backupPath,
+      tables: tableRows.map((row) => row.name),
+      usersCount: safeCount(db, "users"),
+      holdingsCount: safeCount(db, "holdings"),
+      snapshotsCount: safeCount(db, "snapshots"),
+    };
+  } finally {
+    closeDatabase(db);
+    fs.rmSync(tempDbPath, { force: true });
+  }
+}
