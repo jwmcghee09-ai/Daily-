@@ -2527,7 +2527,7 @@ function fmtChgSpan(price, prevClose, prefix) {
 }
 
 function updateCryptoEl(priceId, chgId, quote, decimals) {
-  if (!quote || !quote.price) return;
+  if (!quote || !Number.isFinite(quote.price) || quote.price <= 0) return;
   const priceEl = document.getElementById(priceId);
   const chgEl = document.getElementById(chgId);
   if (priceEl) {
@@ -2622,7 +2622,7 @@ async function fetchLiveQuotes() {
     // --- Gold hero ---
     const gold = data.crypto?.gold;
     const heroGold = document.getElementById('hero-gold-price');
-    if (gold?.price) {
+    if (gold && Number.isFinite(gold.price) && gold.price > 0) {
       if (heroGold) heroGold.textContent = '$' + Math.round(gold.price).toLocaleString('en-AU');
       if (gold.prevClose && gold.prevClose > 0) {
         const { html, isPos } = fmtChgSpan(gold.price, gold.prevClose, '$');
@@ -2717,7 +2717,7 @@ async function fetchLiveQuotes() {
     console.warn('Live quotes fetch failed:', err);
     for (const id of ['hero-gold-price', 'hero-btc-price', 'hero-eth-price', 'hero-asx200-price', 'hero-audusd-price', 'hero-vix-price']) {
       const el = document.getElementById(id);
-      if (el && el.textContent === 'Loading…') el.textContent = '—';
+      if (el && (el.textContent === 'Loading…' || el.textContent.startsWith('$Loading'))) el.textContent = '—';
     }
   }
 }

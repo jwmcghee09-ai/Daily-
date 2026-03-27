@@ -1,0 +1,49 @@
+/**
+ * SPECTRE Brand Tokens — single source of truth
+ *
+ * Import or reference these variables across all surfaces:
+ * app (globals.css), landing page, HTML prototypes, ad creative.
+ *
+ * See spectre_assets_review.md §5, §6 for background.
+ *
+ * SVG wordmark note (§4):
+ *   spectre-wordmark-plain.svg and spectre-wordmark-banner.svg currently
+ *   use <text> elements with font-stack 'Sora, Montserrat, Arial Black'.
+ *   Convert to <path> in Figma / Illustrator (Type → Create Outlines) to
+ *   eliminate font-loading dependency and guarantee pixel-perfect rendering
+ *   across all renderers (browsers, email clients, social previews).
+ */
+
+:root {
+  /* ── Primary brand accent (red) ── */
+  --brand-accent:        #ff4b33;             /* primary CTA, active highlights  */
+  --brand-accent-strong: #ff2f14;             /* hover / pressed states           */
+  --brand-accent-mid:    #ff7a68;             /* softer accent, icon fills        */
+  --brand-accent-soft:   rgba(255,75,51,.14); /* tinted badge / chip bg           */
+  --brand-accent-faint:  rgba(255,75,51,.07); /* subtle section highlights        */
+
+  /* ── Backgrounds ── */
+  --brand-bg:            #0c0817;             /* page / app background            */
+  --brand-bg-card:       rgba(18,12,32,.93);  /* card surface                     */
+  --brand-bg-card-alt:   rgba(24,19,38,.95);  /* elevated / nested card           */
+
+  /* ── Text ── */
+  --brand-text:          #f2eeff;             /* primary body text                */
+  --brand-muted:         #8a86a8;             /* secondary / caption text         */
+
+  /* ── Borders ── */
+  --brand-border:        rgba(255,255,255,.07);
+  --brand-border-strong: rgba(255,255,255,.12);
+
+  /* ── Semantic colours ── */
+  --brand-positive:      #22c55e;
+  --brand-positive-dim:  rgba(34,197,94,.26);
+  --brand-negative:      #ef4444;
+  --brand-negative-dim:  rgba(239,68,68,.26);
+  --brand-amber:         #ffb547;
+
+  /* ── Typography ── */
+  --brand-font-display: 'Sora', 'Montserrat', 'Arial Black', sans-serif;
+  --brand-font-body:    'Space Grotesk', 'DM Sans', sans-serif;
+  --brand-font-mono:    'DM Mono', monospace;
+}
