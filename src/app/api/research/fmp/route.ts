@@ -236,16 +236,21 @@ export async function GET(request: NextRequest) {
         return { status: r.status, body: text.slice(0, 150) };
       } catch (e) { return { status: 0, body: String(e) }; }
     };
-    const [idx, comm, fx, econ, earn, sec, news] = await Promise.all([
+    // Probe multiple candidate paths to find what works on this plan
+    const [idx1, idx2, comm1, comm2, fx1, fx2, sec1, sec2, econ, earn, news] = await Promise.all([
       probe("/index-quotes"),
+      probe("/quotes/index"),
       probe("/commodity-quotes"),
+      probe("/quotes/commodity"),
       probe("/forex-quotes"),
+      probe("/exchange-rates"),
+      probe("/sector-performance"),
+      probe("/sectors-performance"),
       probe("/economic-calendar?from=2026-03-01&to=2026-04-01"),
       probe("/earnings-calendar?from=2026-03-01&to=2026-06-01"),
-      probe("/sector-performance"),
       probe("/news/stock?symbols=AAPL&limit=1"),
     ]);
-    return NextResponse.json({ keyPreview, idx, comm, fx, econ, earn, sec, news });
+    return NextResponse.json({ keyPreview, idx1, idx2, comm1, comm2, fx1, fx2, sec1, sec2, econ, earn, news });
   }
 
   const now = Date.now();
