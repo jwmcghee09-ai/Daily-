@@ -3160,7 +3160,7 @@ h3 { font-size: 1.15rem; }
   </div>
 
   <!-- ===== FMP: SECTOR PERFORMANCE + ANALYST RATINGS + NEWS ===== -->
-  <div class="fmp-section cols-3" id="fmp-analytics-section" style="display:none;">
+  <div class="fmp-section cols-2" id="fmp-analytics-section" style="display:none;">
 
     <div class="card reveal">
       <div class="section-label">Sector Performance (US Proxy)</div>
@@ -3176,14 +3176,9 @@ h3 { font-size: 1.15rem; }
       </div>
     </div>
 
-    <div class="card reveal">
-      <div class="section-label">Live Market News</div>
-      <div class="fmp-news-list" id="fmp-news-list">
-        <div style="color:var(--sl-muted);font-size:0.72rem;">Loading…</div>
-      </div>
-    </div>
-
   </div>
+  <!-- fmp-news-list rendered here (hidden, used by Earnings tab) -->
+  <div id="fmp-news-list" style="display:none;"></div>
 
   </div><!-- /rtab-overview -->
 
@@ -5208,12 +5203,23 @@ function switchResearchTab(name, btn) {
   const panel = document.getElementById('rtab-' + name);
   if (panel) panel.classList.add('active');
 
-  if (!_tabInit[name]) {
-    _tabInit[name] = true;
-    if (name === 'equities') populateEquitiesTab();
-    else if (name === 'macro') { populateMacroTab(); loadMacroChart('aud', '1m', document.querySelector('#rtab-macro .time-pill.active')); }
-    else if (name === 'earnings') populateEarningsTab();
-    else if (name === 'crypto') { populateCryptoTab(); loadCryptoChart('btc', '1m', null); loadCryptoChart('eth', '1m', null); loadCryptoChart('sol', '1m', null); }
+  const firstVisit = !_tabInit[name];
+  _tabInit[name] = true;
+
+  // Always refresh data/text on every tab switch (fast, synchronous)
+  if (name === 'equities') populateEquitiesTab();
+  else if (name === 'macro') populateMacroTab();
+  else if (name === 'earnings') populateEarningsTab();
+  else if (name === 'crypto') populateCryptoTab();
+
+  // Charts only load on first visit (async/network-heavy)
+  if (firstVisit) {
+    if (name === 'macro') loadMacroChart('aud', '1m', document.querySelector('#rtab-macro .time-pill.active'));
+    else if (name === 'crypto') {
+      loadCryptoChart('btc', '1m', null);
+      loadCryptoChart('eth', '1m', null);
+      loadCryptoChart('sol', '1m', null);
+    }
   }
 }
 
