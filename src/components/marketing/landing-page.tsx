@@ -686,17 +686,76 @@ export default function LandingPage({
 
       <Divider />
 
-      <section className={styles.section} id="ask-ai-hero">
+      <section className={styles.hero} id="ask-ai-hero" style={{ minHeight: "unset", paddingTop: "5rem", paddingBottom: "5rem" }}>
         <div className={styles.container}>
-          <div className={`${styles.heroBadge} ${styles.reveal}`} style={{ marginBottom: "1.5rem" }}>
-            ★ Available on all plans
+          <div className={styles.heroIntro}>
+            <div className={`${styles.heroBadge} ${styles.reveal}`}>SPECTRE AI — Ask Your Portfolio Anything</div>
+            <h2 className={`${styles.heroTitle} ${styles.reveal}`}>
+              Grounded in your live holdings, <span>real-time data.</span>
+            </h2>
+            <p className={`${styles.heroSub} ${styles.reveal}`}>
+              Ask direct questions about what is driving changes in value, momentum, and risk posture — powered by your imported portfolio data and live market context.
+            </p>
+            <div className={`${styles.heroActions} ${styles.reveal}`}>
+              <Link href="/signin?mode=register&plan=free" className={`${styles.button} ${styles.primaryButton} ${styles.heroButton}`}>
+                Get Started Free
+              </Link>
+              <Link href="/dashboard?demo=1" className={`${styles.button} ${styles.outlineButton} ${styles.heroButton}`}>
+                Try Live Demo →
+              </Link>
+            </div>
           </div>
-          <h2 className={`${styles.heroTitle} ${styles.centered} ${styles.reveal}`}>
-            Ask your portfolio <span>anything.</span>
-          </h2>
-          <p className={`${styles.heroSub} ${styles.centeredSub} ${styles.reveal}`}>
-            Grounded in your live holdings, real-time market data, and risk metrics.
-          </p>
+
+          <div className={`${styles.dashboardCard} ${styles.reveal}`}>
+            <div className={styles.dashboardHeader}>
+              <div className={styles.dashboardUrl}>spectre-assets.com / dashboard</div>
+            </div>
+            <div className={styles.dashboardStats}>
+              <StatCard label="Portfolio Value" value="$1.27M" sub="+2.1% MTD" tone="up" />
+              <StatCard label="Holdings" value="24" sub="Across 6 sources" />
+              <StatCard label="VaR 95%" value="2.1%" sub="Elevated" tone="down" />
+              <StatCard label="Max Drawdown" value="11%" sub="12-month window" />
+            </div>
+            <div className={styles.dashboardCharts}>
+              <div className={styles.chartBox}>
+                <div className={styles.chartTitle}>Risk Score Trend — 72 / 100 (Elevated)</div>
+                <svg className={styles.sparkline} viewBox="0 0 400 60" aria-hidden="true">
+                  <defs>
+                    <linearGradient id="aiHeroLineGrad" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stopColor="#a855f7" />
+                      <stop offset="100%" stopColor="#ff7a30" />
+                    </linearGradient>
+                    <linearGradient id="aiHeroFillGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#d946ef" stopOpacity="0.28" />
+                      <stop offset="100%" stopColor="#ff7a30" stopOpacity="0" />
+                    </linearGradient>
+                  </defs>
+                  <path d="M0,48 L60,42 L120,45 L180,35 L240,30 L300,22 L360,28 L400,20" fill="none" stroke="url(#aiHeroLineGrad)" strokeWidth="2.5" strokeLinecap="round" />
+                  <path d="M0,48 L60,42 L120,45 L180,35 L240,30 L300,22 L360,28 L400,20 L400,60 L0,60Z" fill="url(#aiHeroFillGrad)" />
+                </svg>
+                <div className={styles.riskMeta}>Concentration · Drawdown · VaR95 · Volatility</div>
+                <div className={styles.riskBar}><div className={styles.riskBarFill} /></div>
+              </div>
+              <div className={styles.chartBox}>
+                <div className={styles.chartTitle}>Allocation</div>
+                <div className={styles.donutWrap}>
+                  <svg width="88" height="88" viewBox="0 0 80 80" aria-hidden="true">
+                    <circle cx="40" cy="40" r="28" fill="none" stroke="#111318" strokeWidth="16" />
+                    <circle cx="40" cy="40" r="28" fill="none" stroke="#a855f7" strokeWidth="16" strokeDasharray="81 95" strokeDashoffset="24" transform="rotate(-90 40 40)" />
+                    <circle cx="40" cy="40" r="28" fill="none" stroke="#ff7a30" strokeWidth="16" strokeDasharray="50 95" strokeDashoffset="-57" transform="rotate(-90 40 40)" />
+                    <circle cx="40" cy="40" r="28" fill="none" stroke="#e879f9" strokeWidth="16" strokeDasharray="28 95" strokeDashoffset="-107" transform="rotate(-90 40 40)" />
+                    <circle cx="40" cy="40" r="28" fill="none" stroke="#fb923c" strokeWidth="16" strokeDasharray="18 95" strokeDashoffset="-135" transform="rotate(-90 40 40)" />
+                  </svg>
+                  <div className={styles.legend}>
+                    <LegendItem color="#a855f7" label="Equities" value="46%" />
+                    <LegendItem color="#ff7a30" label="Super" value="28%" />
+                    <LegendItem color="#e879f9" label="Bullion" value="16%" />
+                    <LegendItem color="#fb923c" label="Cash" value="10%" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
