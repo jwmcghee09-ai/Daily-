@@ -232,16 +232,35 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  if (!KEY) return NextResponse.json({ error: "FMP_API_KEY not configured." }, { status: 503 });
+  if (!KEY) return NextResponse.json({ error: "FMP_API_KEY not configured.", keyPresent: false }, { status: 503 });
 
   // Debug mode: return raw FMP responses for troubleshooting
   if (request.nextUrl.searchParams.get("debug") === "1") {
+    const keyPreview = KEY.slice(0, 6) + "…";
+    // Test a simple known endpoint first
+    const testUrl = `${FMP_BASE}/v3/stock/list?apikey=${KEY}`;
+    let testStatus = 0;
+    let testBody = "";
+    try {
+      const ctrl = new AbortController();
+      setTimeout(() => ctrl.abort(), 8000);
+      const r = await fetch(testUrl, { cache: "no-store", signal: ctrl.signal });
+      testStatus = r.status;
+      const text = await r.text();
+      testBody = text.slice(0, 200);
+    } catch (e) {
+      testBody = String(e);
+    }
+
     const [idx, comm, fx] = await Promise.all([
       fmpGet<unknown[]>("/v3/quotes/index"),
       fmpGet<unknown[]>("/v3/quotes/commodity"),
       fmpGet<unknown[]>("/v3/fx"),
     ]);
     return NextResponse.json({
+      keyPreview,
+      testStatus,
+      testBody,
       indexSymbols: Array.isArray(idx) ? idx.slice(0, 5).map((d: unknown) => (d as Record<string, unknown>).symbol) : "failed",
       commSymbols:  Array.isArray(comm) ? comm.slice(0, 10).map((d: unknown) => (d as Record<string, unknown>).symbol) : "failed",
       fxTickers:    Array.isArray(fx)   ? fx.slice(0, 10).map((d: unknown) => (d as Record<string, unknown>).ticker) : "failed",
