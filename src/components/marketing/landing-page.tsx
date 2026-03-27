@@ -218,7 +218,7 @@ export default function LandingPage({
 
   useEffect(() => {
     const reveals = document.querySelectorAll<HTMLElement>(
-      `.${styles.reveal}, .${styles.revealLeft}, .${styles.revealRight}, .${styles.revealScale}`,
+      `.${styles.reveal}, .${styles.revealLeft}, .${styles.revealRight}, .${styles.revealScale}, .${styles.revealUp}`,
     );
 
     const revealObserver = new IntersectionObserver(
@@ -431,10 +431,10 @@ export default function LandingPage({
 
       <section className={styles.section} id="research">
         <div className={styles.container}>
-          <div className={styles.sectionLabel}>ASX Market Research</div>
-          <h2 className={styles.sectionTitle}>From ASX market context to portfolio conviction.</h2>
-          <p className={styles.sectionSub}>
-            SPECTRE Research gives Plus and Pro members a full-page terminal with live indices, blue-chip fundamentals, earnings snapshots, analyst sentiment, sector pressure, and cross-asset data — all updated in real time so portfolio decisions are made with the full market backdrop in view.
+          <div className={`${styles.sectionLabel} ${styles.reveal}`}>ASX Market Research</div>
+          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`} style={{ transitionDelay: "0.07s" }}>From ASX market context to portfolio conviction.</h2>
+          <p className={`${styles.sectionSub} ${styles.reveal}`} style={{ transitionDelay: "0.14s" }}>
+            SPECTRE Research gives Plus and Pro members a 5-tab terminal — Overview, Equities, Macro, Earnings, and Crypto — with live indices, interactive charts, 12 ASX earnings snapshots, analyst sentiment, sector performance, and cross-asset data updated in real time.
           </p>
 
           <div className={styles.steps}>
@@ -452,16 +452,16 @@ export default function LandingPage({
             ))}
           </div>
 
-          <div className={`${styles.researchHighlights} ${styles.reveal}`}>
+          <div className={styles.researchHighlights}>
             {[
-              { name: "6 Live Market Cards", sub: "ASX 200, AUD/USD, VIX, Gold, BTC, ETH refreshing every 5 minutes", alt: false },
-              { name: "15 ASX Blue Chips", sub: "Price, daily change, P/E, dividend yield, 52-week range and trend sparklines", alt: false },
-              { name: "Earnings Snapshots", sub: "BHP & CBA H1 FY26 results with beat/miss status and key metrics", alt: false },
-              { name: "Bull & Bear Sentiment", sub: "Analyst bull and bear cases with price targets for major ASX holdings", alt: true },
-              { name: "US Market Movers", sub: "Live gainers, losers and most active from US markets via Yahoo Finance screener", alt: true },
-              { name: "Live News Feed", sub: "Yahoo Finance and ABC Business headlines tagged by theme: RBA, inflation, ASX, crypto and more", alt: true },
-            ].map((tile) => (
-              <div key={tile.name} className={styles.researchTile}>
+              { name: "5-Tab Research Terminal", sub: "Overview, Equities, Macro, Earnings, and Crypto — each with live data and Chart.js charts", alt: false },
+              { name: "Live Metrics Strip", sub: "ASX 200, AUD/USD, VIX, Gold, BTC, ETH and SOL refreshing every 5 minutes", alt: false },
+              { name: "12 ASX Earnings Snapshots", sub: "BHP, CBA, CSL, WES, NAB, ANZ, WBC, MQG, RIO, FMG, WDS, TLS — beat/miss status and key metrics", alt: false },
+              { name: "Sector & Macro Charts", sub: "Interactive Chart.js bar and line charts for sector performance, AUD/USD, Gold, and crypto", alt: true },
+              { name: "US Market Movers", sub: "Live gainers, losers and most active from FMP and Yahoo Finance screener", alt: true },
+              { name: "Live News Feed", sub: "FMP and Yahoo Finance headlines with economic calendar and earnings calendar", alt: true },
+            ].map((tile, index) => (
+              <div key={tile.name} className={`${styles.researchTile} ${styles.reveal}`} style={{ transitionDelay: `${index * 0.08}s` }}>
                 <div className={`${styles.researchTileIcon} ${tile.alt ? styles.researchTileIconAlt : ""}`}>
                   <BarsIcon />
                 </div>
@@ -488,9 +488,9 @@ export default function LandingPage({
 
       <section className={styles.section} id="workflow">
         <div className={styles.container}>
-          <div className={styles.sectionLabel}>3-Step Workflow</div>
-          <h2 className={styles.sectionTitle}>From CSV to risk clarity.</h2>
-          <p className={styles.sectionSub}>
+          <div className={`${styles.sectionLabel} ${styles.reveal}`}>3-Step Workflow</div>
+          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`} style={{ transitionDelay: "0.07s" }}>From CSV to risk clarity.</h2>
+          <p className={`${styles.sectionSub} ${styles.reveal}`} style={{ transitionDelay: "0.14s" }}>
             Upload files, normalize holdings, then review your risk score and exposure metrics. Purpose-built for Australian investors managing multi-source portfolios.
           </p>
 
@@ -532,15 +532,15 @@ export default function LandingPage({
 
       <section className={styles.section} id="features">
         <div className={styles.container}>
-          <div className={styles.sectionLabel}>Features</div>
-          <h2 className={styles.sectionTitle}>Designed for clarity, built for risk decisions.</h2>
-          <p className={styles.sectionSub}>
+          <div className={`${styles.sectionLabel} ${styles.reveal}`}>Features</div>
+          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`} style={{ transitionDelay: "0.07s" }}>Designed for clarity, built for risk decisions.</h2>
+          <p className={`${styles.sectionSub} ${styles.reveal}`} style={{ transitionDelay: "0.14s" }}>
             Every feature is purpose-built for Australian investors who need a clear, consolidated risk view across multiple account types.
           </p>
 
-          <div className={`${styles.featureGrid} ${styles.reveal}`}>
-            {features.map((feature) => (
-              <article key={feature.title} className={styles.featureItem}>
+          <div className={styles.featureGrid}>
+            {features.map((feature, index) => (
+              <article key={feature.title} className={`${styles.featureItem} ${styles.reveal}`} style={{ transitionDelay: `${index * 0.07}s` }}>
                 <div className={`${styles.iconWrap} ${feature.alt ? styles.iconAlt : ""}`}>{feature.icon}</div>
                 <h3>{feature.title}</h3>
                 <p>{feature.copy}</p>
@@ -554,14 +554,14 @@ export default function LandingPage({
 
       <section className={styles.section} id="charts">
         <div className={styles.container}>
-          <div className={styles.sectionLabel}>Feature Preview</div>
-          <h2 className={styles.sectionTitle}>Concrete dashboard visuals, not abstract promises.</h2>
-          <p className={styles.sectionSub}>
+          <div className={`${styles.sectionLabel} ${styles.reveal}`}>Feature Preview</div>
+          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`} style={{ transitionDelay: "0.07s" }}>Concrete dashboard visuals, not abstract promises.</h2>
+          <p className={`${styles.sectionSub} ${styles.reveal}`} style={{ transitionDelay: "0.14s" }}>
             These charts render from demo values and show the exact layout your real imported data produces.
           </p>
 
-          <div className={`${styles.chartsGrid} ${styles.reveal}`}>
-            <article className={`${styles.chartCard} ${styles.chartTall}`}>
+          <div className={styles.chartsGrid}>
+            <article className={`${styles.chartCard} ${styles.chartTall} ${styles.revealLeft}`}>
               <div className={styles.chartCardHeader}>
                 <span className={styles.chartCardTitle}>Risk Signal Levels</span>
                 <span className={styles.chartBadge}>Live Metrics</span>
@@ -589,7 +589,7 @@ export default function LandingPage({
               </div>
             </article>
 
-            <article className={`${styles.chartCard} ${styles.chartTall}`}>
+            <article className={`${styles.chartCard} ${styles.chartTall} ${styles.revealRight}`}>
               <div className={styles.chartCardHeader}>
                 <span className={styles.chartCardTitle}>Portfolio Drawdown (12-Month)</span>
                 <span className={`${styles.chartBadge} ${styles.chartBadgeOrange}`}>Max -11%</span>
@@ -630,7 +630,7 @@ export default function LandingPage({
               </div>
             </article>
 
-            <article className={styles.chartCard}>
+            <article className={`${styles.chartCard} ${styles.reveal}`} style={{ transitionDelay: "0.1s" }}>
               <div className={styles.chartCardHeader}>
                 <span className={styles.chartCardTitle}>Sector Concentration</span>
                 <span className={styles.chartBadge}>Top-3 = 42%</span>
@@ -653,7 +653,7 @@ export default function LandingPage({
               </div>
             </article>
 
-            <article className={styles.chartCard}>
+            <article className={`${styles.chartCard} ${styles.reveal}`} style={{ transitionDelay: "0.18s" }}>
               <div className={styles.chartCardHeader}>
                 <span className={styles.chartCardTitle}>ASX Session Movers</span>
                 <span className={`${styles.chartBadge} ${styles.chartBadgeOrange}`}>Today</span>
@@ -706,53 +706,23 @@ export default function LandingPage({
             </div>
           </div>
 
-          <div className={`${styles.dashboardCard} ${styles.reveal}`}>
-            <div className={styles.dashboardHeader}>
-              <div className={styles.dashboardUrl}>spectre-assets.com / dashboard</div>
-            </div>
-            <div className={styles.dashboardStats}>
-              <StatCard label="Portfolio Value" value="$1.27M" sub="+2.1% MTD" tone="up" />
-              <StatCard label="Holdings" value="24" sub="Across 6 sources" />
-              <StatCard label="VaR 95%" value="2.1%" sub="Elevated" tone="down" />
-              <StatCard label="Max Drawdown" value="11%" sub="12-month window" />
-            </div>
-            <div className={styles.dashboardCharts}>
-              <div className={styles.chartBox}>
-                <div className={styles.chartTitle}>Risk Score Trend — 72 / 100 (Elevated)</div>
-                <svg className={styles.sparkline} viewBox="0 0 400 60" aria-hidden="true">
-                  <defs>
-                    <linearGradient id="aiHeroLineGrad" x1="0" y1="0" x2="1" y2="0">
-                      <stop offset="0%" stopColor="#a855f7" />
-                      <stop offset="100%" stopColor="#ff7a30" />
-                    </linearGradient>
-                    <linearGradient id="aiHeroFillGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#d946ef" stopOpacity="0.28" />
-                      <stop offset="100%" stopColor="#ff7a30" stopOpacity="0" />
-                    </linearGradient>
-                  </defs>
-                  <path d="M0,48 L60,42 L120,45 L180,35 L240,30 L300,22 L360,28 L400,20" fill="none" stroke="url(#aiHeroLineGrad)" strokeWidth="2.5" strokeLinecap="round" />
-                  <path d="M0,48 L60,42 L120,45 L180,35 L240,30 L300,22 L360,28 L400,20 L400,60 L0,60Z" fill="url(#aiHeroFillGrad)" />
-                </svg>
-                <div className={styles.riskMeta}>Concentration · Drawdown · VaR95 · Volatility</div>
-                <div className={styles.riskBar}><div className={styles.riskBarFill} /></div>
+          <div className={`${styles.revealScale}`} style={{ flex: 1 }}>
+            <div className={styles.smallLabel} style={{ marginBottom: "10px" }}>AI Console</div>
+            <div className={styles.aiConsole}>
+              <div className={styles.aiPrompt}>› What&apos;s driving BHP&apos;s recent price action in my portfolio?</div>
+              <div className={styles.aiResponse}>
+                <strong>BHP (7.3% of portfolio)</strong> is showing positive momentum driven by iron ore spot prices rebounding above USD 110/t. Concentration is near threshold — monitor if it exceeds <strong>8%</strong>. Upside driver: China stimulus expectations. Downside risk: USD strength.
+                <span className={styles.aiCursor} />
               </div>
-              <div className={styles.chartBox}>
-                <div className={styles.chartTitle}>Allocation</div>
-                <div className={styles.donutWrap}>
-                  <svg width="88" height="88" viewBox="0 0 80 80" aria-hidden="true">
-                    <circle cx="40" cy="40" r="28" fill="none" stroke="#111318" strokeWidth="16" />
-                    <circle cx="40" cy="40" r="28" fill="none" stroke="#a855f7" strokeWidth="16" strokeDasharray="81 95" strokeDashoffset="24" transform="rotate(-90 40 40)" />
-                    <circle cx="40" cy="40" r="28" fill="none" stroke="#ff7a30" strokeWidth="16" strokeDasharray="50 95" strokeDashoffset="-57" transform="rotate(-90 40 40)" />
-                    <circle cx="40" cy="40" r="28" fill="none" stroke="#e879f9" strokeWidth="16" strokeDasharray="28 95" strokeDashoffset="-107" transform="rotate(-90 40 40)" />
-                    <circle cx="40" cy="40" r="28" fill="none" stroke="#fb923c" strokeWidth="16" strokeDasharray="18 95" strokeDashoffset="-135" transform="rotate(-90 40 40)" />
-                  </svg>
-                  <div className={styles.legend}>
-                    <LegendItem color="#a855f7" label="Equities" value="46%" />
-                    <LegendItem color="#ff7a30" label="Super" value="28%" />
-                    <LegendItem color="#e879f9" label="Bullion" value="16%" />
-                    <LegendItem color="#fb923c" label="Cash" value="10%" />
-                  </div>
-                </div>
+            </div>
+            <div className={styles.miniGrid} style={{ marginTop: "14px" }}>
+              <div className={styles.miniCard}>
+                <div className={styles.smallLabel}>What AI Reads</div>
+                <p>Holdings, weights, live price context, technical signals, concentration.</p>
+              </div>
+              <div className={styles.miniCard}>
+                <div className={styles.smallLabel}>What You Get</div>
+                <p>Top drivers, confidence-aware analysis, and follow-up review points.</p>
               </div>
             </div>
           </div>
@@ -811,9 +781,9 @@ export default function LandingPage({
 
       <section className={styles.section} id="security">
         <div className={styles.container}>
-          <div className={styles.sectionLabel}>Data Safety</div>
-          <h2 className={styles.sectionTitle}>Plain-English security and privacy controls.</h2>
-          <p className={styles.sectionSub}>These safeguards reflect the controls active in the current SPECTRE release.</p>
+          <div className={`${styles.sectionLabel} ${styles.reveal}`}>Data Safety</div>
+          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`} style={{ transitionDelay: "0.07s" }}>Plain-English security and privacy controls.</h2>
+          <p className={`${styles.sectionSub} ${styles.reveal}`} style={{ transitionDelay: "0.14s" }}>These safeguards reflect the controls active in the current SPECTRE release.</p>
 
           <div className={styles.securityGrid}>
             {securityCards.map((card, index) => (
@@ -835,9 +805,9 @@ export default function LandingPage({
 
       <section className={styles.section} id="pricing">
         <div className={styles.container}>
-          <div className={styles.sectionLabel}>Pricing</div>
-          <h2 className={`${styles.sectionTitle} ${styles.centered}`}>Simple pricing, low barrier to start.</h2>
-          <p className={`${styles.sectionSub} ${styles.centeredSub}`}>One private workspace per account. Cancel anytime through Stripe.</p>
+          <div className={`${styles.sectionLabel} ${styles.reveal}`}>Pricing</div>
+          <h2 className={`${styles.sectionTitle} ${styles.centered} ${styles.reveal}`} style={{ transitionDelay: "0.07s" }}>Simple pricing, low barrier to start.</h2>
+          <p className={`${styles.sectionSub} ${styles.centeredSub} ${styles.reveal}`} style={{ transitionDelay: "0.14s" }}>One private workspace per account. Cancel anytime through Stripe.</p>
 
           <div className={styles.pricingGrid}>
             <article className={`${styles.planCard} ${styles.reveal}`}>
@@ -921,8 +891,8 @@ export default function LandingPage({
 
       <section className={styles.section}>
         <div className={styles.container}>
-          <div className={styles.sectionLabel}>Why SPECTRE?</div>
-          <h2 className={styles.sectionTitle}>There&apos;s a smarter way to manage portfolio risk.</h2>
+          <div className={`${styles.sectionLabel} ${styles.reveal}`}>Why SPECTRE?</div>
+          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`} style={{ transitionDelay: "0.07s" }}>There&apos;s a smarter way to manage portfolio risk.</h2>
 
           <div className={styles.compareGrid}>
             <div className={`${styles.compareColumn} ${styles.revealLeft}`}>
@@ -953,8 +923,8 @@ export default function LandingPage({
 
       <section className={styles.section}>
         <div className={styles.container}>
-          <div className={styles.sectionLabel}>FAQ</div>
-          <h2 className={styles.sectionTitle}>Got questions? We&apos;ve got answers.</h2>
+          <div className={`${styles.sectionLabel} ${styles.reveal}`}>FAQ</div>
+          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`} style={{ transitionDelay: "0.07s" }}>Got questions? We&apos;ve got answers.</h2>
 
           <div className={`${styles.faqList} ${styles.reveal}`}>
             {faqs.map((faq, index) => (

@@ -1394,19 +1394,28 @@
 .reveal,
 .revealLeft,
 .revealRight,
-.revealScale {
+.revealScale,
+.revealUp {
   opacity: 0;
-  transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.reveal { transform: translateY(32px); }
-.revealLeft { transform: translateX(-32px); }
-.revealRight { transform: translateX(32px); }
-.revealScale { transform: scale(0.94); }
+.reveal    { transform: translateY(28px); }
+.revealUp  { transform: translateY(52px); }
+.revealLeft  { transform: translateX(-40px); }
+.revealRight { transform: translateX(40px); }
+.revealScale { transform: scale(0.93) translateY(16px); }
 
 .visible {
   opacity: 1;
   transform: none;
+}
+
+/* Section headings get a slightly longer, spring-feel transition */
+.sectionLabel.visible,
+.sectionTitle.visible,
+.sectionSub.visible {
+  transition-duration: 0.8s;
 }
 
 @keyframes ticker {
