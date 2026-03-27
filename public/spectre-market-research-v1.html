@@ -3163,24 +3163,36 @@ async function fetchFmpData() {
   const url = '/api/research/fmp' + (state.demoMode ? '?demo=1' : '');
   try {
     const data = await apiJson(url);
-    if (!data) return;
+    if (!data) {
+      // Show sections with error state
+      ['fmp-global-section','fmp-calendars-section','fmp-analytics-section'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = '';
+      });
+      return;
+    }
 
-    // Show sections
+    // Always show sections
     ['fmp-global-section','fmp-calendars-section','fmp-analytics-section'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = '';
     });
 
-    if (data.indices?.length)          renderIndices(data.indices);
-    if (data.fx?.length)               renderFx(data.fx);
-    if (data.commodities?.length)      renderCommodities(data.commodities);
-    if (data.economicCalendar)         renderEconomicCalendar(data.economicCalendar);
-    if (data.earningsCalendar)         renderEarningsCalendar(data.earningsCalendar);
-    if (data.sectorPerformance?.length) renderSectorPerformance(data.sectorPerformance);
-    if (data.analystRatings?.length)   renderAnalystRatings(data.analystRatings);
-    if (data.news?.length)             renderFmpNews(data.news);
+    // Always render — each function handles its own empty state
+    renderIndices(data.indices ?? []);
+    renderFx(data.fx ?? []);
+    renderCommodities(data.commodities ?? []);
+    renderEconomicCalendar(data.economicCalendar ?? []);
+    renderEarningsCalendar(data.earningsCalendar ?? []);
+    renderSectorPerformance(data.sectorPerformance ?? []);
+    renderAnalystRatings(data.analystRatings ?? []);
+    renderFmpNews(data.news ?? []);
   } catch(err) {
     console.warn('FMP fetch failed:', err);
+    ['fmp-global-section','fmp-calendars-section','fmp-analytics-section'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = '';
+    });
   }
 }
 </script>
