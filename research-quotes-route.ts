@@ -191,7 +191,7 @@ export async function GET(request: NextRequest) {
   }
 
   const asxSymbols = ASX_TICKERS.map((t) => `${t}.AX`);
-  const extraSymbols = ["^AXJO", "^AORD", "AUDUSD=X", "^VIX", "BTC-USD", "ETH-USD", "XAUUSD=X", "XAUAUD=X"];
+  const extraSymbols = ["^AXJO", "^AORD", "AUDUSD=X", "^VIX", "BTC-USD", "ETH-USD", "XAUUSD=X", "GC=F"];
   const allSymbols = [...asxSymbols, ...extraSymbols];
 
   const [quotes, fundamentals, coingecko, frankfurterAudUsd] = await Promise.all([
@@ -227,20 +227,17 @@ export async function GET(request: NextRequest) {
     };
   }
 
-  // Convert gold USD→AUD, with direct XAUAUD=X as fallback
-  const goldUsd = bySymbol["XAUUSD=X"];
+  // Convert gold USD→AUD.
+  // Primary source: XAUUSD=X (spot); fallback: GC=F (COMEX futures, same unit, more reliable on Yahoo).
   const audUsdQ = bySymbol["AUDUSD=X"];
-  const goldAudDirect = bySymbol["XAUAUD=X"];
+  const goldUsd = bySymbol["XAUUSD=X"]?.price ? bySymbol["XAUUSD=X"] : bySymbol["GC=F"];
   let goldAudPrice: number | null = null;
   let goldAudPrevClose: number | null = null;
-  if (goldUsd.price && audUsdQ.price && audUsdQ.price > 0) {
+  if (goldUsd?.price && audUsdQ.price && audUsdQ.price > 0) {
     goldAudPrice = goldUsd.price / audUsdQ.price;
     if (goldUsd.prevClose && audUsdQ.prevClose && audUsdQ.prevClose > 0) {
       goldAudPrevClose = goldUsd.prevClose / audUsdQ.prevClose;
     }
-  } else if (goldAudDirect.price) {
-    goldAudPrice = goldAudDirect.price;
-    goldAudPrevClose = goldAudDirect.prevClose;
   }
 
   const payload: QuotesPayload = {
