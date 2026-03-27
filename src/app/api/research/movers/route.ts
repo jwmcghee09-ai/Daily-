@@ -57,7 +57,7 @@ async function fetchScreener(scrId: string, count = 5): Promise<Mover[]> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const data = (await res.json()) as any;
     const quotes: unknown[] = data?.finance?.result?.[0]?.quotes ?? [];
-    const movers = quotes
+    const movers: Mover[] = quotes
       .map((q) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const r = q as any;
@@ -67,7 +67,7 @@ async function fetchScreener(scrId: string, count = 5): Promise<Mover[]> {
           name: (r.shortName ?? r.longName ?? r.symbol) as string,
           price: r.regularMarketPrice as number,
           changePct: typeof r.regularMarketChangePercent === "number" ? r.regularMarketChangePercent : 0,
-          sparkline: [],
+          sparkline: [] as number[],
         };
       })
       .filter((m): m is Mover => m !== null);
