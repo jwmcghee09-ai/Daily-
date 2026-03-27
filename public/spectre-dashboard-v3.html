@@ -124,6 +124,26 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
   background-clip:text;
 }
 .hero-sub{font-size:.88rem;color:var(--muted2);max-width:480px;line-height:1.8;margin-bottom:2rem}
+.hero-wordmark{
+  display:block;
+  width:min(360px,100%);
+  max-width:100%;
+  height:auto;
+  margin:0 0 1.15rem;
+}
+.hero-kicker{
+  display:inline-flex;
+  align-items:center;
+  gap:.55rem;
+  flex-wrap:wrap;
+  margin:0 0 1.1rem;
+  font-family:var(--mono);
+  font-size:.58rem;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  color:var(--muted2);
+}
+.hero-kicker-sep{color:rgba(255,255,255,.24)}
 .hero-meta{display:flex;flex-direction:column;gap:.55rem;padding-top:1.5rem;border-top:1px solid var(--border)}
 .meta-row{display:flex;align-items:center;gap:.6rem}
 .meta-lbl{font-family:var(--mono);font-size:.56rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);min-width:90px}
@@ -884,6 +904,72 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     </div>
   </div>
 </nav>
+
+<!-- RESTORED DASHBOARD HERO -->
+<div class="wrap">
+  <header class="hero">
+    <div class="hero-left">
+      <div class="hero-kicker">
+        <span id="hero-kicker-account">Demo Portfolio</span>
+        <span class="hero-kicker-sep">·</span>
+        <span id="hero-kicker-plan">Pro Demo</span>
+        <span class="hero-kicker-sep">·</span>
+        <span id="hero-kicker-holdings">0 positions</span>
+      </div>
+      <img src="/spectre-wordmark-plain.svg" alt="SPECTRE" class="hero-wordmark"/>
+      <h1 class="hero-title">Ask your portfolio anything.</h1>
+      <p class="hero-sub">Grounded in your live holdings, real-time market data, and risk metrics.</p>
+      <div class="hero-meta">
+        <div class="meta-row">
+          <span class="meta-lbl">Account</span>
+          <span class="meta-val" id="hero-meta-account">—</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-lbl">Plan</span>
+          <span class="meta-val" id="hero-meta-plan">—</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-lbl">Live Prices</span>
+          <span class="meta-val" id="hero-meta-prices">—</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-lbl">Latest Report</span>
+          <span class="meta-val" id="hero-meta-report">—</span>
+        </div>
+      </div>
+    </div>
+    <aside class="meta-panel">
+      <div class="meta-panel-title">Workspace Snapshot</div>
+      <div class="kpi-grid-mini">
+        <div class="kpi-mini">
+          <div class="kpi-mini-lbl">Portfolio Value</div>
+          <div class="kpi-mini-val" id="hero-total-value">—</div>
+        </div>
+        <div class="kpi-mini">
+          <div class="kpi-mini-lbl">Holdings</div>
+          <div class="kpi-mini-val" id="hero-holdings-count">—</div>
+        </div>
+        <div class="kpi-mini">
+          <div class="kpi-mini-lbl">Today</div>
+          <div class="kpi-mini-val" id="hero-day-change">—</div>
+        </div>
+        <div class="kpi-mini">
+          <div class="kpi-mini-lbl">VaR 95%</div>
+          <div class="kpi-mini-val accent" id="hero-var95">—</div>
+        </div>
+      </div>
+      <div class="risk-bar-wrap">
+        <div class="risk-bar-top">
+          <span class="risk-bar-lbl">Risk Score</span>
+          <span class="risk-bar-val" id="hero-risk-score">—</span>
+        </div>
+        <div class="risk-track"><div class="risk-fill" id="hero-risk-fill"></div></div>
+      </div>
+    </aside>
+  </header>
+</div>
+
+<div class="divider"></div>
 
 <!-- AI HERO -->
 <div class="ai-hero-wrap" id="dashboard-top">
@@ -2087,8 +2173,12 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     if (state.demoMode) {
       setText("nav-user-email", "Demo workspace");
       setText("meta-account-name", DEMO_SESSION_USER.displayName);
+      setText("hero-kicker-account", DEMO_SESSION_USER.displayName);
+      setText("hero-meta-account", `${DEMO_SESSION_USER.displayName} (${DEMO_SESSION_USER.email})`);
       setClass("meta-plan-chip", "plan-chip pro");
       setText("meta-plan-chip", "Pro Demo");
+      setText("hero-kicker-plan", "Pro Demo");
+      setText("hero-meta-plan", "Pro Demo");
       setText("pro-console-badge", "Pro Demo");
       if (signOutButton) {
         signOutButton.textContent = "Create Account";
@@ -3026,8 +3116,12 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       state.sessionUser = cloneData(DEMO_SESSION_USER);
       setText("nav-user-email", "Demo workspace");
       setText("meta-account-name", DEMO_SESSION_USER.displayName);
+      setText("hero-kicker-account", DEMO_SESSION_USER.displayName);
+      setText("hero-meta-account", `${DEMO_SESSION_USER.displayName} (${DEMO_SESSION_USER.email})`);
       setClass("meta-plan-chip", "plan-chip pro");
       setText("meta-plan-chip", "Pro Demo");
+      setText("hero-kicker-plan", "Pro Demo");
+      setText("hero-meta-plan", "Pro Demo");
       setText("pro-console-badge", "Pro Demo");
       const proConsole = document.getElementById("pro-console");
       if (proConsole) {
@@ -3050,10 +3144,14 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     state.aiMonthlyLimit = payload.user.aiMonthlyLimit ?? -1;
     setText("nav-user-email", payload.user.email);
     setText("meta-account-name", payload.user.displayName || payload.user.email);
+    setText("hero-kicker-account", payload.user.displayName || payload.user.email);
+    setText("hero-meta-account", payload.user.email);
     const chipClass = payload.user.proEnabled ? "plan-chip pro" : payload.user.planTier === "plus" ? "plan-chip plus" : "plan-chip starter";
     const chipLabel = payload.user.proEnabled ? "Pro Active" : payload.user.planTier === "plus" ? "Plus" : "Starter";
     setClass("meta-plan-chip", chipClass);
     setText("meta-plan-chip", chipLabel);
+    setText("hero-kicker-plan", chipLabel);
+    setText("hero-meta-plan", chipLabel);
     setText("pro-console-badge", chipLabel);
     const proConsole = document.getElementById("pro-console");
     if (proConsole) {
@@ -3514,17 +3612,28 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     setText("meta-holdings-count", `${holdings.length} positions`);
     setText("meta-latest-report", latestReportDate ? formatDate(latestReportDate) : "—");
     setText("meta-prices-updated", latestPriceTime ? formatDateTime(latestPriceTime) : "—");
+    setText("hero-kicker-holdings", `${holdings.length} positions`);
+    setText("hero-meta-report", latestReportDate ? formatDate(latestReportDate) : "—");
+    setText("hero-meta-prices", latestPriceTime ? formatDateTime(latestPriceTime) : "—");
     setText("holdings-count-label", `${holdings.length} positions`);
 
     setText("mini-total-value", formatCurrency(metrics.totalValue));
     setText("mini-unrealised-pnl", formatSignedCurrency(metrics.pnl));
     setText("mini-day-change", formatSignedCurrency(today.amount));
     setText("mini-var95", effectiveVar95Pct != null ? formatPercent(effectiveVar95Pct, { negative: true, decimals: 1 }) : "—");
+    setText("hero-total-value", formatCurrency(metrics.totalValue));
+    setText("hero-holdings-count", String(holdings.length));
+    setText("hero-day-change", formatSignedCurrency(today.amount));
+    setText("hero-var95", effectiveVar95Pct != null ? formatPercent(effectiveVar95Pct, { negative: true, decimals: 1 }) : "—");
     setClass("mini-unrealised-pnl", `kpi-mini-val ${metrics.pnl >= 0 ? "accent" : ""}`.trim());
     setClass("mini-day-change", `kpi-mini-val ${today.amount < 0 ? "accent" : ""}`.trim());
+    setClass("hero-day-change", `kpi-mini-val ${today.amount < 0 ? "accent" : ""}`.trim());
     setText("risk-bar-value", riskScore ? `${riskScore.score} / 100` : "—");
+    setText("hero-risk-score", riskScore ? `${riskScore.score} / 100` : "—");
     const fill = document.getElementById("risk-bar-fill");
     if (fill) fill.style.width = `${riskScore ? riskScore.score : 0}%`;
+    const heroFill = document.getElementById("hero-risk-fill");
+    if (heroFill) heroFill.style.width = `${riskScore ? riskScore.score : 0}%`;
 
     setText("preview-total-value", formatCurrency(metrics.totalValue, { compact: metrics.totalValue >= 1000000, decimals: metrics.totalValue >= 1000000 ? 2 : 0 }));
     setText("preview-total-sub", holdings.length > 0 ? `${formatPercent(metrics.pnlPct, { signed: true, decimals: 1 })} since entry` : "No holdings yet");
