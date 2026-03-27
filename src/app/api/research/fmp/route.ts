@@ -18,9 +18,10 @@ interface FmpNewsItem { title: string; publishedDate: string; url: string; symbo
 interface MacroRate { key: string; label: string; value: string | null; actual: number | null; date: string | null; event: string | null; }
 interface MacroIndicator { key: string; label: string; value: number | null; unit: string; date: string | null; }
 interface EarningsSurprise { symbol: string; name: string; date: string; actualEps: number | null; estimatedEps: number | null; surprise: number | null; surprisePct: number | null; }
-interface CryptoAssetMetric { symbol: string; name: string; price: number | null; marketCap: number | null; volume24h: number | null; changePct24h: number | null; }
+interface CryptoAssetMetric { symbol: string; name: string; price: number | null; marketCap: number | null; volume24h: number | null; changePct24h: number | null; high24h: number | null; low24h: number | null; }
 interface CryptoMarketSnapshot {
   btcDominance: number | null;
+  ethDominance: number | null;
   totalMarketCapUsd: number | null;
   totalVolume24hUsd: number | null;
   fearGreedValue: number | null;
@@ -469,6 +470,7 @@ async function fetchEarningsSurprises(apiKey: string): Promise<EarningsSurprise[
 async function fetchCryptoMarket(): Promise<CryptoMarketSnapshot> {
   const empty: CryptoMarketSnapshot = {
     btcDominance: null,
+    ethDominance: null,
     totalMarketCapUsd: null,
     totalVolume24hUsd: null,
     fearGreedValue: null,
@@ -492,6 +494,7 @@ async function fetchCryptoMarket(): Promise<CryptoMarketSnapshot> {
 
     return {
       btcDominance: typeof globalJson?.data?.market_cap_percentage?.btc === "number" ? globalJson.data.market_cap_percentage.btc : null,
+      ethDominance: typeof globalJson?.data?.market_cap_percentage?.eth === "number" ? globalJson.data.market_cap_percentage.eth : null,
       totalMarketCapUsd: typeof globalJson?.data?.total_market_cap?.usd === "number" ? globalJson.data.total_market_cap.usd : null,
       totalVolume24hUsd: typeof globalJson?.data?.total_volume?.usd === "number" ? globalJson.data.total_volume.usd : null,
       fearGreedValue: parseNumericValue(fearJson?.data?.[0]?.value),
@@ -504,6 +507,8 @@ async function fetchCryptoMarket(): Promise<CryptoMarketSnapshot> {
             marketCap: typeof coin?.market_cap === "number" ? coin.market_cap : null,
             volume24h: typeof coin?.total_volume === "number" ? coin.total_volume : null,
             changePct24h: typeof coin?.price_change_percentage_24h_in_currency === "number" ? coin.price_change_percentage_24h_in_currency : null,
+            high24h: typeof coin?.high_24h === "number" ? coin.high_24h : null,
+            low24h: typeof coin?.low_24h === "number" ? coin.low_24h : null,
           }))
         : [],
     };

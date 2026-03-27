@@ -2202,6 +2202,147 @@ h3 { font-size: 1.15rem; }
 .asset-metric-name { font-size: 0.7rem; color: var(--sl-text); }
 .asset-metric-val, .asset-metric-chg {
   font-family: var(--font-mono);
+
+/* ── Crypto price card extras ─────────────────────────────── */
+.crypto-tab-tag {
+  display: inline-block;
+  font-size: 0.56rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  font-family: var(--font-mono);
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+.crypto-tab-tag.btc { background: rgba(249,115,22,.12); color: #fb923c; border: 1px solid rgba(249,115,22,.2); }
+.crypto-tab-tag.eth { background: rgba(98,126,234,.12); color: #7c93f0; border: 1px solid rgba(98,126,234,.2); }
+.crypto-tab-tag.sol { background: rgba(153,69,255,.12); color: #b57bff; border: 1px solid rgba(153,69,255,.2); }
+.ct-price-detail {
+  display: flex;
+  gap: 14px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255,255,255,.05);
+  font-size: 0.62rem;
+  font-family: var(--font-mono);
+  color: var(--sl-muted);
+}
+.ct-price-detail span { color: var(--sl-text); }
+
+/* ── Fear & Greed meter ──────────────────────────────────── */
+.fear-greed-wrap { margin-top: 8px; }
+.fear-greed-track {
+  position: relative;
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #ef4444 0%, #fb923c 25%, #eab308 50%, #84cc16 75%, #22c55e 100%);
+  margin: 8px 0 4px;
+}
+.fear-greed-needle {
+  position: absolute;
+  top: -5px;
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  border-radius: 50%;
+  transform: translateX(-50%);
+  box-shadow: 0 1px 6px rgba(0,0,0,.6);
+  transition: left 0.6s cubic-bezier(.16,1,.3,1);
+}
+.fear-greed-labels { display: flex; justify-content: space-between; font-size: 0.52rem; color: var(--sl-muted); font-family: var(--font-mono); letter-spacing:.06em; }
+
+/* ── Dominance bar ───────────────────────────────────────── */
+.dominance-bar-wrap {
+  display: flex;
+  height: 5px;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 10px;
+  gap: 1px;
+}
+.dominance-bar-btc { background: #fb923c; border-radius: 3px 0 0 3px; }
+.dominance-bar-eth { background: #7c93f0; }
+.dominance-bar-other { background: rgba(255,255,255,.12); border-radius: 0 3px 3px 0; flex: 1; }
+
+/* ── Bloomberg-style rates strip ─────────────────────────── */
+.macro-rates-strip {
+  display: flex;
+  background: rgba(14,10,24,.85);
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+.macro-rate-cell {
+  flex: 1;
+  padding: 13px 16px;
+  border-right: 1px solid rgba(255,255,255,.06);
+  min-width: 0;
+}
+.macro-rate-cell:last-child { border-right: none; }
+.macro-rate-name {
+  font-size: 0.56rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--sl-muted);
+  font-family: var(--font-mono);
+}
+.macro-rate-val {
+  font-size: 1.25rem;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  margin: 4px 0 2px;
+}
+.macro-rate-dir {
+  font-size: 0.58rem;
+  font-family: var(--font-mono);
+  letter-spacing: .06em;
+}
+.macro-rate-dir.hold { color: var(--sl-amber); }
+.macro-rate-dir.cut  { color: var(--green); }
+.macro-rate-dir.hike { color: var(--red); }
+
+/* ── Macro 3-col grid ────────────────────────────────────── */
+.macro-3col {
+  display: grid;
+  grid-template-columns: 1.1fr 0.8fr 1.1fr;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+.macro-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+/* ── Equities summary strip ──────────────────────────────── */
+.eq-summary-strip {
+  display: flex;
+  background: rgba(14,10,24,.85);
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+.eq-summary-cell {
+  flex: 1;
+  padding: 12px 16px;
+  border-right: 1px solid rgba(255,255,255,.06);
+  min-width: 0;
+}
+.eq-summary-cell:last-child { border-right: none; }
+.eq-summary-label { font-size: 0.56rem; letter-spacing:.1em; text-transform:uppercase; color:var(--sl-muted); font-family:var(--font-mono); }
+.eq-summary-val { font-size: 1.1rem; font-weight: 600; font-family: var(--font-mono); margin: 4px 0 2px; }
+.eq-summary-sub { font-size: 0.6rem; color: var(--sl-muted); font-family: var(--font-mono); }
+
+@media (max-width: 900px) {
+  .macro-3col, .macro-2col { grid-template-columns: 1fr !important; }
+  .macro-rates-strip { flex-wrap: wrap; }
+  .macro-rate-cell { flex: 1 1 30%; border-bottom: 1px solid rgba(255,255,255,.06); }
+  .eq-summary-strip { flex-wrap: wrap; }
+  .eq-summary-cell { flex: 1 1 40%; }
+}
   font-size: 0.68rem;
   text-align: right;
 }
@@ -3049,6 +3190,35 @@ h3 { font-size: 1.15rem; }
   <!-- ===== TAB: EQUITIES ===== -->
   <div id="rtab-equities" class="rtab-panel">
 
+    <!-- ── Summary strip ── -->
+    <div class="eq-summary-strip reveal">
+      <div class="eq-summary-cell">
+        <div class="eq-summary-label">ASX 200</div>
+        <div class="eq-summary-val mono" id="eq-asx200-val">—</div>
+        <div class="eq-summary-sub" id="eq-asx200-chg">—</div>
+      </div>
+      <div class="eq-summary-cell">
+        <div class="eq-summary-label">Best Sector</div>
+        <div class="eq-summary-val mono pos" id="eq-best-sector">—</div>
+        <div class="eq-summary-sub" id="eq-best-sector-chg">—</div>
+      </div>
+      <div class="eq-summary-cell">
+        <div class="eq-summary-label">Worst Sector</div>
+        <div class="eq-summary-val mono neg" id="eq-worst-sector">—</div>
+        <div class="eq-summary-sub" id="eq-worst-sector-chg">—</div>
+      </div>
+      <div class="eq-summary-cell">
+        <div class="eq-summary-label">Gainers / Losers</div>
+        <div class="eq-summary-val mono" id="eq-gainer-ratio">—</div>
+        <div class="eq-summary-sub">Top 15 ASX holdings</div>
+      </div>
+      <div class="eq-summary-cell">
+        <div class="eq-summary-label">Avg Div Yield</div>
+        <div class="eq-summary-val mono" id="eq-avg-yield">—</div>
+        <div class="eq-summary-sub">Weighted by mkt cap</div>
+      </div>
+    </div>
+
     <!-- Sector performance bar chart -->
     <div class="card reveal" style="margin-bottom:14px;">
       <div class="section-label">Sector Performance (US Proxy — FMP)</div>
@@ -3121,31 +3291,53 @@ h3 { font-size: 1.15rem; }
   <!-- ===== TAB: MACRO ===== -->
   <div id="rtab-macro" class="rtab-panel">
 
-    <!-- AUD/USD chart -->
-    <div class="card reveal" style="margin-bottom:14px;">
-      <div class="section-label" style="display:flex;justify-content:space-between;align-items:center;">
-        <span>AUD / USD</span>
-        <div class="time-pills" style="margin-top:0;">
-          <button class="time-pill active" onclick="loadMacroChart('aud','1m',this)">1M</button>
-          <button class="time-pill" onclick="loadMacroChart('aud','3m',this)">3M</button>
-          <button class="time-pill" onclick="loadMacroChart('aud','6m',this)">6M</button>
-          <button class="time-pill" onclick="loadMacroChart('aud','1y',this)">1Y</button>
-        </div>
+    <!-- ── Bloomberg-style rates strip ── -->
+    <div class="macro-rates-strip reveal">
+      <div class="macro-rate-cell">
+        <div class="macro-rate-name">🇦🇺 RBA Cash Rate</div>
+        <div class="macro-rate-val" id="macro-rba-rate">4.35%</div>
+        <div class="macro-rate-dir hold">● HOLD — since Nov 2023</div>
       </div>
-      <div class="macro-chart-wrap"><canvas id="macro-aud-chart"></canvas></div>
+      <div class="macro-rate-cell">
+        <div class="macro-rate-name">🇺🇸 Fed Funds Rate</div>
+        <div class="macro-rate-val" id="macro-fed-rate">4.25–4.50%</div>
+        <div class="macro-rate-dir cut">▼ CUT — Dec 2024</div>
+      </div>
+      <div class="macro-rate-cell">
+        <div class="macro-rate-name">🇪🇺 ECB Deposit Rate</div>
+        <div class="macro-rate-val" id="macro-ecb-rate">2.50%</div>
+        <div class="macro-rate-dir cut">▼ CUT — Mar 2025</div>
+      </div>
+      <div class="macro-rate-cell">
+        <div class="macro-rate-name">🇬🇧 BoE Base Rate</div>
+        <div class="macro-rate-val">4.50%</div>
+        <div class="macro-rate-dir cut">▼ CUT — Feb 2025</div>
+      </div>
+      <div class="macro-rate-cell">
+        <div class="macro-rate-name">🇯🇵 BoJ Policy Rate</div>
+        <div class="macro-rate-val">0.50%</div>
+        <div class="macro-rate-dir hike">▲ HIKE — Jan 2025</div>
+      </div>
+      <div class="macro-rate-cell">
+        <div class="macro-rate-name">🇨🇳 PBoC LPR 1yr</div>
+        <div class="macro-rate-val">3.10%</div>
+        <div class="macro-rate-dir cut">▼ CUT — Oct 2024</div>
+      </div>
     </div>
 
-    <!-- Key rates + FX/commodities grid -->
-    <div class="macro-grid">
+    <!-- ── 3-col: AUD/USD chart | FX pairs | Commodities ── -->
+    <div class="macro-3col">
       <div class="card reveal">
-        <div class="section-label">Key Central Bank Rates</div>
-        <table class="macro-rates-table">
-          <tbody>
-            <tr><td>🇦🇺 RBA Cash Rate</td><td id="macro-rba-rate">Loading…</td></tr>
-            <tr><td>🇺🇸 Fed Funds Rate</td><td id="macro-fed-rate">Loading…</td></tr>
-            <tr><td>🇪🇺 ECB Deposit Rate</td><td id="macro-ecb-rate">Loading…</td></tr>
-          </tbody>
-        </table>
+        <div class="section-label" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>AUD / USD</span>
+          <div class="time-pills" style="margin-top:0;">
+            <button class="time-pill active" onclick="loadMacroChart('aud','1m',this)">1M</button>
+            <button class="time-pill" onclick="loadMacroChart('aud','3m',this)">3M</button>
+            <button class="time-pill" onclick="loadMacroChart('aud','6m',this)">6M</button>
+            <button class="time-pill" onclick="loadMacroChart('aud','1y',this)">1Y</button>
+          </div>
+        </div>
+        <div class="macro-chart-wrap"><canvas id="macro-aud-chart"></canvas></div>
       </div>
       <div class="card reveal">
         <div class="section-label">AUD Currency Pairs</div>
@@ -3153,16 +3345,21 @@ h3 { font-size: 1.15rem; }
           <div style="color:var(--sl-muted);font-size:0.72rem;">Loading…</div>
         </div>
       </div>
-    </div>
-
-    <!-- Commodities chart + table -->
-    <div class="macro-grid">
       <div class="card reveal">
         <div class="section-label">Commodities</div>
         <div class="comm-grid" id="macro-comm-grid">
           <div style="color:var(--sl-muted);font-size:0.72rem;">Loading…</div>
         </div>
       </div>
+    </div>
+
+    <!-- ── Macro indicators strip ── -->
+    <div class="metric-card-grid reveal" id="macro-indicator-grid">
+      <div class="metric-card"><div class="metric-card-label">Indicator</div><div class="metric-card-value">Loading…</div></div>
+    </div>
+
+    <!-- ── 2-col: Gold chart | Global indices ── -->
+    <div class="macro-2col">
       <div class="card reveal">
         <div class="section-label" style="display:flex;justify-content:space-between;align-items:center;">
           <span>Gold (XAU/USD)</span>
@@ -3175,21 +3372,15 @@ h3 { font-size: 1.15rem; }
         </div>
         <div class="macro-chart-wrap"><canvas id="macro-gold-chart"></canvas></div>
       </div>
-    </div>
-
-    <div class="metric-card-grid" id="macro-indicator-grid">
-      <div class="metric-card"><div class="metric-card-label">Macro Indicators</div><div class="metric-card-value">Loading…</div></div>
-    </div>
-
-    <!-- Global indices -->
-    <div class="card reveal" style="margin-bottom:14px;">
-      <div class="section-label">Global Indices</div>
-      <div class="index-grid" id="macro-indices-grid">
-        <div style="color:var(--sl-muted);font-size:0.72rem;grid-column:span 3;">Loading…</div>
+      <div class="card reveal">
+        <div class="section-label">Global Indices</div>
+        <div class="index-grid" id="macro-indices-grid">
+          <div style="color:var(--sl-muted);font-size:0.72rem;grid-column:span 3;">Loading…</div>
+        </div>
       </div>
     </div>
 
-    <!-- Economic calendar -->
+    <!-- ── Economic calendar full-width ── -->
     <div class="card reveal">
       <div class="section-label">Economic Calendar — Next 60 Days</div>
       <div class="econ-list" id="macro-econ-list">
@@ -3288,27 +3479,50 @@ h3 { font-size: 1.15rem; }
     <!-- Price cards row -->
     <div class="crypto-tab-grid">
       <div class="card crypto-tab-card card-glow reveal">
+        <div class="crypto-tab-tag btc">Bitcoin</div>
         <div class="crypto-tab-symbol">BTC / USD</div>
         <div class="crypto-big-price" id="ct-btc-price">Loading…</div>
         <div class="crypto-big-chg" id="ct-btc-chg">—</div>
+        <div class="ct-price-detail">
+          <div>24H H: <span id="ct-btc-high">—</span></div>
+          <div>24H L: <span id="ct-btc-low">—</span></div>
+          <div>MCap: <span id="ct-btc-mcap">—</span></div>
+        </div>
       </div>
       <div class="card crypto-tab-card card-glow reveal">
+        <div class="crypto-tab-tag eth">Ethereum</div>
         <div class="crypto-tab-symbol">ETH / USD</div>
         <div class="crypto-big-price" id="ct-eth-price">Loading…</div>
         <div class="crypto-big-chg" id="ct-eth-chg">—</div>
+        <div class="ct-price-detail">
+          <div>24H H: <span id="ct-eth-high">—</span></div>
+          <div>24H L: <span id="ct-eth-low">—</span></div>
+          <div>MCap: <span id="ct-eth-mcap">—</span></div>
+        </div>
       </div>
       <div class="card crypto-tab-card card-glow reveal">
+        <div class="crypto-tab-tag sol">Solana</div>
         <div class="crypto-tab-symbol">SOL / USD</div>
         <div class="crypto-big-price" id="ct-sol-price">Loading…</div>
         <div class="crypto-big-chg" id="ct-sol-chg">—</div>
+        <div class="ct-price-detail">
+          <div>24H H: <span id="ct-sol-high">—</span></div>
+          <div>24H L: <span id="ct-sol-low">—</span></div>
+          <div>MCap: <span id="ct-sol-mcap">—</span></div>
+        </div>
       </div>
     </div>
 
+    <!-- Market stats strip -->
     <div class="metric-card-grid">
       <div class="metric-card">
         <div class="metric-card-label">BTC Dominance</div>
         <div class="metric-card-value" id="ct-btc-dominance">—</div>
-        <div class="metric-card-sub">Share of total crypto market cap</div>
+        <div class="dominance-bar-wrap">
+          <div class="dominance-bar-btc" id="ct-dom-btc-bar" style="width:50%"></div>
+          <div class="dominance-bar-eth" id="ct-dom-eth-bar" style="width:18%"></div>
+          <div class="dominance-bar-other"></div>
+        </div>
       </div>
       <div class="metric-card">
         <div class="metric-card-label">24H Volume</div>
@@ -3318,7 +3532,12 @@ h3 { font-size: 1.15rem; }
       <div class="metric-card">
         <div class="metric-card-label">Fear &amp; Greed</div>
         <div class="metric-card-value" id="ct-fear-greed">—</div>
-        <div class="metric-card-sub" id="ct-fear-greed-label">Sentiment</div>
+        <div class="fear-greed-wrap">
+          <div class="fear-greed-track">
+            <div class="fear-greed-needle" id="ct-fear-greed-needle" style="left:50%"></div>
+          </div>
+          <div class="fear-greed-labels"><span>Fear</span><span id="ct-fear-greed-label">—</span><span>Greed</span></div>
+        </div>
       </div>
       <div class="metric-card">
         <div class="metric-card-label">Market Cap</div>
@@ -5092,7 +5311,64 @@ async function loadEquityChart(range, btn) {
 
 function populateEquitiesTab() {
   const fmp = window._fmpData;
+  const quotes = window._liveQuotesData;
   const equities = getEquityUniverse();
+
+  // ── Summary strip ──────────────────────────────────────────────
+  // ASX 200 value + change
+  const asx200 = quotes?.indices?.asx200;
+  const asx200ValEl = document.getElementById('eq-asx200-val');
+  const asx200ChgEl = document.getElementById('eq-asx200-chg');
+  if (asx200ValEl) asx200ValEl.textContent = asx200?.price != null ? Math.round(asx200.price).toLocaleString('en-AU') : '—';
+  if (asx200ChgEl && asx200?.price != null && asx200?.prevClose != null && asx200.prevClose > 0) {
+    const pct = ((asx200.price - asx200.prevClose) / asx200.prevClose) * 100;
+    asx200ChgEl.textContent = (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%';
+    asx200ChgEl.className = 'eq-summary-sub ' + (pct >= 0 ? 'pos' : 'neg');
+  }
+
+  // Best / Worst sector from FMP sector performance
+  if (fmp?.sectorPerformance?.length) {
+    const sectors = fmp.sectorPerformance.map(s => ({
+      name: s.sector || s.name || '',
+      pct: parseFloat(s.changesPercentage ?? s.changePct ?? 0),
+    })).filter(s => s.name);
+    sectors.sort((a, b) => b.pct - a.pct);
+    const best = sectors[0];
+    const worst = sectors[sectors.length - 1];
+    const bestEl = document.getElementById('eq-best-sector');
+    const bestChgEl = document.getElementById('eq-best-sector-chg');
+    const worstEl = document.getElementById('eq-worst-sector');
+    const worstChgEl = document.getElementById('eq-worst-sector-chg');
+    // Shorten long sector names
+    const shortSector = n => n.replace('Real Estate','RE').replace('Consumer Defensive','Con Def').replace('Consumer Cyclical','Con Cyc').replace('Basic Materials','Materials').replace('Communication Services','Comms').replace('Financial Services','Financials').replace('Healthcare','Health');
+    if (bestEl)    bestEl.textContent    = shortSector(best.name);
+    if (bestChgEl) bestChgEl.textContent = (best.pct >= 0 ? '+' : '') + best.pct.toFixed(2) + '%';
+    if (worstEl)    worstEl.textContent    = shortSector(worst.name);
+    if (worstChgEl) worstChgEl.textContent = (worst.pct >= 0 ? '+' : '') + worst.pct.toFixed(2) + '%';
+  }
+
+  // Gainers / Losers ratio from equity universe
+  if (equities.length) {
+    let gainers = 0, losers = 0;
+    equities.forEach(q => {
+      const pct = equityChangePct(q);
+      if (pct == null) return;
+      if (pct >= 0) gainers++; else losers++;
+    });
+    const ratioEl = document.getElementById('eq-gainer-ratio');
+    if (ratioEl) ratioEl.textContent = `${gainers} / ${losers}`;
+  }
+
+  // Weighted average dividend yield
+  if (equities.length) {
+    let weightedSum = 0, totalWeight = 0;
+    equities.forEach(q => {
+      const w = q.marketCap || 0;
+      if (q.divYield != null && w > 0) { weightedSum += q.divYield * w; totalWeight += w; }
+    });
+    const yieldEl = document.getElementById('eq-avg-yield');
+    if (yieldEl) yieldEl.textContent = totalWeight > 0 ? (weightedSum / totalWeight).toFixed(2) + '%' : '—';
+  }
 
   // Sector bar chart
   if (fmp?.sectorPerformance?.length) {
@@ -5336,6 +5612,26 @@ function populateCryptoTab() {
   setCryptoCard('ct-sol-price', 'ct-sol-chg', quotes.crypto.sol);
 
   const market = window._fmpData?.cryptoMarket;
+
+  // Populate 24H high/low and market cap from assets array
+  const assets = Array.isArray(market?.assets) ? market.assets : [];
+  const assetBySymbol = {};
+  assets.forEach(a => { assetBySymbol[a.symbol.toUpperCase()] = a; });
+
+  function setCryptoDetail(sym, highId, lowId, mcapId) {
+    const a = assetBySymbol[sym.toUpperCase()];
+    const highEl = document.getElementById(highId);
+    const lowEl = document.getElementById(lowId);
+    const mcapEl = document.getElementById(mcapId);
+    if (highEl) highEl.textContent = a?.high24h != null ? '$' + Math.round(a.high24h).toLocaleString('en-AU') : '—';
+    if (lowEl)  lowEl.textContent  = a?.low24h  != null ? '$' + Math.round(a.low24h).toLocaleString('en-AU')  : '—';
+    if (mcapEl) mcapEl.textContent = fmtCompactCurrency(a?.marketCap ?? null);
+  }
+  setCryptoDetail('BTC', 'ct-btc-high', 'ct-btc-low', 'ct-btc-mcap');
+  setCryptoDetail('ETH', 'ct-eth-high', 'ct-eth-low', 'ct-eth-mcap');
+  setCryptoDetail('SOL', 'ct-sol-high', 'ct-sol-low', 'ct-sol-mcap');
+
+  // Market stats strip
   const dominanceEl = document.getElementById('ct-btc-dominance');
   const volumeEl = document.getElementById('ct-total-volume');
   const fearEl = document.getElementById('ct-fear-greed');
@@ -5347,9 +5643,22 @@ function populateCryptoTab() {
   if (fearLabelEl) fearLabelEl.textContent = market?.fearGreedLabel || 'Sentiment';
   if (marketCapEl) marketCapEl.textContent = fmtCompactCurrency(market?.totalMarketCapUsd ?? null);
 
+  // Dominance bar widths
+  const btcPct = market?.btcDominance ?? 50;
+  const ethPct = market?.ethDominance ?? 18;
+  const btcBarEl = document.getElementById('ct-dom-btc-bar');
+  const ethBarEl = document.getElementById('ct-dom-eth-bar');
+  if (btcBarEl) btcBarEl.style.width = btcPct.toFixed(1) + '%';
+  if (ethBarEl) ethBarEl.style.width = ethPct.toFixed(1) + '%';
+
+  // Fear & Greed needle position (0–100 → 0%–100% left offset)
+  const fgVal = market?.fearGreedValue;
+  const needleEl = document.getElementById('ct-fear-greed-needle');
+  if (needleEl && fgVal != null) needleEl.style.left = Math.max(0, Math.min(100, fgVal)).toFixed(1) + '%';
+
+  // Asset market depth table
   const assetEl = document.getElementById('ct-asset-metrics');
   if (assetEl) {
-    const assets = Array.isArray(market?.assets) ? market.assets : [];
     assetEl.innerHTML = assets.length ? assets.map((asset) => `
       <div class="asset-metric-row">
         <div class="asset-metric-sym">${escapeHtml(asset.symbol)}</div>
