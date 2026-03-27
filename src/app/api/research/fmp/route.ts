@@ -4,10 +4,7 @@ import { readUserEntitlements } from "@/lib/db";
 
 export const runtime = "nodejs";
 
-// FMP moved to stable API after Aug 2025 — v3 endpoints are legacy
-const FMP_BASE = "https://financialmodelingprep.com/stable";
-const CACHE_TTL_MS = 30 * 60 * 1000;
-
+const CACHE_TTL_MS = 15 * 60 * 1000;
 let cache: { data: FmpPayload; expiresAt: number } | null = null;
 
 interface IndexQuote { symbol: string; name: string; price: number | null; changePct: number | null; }
@@ -31,183 +28,167 @@ interface FmpPayload {
   news: FmpNewsItem[];
 }
 
-const KEY = process.env.FMP_API_KEY ?? "";
+const YAHOO_HEADERS = { "User-Agent": "Mozilla/5.0 (compatible; SPECTRE/1.0)", Accept: "application/json" };
 
-async function fmpGet<T>(path: string, params: Record<string, string> = {}): Promise<T | null> {
-  if (!KEY) return null;
-  const url = new URL(`${FMP_BASE}${path}`);
-  url.searchParams.set("apikey", KEY);
-  for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
+async function yahooQuote(symbol: string): Promise<{ price: number | null; prevClose: number | null; name: string | null }> {
+  const url = `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=5d`;
   try {
     const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), 10_000);
-    const res = await fetch(url.toString(), { cache: "no-store", signal: ctrl.signal });
+    const t = setTimeout(() => ctrl.abort(), 8_000);
+    const res = await fetch(url, { cache: "no-store", signal: ctrl.signal, headers: YAHOO_HEADERS });
     clearTimeout(t);
-    if (!res.ok) return null;
-    return (await res.json()) as T;
-  } catch {
-    return null;
-  }
+    if (!res.ok) return { price: null, prevClose: null, name: null };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const data = (await res.json()) as any;
+    const meta = data?.chart?.result?.[0]?.meta ?? {};
+    const price = typeof meta.regularMarketPrice === "number" ? meta.regularMarketPrice : null;
+    const prevClose = typeof meta.previousClose === "number" ? meta.previousClose
+      : typeof meta.chartPreviousClose === "number" ? meta.chartPreviousClose : null;
+    const name = meta.shortName ?? meta.longName ?? null;
+    return { price, prevClose, name };
+  } catch { return { price: null, prevClose: null, name: null }; }
 }
 
-// ---- Indices ----
-const INDEX_MAP: Record<string, string> = {
-  "^GSPC": "S&P 500", "^IXIC": "NASDAQ", "^DJI": "Dow Jones",
-  "^FTSE": "FTSE 100", "^GDAXI": "DAX", "^N225": "Nikkei 225",
-  "^HSI": "Hang Seng", "^AXJO": "ASX 200", "^FCHI": "CAC 40",
-};
+function changePct(price: number | null, prev: number | null): number | null {
+  if (!price || !prev || prev === 0) return null;
+  return ((price - prev) / prev) * 100;
+}
+
+// ---- Global Indices via Yahoo Finance ----
+const INDEX_SYMBOLS: { sym: string; name: string }[] = [
+  { sym: "^GSPC",    name: "S&P 500"     },
+  { sym: "^IXIC",    name: "NASDAQ"      },
+  { sym: "^DJI",     name: "Dow Jones"   },
+  { sym: "^FTSE",    name: "FTSE 100"    },
+  { sym: "^GDAXI",   name: "DAX"         },
+  { sym: "^N225",    name: "Nikkei 225"  },
+  { sym: "^HSI",     name: "Hang Seng"   },
+  { sym: "^AXJO",    name: "ASX 200"     },
+  { sym: "000001.SS",name: "Shanghai"    },
+];
 
 async function fetchIndices(): Promise<IndexQuote[]> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const data = await fmpGet<any[]>("/index-quotes");
-  if (!Array.isArray(data)) return [];
-  const out: IndexQuote[] = [];
-  for (const sym of Object.keys(INDEX_MAP)) {
-    const q = data.find((d) => d.symbol === sym || d.symbol === sym.replace("^", ""));
-    if (!q?.price) continue;
-    out.push({ symbol: sym, name: INDEX_MAP[sym], price: q.price ?? null, changePct: q.changesPercentage ?? q.changePercentage ?? null });
-  }
-  return out;
+  const results = await Promise.allSettled(INDEX_SYMBOLS.map(({ sym }) => yahooQuote(sym)));
+  return INDEX_SYMBOLS.map(({ sym, name }, i) => {
+    const r = results[i];
+    const q = r.status === "fulfilled" ? r.value : { price: null, prevClose: null, name: null };
+    return { symbol: sym, name, price: q.price, changePct: changePct(q.price, q.prevClose) };
+  }).filter((q) => q.price !== null);
 }
 
-// ---- Commodities ----
-const COMMODITY_WANT: { syms: string[]; name: string; unit: string }[] = [
-  { syms: ["CLUSD", "CLF", "CL", "OUSX"],   name: "Crude Oil (WTI)",  unit: "USD/bbl" },
-  { syms: ["BZUSD", "BZF", "BZ", "BRNT"],   name: "Brent Crude",      unit: "USD/bbl" },
-  { syms: ["GCUSD", "GCF", "GC", "XAUUSD"], name: "Gold",             unit: "USD/oz"  },
-  { syms: ["SIUSD", "SIF", "SI", "XAGUSD"], name: "Silver",           unit: "USD/oz"  },
-  { syms: ["HGUSD", "HGF", "HG"],           name: "Copper",           unit: "USD/lb"  },
-  { syms: ["NGUSD", "NGF", "NG"],           name: "Natural Gas",      unit: "USD/MMBtu" },
-  { syms: ["ZWUSD", "ZWF", "ZW"],           name: "Wheat",            unit: "USD/bu"  },
-  { syms: ["ZSUSD", "ZSF", "ZS"],           name: "Soybeans",         unit: "USD/bu"  },
+// ---- Commodities via Yahoo Finance ----
+const COMMODITY_SYMBOLS: { sym: string; name: string; unit: string }[] = [
+  { sym: "CL=F",   name: "Crude Oil (WTI)", unit: "USD/bbl"  },
+  { sym: "BZ=F",   name: "Brent Crude",     unit: "USD/bbl"  },
+  { sym: "GC=F",   name: "Gold",            unit: "USD/oz"   },
+  { sym: "SI=F",   name: "Silver",          unit: "USD/oz"   },
+  { sym: "HG=F",   name: "Copper",          unit: "USD/lb"   },
+  { sym: "NG=F",   name: "Natural Gas",     unit: "USD/MMBtu"},
+  { sym: "ZW=F",   name: "Wheat",           unit: "USD/bu"   },
+  { sym: "ZS=F",   name: "Soybeans",        unit: "USD/bu"   },
 ];
 
 async function fetchCommodities(): Promise<CommodityQuote[]> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const data = await fmpGet<any[]>("/commodity-quotes");
-  if (!Array.isArray(data)) return [];
-  const out: CommodityQuote[] = [];
-  for (const want of COMMODITY_WANT) {
-    const q = data.find((d) => want.syms.includes(d.symbol));
-    if (!q?.price) continue;
-    out.push({ symbol: q.symbol, name: want.name, unit: want.unit, price: q.price, changePct: q.changesPercentage ?? q.changePercentage ?? null });
-  }
-  return out;
+  const results = await Promise.allSettled(COMMODITY_SYMBOLS.map(({ sym }) => yahooQuote(sym)));
+  return COMMODITY_SYMBOLS.map(({ sym, name, unit }, i) => {
+    const r = results[i];
+    const q = r.status === "fulfilled" ? r.value : { price: null, prevClose: null, name: null };
+    return { symbol: sym, name, unit, price: q.price, changePct: changePct(q.price, q.prevClose) };
+  }).filter((q) => q.price !== null);
 }
 
-// ---- FX ----
+// ---- FX via Frankfurter (ECB data) — all AUD crosses in one call ----
 async function fetchFx(): Promise<FxRate[]> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const data = await fmpGet<any[]>("/forex-quotes");
-  if (!Array.isArray(data)) return [];
-
-  const byTicker: Record<string, { bid: number; changes: number }> = {};
-  for (const d of data) {
-    const key = (d.symbol ?? d.ticker ?? "").toUpperCase().replace("/", "");
-    if (key) byTicker[key] = { bid: d.bid ?? d.price ?? d.ask ?? 0, changes: d.changesPercentage ?? d.changes ?? 0 };
-  }
-
-  const r = (t: string) => byTicker[t.toUpperCase()] ?? null;
-  const audUsd = r("AUDUSD")?.bid ?? 0;
-
-  const pairs: { label: string; calc: () => { rate: number | null; changePct: number | null } }[] = [
-    { label: "AUD/USD", calc: () => { const q = r("AUDUSD"); return { rate: q?.bid ?? null, changePct: q?.changes ?? null }; } },
-    { label: "AUD/EUR", calc: () => { const q = r("EURUSD"); return { rate: q && audUsd ? audUsd / q.bid : null, changePct: null }; } },
-    { label: "AUD/GBP", calc: () => { const q = r("GBPUSD"); return { rate: q && audUsd ? audUsd / q.bid : null, changePct: null }; } },
-    { label: "AUD/JPY", calc: () => { const q = r("USDJPY"); return { rate: q && audUsd ? audUsd * q.bid : null, changePct: null }; } },
-    { label: "AUD/CNY", calc: () => { const q = r("USDCNY"); return { rate: q && audUsd ? audUsd * q.bid : null, changePct: null }; } },
-    { label: "AUD/NZD", calc: () => { const q = r("AUDNZD"); return { rate: q?.bid ?? null, changePct: q?.changes ?? null }; } },
-    { label: "AUD/CAD", calc: () => { const q = r("AUDCAD"); return { rate: q?.bid ?? null, changePct: q?.changes ?? null }; } },
-    { label: "AUD/SGD", calc: () => { const q = r("USDSGD"); return { rate: q && audUsd ? audUsd * q.bid : null, changePct: null }; } },
-  ];
-
-  return pairs.map(({ label, calc }) => {
-    const { rate, changePct } = calc();
-    return { pair: label.replace("/", ""), label, rate: rate && rate > 0 ? rate : null, changePct };
-  });
+  const TARGETS = ["USD","EUR","GBP","JPY","CNY","NZD","CAD","SGD"];
+  const labels: Record<string, string> = { USD:"AUD/USD",EUR:"AUD/EUR",GBP:"AUD/GBP",JPY:"AUD/JPY",CNY:"AUD/CNY",NZD:"AUD/NZD",CAD:"AUD/CAD",SGD:"AUD/SGD" };
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 8_000);
+    const res = await fetch(`https://api.frankfurter.app/latest?from=AUD&to=${TARGETS.join(",")}`, { cache: "no-store", signal: ctrl.signal });
+    clearTimeout(t);
+    if (!res.ok) return [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const data = (await res.json()) as any;
+    const rates = data?.rates ?? {};
+    return TARGETS
+      .filter((t) => typeof rates[t] === "number")
+      .map((t) => ({ pair: `AUD${t}`, label: labels[t], rate: rates[t], changePct: null }));
+  } catch { return []; }
 }
 
-// ---- Economic Calendar ----
-async function fetchEconomicCalendar(): Promise<EconEvent[]> {
-  const from = new Date().toISOString().slice(0, 10);
-  const to = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const data = await fmpGet<any[]>("/economic-calendar", { from, to });
-  if (!Array.isArray(data)) return [];
-  return data
-    .filter((e) => ["AU", "US", "CN", "GB", "EU", "JP"].includes(e.country))
-    .filter((e) => e.impact === "High" || e.impact === "Medium")
-    .slice(0, 30)
-    .map((e) => ({
-      date: e.date ?? "",
-      country: e.country ?? "",
-      event: e.event ?? "",
-      actual: e.actual != null ? String(e.actual) : null,
-      estimate: e.estimate != null ? String(e.estimate) : null,
-      prior: e.previous != null ? String(e.previous) : null,
-      impact: e.impact ?? "Low",
-    }));
-}
+// ---- Sector Performance via US sector ETFs (Yahoo Finance) ----
+const SECTOR_ETFS: { sym: string; sector: string }[] = [
+  { sym: "XLK",  sector: "Technology"            },
+  { sym: "XLF",  sector: "Financials"             },
+  { sym: "XLV",  sector: "Healthcare"             },
+  { sym: "XLE",  sector: "Energy"                 },
+  { sym: "XLI",  sector: "Industrials"            },
+  { sym: "XLY",  sector: "Consumer Discretionary" },
+  { sym: "XLP",  sector: "Consumer Staples"       },
+  { sym: "XLB",  sector: "Materials"              },
+  { sym: "XLRE", sector: "Real Estate"            },
+  { sym: "XLU",  sector: "Utilities"              },
+  { sym: "XLC",  sector: "Communication"          },
+];
 
-// ---- Earnings Calendar ----
-const WATCHLIST = ["BHP.AX","CBA.AX","CSL.AX","WES.AX","ANZ.AX","NAB.AX","RIO.AX","MQG.AX","AAPL","MSFT","NVDA","GOOGL","AMZN","META","TSLA"];
-
-async function fetchEarningsCalendar(): Promise<EarningsEvent[]> {
-  const from = new Date().toISOString().slice(0, 10);
-  const to = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const data = await fmpGet<any[]>("/earnings-calendar", { from, to });
-  if (!Array.isArray(data)) return [];
-  const set = new Set(WATCHLIST);
-  return data
-    .filter((e) => set.has(e.symbol))
-    .slice(0, 20)
-    .map((e) => ({ date: e.date ?? "", symbol: e.symbol ?? "", name: e.name ?? e.symbol ?? "", epsEstimate: typeof e.epsEstimated === "number" ? e.epsEstimated : null }));
-}
-
-// ---- Sector Performance ----
 async function fetchSectorPerformance(): Promise<SectorPerf[]> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const data = await fmpGet<any[]>("/sector-performance");
-  if (!Array.isArray(data)) return [];
-  return data
-    .map((s) => ({ sector: s.sector ?? "", changePct: parseFloat(String(s.changesPercentage ?? s.changePercentage ?? "0").replace("%", "")) }))
+  const results = await Promise.allSettled(SECTOR_ETFS.map(({ sym }) => yahooQuote(sym)));
+  return SECTOR_ETFS
+    .map(({ sector }, i) => {
+      const r = results[i];
+      const q = r.status === "fulfilled" ? r.value : { price: null, prevClose: null, name: null };
+      const pct = changePct(q.price, q.prevClose);
+      return { sector, changePct: pct ?? 0 };
+    })
+    .filter((_, i) => {
+      const r = results[i];
+      return r.status === "fulfilled" && r.value.price !== null;
+    })
     .sort((a, b) => b.changePct - a.changePct);
 }
 
-// ---- Analyst Ratings ----
-async function fetchAnalystRatings(): Promise<AnalystRating[]> {
-  const symbols = ["BHP.AX", "CBA.AX", "CSL.AX", "WES.AX", "ANZ.AX", "RIO.AX"];
-  const results = await Promise.allSettled(
-    symbols.map(async (sym) => {
-      const [ratingArr, targetArr] = await Promise.all([
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        fmpGet<any[]>(`/ratings/${encodeURIComponent(sym)}`),
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        fmpGet<any[]>(`/price-target-consensus?symbol=${encodeURIComponent(sym)}`),
-      ]);
-      const r = Array.isArray(ratingArr) ? ratingArr[0] : null;
-      const t = Array.isArray(targetArr) ? targetArr[0] : null;
-      return {
-        symbol: sym.replace(".AX", ""),
-        rating: r?.ratingRecommendation ?? r?.rating ?? "—",
-        targetConsensus: t?.targetConsensus ?? null,
-        targetLow: t?.targetLow ?? null,
-        targetHigh: t?.targetHigh ?? null,
-      } as AnalystRating;
-    })
-  );
-  return results
-    .filter((r): r is PromiseFulfilledResult<AnalystRating> => r.status === "fulfilled")
-    .map((r) => r.value);
+// ---- News via RSS (no paid API needed) ----
+const NEWS_FEEDS = [
+  { url: "https://finance.yahoo.com/rss/topfinstories", source: "Yahoo Finance" },
+  { url: "https://www.abc.net.au/news/feed/51120/rss.xml", source: "ABC Business" },
+  { url: "https://www.afr.com/rss", source: "AFR" },
+  { url: "https://feeds.bloomberg.com/markets/news.rss", source: "Bloomberg" },
+];
+
+function extractXml(xml: string, tag: string): string {
+  const s = xml.indexOf(`<${tag}`); if (s === -1) return "";
+  const cs = xml.indexOf(">", s) + 1;
+  const e = xml.indexOf(`</${tag}>`, cs); if (e === -1) return "";
+  return xml.slice(cs, e).replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1").trim();
 }
 
-// ---- News ----
-async function fetchFmpNews(): Promise<FmpNewsItem[]> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const data = await fmpGet<any[]>("/news/stock", { symbols: WATCHLIST.join(","), limit: "20" });
-  if (!Array.isArray(data)) return [];
-  return data.map((n) => ({ title: n.title ?? "", publishedDate: n.publishedDate ?? n.date ?? "", url: n.url ?? "", symbol: n.symbol ?? n.tickers?.[0] ?? "", site: n.site ?? n.source ?? "" }));
+async function fetchNews(): Promise<FmpNewsItem[]> {
+  const results = await Promise.allSettled(
+    NEWS_FEEDS.map(async ({ url, source }) => {
+      try {
+        const ctrl = new AbortController();
+        const t = setTimeout(() => ctrl.abort(), 6_000);
+        const res = await fetch(url, { cache: "no-store", signal: ctrl.signal, headers: { "User-Agent": "Mozilla/5.0" } });
+        clearTimeout(t);
+        if (!res.ok) return [];
+        const xml = await res.text();
+        const items: FmpNewsItem[] = [];
+        let cur = 0;
+        while (items.length < 5) {
+          const s = xml.indexOf("<item>", cur); if (s === -1) break;
+          const e = xml.indexOf("</item>", s); if (e === -1) break;
+          const block = xml.slice(s, e + 7); cur = e + 7;
+          const title = extractXml(block, "title");
+          const link = extractXml(block, "link");
+          const date = extractXml(block, "pubDate");
+          if (!title) continue;
+          items.push({ title, url: link, publishedDate: date, symbol: "", site: source });
+        }
+        return items;
+      } catch { return []; }
+    })
+  );
+  return results.flatMap((r) => r.status === "fulfilled" ? r.value : []).slice(0, 15);
 }
 
 export async function GET(request: NextRequest) {
@@ -221,53 +202,21 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  if (!KEY) return NextResponse.json({ error: "FMP_API_KEY not configured.", keyPresent: false }, { status: 503 });
-
-  // Debug mode
-  if (request.nextUrl.searchParams.get("debug") === "1") {
-    const keyPreview = KEY.slice(0, 6) + "…";
-    const probe = async (path: string) => {
-      const url = `${FMP_BASE}${path}?apikey=${KEY}`;
-      try {
-        const ctrl = new AbortController();
-        setTimeout(() => ctrl.abort(), 8000);
-        const r = await fetch(url, { cache: "no-store", signal: ctrl.signal });
-        const text = await r.text();
-        return { status: r.status, body: text.slice(0, 150) };
-      } catch (e) { return { status: 0, body: String(e) }; }
-    };
-    // Probe multiple candidate paths to find what works on this plan
-    const [idx1, idx2, comm1, comm2, fx1, fx2, sec1, sec2, econ, earn, news] = await Promise.all([
-      probe("/index-quotes"),
-      probe("/quotes/index"),
-      probe("/commodity-quotes"),
-      probe("/quotes/commodity"),
-      probe("/forex-quotes"),
-      probe("/exchange-rates"),
-      probe("/sector-performance"),
-      probe("/sectors-performance"),
-      probe("/economic-calendar?from=2026-03-01&to=2026-04-01"),
-      probe("/earnings-calendar?from=2026-03-01&to=2026-06-01"),
-      probe("/news/stock?symbols=AAPL&limit=1"),
-    ]);
-    return NextResponse.json({ keyPreview, idx1, idx2, comm1, comm2, fx1, fx2, sec1, sec2, econ, earn, news });
-  }
-
   const now = Date.now();
   if (cache && now < cache.expiresAt) {
     return NextResponse.json(cache.data, { headers: { "Cache-Control": "no-store" } });
   }
 
-  const [indices, commodities, fx, economicCalendar, earningsCalendar, sectorPerformance, analystRatings, news] =
-    await Promise.all([
-      fetchIndices(), fetchCommodities(), fetchFx(),
-      fetchEconomicCalendar(), fetchEarningsCalendar(),
-      fetchSectorPerformance(), fetchAnalystRatings(), fetchFmpNews(),
-    ]);
+  const [indices, commodities, fx, sectorPerformance, news] = await Promise.all([
+    fetchIndices(), fetchCommodities(), fetchFx(), fetchSectorPerformance(), fetchNews(),
+  ]);
 
   const payload: FmpPayload = {
     fetchedAt: new Date().toISOString(),
-    indices, commodities, fx, economicCalendar, earningsCalendar, sectorPerformance, analystRatings, news,
+    indices, commodities, fx, sectorPerformance, news,
+    economicCalendar: [],
+    earningsCalendar: [],
+    analystRatings: [],
   };
 
   cache = { data: payload, expiresAt: now + CACHE_TTL_MS };
