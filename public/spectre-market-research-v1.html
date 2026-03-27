@@ -3016,9 +3016,12 @@ function fmtPrice(v, decimals) {
 }
 function chgClass(v) { return v == null ? '' : (v >= 0 ? 'pos' : 'neg'); }
 
+function noData(el, msg) { if (el) el.innerHTML = `<div style="color:var(--sl-muted);font-size:0.72rem;">${msg || 'No data available.'}</div>`; }
+
 function renderIndices(indices) {
   const el = document.getElementById('fmp-indices-grid');
-  if (!el || !indices.length) return;
+  if (!el) return;
+  if (!indices.length) { noData(el, 'No index data.'); return; }
   el.innerHTML = indices.map(idx => `
     <div class="index-item">
       <div class="index-name">${escapeHtml(idx.name)}</div>
@@ -3030,7 +3033,10 @@ function renderIndices(indices) {
 
 function renderFx(fx) {
   const el = document.getElementById('fmp-fx-grid');
-  if (!el || !fx.length) return;
+  if (!el) return;
+  const valid = fx.filter(f => f.rate);
+  if (!valid.length) { noData(el, 'No FX data.'); return; }
+  fx = valid;
   el.innerHTML = fx.map(f => `
     <div class="fx-row">
       <span class="fx-pair">${escapeHtml(f.label)}</span>
@@ -3042,7 +3048,8 @@ function renderFx(fx) {
 
 function renderCommodities(commodities) {
   const el = document.getElementById('fmp-comm-grid');
-  if (!el || !commodities.length) return;
+  if (!el) return;
+  if (!commodities.length) { noData(el, 'No commodity data.'); return; }
   el.innerHTML = commodities.map(c => `
     <div class="comm-row">
       <div class="comm-info">
@@ -3096,7 +3103,8 @@ function renderEarningsCalendar(events) {
 
 function renderSectorPerformance(sectors) {
   const el = document.getElementById('fmp-sector-list');
-  if (!el || !sectors.length) return;
+  if (!el) return;
+  if (!sectors.length) { noData(el, 'No sector data.'); return; }
   const max = Math.max(...sectors.map(s => Math.abs(s.changePct)), 0.01);
   el.innerHTML = sectors.map(s => {
     const pct = s.changePct;
@@ -3113,7 +3121,8 @@ function renderSectorPerformance(sectors) {
 
 function renderAnalystRatings(ratings) {
   const el = document.getElementById('fmp-analyst-grid');
-  if (!el || !ratings.length) return;
+  if (!el) return;
+  if (!ratings.length) { noData(el, 'No analyst data.'); return; }
   el.innerHTML = ratings.map(r => {
     const rating = r.rating || '—';
     let badgeClass = 'badge-na';
@@ -3134,7 +3143,8 @@ function renderAnalystRatings(ratings) {
 
 function renderFmpNews(news) {
   const el = document.getElementById('fmp-news-list');
-  if (!el || !news.length) return;
+  if (!el) return;
+  if (!news.length) { noData(el, 'No news available.'); return; }
   el.innerHTML = news.slice(0, 10).map(n => {
     const date = n.publishedDate ? new Date(n.publishedDate).toLocaleDateString('en-AU',{day:'numeric',month:'short'}) : '';
     return `
