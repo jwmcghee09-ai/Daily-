@@ -4,7 +4,8 @@ import { readUserEntitlements } from "@/lib/db";
 
 export const runtime = "nodejs";
 
-const FMP_BASE = "https://financialmodelingprep.com/api";
+// FMP moved to stable API after Aug 2025 — v3 endpoints are legacy
+const FMP_BASE = "https://financialmodelingprep.com/stable";
 const CACHE_TTL_MS = 30 * 60 * 1000;
 
 let cache: { data: FmpPayload; expiresAt: number } | null = null;
@@ -50,7 +51,6 @@ async function fmpGet<T>(path: string, params: Record<string, string> = {}): Pro
 }
 
 // ---- Indices ----
-// FMP uses these symbols in /v3/quotes/index
 const INDEX_MAP: Record<string, string> = {
   "^GSPC": "S&P 500", "^IXIC": "NASDAQ", "^DJI": "Dow Jones",
   "^FTSE": "FTSE 100", "^GDAXI": "DAX", "^N225": "Nikkei 225",
@@ -59,39 +59,32 @@ const INDEX_MAP: Record<string, string> = {
 
 async function fetchIndices(): Promise<IndexQuote[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const data = await fmpGet<any[]>("/v3/quotes/index");
+  const data = await fmpGet<any[]>("/index-quotes");
   if (!Array.isArray(data)) return [];
   const out: IndexQuote[] = [];
   for (const sym of Object.keys(INDEX_MAP)) {
-    // FMP may omit the ^ prefix in some responses — try both
     const q = data.find((d) => d.symbol === sym || d.symbol === sym.replace("^", ""));
     if (!q?.price) continue;
-    out.push({
-      symbol: sym,
-      name: INDEX_MAP[sym],
-      price: q.price ?? null,
-      changePct: q.changesPercentage ?? q.changePercentage ?? null,
-    });
+    out.push({ symbol: sym, name: INDEX_MAP[sym], price: q.price ?? null, changePct: q.changesPercentage ?? q.changePercentage ?? null });
   }
   return out;
 }
 
 // ---- Commodities ----
-// Symbols verified against FMP /v3/quotes/commodity
 const COMMODITY_WANT: { syms: string[]; name: string; unit: string }[] = [
-  { syms: ["CLUSD", "CLF", "CL"],         name: "Crude Oil (WTI)",  unit: "USD/bbl" },
-  { syms: ["BZUSD", "BZF", "BZ"],         name: "Brent Crude",      unit: "USD/bbl" },
-  { syms: ["GCUSD", "GCF", "GC"],         name: "Gold",             unit: "USD/oz"  },
-  { syms: ["SIUSD", "SIF", "SI"],         name: "Silver",           unit: "USD/oz"  },
-  { syms: ["HGUSD", "HGF", "HG"],         name: "Copper",           unit: "USD/lb"  },
-  { syms: ["NGUSD", "NGF", "NG"],         name: "Natural Gas",      unit: "USD/MMBtu" },
-  { syms: ["ZWUSD", "ZWF", "ZW"],         name: "Wheat",            unit: "USD/bu"  },
-  { syms: ["ZSUSD", "ZSF", "ZS"],         name: "Soybeans",         unit: "USD/bu"  },
+  { syms: ["CLUSD", "CLF", "CL", "OUSX"],   name: "Crude Oil (WTI)",  unit: "USD/bbl" },
+  { syms: ["BZUSD", "BZF", "BZ", "BRNT"],   name: "Brent Crude",      unit: "USD/bbl" },
+  { syms: ["GCUSD", "GCF", "GC", "XAUUSD"], name: "Gold",             unit: "USD/oz"  },
+  { syms: ["SIUSD", "SIF", "SI", "XAGUSD"], name: "Silver",           unit: "USD/oz"  },
+  { syms: ["HGUSD", "HGF", "HG"],           name: "Copper",           unit: "USD/lb"  },
+  { syms: ["NGUSD", "NGF", "NG"],           name: "Natural Gas",      unit: "USD/MMBtu" },
+  { syms: ["ZWUSD", "ZWF", "ZW"],           name: "Wheat",            unit: "USD/bu"  },
+  { syms: ["ZSUSD", "ZSF", "ZS"],           name: "Soybeans",         unit: "USD/bu"  },
 ];
 
 async function fetchCommodities(): Promise<CommodityQuote[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const data = await fmpGet<any[]>("/v3/quotes/commodity");
+  const data = await fmpGet<any[]>("/commodity-quotes");
   if (!Array.isArray(data)) return [];
   const out: CommodityQuote[] = [];
   for (const want of COMMODITY_WANT) {
@@ -102,38 +95,35 @@ async function fetchCommodities(): Promise<CommodityQuote[]> {
   return out;
 }
 
-// ---- FX: compute AUD crosses from base rates ----
+// ---- FX ----
 async function fetchFx(): Promise<FxRate[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const data = await fmpGet<any[]>("/v3/fx");
+  const data = await fmpGet<any[]>("/forex-quotes");
   if (!Array.isArray(data)) return [];
 
-  // Build lookup by ticker (case-insensitive, strip slash)
   const byTicker: Record<string, { bid: number; changes: number }> = {};
   for (const d of data) {
-    if (!d.ticker) continue;
-    byTicker[d.ticker.toUpperCase()] = { bid: d.bid ?? d.ask ?? 0, changes: d.changes ?? 0 };
+    const key = (d.symbol ?? d.ticker ?? "").toUpperCase().replace("/", "");
+    if (key) byTicker[key] = { bid: d.bid ?? d.price ?? d.ask ?? 0, changes: d.changesPercentage ?? d.changes ?? 0 };
   }
 
-  // Helper: get rate for a pair, try both directions
-  const rate = (t: string) => byTicker[t.toUpperCase()] ?? null;
+  const r = (t: string) => byTicker[t.toUpperCase()] ?? null;
+  const audUsd = r("AUDUSD")?.bid ?? 0;
 
-  const audUsd = rate("AUDUSD")?.bid ?? 0;
-
-  const pairs: { label: string; calc: () => { r: number | null; c: number | null } }[] = [
-    { label: "AUD/USD", calc: () => { const q = rate("AUDUSD"); return { r: q?.bid ?? null, c: q?.changes ?? null }; } },
-    { label: "AUD/EUR", calc: () => { const eur = rate("EURUSD"); return eur && audUsd ? { r: audUsd / eur.bid, c: null } : { r: null, c: null }; } },
-    { label: "AUD/GBP", calc: () => { const gbp = rate("GBPUSD"); return gbp && audUsd ? { r: audUsd / gbp.bid, c: null } : { r: null, c: null }; } },
-    { label: "AUD/JPY", calc: () => { const jpy = rate("USDJPY"); return jpy && audUsd ? { r: audUsd * jpy.bid, c: null } : { r: null, c: null }; } },
-    { label: "AUD/CNY", calc: () => { const cny = rate("USDCNY"); return cny && audUsd ? { r: audUsd * cny.bid, c: null } : { r: null, c: null }; } },
-    { label: "AUD/NZD", calc: () => { const q = rate("AUDNZD"); return { r: q?.bid ?? null, c: q?.changes ?? null }; } },
-    { label: "AUD/CAD", calc: () => { const q = rate("AUDCAD"); return { r: q?.bid ?? null, c: q?.changes ?? null }; } },
-    { label: "AUD/SGD", calc: () => { const sgd = rate("USDSGD"); return sgd && audUsd ? { r: audUsd * sgd.bid, c: null } : { r: null, c: null }; } },
+  const pairs: { label: string; calc: () => { rate: number | null; changePct: number | null } }[] = [
+    { label: "AUD/USD", calc: () => { const q = r("AUDUSD"); return { rate: q?.bid ?? null, changePct: q?.changes ?? null }; } },
+    { label: "AUD/EUR", calc: () => { const q = r("EURUSD"); return { rate: q && audUsd ? audUsd / q.bid : null, changePct: null }; } },
+    { label: "AUD/GBP", calc: () => { const q = r("GBPUSD"); return { rate: q && audUsd ? audUsd / q.bid : null, changePct: null }; } },
+    { label: "AUD/JPY", calc: () => { const q = r("USDJPY"); return { rate: q && audUsd ? audUsd * q.bid : null, changePct: null }; } },
+    { label: "AUD/CNY", calc: () => { const q = r("USDCNY"); return { rate: q && audUsd ? audUsd * q.bid : null, changePct: null }; } },
+    { label: "AUD/NZD", calc: () => { const q = r("AUDNZD"); return { rate: q?.bid ?? null, changePct: q?.changes ?? null }; } },
+    { label: "AUD/CAD", calc: () => { const q = r("AUDCAD"); return { rate: q?.bid ?? null, changePct: q?.changes ?? null }; } },
+    { label: "AUD/SGD", calc: () => { const q = r("USDSGD"); return { rate: q && audUsd ? audUsd * q.bid : null, changePct: null }; } },
   ];
 
   return pairs.map(({ label, calc }) => {
-    const { r, c } = calc();
-    return { pair: label.replace("/", ""), label, rate: r && r > 0 ? r : null, changePct: c };
+    const { rate, changePct } = calc();
+    return { pair: label.replace("/", ""), label, rate: rate && rate > 0 ? rate : null, changePct };
   });
 }
 
@@ -142,7 +132,7 @@ async function fetchEconomicCalendar(): Promise<EconEvent[]> {
   const from = new Date().toISOString().slice(0, 10);
   const to = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const data = await fmpGet<any[]>("/v3/economic_calendar", { from, to });
+  const data = await fmpGet<any[]>("/economic-calendar", { from, to });
   if (!Array.isArray(data)) return [];
   return data
     .filter((e) => ["AU", "US", "CN", "GB", "EU", "JP"].includes(e.country))
@@ -166,7 +156,7 @@ async function fetchEarningsCalendar(): Promise<EarningsEvent[]> {
   const from = new Date().toISOString().slice(0, 10);
   const to = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const data = await fmpGet<any[]>("/v3/earning_calendar", { from, to });
+  const data = await fmpGet<any[]>("/earnings-calendar", { from, to });
   if (!Array.isArray(data)) return [];
   const set = new Set(WATCHLIST);
   return data
@@ -178,10 +168,10 @@ async function fetchEarningsCalendar(): Promise<EarningsEvent[]> {
 // ---- Sector Performance ----
 async function fetchSectorPerformance(): Promise<SectorPerf[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const data = await fmpGet<any[]>("/v3/sector_performance");
+  const data = await fmpGet<any[]>("/sector-performance");
   if (!Array.isArray(data)) return [];
   return data
-    .map((s) => ({ sector: s.sector ?? "", changePct: parseFloat(String(s.changesPercentage ?? "0").replace("%", "")) }))
+    .map((s) => ({ sector: s.sector ?? "", changePct: parseFloat(String(s.changesPercentage ?? s.changePercentage ?? "0").replace("%", "")) }))
     .sort((a, b) => b.changePct - a.changePct);
 }
 
@@ -192,15 +182,15 @@ async function fetchAnalystRatings(): Promise<AnalystRating[]> {
     symbols.map(async (sym) => {
       const [ratingArr, targetArr] = await Promise.all([
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        fmpGet<any[]>(`/v3/rating/${encodeURIComponent(sym)}`),
+        fmpGet<any[]>(`/ratings/${encodeURIComponent(sym)}`),
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        fmpGet<any[]>(`/v3/price-target-consensus/${encodeURIComponent(sym)}`),
+        fmpGet<any[]>(`/price-target-consensus?symbol=${encodeURIComponent(sym)}`),
       ]);
       const r = Array.isArray(ratingArr) ? ratingArr[0] : null;
       const t = Array.isArray(targetArr) ? targetArr[0] : null;
       return {
         symbol: sym.replace(".AX", ""),
-        rating: r?.rating ?? r?.ratingRecommendation ?? "—",
+        rating: r?.ratingRecommendation ?? r?.rating ?? "—",
         targetConsensus: t?.targetConsensus ?? null,
         targetLow: t?.targetLow ?? null,
         targetHigh: t?.targetHigh ?? null,
@@ -214,11 +204,10 @@ async function fetchAnalystRatings(): Promise<AnalystRating[]> {
 
 // ---- News ----
 async function fetchFmpNews(): Promise<FmpNewsItem[]> {
-  const tickers = WATCHLIST.join(",");
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const data = await fmpGet<any[]>("/v3/stock_news", { tickers, limit: "20" });
+  const data = await fmpGet<any[]>("/news/stock", { symbols: WATCHLIST.join(","), limit: "20" });
   if (!Array.isArray(data)) return [];
-  return data.map((n) => ({ title: n.title ?? "", publishedDate: n.publishedDate ?? "", url: n.url ?? "", symbol: n.symbol ?? "", site: n.site ?? "" }));
+  return data.map((n) => ({ title: n.title ?? "", publishedDate: n.publishedDate ?? n.date ?? "", url: n.url ?? "", symbol: n.symbol ?? n.tickers?.[0] ?? "", site: n.site ?? n.source ?? "" }));
 }
 
 export async function GET(request: NextRequest) {
@@ -234,37 +223,29 @@ export async function GET(request: NextRequest) {
 
   if (!KEY) return NextResponse.json({ error: "FMP_API_KEY not configured.", keyPresent: false }, { status: 503 });
 
-  // Debug mode: return raw FMP responses for troubleshooting
+  // Debug mode
   if (request.nextUrl.searchParams.get("debug") === "1") {
     const keyPreview = KEY.slice(0, 6) + "…";
-    // Test a simple known endpoint first
-    const testUrl = `${FMP_BASE}/v3/stock/list?apikey=${KEY}`;
-    let testStatus = 0;
-    let testBody = "";
-    try {
-      const ctrl = new AbortController();
-      setTimeout(() => ctrl.abort(), 8000);
-      const r = await fetch(testUrl, { cache: "no-store", signal: ctrl.signal });
-      testStatus = r.status;
-      const text = await r.text();
-      testBody = text.slice(0, 200);
-    } catch (e) {
-      testBody = String(e);
-    }
-
-    const [idx, comm, fx] = await Promise.all([
-      fmpGet<unknown[]>("/v3/quotes/index"),
-      fmpGet<unknown[]>("/v3/quotes/commodity"),
-      fmpGet<unknown[]>("/v3/fx"),
+    const probe = async (path: string) => {
+      const url = `${FMP_BASE}${path}?apikey=${KEY}`;
+      try {
+        const ctrl = new AbortController();
+        setTimeout(() => ctrl.abort(), 8000);
+        const r = await fetch(url, { cache: "no-store", signal: ctrl.signal });
+        const text = await r.text();
+        return { status: r.status, body: text.slice(0, 150) };
+      } catch (e) { return { status: 0, body: String(e) }; }
+    };
+    const [idx, comm, fx, econ, earn, sec, news] = await Promise.all([
+      probe("/index-quotes"),
+      probe("/commodity-quotes"),
+      probe("/forex-quotes"),
+      probe("/economic-calendar?from=2026-03-01&to=2026-04-01"),
+      probe("/earnings-calendar?from=2026-03-01&to=2026-06-01"),
+      probe("/sector-performance"),
+      probe("/news/stock?symbols=AAPL&limit=1"),
     ]);
-    return NextResponse.json({
-      keyPreview,
-      testStatus,
-      testBody,
-      indexSymbols: Array.isArray(idx) ? idx.slice(0, 5).map((d: unknown) => (d as Record<string, unknown>).symbol) : "failed",
-      commSymbols:  Array.isArray(comm) ? comm.slice(0, 10).map((d: unknown) => (d as Record<string, unknown>).symbol) : "failed",
-      fxTickers:    Array.isArray(fx)   ? fx.slice(0, 10).map((d: unknown) => (d as Record<string, unknown>).ticker) : "failed",
-    });
+    return NextResponse.json({ keyPreview, idx, comm, fx, econ, earn, sec, news });
   }
 
   const now = Date.now();
@@ -274,14 +255,9 @@ export async function GET(request: NextRequest) {
 
   const [indices, commodities, fx, economicCalendar, earningsCalendar, sectorPerformance, analystRatings, news] =
     await Promise.all([
-      fetchIndices(),
-      fetchCommodities(),
-      fetchFx(),
-      fetchEconomicCalendar(),
-      fetchEarningsCalendar(),
-      fetchSectorPerformance(),
-      fetchAnalystRatings(),
-      fetchFmpNews(),
+      fetchIndices(), fetchCommodities(), fetchFx(),
+      fetchEconomicCalendar(), fetchEarningsCalendar(),
+      fetchSectorPerformance(), fetchAnalystRatings(), fetchFmpNews(),
     ]);
 
   const payload: FmpPayload = {
