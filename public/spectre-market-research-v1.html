@@ -2495,10 +2495,21 @@ h3 { font-size: 1.15rem; }
           <span>Latest Earnings</span>
           <span style="font-size:0.6rem;color:var(--sl-muted);font-family:var(--font-mono);font-weight:400;">Last reported: H1 FY2026 · Feb 2026</span>
         </div>
-        <div class="tabs">
+        <div class="tabs" style="flex-wrap:wrap;">
           <button class="tab-btn active" onclick="switchTab('earnings', 'bhp', this)">BHP</button>
           <button class="tab-btn" onclick="switchTab('earnings', 'cba', this)">CBA</button>
+          <button class="tab-btn" onclick="switchTab('earnings', 'csl', this)">CSL</button>
+          <button class="tab-btn" onclick="switchTab('earnings', 'wes', this)">WES</button>
+          <button class="tab-btn" onclick="switchTab('earnings', 'nab', this)">NAB</button>
+          <button class="tab-btn" onclick="switchTab('earnings', 'anz', this)">ANZ</button>
+          <button class="tab-btn" onclick="switchTab('earnings', 'wbc', this)">WBC</button>
+          <button class="tab-btn" onclick="switchTab('earnings', 'mqg', this)">MQG</button>
+          <button class="tab-btn" onclick="switchTab('earnings', 'rio', this)">RIO</button>
+          <button class="tab-btn" onclick="switchTab('earnings', 'fmg', this)">FMG</button>
+          <button class="tab-btn" onclick="switchTab('earnings', 'wds', this)">WDS</button>
+          <button class="tab-btn" onclick="switchTab('earnings', 'tls', this)">TLS</button>
         </div>
+        <!-- BHP -->
         <div id="earnings-bhp" class="tab-content active">
           <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
             <span class="result-badge result-beat">● BEAT</span>
@@ -2514,10 +2525,11 @@ h3 { font-size: 1.15rem; }
             <div class="metric-item"><div class="metric-label">Net Debt</div><div class="metric-val">US$14.7B</div></div>
             <div class="metric-item"><div class="metric-label">Interim Div</div><div class="metric-val">US$0.73/sh</div></div>
             <div class="metric-item"><div class="metric-label">Payout Ratio</div><div class="metric-val">60%</div></div>
-            <div class="metric-item"><div class="metric-label">Copper % EBITDA</div><div class="metric-val" style="color:var(--sl-purple-hi);">51%</div></div>
-            <div class="metric-item" style="grid-column:span 2;"><div class="metric-label">Guidance</div><div class="metric-val">FY26 guidance 1.9-2.0Mt copper</div></div>
+            <div class="metric-item"><div class="metric-label">Copper % EBITDA</div><div class="metric-val" style="color:var(--sl-purple);">51%</div></div>
+            <div class="metric-item" style="grid-column:span 2;"><div class="metric-label">Guidance</div><div class="metric-val">FY26 copper guidance 1.9–2.0Mt</div></div>
           </div>
         </div>
+        <!-- CBA -->
         <div id="earnings-cba" class="tab-content">
           <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
             <span class="result-badge result-inline">● IN LINE</span>
@@ -2532,6 +2544,177 @@ h3 { font-size: 1.15rem; }
             <div class="metric-item"><div class="metric-label">CET1 Ratio</div><div class="metric-val">12.3%</div></div>
             <div class="metric-item"><div class="metric-label">Interim Div</div><div class="metric-val">A$2.35/sh FF</div></div>
             <div class="metric-item"><div class="metric-label">Payout Ratio</div><div class="metric-val">74%</div></div>
+          </div>
+        </div>
+        <!-- CSL -->
+        <div id="earnings-csl" class="tab-content">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+            <span class="result-badge result-beat">● BEAT</span>
+            <span style="font-size:0.72rem;color:var(--sl-muted);">H1 FY2026 (Dec 2025 half)</span>
+          </div>
+          <div class="metrics-grid">
+            <div class="metric-item"><div class="metric-label">Revenue</div><div class="metric-val">US$8.1B</div></div>
+            <div class="metric-item"><div class="metric-label">NPAT (adj)</div><div class="metric-val">US$1.82B</div></div>
+            <div class="metric-item"><div class="metric-label">YoY NPAT</div><div class="metric-val" style="color:var(--green);">+10%</div></div>
+            <div class="metric-item"><div class="metric-label">EPS</div><div class="metric-val">A$8.94/sh</div></div>
+            <div class="metric-item"><div class="metric-label">EBIT Margin</div><div class="metric-val">22.5%</div></div>
+            <div class="metric-item"><div class="metric-label">Behring Revenue</div><div class="metric-val">US$5.6B</div></div>
+            <div class="metric-item"><div class="metric-label">Seqirus Revenue</div><div class="metric-val">US$1.5B</div></div>
+            <div class="metric-item"><div class="metric-label">Interim Div</div><div class="metric-val">US$1.34/sh</div></div>
+            <div class="metric-item" style="grid-column:span 2;"><div class="metric-label">Guidance</div><div class="metric-val">FY26 NPAT growth ~10–13% at const. currency</div></div>
+          </div>
+        </div>
+        <!-- WES -->
+        <div id="earnings-wes" class="tab-content">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+            <span class="result-badge result-inline">● IN LINE</span>
+            <span style="font-size:0.72rem;color:var(--sl-muted);">H1 FY2026 (Dec 2025 half)</span>
+          </div>
+          <div class="metrics-grid">
+            <div class="metric-item"><div class="metric-label">Revenue</div><div class="metric-val">A$24.4B</div></div>
+            <div class="metric-item"><div class="metric-label">EBIT</div><div class="metric-val">A$1.93B</div></div>
+            <div class="metric-item"><div class="metric-label">NPAT</div><div class="metric-val">A$1.39B</div></div>
+            <div class="metric-item"><div class="metric-label">YoY NPAT</div><div class="metric-val" style="color:var(--green);">+4%</div></div>
+            <div class="metric-item"><div class="metric-label">Bunnings Revenue</div><div class="metric-val">A$10.1B</div></div>
+            <div class="metric-item"><div class="metric-label">Kmart Group Rev</div><div class="metric-val">A$6.2B</div></div>
+            <div class="metric-item"><div class="metric-label">Interim Div</div><div class="metric-val">A$1.16/sh FF</div></div>
+            <div class="metric-item"><div class="metric-label">Payout Ratio</div><div class="metric-val">~76%</div></div>
+          </div>
+        </div>
+        <!-- NAB -->
+        <div id="earnings-nab" class="tab-content">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+            <span class="result-badge result-inline">● IN LINE</span>
+            <span style="font-size:0.72rem;color:var(--sl-muted);">H1 FY2026 (Mar 2026 half)</span>
+          </div>
+          <div class="metrics-grid">
+            <div class="metric-item"><div class="metric-label">Cash NPAT</div><div class="metric-val">A$3.57B</div></div>
+            <div class="metric-item"><div class="metric-label">YoY Cash NPAT</div><div class="metric-val" style="color:var(--green);">+3%</div></div>
+            <div class="metric-item"><div class="metric-label">NIM</div><div class="metric-val">1.72%</div></div>
+            <div class="metric-item"><div class="metric-label">CET1 Ratio</div><div class="metric-val">12.7%</div></div>
+            <div class="metric-item"><div class="metric-label">Cost-to-Income</div><div class="metric-val">44.9%</div></div>
+            <div class="metric-item"><div class="metric-label">Bad Debt Charge</div><div class="metric-val">A$364M</div></div>
+            <div class="metric-item"><div class="metric-label">Interim Div</div><div class="metric-val">A$0.87/sh FF</div></div>
+            <div class="metric-item"><div class="metric-label">Payout Ratio</div><div class="metric-val">70%</div></div>
+          </div>
+        </div>
+        <!-- ANZ -->
+        <div id="earnings-anz" class="tab-content">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+            <span class="result-badge result-miss">● MISS</span>
+            <span style="font-size:0.72rem;color:var(--sl-muted);">H1 FY2026 (Mar 2026 half)</span>
+          </div>
+          <div class="metrics-grid">
+            <div class="metric-item"><div class="metric-label">Cash NPAT</div><div class="metric-val">A$3.29B</div></div>
+            <div class="metric-item"><div class="metric-label">YoY Cash NPAT</div><div class="metric-val" style="color:var(--red);">−6%</div></div>
+            <div class="metric-item"><div class="metric-label">NIM</div><div class="metric-val">1.57%</div></div>
+            <div class="metric-item"><div class="metric-label">CET1 Ratio</div><div class="metric-val">12.2%</div></div>
+            <div class="metric-item"><div class="metric-label">Op Income</div><div class="metric-val">A$10.4B</div></div>
+            <div class="metric-item"><div class="metric-label">Bad Debt Charge</div><div class="metric-val">A$550M</div></div>
+            <div class="metric-item"><div class="metric-label">Interim Div</div><div class="metric-val">A$0.83/sh FF</div></div>
+            <div class="metric-item"><div class="metric-label">Suncorp Integration</div><div class="metric-val">On track</div></div>
+          </div>
+        </div>
+        <!-- WBC -->
+        <div id="earnings-wbc" class="tab-content">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+            <span class="result-badge result-inline">● IN LINE</span>
+            <span style="font-size:0.72rem;color:var(--sl-muted);">H1 FY2026 (Mar 2026 half)</span>
+          </div>
+          <div class="metrics-grid">
+            <div class="metric-item"><div class="metric-label">Cash NPAT</div><div class="metric-val">A$3.44B</div></div>
+            <div class="metric-item"><div class="metric-label">YoY Cash NPAT</div><div class="metric-val" style="color:var(--green);">+1%</div></div>
+            <div class="metric-item"><div class="metric-label">NIM</div><div class="metric-val">1.80%</div></div>
+            <div class="metric-item"><div class="metric-label">CET1 Ratio</div><div class="metric-val">12.5%</div></div>
+            <div class="metric-item"><div class="metric-label">Cost-to-Income</div><div class="metric-val">47.2%</div></div>
+            <div class="metric-item"><div class="metric-label">Bad Debt Charge</div><div class="metric-val">A$395M</div></div>
+            <div class="metric-item"><div class="metric-label">Interim Div</div><div class="metric-val">A$0.76/sh FF</div></div>
+            <div class="metric-item"><div class="metric-label">UNITE program</div><div class="metric-val">A$1.5B saves target</div></div>
+          </div>
+        </div>
+        <!-- MQG -->
+        <div id="earnings-mqg" class="tab-content">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+            <span class="result-badge result-beat">● BEAT</span>
+            <span style="font-size:0.72rem;color:var(--sl-muted);">H1 FY2026 (Sep 2025 half)</span>
+          </div>
+          <div class="metrics-grid">
+            <div class="metric-item"><div class="metric-label">NPAT</div><div class="metric-val">A$1.79B</div></div>
+            <div class="metric-item"><div class="metric-label">YoY NPAT</div><div class="metric-val" style="color:var(--green);">+8%</div></div>
+            <div class="metric-item"><div class="metric-label">EPS</div><div class="metric-val">A$4.89/sh</div></div>
+            <div class="metric-item"><div class="metric-label">AUM</div><div class="metric-val">A$890B</div></div>
+            <div class="metric-item"><div class="metric-label">Annuity-style %</div><div class="metric-val">73%</div></div>
+            <div class="metric-item"><div class="metric-label">Capital Return</div><div class="metric-val">A$2.1B</div></div>
+            <div class="metric-item"><div class="metric-label">Interim Div</div><div class="metric-val">A$2.90/sh FF</div></div>
+            <div class="metric-item"><div class="metric-label">Guidance</div><div class="metric-val">FY26 "broadly in line" with FY25</div></div>
+          </div>
+        </div>
+        <!-- RIO -->
+        <div id="earnings-rio" class="tab-content">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+            <span class="result-badge result-beat">● BEAT</span>
+            <span style="font-size:0.72rem;color:var(--sl-muted);">Full Year FY2025</span>
+          </div>
+          <div class="metrics-grid">
+            <div class="metric-item"><div class="metric-label">Revenue</div><div class="metric-val">US$53.7B</div></div>
+            <div class="metric-item"><div class="metric-label">Underlying EBITDA</div><div class="metric-val">US$24.4B</div></div>
+            <div class="metric-item"><div class="metric-label">EBITDA Margin</div><div class="metric-val">45%</div></div>
+            <div class="metric-item"><div class="metric-label">Underlying NPAT</div><div class="metric-val">US$11.0B</div></div>
+            <div class="metric-item"><div class="metric-label">FCF</div><div class="metric-val">US$6.8B</div></div>
+            <div class="metric-item"><div class="metric-label">Net Debt</div><div class="metric-val">US$5.5B</div></div>
+            <div class="metric-item"><div class="metric-label">Final Div</div><div class="metric-val">US$2.25/sh</div></div>
+            <div class="metric-item"><div class="metric-label">Iron Ore EBITDA</div><div class="metric-val">US$14.2B (58%)</div></div>
+          </div>
+        </div>
+        <!-- FMG -->
+        <div id="earnings-fmg" class="tab-content">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+            <span class="result-badge result-miss">● MISS</span>
+            <span style="font-size:0.72rem;color:var(--sl-muted);">H1 FY2026 (Dec 2025 half)</span>
+          </div>
+          <div class="metrics-grid">
+            <div class="metric-item"><div class="metric-label">Revenue</div><div class="metric-val">US$7.7B</div></div>
+            <div class="metric-item"><div class="metric-label">EBITDA</div><div class="metric-val">US$4.8B</div></div>
+            <div class="metric-item"><div class="metric-label">NPAT</div><div class="metric-val">US$2.5B</div></div>
+            <div class="metric-item"><div class="metric-label">YoY NPAT</div><div class="metric-val" style="color:var(--red);">−12%</div></div>
+            <div class="metric-item"><div class="metric-label">Avg Realised Price</div><div class="metric-val">US$89/dmt</div></div>
+            <div class="metric-item"><div class="metric-label">C1 Cost</div><div class="metric-val">US$18.5/wmt</div></div>
+            <div class="metric-item"><div class="metric-label">Interim Div</div><div class="metric-val">A$0.50/sh FF</div></div>
+            <div class="metric-item"><div class="metric-label">Payout Ratio</div><div class="metric-val">65%</div></div>
+          </div>
+        </div>
+        <!-- WDS -->
+        <div id="earnings-wds" class="tab-content">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+            <span class="result-badge result-miss">● MISS</span>
+            <span style="font-size:0.72rem;color:var(--sl-muted);">Full Year FY2025</span>
+          </div>
+          <div class="metrics-grid">
+            <div class="metric-item"><div class="metric-label">Revenue</div><div class="metric-val">US$6.8B</div></div>
+            <div class="metric-item"><div class="metric-label">EBITDAX</div><div class="metric-val">US$3.8B</div></div>
+            <div class="metric-item"><div class="metric-label">Net Profit</div><div class="metric-val">US$1.54B</div></div>
+            <div class="metric-item"><div class="metric-label">YoY NPAT</div><div class="metric-val" style="color:var(--red);">−18%</div></div>
+            <div class="metric-item"><div class="metric-label">Production</div><div class="metric-val">188.3 MMboe</div></div>
+            <div class="metric-item"><div class="metric-label">Unit Production Cost</div><div class="metric-val">US$8.3/boe</div></div>
+            <div class="metric-item"><div class="metric-label">Final Div</div><div class="metric-val">US$0.38/sh</div></div>
+            <div class="metric-item"><div class="metric-label">Scarborough Capex</div><div class="metric-val">US$12.5B (total)</div></div>
+          </div>
+        </div>
+        <!-- TLS -->
+        <div id="earnings-tls" class="tab-content">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+            <span class="result-badge result-inline">● IN LINE</span>
+            <span style="font-size:0.72rem;color:var(--sl-muted);">H1 FY2026 (Dec 2025 half)</span>
+          </div>
+          <div class="metrics-grid">
+            <div class="metric-item"><div class="metric-label">Total Income</div><div class="metric-val">A$11.8B</div></div>
+            <div class="metric-item"><div class="metric-label">EBITDA</div><div class="metric-val">A$3.78B</div></div>
+            <div class="metric-item"><div class="metric-label">NPAT</div><div class="metric-val">A$920M</div></div>
+            <div class="metric-item"><div class="metric-label">YoY NPAT</div><div class="metric-val" style="color:var(--green);">+7%</div></div>
+            <div class="metric-item"><div class="metric-label">Mobile Rev</div><div class="metric-val">A$5.1B (+4%)</div></div>
+            <div class="metric-item"><div class="metric-label">InfraCo Fixed</div><div class="metric-val">A$1.65B EBITDA</div></div>
+            <div class="metric-item"><div class="metric-label">Interim Div</div><div class="metric-val">A$0.09/sh FF</div></div>
+            <div class="metric-item"><div class="metric-label">T26 Guidance</div><div class="metric-val">EBITDA A$8.5–8.7B</div></div>
           </div>
         </div>
       </div>
