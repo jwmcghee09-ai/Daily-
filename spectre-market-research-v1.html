@@ -1437,6 +1437,255 @@ h3 { font-size: 1.15rem; }
   margin: 0 -24px;
   padding: 0 24px;
 }
+
+/* ================================================================
+   BLOOMBERG / PERPLEXITY FINANCE LAYOUT REDESIGN
+   ================================================================ */
+
+/* ── Page header (replaces marketing hero-intro) ──────────────── */
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 0 12px;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+  margin-bottom: 0;
+}
+.page-header-left {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+.page-title {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sl-text);
+}
+.page-subtitle {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--sl-muted);
+}
+.page-header-right {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: var(--sl-muted);
+  letter-spacing: 0.06em;
+}
+
+/* Hide the old marketing intro */
+.hero-intro { display: none !important; }
+
+/* ── Metrics strip (Bloomberg-style horizontal bar) ───────────── */
+.hero-grid {
+  display: flex !important;
+  gap: 0 !important;
+  grid-template-columns: unset !important;
+  background: rgba(14,10,24,.85);
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 14px 0 !important;
+}
+.hero-card {
+  flex: 1;
+  padding: 11px 16px !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: none !important;
+  border-right: 1px solid rgba(255,255,255,.06) !important;
+  box-shadow: none !important;
+  transition: background 0.15s;
+}
+.hero-card:last-child { border-right: none !important; }
+.hero-card:hover {
+  transform: none !important;
+  background: rgba(155,93,229,.06) !important;
+  box-shadow: none !important;
+}
+.hero-card .label {
+  font-size: 0.58rem !important;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--sl-muted);
+  margin-bottom: 4px !important;
+  white-space: nowrap;
+}
+.hero-card .value {
+  font-size: 1.1rem !important;
+  font-weight: 500;
+  line-height: 1.1;
+}
+.hero-card .value span { font-size: 1.1rem !important; }
+.hero-card .change {
+  font-size: 0.7rem !important;
+  margin-top: 3px !important;
+}
+
+/* ── Market pulse — tighter ───────────────────────────────────── */
+.market-pulse-strip {
+  padding: 11px 20px !important;
+  margin-bottom: 14px !important;
+  gap: 20px !important;
+}
+.pulse-verdict { font-size: 0.88rem !important; }
+.pulse-sub { font-size: 0.6rem !important; }
+.pulse-meter { min-width: 130px !important; height: 5px !important; }
+.sig-label { font-size: 0.57rem !important; }
+.sig-val { font-size: 0.7rem !important; }
+
+/* ── Cards — less glassmorphic ───────────────────────────────── */
+.card {
+  background: rgba(14,10,24,.88) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  border: 1px solid rgba(255,255,255,.06) !important;
+  border-radius: 12px !important;
+  padding: 18px 20px !important;
+  box-shadow: 0 4px 18px rgba(0,0,0,.28) !important;
+  transition: border-color 0.2s, box-shadow 0.2s !important;
+}
+.card:hover {
+  transform: none !important;
+  border-color: rgba(255,255,255,.1) !important;
+  box-shadow: 0 4px 24px rgba(0,0,0,.32) !important;
+}
+.card-glow:hover {
+  border-color: rgba(155,93,229,.2) !important;
+  box-shadow: 0 4px 24px rgba(0,0,0,.32), 0 0 18px rgba(155,93,229,.08) !important;
+}
+
+/* ── Section labels — terminal divider style ──────────────────── */
+.section-label {
+  font-size: 0.6rem !important;
+  letter-spacing: 0.14em !important;
+  color: var(--sl-muted) !important;
+  text-transform: uppercase;
+  margin-bottom: 12px !important;
+  padding-bottom: 8px !important;
+  border-bottom: 1px solid rgba(255,255,255,.05) !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px;
+}
+
+/* ── Main grid — tighter ─────────────────────────────────────── */
+.main-grid {
+  grid-template-columns: 1fr 355px !important;
+  gap: 14px !important;
+  margin-bottom: 14px !important;
+}
+.left-col { gap: 14px !important; }
+.right-col {
+  gap: 14px !important;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Right sidebar: news first ───────────────────────────────── */
+.right-col > div:nth-child(1) { order: 2; } /* company overview */
+.right-col > div:nth-child(2) { order: 4; } /* peers */
+.right-col > div:nth-child(3) { order: 1; } /* news → top */
+.right-col > div:nth-child(4) { order: 3; } /* risk */
+
+/* ── Chart — tighter header ──────────────────────────────────── */
+.chart-header { margin-bottom: 12px !important; }
+.chart-title-group .chart-val { font-size: 1.6rem !important; }
+.chart-title-group .chart-sub { font-size: 0.72rem !important; }
+.time-pill { padding: 4px 10px !important; font-size: 0.62rem !important; }
+
+/* ── Data table — dense Bloomberg rows ───────────────────────── */
+.data-table th {
+  font-size: 0.58rem !important;
+  padding: 7px 10px !important;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--sl-muted) !important;
+  background: rgba(255,255,255,.02) !important;
+  border-bottom: 1px solid rgba(255,255,255,.07) !important;
+  white-space: nowrap;
+}
+.data-table td {
+  font-size: 0.7rem !important;
+  padding: 7px 10px !important;
+}
+.data-table tbody tr:hover td {
+  background: rgba(155,93,229,.05) !important;
+}
+.data-table tbody tr { border-bottom: 1px solid rgba(255,255,255,.03) !important; }
+
+/* ── News feed — tighter ─────────────────────────────────────── */
+.news-item { padding: 9px 0 !important; }
+.news-headline-link { font-size: 0.78rem !important; line-height: 1.4 !important; }
+.news-meta { font-size: 0.6rem !important; margin-top: 3px !important; }
+.news-tag { font-size: 0.57rem !important; padding: 2px 7px !important; }
+
+/* ── Company panel ───────────────────────────────────────────── */
+.company-header h3 { font-size: 0.95rem !important; }
+.info-grid { font-size: 0.68rem !important; gap: 7px 14px !important; }
+.info-label { font-size: 0.62rem !important; }
+.consensus-row { margin-top: 10px !important; padding-top: 10px !important; }
+
+/* ── Bottom grid ─────────────────────────────────────────────── */
+.bottom-grid { gap: 14px !important; margin-bottom: 20px !important; }
+
+/* ── Crypto rows — tighter ───────────────────────────────────── */
+.crypto-row { padding: 9px 0 !important; }
+.crypto-name { font-size: 0.78rem !important; }
+.crypto-sub { font-size: 0.6rem !important; }
+.cprice { font-size: 0.88rem !important; }
+.cchange { font-size: 0.68rem !important; }
+.crypto-icon { width: 30px !important; height: 30px !important; font-size: 0.7rem !important; }
+
+/* ── Sector bars ─────────────────────────────────────────────── */
+.sector-bar-name { font-size: 0.67rem !important; }
+.sector-bar-val { font-size: 0.67rem !important; }
+
+/* ── Movers ──────────────────────────────────────────────────── */
+.mover-sym { font-size: 0.72rem !important; }
+.mover-name { font-size: 0.6rem !important; }
+.mover-price { font-size: 0.72rem !important; }
+.mover-chg { font-size: 0.68rem !important; }
+
+/* ── Earnings / sentiment / fundamentals — tighter ───────────── */
+.metric-item { padding: 7px 10px !important; }
+.metric-label { font-size: 0.6rem !important; }
+.metric-val { font-size: 0.78rem !important; }
+.sentiment-col h4 { font-size: 0.68rem !important; }
+.sentiment-col li { font-size: 0.7rem !important; }
+.fund-table td, .fund-table th { font-size: 0.7rem !important; padding: 6px 10px !important; }
+
+/* ── Tab bar ─────────────────────────────────────────────────── */
+.tab-btn { font-size: 0.6rem !important; padding: 5px 10px !important; }
+
+/* ── Risk bars ───────────────────────────────────────────────── */
+.risk-item { padding: 6px 0 !important; }
+.risk-item-label span:first-child { font-size: 0.68rem !important; }
+.risk-item-label span:last-child { font-size: 0.64rem !important; }
+
+/* ── Responsive overrides ────────────────────────────────────── */
+@media (max-width: 900px) {
+  .hero-grid { flex-wrap: wrap !important; border-radius: 10px !important; }
+  .hero-card { flex: 1 1 30% !important; border-right: 1px solid rgba(255,255,255,.06) !important; border-bottom: 1px solid rgba(255,255,255,.06) !important; }
+  .main-grid { grid-template-columns: 1fr !important; }
+  .right-col > div:nth-child(1),
+  .right-col > div:nth-child(2),
+  .right-col > div:nth-child(3),
+  .right-col > div:nth-child(4) { order: unset; }
+}
+@media (max-width: 600px) {
+  .hero-card { flex: 1 1 45% !important; }
+  .page-header { flex-direction: column; align-items: flex-start; gap: 4px; }
+}
 </style>
 </head>
 <body>
@@ -1472,13 +1721,13 @@ h3 { font-size: 1.15rem; }
 
 <div class="container" id="terminal">
 
-  <section class="hero-intro reveal">
-    <div class="hero-kicker">Plus + Pro Market Research</div>
-    <h1 class="hero-heading">See the market backdrop behind your <span class="gradient">portfolio decisions.</span></h1>
-    <p class="hero-copy">
-      SPECTRE Research gives paid workspaces a dedicated market-research view for ASX leadership, macro context, sector pressure, earnings snapshots, and cross-asset sentiment, so portfolio decisions are made with broader market context instead of isolated holdings alone.
-    </p>
-  </section>
+  <div class="page-header">
+    <div class="page-header-left">
+      <span class="page-title">Market Research</span>
+      <span class="page-subtitle">ASX Terminal</span>
+    </div>
+    <div class="page-header-right" id="page-last-updated">—</div>
+  </div>
 
   <!-- ===== HERO METRICS ===== -->
   <section class="hero-grid reveal">
@@ -2558,6 +2807,11 @@ async function fetchLiveQuotes() {
       statusEl.style.borderColor = 'rgba(34,197,94,0.2)';
       statusEl.style.color = 'var(--green)';
       statusEl.childNodes[statusEl.childNodes.length - 1].textContent = ` LIVE · ${hhmm}`;
+    }
+    const lastUpdatedEl = document.getElementById('page-last-updated');
+    if (lastUpdatedEl) {
+      const now2 = new Date();
+      lastUpdatedEl.textContent = 'Updated ' + now2.toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit', hour12: false });
     }
 
     // --- ASX 200 hero + chart header ---
