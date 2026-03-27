@@ -3087,16 +3087,18 @@ function renderEconomicCalendar(events) {
 function renderEarningsCalendar(events) {
   const el = document.getElementById('fmp-earn-list');
   if (!el) return;
-  if (!events.length) { el.innerHTML = '<div style="color:var(--sl-muted);font-size:0.72rem;">No upcoming earnings in watchlist.</div>'; return; }
+  if (!events.length) { el.innerHTML = '<div style="color:var(--sl-muted);font-size:0.72rem;">No upcoming earnings.</div>'; return; }
   el.innerHTML = events.map(e => {
-    const date = e.date ? new Date(e.date).toLocaleDateString('en-AU',{day:'numeric',month:'short'}) : '—';
-    const eps = e.epsEstimate != null ? `EPS est. ${e.epsEstimate.toFixed(2)}` : '';
+    const date = e.date ? new Date(e.date + 'T00:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'short'}) : '—';
+    const eps = e.epsEstimate != null ? `EPS est. $${e.epsEstimate.toFixed(2)}` : '';
+    const rev = e.revenueEstimate != null ? `Rev est. $${(e.revenueEstimate/1e9).toFixed(1)}B` : '';
+    const extra = [eps, rev].filter(Boolean).join(' · ');
     return `
     <div class="earn-item">
       <span class="earn-date">${escapeHtml(date)}</span>
       <span class="earn-sym">${escapeHtml(e.symbol.replace('.AX',''))}</span>
       <span class="earn-name">${escapeHtml(e.name)}</span>
-      <span class="earn-eps">${escapeHtml(eps)}</span>
+      <span class="earn-eps">${escapeHtml(extra)}</span>
     </div>`;
   }).join('');
 }
@@ -3124,19 +3126,15 @@ function renderAnalystRatings(ratings) {
   if (!el) return;
   if (!ratings.length) { noData(el, 'No analyst data.'); return; }
   el.innerHTML = ratings.map(r => {
-    const rating = r.rating || '—';
-    let badgeClass = 'badge-na';
-    if (/buy|strong buy/i.test(rating)) badgeClass = 'badge-buy';
-    else if (/hold|neutral/i.test(rating)) badgeClass = 'badge-hold';
-    else if (/sell|underperform/i.test(rating)) badgeClass = 'badge-sell';
-    const targetStr = r.targetConsensus ? `A$${fmtPrice(r.targetConsensus,2)}` : '—';
-    const rangeStr = (r.targetLow && r.targetHigh) ? `${fmtPrice(r.targetLow,2)}–${fmtPrice(r.targetHigh,2)}` : '';
+    const targetStr = r.targetConsensus ? `$${fmtPrice(r.targetConsensus,0)}` : '—';
+    const rangeStr = (r.targetLow && r.targetHigh) ? `$${fmtPrice(r.targetLow,0)}–$${fmtPrice(r.targetHigh,0)}` : '';
+    const countStr = r.analystCount ? `${r.analystCount} analysts` : '';
     return `
     <div class="analyst-item">
       <span class="analyst-sym">${escapeHtml(r.symbol)}</span>
-      <span class="analyst-badge ${badgeClass}">${escapeHtml(rating)}</span>
+      <span class="analyst-badge badge-buy">Consensus</span>
       <div class="analyst-target">Target <span>${escapeHtml(targetStr)}</span></div>
-      <span class="analyst-range">${escapeHtml(rangeStr)}</span>
+      <span class="analyst-range">${escapeHtml(rangeStr)}${rangeStr && countStr ? ' · ' : ''}${escapeHtml(countStr)}</span>
     </div>`;
   }).join('');
 }
