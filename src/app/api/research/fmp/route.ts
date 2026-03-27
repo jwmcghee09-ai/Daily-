@@ -31,7 +31,7 @@ interface FmpPayload {
 const FMP_BASE = "https://financialmodelingprep.com/stable";
 const YAHOO_HEADERS = { "User-Agent": "Mozilla/5.0 (compatible; SPECTRE/1.0)", Accept: "application/json" };
 
-// ---- FMP single-symbol quote ----
+// ---- FMP single-symbol quote — returns first array item or null ----
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function fmpQuote(symbol: string, apiKey: string): Promise<any | null> {
   try {
@@ -48,7 +48,7 @@ async function fmpQuote(symbol: string, apiKey: string): Promise<any | null> {
   } catch { return null; }
 }
 
-// ---- Yahoo Finance fallback ----
+// ---- Yahoo Finance fallback for symbols blocked on FMP plan ----
 async function yahooQuote(symbol: string): Promise<{ price: number | null; prevClose: number | null; name: string | null }> {
   const url = `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=5d`;
   try {
@@ -74,7 +74,8 @@ function changePctCalc(price: number | null, prev: number | null): number | null
 }
 
 // ---- Global Indices ----
-// Free plan supports these index symbols via /quote?symbol=X (one at a time)
+// FMP free: ^GSPC, ^IXIC, ^DJI, ^FTSE, ^N225, ^HSI, ^RUT, ^VIX
+// Yahoo fallback: ^GDAXI, ^AXJO, 000001.SS (require higher FMP tier)
 const FMP_INDEX_SYMBOLS: { sym: string; name: string }[] = [
   { sym: "^GSPC",  name: "S&P 500"     },
   { sym: "^IXIC",  name: "NASDAQ"      },
@@ -85,7 +86,6 @@ const FMP_INDEX_SYMBOLS: { sym: string; name: string }[] = [
   { sym: "^RUT",   name: "Russell 2000"},
   { sym: "^VIX",   name: "VIX"         },
 ];
-// These require Yahoo Finance as FMP premium plan only
 const YAHOO_INDEX_SYMBOLS: { sym: string; name: string }[] = [
   { sym: "^GDAXI",    name: "DAX"      },
   { sym: "^AXJO",     name: "ASX 200"  },
@@ -120,8 +120,8 @@ async function fetchIndices(apiKey: string): Promise<IndexQuote[]> {
 }
 
 // ---- Commodities ----
-// Available on FMP free plan: Gold (GCUSD), Silver (SIUSD), Brent (BZUSD), XAUUSD
-// Premium on FMP: WTI Crude (CLUSD), Copper (HGUSD), Natural Gas (NGUSD) — use Yahoo Finance
+// FMP: GCUSD (Gold), SIUSD (Silver), BZUSD (Brent)
+// Yahoo Finance: WTI, Copper, NatGas, Wheat, Soybeans (not available on current FMP plan)
 const FMP_COMMODITIES: { sym: string; name: string; unit: string }[] = [
   { sym: "GCUSD",  name: "Gold",        unit: "USD/oz"  },
   { sym: "SIUSD",  name: "Silver",      unit: "USD/oz"  },
@@ -162,7 +162,7 @@ async function fetchCommodities(apiKey: string): Promise<CommodityQuote[]> {
   return out;
 }
 
-// ---- FX via FMP — AUD crosses all available on free plan ----
+// ---- FX via FMP — all AUD crosses + majors available on plan ----
 const FMP_FX_PAIRS: { sym: string; label: string }[] = [
   { sym: "AUDUSD", label: "AUD/USD" },
   { sym: "AUDEUR", label: "AUD/EUR" },
@@ -194,7 +194,7 @@ async function fetchFx(apiKey: string): Promise<FxRate[]> {
     .filter((x): x is FxRate => x !== null);
 }
 
-// ---- Sector Performance via US sector ETFs (Yahoo Finance — no FMP endpoint available) ----
+// ---- Sector Performance via FMP — US sector ETFs ----
 const SECTOR_ETFS: { sym: string; sector: string }[] = [
   { sym: "XLK",  sector: "Technology"            },
   { sym: "XLF",  sector: "Financials"             },
@@ -209,19 +209,16 @@ const SECTOR_ETFS: { sym: string; sector: string }[] = [
   { sym: "XLC",  sector: "Communication"          },
 ];
 
-async function fetchSectorPerformance(): Promise<SectorPerf[]> {
-  const results = await Promise.allSettled(SECTOR_ETFS.map(({ sym }) => yahooQuote(sym)));
+async function fetchSectorPerformance(apiKey: string): Promise<SectorPerf[]> {
+  const results = await Promise.allSettled(SECTOR_ETFS.map(({ sym }) => fmpQuote(sym, apiKey)));
   return SECTOR_ETFS
     .map(({ sector }, i) => {
       const r = results[i];
-      const q = r.status === "fulfilled" ? r.value : { price: null, prevClose: null, name: null };
-      const pct = changePctCalc(q.price, q.prevClose);
-      return { sector, changePct: pct ?? 0 };
+      const q = r.status === "fulfilled" ? r.value : null;
+      if (!q || typeof q.price !== "number") return null;
+      return { sector, changePct: typeof q.changePercentage === "number" ? q.changePercentage : 0 };
     })
-    .filter((_, i) => {
-      const r = results[i];
-      return r.status === "fulfilled" && r.value.price !== null;
-    })
+    .filter((x): x is SectorPerf => x !== null)
     .sort((a, b) => b.changePct - a.changePct);
 }
 
@@ -287,7 +284,7 @@ async function fetchEarningsCalendar(apiKey: string): Promise<EarningsEvent[]> {
   } catch { return []; }
 }
 
-// ---- Analyst Price Targets via FMP (/price-target-summary — US stocks only on free plan) ----
+// ---- Analyst Price Targets via FMP (/price-target-summary) ----
 const ANALYST_SYMBOLS = ["AAPL", "MSFT", "NVDA", "AMZN", "GOOGL", "META", "TSLA", "JPM", "BRK-B", "UNH"];
 
 async function fetchAnalystRatings(apiKey: string): Promise<AnalystRating[]> {
@@ -373,7 +370,7 @@ export async function GET(request: NextRequest) {
       fetchIndices(apiKey),
       fetchCommodities(apiKey),
       fetchFx(apiKey),
-      fetchSectorPerformance(),
+      fetchSectorPerformance(apiKey),
       fetchEconomicCalendar(apiKey),
       fetchEarningsCalendar(apiKey),
       fetchAnalystRatings(apiKey),
