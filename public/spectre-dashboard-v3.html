@@ -107,69 +107,105 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
 .nav-btn:hover{color:var(--text);border-color:rgba(255,255,255,.22);transform:translateY(-1px)}
 
 /* ── HERO HEADER ── */
-.hero{padding:100px 0 4rem;display:grid;grid-template-columns:1fr 420px;gap:4rem;align-items:start;position:relative;z-index:2}
+.hero{padding:100px 0 4rem;display:grid;grid-template-columns:minmax(0,1fr) 600px;gap:5rem;align-items:start;position:relative;z-index:2}
+.hero-left{max-width:780px}
 .hero-glow{position:absolute;top:-140px;left:-140px;width:760px;height:520px;pointer-events:none;background:radial-gradient(ellipse,rgba(100,40,180,.09) 0%,transparent 70%);z-index:1}
 .hero-eyebrow{display:inline-flex;align-items:center;gap:.65rem;padding:.45rem 1rem;border-radius:999px;border:1px solid transparent;background:linear-gradient(var(--bg),var(--bg)) padding-box,linear-gradient(90deg,var(--purple),var(--orange)) border-box;font-family:var(--mono);font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:var(--text);margin-bottom:1.1rem}
 .hero-eyebrow::before{content:'';width:8px;height:8px;background:linear-gradient(135deg,var(--purple),var(--orange));display:block;border-radius:999px;flex-shrink:0}
 .hero-title{
   font-family:var(--sans);
-  font-size:clamp(3.8rem,7vw,6.3rem);
+  max-width:760px;
+  font-size:clamp(4.2rem,10vw,7.8rem);
   font-weight:800;
-  line-height:.94;
+  line-height:.9;
   letter-spacing:-.04em;
-  margin-bottom:1.4rem;
-  background:linear-gradient(90deg,#f4f0ff 0%,#f4f0ff 45%,var(--purple-hi) 72%,var(--orange) 100%);
+  margin-bottom:1.1rem;
+  background:linear-gradient(90deg,#f4f0ff 0%,#f2eeff 52%,#e5c5ff 82%,var(--purple-hi) 100%);
   -webkit-background-clip:text;
   -webkit-text-fill-color:transparent;
   background-clip:text;
 }
-.hero-sub{font-size:.88rem;color:var(--muted2);max-width:480px;line-height:1.8;margin-bottom:2rem}
-.hero-wordmark{
+.hero-sub{font-size:.92rem;color:var(--muted2);max-width:720px;line-height:1.8;margin-bottom:2.8rem}
+.hero-brand{
   display:block;
-  width:min(360px,100%);
-  max-width:100%;
-  height:auto;
-  margin:0 0 1.15rem;
+  margin:0 0 1.75rem;
+  font-family:var(--sans);
+  font-size:clamp(3rem,5vw,4.8rem);
+  font-weight:800;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:#ff523d;
+}
+.hero-system{
+  display:flex;
+  align-items:center;
+  gap:1rem;
+  margin:0 0 1.9rem;
+  font-family:var(--mono);
+  font-size:.6rem;
+  letter-spacing:.28em;
+  text-transform:uppercase;
+  color:#b98af2;
+}
+.hero-system::before{
+  content:'';
+  width:42px;
+  height:2px;
+  border-radius:999px;
+  background:linear-gradient(90deg,#ff6a57 0%,#b36cff 100%);
+  box-shadow:0 0 14px rgba(179,108,255,.24);
+  flex:0 0 auto;
 }
 .hero-kicker{
-  display:inline-flex;
+  display:flex;
   align-items:center;
-  gap:.55rem;
+  gap:.95rem;
   flex-wrap:wrap;
-  margin:0 0 1.1rem;
+  margin:0 0 2rem;
   font-family:var(--mono);
-  font-size:.58rem;
-  letter-spacing:.16em;
+  font-size:.68rem;
+  letter-spacing:.2em;
   text-transform:uppercase;
   color:var(--muted2);
 }
 .hero-kicker-sep{color:rgba(255,255,255,.24)}
-.hero-meta{display:flex;flex-direction:column;gap:.55rem;padding-top:1.5rem;border-top:1px solid var(--border)}
-.meta-row{display:flex;align-items:center;gap:.6rem}
-.meta-lbl{font-family:var(--mono);font-size:.56rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);min-width:90px}
-.meta-val{font-family:var(--mono);font-size:.7rem;color:var(--muted2)}
+.hero-meta{display:flex;flex-direction:column;gap:1rem;max-width:760px;padding-top:2rem;border-top:1px solid var(--border)}
+.meta-row{display:grid;grid-template-columns:170px minmax(0,1fr);align-items:center;gap:1.8rem}
+.meta-lbl{font-family:var(--mono);font-size:.56rem;letter-spacing:.24em;text-transform:uppercase;color:var(--muted);min-width:0}
+.meta-val{font-family:var(--mono);font-size:.78rem;color:var(--muted2)}
+.hero-actions{display:flex;gap:.75rem;flex-wrap:wrap;margin:0 0 2.8rem}
 .plan-chip{font-family:var(--mono);font-size:.5rem;letter-spacing:.14em;text-transform:uppercase;padding:.18rem .55rem;border-radius:3px;font-weight:600}
 .plan-chip.pro{background:var(--accent-dim);color:var(--purple-hi);border:1px solid rgba(217,70,239,.22)}
 .plan-chip.starter{background:rgba(255,255,255,.05);color:var(--muted2);border:1px solid var(--border2)}
 .plan-chip.plus{background:rgba(251,191,36,.07);color:#fbbf24;border:1px solid rgba(251,191,36,.25)}
-.hero-actions{display:flex;gap:.65rem;flex-wrap:wrap;margin-bottom:2rem}
 .btn-primary{font-family:var(--mono);font-size:.64rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#fff;background:linear-gradient(135deg,var(--purple) 0%,var(--purple-hi) 54%,var(--orange) 100%);border:1px solid rgba(217,70,239,.2);border-radius:999px;padding:.8rem 1.7rem;cursor:pointer;transition:all .2s;box-shadow:0 10px 22px rgba(168,85,247,.18);text-decoration:none;display:inline-block}
 .btn-primary:hover{transform:translateY(-1px);filter:brightness(1.07)}
+.hero-primary{
+  min-width:236px;
+  justify-content:center;
+  background:linear-gradient(180deg,#ff623b 0%,#ff4b33 100%);
+  border-color:rgba(255,149,120,.3);
+  box-shadow:0 18px 36px rgba(255,91,57,.22);
+}
+.hero-secondary{
+  min-width:192px;
+  justify-content:center;
+  background:rgba(14,10,24,.55);
+}
 .btn-ghost{font-family:var(--mono);font-size:.64rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text);background:transparent;border:1px solid var(--border2);border-radius:999px;padding:.8rem 1.7rem;cursor:pointer;transition:all .2s;text-decoration:none;display:inline-block}
 .btn-ghost:hover{color:var(--text);transform:translateY(-1px);border-color:rgba(255,122,48,.5)}
 
-/* META PANEL (right side) */
-.meta-panel{background:linear-gradient(180deg,rgba(19,15,31,.97) 0%,rgba(13,10,22,.96) 100%);border:1px solid var(--border2);border-radius:20px;padding:1.5rem;box-shadow:0 18px 40px rgba(0,0,0,.34),0 0 0 1px rgba(255,255,255,.02) inset}
-.meta-panel-title{font-family:var(--mono);font-size:.56rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:1.2rem}
-.kpi-grid-mini{display:grid;grid-template-columns:1fr 1fr;gap:.65rem;margin-bottom:1.2rem}
-.kpi-mini{background:linear-gradient(180deg,rgba(25,19,41,.95),rgba(16,12,27,.95));border:1px solid var(--border);border-radius:12px;padding:.85rem 1rem}
-.kpi-mini-lbl{font-family:var(--mono);font-size:.52rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:.25rem}
-.kpi-mini-val{font-family:var(--disp);font-size:1.55rem;letter-spacing:.04em;color:var(--text)}
+.meta-panel{background:linear-gradient(180deg,rgba(19,15,31,.97) 0%,rgba(13,10,22,.96) 100%);border:1px solid var(--border2);border-radius:22px;padding:1.6rem;box-shadow:0 22px 52px rgba(0,0,0,.36),0 0 0 1px rgba(255,255,255,.02) inset}
+.meta-panel-title{font-family:var(--mono);font-size:.62rem;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);margin-bottom:1.5rem}
+.kpi-grid-mini{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.2rem}
+.kpi-mini{background:linear-gradient(180deg,rgba(25,19,41,.95),rgba(16,12,27,.95));border:1px solid var(--border);border-radius:18px;padding:1.25rem 1.35rem}
+.kpi-mini-lbl{font-family:var(--mono);font-size:.54rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:.55rem}
+.kpi-mini-val{font-family:var(--disp);font-size:1.9rem;letter-spacing:.02em;color:var(--text);font-weight:700}
 .kpi-mini-val.accent{color:var(--orange);text-shadow:0 0 16px rgba(255,122,48,.24)}
-.risk-bar-wrap{background:rgba(13,10,20,.86);border:1px solid var(--border);border-radius:12px;padding:.85rem 1rem}
-.risk-bar-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.6rem}
-.risk-bar-lbl{font-family:var(--mono);font-size:.52rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
-.risk-bar-val{font-family:var(--sans);font-size:1.7rem;font-weight:800;color:var(--text)}
+.risk-bar-wrap{background:rgba(13,10,20,.86);border:1px solid var(--border);border-radius:18px;padding:1.35rem 1.5rem}
+.risk-bar-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.9rem}
+.risk-bar-lbl{font-family:var(--mono);font-size:.54rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.risk-bar-val{font-family:var(--sans);font-size:2rem;font-weight:800;color:var(--orange)}
 .risk-track{height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden}
 .risk-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--purple) 0%,var(--purple-hi) 42%,var(--orange) 100%);width:8%}
 
@@ -700,8 +736,8 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   .nav-right{margin-left:auto}
   .hero{
     grid-template-columns:1fr;
-    gap:1.45rem;
     padding:88px 0 2.4rem;
+    gap:1.75rem;
   }
   .hero-left,.meta-panel{
     width:min(700px,100%);
@@ -722,17 +758,16 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 }
 @media(max-width:700px){
   .hero-left{text-align:center}
-  .hero-eyebrow{justify-content:center}
+  .hero-kicker{justify-content:center}
+  .hero-system{justify-content:center}
   .hero-meta{
-    align-items:center;
     text-align:center;
   }
   .meta-row{
-    justify-content:center;
-    flex-wrap:wrap;
+    grid-template-columns:1fr;
+    gap:.45rem;
   }
   .hero-actions{justify-content:center}
-  .kpi-grid-mini{grid-template-columns:1fr}
   .sec{padding:2.6rem 0}
   .sec-head{
     flex-direction:column;
@@ -763,11 +798,18 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 
   /* Hero */
   .hero{padding:80px 0 2rem;gap:1rem}
-  .hero-eyebrow{font-size:.52rem;padding:.4rem .8rem}
-  .hero-title{font-size:clamp(1.6rem,8vw,2.2rem) !important}
+  .hero-kicker{font-size:.56rem;gap:.5rem;margin-bottom:1.25rem}
+  .hero-system{font-size:.5rem;gap:.7rem;margin-bottom:1.2rem}
+  .hero-system::before{width:28px}
+  .hero-brand{font-size:clamp(2rem,8vw,2.8rem);margin-bottom:1rem}
+  .hero-title{font-size:clamp(3rem,14vw,4.4rem) !important}
   .hero-sub{font-size:.78rem;line-height:1.7;margin-bottom:1.2rem}
   .hero-actions{justify-content:center;gap:.5rem}
+  .hero-primary,.hero-secondary{min-width:0;width:100%}
   .meta-panel{padding:1rem}
+  .kpi-grid-mini{grid-template-columns:1fr}
+  .kpi-mini{padding:1rem}
+  .kpi-mini-val{font-size:1.45rem}
 
   /* Section spacing */
   .sec{padding:2rem 0}
@@ -916,9 +958,13 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
         <span class="hero-kicker-sep">·</span>
         <span id="hero-kicker-holdings">0 positions</span>
       </div>
-      <img src="/spectre-wordmark-plain.svg" alt="SPECTRE" class="hero-wordmark"/>
-      <h1 class="hero-title">Ask your portfolio anything.</h1>
-      <p class="hero-sub">Grounded in your live holdings, real-time market data, and risk metrics.</p>
+      <div class="hero-system">System for Portfolio Exposure, Correlation, Threat &amp; Risk Evaluation</div>
+      <div class="hero-brand">SPECTRE</div>
+      <p class="hero-sub">Upload super, ASX, crypto, index, mutual fund, and ABC Bullion CSV reports to track exposure, concentration, and downside risk in one private workspace.</p>
+      <div class="hero-actions">
+        <button type="button" class="btn-primary hero-primary" id="hero-refresh-prices-btn">Refresh Prices</button>
+        <button type="button" class="btn-ghost hero-secondary" id="hero-clear-data-btn">Clear Data</button>
+      </div>
       <div class="hero-meta">
         <div class="meta-row">
           <span class="meta-lbl">Account</span>
@@ -929,32 +975,36 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
           <span class="meta-val" id="hero-meta-plan">—</span>
         </div>
         <div class="meta-row">
-          <span class="meta-lbl">Live Prices</span>
-          <span class="meta-val" id="hero-meta-prices">—</span>
+          <span class="meta-lbl">Holdings</span>
+          <span class="meta-val" id="hero-meta-holdings">—</span>
         </div>
         <div class="meta-row">
           <span class="meta-lbl">Latest Report</span>
           <span class="meta-val" id="hero-meta-report">—</span>
         </div>
+        <div class="meta-row">
+          <span class="meta-lbl">Prices Updated</span>
+          <span class="meta-val" id="hero-meta-prices">—</span>
+        </div>
       </div>
     </div>
     <aside class="meta-panel">
-      <div class="meta-panel-title">Workspace Snapshot</div>
+      <div class="meta-panel-title">Portfolio Snapshot</div>
       <div class="kpi-grid-mini">
         <div class="kpi-mini">
-          <div class="kpi-mini-lbl">Portfolio Value</div>
+          <div class="kpi-mini-lbl">Total Value</div>
           <div class="kpi-mini-val" id="hero-total-value">—</div>
         </div>
         <div class="kpi-mini">
-          <div class="kpi-mini-lbl">Holdings</div>
-          <div class="kpi-mini-val" id="hero-holdings-count">—</div>
+          <div class="kpi-mini-lbl">Unrealised P/L</div>
+          <div class="kpi-mini-val accent" id="hero-unrealised-pnl">—</div>
         </div>
         <div class="kpi-mini">
-          <div class="kpi-mini-lbl">Today</div>
+          <div class="kpi-mini-lbl">Today's Change</div>
           <div class="kpi-mini-val" id="hero-day-change">—</div>
         </div>
         <div class="kpi-mini">
-          <div class="kpi-mini-lbl">VaR 95%</div>
+          <div class="kpi-mini-lbl">1-Day VaR 95%</div>
           <div class="kpi-mini-val accent" id="hero-var95">—</div>
         </div>
       </div>
@@ -2166,6 +2216,8 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     const signOutButton = document.getElementById("sign-out-btn");
     const clearDataButton = document.getElementById("clear-data-btn");
     const refreshPricesButton = document.getElementById("refresh-prices-btn");
+    const heroClearDataButton = document.getElementById("hero-clear-data-btn");
+    const heroRefreshPricesButton = document.getElementById("hero-refresh-prices-btn");
     const dashboardLogo = document.getElementById("nav-dashboard-logo");
     const researchLink = document.getElementById("nav-research-link");
     const settingsLink = document.getElementById("nav-settings-link");
@@ -2174,7 +2226,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       setText("nav-user-email", "Demo workspace");
       setText("meta-account-name", DEMO_SESSION_USER.displayName);
       setText("hero-kicker-account", DEMO_SESSION_USER.displayName);
-      setText("hero-meta-account", `${DEMO_SESSION_USER.displayName} (${DEMO_SESSION_USER.email})`);
+      setText("hero-meta-account", DEMO_SESSION_USER.displayName);
       setClass("meta-plan-chip", "plan-chip pro");
       setText("meta-plan-chip", "Pro Demo");
       setText("hero-kicker-plan", "Pro Demo");
@@ -2187,8 +2239,14 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       if (clearDataButton) {
         clearDataButton.textContent = "Reset Demo";
       }
+      if (heroClearDataButton) {
+        heroClearDataButton.textContent = "Reset Demo";
+      }
       if (refreshPricesButton) {
         refreshPricesButton.textContent = "Exit Demo";
+      }
+      if (heroRefreshPricesButton) {
+        heroRefreshPricesButton.textContent = "Exit Demo";
       }
       if (settingsLink) {
         settingsLink.setAttribute("href", "/settings?demo=1");
@@ -2210,8 +2268,14 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     if (clearDataButton) {
       clearDataButton.textContent = "Clear Data";
     }
+    if (heroClearDataButton) {
+      heroClearDataButton.textContent = "Clear Data";
+    }
     if (refreshPricesButton) {
       refreshPricesButton.textContent = "Refresh Prices";
+    }
+    if (heroRefreshPricesButton) {
+      heroRefreshPricesButton.textContent = "Refresh Prices";
     }
     if (settingsLink) {
       settingsLink.setAttribute("href", "/settings");
@@ -3117,7 +3181,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       setText("nav-user-email", "Demo workspace");
       setText("meta-account-name", DEMO_SESSION_USER.displayName);
       setText("hero-kicker-account", DEMO_SESSION_USER.displayName);
-      setText("hero-meta-account", `${DEMO_SESSION_USER.displayName} (${DEMO_SESSION_USER.email})`);
+      setText("hero-meta-account", DEMO_SESSION_USER.displayName);
       setClass("meta-plan-chip", "plan-chip pro");
       setText("meta-plan-chip", "Pro Demo");
       setText("hero-kicker-plan", "Pro Demo");
@@ -3145,7 +3209,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     setText("nav-user-email", payload.user.email);
     setText("meta-account-name", payload.user.displayName || payload.user.email);
     setText("hero-kicker-account", payload.user.displayName || payload.user.email);
-    setText("hero-meta-account", payload.user.email);
+    setText("hero-meta-account", payload.user.displayName || payload.user.email);
     const chipClass = payload.user.proEnabled ? "plan-chip pro" : payload.user.planTier === "plus" ? "plan-chip plus" : "plan-chip starter";
     const chipLabel = payload.user.proEnabled ? "Pro Active" : payload.user.planTier === "plus" ? "Plus" : "Starter";
     setClass("meta-plan-chip", chipClass);
@@ -3613,6 +3677,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     setText("meta-latest-report", latestReportDate ? formatDate(latestReportDate) : "—");
     setText("meta-prices-updated", latestPriceTime ? formatDateTime(latestPriceTime) : "—");
     setText("hero-kicker-holdings", `${holdings.length} positions`);
+    setText("hero-meta-holdings", `${holdings.length} positions`);
     setText("hero-meta-report", latestReportDate ? formatDate(latestReportDate) : "—");
     setText("hero-meta-prices", latestPriceTime ? formatDateTime(latestPriceTime) : "—");
     setText("holdings-count-label", `${holdings.length} positions`);
@@ -3622,11 +3687,12 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     setText("mini-day-change", formatSignedCurrency(today.amount));
     setText("mini-var95", effectiveVar95Pct != null ? formatPercent(effectiveVar95Pct, { negative: true, decimals: 1 }) : "—");
     setText("hero-total-value", formatCurrency(metrics.totalValue));
-    setText("hero-holdings-count", String(holdings.length));
+    setText("hero-unrealised-pnl", formatSignedCurrency(metrics.pnl));
     setText("hero-day-change", formatSignedCurrency(today.amount));
     setText("hero-var95", effectiveVar95Pct != null ? formatPercent(effectiveVar95Pct, { negative: true, decimals: 1 }) : "—");
     setClass("mini-unrealised-pnl", `kpi-mini-val ${metrics.pnl >= 0 ? "accent" : ""}`.trim());
     setClass("mini-day-change", `kpi-mini-val ${today.amount < 0 ? "accent" : ""}`.trim());
+    setClass("hero-unrealised-pnl", `kpi-mini-val ${metrics.pnl >= 0 ? "accent" : ""}`.trim());
     setClass("hero-day-change", `kpi-mini-val ${today.amount < 0 ? "accent" : ""}`.trim());
     setText("risk-bar-value", riskScore ? `${riskScore.score} / 100` : "—");
     setText("hero-risk-score", riskScore ? `${riskScore.score} / 100` : "—");
@@ -3962,11 +4028,15 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       return;
     }
 
-    const button = document.getElementById("refresh-prices-btn");
-    const original = button ? button.textContent : "Refresh Prices";
-    if (button && !skipButtonState) {
-      button.textContent = "Refreshing...";
-      button.disabled = true;
+    const buttons = ["refresh-prices-btn", "hero-refresh-prices-btn"]
+      .map((id) => document.getElementById(id))
+      .filter((button) => button instanceof HTMLButtonElement);
+    const originals = buttons.map((button) => button.textContent || "Refresh Prices");
+    if (!skipButtonState) {
+      buttons.forEach((button) => {
+        button.textContent = "Refreshing...";
+        button.disabled = true;
+      });
     }
     try {
       const payload = await apiJson("/api/prices/refresh", { method: "POST" });
@@ -3990,9 +4060,11 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
         showToast(error instanceof Error ? error.message : "Price refresh failed.", "error");
       }
     } finally {
-      if (button && !skipButtonState) {
-        button.textContent = original;
-        button.disabled = false;
+      if (!skipButtonState) {
+        buttons.forEach((button, index) => {
+          button.textContent = originals[index];
+          button.disabled = false;
+        });
       }
     }
   }
@@ -4026,12 +4098,14 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 
     const confirmed = window.confirm("Clear all imported holdings, snapshots, and dip alerts? Your sign-in email/password stays active.");
     if (!confirmed) return;
-    const button = document.getElementById("clear-data-btn");
-    const original = button ? button.textContent : "Clear Data";
-    if (button) {
+    const buttons = ["clear-data-btn", "hero-clear-data-btn"]
+      .map((id) => document.getElementById(id))
+      .filter((button) => button instanceof HTMLButtonElement);
+    const originals = buttons.map((button) => button.textContent || "Clear Data");
+    buttons.forEach((button) => {
       button.textContent = "Clearing...";
       button.disabled = true;
-    }
+    });
     try {
       state.portfolio = await apiJson("/api/portfolio", { method: "DELETE" });
       await loadAlerts();
@@ -4041,10 +4115,10 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     } catch (error) {
       showToast(error instanceof Error ? error.message : "Failed to clear data.", "error");
     } finally {
-      if (button) {
-        button.textContent = original;
+      buttons.forEach((button, index) => {
+        button.textContent = originals[index];
         button.disabled = false;
-      }
+      });
     }
   }
 
@@ -4271,6 +4345,8 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 
     document.getElementById("refresh-prices-btn")?.addEventListener("click", refreshPrices);
     document.getElementById("clear-data-btn")?.addEventListener("click", clearData);
+    document.getElementById("hero-refresh-prices-btn")?.addEventListener("click", refreshPrices);
+    document.getElementById("hero-clear-data-btn")?.addEventListener("click", clearData);
     document.getElementById("sign-out-btn")?.addEventListener("click", signOut);
     document.getElementById("add-alert-btn")?.addEventListener("click", addAlert);
     document.getElementById("pro-ai-ask-btn")?.addEventListener("click", runHoldingsAi);
