@@ -28,9 +28,17 @@ interface QuoteData {
   name: string | null;
 }
 
+interface AsxConstituentQuote extends QuoteData {
+  marketCap: number | null;
+  sector: string | null;
+  volume: number | null;
+  exchange: string | null;
+}
+
 interface QuotesPayload {
   fetchedAt: string;
   asx: Record<string, QuoteData>;
+  asxConstituents: AsxConstituentQuote[];
   indices: {
     asx200: QuoteData;
     allOrds: QuoteData;
@@ -43,6 +51,59 @@ interface QuotesPayload {
     sol: QuoteData;
     gold: QuoteData;
   };
+}
+
+async function fetchAsxConstituents(apiKey: string): Promise<AsxConstituentQuote[]> {
+  if (!apiKey) return [];
+  const query = new URLSearchParams({
+    exchange: "ASX",
+    country: "AU",
+    isEtf: "false",
+    isFund: "false",
+    isActivelyTrading: "true",
+    limit: "200",
+    apikey: apiKey,
+  });
+
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 10_000);
+    const res = await fetch(`${FMP_BASE}/company-screener?${query.toString()}`, {
+      cache: "no-store",
+      signal: ctrl.signal,
+    });
+    clearTimeout(t);
+    if (!res.ok) return [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const data = (await res.json()) as any[];
+    if (!Array.isArray(data)) return [];
+    return data
+      .map((item) => {
+        const rawSymbol = typeof item.symbol === "string" ? item.symbol.toUpperCase() : null;
+        if (!rawSymbol) return null;
+        const symbol = rawSymbol.endsWith(".AX") ? rawSymbol : `${rawSymbol}.AX`;
+        const price = typeof item.price === "number" ? item.price : null;
+        const change = typeof item.change === "number" ? item.change : null;
+        return {
+          symbol,
+          price,
+          prevClose: price != null && change != null ? price - change : null,
+          yearHigh: typeof item.yearHigh === "number" ? item.yearHigh : null,
+          yearLow: typeof item.yearLow === "number" ? item.yearLow : null,
+          pe: typeof item.pe === "number" ? item.pe : null,
+          divYield: typeof item.dividendYield === "number" ? item.dividendYield : null,
+          name: typeof item.companyName === "string" ? item.companyName : symbol.replace(".AX", ""),
+          marketCap: typeof item.marketCap === "number" ? item.marketCap : null,
+          sector: typeof item.sector === "string" ? item.sector : null,
+          volume: typeof item.volume === "number" ? item.volume : null,
+          exchange: typeof item.exchangeShortName === "string" ? item.exchangeShortName : null,
+        };
+      })
+      .filter((item): item is AsxConstituentQuote => item !== null)
+      .sort((a, b) => (b.marketCap ?? 0) - (a.marketCap ?? 0));
+  } catch {
+    return [];
+  }
 }
 
 // FMP /profile — primary source for ASX stocks (returns price, changePct, 52wk range, marketCap, divYield)
@@ -203,9 +264,10 @@ export async function GET(request: NextRequest) {
   const fmpApiKey = process.env.FMP_API_KEY ?? "";
   const extraSymbols = ["^AXJO", "^AORD", "AUDUSD=X", "^VIX", "BTC-USD", "ETH-USD", "SOL-USD", "XAUUSD=X", "GC=F"];
 
-  const [fmpAsxResults, extraQuotes, coingecko, frankfurterAudUsd] = await Promise.all([
+  const [fmpAsxResults, asxConstituents, extraQuotes, coingecko, frankfurterAudUsd] = await Promise.all([
     // Use FMP profile as primary source for ASX stocks (more reliable than Yahoo for AU exchange)
     Promise.all(ASX_TICKERS.map((t) => fetchFmpProfile(t, fmpApiKey))),
+    fetchAsxConstituents(fmpApiKey),
     Promise.all(extraSymbols.map(fetchQuote)),
     fetchCryptoFromCoinGecko(),
     fetchAudUsdFromFrankfurter(),
@@ -276,9 +338,37 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  const mergedAsxConstituents = asxConstituents.map((item) => {
+    const live = bySymbol[item.symbol];
+    if (!live) return item;
+    return {
+      ...item,
+      price: live.price ?? item.price,
+      prevClose: live.prevClose ?? item.prevClose,
+      yearHigh: live.yearHigh ?? item.yearHigh,
+      yearLow: live.yearLow ?? item.yearLow,
+      pe: live.pe ?? item.pe,
+      divYield: live.divYield ?? item.divYield,
+      name: live.name ?? item.name,
+    };
+  });
+
+  const fallbackAsxConstituents: AsxConstituentQuote[] = ASX_TICKERS.map((ticker) => {
+    const q = bySymbol[`${ticker}.AX`] ?? nullQuote(`${ticker}.AX`);
+    return {
+      ...q,
+      marketCap: null,
+      sector: null,
+      volume: null,
+      exchange: "ASX",
+      name: q.name ?? ticker,
+    };
+  });
+
   const payload: QuotesPayload = {
     fetchedAt: new Date().toISOString(),
     asx: Object.fromEntries(ASX_TICKERS.map((t) => [t, bySymbol[`${t}.AX`]])),
+    asxConstituents: mergedAsxConstituents.length > 0 ? mergedAsxConstituents : fallbackAsxConstituents,
     indices: {
       asx200: bySymbol["^AXJO"],
       allOrds: bySymbol["^AORD"],

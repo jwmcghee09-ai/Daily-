@@ -15,6 +15,18 @@ interface EarningsEvent { date: string; symbol: string; name: string; epsEstimat
 interface SectorPerf { sector: string; changePct: number; }
 interface AnalystRating { symbol: string; name: string; targetLow: number | null; targetHigh: number | null; targetConsensus: number | null; analystCount: number; }
 interface FmpNewsItem { title: string; publishedDate: string; url: string; symbol: string; site: string; image: string | null; }
+interface MacroRate { key: string; label: string; value: string | null; actual: number | null; date: string | null; event: string | null; }
+interface MacroIndicator { key: string; label: string; value: number | null; unit: string; date: string | null; }
+interface EarningsSurprise { symbol: string; name: string; date: string; actualEps: number | null; estimatedEps: number | null; surprise: number | null; surprisePct: number | null; }
+interface CryptoAssetMetric { symbol: string; name: string; price: number | null; marketCap: number | null; volume24h: number | null; changePct24h: number | null; }
+interface CryptoMarketSnapshot {
+  btcDominance: number | null;
+  totalMarketCapUsd: number | null;
+  totalVolume24hUsd: number | null;
+  fearGreedValue: number | null;
+  fearGreedLabel: string | null;
+  assets: CryptoAssetMetric[];
+}
 
 interface FmpPayload {
   fetchedAt: string;
@@ -22,14 +34,27 @@ interface FmpPayload {
   commodities: CommodityQuote[];
   fx: FxRate[];
   economicCalendar: EconEvent[];
+  macroRates: MacroRate[];
+  macroIndicators: MacroIndicator[];
   earningsCalendar: EarningsEvent[];
+  earningsSurprises: EarningsSurprise[];
   sectorPerformance: SectorPerf[];
   analystRatings: AnalystRating[];
   news: FmpNewsItem[];
+  cryptoMarket: CryptoMarketSnapshot;
 }
 
 const FMP_BASE = "https://financialmodelingprep.com/stable";
 const YAHOO_HEADERS = { "User-Agent": "Mozilla/5.0 (compatible; SPECTRE/1.0)", Accept: "application/json" };
+
+function parseNumericValue(value: string | number | null | undefined): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value !== "string") return null;
+  const cleaned = value.replace(/,/g, "").match(/-?\d+(\.\d+)?/);
+  if (!cleaned) return null;
+  const parsed = Number(cleaned[0]);
+  return Number.isFinite(parsed) ? parsed : null;
+}
 
 // ---- FMP single-symbol quote — returns first array item or null ----
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -225,8 +250,8 @@ async function fetchSectorPerformance(apiKey: string): Promise<SectorPerf[]> {
 // ---- Economic Calendar via FMP ----
 async function fetchEconomicCalendar(apiKey: string): Promise<EconEvent[]> {
   try {
-    const from = new Date();
-    const to = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
+    const from = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const to = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000);
     const fmt = (d: Date) => d.toISOString().split("T")[0];
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), 10_000);
@@ -241,7 +266,7 @@ async function fetchEconomicCalendar(apiKey: string): Promise<EconEvent[]> {
     if (!Array.isArray(data)) return [];
     return data
       .filter((e) => e.country && e.event && (e.impact === "High" || e.impact === "Medium"))
-      .slice(0, 20)
+      .slice(0, 40)
       .map((e) => ({
         date: e.date ?? "",
         country: e.country ?? "",
@@ -282,6 +307,169 @@ async function fetchEarningsCalendar(apiKey: string): Promise<EarningsEvent[]> {
         revenueEstimate: typeof e.revenueEstimated === "number" ? e.revenueEstimated : null,
       }));
   } catch { return []; }
+}
+
+async function fetchEconomicIndicatorSeries(apiKey: string, names: string[]): Promise<MacroIndicator | null> {
+  if (!apiKey) return null;
+  for (const name of names) {
+    try {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 10_000);
+      const res = await fetch(
+        `${FMP_BASE}/economic-indicators?name=${encodeURIComponent(name)}&apikey=${apiKey}`,
+        { cache: "no-store", signal: ctrl.signal }
+      );
+      clearTimeout(t);
+      if (!res.ok) continue;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const data = (await res.json()) as any[];
+      if (!Array.isArray(data) || data.length === 0) continue;
+      const latest = data.find((entry) => entry?.date && entry?.value != null) ?? data[0];
+      const value = typeof latest?.value === "number" ? latest.value : parseNumericValue(latest?.value);
+      if (value == null) continue;
+      return {
+        key: name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+        label: name,
+        value,
+        unit: "",
+        date: typeof latest?.date === "string" ? latest.date : null,
+      };
+    } catch {
+      continue;
+    }
+  }
+  return null;
+}
+
+async function fetchMacroIndicators(apiKey: string): Promise<MacroIndicator[]> {
+  const indicatorConfigs = [
+    { label: "Inflation Rate", names: ["Inflation Rate", "inflationRate"], unit: "%" },
+    { label: "CPI", names: ["CPI", "Consumer Price Index"], unit: "" },
+    { label: "GDP", names: ["GDP", "Gross Domestic Product"], unit: "" },
+    { label: "Unemployment Rate", names: ["Unemployment Rate", "unemploymentRate"], unit: "%" },
+  ];
+
+  const results = await Promise.all(
+    indicatorConfigs.map(async (config) => {
+      const indicator = await fetchEconomicIndicatorSeries(apiKey, config.names);
+      if (!indicator) return null;
+      return { ...indicator, key: config.label.toLowerCase().replace(/[^a-z0-9]+/g, "-"), label: config.label, unit: config.unit };
+    })
+  );
+
+  return results.filter((item): item is MacroIndicator => item !== null);
+}
+
+function deriveMacroRates(events: EconEvent[]): MacroRate[] {
+  const configs = [
+    { key: "rba", label: "RBA Cash Rate", country: "AU", patterns: ["cash rate", "interest rate decision"] },
+    { key: "fed", label: "Fed Funds Rate", country: "US", patterns: ["interest rate decision", "federal funds"] },
+    { key: "ecb", label: "ECB Deposit Rate", country: "EU", patterns: ["deposit facility rate", "interest rate decision", "main refinancing rate"] },
+  ];
+
+  return configs.map((config) => {
+    const match = events.find((event) => {
+      if (event.country !== config.country) return false;
+      const lower = event.event.toLowerCase();
+      return config.patterns.some((pattern) => lower.includes(pattern));
+    });
+    const rawValue = match?.actual ?? match?.estimate ?? match?.prior ?? null;
+    return {
+      key: config.key,
+      label: config.label,
+      value: rawValue,
+      actual: parseNumericValue(rawValue),
+      date: match?.date ?? null,
+      event: match?.event ?? null,
+    };
+  });
+}
+
+async function fetchEarningsSurprises(apiKey: string): Promise<EarningsSurprise[]> {
+  if (!apiKey) return [];
+  const years = [new Date().getUTCFullYear(), new Date().getUTCFullYear() - 1];
+  for (const year of years) {
+    try {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 10_000);
+      const res = await fetch(`${FMP_BASE}/earnings-surprises-bulk?year=${year}&apikey=${apiKey}`, {
+        cache: "no-store",
+        signal: ctrl.signal,
+      });
+      clearTimeout(t);
+      if (!res.ok) continue;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const data = (await res.json()) as any[];
+      if (!Array.isArray(data) || data.length === 0) continue;
+      return data
+        .filter((item) => item?.symbol && item?.date && (item?.epsActual != null || item?.epsEstimated != null))
+        .slice(0, 40)
+        .map((item) => {
+          const actualEps = typeof item.epsActual === "number" ? item.epsActual : null;
+          const estimatedEps = typeof item.epsEstimated === "number" ? item.epsEstimated : null;
+          const surprise = actualEps != null && estimatedEps != null ? actualEps - estimatedEps : null;
+          const surprisePct = surprise != null && estimatedEps && estimatedEps !== 0 ? (surprise / Math.abs(estimatedEps)) * 100 : null;
+          return {
+            symbol: item.symbol ?? "",
+            name: item.symbol ?? "",
+            date: item.date ?? "",
+            actualEps,
+            estimatedEps,
+            surprise,
+            surprisePct,
+          };
+        });
+    } catch {
+      continue;
+    }
+  }
+  return [];
+}
+
+async function fetchCryptoMarket(): Promise<CryptoMarketSnapshot> {
+  const empty: CryptoMarketSnapshot = {
+    btcDominance: null,
+    totalMarketCapUsd: null,
+    totalVolume24hUsd: null,
+    fearGreedValue: null,
+    fearGreedLabel: null,
+    assets: [],
+  };
+
+  try {
+    const [globalRes, marketsRes, fearRes] = await Promise.allSettled([
+      fetch("https://api.coingecko.com/api/v3/global", { cache: "no-store", signal: AbortSignal.timeout(8_000) }),
+      fetch("https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=bitcoin,ethereum,solana&price_change_percentage=24h", { cache: "no-store", signal: AbortSignal.timeout(8_000) }),
+      fetch("https://api.alternative.me/fng/?limit=1", { cache: "no-store", signal: AbortSignal.timeout(8_000) }),
+    ]);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const globalJson = globalRes.status === "fulfilled" && globalRes.value.ok ? await globalRes.value.json() as any : null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const marketsJson = marketsRes.status === "fulfilled" && marketsRes.value.ok ? await marketsRes.value.json() as any[] : [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const fearJson = fearRes.status === "fulfilled" && fearRes.value.ok ? await fearRes.value.json() as any : null;
+
+    return {
+      btcDominance: typeof globalJson?.data?.market_cap_percentage?.btc === "number" ? globalJson.data.market_cap_percentage.btc : null,
+      totalMarketCapUsd: typeof globalJson?.data?.total_market_cap?.usd === "number" ? globalJson.data.total_market_cap.usd : null,
+      totalVolume24hUsd: typeof globalJson?.data?.total_volume?.usd === "number" ? globalJson.data.total_volume.usd : null,
+      fearGreedValue: parseNumericValue(fearJson?.data?.[0]?.value),
+      fearGreedLabel: typeof fearJson?.data?.[0]?.value_classification === "string" ? fearJson.data[0].value_classification : null,
+      assets: Array.isArray(marketsJson)
+        ? marketsJson.map((coin) => ({
+            symbol: typeof coin?.symbol === "string" ? coin.symbol.toUpperCase() : "",
+            name: typeof coin?.name === "string" ? coin.name : "",
+            price: typeof coin?.current_price === "number" ? coin.current_price : null,
+            marketCap: typeof coin?.market_cap === "number" ? coin.market_cap : null,
+            volume24h: typeof coin?.total_volume === "number" ? coin.total_volume : null,
+            changePct24h: typeof coin?.price_change_percentage_24h_in_currency === "number" ? coin.price_change_percentage_24h_in_currency : null,
+          }))
+        : [],
+    };
+  } catch {
+    return empty;
+  }
 }
 
 // ---- Analyst Price Targets via FMP (/price-target-summary) ----
@@ -365,22 +553,29 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(cache.data, { headers: { "Cache-Control": "no-store" } });
   }
 
-  const [indices, commodities, fx, sectorPerformance, economicCalendar, earningsCalendar, analystRatings, news] =
+  const [indices, commodities, fx, sectorPerformance, economicCalendar, macroIndicators, earningsCalendar, earningsSurprises, analystRatings, news, cryptoMarket] =
     await Promise.all([
       fetchIndices(apiKey),
       fetchCommodities(apiKey),
       fetchFx(apiKey),
       fetchSectorPerformance(apiKey),
       fetchEconomicCalendar(apiKey),
+      fetchMacroIndicators(apiKey),
       fetchEarningsCalendar(apiKey),
+      fetchEarningsSurprises(apiKey),
       fetchAnalystRatings(apiKey),
       fetchNews(apiKey),
+      fetchCryptoMarket(),
     ]);
+
+  const macroRates = deriveMacroRates(economicCalendar);
 
   const payload: FmpPayload = {
     fetchedAt: new Date().toISOString(),
     indices, commodities, fx, sectorPerformance,
-    economicCalendar, earningsCalendar, analystRatings, news,
+    economicCalendar, macroRates, macroIndicators,
+    earningsCalendar, earningsSurprises, analystRatings, news,
+    cryptoMarket,
   };
 
   cache = { data: payload, expiresAt: now + CACHE_TTL_MS };

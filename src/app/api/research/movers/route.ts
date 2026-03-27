@@ -18,6 +18,7 @@ interface Mover {
   name: string;
   price: number;
   changePct: number;
+  sparkline: number[];
 }
 
 interface MoversPayload {
@@ -25,6 +26,24 @@ interface MoversPayload {
   losers: Mover[];
   mostActive: Mover[];
   fetchedAt: string;
+}
+
+async function fetchSparkline(symbol: string): Promise<number[]> {
+  const url = `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1mo`;
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8_000);
+    const res = await fetch(url, { cache: "no-store", signal: controller.signal, headers: YAHOO_HEADERS });
+    clearTimeout(timeout);
+    if (!res.ok) return [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const data = (await res.json()) as any;
+    const closes = ((data?.chart?.result?.[0]?.indicators?.quote?.[0]?.close ?? []) as Array<number | null>)
+      .filter((v): v is number => typeof v === "number" && Number.isFinite(v) && v > 0);
+    return closes.slice(-10);
+  } catch {
+    return [];
+  }
 }
 
 async function fetchScreener(scrId: string, count = 5): Promise<Mover[]> {
@@ -38,7 +57,7 @@ async function fetchScreener(scrId: string, count = 5): Promise<Mover[]> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const data = (await res.json()) as any;
     const quotes: unknown[] = data?.finance?.result?.[0]?.quotes ?? [];
-    return quotes
+    const movers = quotes
       .map((q) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const r = q as any;
@@ -48,9 +67,16 @@ async function fetchScreener(scrId: string, count = 5): Promise<Mover[]> {
           name: (r.shortName ?? r.longName ?? r.symbol) as string,
           price: r.regularMarketPrice as number,
           changePct: typeof r.regularMarketChangePercent === "number" ? r.regularMarketChangePercent : 0,
+          sparkline: [],
         };
       })
       .filter((m): m is Mover => m !== null);
+
+    const sparklines = await Promise.allSettled(movers.map((m) => fetchSparkline(m.symbol)));
+    return movers.map((m, index) => ({
+      ...m,
+      sparkline: sparklines[index]?.status === "fulfilled" ? sparklines[index].value : [],
+    }));
   } catch {
     return [];
   }

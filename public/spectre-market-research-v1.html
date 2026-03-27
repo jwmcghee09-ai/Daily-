@@ -1894,6 +1894,90 @@ h3 { font-size: 1.15rem; }
   color: var(--sl-muted);
   font-family: var(--font-mono);
 }
+.metric-card-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin: 14px 0; }
+.metric-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--sl-border);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+.metric-card-label {
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sl-muted);
+  font-family: var(--font-mono);
+}
+.metric-card-value {
+  font-family: var(--font-mono);
+  font-size: 1.18rem;
+  font-weight: 600;
+  color: var(--sl-text);
+  margin-top: 6px;
+}
+.metric-card-sub {
+  margin-top: 4px;
+  font-size: 0.68rem;
+  color: var(--sl-muted);
+}
+.eq-stock-row { cursor: pointer; }
+.eq-stock-row.active { background: rgba(155,93,229,0.08); }
+.eq-stock-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+.eq-stock-sub {
+  font-size: 0.7rem;
+  color: var(--sl-muted);
+  margin-bottom: 10px;
+}
+.mover-row {
+  display: grid;
+  grid-template-columns: 1fr 78px;
+  gap: 12px;
+  align-items: center;
+  padding: 9px 0;
+  border-bottom: 1px solid rgba(255,255,255,.04);
+}
+.mover-row:last-child { border-bottom: none; }
+.mover-spark { width: 72px; height: 24px; display: block; }
+.earnings-grid-2 {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+.chart-note {
+  font-size: 0.68rem;
+  color: var(--sl-muted);
+  margin-bottom: 10px;
+}
+.asset-metric-list { display: grid; gap: 10px; }
+.asset-metric-row {
+  display: grid;
+  grid-template-columns: 64px 1fr auto auto;
+  gap: 10px;
+  align-items: center;
+  padding: 9px 10px;
+  border: 1px solid rgba(255,255,255,.05);
+  border-radius: 8px;
+  background: rgba(255,255,255,.02);
+}
+.asset-metric-sym {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--sl-purple-hi);
+  font-weight: 600;
+}
+.asset-metric-name { font-size: 0.7rem; color: var(--sl-text); }
+.asset-metric-val, .asset-metric-chg {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  text-align: right;
+}
 
 /* ── FMP section full-width within tabs ─────────────────────── */
 .fmp-section.in-tab { display: grid !important; }
@@ -1901,7 +1985,7 @@ h3 { font-size: 1.15rem; }
 .fmp-section.in-tab.cols-2 { grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
 
 @media (max-width: 900px) {
-  .macro-grid, .eq-movers-grid, .earnings-grid, .crypto-tab-charts { grid-template-columns: 1fr !important; }
+  .macro-grid, .eq-movers-grid, .earnings-grid, .crypto-tab-charts, .earnings-grid-2, .metric-card-grid { grid-template-columns: 1fr !important; }
   .crypto-tab-grid { grid-template-columns: 1fr 1fr !important; }
   .fmp-section.in-tab.cols-3, .fmp-section.in-tab.cols-2 { grid-template-columns: 1fr !important; }
 }
@@ -2511,9 +2595,23 @@ h3 { font-size: 1.15rem; }
       </div>
     </div>
 
+    <div class="card reveal" style="margin:14px 0;">
+      <div class="eq-stock-header">
+        <div class="section-label" id="eq-stock-chart-label">ASX Stock Detail</div>
+        <div class="time-pills" style="margin-top:0;">
+          <button class="time-pill active" onclick="loadEquityChart('1m',this)">1M</button>
+          <button class="time-pill" onclick="loadEquityChart('3m',this)">3M</button>
+          <button class="time-pill" onclick="loadEquityChart('6m',this)">6M</button>
+          <button class="time-pill" onclick="loadEquityChart('1y',this)">1Y</button>
+        </div>
+      </div>
+      <div class="eq-stock-sub" id="eq-stock-meta">Select any row below to load an individual ASX chart.</div>
+      <div class="macro-chart-wrap"><canvas id="eq-stock-chart"></canvas></div>
+    </div>
+
     <!-- Full ASX stocks table -->
     <div class="card reveal">
-      <div class="section-label">ASX Top 15 Holdings — Live Quotes</div>
+      <div class="section-label">ASX Constituents — Live Quotes</div>
       <div class="table-wrap">
         <table class="data-table">
           <thead>
@@ -2528,10 +2626,9 @@ h3 { font-size: 1.15rem; }
               <th>Div Yield</th>
               <th>52W High</th>
               <th>52W Low</th>
-              <th>EPS</th>
             </tr>
           </thead>
-          <tbody id="eq-stocks-tbody"><tr><td colspan="11" style="color:var(--sl-muted);font-size:0.72rem;text-align:center;padding:20px;">Loading…</td></tr></tbody>
+          <tbody id="eq-stocks-tbody"><tr><td colspan="10" style="color:var(--sl-muted);font-size:0.72rem;text-align:center;padding:20px;">Loading…</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -2569,12 +2666,9 @@ h3 { font-size: 1.15rem; }
         <div class="section-label">Key Central Bank Rates</div>
         <table class="macro-rates-table">
           <tbody>
-            <tr><td>🇦🇺 RBA Cash Rate</td><td id="macro-rba-rate">4.35%</td></tr>
-            <tr><td>🇺🇸 Fed Funds Rate</td><td id="macro-fed-rate">5.25–5.50%</td></tr>
-            <tr><td>🇬🇧 BoE Base Rate</td><td id="macro-boe-rate">5.25%</td></tr>
-            <tr><td>🇪🇺 ECB Deposit Rate</td><td id="macro-ecb-rate">4.00%</td></tr>
-            <tr><td>🇯🇵 BoJ Policy Rate</td><td id="macro-boj-rate">0.10%</td></tr>
-            <tr><td>🇨🇳 PBoC LPR (1yr)</td><td id="macro-pboc-rate">3.45%</td></tr>
+            <tr><td>🇦🇺 RBA Cash Rate</td><td id="macro-rba-rate">Loading…</td></tr>
+            <tr><td>🇺🇸 Fed Funds Rate</td><td id="macro-fed-rate">Loading…</td></tr>
+            <tr><td>🇪🇺 ECB Deposit Rate</td><td id="macro-ecb-rate">Loading…</td></tr>
           </tbody>
         </table>
       </div>
@@ -2608,6 +2702,10 @@ h3 { font-size: 1.15rem; }
       </div>
     </div>
 
+    <div class="metric-card-grid" id="macro-indicator-grid">
+      <div class="metric-card"><div class="metric-card-label">Macro Indicators</div><div class="metric-card-value">Loading…</div></div>
+    </div>
+
     <!-- Global indices -->
     <div class="card reveal" style="margin-bottom:14px;">
       <div class="section-label">Global Indices</div>
@@ -2628,6 +2726,20 @@ h3 { font-size: 1.15rem; }
 
   <!-- ===== TAB: EARNINGS ===== -->
   <div id="rtab-earnings" class="rtab-panel">
+
+    <div class="earnings-grid-2">
+      <div class="card reveal">
+        <div class="section-label">Recent EPS Surprises</div>
+        <div id="earn-surprises-list">
+          <div style="color:var(--sl-muted);font-size:0.72rem;">Loading…</div>
+        </div>
+      </div>
+      <div class="card reveal">
+        <div class="section-label">EPS Estimates vs Actuals</div>
+        <div class="chart-note" id="earn-surprise-note">Latest reported earnings from the live FMP feed.</div>
+        <div class="macro-chart-wrap"><canvas id="earn-surprise-chart"></canvas></div>
+      </div>
+    </div>
 
     <div class="earnings-grid">
       <div class="card reveal">
@@ -2717,6 +2829,36 @@ h3 { font-size: 1.15rem; }
       </div>
     </div>
 
+    <div class="metric-card-grid">
+      <div class="metric-card">
+        <div class="metric-card-label">BTC Dominance</div>
+        <div class="metric-card-value" id="ct-btc-dominance">—</div>
+        <div class="metric-card-sub">Share of total crypto market cap</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-card-label">24H Volume</div>
+        <div class="metric-card-value" id="ct-total-volume">—</div>
+        <div class="metric-card-sub">Spot market turnover</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-card-label">Fear &amp; Greed</div>
+        <div class="metric-card-value" id="ct-fear-greed">—</div>
+        <div class="metric-card-sub" id="ct-fear-greed-label">Sentiment</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-card-label">Market Cap</div>
+        <div class="metric-card-value" id="ct-total-marketcap">—</div>
+        <div class="metric-card-sub">Total crypto market value</div>
+      </div>
+    </div>
+
+    <div class="card reveal" style="margin-bottom:14px;">
+      <div class="section-label">Market Depth</div>
+      <div class="asset-metric-list" id="ct-asset-metrics">
+        <div style="color:var(--sl-muted);font-size:0.72rem;">Loading…</div>
+      </div>
+    </div>
+
     <!-- Charts -->
     <div class="crypto-tab-charts">
       <div class="card reveal">
@@ -2802,9 +2944,23 @@ const ASX_ORDER = ['BHP','CBA','CSL','WES','ANZ','NAB','FMG','RIO','MQG','WBC','
 
 // Live data — populated by API calls
 const DATA = { stocks: [], news: [], usMovers: { gainers: [], losers: [], mostActive: [] } };
+const _equityState = { symbol: 'BHP.AX', range: '1m' };
 
 function escapeHtml(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function fmtCompactNumber(value, digits) {
+  if (value == null || !isFinite(value)) return '—';
+  return new Intl.NumberFormat('en-AU', {
+    notation: 'compact',
+    maximumFractionDigits: digits ?? 1,
+  }).format(value);
+}
+
+function fmtCompactCurrency(value) {
+  if (value == null || !isFinite(value)) return '—';
+  return '$' + fmtCompactNumber(value, 1);
 }
 
 // ===== SPARKLINE GENERATOR =====
@@ -2826,6 +2982,22 @@ function generateSparkline(yearLow, yearHigh, price, changePct) {
   }
   const color = changePct >= 0 ? '#22c55e' : '#ef4444';
   return `<svg class="sparkline-svg" viewBox="0 0 72 24" fill="none"><polyline points="${pts.join(' ')}" stroke="${color}" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+
+function renderLineSparkline(points, positive) {
+  if (!Array.isArray(points) || points.length < 2) return '';
+  const width = 72;
+  const height = 24;
+  const min = Math.min(...points);
+  const max = Math.max(...points);
+  const range = max - min || 1;
+  const coords = points.map((point, index) => {
+    const x = (index / Math.max(points.length - 1, 1)) * width;
+    const y = height - (((point - min) / range) * (height - 4) + 2);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(' ');
+  const color = positive ? '#22c55e' : '#ef4444';
+  return `<svg class="mover-spark" viewBox="0 0 72 24" fill="none"><polyline points="${coords}" stroke="${color}" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 }
 
 // ===== BADGE MAPPING =====
@@ -3649,7 +3821,7 @@ function renderFx(fx) {
     <div class="fx-row">
       <span class="fx-pair">${escapeHtml(f.label)}</span>
       <span class="fx-rate">${f.rate ? fmtPrice(f.rate, 4) : '—'}</span>
-      <span class="fx-chg ${chgClass(f.change)}">${f.change != null ? fmtPct(f.change) : '—'}</span>
+      <span class="fx-chg ${chgClass(f.changePct)}">${f.changePct != null ? fmtPct(f.changePct) : '—'}</span>
     </div>
   `).join('');
 }
@@ -3802,6 +3974,7 @@ async function fetchFmpData() {
     if (activeTab === 'equities') populateEquitiesTab();
     else if (activeTab === 'macro') populateMacroTab();
     else if (activeTab === 'earnings') populateEarningsTab();
+    else if (activeTab === 'crypto') populateCryptoTab();
   } catch(err) {
     console.warn('FMP fetch failed:', err);
     ['fmp-global-section','fmp-calendars-section','fmp-analytics-section'].forEach(id => {
@@ -3953,6 +4126,67 @@ function makeCjsBarChart(canvasId, labels, values, colors) {
   });
 }
 
+function makeCjsCompareBarChart(canvasId, labels, estimateValues, actualValues) {
+  destroyCjsChart(canvasId);
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  _cjsCharts[canvasId] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Estimate',
+          data: estimateValues,
+          backgroundColor: 'rgba(138,134,168,0.55)',
+          borderRadius: 4,
+        },
+        {
+          label: 'Actual',
+          data: actualValues,
+          backgroundColor: 'rgba(192,132,252,0.75)',
+          borderRadius: 4,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 400 },
+      plugins: {
+        legend: {
+          labels: {
+            color: '#f2eeff',
+            font: { family: 'DM Mono', size: 10 },
+          },
+        },
+        tooltip: {
+          backgroundColor: 'rgba(14,10,24,0.95)',
+          borderColor: 'rgba(255,255,255,0.1)',
+          borderWidth: 1,
+          titleColor: '#8a86a8',
+          bodyColor: '#f2eeff',
+          titleFont: { family: 'DM Mono', size: 10 },
+          bodyFont: { family: 'DM Mono', size: 12 },
+        },
+      },
+      scales: {
+        x: {
+          ticks: { color: '#8a86a8', font: { family: 'DM Mono', size: 9 }, maxRotation: 0 },
+          grid: { display: false },
+          border: { display: false },
+        },
+        y: {
+          ticks: { color: '#8a86a8', font: { family: 'DM Mono', size: 9 } },
+          grid: { color: 'rgba(255,255,255,0.04)' },
+          border: { display: false },
+        },
+      },
+    },
+  });
+}
+
 // Parse chart API response into labels + values
 function parseChartData(data, range) {
   if (!data?.closes?.length) return { labels: [], values: [] };
@@ -3985,8 +4219,97 @@ function switchResearchTab(name, btn) {
 }
 
 // ─── EQUITIES TAB ─────────────────────────────────────────────────
+function getEquityUniverse() {
+  const constituents = window._liveQuotesData?.asxConstituents;
+  if (Array.isArray(constituents) && constituents.length) {
+    return constituents.slice().sort((a, b) => (b.marketCap ?? 0) - (a.marketCap ?? 0));
+  }
+  const asx = window._liveQuotesData?.asx ?? {};
+  return ASX_ORDER.map((sym) => {
+    const q = asx[sym];
+    if (!q) return null;
+    return {
+      ...q,
+      symbol: `${sym}.AX`,
+      marketCap: MCAP_MAP[sym] ?? null,
+      sector: SECTOR_MAP[`${sym}.AX`] ?? null,
+      volume: null,
+      exchange: 'ASX',
+      name: q.name ?? sym,
+    };
+  }).filter(Boolean);
+}
+
+function equityChangePct(quote) {
+  if (quote?.price && quote?.prevClose && quote.prevClose > 0) {
+    return ((quote.price - quote.prevClose) / quote.prevClose) * 100;
+  }
+  return quote?.changePct ?? null;
+}
+
+function syncEquitySelection(list) {
+  if (!list.length) return null;
+  const exists = list.some(item => item.symbol === _equityState.symbol);
+  if (!exists) _equityState.symbol = list[0].symbol;
+  return list.find(item => item.symbol === _equityState.symbol) ?? list[0];
+}
+
+function updateEquitySelectionCard(selected) {
+  const labelEl = document.getElementById('eq-stock-chart-label');
+  const metaEl = document.getElementById('eq-stock-meta');
+  if (!selected) {
+    if (labelEl) labelEl.textContent = 'ASX Stock Detail';
+    if (metaEl) metaEl.textContent = 'Select any row below to load an individual ASX chart.';
+    return;
+  }
+  const changePct = equityChangePct(selected);
+  const cap = selected.marketCap ? fmtCompactCurrency(selected.marketCap) : '—';
+  const volume = selected.volume ? fmtCompactNumber(selected.volume, 1) : '—';
+  if (labelEl) labelEl.textContent = `${selected.symbol.replace('.AX','')} · ${selected.name || 'ASX constituent'}`;
+  if (metaEl) {
+    const changeText = changePct == null ? '—' : `${changePct >= 0 ? '+' : ''}${changePct.toFixed(2)}%`;
+    metaEl.textContent = `${selected.sector || 'Sector n/a'} · Mkt Cap ${cap} · Volume ${volume} · Day ${changeText}`;
+  }
+}
+
+function highlightEquityRows() {
+  document.querySelectorAll('#eq-stocks-tbody tr[data-symbol]').forEach((row) => {
+    row.classList.toggle('active', row.getAttribute('data-symbol') === _equityState.symbol);
+  });
+}
+
+function selectEquityTicker(symbol) {
+  _equityState.symbol = symbol;
+  highlightEquityRows();
+  const selected = syncEquitySelection(getEquityUniverse());
+  updateEquitySelectionCard(selected);
+  const activeBtn = document.querySelector('#rtab-equities .time-pill.active');
+  void loadEquityChart(_equityState.range, activeBtn);
+}
+
+async function loadEquityChart(range, btn) {
+  _equityState.range = range;
+  if (btn) {
+    const siblings = btn.closest('.time-pills')?.querySelectorAll('.time-pill');
+    if (siblings) siblings.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+  const symbol = _equityState.symbol || 'BHP.AX';
+  try {
+    const demoParam = state.demoMode ? '&demo=1' : '';
+    const data = await apiJson(`/api/research/chart?ticker=${encodeURIComponent(symbol)}&range=${range}${demoParam}`);
+    if (data?.closes?.length) {
+      const { labels, values } = parseChartData(data, range);
+      makeCjsLineChart('eq-stock-chart', labels, values, '#c084fc', symbol.replace('.AX',''));
+    }
+  } catch (e) {
+    console.warn('Equity chart failed:', e);
+  }
+}
+
 function populateEquitiesTab() {
   const fmp = window._fmpData;
+  const equities = getEquityUniverse();
 
   // Sector bar chart
   if (fmp?.sectorPerformance?.length) {
@@ -3999,18 +4322,20 @@ function populateEquitiesTab() {
 
   // Stocks table
   const tbody = document.getElementById('eq-stocks-tbody');
-  if (tbody && window._liveQuotesData?.asx) {
-    const asx = window._liveQuotesData.asx;
-    const rows = ASX_ORDER.map(sym => {
-      const q = asx[sym];
-      if (!q) return '';
-      const chgPct = (q.price && q.prevClose && q.prevClose > 0) ? ((q.price - q.prevClose)/q.prevClose*100) : null;
+  if (tbody) {
+    const selected = syncEquitySelection(equities);
+    updateEquitySelectionCard(selected);
+    const rows = equities.map((q) => {
+      if (!q?.symbol) return '';
+      const chgPct = equityChangePct(q);
       const chgClass = chgPct == null ? '' : chgPct >= 0 ? 'pos' : 'neg';
-      const mcap = MCAP_MAP[sym] ? (MCAP_MAP[sym] >= 1e9 ? '$' + (MCAP_MAP[sym]/1e9).toFixed(1)+'B' : '$' + (MCAP_MAP[sym]/1e6).toFixed(0)+'M') : '—';
-      return `<tr>
-        <td class="mono" style="font-weight:600;">${escapeHtml(sym)}</td>
+      const mcap = q.marketCap ? fmtCompactCurrency(q.marketCap) : '—';
+      const sector = q.sector || SECTOR_MAP[q.symbol] || '—';
+      const symbol = q.symbol.replace('.AX', '');
+      return `<tr class="eq-stock-row ${q.symbol === _equityState.symbol ? 'active' : ''}" data-symbol="${escapeHtml(q.symbol)}" onclick="selectEquityTicker('${q.symbol}')">
+        <td class="mono" style="font-weight:600;">${escapeHtml(symbol)}</td>
         <td style="font-size:0.65rem;color:var(--sl-muted);">${escapeHtml(q.name || '')}</td>
-        <td><span class="badge ${sectorBadge(SECTOR_MAP[sym+'.AX'] || '')}">${escapeHtml(SECTOR_MAP[sym+'.AX'] || '—')}</span></td>
+        <td>${sectorBadge(sector)}</td>
         <td class="mono">$${q.price ? q.price.toFixed(2) : '—'}</td>
         <td class="mono ${chgClass}">${chgPct != null ? (chgPct>=0?'+':'')+chgPct.toFixed(2)+'%' : '—'}</td>
         <td class="mono">${mcap}</td>
@@ -4018,10 +4343,14 @@ function populateEquitiesTab() {
         <td class="mono">${q.divYield ? q.divYield.toFixed(2)+'%' : '—'}</td>
         <td class="mono">${q.yearHigh ? '$'+q.yearHigh.toFixed(2) : '—'}</td>
         <td class="mono">${q.yearLow ? '$'+q.yearLow.toFixed(2) : '—'}</td>
-        <td class="mono">—</td>
-      </tr>`;
+        </tr>`;
     }).join('');
-    tbody.innerHTML = rows || '<tr><td colspan="11" style="color:var(--sl-muted);text-align:center;padding:20px;">No data</td></tr>';
+    tbody.innerHTML = rows || '<tr><td colspan="10" style="color:var(--sl-muted);text-align:center;padding:20px;">No data</td></tr>';
+    highlightEquityRows();
+    if (selected) {
+      const activeBtn = document.querySelector('#rtab-equities .time-pill.active');
+      void loadEquityChart(_equityState.range, activeBtn);
+    }
   }
 
   // Analyst grid (duplicate from overview)
@@ -4039,12 +4368,16 @@ function populateEquitiesMovers() {
   const losersEl = document.getElementById('eq-losers-list');
 
   function moverRow(m) {
-    const pct = parseFloat(m.changesPercentage ?? 0);
+    const pct = parseFloat(m.changePct ?? m.changesPercentage ?? 0);
     const cls = pct >= 0 ? 'pos' : 'neg';
-    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04);">
+    const spark = renderLineSparkline(m.sparkline || [], pct >= 0);
+    return `<div class="mover-row">
       <div>
-        <span class="mono" style="font-weight:600;font-size:0.78rem;">${escapeHtml(m.ticker||m.symbol||'')}</span>
-        <span style="color:var(--sl-muted);font-size:0.62rem;margin-left:8px;">${escapeHtml((m.companyName||m.name||'').substring(0,28))}</span>
+        <div>
+          <span class="mono" style="font-weight:600;font-size:0.78rem;">${escapeHtml(m.symbol || m.ticker || '')}</span>
+          <span style="color:var(--sl-muted);font-size:0.62rem;margin-left:8px;">${escapeHtml((m.name || m.companyName || '').substring(0,32))}</span>
+        </div>
+        ${spark}
       </div>
       <div style="text-align:right;">
         <div class="mono" style="font-size:0.75rem;">$${parseFloat(m.price||0).toFixed(2)}</div>
@@ -4062,6 +4395,17 @@ function populateMacroTab() {
   const fmp = window._fmpData;
   if (!fmp) return;
 
+  const rateMap = Object.fromEntries((fmp.macroRates || []).map(rate => [rate.key, rate]));
+  const setRate = (id, key) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const rate = rateMap[key];
+    el.textContent = rate?.value || '—';
+  };
+  setRate('macro-rba-rate', 'rba');
+  setRate('macro-fed-rate', 'fed');
+  setRate('macro-ecb-rate', 'ecb');
+
   // FX grid (macro)
   const fxEl = document.getElementById('macro-fx-grid');
   if (fxEl && fmp.fx?.length) {
@@ -4070,9 +4414,21 @@ function populateMacroTab() {
       <div class="fx-row">
         <span class="fx-pair">${escapeHtml(f.label)}</span>
         <span class="fx-rate">${fmtPrice(f.rate, 4)}</span>
-        <span class="fx-chg ${chgClass(f.change)}">${fmtPct(f.change)}</span>
+        <span class="fx-chg ${chgClass(f.changePct)}">${fmtPct(f.changePct)}</span>
       </div>
     `).join('') || '<div style="color:var(--sl-muted);font-size:0.72rem;">No data.</div>';
+  }
+
+  const macroIndicatorEl = document.getElementById('macro-indicator-grid');
+  if (macroIndicatorEl) {
+    const indicators = Array.isArray(fmp.macroIndicators) ? fmp.macroIndicators.slice(0, 4) : [];
+    macroIndicatorEl.innerHTML = indicators.length ? indicators.map(ind => `
+      <div class="metric-card">
+        <div class="metric-card-label">${escapeHtml(ind.label)}</div>
+        <div class="metric-card-value">${ind.value != null ? `${fmtCompactNumber(ind.value, 2)}${ind.unit || ''}` : '—'}</div>
+        <div class="metric-card-sub">${ind.date ? `As of ${escapeHtml(new Date(ind.date).toLocaleDateString('en-AU',{ day:'numeric', month:'short', year:'numeric' }))}` : 'Economic indicator'}</div>
+      </div>
+    `).join('') : '<div class="metric-card"><div class="metric-card-label">Macro Indicators</div><div class="metric-card-value">—</div><div class="metric-card-sub">No FMP indicator data available.</div></div>';
   }
 
   // Commodities (macro)
@@ -4114,6 +4470,39 @@ async function loadMacroChart(symbol, range, btn) {
 function populateEarningsTab() {
   const fmp = window._fmpData;
 
+  const surprises = Array.isArray(fmp?.earningsSurprises) ? fmp.earningsSurprises.slice(0, 10) : [];
+  const surprisesEl = document.getElementById('earn-surprises-list');
+  if (surprisesEl) {
+    surprisesEl.innerHTML = surprises.length ? surprises.map((item) => {
+      const surprisePct = item.surprisePct;
+      const cls = surprisePct == null ? '' : surprisePct >= 0 ? 'pos' : 'neg';
+      const actual = item.actualEps != null ? item.actualEps.toFixed(2) : '—';
+      const estimate = item.estimatedEps != null ? item.estimatedEps.toFixed(2) : '—';
+      return `<div class="earn-item">
+        <span class="earn-date">${escapeHtml(new Date(item.date).toLocaleDateString('en-AU',{ day:'numeric', month:'short' }))}</span>
+        <span class="earn-sym">${escapeHtml((item.symbol || '').replace('.AX',''))}</span>
+        <span class="earn-name">Act ${escapeHtml(actual)} · Est ${escapeHtml(estimate)}</span>
+        <span class="earn-eps ${cls}">${surprisePct == null ? '—' : `${surprisePct >= 0 ? '+' : ''}${surprisePct.toFixed(1)}%`}</span>
+      </div>`;
+    }).join('') : '<div style="color:var(--sl-muted);font-size:0.72rem;">No earnings surprise data.</div>';
+  }
+
+  const chartItems = surprises.slice(0, 6).reverse();
+  const noteEl = document.getElementById('earn-surprise-note');
+  if (noteEl) {
+    noteEl.textContent = chartItems.length ? `Latest ${chartItems.length} reported earnings from the live FMP feed.` : 'Latest reported earnings from the live FMP feed.';
+  }
+  if (chartItems.length) {
+    makeCjsCompareBarChart(
+      'earn-surprise-chart',
+      chartItems.map(item => `${(item.symbol || '').replace('.AX','')} ${new Date(item.date).toLocaleDateString('en-AU',{ day:'numeric', month:'short' })}`),
+      chartItems.map(item => item.estimatedEps ?? 0),
+      chartItems.map(item => item.actualEps ?? 0),
+    );
+  } else {
+    destroyCjsChart('earn-surprise-chart');
+  }
+
   // Earnings calendar
   const earnEl = document.getElementById('earn-tab-list');
   const sourceEarnEl = document.getElementById('fmp-earn-list');
@@ -4146,6 +4535,31 @@ function populateCryptoTab() {
   setCryptoCard('ct-btc-price', 'ct-btc-chg', quotes.crypto.btc);
   setCryptoCard('ct-eth-price', 'ct-eth-chg', quotes.crypto.eth);
   setCryptoCard('ct-sol-price', 'ct-sol-chg', quotes.crypto.sol);
+
+  const market = window._fmpData?.cryptoMarket;
+  const dominanceEl = document.getElementById('ct-btc-dominance');
+  const volumeEl = document.getElementById('ct-total-volume');
+  const fearEl = document.getElementById('ct-fear-greed');
+  const fearLabelEl = document.getElementById('ct-fear-greed-label');
+  const marketCapEl = document.getElementById('ct-total-marketcap');
+  if (dominanceEl) dominanceEl.textContent = market?.btcDominance != null ? `${market.btcDominance.toFixed(1)}%` : '—';
+  if (volumeEl) volumeEl.textContent = fmtCompactCurrency(market?.totalVolume24hUsd ?? null);
+  if (fearEl) fearEl.textContent = market?.fearGreedValue != null ? String(Math.round(market.fearGreedValue)) : '—';
+  if (fearLabelEl) fearLabelEl.textContent = market?.fearGreedLabel || 'Sentiment';
+  if (marketCapEl) marketCapEl.textContent = fmtCompactCurrency(market?.totalMarketCapUsd ?? null);
+
+  const assetEl = document.getElementById('ct-asset-metrics');
+  if (assetEl) {
+    const assets = Array.isArray(market?.assets) ? market.assets : [];
+    assetEl.innerHTML = assets.length ? assets.map((asset) => `
+      <div class="asset-metric-row">
+        <div class="asset-metric-sym">${escapeHtml(asset.symbol)}</div>
+        <div class="asset-metric-name">${escapeHtml(asset.name)}</div>
+        <div class="asset-metric-val">${fmtCompactCurrency(asset.marketCap)}</div>
+        <div class="asset-metric-chg ${chgClass(asset.changePct24h)}">${asset.changePct24h != null ? `${asset.changePct24h >= 0 ? '+' : ''}${asset.changePct24h.toFixed(2)}%` : '—'}</div>
+      </div>
+    `).join('') : '<div style="color:var(--sl-muted);font-size:0.72rem;">No crypto market metrics available.</div>';
+  }
 }
 
 async function loadCryptoChart(symbol, range, btn) {

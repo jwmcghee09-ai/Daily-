@@ -36,6 +36,16 @@ const SYMBOL_MAP: Record<string, string> = {
   vix:     "%5EVIX",
 };
 
+function normalizeDynamicSymbol(raw: string | null): string | null {
+  if (!raw) return null;
+  const trimmed = raw.trim().toUpperCase();
+  if (!/^[A-Z0-9.^=\-]+$/.test(trimmed)) return null;
+  if (trimmed.endsWith(".AX") || trimmed.startsWith("^") || trimmed.includes("=") || trimmed.includes("-")) {
+    return encodeURIComponent(trimmed);
+  }
+  return encodeURIComponent(`${trimmed}.AX`);
+}
+
 async function fetchChart(range: string, yahooSymbol: string): Promise<ChartPayload | null> {
   const cfg = RANGE_CONFIG[range];
   if (!cfg) return null;
@@ -76,13 +86,16 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const demo = searchParams.get("demo") === "1";
   const range = searchParams.get("range") ?? "6m";
-  const symbolKey = (searchParams.get("symbol") ?? "asx200").toLowerCase();
+  const symbolParam = searchParams.get("symbol");
+  const symbolKey = (symbolParam ?? "asx200").toLowerCase();
+  const tickerParam = searchParams.get("ticker");
 
   if (!RANGE_CONFIG[range]) {
     return NextResponse.json({ error: "Invalid range" }, { status: 400 });
   }
 
-  const yahooSymbol = SYMBOL_MAP[symbolKey];
+  const dynamicSymbol = normalizeDynamicSymbol(tickerParam ?? (SYMBOL_MAP[symbolKey] ? null : symbolParam));
+  const yahooSymbol = dynamicSymbol ?? SYMBOL_MAP[symbolKey];
   if (!yahooSymbol) {
     return NextResponse.json({ error: "Invalid symbol" }, { status: 400 });
   }
@@ -98,7 +111,7 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  const cacheKey = `${symbolKey}:${range}`;
+  const cacheKey = `${dynamicSymbol ?? symbolKey}:${range}`;
   const now = Date.now();
   const cached = cache[cacheKey];
   if (cached && cached.expiresAt > now) {
