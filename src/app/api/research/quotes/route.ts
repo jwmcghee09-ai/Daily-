@@ -221,6 +221,53 @@ async function fetchCryptoFromCoinGecko(): Promise<{ btc: QuoteData | null; eth:
   }
 }
 
+async function fetchCryptoFromFmp(apiKey: string): Promise<{ btc: QuoteData | null; eth: QuoteData | null; sol: QuoteData | null }> {
+  if (!apiKey) return { btc: null, eth: null, sol: null };
+  const symbols = [
+    { key: "btc", symbol: "BTCUSD", out: "BTC-USD", name: "Bitcoin" },
+    { key: "eth", symbol: "ETHUSD", out: "ETH-USD", name: "Ethereum" },
+    { key: "sol", symbol: "SOLUSD", out: "SOL-USD", name: "Solana" },
+  ] as const;
+
+  const results = await Promise.allSettled(symbols.map(async (item) => {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 8_000);
+    const res = await fetch(`${FMP_BASE}/quote?symbol=${item.symbol}&apikey=${apiKey}`, {
+      cache: "no-store",
+      signal: ctrl.signal,
+    });
+    clearTimeout(t);
+    if (!res.ok) return { key: item.key, quote: null };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const data = (await res.json()) as any[];
+    const row = Array.isArray(data) ? data[0] : null;
+    if (!row || typeof row.price !== "number") return { key: item.key, quote: null };
+    const price = row.price as number;
+    const change = typeof row.change === "number" ? row.change : null;
+    const prevClose = change != null ? price - change : null;
+    return {
+      key: item.key,
+      quote: {
+        symbol: item.out,
+        price,
+        prevClose,
+        yearHigh: null,
+        yearLow: null,
+        pe: null,
+        divYield: null,
+        name: item.name,
+      } satisfies QuoteData,
+    };
+  }));
+
+  const out = { btc: null, eth: null, sol: null } as { btc: QuoteData | null; eth: QuoteData | null; sol: QuoteData | null };
+  for (const result of results) {
+    if (result.status !== "fulfilled" || !result.value.quote) continue;
+    out[result.value.key] = result.value.quote;
+  }
+  return out;
+}
+
 // Frankfurter (ECB data) — primary source for AUD/USD rate
 async function fetchAudUsdFromFrankfurter(): Promise<number | null> {
   try {
@@ -264,11 +311,12 @@ export async function GET(request: NextRequest) {
   const fmpApiKey = process.env.FMP_API_KEY ?? "";
   const extraSymbols = ["^AXJO", "^AORD", "AUDUSD=X", "^VIX", "BTC-USD", "ETH-USD", "SOL-USD", "XAUUSD=X", "GC=F"];
 
-  const [fmpAsxResults, asxConstituents, extraQuotes, coingecko, frankfurterAudUsd] = await Promise.all([
+  const [fmpAsxResults, asxConstituents, extraQuotes, fmpCrypto, coingecko, frankfurterAudUsd] = await Promise.all([
     // Use FMP profile as primary source for ASX stocks (more reliable than Yahoo for AU exchange)
     Promise.all(ASX_TICKERS.map((t) => fetchFmpProfile(t, fmpApiKey))),
     fetchAsxConstituents(fmpApiKey),
     Promise.all(extraSymbols.map(fetchQuote)),
+    fetchCryptoFromFmp(fmpApiKey),
     fetchCryptoFromCoinGecko(),
     fetchAudUsdFromFrankfurter(),
   ]);
@@ -296,10 +344,13 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // Use CoinGecko for BTC/ETH/SOL if available, fall back to Yahoo
-  if (coingecko.btc) bySymbol["BTC-USD"] = coingecko.btc;
-  if (coingecko.eth) bySymbol["ETH-USD"] = coingecko.eth;
-  if (coingecko.sol) bySymbol["SOL-USD"] = coingecko.sol;
+  // Prefer FMP for BTC/ETH/SOL, then CoinGecko, then Yahoo
+  if (fmpCrypto.btc) bySymbol["BTC-USD"] = fmpCrypto.btc;
+  else if (coingecko.btc) bySymbol["BTC-USD"] = coingecko.btc;
+  if (fmpCrypto.eth) bySymbol["ETH-USD"] = fmpCrypto.eth;
+  else if (coingecko.eth) bySymbol["ETH-USD"] = coingecko.eth;
+  if (fmpCrypto.sol) bySymbol["SOL-USD"] = fmpCrypto.sol;
+  else if (coingecko.sol) bySymbol["SOL-USD"] = coingecko.sol;
 
   // Use FMP AUDUSD rate if available, else Frankfurter, else Yahoo
   const fmpAudUsd = await (async () => {

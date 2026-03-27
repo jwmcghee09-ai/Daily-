@@ -387,6 +387,46 @@ function deriveMacroRates(events: EconEvent[]): MacroRate[] {
 
 async function fetchEarningsSurprises(apiKey: string): Promise<EarningsSurprise[]> {
   if (!apiKey) return [];
+  const symbols = ["BHP.AX", "CBA.AX", "CSL.AX", "NAB.AX", "WBC.AX", "ANZ.AX"];
+  const results = await Promise.allSettled(
+    symbols.map(async (symbol) => {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 10_000);
+      const res = await fetch(`${FMP_BASE}/earnings?symbol=${encodeURIComponent(symbol)}&apikey=${apiKey}`, {
+        cache: "no-store",
+        signal: ctrl.signal,
+      });
+      clearTimeout(t);
+      if (!res.ok) return [];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const data = (await res.json()) as any[];
+      if (!Array.isArray(data)) return [];
+      return data.slice(0, 6).map((item) => {
+        const actualEps = typeof item.eps === "number" ? item.eps : typeof item.epsActual === "number" ? item.epsActual : null;
+        const estimatedEps = typeof item.epsEstimated === "number" ? item.epsEstimated : null;
+        const surprise = actualEps != null && estimatedEps != null ? actualEps - estimatedEps : null;
+        const surprisePct = surprise != null && estimatedEps && estimatedEps !== 0 ? (surprise / Math.abs(estimatedEps)) * 100 : null;
+        return {
+          symbol,
+          name: symbol.replace(".AX", ""),
+          date: item.date ?? item.fillingDate ?? "",
+          actualEps,
+          estimatedEps,
+          surprise,
+          surprisePct,
+        };
+      });
+    })
+  );
+
+  const flattened = results.flatMap((result) => result.status === "fulfilled" ? result.value : []);
+  if (flattened.length > 0) {
+    return flattened
+      .filter((item) => item.date && (item.actualEps != null || item.estimatedEps != null))
+      .sort((a, b) => String(b.date).localeCompare(String(a.date)))
+      .slice(0, 20);
+  }
+
   const years = [new Date().getUTCFullYear(), new Date().getUTCFullYear() - 1];
   for (const year of years) {
     try {

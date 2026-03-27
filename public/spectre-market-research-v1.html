@@ -1836,7 +1836,7 @@ h3 { font-size: 1.15rem; }
 /* ── Equities tab ────────────────────────────────────────────── */
 .sector-chart-wrap {
   position: relative;
-  height: 220px;
+  height: 160px;
   margin-bottom: 4px;
 }
 .eq-movers-grid {
@@ -1856,7 +1856,7 @@ h3 { font-size: 1.15rem; }
 .macro-rates-table { width: 100%; border-collapse: collapse; }
 .macro-rates-table td { padding: 8px 10px; font-size: 0.72rem; border-bottom: 1px solid rgba(255,255,255,.04); }
 .macro-rates-table td:last-child { text-align: right; font-family: var(--font-mono); }
-.macro-chart-wrap { position: relative; height: 180px; }
+.macro-chart-wrap { position: relative; height: 145px; }
 
 /* ── Earnings tab ────────────────────────────────────────────── */
 .earnings-grid {
@@ -1877,7 +1877,7 @@ h3 { font-size: 1.15rem; }
   grid-template-columns: 1fr 1fr;
   gap: 14px;
 }
-.crypto-tab-chart-wrap { position: relative; height: 200px; }
+.crypto-tab-chart-wrap { position: relative; height: 155px; }
 .crypto-big-price {
   font-family: var(--font-mono);
   font-size: 1.7rem;
@@ -1954,6 +1954,17 @@ h3 { font-size: 1.15rem; }
   font-size: 0.68rem;
   color: var(--sl-muted);
   margin-bottom: 10px;
+}
+.chart-empty {
+  min-height: 88px !important;
+  height: 88px !important;
+}
+.chart-empty canvas { opacity: 0.95; }
+.section-kicker {
+  font-size: 0.62rem;
+  color: var(--sl-muted);
+  font-family: var(--font-mono);
+  letter-spacing: 0.08em;
 }
 .asset-metric-list { display: grid; gap: 10px; }
 .asset-metric-row {
@@ -2611,7 +2622,7 @@ h3 { font-size: 1.15rem; }
 
     <!-- Full ASX stocks table -->
     <div class="card reveal">
-      <div class="section-label">ASX Constituents — Live Quotes</div>
+      <div class="section-label" id="eq-table-title">ASX Constituents — Live Quotes</div>
       <div class="table-wrap">
         <table class="data-table">
           <thead>
@@ -2635,10 +2646,11 @@ h3 { font-size: 1.15rem; }
 
     <!-- Analyst consensus -->
     <div class="card reveal" style="margin-top:14px;">
-      <div class="section-label">Analyst Consensus — ASX Watchlist</div>
-      <div class="analyst-grid" id="eq-analyst-grid">
-        <div style="color:var(--sl-muted);font-size:0.72rem;">Loading…</div>
-      </div>
+        <div class="section-label">Analyst Consensus — ASX Watchlist</div>
+        <div class="section-kicker" id="eq-analyst-kicker">FMP price-target coverage</div>
+        <div class="analyst-grid" id="eq-analyst-grid">
+          <div style="color:var(--sl-muted);font-size:0.72rem;">Loading…</div>
+        </div>
     </div>
 
   </div><!-- /rtab-equities -->
@@ -3994,6 +4006,31 @@ const _tabInit = { overview: true, equities: false, macro: false, earnings: fals
 // Chart.js instances keyed by canvas id
 const _cjsCharts = {};
 
+function setChartEmpty(canvasId, message, compactHeight) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas || !canvas.getContext) return;
+  const wrap = canvas.parentElement;
+  if (wrap) {
+    wrap.classList.add('chart-empty');
+    if (compactHeight) wrap.style.height = `${compactHeight}px`;
+  }
+  const { ctx, width, height } = setupCanvas(canvas);
+  ctx.fillStyle = '#8a86a8';
+  ctx.font = '11px "DM Mono", monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(message || 'No data available', width / 2, height / 2);
+}
+
+function clearChartEmpty(canvasId) {
+  const canvas = document.getElementById(canvasId);
+  const wrap = canvas?.parentElement;
+  if (wrap) {
+    wrap.classList.remove('chart-empty');
+    wrap.style.height = '';
+  }
+}
+
 function setupCanvas(canvas) {
   const dpr = window.devicePixelRatio || 1;
   const width = Math.max(canvas.clientWidth || canvas.parentElement?.clientWidth || 320, 320);
@@ -4128,6 +4165,11 @@ function makeCjsLineChart(canvasId, labels, values, color, label) {
   destroyCjsChart(canvasId);
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
+  if (!values?.length) {
+    setChartEmpty(canvasId, 'Awaiting FMP series', 90);
+    return;
+  }
+  clearChartEmpty(canvasId);
   if (typeof Chart === 'undefined') {
     drawFallbackLineChart(canvasId, labels, values, color);
     return;
@@ -4208,6 +4250,11 @@ function makeCjsBarChart(canvasId, labels, values, colors) {
   destroyCjsChart(canvasId);
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
+  if (!values?.length) {
+    setChartEmpty(canvasId, 'Awaiting FMP data', 90);
+    return;
+  }
+  clearChartEmpty(canvasId);
   if (typeof Chart === 'undefined') {
     drawFallbackBarChart(canvasId, labels, values, colors);
     return;
@@ -4264,6 +4311,11 @@ function makeCjsCompareBarChart(canvasId, labels, estimateValues, actualValues) 
   destroyCjsChart(canvasId);
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
+  if (!labels?.length) {
+    setChartEmpty(canvasId, 'No FMP earnings history yet', 90);
+    return;
+  }
+  clearChartEmpty(canvasId);
   if (typeof Chart === 'undefined') {
     drawFallbackCompareBarChart(canvasId, labels, estimateValues, actualValues);
     return;
@@ -4439,8 +4491,11 @@ async function loadEquityChart(range, btn) {
     if (data?.closes?.length) {
       const { labels, values } = parseChartData(data, range);
       makeCjsLineChart('eq-stock-chart', labels, values, '#c084fc', symbol.replace('.AX',''));
+    } else {
+      setChartEmpty('eq-stock-chart', 'No equity chart data', 92);
     }
   } catch (e) {
+    setChartEmpty('eq-stock-chart', 'No equity chart data', 92);
     console.warn('Equity chart failed:', e);
   }
 }
@@ -4456,13 +4511,19 @@ function populateEquitiesTab() {
     const values = sectors.map(s => parseFloat(s.changesPercentage ?? s.changePct ?? 0));
     const colors = values.map(v => v >= 0 ? 'rgba(34,197,94,0.75)' : 'rgba(239,68,68,0.75)');
     makeCjsBarChart('eq-sector-chart', labels, values, colors);
+  } else {
+    setChartEmpty('eq-sector-chart', 'No FMP sector feed', 90);
   }
 
   // Stocks table
   const tbody = document.getElementById('eq-stocks-tbody');
+  const tableTitleEl = document.getElementById('eq-table-title');
   if (tbody) {
     const selected = syncEquitySelection(equities);
     updateEquitySelectionCard(selected);
+    if (tableTitleEl) {
+      tableTitleEl.textContent = `ASX Constituents — ${equities.length} FMP names`;
+    }
     const rows = equities.map((q) => {
       if (!q?.symbol) return '';
       const chgPct = equityChangePct(q);
@@ -4488,6 +4549,8 @@ function populateEquitiesTab() {
     if (selected) {
       const activeBtn = document.querySelector('#rtab-equities .time-pill.active');
       void loadEquityChart(_equityState.range, activeBtn);
+    } else {
+      setChartEmpty('eq-stock-chart', 'Select an FMP equity row', 92);
     }
   }
 
@@ -4508,7 +4571,12 @@ function populateEquitiesMovers() {
   function moverRow(m) {
     const pct = parseFloat(m.changePct ?? m.changesPercentage ?? 0);
     const cls = pct >= 0 ? 'pos' : 'neg';
-    const spark = renderLineSparkline(m.sparkline || [], pct >= 0);
+    const spark = renderLineSparkline(m.sparkline || [], pct >= 0) || generateSparkline(
+      Math.max((Number(m.price) || 0) * 0.92, 0.01),
+      Math.max((Number(m.price) || 0) * 1.08, 0.02),
+      Number(m.price) || 0,
+      pct
+    );
     return `<div class="mover-row">
       <div>
         <div>
@@ -4524,8 +4592,8 @@ function populateEquitiesMovers() {
     </div>`;
   }
 
-  if (gainersEl) gainersEl.innerHTML = movers.gainers.length ? movers.gainers.slice(0,8).map(moverRow).join('') : '<div style="color:var(--sl-muted);font-size:0.72rem;">Loading…</div>';
-  if (losersEl) losersEl.innerHTML = movers.losers.length ? movers.losers.slice(0,8).map(moverRow).join('') : '<div style="color:var(--sl-muted);font-size:0.72rem;">Loading…</div>';
+  if (gainersEl) gainersEl.innerHTML = movers.gainers.length ? movers.gainers.slice(0,8).map(moverRow).join('') : '<div style="color:var(--sl-muted);font-size:0.72rem;">No FMP gainers feed.</div>';
+  if (losersEl) losersEl.innerHTML = movers.losers.length ? movers.losers.slice(0,8).map(moverRow).join('') : '<div style="color:var(--sl-muted);font-size:0.72rem;">No FMP losers feed.</div>';
 }
 
 // ─── MACRO TAB ────────────────────────────────────────────────────
@@ -4600,8 +4668,10 @@ async function loadMacroChart(symbol, range, btn) {
     if (data?.closes?.length) {
       const { labels, values } = parseChartData(data, range);
       makeCjsLineChart(canvasId, labels, values, color, label);
+    } else {
+      setChartEmpty(canvasId, 'No macro chart data', 90);
     }
-  } catch(e) { console.warn('Macro chart failed:', e); }
+  } catch(e) { setChartEmpty(canvasId, 'No macro chart data', 90); console.warn('Macro chart failed:', e); }
 }
 
 // ─── EARNINGS TAB ─────────────────────────────────────────────────
@@ -4639,6 +4709,7 @@ function populateEarningsTab() {
     );
   } else {
     destroyCjsChart('earn-surprise-chart');
+    setChartEmpty('earn-surprise-chart', 'No FMP earnings history yet', 92);
   }
 
   // Earnings calendar
@@ -4716,8 +4787,10 @@ async function loadCryptoChart(symbol, range, btn) {
     if (data?.closes?.length) {
       const { labels, values } = parseChartData(data, range);
       makeCjsLineChart(canvasId, labels, values, color, labelMap[symbol]);
+    } else {
+      setChartEmpty(canvasId, 'No crypto chart data', 90);
     }
-  } catch(e) { console.warn('Crypto chart failed:', e); }
+  } catch(e) { setChartEmpty(canvasId, 'No crypto chart data', 90); console.warn('Crypto chart failed:', e); }
 }
 
 // Live quotes stored globally via window._liveQuotesData in fetchLiveQuotes()

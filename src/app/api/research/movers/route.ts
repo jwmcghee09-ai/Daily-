@@ -4,10 +4,7 @@ import { readUserEntitlements } from "@/lib/db";
 
 export const runtime = "nodejs";
 
-const YAHOO_HEADERS = {
-  "User-Agent": "Mozilla/5.0 (compatible; SPECTRE/1.0)",
-  Accept: "application/json",
-};
+const FMP_MARKET_BASE = "https://financialmodelingprep.com/api/v3/stock_market";
 
 // 10-minute cache
 let cache: { data: MoversPayload; expiresAt: number } | null = null;
@@ -28,55 +25,42 @@ interface MoversPayload {
   fetchedAt: string;
 }
 
-async function fetchSparkline(symbol: string): Promise<number[]> {
-  const url = `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1mo`;
-  try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 8_000);
-    const res = await fetch(url, { cache: "no-store", signal: controller.signal, headers: YAHOO_HEADERS });
-    clearTimeout(timeout);
-    if (!res.ok) return [];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const data = (await res.json()) as any;
-    const closes = ((data?.chart?.result?.[0]?.indicators?.quote?.[0]?.close ?? []) as Array<number | null>)
-      .filter((v): v is number => typeof v === "number" && Number.isFinite(v) && v > 0);
-    return closes.slice(-10);
-  } catch {
-    return [];
-  }
+function parsePct(value: unknown): number {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value !== "string") return 0;
+  const match = value.match(/-?\d+(\.\d+)?/);
+  if (!match) return 0;
+  const parsed = Number(match[0]);
+  return Number.isFinite(parsed) ? parsed : 0;
 }
 
-async function fetchScreener(scrId: string, count = 5): Promise<Mover[]> {
-  const url = `https://query2.finance.yahoo.com/v1/finance/screener/predefined/saved?scrIds=${scrId}&count=${count}&region=US&lang=en-US`;
+async function fetchFmpMovers(listType: "gainers" | "losers" | "actives", apiKey: string, count = 8): Promise<Mover[]> {
+  if (!apiKey) return [];
+  const url = `${FMP_MARKET_BASE}/${listType}?apikey=${apiKey}`;
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 8_000);
-    const res = await fetch(url, { cache: "no-store", signal: controller.signal, headers: YAHOO_HEADERS });
+    const res = await fetch(url, { cache: "no-store", signal: controller.signal });
     clearTimeout(timeout);
     if (!res.ok) return [];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const data = (await res.json()) as any;
-    const quotes: unknown[] = data?.finance?.result?.[0]?.quotes ?? [];
-    const movers: Mover[] = quotes
-      .map((q) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const r = q as any;
-        if (!r?.symbol || typeof r.regularMarketPrice !== "number") return null;
+    const data = (await res.json()) as any[];
+    if (!Array.isArray(data)) return [];
+    return data
+      .slice(0, count)
+      .map((r) => {
+        if (!r?.symbol) return null;
+        const price = typeof r.price === "number" ? r.price : Number(r.price);
+        if (!Number.isFinite(price)) return null;
         return {
           symbol: r.symbol as string,
           name: (r.shortName ?? r.longName ?? r.symbol) as string,
-          price: r.regularMarketPrice as number,
-          changePct: typeof r.regularMarketChangePercent === "number" ? r.regularMarketChangePercent : 0,
+          price,
+          changePct: parsePct(r.changesPercentage ?? r.changePercentage ?? r.changePercent),
           sparkline: [] as number[],
         };
       })
       .filter((m): m is Mover => m !== null);
-
-    const sparklines = await Promise.allSettled(movers.map((m) => fetchSparkline(m.symbol)));
-    return movers.map((m, index) => ({
-      ...m,
-      sparkline: sparklines[index]?.status === "fulfilled" ? sparklines[index].value : [],
-    }));
   } catch {
     return [];
   }
@@ -98,10 +82,11 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(cache.data, { headers: { "Cache-Control": "no-store" } });
   }
 
+  const apiKey = process.env.FMP_API_KEY ?? "";
   const [gainers, losers, mostActive] = await Promise.all([
-    fetchScreener("day_gainers"),
-    fetchScreener("day_losers"),
-    fetchScreener("most_actives"),
+    fetchFmpMovers("gainers", apiKey),
+    fetchFmpMovers("losers", apiKey),
+    fetchFmpMovers("actives", apiKey),
   ]);
 
   const payload: MoversPayload = {
