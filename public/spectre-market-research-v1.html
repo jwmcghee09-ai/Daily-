@@ -5447,7 +5447,12 @@ function makeCjsLineChart(canvasId, labels, values, color, label) {
     if (v >= 10)    return v.toFixed(2);
     return v.toFixed(4);
   };
-  void minVal; // suppress unused-variable lint
+  // Explicit Y-axis bounds: pad by 8% of the data range so the line fills the chart area
+  // without this Chart.js sometimes starts Y near 0 which crushes FX/small-range data
+  const dataRange = maxVal - minVal || maxVal * 0.02;
+  const yPad = dataRange * 0.08;
+  const yMin = minVal - yPad;
+  const yMax = maxVal + yPad;
 
   _cjsCharts[canvasId] = new Chart(ctx, {
     type: 'line',
@@ -5504,6 +5509,8 @@ function makeCjsLineChart(canvasId, labels, values, color, label) {
         y: {
           display: true,
           position: 'right',
+          min: yMin,
+          max: yMax,
           grid: { color: 'rgba(255,255,255,0.03)', drawTicks: false },
           ticks: {
             color: '#6b6886',
@@ -5681,16 +5688,18 @@ function switchResearchTab(name, btn) {
   else if (name === 'crypto') populateCryptoTab();
 
   // Charts only load on first visit (async/network-heavy)
+  // Double-RAF ensures the browser has completed layout before Chart.js reads canvas dimensions
   if (firstVisit) {
-    if (name === 'macro') {
-      loadMacroChart('aud', '1m', null);
-      loadMacroChart('gold', '1m', null);
-    }
-    else if (name === 'crypto') {
-      loadCryptoChart('btc', '1m', null);
-      loadCryptoChart('eth', '1m', null);
-      loadCryptoChart('sol', '1m', null);
-    }
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      if (name === 'macro') {
+        loadMacroChart('aud', '1m', null);
+        loadMacroChart('gold', '1m', null);
+      } else if (name === 'crypto') {
+        loadCryptoChart('btc', '1m', null);
+        loadCryptoChart('eth', '1m', null);
+        loadCryptoChart('sol', '1m', null);
+      }
+    }));
   }
 }
 
