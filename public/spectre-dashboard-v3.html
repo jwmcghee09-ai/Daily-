@@ -1038,30 +1038,14 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     </div>
 
     <!-- Headline -->
-    <h1 class="ai-hero-title">Ask your portfolio anything.</h1>
-    <p class="ai-hero-sub">Grounded in your live holdings, real-time market data, and risk metrics.</p>
+    <h1 class="ai-hero-title">Your portfolio intelligence.</h1>
+    <p class="ai-hero-sub">AI-powered analysis grounded in your live holdings, risk metrics, and research.</p>
 
-    <!-- Big input card -->
-    <div class="ai-input-card" id="ai-hero-card">
-      <textarea class="ai-input-textarea" id="pro-ai-question" maxlength="700" placeholder="What may be influencing the value of my current holdings?">What may be influencing the value of my current holdings?</textarea>
-      <div class="ai-input-footer">
-        <div class="ai-input-chips" id="pro-ai-chips">
-          <button type="button" class="ai-chip" data-q="What are my biggest concentration risks right now?">Concentration</button>
-          <button type="button" class="ai-chip" data-q="Which holdings are most exposed to AUD/USD weakness?">AUD exposure</button>
-          <button type="button" class="ai-chip" data-q="What is driving my portfolio volatility?">Volatility</button>
-          <button type="button" class="ai-chip" data-q="Where should I consider reducing risk?">Reduce risk</button>
-          <button type="button" class="ai-chip" data-q="How does my crypto exposure affect overall portfolio risk?">Crypto risk</button>
-          <button type="button" class="ai-chip" data-q="Which sectors are over or underweight in my portfolio?">Sectors</button>
-        </div>
-        <div class="ai-input-actions">
-          <button type="button" id="refresh-prices-btn" class="ai-refresh-btn" title="Refresh live prices">↻ Refresh</button>
-          <button type="button" class="ai-send-btn" id="pro-ai-ask-btn">
-            <span id="pro-ai-ask-label">Ask AI</span>
-            <span class="ai-send-arrow">↑</span>
-          </button>
-        </div>
-      </div>
-    </div>
+    <!-- Hidden inputs kept for JS compat — card removed -->
+    <textarea id="pro-ai-question" style="display:none" maxlength="700">What may be influencing the value of my current holdings?</textarea>
+    <button type="button" id="pro-ai-ask-btn" style="display:none"><span id="pro-ai-ask-label">Ask AI</span></button>
+    <button type="button" id="refresh-prices-btn" style="display:none">Refresh</button>
+    <div id="pro-ai-chips" style="display:none"></div>
 
     <div class="console-ai-error" id="pro-ai-error" hidden></div>
     <div class="ai-hero-output" id="pro-ai-output"></div>
@@ -4448,6 +4432,10 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
           renderPortfolio();
         }
       });
+      // Auto-run AI analysis once on load (card removed — runs silently)
+      if (!state.holdingsAi && !state.holdingsAiLoading) {
+        window.setTimeout(() => { runHoldingsAi(); }, 800);
+      }
     } catch (error) {
       showToast(error instanceof Error ? error.message : "Failed to load dashboard.", "error");
     } finally {
