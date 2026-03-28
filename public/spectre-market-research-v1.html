@@ -2202,6 +2202,9 @@ h3 { font-size: 1.15rem; }
 .asset-metric-name { font-size: 0.7rem; color: var(--sl-text); }
 .asset-metric-val, .asset-metric-chg {
   font-family: var(--font-mono);
+  font-size: 0.68rem;
+  text-align: right;
+}
 
 /* ── Crypto price card extras ─────────────────────────────── */
 .crypto-tab-tag {
@@ -2343,9 +2346,6 @@ h3 { font-size: 1.15rem; }
   .eq-summary-strip { flex-wrap: wrap; }
   .eq-summary-cell { flex: 1 1 40%; }
 }
-  font-size: 0.68rem;
-  text-align: right;
-}
 
 /* ── FMP section full-width within tabs ─────────────────────── */
 .fmp-section.in-tab { display: grid !important; }
@@ -2380,6 +2380,386 @@ h3 { font-size: 1.15rem; }
   .workspace-sub { margin-top: 12px; font-size: 0.84rem; line-height: 1.55; }
   .workspace-meta-grid { grid-template-columns: 1fr; }
   .workspace-meta-item.wide { grid-column: auto; }
+}
+
+/* ═══════════════════════════════════════════════════
+   VISUAL OVERHAUL — Bloomberg-grade polish
+   ═══════════════════════════════════════════════════ */
+
+/* ── Page header ────────────────────────────────── */
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 20px;
+  background: linear-gradient(135deg, rgba(22,14,38,.9) 0%, rgba(14,10,24,.95) 100%);
+  border: 1px solid rgba(155,93,229,.15);
+  border-radius: 12px;
+  margin-bottom: 16px;
+  backdrop-filter: blur(16px);
+  gap: 16px;
+}
+.page-title {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  background: linear-gradient(130deg, #fff 40%, var(--sl-purple-hi));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.page-subtitle {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--sl-muted);
+  margin-left: 10px;
+  padding-left: 10px;
+  border-left: 1px solid rgba(255,255,255,.1);
+}
+
+/* ── Research tab nav — pill-style ─────────────── */
+.research-tab-nav {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-bottom: none;
+  margin-bottom: 20px;
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 11px;
+}
+.rtab {
+  flex: 1;
+  text-align: center;
+  background: none;
+  border: none;
+  border-bottom: none;
+  border-radius: 8px;
+  color: var(--sl-muted);
+  font-family: var(--font-mono);
+  font-size: 0.63rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 7px 14px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  margin-bottom: 0;
+}
+.rtab:hover {
+  color: var(--sl-text);
+  background: rgba(255,255,255,.04);
+}
+.rtab.active {
+  color: #e8deff;
+  background: linear-gradient(135deg, rgba(155,93,229,.3) 0%, rgba(155,93,229,.15) 100%);
+  box-shadow: 0 1px 10px rgba(155,93,229,.2), inset 0 1px 0 rgba(255,255,255,.08);
+  border: none;
+}
+
+/* ── Section labels — terminal accent bar ───────── */
+.section-label {
+  font-size: 0.6rem !important;
+  letter-spacing: 0.11em !important;
+  text-transform: uppercase !important;
+  font-family: var(--font-mono) !important;
+  color: var(--sl-muted) !important;
+  padding-bottom: 10px !important;
+  margin-bottom: 14px !important;
+  border-bottom: 1px solid rgba(255,255,255,.05) !important;
+  padding-left: 9px !important;
+  border-left: 2px solid var(--sl-purple) !important;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* ── Cards — richer glass ───────────────────────── */
+.card {
+  background: linear-gradient(150deg, rgba(22,14,38,.88) 0%, rgba(13,8,24,.94) 100%) !important;
+  border: 1px solid rgba(155,93,229,.13) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 2px 20px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.04) !important;
+}
+.card:hover {
+  border-color: rgba(155,93,229,.22) !important;
+  box-shadow: 0 4px 28px rgba(0,0,0,.45), 0 0 0 1px rgba(155,93,229,.08) !important;
+  transform: none !important;
+}
+
+/* ── Hero metric cards ─────────────────────────── */
+.hero-card {
+  padding: 14px 18px !important;
+}
+.hero-card .label {
+  font-size: 0.57rem !important;
+  letter-spacing: 0.13em !important;
+  text-transform: uppercase !important;
+  color: var(--sl-muted) !important;
+  font-family: var(--font-mono) !important;
+  margin-bottom: 6px !important;
+}
+.hero-card .value span {
+  font-size: 1.75rem !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.03em !important;
+  color: #fff !important;
+}
+.hero-card .change {
+  margin-top: 4px !important;
+  font-size: 0.72rem !important;
+  font-family: var(--font-mono) !important;
+}
+
+/* ── Crypto price cards ─────────────────────────── */
+.crypto-tab-card {
+  padding: 18px 20px !important;
+  position: relative;
+  overflow: hidden;
+}
+.crypto-tab-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 80% 20%, rgba(155,93,229,.06) 0%, transparent 60%);
+  pointer-events: none;
+}
+.crypto-big-price {
+  font-family: var(--font-mono) !important;
+  font-size: 1.95rem !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.03em !important;
+  color: #fff !important;
+  margin: 8px 0 3px !important;
+  line-height: 1 !important;
+}
+.crypto-big-chg {
+  font-family: var(--font-mono) !important;
+  font-size: 0.82rem !important;
+  font-weight: 600 !important;
+}
+.crypto-tab-symbol {
+  font-size: 0.56rem !important;
+  letter-spacing: 0.15em !important;
+  text-transform: uppercase !important;
+  color: rgba(255,255,255,.35) !important;
+  font-family: var(--font-mono) !important;
+}
+.crypto-tab-tag {
+  font-size: 0.55rem !important;
+  letter-spacing: 0.1em !important;
+  padding: 2px 9px !important;
+  border-radius: 5px !important;
+  font-weight: 600 !important;
+}
+
+/* ── Metric stat cards (dominance/fear/vol) ─────── */
+.metric-card {
+  background: rgba(22,14,38,.55) !important;
+  border: 1px solid rgba(155,93,229,.1) !important;
+  border-radius: 12px !important;
+  padding: 16px 18px !important;
+}
+.metric-card-label {
+  font-size: 0.57rem !important;
+  letter-spacing: 0.12em !important;
+  color: rgba(255,255,255,.4) !important;
+}
+.metric-card-value {
+  font-size: 1.3rem !important;
+  font-weight: 700 !important;
+  margin-top: 7px !important;
+  letter-spacing: -0.02em !important;
+}
+
+/* ── Rates strip (macro) ────────────────────────── */
+.macro-rates-strip {
+  background: linear-gradient(135deg, rgba(22,14,38,.92) 0%, rgba(14,10,24,.96) 100%) !important;
+  border: 1px solid rgba(155,93,229,.13) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 2px 16px rgba(0,0,0,.3) !important;
+}
+.macro-rate-cell { padding: 14px 18px !important; }
+.macro-rate-name {
+  font-size: 0.54rem !important;
+  letter-spacing: 0.12em !important;
+  color: rgba(255,255,255,.38) !important;
+}
+.macro-rate-val {
+  font-size: 1.4rem !important;
+  font-weight: 700 !important;
+  margin: 5px 0 4px !important;
+  letter-spacing: -0.02em !important;
+}
+.macro-rate-dir {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.56rem !important;
+  letter-spacing: 0.06em !important;
+  padding: 2px 7px !important;
+  border-radius: 5px !important;
+  font-weight: 600 !important;
+}
+.macro-rate-dir.hold { background: rgba(255,181,71,.12) !important; color: var(--sl-amber) !important; }
+.macro-rate-dir.cut  { background: rgba(34,197,94,.12) !important; color: var(--green) !important; }
+.macro-rate-dir.hike { background: rgba(239,68,68,.12) !important; color: var(--red) !important; }
+
+/* ── Equities summary strip ─────────────────────── */
+.eq-summary-strip {
+  background: linear-gradient(135deg, rgba(22,14,38,.92) 0%, rgba(14,10,24,.96) 100%) !important;
+  border: 1px solid rgba(155,93,229,.13) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 2px 16px rgba(0,0,0,.3) !important;
+}
+.eq-summary-cell { padding: 14px 18px !important; }
+.eq-summary-label {
+  font-size: 0.54rem !important;
+  letter-spacing: 0.12em !important;
+  color: rgba(255,255,255,.38) !important;
+}
+.eq-summary-val {
+  font-size: 1.25rem !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.02em !important;
+  margin: 5px 0 3px !important;
+}
+.eq-summary-sub { font-size: 0.6rem !important; font-family: var(--font-mono) !important; }
+
+/* ── Mover rows ─────────────────────────────────── */
+.mover-row {
+  border-bottom: 1px solid rgba(255,255,255,.03) !important;
+  padding: 8px 0 !important;
+  transition: background .12s;
+  border-radius: 6px;
+  padding: 8px 6px !important;
+  margin: 0 -6px;
+}
+.mover-row:hover { background: rgba(155,93,229,.05); }
+.mover-row:last-child { border-bottom: none !important; }
+
+/* ── Chart wrappers — taller ────────────────────── */
+.macro-chart-wrap { height: 165px !important; }
+.crypto-tab-chart-wrap { height: 170px !important; }
+.sector-chart-wrap { height: 170px !important; }
+
+/* ── Asset market depth rows ────────────────────── */
+.asset-metric-row {
+  background: rgba(22,14,38,.5) !important;
+  border: 1px solid rgba(155,93,229,.08) !important;
+  border-radius: 9px !important;
+  transition: border-color .15s;
+}
+.asset-metric-row:hover { border-color: rgba(155,93,229,.2) !important; }
+
+/* ── FX / commodity rows ────────────────────────── */
+.fx-row {
+  display: flex;
+  align-items: center;
+  padding: 7px 0;
+  border-bottom: 1px solid rgba(255,255,255,.03);
+  gap: 10px;
+}
+.fx-row:last-child { border-bottom: none; }
+.fx-pair { font-family: var(--font-mono); font-size: 0.7rem; color: var(--sl-text); flex: 1; }
+.fx-rate { font-family: var(--font-mono); font-size: 0.72rem; font-weight: 600; color: #fff; }
+.fx-chg  { font-family: var(--font-mono); font-size: 0.65rem; min-width: 54px; text-align: right; }
+
+/* ── Data table upgrades ────────────────────────── */
+.data-table th {
+  background: rgba(155,93,229,.06) !important;
+  border-bottom: 1px solid rgba(155,93,229,.12) !important;
+  color: rgba(255,255,255,.45) !important;
+}
+.data-table tbody tr:hover td { background: rgba(155,93,229,.07) !important; }
+
+/* ── Earn / surprise items ─────────────────────── */
+.earn-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  border-radius: 7px;
+  transition: background .12s;
+}
+.earn-item:hover { background: rgba(155,93,229,.06); }
+.earn-date { font-family: var(--font-mono); font-size: 0.6rem; color: var(--sl-muted); min-width: 52px; }
+.earn-sym  { font-family: var(--font-mono); font-size: 0.7rem; font-weight: 600; color: var(--sl-purple-hi); min-width: 44px; }
+.earn-name { font-size: 0.65rem; color: var(--sl-muted); flex: 1; }
+.earn-eps  { font-family: var(--font-mono); font-size: 0.7rem; font-weight: 600; min-width: 54px; text-align: right; }
+
+/* ── Analyst / consensus cards ──────────────────── */
+.analyst-card {
+  background: rgba(22,14,38,.5) !important;
+  border: 1px solid rgba(155,93,229,.1) !important;
+  border-radius: 10px !important;
+  padding: 12px 14px !important;
+}
+
+/* ── Time pill buttons ──────────────────────────── */
+.time-pill {
+  padding: 4px 12px !important;
+  font-size: 0.6rem !important;
+  border-radius: 6px !important;
+  background: rgba(255,255,255,.05) !important;
+  border: 1px solid rgba(255,255,255,.07) !important;
+  color: var(--sl-muted) !important;
+  transition: all .15s !important;
+}
+.time-pill:hover { background: rgba(155,93,229,.15) !important; color: var(--sl-text) !important; }
+.time-pill.active {
+  background: rgba(155,93,229,.22) !important;
+  border-color: rgba(155,93,229,.35) !important;
+  color: var(--sl-purple-hi) !important;
+}
+
+/* ── Fear & Greed meter — bigger needle ─────────── */
+.fear-greed-track {
+  height: 7px !important;
+  border-radius: 4px !important;
+  margin: 10px 0 6px !important;
+}
+.fear-greed-needle {
+  width: 14px !important;
+  height: 14px !important;
+  top: -4px !important;
+  border: 2px solid rgba(0,0,0,.5) !important;
+}
+
+/* ── Dominance bar ─────────────────────────────── */
+.dominance-bar-wrap {
+  height: 6px !important;
+  margin-top: 12px !important;
+  border-radius: 4px !important;
+}
+
+/* ── Pos / neg colors ──────────────────────────── */
+.pos { color: var(--green) !important; }
+.neg { color: var(--red) !important; }
+
+/* ── nav date stays updated ─────────────────────── */
+#nav-market-status {
+  border-radius: 6px;
+  padding: 3px 10px;
+  font-size: 0.62rem;
+  font-family: var(--font-mono);
+  letter-spacing: 0.05em;
+}
+
+@media (max-width: 900px) {
+  .rtab { font-size: 0.58rem; padding: 6px 8px; }
+  .crypto-big-price { font-size: 1.5rem !important; }
+  .macro-rate-val { font-size: 1.1rem !important; }
+  .eq-summary-val { font-size: 1rem !important; }
+  .crypto-tab-grid { grid-template-columns: 1fr 1fr !important; }
+}
+@media (max-width: 600px) {
+  .research-tab-nav { flex-wrap: wrap; }
+  .rtab { flex: 1 1 30%; }
+  .crypto-tab-grid { grid-template-columns: 1fr !important; }
+  .crypto-big-price { font-size: 1.75rem !important; }
 }
 </style>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
