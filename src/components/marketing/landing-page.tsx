@@ -34,89 +34,55 @@ const workflowSteps: readonly WorkflowStep[] = [
   {
     number: "01 — IMPORT",
     title: "Import Reports",
-    copy:
-      "Upload super, savings, tax reports, ASX brokerage, crypto wallet, index funds, mutual funds, and bullion exports directly into SPECTRE.",
+    copy: "Drop in CSV or XLSX exports from any Australian broker, exchange, or fund.",
     icon: <UploadIcon />,
   },
   {
     number: "02 — NORMALIZE",
     title: "Normalize Exposure",
-    copy:
-      "SPECTRE aggregates positions by source, account, sector, and instrument in one unified workspace.",
+    copy: "Holdings combined by source, sector, and instrument into one view.",
     icon: <GridIcon />,
     alt: true,
   },
   {
     number: "03 — REVIEW",
     title: "Act on Risk Signals",
-    copy:
-      "Use risk score, drawdown, VaR95, concentration metrics, and dip alert emails to monitor your portfolio posture.",
+    copy: "Risk score, concentration alerts, VaR95, and dip emails — all in one place.",
     icon: <PulseIcon />,
-  },
-] as const;
-
-const researchSteps: readonly WorkflowStep[] = [
-  {
-    number: "01 — SCAN",
-    title: "Get the Full Market Picture",
-    copy:
-      "Open the terminal to see live ASX 200, AUD/USD, VIX fear index, Gold, BTC and ETH side by side. Scan sector pressure, US movers and a live news feed tagged by theme before touching your portfolio.",
-    icon: <PulseIcon />,
-  },
-  {
-    number: "02 — COMPARE",
-    title: "Drill Into Stocks & Earnings",
-    copy:
-      "Review 15 ASX blue chips with live PE ratios, dividend yields and 52-week ranges. Compare against the latest earnings snapshots and analyst bull/bear cases so each holding is judged against its actual operating context.",
-    icon: <GridIcon />,
-    alt: true,
-  },
-  {
-    number: "03 — ACT",
-    title: "Trade With Market Conviction",
-    copy:
-      "Return to your risk dashboard with a clear view of what is driving the market. Make concentration, rebalancing and dip alert decisions backed by the same macro data that professional analysts use.",
-    icon: <BarsIcon />,
   },
 ] as const;
 
 const features: readonly MarketingCard[] = [
   {
-    title: "ASX + Crypto + Super Imports",
-    copy:
-      "Ingest brokerage, crypto wallet, super, savings, tax reports, index, fund, and bullion exports in one workflow.",
+    title: "Multi-Source Import",
+    copy: "Super, ASX, crypto, funds, and bullion — one import flow.",
     icon: <UploadIcon />,
   },
   {
-    title: "Risk Score + Dashboard",
-    copy:
-      "Track one clear risk score alongside VaR95, drawdown, volatility, and concentration in a live dashboard.",
+    title: "Risk Score",
+    copy: "One number. Five signal dimensions. Live dashboard.",
     icon: <PulseIcon />,
     alt: true,
   },
   {
-    title: "Market Research Terminal",
-    copy:
-      "Open a dedicated research view for ASX leadership, macro context, earnings snapshots, sector pressure, and cross-asset sentiment.",
+    title: "Research Terminal",
+    copy: "ASX, macro, earnings, and crypto — all in one tab.",
     icon: <BarsIcon />,
   },
   {
     title: "Session Movers",
-    copy:
-      "Surface ASX top movers and trigger dip alert emails using refreshed market prices each session.",
+    copy: "Today's biggest ASX movers with dip email alerts.",
     icon: <BarsIcon />,
   },
   {
-    title: "Snapshot Audit Trail",
-    copy:
-      "Review portfolio trend history and data quality signals over time with automated snapshot captures.",
+    title: "Snapshot History",
+    copy: "Historical risk snapshots with data quality signals.",
     icon: <ClockIcon />,
     alt: true,
   },
   {
-    title: "Dip Alert Emails",
-    copy:
-      "Set price thresholds and receive email alerts when holdings reach dip levels worth reviewing.",
+    title: "Dip Alerts",
+    copy: "Email alerts when your holdings hit your thresholds.",
     icon: <BellIcon />,
     alt: true,
   },
@@ -152,28 +118,24 @@ const sessionMovers = [
 
 const securityCards: readonly MarketingCard[] = [
   {
-    title: "Privacy Promise",
-    copy:
-      "We do not sell your data. Portfolio uploads are used only to generate your analytics workspace.",
+    title: "No data selling",
+    copy: "Your portfolio is used only to generate your workspace. We don't share or sell it.",
     icon: <UsersIcon />,
   },
   {
-    title: "Data Control & Deletion",
-    copy:
-      "Clear imported holdings, snapshots, and dip alerts anytime from the dashboard. Cancelling your paid plan does not unexpectedly wipe your workspace.",
+    title: "Delete anytime",
+    copy: "Clear holdings, snapshots, and alerts from the dashboard whenever you want.",
     icon: <TrashIcon />,
     alt: true,
   },
   {
-    title: "Account & Payment Security",
-    copy:
-      "Email verification, scrypt password hashing, secure cookies, and Stripe-hosted checkout are already wired into production flows.",
+    title: "Secure accounts",
+    copy: "scrypt password hashing, secure cookies, and Stripe-hosted checkout.",
     icon: <LockIcon />,
   },
   {
-    title: "Hosting & Hardening",
-    copy:
-      "Production runs over HTTPS with CSP, HSTS, anti-framing headers, and encrypted backups with restore verification checks.",
+    title: "Hardened hosting",
+    copy: "HTTPS with CSP, HSTS, anti-framing headers, and encrypted backups.",
     icon: <ShieldIcon />,
     alt: true,
   },
@@ -534,35 +496,20 @@ export default function LandingPage({
 
       <section className={styles.section} id="research">
         <div className={styles.container}>
-          <div className={`${styles.sectionLabel} ${styles.reveal}`}>ASX Market Research</div>
-          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`} style={{ transitionDelay: "0.07s" }}>From ASX market context to portfolio conviction.</h2>
+          <div className={`${styles.sectionLabel} ${styles.reveal}`}>Market Research</div>
+          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`} style={{ transitionDelay: "0.07s" }}>Market context before you act.</h2>
           <p className={`${styles.sectionSub} ${styles.reveal}`} style={{ transitionDelay: "0.14s" }}>
-            SPECTRE Research gives Plus and Pro members a 5-tab terminal — Overview, Equities, Macro, Earnings, and Crypto — with live indices, interactive charts, 12 ASX earnings snapshots, analyst sentiment, sector performance, and cross-asset data updated in real time.
+            A 5-tab terminal for Plus and Pro — macro, equities, earnings, sector, and crypto in one place.
           </p>
-
-          <div className={styles.steps}>
-            {researchSteps.map((step, index) => (
-              <article
-                key={step.title}
-                className={`${styles.stepCard} ${styles.reveal}`}
-                style={{ transitionDelay: `${index * 0.1}s` }}
-              >
-                <span className={styles.stepNumber}>{step.number}</span>
-                <div className={`${styles.iconWrap} ${step.alt ? styles.iconAlt : ""}`}>{step.icon}</div>
-                <h3>{step.title}</h3>
-                <p>{step.copy}</p>
-              </article>
-            ))}
-          </div>
 
           <div className={styles.researchHighlights}>
             {[
-              { name: "5-Tab Research Terminal", sub: "Overview, Equities, Macro, Earnings, and Crypto — each with live data and Chart.js charts", alt: false },
-              { name: "Live Metrics Strip", sub: "ASX 200, AUD/USD, VIX, Gold, BTC, ETH and SOL refreshing every 5 minutes", alt: false },
-              { name: "12 ASX Earnings Snapshots", sub: "BHP, CBA, CSL, WES, NAB, ANZ, WBC, MQG, RIO, FMG, WDS, TLS — beat/miss status and key metrics", alt: false },
-              { name: "Sector & Macro Charts", sub: "Interactive Chart.js bar and line charts for sector performance, AUD/USD, Gold, and crypto", alt: true },
-              { name: "US Market Movers", sub: "Live gainers, losers and most active from FMP and Yahoo Finance screener", alt: true },
-              { name: "Live News Feed", sub: "FMP and Yahoo Finance headlines with economic calendar and earnings calendar", alt: true },
+              { name: "Live Indices", sub: "ASX 200, AUD/USD, VIX, Gold, BTC, ETH — refreshed every 5 minutes", alt: false },
+              { name: "12 Earnings Snapshots", sub: "BHP, CBA, CSL, WES, ANZ, NAB, WBC, MQG, RIO, FMG, WDS, TLS", alt: false },
+              { name: "Sector Charts", sub: "Interactive bar and line charts for sector performance and macro data", alt: false },
+              { name: "US Market Movers", sub: "Live gainers, losers, and most active each session", alt: true },
+              { name: "News Feed", sub: "FMP and Yahoo Finance headlines with economic calendar", alt: true },
+              { name: "Analyst Context", sub: "Bull/bear cases and earnings beat/miss status per stock", alt: true },
             ].map((tile, index) => (
               <div key={tile.name} className={`${styles.researchTile} ${styles.reveal}`} style={{ transitionDelay: `${index * 0.08}s` }}>
                 <div className={`${styles.researchTileIcon} ${tile.alt ? styles.researchTileIconAlt : ""}`}>
@@ -689,10 +636,7 @@ export default function LandingPage({
       <section className={styles.section} id="features">
         <div className={styles.container}>
           <div className={`${styles.sectionLabel} ${styles.reveal}`}>Features</div>
-          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`} style={{ transitionDelay: "0.07s" }}>Designed for clarity, built for risk decisions.</h2>
-          <p className={`${styles.sectionSub} ${styles.reveal}`} style={{ transitionDelay: "0.14s" }}>
-            Every feature is purpose-built for Australian investors who need a clear, consolidated risk view across multiple account types.
-          </p>
+          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`} style={{ transitionDelay: "0.07s" }}>Everything you need, nothing you don&apos;t.</h2>
 
           <div className={styles.featureGrid}>
             {features.map((feature, index) => (
@@ -710,11 +654,8 @@ export default function LandingPage({
 
       <section className={styles.section} id="charts">
         <div className={styles.container}>
-          <div className={`${styles.sectionLabel} ${styles.reveal}`}>Feature Preview</div>
-          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`} style={{ transitionDelay: "0.07s" }}>Concrete dashboard visuals, not abstract promises.</h2>
-          <p className={`${styles.sectionSub} ${styles.reveal}`} style={{ transitionDelay: "0.14s" }}>
-            These charts render from demo values and show the exact layout your real imported data produces.
-          </p>
+          <div className={`${styles.sectionLabel} ${styles.reveal}`}>Dashboard Preview</div>
+          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`} style={{ transitionDelay: "0.07s" }}>This is what your data looks like.</h2>
 
           <div className={styles.chartsGrid}>
             <article className={`${styles.chartCard} ${styles.chartTall} ${styles.revealLeft}`}>
@@ -741,7 +682,7 @@ export default function LandingPage({
               </div>
 
               <div className={styles.chartFooter}>
-                Higher bars indicate elevated risk in that dimension. Concentration and VaR95 are your primary signals to monitor.
+                Concentration and VaR95 are your primary signals.
               </div>
             </article>
 
@@ -782,7 +723,7 @@ export default function LandingPage({
               </div>
 
               <div className={styles.chartFooter}>
-                Drawdown measures peak-to-trough decline. Your current max drawdown sits at -11% over the trailing 12 months.
+                Peak-to-trough decline over the trailing 12 months.
               </div>
             </article>
 
@@ -805,7 +746,7 @@ export default function LandingPage({
               </div>
 
               <div className={styles.chartFooter}>
-                Hidden concentration is the most common risk for multi-source portfolios. Top-3 positions at 42% exceeds the 35% caution threshold.
+                Top-3 at 42% exceeds the 35% caution threshold.
               </div>
             </article>
 
@@ -833,7 +774,7 @@ export default function LandingPage({
               </div>
 
               <div className={styles.chartFooter}>
-                Holdings in your portfolio that moved today are highlighted. Dip alerts trigger on your configured thresholds.
+                Dip alerts trigger when holdings hit your thresholds.
               </div>
             </article>
           </div>
@@ -842,59 +783,10 @@ export default function LandingPage({
 
       <Divider />
 
-      <section className={styles.section} id="pro-ai">
-        <div className={`${styles.container} ${styles.revealScale}`}>
-          <div className={styles.proPanel}>
-            <div>
-              <div className={styles.proTag}>★ AI Analysis — All Plans</div>
-              <h2 className={styles.sectionTitle}>Ask AI about your holdings — on every plan.</h2>
-              <p className={styles.sectionSub}>
-                AI holdings analysis is available at every tier. Ask direct questions about what is influencing the value of your current holdings. Pro unlocks unlimited queries.
-              </p>
-              <ul className={styles.proList}>
-                <li>Ask AI about drivers behind your current holdings</li>
-                <li>Get plain-English analysis of momentum and risk signals</li>
-                <li>See AI reasoning alongside your portfolio context</li>
-                <li>Includes trend, ROC, breakout, and pattern signal tags</li>
-                <li>Highlights both upside drivers and downside pressure</li>
-              </ul>
-              <Link href="/signin?mode=register&plan=free" className={`${styles.button} ${styles.primaryButton}`}>
-                Get Started Free →
-              </Link>
-            </div>
-
-            <div>
-              <div className={styles.smallLabel}>AI Console</div>
-              <div className={styles.aiConsole}>
-                <div className={styles.aiPrompt}>› What&apos;s driving BHP&apos;s recent price action in my portfolio?</div>
-                <div className={styles.aiResponse}>
-                  <strong>BHP (7.3% of portfolio)</strong> is showing positive momentum driven by iron ore spot prices rebounding above USD 110/t. Concentration is near threshold, so monitor if it exceeds <strong>8%</strong>. Upside driver: China stimulus expectations. Downside risk: USD strength.
-                  <span className={styles.aiCursor} />
-                </div>
-              </div>
-
-              <div className={styles.miniGrid}>
-                <div className={styles.miniCard}>
-                  <div className={styles.smallLabel}>What AI Reads</div>
-                  <p>Holdings, weights, live price context, technical signals, concentration.</p>
-                </div>
-                <div className={styles.miniCard}>
-                  <div className={styles.smallLabel}>What You Get</div>
-                  <p>Top drivers, confidence-aware analysis, and follow-up review points.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <Divider />
-
       <section className={styles.section} id="security">
         <div className={styles.container}>
-          <div className={`${styles.sectionLabel} ${styles.reveal}`}>Data Safety</div>
-          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`} style={{ transitionDelay: "0.07s" }}>Plain-English security and privacy controls.</h2>
-          <p className={`${styles.sectionSub} ${styles.reveal}`} style={{ transitionDelay: "0.14s" }}>These safeguards reflect the controls active in the current SPECTRE release.</p>
+          <div className={`${styles.sectionLabel} ${styles.reveal}`}>Security</div>
+          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`} style={{ transitionDelay: "0.07s" }}>Your data stays yours.</h2>
 
           <div className={styles.securityGrid}>
             {securityCards.map((card, index) => (
@@ -927,13 +819,11 @@ export default function LandingPage({
                 <span>$0</span>
                 <small>/month</small>
               </div>
-              <p>Get started at no cost with a private workspace and core dashboard for tracking your portfolio.</p>
+              <p>A private workspace and full risk dashboard at no cost.</p>
               <ul>
-                <li>One private investor workspace</li>
-                <li>CSV/XLSX import for super, savings, ASX, crypto, index, funds, bullion</li>
-                <li>Basic risk score and dashboard charts</li>
-                <li>AI holdings analysis — daily queries included</li>
-                <li>Email verification and password reset</li>
+                <li>Multi-source CSV/XLSX import</li>
+                <li>Risk score and dashboard charts</li>
+                <li>AI holdings analysis — daily queries</li>
               </ul>
               <Link href="/signin?mode=register&plan=free" className={`${styles.button} ${styles.outlineButton} ${styles.blockButton}`}>
                 Get Started Free
@@ -947,22 +837,13 @@ export default function LandingPage({
                 <span>$2.99</span>
                 <small>/month</small>
               </div>
-              <p>Everything in Free, plus the market research terminal and full snapshot history.</p>
+              <p>Free, plus research terminal and snapshot history.</p>
               <ul>
                 <li>Everything in Free</li>
-                <li>Market research terminal for ASX, macro, and sector context</li>
-                <li>Price dip alerts and dip email notifications</li>
-                <li>Snapshots and historical risk tracking</li>
+                <li>Market research terminal</li>
+                <li>Dip alert emails</li>
+                <li>Snapshot history</li>
               </ul>
-              <div className={styles.planResearchCallout}>
-                <div>
-                  <strong>See Research</strong>
-                  <span>Plus includes the market research terminal for ASX, macro, and sector context.</span>
-                </div>
-                <Link href="/research?demo=1" className={`${styles.button} ${styles.ghostButton}`}>
-                  Preview Research
-                </Link>
-              </div>
               <Link href="/signin?mode=register&plan=plus" className={`${styles.button} ${styles.primaryButton} ${styles.blockButton}`}>
                 Get Plus
               </Link>
@@ -974,22 +855,13 @@ export default function LandingPage({
                 <span>$9.99</span>
                 <small>/month</small>
               </div>
-              <p>Advanced quant analytics with unlimited AI queries for serious investors.</p>
+              <p>Plus, unlimited AI queries and advanced analytics.</p>
               <ul>
-                <li>Everything in Plus, plus unlimited AI queries</li>
-                <li>Expected Shortfall (ES 95) tail risk</li>
+                <li>Everything in Plus</li>
+                <li>Unlimited AI queries</li>
+                <li>Expected Shortfall (ES 95)</li>
                 <li>Beta &amp; tracking error vs ASX 200</li>
-                <li>Date-aligned benchmark analytics</li>
               </ul>
-              <div className={styles.planResearchCallout}>
-                <div>
-                  <strong>See Research</strong>
-                  <span>Pro pairs the research terminal with advanced analytics and Ask AI holdings analysis.</span>
-                </div>
-                <Link href="/research?demo=1" className={`${styles.button} ${styles.ghostButton}`}>
-                  Preview Research
-                </Link>
-              </div>
               <Link href="/signin?mode=register&plan=pro" className={`${styles.button} ${styles.outlineButton} ${styles.blockButton}`}>
                 Get Pro
               </Link>
@@ -1003,7 +875,7 @@ export default function LandingPage({
       <section className={styles.section}>
         <div className={styles.container}>
           <div className={`${styles.sectionLabel} ${styles.reveal}`}>Why SPECTRE?</div>
-          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`} style={{ transitionDelay: "0.07s" }}>There&apos;s a smarter way to manage portfolio risk.</h2>
+          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`} style={{ transitionDelay: "0.07s" }}>Built different.</h2>
 
           <div className={styles.compareGrid}>
             <div className={`${styles.compareColumn} ${styles.revealLeft}`}>
@@ -1035,7 +907,7 @@ export default function LandingPage({
       <section className={styles.section}>
         <div className={styles.container}>
           <div className={`${styles.sectionLabel} ${styles.reveal}`}>FAQ</div>
-          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`} style={{ transitionDelay: "0.07s" }}>Got questions? We&apos;ve got answers.</h2>
+          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`} style={{ transitionDelay: "0.07s" }}>Common questions.</h2>
 
           <div className={`${styles.faqList} ${styles.reveal}`}>
             {faqs.map((faq, index) => (
@@ -1066,9 +938,9 @@ export default function LandingPage({
       <div className={styles.ctaSection}>
         <div className={`${styles.container} ${styles.revealScale}`}>
           <div className={styles.ctaPanel}>
-            <div className={styles.heroBadge}>Start today — no commitment</div>
-            <h2>Ready to see your portfolio risk clearly?</h2>
-            <p>It takes minutes to import your first CSV and get a risk score. Start free, upgrade anytime.</p>
+            <div className={styles.heroBadge}>Start free — no card required</div>
+            <h2>See your risk clearly.</h2>
+            <p>Import your first CSV and get a risk score in minutes.</p>
             <div className={styles.heroActions}>
               <Link href="/signin?mode=register&plan=free" className={`${styles.button} ${styles.primaryButton} ${styles.heroButton}`}>
                 Get Started Free
