@@ -1604,8 +1604,7 @@ tr:hover td {
   box-shadow: 0 0 0 1px rgba(255, 75, 51, 0.34);
 }
 
-.plan-chip.starter,
-.plan-chip.plus {
+.plan-chip.starter {
   border-color: #7b7b86;
   background: #1a1a1f;
   color: #e6e6eb;
@@ -1707,10 +1706,17 @@ tr:hover td {
 
 .holdings-ai-panel {
   margin-top: 14px;
-  border: 1px solid #5e2f5a;
-  border-radius: 12px;
-  padding: 12px;
-  background: linear-gradient(145deg, rgba(17, 10, 30, 0.9) 0%, rgba(13, 10, 20, 0.94) 100%);
+  border: 1px solid rgba(168, 85, 247, 0.2);
+  border-radius: 18px;
+  padding: 0;
+  background: rgba(8, 7, 16, 0.88);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+    0 24px 60px rgba(0, 0, 0, 0.5),
+    0 0 40px rgba(168, 85, 247, 0.07);
+  overflow: hidden;
 }
 
 .holdings-ai-head {
@@ -1719,88 +1725,119 @@ tr:hover td {
   justify-content: space-between;
   gap: 8px;
   flex-wrap: wrap;
+  padding: 12px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.02);
 }
 
 .holdings-ai-head h3 {
   margin: 0;
-  font-size: 0.92rem;
+  font-size: 0.72rem;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #f4edff;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  color: #8a8098;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.holdings-ai-head h3::before {
+  content: "";
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #a855f7;
+  box-shadow: 0 0 6px rgba(168, 85, 247, 0.8);
+  animation: aiPulseDotDash 2s infinite;
 }
 
 .holdings-ai-head span {
-  font-size: 0.74rem;
-  color: #bcafcf;
+  font-size: 0.72rem;
+  color: #8a8098;
+  letter-spacing: 0.02em;
 }
 
 .holdings-ai-note {
-  margin-top: 8px;
-  color: #c5bfd7;
-  font-size: 0.86rem;
+  margin: 0;
+  padding: 10px 18px;
+  color: #8a8098;
+  font-size: 0.82rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .holdings-ai-form {
-  margin-top: 10px;
+  padding: 14px 18px;
   display: grid;
-  gap: 8px;
+  gap: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .holdings-ai-form textarea {
   width: 100%;
-  min-height: 88px;
+  min-height: 72px;
   resize: vertical;
-  border: 1px solid #61395f;
+  border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 10px;
-  background: rgba(11, 9, 20, 0.92);
-  color: #f2ebff;
-  padding: 10px;
+  background: rgba(5, 5, 10, 0.7);
+  color: #f0eeff;
+  padding: 10px 14px;
   font: inherit;
-  line-height: 1.45;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  box-sizing: border-box;
 }
 
 .holdings-ai-form textarea:focus-visible {
-  outline: 1px solid #b08de0;
-  outline-offset: 2px;
+  outline: none;
+  border-color: rgba(168, 85, 247, 0.4);
+  box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.08);
+}
+
+.holdings-ai-form textarea::placeholder {
+  color: rgba(138, 128, 152, 0.5);
 }
 
 .holdings-ai-actions {
   display: flex;
-  justify-content: flex-start;
+  justify-content: flex-end;
 }
 
 .holdings-ai-error {
-  margin-top: 8px;
-  color: #ff7c5c;
-  font-size: 0.84rem;
+  padding: 10px 18px;
+  color: #f87171;
+  font-size: 0.82rem;
+  border-top: 1px solid rgba(248, 113, 113, 0.1);
 }
 
 .holdings-ai-output {
-  margin-top: 12px;
+  padding: 14px 18px;
   display: grid;
   gap: 10px;
 }
 
 .holdings-ai-block {
-  border: 1px solid #4a2b5f;
-  border-radius: 10px;
-  background: rgba(13, 9, 24, 0.92);
-  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  background: rgba(5, 5, 10, 0.6);
+  padding: 14px;
 }
 
 .holdings-ai-block h4 {
-  margin: 0 0 8px;
-  font-size: 0.8rem;
-  letter-spacing: 0.08em;
+  margin: 0 0 10px;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #d8c6f4;
+  font-weight: 700;
+  color: #a855f7;
 }
 
 .holdings-ai-block p {
   margin: 0;
   font-size: 0.88rem;
-  color: #ebdeff;
-  line-height: 1.45;
+  color: #f0eeff;
+  line-height: 1.6;
 }
 
 .holdings-ai-block ul {
@@ -1811,9 +1848,9 @@ tr:hover td {
 }
 
 .holdings-ai-block li {
-  color: #dcd0f1;
+  color: #c4b8d8;
   font-size: 0.84rem;
-  line-height: 1.4;
+  line-height: 1.5;
 }
 
 .holdings-ai-breakdown-grid {
@@ -1823,12 +1860,12 @@ tr:hover td {
 }
 
 .holdings-ai-breakdown-card {
-  border: 1px solid #55356c;
+  border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 10px;
-  background: rgba(15, 10, 29, 0.94);
-  padding: 9px;
+  background: rgba(5, 5, 10, 0.7);
+  padding: 12px;
   display: grid;
-  gap: 7px;
+  gap: 8px;
 }
 
 .holdings-ai-breakdown-head {
@@ -1839,18 +1876,26 @@ tr:hover td {
 }
 
 .holdings-ai-breakdown-head strong {
-  font-size: 0.95rem;
-  color: #f5efff;
+  font-size: 0.9rem;
+  color: #f0eeff;
+  font-weight: 700;
 }
 
 .holdings-ai-breakdown-head span {
-  color: #bfa8dc;
-  font-size: 0.73rem;
+  color: #a855f7;
+  font-size: 0.72rem;
+  font-weight: 600;
 }
 
 .holdings-ai-risk-flags {
-  color: #ffa68f !important;
+  color: #ff7a30 !important;
   font-size: 0.8rem !important;
+}
+
+@keyframes aiPulseDotDash {
+  0%   { box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.7); }
+  60%  { box-shadow: 0 0 0 5px rgba(168, 85, 247, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(168, 85, 247, 0); }
 }
 
 .holdings-ai-block-grid {
@@ -4912,8 +4957,7 @@ td {
   color: #e3def9;
 }
 
-.spectre-app .plan-chip.starter,
-.spectre-app .plan-chip.plus {
+.spectre-app .plan-chip.starter {
   background: rgba(255, 77, 26, 0.12);
   border-color: rgba(255, 77, 26, 0.35);
   color: #ffb7a0;
@@ -5479,8 +5523,7 @@ td {
   padding: 0.45rem 0.7rem;
 }
 
-.spectre-app .plan-chip.starter,
-.spectre-app .plan-chip.plus {
+.spectre-app .plan-chip.starter {
   background: rgba(255, 77, 26, 0.1);
   border: 1px solid rgba(255, 77, 26, 0.3);
   color: #ffb7a0;
@@ -6150,6 +6193,7 @@ td {
   flex-shrink: 0;
 }
 
+/* Legacy — replaced by nav-tabs */
 .spectre-app-nav-links {
   display: flex;
   align-items: center;
@@ -6167,6 +6211,121 @@ td {
 
 .spectre-app-nav-links a:hover {
   color: var(--text);
+}
+
+/* Nav tab pills */
+.spectre-app-nav-tabs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 3px;
+}
+
+.nav-tab {
+  font-family: var(--font-geist-sans), sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  color: var(--muted2);
+  background: none;
+  border: none;
+  border-radius: 5px;
+  padding: 0.3rem 0.9rem;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+
+.nav-tab:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.nav-tab-active {
+  color: var(--text) !important;
+  background: rgba(168, 85, 247, 0.15) !important;
+}
+
+/* Settings gear button */
+.nav-settings-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--muted2);
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+
+.nav-settings-btn:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--border2);
+}
+
+.nav-settings-active {
+  color: #a855f7 !important;
+  background: rgba(168, 85, 247, 0.12) !important;
+  border-color: rgba(168, 85, 247, 0.3) !important;
+}
+
+/* Logo as button */
+.spectre-app-nav-logo[type="button"],
+button.spectre-app-nav-logo {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* AI page section */
+.ai-page-section {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2.5rem 2.5rem 4rem;
+}
+
+/* Research placeholder */
+.research-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40vh;
+  padding: 4rem 2.5rem;
+}
+
+.research-placeholder-inner {
+  text-align: center;
+  max-width: 480px;
+}
+
+.research-placeholder-label {
+  font-family: "DM Mono", "Azeret Mono", var(--font-geist-mono), monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--purple-hi);
+  margin-bottom: 1rem;
+}
+
+.research-placeholder-inner h2 {
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 0.75rem;
+}
+
+.research-placeholder-inner p {
+  font-size: 0.88rem;
+  color: var(--muted);
+  line-height: 1.6;
 }
 
 .spectre-app .nav-right {
