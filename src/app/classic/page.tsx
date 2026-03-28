@@ -3140,6 +3140,7 @@ export default function Home() {
           </div>
         ) : null}
       </section>
+      </>
       )}
 
       {activePage === "ai" ? (
