@@ -357,7 +357,6 @@ export default function LandingPage({
               </Link>
             </div>
 
-            <AITeaser />
           </div>
 
           <div ref={heroProductRef} className={styles.heroProduct}>
@@ -1039,70 +1038,6 @@ function CompareItem({ children, tone }: { children: ReactNode; tone: "good" | "
   );
 }
 
-function AITeaser() {
-  const [query, setQuery] = useState("");
-  const router = useRouter();
-
-  const goToSignIn = (q?: string) => {
-    router.push(`/signin?mode=register&plan=pro${q ? `&q=${encodeURIComponent(q)}` : ""}`);
-  };
-
-  return (
-    <div className={styles.aiTeaser}>
-      <div className={styles.aiTeaserHeader}>
-        <div className={styles.aiTeaserHeaderLeft}>
-          <span className={styles.aiPulseDot} />
-          <span>Ask SPECTRE AI</span>
-        </div>
-        <span className={styles.proTag}>Pro AI</span>
-      </div>
-
-      <div className={styles.aiTeaserInput}>
-        <input
-          type="text"
-          className={styles.aiInput}
-          placeholder="e.g. What's my top concentration risk right now?"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && goToSignIn(query)}
-          autoComplete="off"
-          spellCheck={false}
-        />
-        <button
-          type="button"
-          className={styles.aiSendButton}
-          onClick={() => goToSignIn(query)}
-          aria-label="Ask AI"
-        >
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <line x1="22" y1="2" x2="11" y2="13" />
-            <polygon points="22 2 15 22 11 13 2 9 22 2" />
-          </svg>
-        </button>
-      </div>
-
-      <div className={styles.aiSuggestions}>
-        {["What's my top risk?", "BHP concentration?", "VaR impact", "Sector exposure"].map((s) => (
-          <button
-            key={s}
-            type="button"
-            className={styles.aiChip}
-            onClick={() => goToSignIn(s)}
-          >
-            {s}
-          </button>
-        ))}
-        <span className={styles.aiLockNote}>
-          <svg viewBox="0 0 24 24" aria-hidden="true" width="11" height="11">
-            <rect x="3" y="11" width="18" height="11" rx="2" />
-            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-          </svg>
-          Sign in to use
-        </span>
-      </div>
-    </div>
-  );
-}
 
 function UploadIcon() {
   return (
