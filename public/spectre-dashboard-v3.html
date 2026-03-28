@@ -1092,15 +1092,33 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 
 <div class="divider" data-page="ai"></div>
 
-<!-- RESEARCH TAB — embeds the full research terminal -->
-<div class="wrap" data-page="research" style="padding:0;max-width:100%">
-  <iframe
-    id="research-frame"
-    src="/research"
-    style="width:100%;height:calc(100vh - 94px);border:none;display:block"
-    title="SPECTRE Research Terminal"
-    allow="same-origin"
-  ></iframe>
+<!-- RESEARCH TAB — link to research terminal -->
+<div class="wrap" data-page="research">
+  <section class="sec" id="research-hub" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center;gap:1.5rem">
+    <div style="font-family:var(--mono);font-size:.58rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)">Research Terminal</div>
+    <h2 style="font-family:var(--disp);font-size:clamp(2.2rem,5vw,3.8rem);letter-spacing:.04em;background:linear-gradient(120deg,var(--purple-hi) 0%,var(--orange) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin:0">SPECTRE RESEARCH</h2>
+    <p style="font-family:var(--sans);font-size:.92rem;color:var(--muted);max-width:480px;line-height:1.7;margin:0">Market intelligence, live ASX data, sector analysis, and economic signals — all in one terminal.</p>
+    <a href="/research" class="btn-primary" style="margin-top:.5rem;display:inline-flex;align-items:center;gap:.5rem">
+      Open Research Terminal
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+    </a>
+    <div style="display:flex;gap:2rem;margin-top:1rem;flex-wrap:wrap;justify-content:center">
+      <div style="text-align:center">
+        <div style="font-family:var(--mono);font-size:.52rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-bottom:.35rem">Coverage</div>
+        <div style="font-family:var(--mono);font-size:.88rem;color:var(--text)">ASX + Global</div>
+      </div>
+      <div style="width:1px;background:var(--border)"></div>
+      <div style="text-align:center">
+        <div style="font-family:var(--mono);font-size:.52rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-bottom:.35rem">Data</div>
+        <div style="font-family:var(--mono);font-size:.88rem;color:var(--text)">Live Market Feeds</div>
+      </div>
+      <div style="width:1px;background:var(--border)"></div>
+      <div style="text-align:center">
+        <div style="font-family:var(--mono);font-size:.52rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-bottom:.35rem">Analysis</div>
+        <div style="font-family:var(--mono);font-size:.88rem;color:var(--text)">Sector + Macro</div>
+      </div>
+    </div>
+  </section>
 </div>
 
 <!-- UPLOADS (moved to quant tab) -->
@@ -4587,13 +4605,6 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     document.querySelectorAll('.nav-tab').forEach(function(btn) {
       btn.classList.toggle('nav-tab-active', btn.getAttribute('data-tab') === tab);
     });
-    // Lazy-load research iframe on first visit
-    if (tab === 'research') {
-      var frame = document.getElementById('research-frame');
-      if (frame && !frame.getAttribute('data-loaded')) {
-        frame.setAttribute('data-loaded', '1');
-      }
-    }
     window.scrollTo({ top: 0, behavior: 'instant' });
   }
 
