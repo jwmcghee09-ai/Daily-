@@ -1092,8 +1092,19 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 
 <div class="divider" data-page="ai"></div>
 
-<!-- UPLOADS -->
-<div class="wrap" data-page="research">
+<!-- RESEARCH TAB — embeds the full research terminal -->
+<div class="wrap" data-page="research" style="padding:0;max-width:100%">
+  <iframe
+    id="research-frame"
+    src="/research"
+    style="width:100%;height:calc(100vh - 94px);border:none;display:block"
+    title="SPECTRE Research Terminal"
+    allow="same-origin"
+  ></iframe>
+</div>
+
+<!-- UPLOADS (moved to quant tab) -->
+<div class="wrap" data-page="quant">
   <section class="sec" id="uploads">
     <div class="sec-head">
       <h2 class="sec-title">Data Uploads</h2>
@@ -1797,6 +1808,8 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     </div>
   </section>
 </div>
+
+<div class="divider" data-page="quant"></div>
 
 <!-- FOOTER -->
 <div class="wrap" data-page="always">
@@ -4574,6 +4587,13 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
     document.querySelectorAll('.nav-tab').forEach(function(btn) {
       btn.classList.toggle('nav-tab-active', btn.getAttribute('data-tab') === tab);
     });
+    // Lazy-load research iframe on first visit
+    if (tab === 'research') {
+      var frame = document.getElementById('research-frame');
+      if (frame && !frame.getAttribute('data-loaded')) {
+        frame.setAttribute('data-loaded', '1');
+      }
+    }
     window.scrollTo({ top: 0, behavior: 'instant' });
   }
 
