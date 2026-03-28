@@ -367,6 +367,7 @@ export default function Home() {
   const [holdingsAiLoading, setHoldingsAiLoading] = useState(false);
   const [holdingsAiError, setHoldingsAiError] = useState("");
   const [holdingsAiResult, setHoldingsAiResult] = useState<HoldingsAiAnalysis | null>(null);
+  const [activePage, setActivePage] = useState<"quant" | "ai" | "research" | "settings">("quant");
   const refreshInFlight = useRef(false);
   const lastAutoRefreshAttemptAtRef = useRef(0);
 
@@ -2519,17 +2520,21 @@ export default function Home() {
     <div className="shell spectre-app">
       <nav className="spectre-app-nav">
         <div className="spectre-app-nav-inner">
-          <a href="#dashboard-top" className="spectre-app-nav-logo">SPECTRE</a>
-          <div className="spectre-app-nav-links">
-            <a href="#settings">Settings</a>
-            <a href="#uploads">Uploads</a>
-            <a href="#metrics">Metrics</a>
-            <a href="#risk">Risk</a>
-            <a href="#charts">Charts</a>
-            <a href="#holdings">Holdings</a>
-            {proAnalyticsEnabled ? <a href="#alerts">Alerts</a> : null}
+          <button type="button" className="spectre-app-nav-logo" onClick={() => setActivePage("quant")}>SPECTRE</button>
+          <div className="spectre-app-nav-tabs">
+            <button type="button" className={`nav-tab${activePage === "quant" ? " nav-tab-active" : ""}`} onClick={() => setActivePage("quant")}>Quant</button>
+            <button type="button" className={`nav-tab${activePage === "ai" ? " nav-tab-active" : ""}`} onClick={() => setActivePage("ai")}>AI</button>
+            <button type="button" className={`nav-tab${activePage === "research" ? " nav-tab-active" : ""}`} onClick={() => setActivePage("research")}>Research</button>
           </div>
           <div className="nav-right">
+            <button
+              type="button"
+              className={`nav-settings-btn${activePage === "settings" ? " nav-settings-active" : ""}`}
+              onClick={() => setActivePage(activePage === "settings" ? "quant" : "settings")}
+              aria-label="Settings"
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            </button>
             <span className="nav-user">{demoMode ? "Demo workspace" : sessionUser.email}</span>
             <button type="button" className="nav-signout" onClick={logout} disabled={working || refreshingPrices || checkoutWorking || billingPortalWorking}>
               {demoMode ? "Exit Demo" : "Sign Out"}
@@ -2565,6 +2570,7 @@ export default function Home() {
           <span className="ti"><span className="ti-sym">WBC</span>32.10<span className="ti-dn">-0.2%</span></span>
         </div>
       </div>
+      {activePage === "quant" && (
       <header id="dashboard-top" className="hero">
         <div className="hero-copy">
           <h1><Image src="/spectre-wordmark-plain.svg" alt="SPECTRE" width={620} height={148} className="hero-wordmark-image" priority /></h1>
@@ -2607,6 +2613,7 @@ export default function Home() {
           </div>
         </div>
       </header>
+      )}
 
       {demoMode ? (
         <div className="banner info">
@@ -2651,6 +2658,7 @@ export default function Home() {
         </div>
       ) : null}
 
+      {activePage === "settings" && (
       <section id="settings" className="settings-section">
         <div className="settings-head">
           <h2>Settings</h2>
@@ -2729,7 +2737,10 @@ export default function Home() {
           </article>
         </div>
       </section>
+      )}
 
+      {activePage === "research" && (
+      <>
       <section id="uploads" className="upload-grid">
         <UploadCard
           title="Super Report File"
@@ -2812,8 +2823,17 @@ export default function Home() {
           disabledLabel={demoMode ? "Create account to upload" : undefined}
         />
       </section>
+      <div className="research-placeholder">
+        <div className="research-placeholder-inner">
+          <p className="research-placeholder-label">Research Terminal</p>
+          <h2>Research tools coming soon.</h2>
+          <p>Your uploaded reports are managed above. Advanced research capabilities — screeners, fundamentals, and market data — are planned for a future release.</p>
+        </div>
+      </div>
+      </>
+      )}
 
-      {proAnalyticsEnabled ? (
+      {proAnalyticsEnabled && activePage === "ai" ? (
         <section id="alerts" className="dip-alerts-section">
           <div className="dip-alerts-head">
             <h2>Email Dip Alerts</h2>
@@ -2909,7 +2929,9 @@ export default function Home() {
         </section>
       ) : null}
 
-      
+
+      {activePage === "quant" && (
+      <>
       <section id="metrics" className="kpi-grid">
         <KpiCard label="Total Portfolio" value={formatCurrency(metrics.totalValue)} help="Current market value across all imported holdings." />
         <KpiCard label="Cost Base" value={formatCurrency(metrics.totalCost)} help="Total invested amount from imported cost-base values." />
@@ -3118,8 +3140,127 @@ export default function Home() {
           </div>
         ) : null}
       </section>
+      )}
 
-      
+      {activePage === "ai" ? (
+        <section className="ai-page-section">
+          {proAnalyticsEnabled ? (
+            <div className="holdings-ai-panel">
+              <div className="holdings-ai-head">
+                <h3>Ask AI: Holdings Drivers</h3>
+                {holdingsAiResult ? (
+                  <span>
+                    {new Date(holdingsAiResult.generatedAt).toLocaleString("en-AU")} via {holdingsAiResult.model}
+                  </span>
+                ) : null}
+              </div>
+              <p className="holdings-ai-note">Ask what may be influencing value, momentum, risk, and concentration in your current portfolio.</p>
+              <form className="holdings-ai-form" onSubmit={(event) => void runHoldingsAi(event)}>
+                <textarea
+                  value={holdingsAiQuestion}
+                  onChange={(event) => setHoldingsAiQuestion(event.target.value)}
+                  placeholder={HOLDINGS_AI_DEFAULT_PROMPT}
+                  maxLength={700}
+                  disabled={holdingsAiLoading}
+                />
+                <div className="holdings-ai-actions">
+                  <button type="submit" className="refresh-btn" disabled={holdingsAiLoading || state.holdings.length === 0}>
+                    {holdingsAiLoading ? "Analyzing..." : "Ask AI"}
+                  </button>
+                </div>
+              </form>
+              {holdingsAiError ? <p className="holdings-ai-error">{holdingsAiError}</p> : null}
+              {holdingsAiResult ? (
+                <div className="holdings-ai-output">
+                  <article className="holdings-ai-block">
+                    <h4>Answer</h4>
+                    <p>{holdingsAiResult.answer}</p>
+                  </article>
+
+                  <article className="holdings-ai-block">
+                    <h4>Portfolio Drivers</h4>
+                    {holdingsAiResult.portfolioDrivers.length === 0 ? (
+                      <p className="empty">No portfolio drivers returned.</p>
+                    ) : (
+                      <ul>
+                        {holdingsAiResult.portfolioDrivers.map((driver, index) => (
+                          <li key={`${driver}-${index}`}>{driver}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </article>
+
+                  <article className="holdings-ai-block">
+                    <h4>Holding-Level Influences</h4>
+                    {holdingsAiResult.holdingBreakdown.length === 0 ? (
+                      <p className="empty">No holding-level breakdown returned.</p>
+                    ) : (
+                      <div className="holdings-ai-breakdown-grid">
+                        {holdingsAiResult.holdingBreakdown.map((item, index) => (
+                          <div className="holdings-ai-breakdown-card" key={`${item.ticker}-${index}`}>
+                            <div className="holdings-ai-breakdown-head">
+                              <strong>{item.ticker}</strong>
+                              <span>Confidence {item.confidence}%</span>
+                            </div>
+                            <p>{item.summary}</p>
+                            {item.influences.length > 0 ? (
+                              <ul>
+                                {item.influences.map((influence, influenceIndex) => (
+                                  <li key={`${influence}-${influenceIndex}`}>{influence}</li>
+                                ))}
+                              </ul>
+                            ) : null}
+                            {item.riskFlags.length > 0 ? (
+                              <p className="holdings-ai-risk-flags">Risk: {item.riskFlags.join(" | ")}</p>
+                            ) : null}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </article>
+
+                  <div className="holdings-ai-block-grid">
+                    <article className="holdings-ai-block">
+                      <h4>Risk Checks</h4>
+                      {holdingsAiResult.riskChecks.length === 0 ? (
+                        <p className="empty">No risk checks returned.</p>
+                      ) : (
+                        <ul>
+                          {holdingsAiResult.riskChecks.map((item, index) => (
+                            <li key={`${item}-${index}`}>{item}</li>
+                          ))}
+                        </ul>
+                      )}
+                    </article>
+                    <article className="holdings-ai-block">
+                      <h4>Next Actions</h4>
+                      {holdingsAiResult.nextActions.length === 0 ? (
+                        <p className="empty">No next actions returned.</p>
+                      ) : (
+                        <ul>
+                          {holdingsAiResult.nextActions.map((item, index) => (
+                            <li key={`${item}-${index}`}>{item}</li>
+                          ))}
+                        </ul>
+                      )}
+                    </article>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+          {!proAnalyticsEnabled ? (
+            <div className="pro-analytics-cta">
+              <button type="button" onClick={() => void startProCheckout(authEmail)} className="refresh-btn" disabled={checkoutWorking}>
+                {checkoutWorking ? "Redirecting..." : "Unlock Pro Analytics"}
+              </button>
+            </div>
+          ) : null}
+        </section>
+      ) : null}
+
+      {activePage === "quant" && (
+      <>
       <section id="insights" className="insights-section">
         <h2>{proAnalyticsEnabled ? "Performance & Stress" : "Performance"}</h2>
         <div className="insights-grid">
@@ -3426,6 +3567,8 @@ export default function Home() {
           </div>
         )}
       </section>
+      </>
+      )}
 
       <footer className="footer-note">
         <p className="footer-disclaimer">Disclaimer: SPECTRE provides informational analytics only. It is not financial, investment, tax, or legal advice, and no result is guaranteed to be complete, current, or accurate.</p>

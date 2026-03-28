@@ -6193,6 +6193,7 @@ td {
   flex-shrink: 0;
 }
 
+/* Legacy — replaced by nav-tabs */
 .spectre-app-nav-links {
   display: flex;
   align-items: center;
@@ -6210,6 +6211,121 @@ td {
 
 .spectre-app-nav-links a:hover {
   color: var(--text);
+}
+
+/* Nav tab pills */
+.spectre-app-nav-tabs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 3px;
+}
+
+.nav-tab {
+  font-family: var(--font-geist-sans), sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  color: var(--muted2);
+  background: none;
+  border: none;
+  border-radius: 5px;
+  padding: 0.3rem 0.9rem;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+
+.nav-tab:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.nav-tab-active {
+  color: var(--text) !important;
+  background: rgba(168, 85, 247, 0.15) !important;
+}
+
+/* Settings gear button */
+.nav-settings-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--muted2);
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+
+.nav-settings-btn:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--border2);
+}
+
+.nav-settings-active {
+  color: #a855f7 !important;
+  background: rgba(168, 85, 247, 0.12) !important;
+  border-color: rgba(168, 85, 247, 0.3) !important;
+}
+
+/* Logo as button */
+.spectre-app-nav-logo[type="button"],
+button.spectre-app-nav-logo {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* AI page section */
+.ai-page-section {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2.5rem 2.5rem 4rem;
+}
+
+/* Research placeholder */
+.research-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40vh;
+  padding: 4rem 2.5rem;
+}
+
+.research-placeholder-inner {
+  text-align: center;
+  max-width: 480px;
+}
+
+.research-placeholder-label {
+  font-family: "DM Mono", "Azeret Mono", var(--font-geist-mono), monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--purple-hi);
+  margin-bottom: 1rem;
+}
+
+.research-placeholder-inner h2 {
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 0.75rem;
+}
+
+.research-placeholder-inner p {
+  font-size: 0.88rem;
+  color: var(--muted);
+  line-height: 1.6;
 }
 
 .spectre-app .nav-right {
