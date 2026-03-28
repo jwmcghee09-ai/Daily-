@@ -522,7 +522,7 @@
 }
 
 .section {
-  padding: 88px 0;
+  padding: 120px 0;
 }
 
 .sectionLabel {
@@ -2077,6 +2077,113 @@
     opacity: 1 !important;
     transform: none !important;
     pointer-events: auto;
+  }
+}
+
+/* ─── AI Reveal Section ──────────────────────────────────────── */
+
+.aiRevealSection {
+  padding: 160px 0 100px;
+  text-align: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.aiRevealSection::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 50% at 50% 0%, rgba(168, 85, 247, 0.09) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 40% at 50% 100%, rgba(255, 122, 48, 0.05) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.aiRevealHead {
+  position: relative;
+  z-index: 1;
+  margin-bottom: 80px;
+}
+
+.aiRevealTitle {
+  margin: 16px 0 20px;
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-size: clamp(52px, 8.5vw, 108px);
+  font-weight: 700;
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+}
+
+.aiRevealTitle span {
+  background: linear-gradient(90deg, #a855f7, #d946ef 40%, #ff7a30 80%, #ffb347);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.aiRevealSub {
+  max-width: 460px;
+  margin: 0 auto;
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1.65;
+}
+
+.aiConsoleReveal {
+  position: relative;
+  z-index: 1;
+  max-width: 680px;
+  margin: 0 auto;
+  transform: scale(0.72) translateY(50px);
+  opacity: 0;
+  will-change: transform, opacity;
+  transform-origin: center top;
+}
+
+.aiConsoleRevealInner {
+  background: rgba(6, 5, 12, 0.88);
+  border: 1px solid rgba(168, 85, 247, 0.22);
+  border-radius: var(--radiusLg);
+  padding: 28px 28px 24px;
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+    0 60px 120px rgba(0, 0, 0, 0.6),
+    0 0 80px rgba(168, 85, 247, 0.1);
+}
+
+.aiConsoleRevealLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.aiRevealCta {
+  margin-top: 24px;
+  text-align: center;
+}
+
+/* ─── Mobile overrides for AI reveal ────────────────────────── */
+
+@media (max-width: 960px) {
+  .aiConsoleReveal {
+    transform: none !important;
+    opacity: 1 !important;
+  }
+
+  .aiRevealSection {
+    padding: 100px 0 80px;
+  }
+
+  .aiRevealTitle {
+    font-size: clamp(44px, 10vw, 72px);
   }
 }
 

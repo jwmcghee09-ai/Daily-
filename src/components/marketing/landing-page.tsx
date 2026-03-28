@@ -217,6 +217,8 @@ export default function LandingPage({
   const [activeFaqIndex, setActiveFaqIndex] = useState(0);
   const heroProductRef = useRef<HTMLDivElement>(null);
   const stickySectionRef = useRef<HTMLElement>(null);
+  const aiConsoleRef = useRef<HTMLDivElement>(null);
+  const aiSectionRef = useRef<HTMLElement>(null);
   const [activeStickyPanel, setActiveStickyPanel] = useState(0);
 
   useEffect(() => {
@@ -303,6 +305,15 @@ export default function LandingPage({
           setActiveStickyPanel(Math.min(Math.floor(progress * 3), 2));
         }
       }
+      const aiSection = aiSectionRef.current;
+      const aiConsole = aiConsoleRef.current;
+      if (aiSection && aiConsole) {
+        const rect = aiSection.getBoundingClientRect();
+        const p = Math.max(0, Math.min(1, (window.innerHeight - rect.top) / (window.innerHeight * 0.72)));
+        const e = 1 - Math.pow(1 - p, 3);
+        aiConsole.style.transform = `scale(${(0.72 + e * 0.28).toFixed(4)}) translateY(${((1 - e) * 50).toFixed(1)}px)`;
+        aiConsole.style.opacity = e.toFixed(3);
+      }
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     onScroll();
@@ -368,12 +379,12 @@ export default function LandingPage({
           ) : null}
 
           <div className={styles.heroIntro}>
-            <div className={`${styles.heroBadge} ${styles.reveal}`}>SPECTRE OPS — Portfolio Risk Analysis</div>
+            <div className={`${styles.heroBadge} ${styles.reveal}`}>SPECTRE — ASX Portfolio Risk</div>
             <h1 className={`${styles.heroTitle} ${styles.reveal}`}>
-              See your investment portfolio risk <span>in one place.</span>
+              Your portfolio risk,<br /><span>seen clearly.</span>
             </h1>
             <p className={`${styles.heroSub} ${styles.reveal}`}>
-              System for Portfolio Exposure, Correlation, Threat &amp; Risk Evaluation. Turn CSV exports from super, ASX, crypto, and funds into one clear risk view.
+              Turn CSV exports from super, ASX, crypto, and funds into one unified risk view — in minutes.
             </p>
             <div className={`${styles.heroActions} ${styles.reveal}`}>
               <Link href="/signin?mode=register&plan=free" className={`${styles.button} ${styles.primaryButton} ${styles.heroButton}`}>
@@ -473,6 +484,51 @@ export default function LandingPage({
           </div>
         </div>
       </div>
+
+      <section className={styles.aiRevealSection} id="ai" ref={aiSectionRef}>
+        <div className={styles.container}>
+          <div className={styles.aiRevealHead}>
+            <div className={`${styles.sectionLabel} ${styles.reveal}`}>SPECTRE AI</div>
+            <h2 className={`${styles.aiRevealTitle} ${styles.reveal}`} style={{ transitionDelay: "0.07s" }}>
+              Ask your portfolio<br /><span>anything.</span>
+            </h2>
+            <p className={`${styles.aiRevealSub} ${styles.reveal}`} style={{ transitionDelay: "0.14s" }}>
+              Grounded in your live holdings and real-time market data. Available on every plan.
+            </p>
+          </div>
+          <div ref={aiConsoleRef} className={styles.aiConsoleReveal}>
+            <div className={styles.aiConsoleRevealInner}>
+              <div className={styles.aiConsoleRevealLabel}>
+                <span className={styles.aiPulseDot} />
+                <span>AI Console</span>
+                <span className={styles.proTag} style={{ marginLeft: "auto" }}>All Plans</span>
+              </div>
+              <div className={styles.aiConsole}>
+                <div className={styles.aiPrompt}>› What&apos;s driving BHP&apos;s recent price action in my portfolio?</div>
+                <div className={styles.aiResponse}>
+                  <strong>BHP (7.3% of portfolio)</strong> is showing positive momentum driven by iron ore spot prices rebounding above USD 110/t. Concentration is near threshold — monitor if it exceeds <strong>8%</strong>. Upside driver: China stimulus expectations. Downside risk: USD strength.
+                  <span className={styles.aiCursor} />
+                </div>
+              </div>
+              <div className={styles.miniGrid} style={{ marginTop: "14px" }}>
+                <div className={styles.miniCard}>
+                  <div className={styles.smallLabel}>What AI Reads</div>
+                  <p>Holdings, weights, live prices, technical signals, concentration.</p>
+                </div>
+                <div className={styles.miniCard}>
+                  <div className={styles.smallLabel}>What You Get</div>
+                  <p>Top drivers, confidence analysis, and follow-up review points.</p>
+                </div>
+              </div>
+              <div className={styles.aiRevealCta}>
+                <Link href="/signin?mode=register&plan=free" className={`${styles.button} ${styles.primaryButton} ${styles.heroButton}`}>
+                  Start Asking Free →
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <Divider />
 
@@ -780,51 +836,6 @@ export default function LandingPage({
                 Holdings in your portfolio that moved today are highlighted. Dip alerts trigger on your configured thresholds.
               </div>
             </article>
-          </div>
-        </div>
-      </section>
-
-      <Divider />
-
-      <section className={styles.hero} id="ask-ai-hero" style={{ minHeight: "unset", paddingTop: "5rem", paddingBottom: "5rem" }}>
-        <div className={styles.container}>
-          <div className={styles.heroIntro}>
-            <div className={`${styles.heroBadge} ${styles.reveal}`}>SPECTRE AI — Ask Your Portfolio Anything</div>
-            <h2 className={`${styles.heroTitle} ${styles.reveal}`}>
-              Grounded in your live holdings, <span>real-time data.</span>
-            </h2>
-            <p className={`${styles.heroSub} ${styles.reveal}`}>
-              Ask direct questions about what is driving changes in value, momentum, and risk posture — powered by your imported portfolio data and live market context.
-            </p>
-            <div className={`${styles.heroActions} ${styles.reveal}`}>
-              <Link href="/signin?mode=register&plan=free" className={`${styles.button} ${styles.primaryButton} ${styles.heroButton}`}>
-                Get Started Free
-              </Link>
-              <Link href="/dashboard?demo=1" className={`${styles.button} ${styles.outlineButton} ${styles.heroButton}`}>
-                Try Live Demo →
-              </Link>
-            </div>
-          </div>
-
-          <div className={`${styles.revealScale}`} style={{ flex: 1 }}>
-            <div className={styles.smallLabel} style={{ marginBottom: "10px" }}>AI Console</div>
-            <div className={styles.aiConsole}>
-              <div className={styles.aiPrompt}>› What&apos;s driving BHP&apos;s recent price action in my portfolio?</div>
-              <div className={styles.aiResponse}>
-                <strong>BHP (7.3% of portfolio)</strong> is showing positive momentum driven by iron ore spot prices rebounding above USD 110/t. Concentration is near threshold — monitor if it exceeds <strong>8%</strong>. Upside driver: China stimulus expectations. Downside risk: USD strength.
-                <span className={styles.aiCursor} />
-              </div>
-            </div>
-            <div className={styles.miniGrid} style={{ marginTop: "14px" }}>
-              <div className={styles.miniCard}>
-                <div className={styles.smallLabel}>What AI Reads</div>
-                <p>Holdings, weights, live price context, technical signals, concentration.</p>
-              </div>
-              <div className={styles.miniCard}>
-                <div className={styles.smallLabel}>What You Get</div>
-                <p>Top drivers, confidence-aware analysis, and follow-up review points.</p>
-              </div>
-            </div>
           </div>
         </div>
       </section>
