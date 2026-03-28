@@ -77,30 +77,12 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
   -webkit-text-fill-color:transparent;
   background-clip:text;
 }
-.nav-links{display:flex;gap:2rem;list-style:none;align-items:center}
-.nav-links a{position:relative;font-family:var(--mono);font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted2);text-decoration:none;transition:color .2s}
-.nav-links a::after{content:'';position:absolute;left:0;right:100%;bottom:-4px;height:1.5px;background:linear-gradient(90deg,var(--purple),var(--orange));transition:right .25s ease}
-.nav-links a:hover,.nav-links a.active{color:var(--text)}
-.nav-links a:hover::after,.nav-links a.active::after{right:0}
-.nav-links a#nav-research-link{
-  padding:.52rem 1rem;
-  border-radius:999px;
-  font-size:.68rem;
-  font-weight:700;
-  letter-spacing:.18em;
-  color:#f8f1ff;
-  background:linear-gradient(135deg,rgba(168,85,247,.2),rgba(255,122,48,.12));
-  border:1px solid rgba(168,85,247,.3);
-  box-shadow:0 0 0 1px rgba(255,255,255,.02) inset,0 10px 24px rgba(168,85,247,.12);
-}
-.nav-links a#nav-research-link::after{display:none}
-.nav-links a#nav-research-link:hover,
-.nav-links a#nav-research-link.active{
-  color:#fff;
-  border-color:rgba(255,122,48,.4);
-  background:linear-gradient(135deg,rgba(168,85,247,.3),rgba(255,122,48,.18));
-  transform:translateY(-1px);
-}
+.nav-tabs{display:flex;align-items:center;gap:2px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;padding:3px}
+.nav-tab{font-family:var(--sans);font-size:.72rem;font-weight:500;letter-spacing:.03em;color:var(--muted2);background:none;border:none;border-radius:5px;padding:.28rem .9rem;cursor:pointer;transition:color .15s,background .15s}
+.nav-tab:hover{color:var(--text);background:rgba(255,255,255,.06)}
+.nav-tab-active{color:var(--text)!important;background:rgba(168,85,247,.15)!important}
+.nav-settings-btn{display:flex;align-items:center;justify-content:center;width:30px;height:30px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;color:var(--muted2);text-decoration:none;transition:color .15s,background .15s;flex-shrink:0}
+.nav-settings-btn:hover{color:var(--text);background:rgba(255,255,255,.08)}
 .nav-right{display:flex;align-items:center;gap:1.2rem;position:relative}
 .nav-user{font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;color:var(--muted);text-transform:uppercase}
 .nav-btn{font-family:var(--mono);font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted2);background:transparent;border:1px solid var(--border2);border-radius:999px;padding:.45rem .95rem;cursor:pointer;transition:all .2s;text-decoration:none}
@@ -918,29 +900,22 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 <!-- NAV -->
 <nav>
   <div class="nav-inner">
-    <a href="/dashboard?mode=account" class="nav-logo" id="nav-dashboard-logo">SPECTRE</a>
-    <ul class="nav-links">
-      <li><a href="/research" id="nav-research-link">Research</a></li>
-      <li><a href="/settings" id="nav-settings-link">Settings</a></li>
-      <li id="nav-platinum-link" style="display:none"><a href="/spectre-platinum">Platinum</a></li>
-      <li><a href="#uploads">Uploads</a></li>
-      <li><a href="#metrics">Metrics</a></li>
-      <li><a href="#risk">Risk</a></li>
-      <li><a href="#charts">Charts</a></li>
-      <li id="nav-alerts-link"><a href="#alerts">Alerts</a></li>
-      <li><a href="#holdings">Holdings</a></li>
-    </ul>
+    <a href="/dashboard" class="nav-logo" id="nav-dashboard-logo">SPECTRE</a>
+    <div class="nav-tabs">
+      <button type="button" class="nav-tab nav-tab-active" data-tab="quant">Quant</button>
+      <button type="button" class="nav-tab" data-tab="ai">AI</button>
+      <button type="button" class="nav-tab" data-tab="research">Research</button>
+    </div>
     <div class="nav-right">
-      <button type="button" class="nav-btn" id="notif-bell" title="Notifications" style="position:relative;font-size:0.56rem">
-        &#128276;
-        <span id="notif-badge" style="display:none;position:absolute;top:-4px;right:-4px;background:var(--orange);color:#fff;font-size:0.48rem;min-width:14px;height:14px;border-radius:999px;align-items:center;justify-content:center;font-family:var(--mono)">0</span>
-      </button>
+      <a href="/settings" class="nav-settings-btn" id="nav-settings-link" title="Settings">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </a>
       <div id="notif-dropdown" style="display:none;position:absolute;top:52px;right:0;width:340px;max-height:420px;overflow-y:auto;background:var(--card);border:1px solid var(--border2);border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,.45);z-index:9999;padding:0.5rem 0">
         <div style="padding:0.4rem 0.8rem;font-family:var(--mono);font-size:0.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border2)">Notifications</div>
         <div id="notif-list" style="padding:0.25rem 0"></div>
         <div id="notif-empty" style="display:none;padding:1.2rem 0.8rem;text-align:center;font-family:var(--mono);font-size:0.54rem;color:var(--muted)">No notifications yet.</div>
       </div>
-      <a href="/api/export/csv" class="nav-btn" id="export-csv-btn" title="Export holdings as CSV" style="font-size:0.56rem">Export CSV</a>
+      <a href="/api/export/csv" class="nav-btn" id="export-csv-btn" title="Export CSV" style="font-size:0.56rem">Export CSV</a>
       <span class="nav-user" id="nav-user-email">j.smith@email.com</span>
       <a href="#" class="nav-btn" id="sign-out-btn">Sign Out</a>
     </div>
@@ -948,7 +923,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 </nav>
 
 <!-- RESTORED DASHBOARD HERO -->
-<div class="wrap">
+<div class="wrap" data-tab="quant">
   <header class="hero">
     <div class="hero-left">
       <div class="hero-kicker">
@@ -1019,10 +994,10 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   </header>
 </div>
 
-<div class="divider"></div>
+<div class="divider" data-tab="quant"></div>
 
 <!-- AI HERO -->
-<div class="ai-hero-wrap" id="dashboard-top">
+<div class="ai-hero-wrap" id="dashboard-top" data-tab="ai">
   <div class="ai-hero-glow ai-hero-glow-l"></div>
   <div class="ai-hero-glow ai-hero-glow-r"></div>
   <div class="ai-hero-dots"></div>
@@ -1109,10 +1084,10 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   </div>
 </div>
 
-<div class="divider"></div>
+<div class="divider" data-tab="ai"></div>
 
 <!-- UPLOADS -->
-<div class="wrap">
+<div class="wrap" data-tab="research">
   <section class="sec" id="uploads">
     <div class="sec-head">
       <h2 class="sec-title">Data Uploads</h2>
@@ -1173,10 +1148,10 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   </section>
 </div>
 
-<div class="divider"></div>
+<div class="divider" data-tab="quant"></div>
 
 <!-- METRICS -->
-<div class="wrap">
+<div class="wrap" data-tab="quant">
   <section class="sec" id="metrics">
     <div class="sec-head">
       <h2 class="sec-title">Portfolio Metrics</h2>
@@ -1357,10 +1332,10 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   </section>
 </div>
 
-<div class="divider"></div>
+<div class="divider" data-tab="quant"></div>
 
 <!-- BULLION -->
-<div class="wrap">
+<div class="wrap" data-tab="quant">
   <section class="sec" id="bullion">
     <div class="sec-head">
       <h2 class="sec-title">Bullion Tracking</h2>
@@ -1402,10 +1377,10 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   </section>
 </div>
 
-<div class="divider"></div>
+<div class="divider" data-tab="quant"></div>
 
 <!-- DATA QUALITY -->
-<div class="wrap">
+<div class="wrap" data-tab="quant">
   <section class="sec">
     <div class="sec-head">
       <h2 class="sec-title">Data Quality</h2>
@@ -1448,10 +1423,10 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   </section>
 </div>
 
-<div class="divider"></div>
+<div class="divider" data-tab="quant"></div>
 
 <!-- RISK SIGNALS -->
-<div class="wrap">
+<div class="wrap" data-tab="quant">
   <section class="sec" id="risk">
     <div class="risk-header">
       <div>
@@ -1534,10 +1509,10 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   </section>
 </div>
 
-<div class="divider"></div>
+<div class="divider" data-tab="quant"></div>
 
 <!-- LIVE SIGNALS -->
-<div class="wrap">
+<div class="wrap" data-tab="quant">
   <section class="sec" id="live-signals">
     <div class="sec-head">
       <h2 class="sec-title">Live Signals</h2>
@@ -1596,10 +1571,10 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   </section>
 </div>
 
-<div class="divider"></div>
+<div class="divider" data-tab="quant"></div>
 
 <!-- CHARTS -->
-<div class="wrap">
+<div class="wrap" data-tab="quant">
   <section class="sec" id="charts">
     <div class="sec-head">
       <h2 class="sec-title">Portfolio Charts</h2>
@@ -1656,10 +1631,10 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   </section>
 </div>
 
-<div class="divider"></div>
+<div class="divider" data-tab="ai"></div>
 
 <!-- DIP ALERTS -->
-<div class="wrap">
+<div class="wrap" data-tab="ai">
   <section class="sec" id="alerts">
     <div class="sec-head">
       <h2 class="sec-title">Dip Alerts</h2>
@@ -1696,10 +1671,10 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   </section>
 </div>
 
-<div class="divider"></div>
+<div class="divider" data-tab="quant"></div>
 
 <!-- HOLDINGS TABLE -->
-<div class="wrap">
+<div class="wrap" data-tab="quant">
   <section class="sec" id="holdings">
     <div class="sec-head">
       <h2 class="sec-title">Holdings</h2>
@@ -1818,7 +1793,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 </div>
 
 <!-- FOOTER -->
-<div class="wrap">
+<div class="wrap" data-tab="always">
   <footer>
     <div class="foot-inner">
       <span class="foot-logo">SPECTRE</span>
@@ -4576,6 +4551,27 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   });
 
   fetchNotifications();
+})();
+
+// ── TAB NAVIGATION ──
+(function() {
+  function switchTab(tab) {
+    document.querySelectorAll('[data-tab]').forEach(function(el) {
+      var t = el.getAttribute('data-tab');
+      if (t === 'always') { el.style.display = ''; return; }
+      el.style.display = (t === tab) ? '' : 'none';
+    });
+    document.querySelectorAll('.nav-tab').forEach(function(btn) {
+      btn.classList.toggle('nav-tab-active', btn.getAttribute('data-tab') === tab);
+    });
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }
+
+  document.querySelectorAll('.nav-tab').forEach(function(btn) {
+    btn.addEventListener('click', function() { switchTab(btn.getAttribute('data-tab')); });
+  });
+
+  switchTab('quant');
 })();
 </script>
 </body>
