@@ -2715,6 +2715,41 @@ h3 { font-size: 1.15rem; }
   color: var(--sl-purple-hi) !important;
 }
 
+/* ── Treasury yield strip ──────────────────────── */
+.treasury-strip {
+  display: flex;
+  gap: 2px;
+  background: rgba(255,255,255,.02);
+  border: 1px solid rgba(255,255,255,.05);
+  border-radius: 9px;
+  overflow: hidden;
+}
+.treasury-cell {
+  flex: 1;
+  padding: 12px 14px;
+  border-right: 1px solid rgba(255,255,255,.04);
+  text-align: center;
+  min-width: 0;
+}
+.treasury-cell:last-child { border-right: none; }
+.treasury-label {
+  font-family: var(--font-mono);
+  font-size: 0.54rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.35);
+  margin-bottom: 6px;
+}
+.treasury-val {
+  font-family: var(--font-mono);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--sl-text);
+  letter-spacing: -0.01em;
+}
+.treasury-val.inverted { color: var(--red); }
+.treasury-val.normal { color: var(--green); }
+
 /* ── Fear & Greed meter — bigger needle ─────────── */
 .fear-greed-track {
   height: 7px !important;
@@ -3671,32 +3706,50 @@ h3 { font-size: 1.15rem; }
       <div class="macro-rate-cell">
         <div class="macro-rate-name">🇦🇺 RBA Cash Rate</div>
         <div class="macro-rate-val" id="macro-rba-rate">4.35%</div>
-        <div class="macro-rate-dir hold">● HOLD — since Nov 2023</div>
+        <div class="macro-rate-dir hold" id="macro-rba-dir">● HOLD</div>
       </div>
       <div class="macro-rate-cell">
         <div class="macro-rate-name">🇺🇸 Fed Funds Rate</div>
         <div class="macro-rate-val" id="macro-fed-rate">4.25–4.50%</div>
-        <div class="macro-rate-dir cut">▼ CUT — Dec 2024</div>
+        <div class="macro-rate-dir cut" id="macro-fed-dir">▼ CUT</div>
       </div>
       <div class="macro-rate-cell">
         <div class="macro-rate-name">🇪🇺 ECB Deposit Rate</div>
         <div class="macro-rate-val" id="macro-ecb-rate">2.50%</div>
-        <div class="macro-rate-dir cut">▼ CUT — Mar 2025</div>
+        <div class="macro-rate-dir cut" id="macro-ecb-dir">▼ CUT</div>
       </div>
       <div class="macro-rate-cell">
-        <div class="macro-rate-name">🇬🇧 BoE Base Rate</div>
-        <div class="macro-rate-val">4.50%</div>
-        <div class="macro-rate-dir cut">▼ CUT — Feb 2025</div>
+        <div class="macro-rate-name">🇬🇧 BoE Bank Rate</div>
+        <div class="macro-rate-val" id="macro-boe-rate">4.50%</div>
+        <div class="macro-rate-dir cut" id="macro-boe-dir">▼ CUT</div>
       </div>
       <div class="macro-rate-cell">
         <div class="macro-rate-name">🇯🇵 BoJ Policy Rate</div>
-        <div class="macro-rate-val">0.50%</div>
-        <div class="macro-rate-dir hike">▲ HIKE — Jan 2025</div>
+        <div class="macro-rate-val" id="macro-boj-rate">0.50%</div>
+        <div class="macro-rate-dir hike" id="macro-boj-dir">▲ HIKE</div>
       </div>
       <div class="macro-rate-cell">
-        <div class="macro-rate-name">🇨🇳 PBoC LPR 1yr</div>
-        <div class="macro-rate-val">3.10%</div>
-        <div class="macro-rate-dir cut">▼ CUT — Oct 2024</div>
+        <div class="macro-rate-name">🇨🇳 PBoC LPR 1Y</div>
+        <div class="macro-rate-val" id="macro-pboc-rate">3.10%</div>
+        <div class="macro-rate-dir cut" id="macro-pboc-dir">▼ CUT</div>
+      </div>
+    </div>
+
+    <!-- ── US Treasury Yield Curve ── -->
+    <div class="card reveal" style="margin-bottom:14px;">
+      <div class="section-label">US Treasury Yield Curve <span id="macro-treasury-date" style="font-weight:400;font-size:0.58rem;color:var(--sl-muted);letter-spacing:0;"></span></div>
+      <div class="treasury-strip" id="macro-treasury-strip">
+        <div class="treasury-cell"><div class="treasury-label">3M</div><div class="treasury-val" id="tr-m3">—</div></div>
+        <div class="treasury-cell"><div class="treasury-label">1Y</div><div class="treasury-val" id="tr-y1">—</div></div>
+        <div class="treasury-cell"><div class="treasury-label">2Y</div><div class="treasury-val" id="tr-y2">—</div></div>
+        <div class="treasury-cell"><div class="treasury-label">5Y</div><div class="treasury-val" id="tr-y5">—</div></div>
+        <div class="treasury-cell"><div class="treasury-label">10Y</div><div class="treasury-val" id="tr-y10">—</div></div>
+        <div class="treasury-cell"><div class="treasury-label">30Y</div><div class="treasury-val" id="tr-y30">—</div></div>
+        <div class="treasury-cell" style="flex:2;">
+          <div class="treasury-label">Curve (2Y→10Y spread)</div>
+          <div class="treasury-val" id="tr-spread">—</div>
+          <div style="font-size:0.58rem;color:var(--sl-muted);font-family:var(--font-mono);margin-top:2px;" id="tr-spread-label">—</div>
+        </div>
       </div>
     </div>
 
@@ -3843,6 +3896,14 @@ h3 { font-size: 1.15rem; }
             <tr><td>R&amp;D Expense</td><td>US$1.3B</td><td>US$1.4B</td><td>US$1.5B</td></tr>
           </tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- Live market news (FMP) -->
+    <div class="card reveal" style="margin-top:14px;">
+      <div class="section-label">Live Market News — FMP</div>
+      <div class="fmp-news-list" id="earn-news-list">
+        <div style="color:var(--sl-muted);font-size:0.72rem;">Loading…</div>
       </div>
     </div>
 
@@ -5853,16 +5914,45 @@ function populateMacroTab() {
   const fmp = window._fmpData;
   if (!fmp) return;
 
+  // Wire all 6 central bank rates + date context
   const rateMap = Object.fromEntries((fmp.macroRates || []).map(rate => [rate.key, rate]));
-  const setRate = (id, key) => {
-    const el = document.getElementById(id);
-    if (!el) return;
+  const RATE_IDS = ['rba','fed','ecb','boe','boj','pboc'];
+  RATE_IDS.forEach(key => {
     const rate = rateMap[key];
-    el.textContent = rate?.value || '—';
-  };
-  setRate('macro-rba-rate', 'rba');
-  setRate('macro-fed-rate', 'fed');
-  setRate('macro-ecb-rate', 'ecb');
+    const valEl = document.getElementById(`macro-${key}-rate`);
+    const dirEl = document.getElementById(`macro-${key}-dir`);
+    if (valEl && rate?.value) valEl.textContent = rate.value;
+    if (dirEl && rate?.date) {
+      const d = new Date(rate.date);
+      const mo = d.toLocaleString('en-AU', { month: 'short', year: 'numeric' });
+      dirEl.textContent = (dirEl.textContent.split('—')[0] || dirEl.textContent).trim() + ' — ' + mo;
+    }
+  });
+
+  // Treasury yield curve
+  const tr = fmp.treasuryRates;
+  if (tr) {
+    const setTr = (id, val) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.textContent = val != null ? val.toFixed(2) + '%' : '—';
+    };
+    setTr('tr-m3', tr.m3); setTr('tr-y1', tr.y1); setTr('tr-y2', tr.y2);
+    setTr('tr-y5', tr.y5); setTr('tr-y10', tr.y10); setTr('tr-y30', tr.y30);
+    const dateEl = document.getElementById('macro-treasury-date');
+    if (dateEl && tr.date) dateEl.textContent = '· as of ' + new Date(tr.date).toLocaleDateString('en-AU', { day:'numeric', month:'short', year:'numeric' });
+    // Spread: 10Y - 2Y
+    if (tr.y10 != null && tr.y2 != null) {
+      const spread = tr.y10 - tr.y2;
+      const spreadEl = document.getElementById('tr-spread');
+      const spreadLabelEl = document.getElementById('tr-spread-label');
+      if (spreadEl) {
+        spreadEl.textContent = (spread >= 0 ? '+' : '') + spread.toFixed(2) + '%';
+        spreadEl.className = 'treasury-val ' + (spread >= 0 ? 'normal' : 'inverted');
+      }
+      if (spreadLabelEl) spreadLabelEl.textContent = spread >= 0 ? 'Normal (upward sloping)' : 'Inverted (recession signal)';
+    }
+  }
 
   // FX grid (macro)
   const fxEl = document.getElementById('macro-fx-grid');
@@ -5973,6 +6063,23 @@ function populateEarningsTab() {
   const analystEl = document.getElementById('earn-analyst-grid');
   const sourceAnalystEl = document.getElementById('fmp-analyst-grid');
   if (analystEl && sourceAnalystEl) analystEl.innerHTML = sourceAnalystEl.innerHTML;
+
+  // FMP live news
+  const newsEl = document.getElementById('earn-news-list');
+  const sourceNewsEl = document.getElementById('fmp-news-list');
+  if (newsEl && sourceNewsEl && sourceNewsEl.innerHTML.trim()) newsEl.innerHTML = sourceNewsEl.innerHTML;
+  else if (newsEl && fmp?.news?.length) {
+    newsEl.innerHTML = fmp.news.slice(0, 12).map(item => `
+      <div class="fmp-news-item">
+        <div class="fmp-news-meta">
+          <span class="fmp-news-sym">${escapeHtml(item.symbol || 'MKT')}</span>
+          <span class="fmp-news-site">${escapeHtml(item.site || '')}</span>
+          <span class="fmp-news-date">${escapeHtml(new Date(item.publishedDate).toLocaleDateString('en-AU',{day:'numeric',month:'short'}))}</span>
+        </div>
+        <div class="fmp-news-title"><a href="${escapeHtml(item.url)}" target="_blank" rel="noopener">${escapeHtml(item.title)}</a></div>
+      </div>
+    `).join('');
+  }
 }
 
 // ─── CRYPTO TAB ───────────────────────────────────────────────────

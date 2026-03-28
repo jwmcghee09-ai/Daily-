@@ -18,6 +18,7 @@ interface FmpNewsItem { title: string; publishedDate: string; url: string; symbo
 interface MacroRate { key: string; label: string; value: string | null; actual: number | null; date: string | null; event: string | null; }
 interface MacroIndicator { key: string; label: string; value: number | null; unit: string; date: string | null; }
 interface EarningsSurprise { symbol: string; name: string; date: string; actualEps: number | null; estimatedEps: number | null; surprise: number | null; surprisePct: number | null; }
+interface TreasuryRates { date: string; m3: number | null; y1: number | null; y2: number | null; y5: number | null; y10: number | null; y30: number | null; }
 interface CryptoAssetMetric { symbol: string; name: string; price: number | null; marketCap: number | null; volume24h: number | null; changePct24h: number | null; high24h: number | null; low24h: number | null; }
 interface CryptoMarketSnapshot {
   btcDominance: number | null;
@@ -43,6 +44,7 @@ interface FmpPayload {
   analystRatings: AnalystRating[];
   news: FmpNewsItem[];
   cryptoMarket: CryptoMarketSnapshot;
+  treasuryRates: TreasuryRates | null;
 }
 
 const FMP_BASE = "https://financialmodelingprep.com/stable";
@@ -361,11 +363,21 @@ async function fetchMacroIndicators(apiKey: string): Promise<MacroIndicator[]> {
   return results.filter((item): item is MacroIndicator => item !== null);
 }
 
+// Fallback known rates for central banks where economic calendar doesn't have recent data
+const KNOWN_RATES: Record<string, { value: string; date: string }> = {
+  boe: { value: "4.50%", date: "2025-02-06" },
+  boj: { value: "0.50%", date: "2025-01-24" },
+  pboc: { value: "3.10%", date: "2025-01-20" },
+};
+
 function deriveMacroRates(events: EconEvent[]): MacroRate[] {
   const configs = [
-    { key: "rba", label: "RBA Cash Rate", country: "AU", patterns: ["cash rate", "interest rate decision"] },
-    { key: "fed", label: "Fed Funds Rate", country: "US", patterns: ["interest rate decision", "federal funds"] },
-    { key: "ecb", label: "ECB Deposit Rate", country: "EU", patterns: ["deposit facility rate", "interest rate decision", "main refinancing rate"] },
+    { key: "rba",   label: "RBA Cash Rate",    country: "AU", patterns: ["cash rate", "interest rate decision"] },
+    { key: "fed",   label: "Fed Funds Rate",   country: "US", patterns: ["interest rate decision", "federal funds"] },
+    { key: "ecb",   label: "ECB Deposit Rate", country: "EU", patterns: ["deposit facility rate", "interest rate decision", "main refinancing rate"] },
+    { key: "boe",   label: "BoE Bank Rate",    country: "UK", patterns: ["bank rate", "interest rate decision", "mpc rate"] },
+    { key: "boj",   label: "BoJ Policy Rate",  country: "JP", patterns: ["interest rate decision", "policy rate", "overnight call rate"] },
+    { key: "pboc",  label: "PBoC LPR 1Y",      country: "CN", patterns: ["loan prime rate", "lpr", "interest rate"] },
   ];
 
   return configs.map((config) => {
@@ -374,13 +386,14 @@ function deriveMacroRates(events: EconEvent[]): MacroRate[] {
       const lower = event.event.toLowerCase();
       return config.patterns.some((pattern) => lower.includes(pattern));
     });
-    const rawValue = match?.actual ?? match?.estimate ?? match?.prior ?? null;
+    const rawValue = match?.actual ?? match?.estimate ?? match?.prior ?? KNOWN_RATES[config.key]?.value ?? null;
+    const fallbackDate = !match ? (KNOWN_RATES[config.key]?.date ?? null) : (match.date ?? null);
     return {
       key: config.key,
       label: config.label,
       value: rawValue,
       actual: parseNumericValue(rawValue),
-      date: match?.date ?? null,
+      date: fallbackDate,
       event: match?.event ?? null,
     };
   });
@@ -388,7 +401,7 @@ function deriveMacroRates(events: EconEvent[]): MacroRate[] {
 
 async function fetchEarningsSurprises(apiKey: string): Promise<EarningsSurprise[]> {
   if (!apiKey) return [];
-  const symbols = ["BHP.AX", "CBA.AX", "CSL.AX", "NAB.AX", "WBC.AX", "ANZ.AX"];
+  const symbols = ["BHP.AX", "CBA.AX", "CSL.AX", "WES.AX", "NAB.AX", "ANZ.AX", "WBC.AX", "MQG.AX", "RIO.AX", "FMG.AX", "WDS.AX", "TLS.AX"];
   const results = await Promise.allSettled(
     symbols.map(async (symbol) => {
       const ctrl = new AbortController();
@@ -517,6 +530,34 @@ async function fetchCryptoMarket(): Promise<CryptoMarketSnapshot> {
   }
 }
 
+// ---- US Treasury Yield Curve via FMP ----
+async function fetchTreasuryRates(apiKey: string): Promise<TreasuryRates | null> {
+  if (!apiKey) return null;
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 8_000);
+    const res = await fetch(`${FMP_BASE}/treasury-rates?apikey=${apiKey}`, {
+      cache: "no-store", signal: ctrl.signal,
+    });
+    clearTimeout(t);
+    if (!res.ok) return null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const data = (await res.json()) as any[];
+    if (!Array.isArray(data) || data.length === 0) return null;
+    const latest = data[0];
+    const n = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : null);
+    return {
+      date: typeof latest.date === "string" ? latest.date : "",
+      m3:  n(latest.month3),
+      y1:  n(latest.year1),
+      y2:  n(latest.year2),
+      y5:  n(latest.year5),
+      y10: n(latest.year10),
+      y30: n(latest.year30),
+    };
+  } catch { return null; }
+}
+
 // ---- Analyst Price Targets via FMP (/price-target-summary) ----
 const ANALYST_SYMBOLS = ["AAPL", "MSFT", "NVDA", "AMZN", "GOOGL", "META", "TSLA", "JPM", "BRK-B", "UNH"];
 
@@ -598,7 +639,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(cache.data, { headers: { "Cache-Control": "no-store" } });
   }
 
-  const [indices, commodities, fx, sectorPerformance, economicCalendar, macroIndicators, earningsCalendar, earningsSurprises, analystRatings, news, cryptoMarket] =
+  const [indices, commodities, fx, sectorPerformance, economicCalendar, macroIndicators, earningsCalendar, earningsSurprises, analystRatings, news, cryptoMarket, treasuryRates] =
     await Promise.all([
       fetchIndices(apiKey),
       fetchCommodities(apiKey),
@@ -611,6 +652,7 @@ export async function GET(request: NextRequest) {
       fetchAnalystRatings(apiKey),
       fetchNews(apiKey),
       fetchCryptoMarket(),
+      fetchTreasuryRates(apiKey),
     ]);
 
   const macroRates = deriveMacroRates(economicCalendar);
@@ -620,7 +662,7 @@ export async function GET(request: NextRequest) {
     indices, commodities, fx, sectorPerformance,
     economicCalendar, macroRates, macroIndicators,
     earningsCalendar, earningsSurprises, analystRatings, news,
-    cryptoMarket,
+    cryptoMarket, treasuryRates,
   };
 
   cache = { data: payload, expiresAt: now + CACHE_TTL_MS };
