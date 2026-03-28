@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./landing-page.module.css";
@@ -215,6 +215,9 @@ export default function LandingPage({
   checkoutPlan: CheckoutPlan;
 }) {
   const [activeFaqIndex, setActiveFaqIndex] = useState(0);
+  const heroProductRef = useRef<HTMLDivElement>(null);
+  const stickySectionRef = useRef<HTMLElement>(null);
+  const [activeStickyPanel, setActiveStickyPanel] = useState(0);
 
   useEffect(() => {
     const reveals = document.querySelectorAll<HTMLElement>(
@@ -280,6 +283,30 @@ export default function LandingPage({
       riskObserver?.disconnect();
       window.removeEventListener("scroll", syncScroll);
     };
+  }, []);
+
+  useEffect(() => {
+    const onScroll = () => {
+      const heroProduct = heroProductRef.current;
+      if (heroProduct) {
+        const p = Math.min(window.scrollY / window.innerHeight, 1);
+        const e = 1 - Math.pow(1 - p, 2.5);
+        heroProduct.style.transform = `scale(${(0.82 + e * 0.18).toFixed(4)}) translateY(${((1 - e) * 60).toFixed(1)}px)`;
+        heroProduct.style.opacity = (0.35 + e * 0.65).toFixed(3);
+      }
+      const sticky = stickySectionRef.current;
+      if (sticky) {
+        const scrollable = sticky.offsetHeight - window.innerHeight;
+        if (scrollable > 0) {
+          const scrolled = Math.max(0, -sticky.getBoundingClientRect().top);
+          const progress = Math.min(scrolled / scrollable, 1);
+          setActiveStickyPanel(Math.min(Math.floor(progress * 3), 2));
+        }
+      }
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   const checkoutMessage =
@@ -360,7 +387,8 @@ export default function LandingPage({
             <AITeaser />
           </div>
 
-          <div className={`${styles.dashboardCard} ${styles.reveal}`}>
+          <div ref={heroProductRef} className={styles.heroProduct}>
+          <div className={styles.dashboardCard}>
             <div className={styles.dashboardHeader}>
               <div className={styles.dashboardUrl}>spectre-assets.com / dashboard</div>
             </div>
@@ -424,8 +452,27 @@ export default function LandingPage({
               </div>
             </div>
           </div>
+          </div>
         </div>
       </section>
+
+      <div className={styles.statsStrip}>
+        <div className={styles.container}>
+          <div className={styles.statsGrid}>
+            {[
+              { val: "24+", label: "File Formats" },
+              { val: "6", label: "Risk Metrics" },
+              { val: "5", label: "Research Tabs" },
+              { val: "$0", label: "To Start" },
+            ].map(({ val, label }) => (
+              <div key={label} className={styles.statStat}>
+                <div className={styles.statStatVal}>{val}</div>
+                <div className={styles.statStatLabel}>{label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
 
       <Divider />
 
@@ -486,44 +533,97 @@ export default function LandingPage({
 
       <Divider />
 
-      <section className={styles.section} id="workflow">
-        <div className={styles.container}>
-          <div className={`${styles.sectionLabel} ${styles.reveal}`}>3-Step Workflow</div>
-          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`} style={{ transitionDelay: "0.07s" }}>From CSV to risk clarity.</h2>
-          <p className={`${styles.sectionSub} ${styles.reveal}`} style={{ transitionDelay: "0.14s" }}>
-            Upload files, normalize holdings, then review your risk score and exposure metrics. Purpose-built for Australian investors managing multi-source portfolios.
-          </p>
-
-          <div className={styles.steps}>
-            {workflowSteps.map((step, index) => (
-              <article
-                key={step.title}
-                className={`${styles.stepCard} ${styles.reveal}`}
-                style={{ transitionDelay: `${index * 0.1}s` }}
-              >
-                <span className={styles.stepNumber}>{step.number}</span>
-                <div className={`${styles.iconWrap} ${step.alt ? styles.iconAlt : ""}`}>{step.icon}</div>
-                <h3>{step.title}</h3>
-                <p>{step.copy}</p>
-              </article>
-            ))}
+      <section className={styles.stickyWrap} id="workflow" ref={stickySectionRef}>
+        <div className={styles.stickyInner}>
+          <div className={styles.stickyLeft}>
+            <div className={styles.stickyPanels}>
+              <div className={`${styles.stickyPreview} ${activeStickyPanel === 0 ? styles.stickyPreviewActive : ""}`}>
+                <div className={styles.previewCard}>
+                  <div className={styles.previewHeader}>
+                    <span className={styles.previewTitle}>Import Portfolio</span>
+                    <span className={styles.chartBadge}>Step 01</span>
+                  </div>
+                  <div className={styles.previewUploadZone}>
+                    <UploadIcon />
+                    <span>Drop CSV or XLSX files here</span>
+                    <span className={styles.previewMuted}>Super · ASX · Crypto · Funds · Bullion</span>
+                  </div>
+                  <div className={styles.previewFileList}>
+                    {["commsec_export.csv", "spaceship_super.csv", "coinspot_wallet.xlsx"].map((f) => (
+                      <div key={f} className={styles.previewFileRow}>
+                        <span className={styles.previewFileIcon}>📄</span>
+                        <span className={styles.previewFileName}>{f}</span>
+                        <span className={styles.previewFileCheck}>✓</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className={`${styles.stickyPreview} ${activeStickyPanel === 1 ? styles.stickyPreviewActive : ""}`}>
+                <div className={styles.previewCard}>
+                  <div className={styles.previewHeader}>
+                    <span className={styles.previewTitle}>Normalized Holdings</span>
+                    <span className={styles.chartBadge}>Step 02</span>
+                  </div>
+                  <div className={styles.previewTable}>
+                    <div className={styles.previewTableHead}>
+                      <span>Ticker</span><span>Source</span><span>Weight</span><span>Value</span>
+                    </div>
+                    {[
+                      { t: "BHP", s: "CommSec", w: "7.3%", v: "$92.7k" },
+                      { t: "CBA", s: "CommSec", w: "5.1%", v: "$64.8k" },
+                      { t: "BTC", s: "CoinSpot", w: "4.4%", v: "$55.9k" },
+                      { t: "VDHG", s: "Vanguard", w: "18.2%", v: "$231k" },
+                      { t: "SUPER", s: "Spaceship", w: "28.1%", v: "$356k" },
+                    ].map((row) => (
+                      <div key={row.t} className={styles.previewTableRow}>
+                        <span className={styles.previewSymbol}>{row.t}</span>
+                        <span className={styles.previewMuted}>{row.s}</span>
+                        <span>{row.w}</span>
+                        <span className={styles.previewValue}>{row.v}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className={`${styles.stickyPreview} ${activeStickyPanel === 2 ? styles.stickyPreviewActive : ""}`}>
+                <div className={styles.previewCard}>
+                  <div className={styles.previewHeader}>
+                    <span className={styles.previewTitle}>Risk Dashboard</span>
+                    <span className={`${styles.chartBadge} ${styles.chartBadgeOrange}`}>Step 03</span>
+                  </div>
+                  <div className={styles.previewRiskScore}>
+                    <div className={styles.previewScoreLabel}>Risk Score</div>
+                    <div className={styles.previewScoreVal}>72</div>
+                    <div className={styles.previewScoreSub}>Elevated — Monitor Concentration</div>
+                  </div>
+                  <div className={styles.previewMetrics}>
+                    {[
+                      { label: "VaR 95%", val: "2.1%", color: "var(--accent2)" },
+                      { label: "Max Drawdown", val: "−11%", color: "var(--danger)" },
+                      { label: "Concentration", val: "42%", color: "var(--accent2)" },
+                    ].map(({ label, val, color }) => (
+                      <div key={label} className={styles.previewMetricRow}>
+                        <span className={styles.previewMuted}>{label}</span>
+                        <span className={styles.previewMetricVal} style={{ color }}>{val}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-
-          <div className={styles.beforeAfter}>
-            <article className={`${styles.beforeAfterCard} ${styles.revealLeft}`}>
-              <span className={`${styles.badge} ${styles.badgeDanger}`}>Before SPECTRE</span>
-              <h3>&quot;Looks diversified&quot;</h3>
-              <p>
-                Many line items scattered across multiple statements and platforms. No unified risk view. Hidden concentration goes undetected.
-              </p>
-            </article>
-            <article className={`${styles.beforeAfterCard} ${styles.afterCard} ${styles.revealRight}`}>
-              <span className={`${styles.badge} ${styles.badgeAccent}`}>After SPECTRE</span>
-              <h3>Top-3 = 42% Exposure</h3>
-              <p>
-                SPECTRE surfaces hidden concentration and downside sensitivity in a single risk score. You see exactly where your risk is and can act faster.
-              </p>
-            </article>
+          <div className={styles.stickyRight}>
+            <div className={styles.stickyPanels}>
+              {workflowSteps.map((step, i) => (
+                <div key={step.title} className={`${styles.stickyPanel} ${activeStickyPanel === i ? styles.stickyPanelActive : ""}`}>
+                  <div className={`${styles.iconWrap} ${step.alt ? styles.iconAlt : ""}`}>{step.icon}</div>
+                  <span className={styles.stepNumber}>{step.number}</span>
+                  <h2 className={styles.stickyPanelTitle}>{step.title}</h2>
+                  <p className={styles.stickyPanelCopy}>{step.copy}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
