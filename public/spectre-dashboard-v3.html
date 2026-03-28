@@ -3432,8 +3432,16 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 
     const analysis = state.holdingsAi;
     if (!analysis) {
-      metaEl.textContent = "No analysis yet";
-      outputEl.innerHTML = "";
+      if (state.holdingsAiLoading) {
+        metaEl.textContent = "Analyzing…";
+        outputEl.innerHTML = `<div class="console-ai-block"><h4>Portfolio Analysis</h4><p style="opacity:.6">Generating analysis — please wait…</p></div>`;
+      } else if (!hasHoldings) {
+        metaEl.textContent = "";
+        outputEl.innerHTML = `<div class="console-ai-block" style="text-align:center;padding:2rem 1rem"><h4 style="margin-bottom:.6rem">No Holdings Yet</h4><p style="color:var(--muted);margin-bottom:.9rem">Upload your portfolio on the <strong style="color:var(--text)">Quant</strong> tab to unlock AI-powered analysis of your holdings, risk exposure, and sector concentration.</p><button type="button" class="btn-primary" style="font-size:.72rem;padding:.45rem 1.2rem" onclick="document.querySelectorAll('.nav-tab')[0]?.click()">Go to Quant →</button></div>`;
+      } else {
+        metaEl.textContent = "Analysis pending";
+        outputEl.innerHTML = `<div class="console-ai-block"><h4>Portfolio Analysis</h4><p style="opacity:.6">Analysis will appear here once complete.</p></div>`;
+      }
       return;
     }
 
@@ -4614,10 +4622,16 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   }
 
   document.querySelectorAll('.nav-tab').forEach(function(btn) {
-    btn.addEventListener('click', function() { switchTab(btn.getAttribute('data-tab')); });
+    btn.addEventListener('click', function() {
+      var tab = btn.getAttribute('data-tab');
+      if (tab === 'research') { window.location.href = '/research'; return; }
+      switchTab(tab);
+    });
   });
 
-  switchTab('quant');
+  var _initTab = new URLSearchParams(window.location.search).get('tab') || 'quant';
+  if (_initTab === 'research') _initTab = 'quant';
+  switchTab(_initTab);
 })();
 
 /* ── TICKER BAR ── */

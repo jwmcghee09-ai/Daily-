@@ -26,7 +26,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@400;600;700;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Sora:wght@400;600;700;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
 
 <style>
 /* ===== RESET & BASE ===== */
@@ -2796,6 +2796,48 @@ h3 { font-size: 1.15rem; }
   .crypto-tab-grid { grid-template-columns: 1fr !important; }
   .crypto-big-price { font-size: 1.75rem !important; }
 }
+
+/* ── Dashboard-aligned tab nav ── */
+.logo {
+  font-family: 'Bebas Neue', sans-serif !important;
+  font-size: 1.45rem !important;
+  letter-spacing: .14em !important;
+  background: linear-gradient(120deg, #d0b3ff 0%, #ff6a3d 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+  font-weight: 400 !important;
+  gap: 0 !important;
+}
+.logo .status-dot { display: none; }
+.nav-links { display: none !important; }
+.nav-tab-group {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+.nav-tab-link {
+  font-family: 'DM Mono', monospace;
+  font-size: .62rem;
+  font-weight: 400;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: #8a86a8;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  padding: .2rem 1.1rem;
+  cursor: pointer;
+  transition: color .15s, border-color .15s;
+  line-height: 50px;
+  height: 50px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+.nav-tab-link:hover { color: #f2eeff; }
+.nav-tab-link-active { color: #f2eeff !important; border-bottom-color: #7c4dff !important; }
 </style>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 </head>
@@ -2804,17 +2846,13 @@ h3 { font-size: 1.15rem; }
 <!-- ===== STICKY NAV ===== -->
 <nav class="nav">
   <div class="nav-inner">
-    <a href="/dashboard?mode=account" class="logo" id="nav-dashboard-logo" style="text-decoration:none;">
-      SPECTRE
-      <span class="status-dot"></span>
-    </a>
-    <ul class="nav-links">
-      <li><a href="/dashboard?mode=account" id="nav-dashboard-link">Dashboard</a></li>
-      <li><a href="/research" class="active">Research</a></li>
-      <li><a href="/settings" id="nav-settings-link">Settings</a></li>
-    </ul>
+    <a href="/dashboard" class="logo" id="nav-dashboard-logo" style="text-decoration:none;">SPECTRE</a>
+    <div class="nav-tab-group">
+      <a href="/dashboard?tab=quant" class="nav-tab-link">Quant</a>
+      <a href="/dashboard?tab=ai" class="nav-tab-link">AI</a>
+      <span class="nav-tab-link nav-tab-link-active">Research</span>
+    </div>
     <div class="nav-right">
-      <span style="font-family:var(--font-mono); font-size:0.7rem;">20 MAR 2026</span>
       <div id="nav-market-status" class="nav-status">
         <span class="status-dot" style="width:6px;height:6px;animation-duration:2.5s;background:var(--sl-amber);box-shadow:0 0 6px var(--sl-amber);"></span>
         ASX CLOSED
@@ -2823,12 +2861,11 @@ h3 { font-size: 1.15rem; }
       <a href="#" class="nav-btn" id="sign-out-btn">Sign Out</a>
     </div>
   </div>
+  <!-- TICKER BAR -->
+  <div class="ticker-wrap">
+    <div class="ticker-track" id="tickerTrack"></div>
+  </div>
 </nav>
-
-<!-- ===== TICKER TAPE ===== -->
-<div class="ticker-wrap">
-  <div class="ticker-track" id="tickerTrack"></div>
-</div>
 
 <div class="container" id="terminal">
 
