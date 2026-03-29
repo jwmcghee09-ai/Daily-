@@ -358,23 +358,6 @@ export default function SignInPage({
           </div>
         </div>
 
-        {authMode === "login" && subMode === "default" && !sessionUser ? (
-          <div className={styles.aiBox}>
-            <span className={styles.aiBoxGlyph}>✦</span>
-            <input
-              type="text"
-              className={styles.aiBoxInput}
-              placeholder="Ask SPECTRE anything about your portfolio risk..."
-              onChange={(e) => {
-                if (e.target.value.length > 0) {
-                  switchToRegister();
-                }
-              }}
-            />
-            <span className={styles.aiBoxCta}>Create account to use AI →</span>
-          </div>
-        ) : null}
-
         <div className={styles.grid}>
           <aside className={styles.sideCard}>
             <div className={styles.pill}>Portfolio Intelligence</div>
@@ -416,9 +399,22 @@ export default function SignInPage({
             <div className={styles.cardBody}>
               {subMode === "forgot" ? (
                 <>
-                  <div className={styles.sectionLabel}>Password Reset</div>
+                  <div className={styles.resetSteps}>
+                    <span className={styles.resetStep} data-active="true">1 · Email</span>
+                    <span className={styles.resetStepDivider}>—</span>
+                    <span className={styles.resetStep}>2 · Check inbox</span>
+                    <span className={styles.resetStepDivider}>—</span>
+                    <span className={styles.resetStep}>3 · New password</span>
+                  </div>
+
+                  <div className={styles.resetIcon}>
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                  </div>
                   <h2>Forgot your password?</h2>
-                  <p>Enter your account email and we&apos;ll send reset instructions.</p>
+                  <p>Enter your account email and we&apos;ll send a reset link straight to your inbox.</p>
 
                   {banner ? (
                     <div className={`${styles.banner} ${banner.tone === "success" ? styles.bannerSuccess : banner.tone === "error" ? styles.bannerError : styles.bannerInfo}`}>
@@ -441,13 +437,13 @@ export default function SignInPage({
                       />
                     </label>
                     <button type="submit" className={`${styles.button} ${styles.primaryButton} ${styles.fullButton}`} disabled={working}>
-                      {working ? "Sending..." : "Send Reset Link"}
+                      {working ? "Sending…" : "Send Reset Link"}
                     </button>
                   </form>
 
                   <div className={styles.linkRow}>
                     <button type="button" className={styles.textButton} onClick={() => openReset()}>
-                      I have a reset token
+                      I already have a token
                     </button>
                     <button type="button" className={styles.textButton} onClick={switchToLogin}>
                       Back to sign in
@@ -456,8 +452,20 @@ export default function SignInPage({
                 </>
               ) : subMode === "reset" ? (
                 <>
-                  <div className={styles.sectionLabel}>New Password</div>
-                  <h2>Reset your password</h2>
+                  <div className={styles.resetSteps}>
+                    <span className={styles.resetStep}>1 · Email</span>
+                    <span className={styles.resetStepDivider}>—</span>
+                    <span className={styles.resetStep}>2 · Check inbox</span>
+                    <span className={styles.resetStepDivider}>—</span>
+                    <span className={styles.resetStep} data-active="true">3 · New password</span>
+                  </div>
+
+                  <div className={styles.resetIcon}>
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    </svg>
+                  </div>
+                  <h2>Set a new password</h2>
                   <p>Paste the token from your email and choose a new password.</p>
 
                   {banner ? (
@@ -493,7 +501,7 @@ export default function SignInPage({
                       />
                     </label>
                     <button type="submit" className={`${styles.button} ${styles.primaryButton} ${styles.fullButton}`} disabled={working}>
-                      {working ? "Resetting..." : "Set New Password"}
+                      {working ? "Resetting…" : "Set New Password"}
                     </button>
                   </form>
 

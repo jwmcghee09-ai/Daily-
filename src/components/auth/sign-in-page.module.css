@@ -398,6 +398,63 @@
   margin-top: 24px;
 }
 
+.forgotLink {
+  display: block;
+  width: 100%;
+  text-align: center;
+  border: 0;
+  background: transparent;
+  color: #9b8fbb;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 6px 0 0;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.forgotLink:hover {
+  color: #e3d7ff;
+}
+
+/* ── Password reset flow ── */
+.resetSteps {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.resetStep {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: rgba(155, 143, 187, 0.45);
+  white-space: nowrap;
+  transition: color 0.2s;
+}
+
+.resetStep[data-active="true"] {
+  color: #a855f7;
+}
+
+.resetStepDivider {
+  color: rgba(155, 143, 187, 0.2);
+  font-size: 10px;
+}
+
+.resetIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: rgba(168, 85, 247, 0.08);
+  border: 1px solid rgba(168, 85, 247, 0.2);
+  color: #a855f7;
+  margin-bottom: 18px;
+}
+
 .linkRow {
   display: flex;
   gap: 18px;
