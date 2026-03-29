@@ -3531,8 +3531,8 @@ h3 { font-size: 1.15rem; }
           <div class="crypto-sub">BTC/USD</div>
         </div>
         <div class="crypto-price">
-          <div id="live-btc-price" class="cprice mono">$70,695</div>
-          <div id="live-btc-chg" class="cchange pos mono">+1.11%</div>
+          <div id="live-btc-price" class="cprice mono">Loading…</div>
+          <div id="live-btc-chg" class="cchange mono">—</div>
         </div>
       </div>
       <div class="crypto-row">
@@ -3542,8 +3542,8 @@ h3 { font-size: 1.15rem; }
           <div class="crypto-sub">ETH/USD</div>
         </div>
         <div class="crypto-price">
-          <div id="live-eth-price" class="cprice mono">$2,146</div>
-          <div id="live-eth-chg" class="cchange pos mono">+0.39%</div>
+          <div id="live-eth-price" class="cprice mono">Loading…</div>
+          <div id="live-eth-chg" class="cchange mono">—</div>
         </div>
       </div>
       <div class="crypto-row">
@@ -3553,8 +3553,8 @@ h3 { font-size: 1.15rem; }
           <div class="crypto-sub">XAU/USD</div>
         </div>
         <div class="crypto-price">
-          <div id="live-gold-price" class="cprice mono">$4,637</div>
-          <div id="live-gold-chg" class="cchange neg mono">−0.29%</div>
+          <div id="live-gold-price" class="cprice mono">Loading…</div>
+          <div id="live-gold-chg" class="cchange mono">—</div>
         </div>
       </div>
     </div>
@@ -5041,7 +5041,7 @@ async function fetchLiveQuotes() {
     }
   } catch (err) {
     console.warn('Live quotes fetch failed:', err);
-    for (const id of ['hero-gold-price', 'hero-btc-price', 'hero-eth-price', 'hero-asx200-price', 'hero-audusd-price', 'hero-vix-price']) {
+    for (const id of ['hero-gold-price', 'hero-btc-price', 'hero-eth-price', 'hero-asx200-price', 'hero-audusd-price', 'hero-vix-price', 'live-btc-price', 'live-eth-price', 'live-gold-price']) {
       const el = document.getElementById(id);
       if (el && el.textContent === 'Loading…') el.textContent = '—';
     }
