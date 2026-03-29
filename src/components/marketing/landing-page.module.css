@@ -1863,7 +1863,7 @@
 
 .previewCard {
   width: 100%;
-  max-width: 360px;
+  max-width: 480px;
   border: 1px solid var(--borderStrong);
   border-radius: var(--radiusLg);
   background: var(--bg);
