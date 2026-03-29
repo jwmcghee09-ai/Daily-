@@ -1547,10 +1547,10 @@ h3 { font-size: 1.15rem; }
 
 /* FX grid */
 .fx-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 8px; }
-.fx-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: rgba(255,255,255,0.03); border: 1px solid var(--sl-border); border-radius: 6px; }
-.fx-pair { font-family: var(--font-mono); font-size: 0.65rem; color: var(--sl-muted); letter-spacing: 0.06em; }
-.fx-rate { font-family: var(--font-mono); font-size: 0.85rem; font-weight: 600; color: var(--sl-text); }
-.fx-chg { font-family: var(--font-mono); font-size: 0.65rem; }
+.fx-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; background: rgba(255,255,255,0.03); border: 1px solid var(--sl-border); border-radius: 6px; gap: 6px; overflow: hidden; min-width: 0; }
+.fx-pair { font-family: var(--font-mono); font-size: 0.65rem; color: var(--sl-muted); letter-spacing: 0.06em; flex-shrink: 0; }
+.fx-rate { font-family: var(--font-mono); font-size: 0.78rem; font-weight: 600; color: var(--sl-text); flex-shrink: 1; min-width: 0; }
+.fx-chg { font-family: var(--font-mono); font-size: 0.65rem; flex-shrink: 0; white-space: nowrap; }
 
 /* Commodity grid */
 .comm-grid { display: grid; grid-template-columns: 1fr; gap: 6px; }
@@ -2673,9 +2673,9 @@ h3 { font-size: 1.15rem; }
   gap: 10px;
 }
 .fx-row:last-child { border-bottom: none; }
-.fx-pair { font-family: var(--font-mono); font-size: 0.7rem; color: var(--sl-text); flex: 1; }
-.fx-rate { font-family: var(--font-mono); font-size: 0.72rem; font-weight: 600; color: #fff; }
-.fx-chg  { font-family: var(--font-mono); font-size: 0.65rem; min-width: 54px; text-align: right; }
+.fx-pair { font-family: var(--font-mono); font-size: 0.65rem; color: var(--sl-muted); flex-shrink: 0; }
+.fx-rate { font-family: var(--font-mono); font-size: 0.78rem; font-weight: 600; color: #fff; flex-shrink: 1; min-width: 0; }
+.fx-chg  { font-family: var(--font-mono); font-size: 0.65rem; text-align: right; flex-shrink: 0; white-space: nowrap; }
 
 /* ── Data table upgrades ────────────────────────── */
 .data-table th {
