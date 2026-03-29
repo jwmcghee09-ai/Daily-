@@ -352,7 +352,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;background:rgba(5,5,10,.92);
 }
 /* ── SECTION ── */
 .sec{padding:7rem 0;position:relative;z-index:2}
-.sec-alt{background:var(--card);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.sec-alt{background:transparent;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
 .sec-head{display:flex;flex-direction:column;align-items:flex-start;gap:.6rem;margin-bottom:2.5rem}
 .sec-title{font-family:var(--disp);font-size:clamp(1.8rem,3.5vw,2.8rem);font-weight:700;letter-spacing:-.02em;color:var(--text);line-height:1.1}
 .sec-line{display:none}
@@ -999,8 +999,8 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
 /* Plan chip */
 .plan-chip.pro{ background:rgba(168,85,247,.12) !important; color:var(--purple) !important; border-color:rgba(168,85,247,.28) !important }
 
-/* Sec alt — match landing card bg */
-.sec-alt{ background:var(--card) !important }
+/* Sec alt — transparent, no grey box */
+.sec-alt{ background:transparent !important }
 
 /* Meta panel */
 .meta-panel{
@@ -1135,9 +1135,6 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
 
 <!-- AI HERO -->
 <div class="ai-hero-wrap" id="dashboard-top" data-page="ai">
-  <div class="ai-hero-glow ai-hero-glow-l"></div>
-  <div class="ai-hero-glow ai-hero-glow-r"></div>
-  <div class="ai-hero-dots"></div>
   <div class="ai-hero-inner">
 
     <!-- Account strip -->
@@ -1153,15 +1150,23 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       <span id="meta-prices-updated" class="ai-strip-meta"></span>
     </div>
 
-    <!-- Headline -->
-    <h1 class="ai-hero-title">Your portfolio intelligence.</h1>
-    <p class="ai-hero-sub">AI-powered analysis grounded in your live holdings, risk metrics, and research.</p>
-
-    <!-- Hidden inputs kept for JS compat — card removed -->
-    <textarea id="pro-ai-question" style="display:none" maxlength="700">What may be influencing the value of my current holdings?</textarea>
-    <button type="button" id="pro-ai-ask-btn" style="display:none"><span id="pro-ai-ask-label">Ask AI</span></button>
+    <!-- Ask AI card -->
+    <div class="ai-input-card" style="max-width:720px;margin:1.5rem 0 0">
+      <textarea id="pro-ai-question" class="ai-input-textarea" maxlength="700" placeholder="Ask anything about your portfolio…">What may be influencing the value of my current holdings?</textarea>
+      <div class="ai-input-footer">
+        <div class="ai-input-chips" id="pro-ai-chips">
+          <button type="button" class="ai-chip" data-q="What is driving my returns right now?">What's driving my returns?</button>
+          <button type="button" class="ai-chip" data-q="Where is my risk concentrated and what should I watch?">Where is my risk concentrated?</button>
+          <button type="button" class="ai-chip" data-q="Are there any sector headwinds affecting my holdings?">Any sector headwinds?</button>
+          <button type="button" class="ai-chip" data-q="Give me a concise summary of my current portfolio.">Summarise my portfolio</button>
+        </div>
+        <button type="button" id="pro-ai-ask-btn" class="ai-send-btn">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          <span id="pro-ai-ask-label">Ask AI</span>
+        </button>
+      </div>
+    </div>
     <button type="button" id="refresh-prices-btn" style="display:none">Refresh</button>
-    <div id="pro-ai-chips" style="display:none"></div>
 
     <div class="console-ai-error" id="pro-ai-error" hidden></div>
     <div class="ai-hero-output" id="pro-ai-output"></div>
