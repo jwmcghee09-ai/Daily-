@@ -5053,6 +5053,17 @@ document.addEventListener('DOMContentLoaded', () => {
   animateBars();
   initReveal();
   applyModeChrome();
+
+  // Fix nav tab links to preserve account/demo mode when returning to dashboard
+  const modeParam = state.demoMode ? 'demo=1' : 'mode=account';
+  document.querySelectorAll('.nav-tab-link').forEach(function(link) {
+    const href = link.getAttribute('href');
+    if (href && href.startsWith('/dashboard?tab=')) {
+      const tab = href.split('tab=')[1];
+      link.setAttribute('href', '/dashboard?' + modeParam + '&tab=' + tab);
+    }
+  });
+
   updateWorkspaceClock();
   updateWorkspaceHeroIdentity();
   updateWorkspacePortfolioSummary(null);
