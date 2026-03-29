@@ -122,10 +122,10 @@ h3 { font-size: 1.15rem; }
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(12, 8, 23, 0.88);
-  backdrop-filter: blur(22px) saturate(1.7);
-  -webkit-backdrop-filter: blur(22px) saturate(1.7);
-  border-bottom: 1px solid rgba(155, 93, 229, 0.1);
+  background: rgba(5,5,10,.92);
+  backdrop-filter: blur(28px) saturate(1.4);
+  -webkit-backdrop-filter: blur(28px) saturate(1.4);
+  border-bottom: 1px solid rgba(255,255,255,.06);
 }
 
 .nav-inner {
@@ -260,14 +260,20 @@ h3 { font-size: 1.15rem; }
 /* ===== TICKER TAPE ===== */
 .ticker-wrap {
   overflow: hidden;
-  background: rgba(12, 8, 23, 0.5);
-  border-bottom: 1px solid var(--sl-border);
+  background: rgba(0,0,0,.22);
+  border-top: 1px solid rgba(255,255,255,.04);
   position: relative;
-  z-index: 1;
+  height: 28px;
+  display: flex;
+  align-items: center;
 }
+.ticker-wrap::before,.ticker-wrap::after{content:'';position:absolute;top:0;bottom:0;width:72px;z-index:2;pointer-events:none}
+.ticker-wrap::before{left:0;background:linear-gradient(to right,rgba(5,5,10,.95),transparent)}
+.ticker-wrap::after{right:0;background:linear-gradient(to left,rgba(5,5,10,.95),transparent)}
 
 .ticker-track {
   display: flex;
+  align-items: center;
   animation: ticker-scroll 40s linear infinite;
   width: max-content;
 }
@@ -280,20 +286,21 @@ h3 { font-size: 1.15rem; }
 }
 
 .ticker-item {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 7px;
-  padding: 8px 20px;
+  gap: .45rem;
+  padding: 0 1.6rem;
   font-family: var(--font-mono);
-  font-size: 0.68rem;
+  font-size: 0.58rem;
+  letter-spacing: .05em;
   white-space: nowrap;
-  border-right: 1px solid rgba(255,255,255,0.07);
 }
 
-.ticker-item .sym { color: var(--sl-text); font-weight: 500; }
-.ticker-item .price { color: var(--sl-muted); }
-.ticker-item .chg.pos { color: var(--green); }
-.ticker-item .chg.neg { color: var(--accent); }
+.ticker-item .sym { color: rgba(255,255,255,.38); font-weight: 500; letter-spacing: .08em; }
+.ticker-item .price { color: rgba(255,255,255,.7); font-weight: 600; }
+.ticker-item .chg { font-weight: 500; }
+.ticker-item .chg.pos { color: #4ade80; }
+.ticker-item .chg.neg { color: #f87171; }
 
 /* ===== CARDS — data terminal style ===== */
 .card {

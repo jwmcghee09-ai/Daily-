@@ -63,7 +63,7 @@ body::after{
 @media(max-width:600px){.wrap{padding:0 1.1rem}}
 
 /* ── NAV ── */
-nav{position:fixed;top:0;left:0;right:0;z-index:900;background:rgba(5,5,10,.85);backdrop-filter:blur(28px) saturate(1.4);-webkit-backdrop-filter:blur(28px) saturate(1.4);border-bottom:1px solid rgba(255,255,255,.05)}
+nav{position:fixed;top:0;left:0;right:0;z-index:900;background:rgba(5,5,10,.92);backdrop-filter:blur(28px) saturate(1.4);-webkit-backdrop-filter:blur(28px) saturate(1.4);border-bottom:1px solid rgba(255,255,255,.06)}
 .nav-inner{max-width:var(--max);margin:0 auto;padding:0 2.5rem;height:56px;display:flex;align-items:center;justify-content:space-between;gap:2rem}
 .nav-logo{
   font-family:var(--disp);
@@ -96,18 +96,20 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;background:rgba(5,5,10,.85);
 .nav-settings-btn{display:flex;align-items:center;justify-content:center;width:32px;height:32px;background:transparent;border:1px solid var(--border2);border-radius:999px;color:var(--muted);text-decoration:none;transition:color .2s,border-color .2s;flex-shrink:0}
 .nav-settings-btn:hover{color:var(--text);border-color:rgba(255,255,255,.28)}
 /* ── TICKER BAR ── */
-.nav-ticker-bar{height:32px;background:rgba(8,7,14,.95);border-top:1px solid rgba(255,255,255,.05);overflow:hidden;display:flex;align-items:center}
-.nav-ticker-bar::before,.nav-ticker-bar::after{content:'';position:absolute;top:0;bottom:0;width:60px;z-index:1;pointer-events:none}
-.nav-ticker-bar::before{left:0;background:linear-gradient(to right,rgba(8,7,14,.95),transparent)}
-.nav-ticker-bar::after{right:0;background:linear-gradient(to left,rgba(8,7,14,.95),transparent)}
+.nav-ticker-bar{position:relative;height:28px;background:rgba(0,0,0,.22);border-top:1px solid rgba(255,255,255,.04);overflow:hidden;display:flex;align-items:center}
+.nav-ticker-bar::before,.nav-ticker-bar::after{content:'';position:absolute;top:0;bottom:0;width:72px;z-index:2;pointer-events:none}
+.nav-ticker-bar::before{left:0;background:linear-gradient(to right,rgba(5,5,10,.95),transparent)}
+.nav-ticker-bar::after{right:0;background:linear-gradient(to left,rgba(5,5,10,.95),transparent)}
 .nav-ticker-track{display:flex;align-items:center;gap:0;white-space:nowrap;animation:tickerScroll 60s linear infinite}
 .nav-ticker-track:hover{animation-play-state:paused}
 @keyframes tickerScroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
-.nav-ticker-item{display:inline-flex;align-items:center;gap:.5rem;padding:0 2rem;font-family:var(--mono);font-size:.64rem;letter-spacing:.04em}
-.nav-ticker-sym{color:var(--muted);font-weight:500}
-.nav-ticker-price{color:var(--text);font-weight:600}
-.nav-ticker-chg.pos{color:var(--green)}
-.nav-ticker-chg.neg{color:var(--danger)}
+.nav-ticker-item{display:inline-flex;align-items:center;gap:.45rem;padding:0 1.6rem;font-family:var(--mono);font-size:.58rem;letter-spacing:.05em}
+.nav-ticker-sep{width:1px;height:10px;background:rgba(255,255,255,.1);margin:0 .2rem}
+.nav-ticker-sym{color:rgba(255,255,255,.38);font-weight:500;letter-spacing:.08em}
+.nav-ticker-price{color:rgba(255,255,255,.7);font-weight:600}
+.nav-ticker-chg{font-weight:500}
+.nav-ticker-chg.pos{color:#4ade80}
+.nav-ticker-chg.neg{color:#f87171}
 
 /* ── HERO HEADER ── */
 .hero{padding:130px 0 5rem;display:grid;grid-template-columns:minmax(0,1fr) 600px;gap:5rem;align-items:start;position:relative;z-index:2}
