@@ -2846,7 +2846,7 @@ h3 { font-size: 1.15rem; }
 <!-- ===== STICKY NAV ===== -->
 <nav class="nav">
   <div class="nav-inner">
-    <a href="/dashboard" class="logo" id="nav-dashboard-logo" style="text-decoration:none;">SPECTRE</a>
+    <a href="/" class="logo" id="nav-home-logo" style="text-decoration:none;">SPECTRE</a>
     <div class="nav-tab-group">
       <a href="/dashboard?tab=quant" class="nav-tab-link">Quant</a>
       <a href="/dashboard?tab=ai" class="nav-tab-link">AI</a>
@@ -4761,8 +4761,8 @@ function applyModeChrome() {
     setText('nav-user-email', 'Demo workspace');
     if (heroBadge) heroBadge.textContent = 'Demo';
     if (signOutButton) {
-      signOutButton.textContent = 'Create Account';
-      signOutButton.setAttribute('href', '/signin?mode=register&plan=starter');
+      signOutButton.textContent = 'Exit Demo';
+      signOutButton.setAttribute('href', '#');
     }
     if (dashboardLink) dashboardLink.setAttribute('href', '/dashboard?demo=1');
     if (dashboardLogo) dashboardLogo.setAttribute('href', '/dashboard?demo=1');
@@ -4803,15 +4803,12 @@ async function loadSession() {
 async function signOut(event) {
   event.preventDefault();
   if (state.demoMode) {
-    const targetHref = event?.currentTarget instanceof HTMLAnchorElement
-      ? event.currentTarget.getAttribute('href') || '/'
-      : '/';
     try {
       await apiJson('/api/portfolio?demo=1&purge=1', { method: 'DELETE' });
     } catch {
       // best effort cleanup
     }
-    window.location.href = targetHref;
+    window.location.href = '/';
     return;
   }
   try {

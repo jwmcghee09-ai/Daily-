@@ -906,6 +906,91 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 /* Usage counter */
 .ai-usage-counter{font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;color:var(--muted);text-align:center;margin-top:.6rem;min-height:1.2em}
 .ai-usage-counter.ai-usage-limit{color:var(--orange)}
+
+/* ══════════════════════════════════════════════
+   DEPTH OVERHAUL — glass morphism, rich contrast
+   ══════════════════════════════════════════════ */
+
+/* Richer background glow */
+body::before{
+  background:
+    radial-gradient(ellipse 90% 130% at -12% 36%,#3d1870 0%,#220f40 22%,#150832 42%,transparent 66%),
+    radial-gradient(ellipse 50% 80% at 105% 10%,rgba(255,106,61,.22) 0%,rgba(255,106,61,.06) 32%,transparent 58%),
+    radial-gradient(ellipse 40% 50% at 50% 95%,rgba(124,77,255,.1) 0%,transparent 60%),
+    linear-gradient(148deg,#1a0d30 0%,#100620 38%,#11071c 62%,#180c14 100%) !important;
+}
+
+/* Glass card — replaces flat opaque look */
+.kpi-card,.chart-card,.signal-card,.upload-card,.panel-half,
+.kpi-mini,.risk-bar-wrap,.alert-card,.alert-form,.console-card,
+.stress-card,.table-wrap,.meta-panel,.window-tabs,
+.landing-preview-stat,.landing-preview-panel,
+.ai-kpi-strip,.perf-row{
+  background:rgba(208,179,255,.038) !important;
+  border:1px solid rgba(255,255,255,.07) !important;
+  backdrop-filter:blur(14px) saturate(1.5) !important;
+  box-shadow:0 2px 16px rgba(0,0,0,.28),0 0 0 1px rgba(208,179,255,.04) inset !important;
+}
+
+/* Purple glow on hover */
+.kpi-card:hover{
+  background:rgba(124,77,255,.08) !important;
+  border-color:rgba(124,77,255,.24) !important;
+  box-shadow:0 8px 32px rgba(124,77,255,.16),0 0 0 1px rgba(208,179,255,.08) inset !important;
+}
+.chart-card:hover{
+  border-color:rgba(124,77,255,.22) !important;
+  box-shadow:0 12px 40px rgba(124,77,255,.18) !important;
+}
+.upload-card:hover{
+  background:rgba(124,77,255,.09) !important;
+  border-color:rgba(208,179,255,.28) !important;
+}
+
+/* Upload card top accent */
+.upload-card{ border-top:2px solid rgba(124,77,255,.55) !important; }
+
+/* Chart card top gradient accent — brighter */
+.chart-card::before{
+  background:linear-gradient(90deg,rgba(124,77,255,.9),rgba(255,106,61,.7)) !important;
+  height:2px !important;
+}
+
+/* Richer section alt */
+.sec-alt{
+  background:linear-gradient(180deg,rgba(6,3,16,.72) 0%,rgba(10,5,22,.6) 100%) !important;
+  border-top:1px solid rgba(124,77,255,.1) !important;
+  border-bottom:1px solid rgba(124,77,255,.1) !important;
+}
+
+/* KPI values — more pop */
+.kpi-val{ text-shadow:0 0 20px rgba(208,179,255,.12) }
+.kpi-val.accent{ text-shadow:0 0 20px rgba(255,106,61,.25) !important }
+.kpi-mini-val{ text-shadow:0 0 20px rgba(208,179,255,.12) }
+
+/* Table rows alternate shading */
+.perf-row:nth-child(odd){ background:rgba(124,77,255,.04) !important; }
+
+/* KPI strip */
+.ai-kpi-strip{ border-radius:10px !important; overflow:hidden }
+
+/* AI output block */
+.console-ai-block{
+  background:rgba(124,77,255,.05) !important;
+  border:1px solid rgba(124,77,255,.14) !important;
+}
+.console-ai-block h4{ color:var(--purple-hi) !important }
+
+/* Stress card left accent */
+.stress-card{ border-left:2px solid rgba(208,179,255,.22) !important }
+
+/* Perf row */
+.perf-row{ border:none !important; border-radius:6px !important }
+
+/* More breathing room on key grids */
+.kpi-row{ gap:1rem !important }
+.upload-grid{ gap:1rem !important }
+.chart-grid{ gap:1.2rem !important }
 </style>
 </head>
 <body class="boot-pending">
@@ -932,6 +1017,10 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
         <div id="notif-list" style="padding:0.25rem 0"></div>
         <div id="notif-empty" style="display:none;padding:1.2rem 0.8rem;text-align:center;font-family:var(--mono);font-size:0.54rem;color:var(--muted)">No notifications yet.</div>
       </div>
+      <a href="/" class="nav-settings-btn" title="Home" style="font-family:var(--mono);font-size:.56rem;letter-spacing:.08em;text-transform:uppercase;width:auto;padding:0 .75rem;gap:.35rem">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Home
+      </a>
       <a href="/settings" class="nav-settings-btn" id="nav-settings-link" title="Settings">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       </a>
@@ -2250,8 +2339,8 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
       setText("hero-meta-plan", "Pro Demo");
       setText("pro-console-badge", "Pro Demo");
       if (signOutButton) {
-        signOutButton.textContent = "Create Account";
-        signOutButton.setAttribute("href", "/signin?mode=register&plan=starter");
+        signOutButton.textContent = "Exit Demo";
+        signOutButton.setAttribute("href", "#");
       }
       if (clearDataButton) {
         clearDataButton.textContent = "Reset Demo";
@@ -4150,15 +4239,12 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   async function signOut(event) {
     event.preventDefault();
     if (state.demoMode) {
-      const targetHref = event?.currentTarget instanceof HTMLAnchorElement
-        ? event.currentTarget.getAttribute("href") || "/"
-        : "/";
       try {
         await apiJson("/api/portfolio?demo=1&purge=1", { method: "DELETE" });
       } catch {
         // best effort for demo cleanup
       }
-      window.location.href = targetHref;
+      window.location.href = "/";
       return;
     }
     try {
