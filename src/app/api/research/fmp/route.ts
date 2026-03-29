@@ -399,8 +399,49 @@ function deriveMacroRates(events: EconEvent[]): MacroRate[] {
   });
 }
 
+async function fetchEarningsSurprisesYahoo(): Promise<EarningsSurprise[]> {
+  const symbols = ["BHP.AX", "CBA.AX", "CSL.AX", "WES.AX", "NAB.AX", "ANZ.AX", "WBC.AX", "MQG.AX", "RIO.AX", "FMG.AX"];
+  const results = await Promise.allSettled(
+    symbols.map(async (symbol): Promise<EarningsSurprise[]> => {
+      const encoded = encodeURIComponent(symbol);
+      const url = `https://query2.finance.yahoo.com/v10/finance/quoteSummary/${encoded}?modules=earnings`;
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 8_000);
+      try {
+        const res = await fetch(url, { cache: "no-store", signal: ctrl.signal, headers: YAHOO_HEADERS });
+        clearTimeout(t);
+        if (!res.ok) return [];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const json = (await res.json()) as any;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const quarterly: any[] = json?.quoteSummary?.result?.[0]?.earnings?.earningsChart?.quarterly ?? [];
+        return quarterly.slice(-4).map((q) => {
+          const actualEps = typeof q.actual?.raw === "number" ? q.actual.raw : null;
+          const estimatedEps = typeof q.estimate?.raw === "number" ? q.estimate.raw : null;
+          const surprise = actualEps != null && estimatedEps != null ? actualEps - estimatedEps : null;
+          const surprisePct = surprise != null && estimatedEps && estimatedEps !== 0 ? (surprise / Math.abs(estimatedEps)) * 100 : null;
+          return {
+            symbol,
+            name: symbol.replace(".AX", ""),
+            date: typeof q.date === "string" ? q.date.replace(/(\d)Q(\d{2})/, "Q$1 20$2") : "",
+            actualEps,
+            estimatedEps,
+            surprise,
+            surprisePct,
+          };
+        }).filter(e => e.date && (e.actualEps != null || e.estimatedEps != null));
+      } catch {
+        clearTimeout(t);
+        return [];
+      }
+    })
+  );
+  const all = results.flatMap(r => r.status === "fulfilled" ? r.value : []);
+  return all.sort((a, b) => String(b.date).localeCompare(String(a.date))).slice(0, 20);
+}
+
 async function fetchEarningsSurprises(apiKey: string): Promise<EarningsSurprise[]> {
-  if (!apiKey) return [];
+  if (!apiKey) return fetchEarningsSurprisesYahoo();
   const symbols = ["BHP.AX", "CBA.AX", "CSL.AX", "WES.AX", "NAB.AX", "ANZ.AX", "WBC.AX", "MQG.AX", "RIO.AX", "FMG.AX", "WDS.AX", "TLS.AX"];
   const results = await Promise.allSettled(
     symbols.map(async (symbol) => {
