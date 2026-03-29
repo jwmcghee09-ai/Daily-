@@ -507,7 +507,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;background:rgba(5,5,10,.85);
 
 /* ── CHARTS ── */
 .chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-.chart-card{position:relative;overflow:hidden;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;transition:transform .25s,border-color .25s,box-shadow .25s}
+.chart-card{position:relative;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;transition:transform .25s,border-color .25s,box-shadow .25s;isolation:isolate}
 .chart-card::before{content:'';position:absolute;inset:0 0 auto;height:1px;background:linear-gradient(90deg,rgba(168,85,247,.6),rgba(255,122,48,.4),transparent 80%)}
 .chart-card:hover{transform:translateY(-3px);border-color:var(--border2);box-shadow:0 8px 32px rgba(168,85,247,.1)}
 .chart-card.full{grid-column:span 2}
