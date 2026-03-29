@@ -1732,14 +1732,7 @@ h3 { font-size: 1.15rem; }
   box-shadow: 0 0 0 1px rgba(255,255,255,.03) inset;
 }
 
-.workspace-wordmark-wrap { margin-bottom: 18px; }
-
-.workspace-wordmark {
-  display: block;
-  width: min(360px, 72%);
-  max-width: 100%;
-  height: auto;
-}
+.workspace-wordmark-wrap { margin-bottom: 14px; }
 
 .workspace-title {
   max-width: 820px;
@@ -2832,11 +2825,11 @@ h3 { font-size: 1.15rem; }
 }
 .nav-tab-link {
   font-family: 'DM Mono', monospace;
-  font-size: .62rem;
-  font-weight: 400;
+  font-size: .65rem;
+  font-weight: 600;
   letter-spacing: .14em;
   text-transform: uppercase;
-  color: #8a86a8;
+  color: rgba(200,192,230,.7);
   background: none;
   border: none;
   border-bottom: 2px solid transparent;
@@ -2850,8 +2843,23 @@ h3 { font-size: 1.15rem; }
   display: inline-flex;
   align-items: center;
 }
-.nav-tab-link:hover { color: #f2eeff; }
-.nav-tab-link-active { color: #f2eeff !important; border-bottom-color: #7c4dff !important; }
+.nav-tab-link:hover {
+  background: linear-gradient(90deg,#a855f7 0%,#d946ef 35%,#ff7a30 72%,#ffb347 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: brandSlide 4s linear infinite;
+}
+.nav-tab-link-active {
+  background: linear-gradient(90deg,#a855f7 0%,#d946ef 35%,#ff7a30 72%,#ffb347 100%) !important;
+  background-size: 200% auto !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+  animation: brandSlide 4s linear infinite !important;
+  border-bottom-color: #a855f7 !important;
+}
 </style>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 </head>
@@ -2904,7 +2912,7 @@ h3 { font-size: 1.15rem; }
           <span id="workspace-clock">—</span>
         </div>
         <div class="workspace-wordmark-wrap">
-          <img src="/spectre-wordmark-plain.svg" alt="SPECTRE" class="workspace-wordmark">
+          <span style="font-family:'Space Grotesk',sans-serif;font-size:clamp(1.6rem,3.2vw,2.4rem);font-weight:800;letter-spacing:.18em;text-transform:uppercase;background:linear-gradient(90deg,#a855f7 0%,#d946ef 35%,#ff7a30 72%,#ffb347 100%);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:brandSlide 4s linear infinite;">SPECTRE</span>
         </div>
         <h1 class="workspace-title">Ask your portfolio <span class="gradient">anything.</span></h1>
         <p class="workspace-sub">Grounded in your live holdings, real-time market data, and risk metrics.</p>
