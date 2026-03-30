@@ -523,9 +523,37 @@ async function fetchCryptoMarket(): Promise<CryptoMarketSnapshot> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const globalJson = globalRes.status === "fulfilled" && globalRes.value.ok ? await globalRes.value.json() as any : null;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const marketsJson = marketsRes.status === "fulfilled" && marketsRes.value.ok ? await marketsRes.value.json() as any[] : [];
+    let marketsJson: any[] = marketsRes.status === "fulfilled" && marketsRes.value.ok ? await marketsRes.value.json() as any[] : [];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const fearJson = fearRes.status === "fulfilled" && fearRes.value.ok ? await fearRes.value.json() as any : null;
+
+    // If /coins/markets was rate-limited, fall back to /simple/price (lighter endpoint)
+    if (!Array.isArray(marketsJson) || marketsJson.length === 0) {
+      try {
+        const simpleRes = await fetch(
+          "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd&include_24hr_change=true&include_market_cap=true&include_24hr_vol=true",
+          { cache: "no-store", signal: AbortSignal.timeout(6_000) }
+        );
+        if (simpleRes.ok) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const s = await simpleRes.json() as any;
+          const map = [
+            { id: "bitcoin",  symbol: "BTC", name: "Bitcoin" },
+            { id: "ethereum", symbol: "ETH", name: "Ethereum" },
+            { id: "solana",   symbol: "SOL", name: "Solana" },
+          ];
+          marketsJson = map.map(({ id, symbol, name }) => ({
+            symbol, name,
+            current_price: s[id]?.usd ?? null,
+            market_cap: s[id]?.usd_market_cap ?? null,
+            total_volume: s[id]?.usd_24h_vol ?? null,
+            price_change_percentage_24h_in_currency: s[id]?.usd_24h_change ?? null,
+            high_24h: null,
+            low_24h: null,
+          }));
+        }
+      } catch { /* ignore, keep empty */ }
+    }
 
     return {
       btcDominance: typeof globalJson?.data?.market_cap_percentage?.btc === "number" ? globalJson.data.market_cap_percentage.btc : null,
@@ -544,7 +572,7 @@ async function fetchCryptoMarket(): Promise<CryptoMarketSnapshot> {
             changePct24h: typeof coin?.price_change_percentage_24h_in_currency === "number" ? coin.price_change_percentage_24h_in_currency : null,
             high24h: typeof coin?.high_24h === "number" ? coin.high_24h : null,
             low24h: typeof coin?.low_24h === "number" ? coin.low_24h : null,
-          }))
+          })).filter(a => a.symbol)
         : [],
     };
   } catch {

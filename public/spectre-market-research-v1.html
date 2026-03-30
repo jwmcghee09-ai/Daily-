@@ -5533,6 +5533,7 @@ function makeCjsLineChart(canvasId, labels, values, color, label) {
         backgroundColor: gradient,
         fill: true,
         tension: 0.25,
+        spanGaps: true,
         pointRadius: 0,
         pointHoverRadius: 5,
         pointHoverBackgroundColor: color,
@@ -6258,17 +6259,35 @@ function populateCryptoTab() {
   const needleEl = document.getElementById('ct-fear-greed-needle');
   if (needleEl && fgVal != null) needleEl.style.left = Math.max(0, Math.min(100, fgVal)).toFixed(1) + '%';
 
-  // Asset market depth table
+  // Asset market depth table — use CoinGecko assets if available, else build from live quotes
   const assetEl = document.getElementById('ct-asset-metrics');
   if (assetEl) {
-    assetEl.innerHTML = assets.length ? assets.map((asset) => `
+    let rows = assets;
+    if (!rows.length && quotes?.crypto) {
+      // Fallback: synthesise rows from live quote prices
+      const cryptoMap = [
+        { key: 'btc', symbol: 'BTC', name: 'Bitcoin' },
+        { key: 'eth', symbol: 'ETH', name: 'Ethereum' },
+        { key: 'sol', symbol: 'SOL', name: 'Solana' },
+      ];
+      rows = cryptoMap
+        .map(({ key, symbol, name }) => {
+          const q = quotes.crypto[key];
+          if (!q?.price) return null;
+          const changePct24h = q.prevClose && q.prevClose > 0
+            ? ((q.price - q.prevClose) / q.prevClose) * 100 : null;
+          return { symbol, name, price: q.price, marketCap: null, volume24h: null, changePct24h, high24h: null, low24h: null };
+        })
+        .filter(Boolean);
+    }
+    assetEl.innerHTML = rows.length ? rows.map((asset) => `
       <div class="asset-metric-row">
         <div class="asset-metric-sym">${escapeHtml(asset.symbol)}</div>
         <div class="asset-metric-name">${escapeHtml(asset.name)}</div>
-        <div class="asset-metric-val">${fmtCompactCurrency(asset.marketCap)}</div>
+        <div class="asset-metric-val">${asset.marketCap ? fmtCompactCurrency(asset.marketCap) : (asset.price ? '$' + Math.round(asset.price).toLocaleString('en-AU') : '—')}</div>
         <div class="asset-metric-chg ${chgClass(asset.changePct24h)}">${asset.changePct24h != null ? `${asset.changePct24h >= 0 ? '+' : ''}${asset.changePct24h.toFixed(2)}%` : '—'}</div>
       </div>
-    `).join('') : '<div style="color:var(--sl-muted);font-size:0.72rem;">No crypto market metrics available.</div>';
+    `).join('') : '<div style="color:var(--sl-muted);font-size:0.72rem;">Loading market data…</div>';
   }
 }
 
