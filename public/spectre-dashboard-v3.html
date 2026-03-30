@@ -1152,7 +1152,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
 
     <!-- Ask AI card -->
     <div class="ai-input-card" style="max-width:720px;margin:1.5rem 0 0">
-      <textarea id="pro-ai-question" class="ai-input-textarea" maxlength="700" placeholder="Ask anything about your portfolio…">What may be influencing the value of my current holdings?</textarea>
+      <textarea id="pro-ai-question" class="ai-input-textarea" maxlength="700" placeholder="Ask anything about your portfolio…"></textarea>
       <div class="ai-input-footer">
         <div class="ai-input-chips" id="pro-ai-chips">
           <button type="button" class="ai-chip" data-q="What is driving my returns right now?">What's driving my returns?</button>
@@ -4589,8 +4589,8 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
           renderPortfolio();
         }
       });
-      // Auto-run AI analysis once on load (card removed — runs silently)
-      if (!state.holdingsAi && !state.holdingsAiLoading) {
+      // Auto-run AI only in demo mode — real users ask manually
+      if (state.demoMode && !state.holdingsAi && !state.holdingsAiLoading) {
         window.setTimeout(() => { runHoldingsAi(); }, 800);
       }
     } catch (error) {
