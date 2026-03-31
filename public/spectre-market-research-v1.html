@@ -1305,6 +1305,7 @@ h3 { font-size: 1.15rem; }
 .crypto-icon.btc { background: linear-gradient(135deg, #f7931a, #e8820e); }
 .crypto-icon.eth { background: linear-gradient(135deg, #627eea, #4a65d4); }
 .crypto-icon.gold { background: linear-gradient(135deg, #ffd700, #daa520); }
+.crypto-icon.oil { background: linear-gradient(135deg, #374151, #6b7280); }
 
 .crypto-info { flex: 1; }
 .crypto-info .crypto-name {
@@ -3572,6 +3573,17 @@ h3 { font-size: 1.15rem; }
           <div id="live-gold-chg" class="cchange mono">—</div>
         </div>
       </div>
+      <div class="crypto-row">
+        <div class="crypto-icon oil">Oil</div>
+        <div class="crypto-info">
+          <div class="crypto-name">WTI Crude</div>
+          <div class="crypto-sub">CL/USD</div>
+        </div>
+        <div class="crypto-price">
+          <div id="live-oil-price" class="cprice mono">Loading…</div>
+          <div id="live-oil-chg" class="cchange mono">—</div>
+        </div>
+      </div>
     </div>
 
     <!-- M. US MARKET MOVERS -->
@@ -3845,7 +3857,7 @@ h3 { font-size: 1.15rem; }
       <div class="metric-card"><div class="metric-card-label">Indicator</div><div class="metric-card-value">Loading…</div></div>
     </div>
 
-    <!-- ── 2-col: Gold chart | Global indices ── -->
+    <!-- ── 2-col: Gold chart | Oil chart ── -->
     <div class="macro-2col">
       <div class="card reveal">
         <div class="section-label" style="display:flex;justify-content:space-between;align-items:center;">
@@ -3860,10 +3872,24 @@ h3 { font-size: 1.15rem; }
         <div class="macro-chart-wrap"><canvas id="macro-gold-chart"></canvas></div>
       </div>
       <div class="card reveal">
-        <div class="section-label">Global Indices</div>
-        <div class="index-grid" id="macro-indices-grid">
-          <div style="color:var(--sl-muted);font-size:0.72rem;grid-column:span 3;">Loading…</div>
+        <div class="section-label" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>WTI Crude Oil (USD/bbl)</span>
+          <div class="time-pills" style="margin-top:0;">
+            <button class="time-pill active" onclick="loadMacroChart('oil','1m',this)">1M</button>
+            <button class="time-pill" onclick="loadMacroChart('oil','3m',this)">3M</button>
+            <button class="time-pill" onclick="loadMacroChart('oil','6m',this)">6M</button>
+            <button class="time-pill" onclick="loadMacroChart('oil','1y',this)">1Y</button>
+          </div>
         </div>
+        <div class="macro-chart-wrap"><canvas id="macro-oil-chart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- ── Global indices full-width ── -->
+    <div class="card reveal">
+      <div class="section-label">Global Indices</div>
+      <div class="index-grid" id="macro-indices-grid">
+        <div style="color:var(--sl-muted);font-size:0.72rem;grid-column:span 3;">Loading…</div>
       </div>
     </div>
 
@@ -4992,6 +5018,7 @@ async function fetchLiveQuotes() {
     updateCryptoEl('live-btc-price', 'live-btc-chg', btc, 0);
     updateCryptoEl('live-eth-price', 'live-eth-chg', data.crypto?.eth, 0);
     updateCryptoEl('live-gold-price', 'live-gold-chg', gold, 0);
+    updateCryptoEl('live-oil-price', 'live-oil-chg', data.crypto?.oil, 2);
 
     // --- Market pulse strip ---
     const asxPct = asx200?.price && asx200?.prevClose && asx200.prevClose > 0
@@ -5056,7 +5083,7 @@ async function fetchLiveQuotes() {
     }
   } catch (err) {
     console.warn('Live quotes fetch failed:', err);
-    for (const id of ['hero-gold-price', 'hero-btc-price', 'hero-eth-price', 'hero-asx200-price', 'hero-audusd-price', 'hero-vix-price', 'live-btc-price', 'live-eth-price', 'live-gold-price']) {
+    for (const id of ['hero-gold-price', 'hero-btc-price', 'hero-eth-price', 'hero-asx200-price', 'hero-audusd-price', 'hero-vix-price', 'live-btc-price', 'live-eth-price', 'live-gold-price', 'live-oil-price']) {
       const el = document.getElementById(id);
       if (el && el.textContent === 'Loading…') el.textContent = '—';
     }
@@ -5765,6 +5792,7 @@ function switchResearchTab(name, btn) {
       if (name === 'macro') {
         loadMacroChart('aud', '1m', null);
         loadMacroChart('gold', '1m', null);
+        loadMacroChart('oil', '1m', null);
       } else if (name === 'crypto') {
         loadCryptoChart('btc', '1m', null);
         loadCryptoChart('eth', '1m', null);
@@ -6111,9 +6139,9 @@ async function loadMacroChart(symbol, range, btn) {
     if (siblings) siblings.forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
   }
-  const canvasId = symbol === 'gold' ? 'macro-gold-chart' : 'macro-aud-chart';
-  const color = symbol === 'gold' ? '#ffb547' : '#9b5de5';
-  const label = symbol === 'gold' ? 'Gold (USD)' : 'AUD/USD';
+  const canvasId = symbol === 'gold' ? 'macro-gold-chart' : symbol === 'oil' ? 'macro-oil-chart' : 'macro-aud-chart';
+  const color = symbol === 'gold' ? '#ffb547' : symbol === 'oil' ? '#6b7280' : '#9b5de5';
+  const label = symbol === 'gold' ? 'Gold (USD)' : symbol === 'oil' ? 'WTI Crude (USD)' : 'AUD/USD';
   const demoParam = state.demoMode ? '&demo=1' : '';
   try {
     const data = await apiJson(`/api/research/chart?symbol=${symbol}&range=${range}${demoParam}`);

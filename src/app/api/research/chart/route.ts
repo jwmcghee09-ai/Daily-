@@ -32,6 +32,7 @@ const SYMBOL_MAP: Record<string, string> = {
   eth:     "ETH-USD",
   sol:     "SOL-USD",
   gold:    "GC%3DF",
+  oil:     "CL%3DF",
   aud:     "AUDUSD%3DX",
   vix:     "%5EVIX",
 };

@@ -50,6 +50,7 @@ interface QuotesPayload {
     eth: QuoteData;
     sol: QuoteData;
     gold: QuoteData;
+    oil: QuoteData;
   };
 }
 
@@ -309,7 +310,7 @@ export async function GET(request: NextRequest) {
   }
 
   const fmpApiKey = process.env.FMP_API_KEY ?? "";
-  const extraSymbols = ["^AXJO", "^AORD", "AUDUSD=X", "^VIX", "BTC-USD", "ETH-USD", "SOL-USD", "XAUUSD=X", "GC=F"];
+  const extraSymbols = ["^AXJO", "^AORD", "AUDUSD=X", "^VIX", "BTC-USD", "ETH-USD", "SOL-USD", "XAUUSD=X", "GC=F", "CL=F"];
 
   const [fmpAsxResults, asxConstituents, extraQuotes, fmpCrypto, coingecko, frankfurterAudUsd] = await Promise.all([
     // Use FMP profile as primary source for ASX stocks (more reliable than Yahoo for AU exchange)
@@ -431,6 +432,7 @@ export async function GET(request: NextRequest) {
       eth: bySymbol["ETH-USD"],
       sol: bySymbol["SOL-USD"] ?? nullQuote("SOL-USD"),
       gold: { symbol: "XAUAUD", price: goldAudPrice, prevClose: goldAudPrevClose, yearHigh: null, yearLow: null, pe: null, divYield: null, name: "Gold" },
+      oil: bySymbol["CL=F"] ?? { symbol: "CL=F", price: null, prevClose: null, yearHigh: null, yearLow: null, pe: null, divYield: null, name: "WTI Crude" },
     },
   };
 
