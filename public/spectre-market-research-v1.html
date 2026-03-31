@@ -3010,6 +3010,13 @@ h3 { font-size: 1.15rem; }
       <div class="value"><span id="hero-eth-price" class="mono" style="font-size:1.8rem;font-weight:600;">Loading…</span></div>
       <div id="hero-eth-chg" class="change" style="margin-top:6px;">—</div>
     </div>
+
+    <!-- WTI Crude Oil -->
+    <div class="card hero-card card-glow">
+      <div class="label">WTI Crude (USD/bbl)</div>
+      <div class="value"><span id="hero-oil-price" class="mono" style="font-size:1.8rem;font-weight:600;">Loading…</span></div>
+      <div id="hero-oil-chg" class="change" style="margin-top:6px;">—</div>
+    </div>
   </section>
 
   <!-- ===== MARKET PULSE STRIP ===== -->
@@ -5000,6 +5007,20 @@ async function fetchLiveQuotes() {
       if (heroGold) heroGold.textContent = '—';
     }
 
+    // --- Oil hero ---
+    const oil = data.crypto?.oil;
+    const heroOil = document.getElementById('hero-oil-price');
+    if (oil?.price) {
+      if (heroOil) heroOil.textContent = '$' + oil.price.toFixed(2);
+      if (oil.prevClose && oil.prevClose > 0) {
+        const { html, isPos } = fmtChgSpan(oil.price, oil.prevClose, '$');
+        const heroOilChg = document.getElementById('hero-oil-chg');
+        if (heroOilChg) { heroOilChg.className = `change ${isPos ? 'pos' : 'neg'}`; heroOilChg.innerHTML = html; }
+      }
+    } else {
+      if (heroOil) heroOil.textContent = '—';
+    }
+
     // --- BTC hero ---
     const btc = data.crypto?.btc;
     const heroBtc = document.getElementById('hero-btc-price');
@@ -5083,7 +5104,7 @@ async function fetchLiveQuotes() {
     }
   } catch (err) {
     console.warn('Live quotes fetch failed:', err);
-    for (const id of ['hero-gold-price', 'hero-btc-price', 'hero-eth-price', 'hero-asx200-price', 'hero-audusd-price', 'hero-vix-price', 'live-btc-price', 'live-eth-price', 'live-gold-price', 'live-oil-price']) {
+    for (const id of ['hero-gold-price', 'hero-btc-price', 'hero-eth-price', 'hero-asx200-price', 'hero-audusd-price', 'hero-vix-price', 'hero-oil-price', 'live-btc-price', 'live-eth-price', 'live-gold-price', 'live-oil-price']) {
       const el = document.getElementById(id);
       if (el && el.textContent === 'Loading…') el.textContent = '—';
     }
