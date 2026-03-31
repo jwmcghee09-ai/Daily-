@@ -1189,28 +1189,16 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       </div>
       <div class="ai-kpi-divider"></div>
       <div class="ai-kpi">
-        <span class="ai-kpi-lbl">VaR 95%</span>
-        <span class="ai-kpi-val" id="mini-var95">—</span>
-      </div>
-      <div class="ai-kpi-divider"></div>
-      <div class="ai-kpi">
         <span class="ai-kpi-lbl">Risk Score</span>
         <span class="ai-kpi-val" id="risk-bar-value">—</span>
+        <div class="risk-track" style="margin-top:.3rem;width:80px"><div class="risk-fill" id="risk-bar-fill"></div></div>
       </div>
-      <div class="ai-kpi-divider"></div>
-      <div class="ai-kpi" style="flex-grow:1;min-width:120px">
-        <span class="ai-kpi-lbl">Risk Bar</span>
-        <div class="risk-track" style="margin-top:.3rem"><div class="risk-fill" id="risk-bar-fill"></div></div>
-      </div>
-      <div class="ai-kpi ai-kpi-actions">
-        <button class="btn-ghost ai-clear-btn" id="clear-data-btn">Clear Data</button>
-      </div>
+      <div style="flex:1"></div>
+      <button class="btn-ghost ai-clear-btn" id="clear-data-btn" style="font-size:.6rem;opacity:.55;padding:.25rem .6rem;align-self:center">Clear Data</button>
     </div>
 
   </div>
 </div>
-
-<div class="divider" data-page="ai"></div>
 
 <!-- RESEARCH TAB — link to research terminal -->
 <div class="wrap" data-page="research">
@@ -1786,10 +1774,8 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
   </section>
 </div>
 
-<div class="divider" data-page="ai"></div>
-
 <!-- DIP ALERTS -->
-<div class="wrap" data-page="ai">
+<div class="wrap" data-page="quant">
   <section class="sec" id="alerts">
     <div class="sec-head">
       <h2 class="sec-title">Dip Alerts</h2>

@@ -12,7 +12,7 @@ const AI_MONTHLY_LIMITS: Record<PlanTier, number> = {
 
 export const runtime = "nodejs";
 
-const HOLDINGS_AI_MODEL = (process.env.PRO_HOLDINGS_AI_MODEL || "gpt-4.1").trim();
+const HOLDINGS_AI_MODEL = (process.env.PRO_HOLDINGS_AI_MODEL || "claude-sonnet-4-6").trim();
 const HOLDINGS_AI_TIMEOUT_MS = clampInteger(process.env.PRO_HOLDINGS_AI_TIMEOUT_MS, 90000, 10000, 180000);
 const DEFAULT_QUESTION = "What is most likely influencing the value of my current holdings right now?";
 
@@ -479,9 +479,9 @@ export async function POST(request: Request) {
       ? body.question.trim().slice(0, 700)
       : DEFAULT_QUESTION;
 
-  const apiKey = String(process.env.OPENAI_API_KEY || "").trim();
+  const apiKey = String(process.env.ANTHROPIC_API_KEY || "").trim();
   if (!apiKey) {
-    return NextResponse.json({ error: "OPENAI_API_KEY is not configured." }, { status: 503 });
+    return NextResponse.json({ error: "ANTHROPIC_API_KEY is not configured." }, { status: 503 });
   }
 
   // Fetch live market data in parallel with no extra latency
@@ -491,21 +491,23 @@ export async function POST(request: Request) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), HOLDINGS_AI_TIMEOUT_MS);
 
-  let openAiRes: Response;
+  let anthropicRes: Response;
   try {
-    openAiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+    anthropicRes = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       signal: controller.signal,
       headers: {
-        Authorization: `Bearer ${apiKey}`,
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
         model: HOLDINGS_AI_MODEL,
+        max_tokens: 4096,
         stream: true,
         temperature: 0.1,
+        system: buildSystemPrompt(),
         messages: [
-          { role: "system", content: buildSystemPrompt() },
           { role: "user", content: JSON.stringify(context) },
         ],
       }),
@@ -513,26 +515,26 @@ export async function POST(request: Request) {
   } catch (error) {
     clearTimeout(timeoutId);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to reach OpenAI." },
+      { error: error instanceof Error ? error.message : "Failed to reach Anthropic." },
       { status: 502 },
     );
   }
 
-  if (!openAiRes.ok) {
+  if (!anthropicRes.ok) {
     clearTimeout(timeoutId);
     let detail = "";
     try {
-      const payload = (await openAiRes.json()) as { error?: { message?: string } };
+      const payload = (await anthropicRes.json()) as { error?: { message?: string } };
       detail = String(payload.error?.message || "").trim();
     } catch {}
     const suffix = detail ? `: ${detail}` : "";
     return NextResponse.json(
-      { error: `OpenAI request failed (${openAiRes.status})${suffix}` },
+      { error: `Anthropic request failed (${anthropicRes.status})${suffix}` },
       { status: 502 },
     );
   }
 
-  // Transform OpenAI SSE → our SSE format:
+  // Transform Anthropic SSE → our SSE format:
   //   data: {"t":"chunk text"}\n\n  — incremental content
   //   data: {"done":true,"analysis":{...},"aiUsed":N,"aiLimit":N}\n\n  — final parsed analysis
   let accumulated = "";
@@ -545,14 +547,16 @@ export async function POST(request: Request) {
         const line = rawLine.trim();
         if (!line.startsWith("data: ")) continue;
         const data = line.slice(6);
-        if (data === "[DONE]") continue;
         try {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const evt = JSON.parse(data) as any;
-          const delta: string = evt.choices?.[0]?.delta?.content ?? "";
-          if (delta) {
-            accumulated += delta;
-            controller.enqueue(enc.encode(`data: ${JSON.stringify({ t: delta })}\n\n`));
+          // Anthropic streams content_block_delta events with delta.text
+          if (evt.type === "content_block_delta" && evt.delta?.type === "text_delta") {
+            const delta: string = evt.delta.text ?? "";
+            if (delta) {
+              accumulated += delta;
+              controller.enqueue(enc.encode(`data: ${JSON.stringify({ t: delta })}\n\n`));
+            }
           }
         } catch {
           /* skip malformed SSE lines */
@@ -578,7 +582,7 @@ export async function POST(request: Request) {
     },
   });
 
-  return new Response(openAiRes.body!.pipeThrough(transform), {
+  return new Response(anthropicRes.body!.pipeThrough(transform), {
     headers: {
       "Content-Type": "text/event-stream",
       "Cache-Control": "no-cache",
