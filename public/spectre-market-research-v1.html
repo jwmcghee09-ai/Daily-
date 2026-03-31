@@ -3892,6 +3892,22 @@ h3 { font-size: 1.15rem; }
       </div>
     </div>
 
+    <!-- ── Quant Signals: FRED + CFTC CoT ── -->
+    <div class="macro-2col" id="quant-signals-wrap" style="display:none">
+      <div class="card reveal">
+        <div class="section-label">FRED Macro Signals <span id="fred-as-of" style="font-weight:400;font-size:.58rem;color:var(--sl-muted);letter-spacing:0"></span></div>
+        <div id="fred-signals-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:.65rem .8rem;margin-top:.5rem">
+          <div style="color:var(--sl-muted);font-size:.72rem;grid-column:span 2">Loading…</div>
+        </div>
+      </div>
+      <div class="card reveal">
+        <div class="section-label">CFTC Commitment of Traders <span style="font-weight:400;font-size:.58rem;color:var(--sl-muted);letter-spacing:0">Managed Money Net Positioning</span></div>
+        <div id="cot-grid" style="display:flex;flex-direction:column;gap:.8rem;margin-top:.6rem">
+          <div style="color:var(--sl-muted);font-size:.72rem">Loading…</div>
+        </div>
+      </div>
+    </div>
+
     <!-- ── Global indices full-width ── -->
     <div class="card reveal">
       <div class="section-label">Global Indices</div>
@@ -6152,6 +6168,91 @@ function populateMacroTab() {
   const econEl = document.getElementById('macro-econ-list');
   const sourceEconEl = document.getElementById('fmp-econ-list');
   if (econEl && sourceEconEl) econEl.innerHTML = sourceEconEl.innerHTML;
+
+  // FRED + CoT — async, doesn't block the rest of the tab
+  loadFredQuantSignals();
+}
+
+async function loadFredQuantSignals() {
+  const wrap = document.getElementById('quant-signals-wrap');
+  const fredGrid = document.getElementById('fred-signals-grid');
+  const cotGrid = document.getElementById('cot-grid');
+  if (!wrap) return;
+
+  try {
+    const demoParam = state.demoMode ? '?demo=1' : '';
+    const data = await apiJson(`/api/research/fred${demoParam}`);
+    if (!data) return;
+
+    wrap.style.display = '';
+
+    // ── FRED series ──────────────────────────────────────────────────────────
+    if (fredGrid && Array.isArray(data.series)) {
+      const asOfEl = document.getElementById('fred-as-of');
+      const latestDate = data.series.find(s => s.date)?.date;
+      if (asOfEl && latestDate) asOfEl.textContent = '· as of ' + new Date(latestDate).toLocaleDateString('en-AU', { day:'numeric', month:'short', year:'numeric' });
+
+      const SIGNAL_THRESHOLDS = {
+        'BAMLH0A0HYM2': { risk: v => v > 5 ? 'warn' : v > 4 ? 'caution' : 'ok',   riskLabel: v => v > 5 ? 'Elevated' : v > 4 ? 'Moderate' : 'Low' },
+        'T10YIE':       { risk: v => v > 3 ? 'warn' : v < 1.5 ? 'caution' : 'ok', riskLabel: v => v > 3 ? 'High' : v < 1.5 ? 'Low' : 'Anchored' },
+        'DTWEXBGS':     { risk: v => v > 110 ? 'warn' : v > 105 ? 'caution' : 'ok', riskLabel: v => v > 110 ? 'Strong USD' : v > 105 ? 'Firm USD' : 'Neutral' },
+      };
+
+      fredGrid.innerHTML = data.series.map(s => {
+        const chgDir = s.change == null ? '' : s.change > 0 ? 'pos' : s.change < 0 ? 'neg' : '';
+        const chgStr = s.change == null ? '' : `${s.change > 0 ? '+' : ''}${s.change.toFixed(s.unit === '%' || !s.unit ? 2 : 0)}${s.unit}`;
+        const sig = SIGNAL_THRESHOLDS[s.id];
+        const riskClass = sig && s.value != null ? sig.risk(s.value) : '';
+        const riskLabel = sig && s.value != null ? sig.riskLabel(s.value) : '';
+        const riskBadge = riskClass ? `<span style="font-size:.55rem;padding:.1rem .35rem;border-radius:3px;font-family:var(--font-mono);letter-spacing:.06em;background:${riskClass==='warn'?'rgba(248,113,113,.12)':riskClass==='caution'?'rgba(251,191,36,.1)':'rgba(192,132,252,.1)'};color:${riskClass==='warn'?'#f87171':riskClass==='caution'?'#fbbf24':'#c084fc'}">${escapeHtml(riskLabel)}</span>` : '';
+        const valFmt = s.value == null ? '—' : s.unit === 'B' ? '$' + Math.round(s.value).toLocaleString('en-AU') + 'B' : s.value.toFixed(2) + s.unit;
+        return `<div title="${escapeHtml(s.description)}" style="padding:.55rem .7rem;background:rgba(255,255,255,.03);border-radius:6px;border:1px solid rgba(255,255,255,.06)">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:.4rem;margin-bottom:.3rem">
+            <span style="font-family:var(--font-mono);font-size:.6rem;color:var(--sl-muted);letter-spacing:.04em;text-transform:uppercase">${escapeHtml(s.label)}</span>
+            ${riskBadge}
+          </div>
+          <div style="display:flex;align-items:baseline;gap:.45rem">
+            <span style="font-family:var(--font-mono);font-size:1.05rem;font-weight:600;color:var(--sl-text)">${escapeHtml(valFmt)}</span>
+            ${chgStr ? `<span style="font-family:var(--font-mono);font-size:.62rem" class="${chgDir}">${escapeHtml(chgStr)}</span>` : ''}
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    // ── CFTC CoT ─────────────────────────────────────────────────────────────
+    if (cotGrid && data.cot) {
+      const renderCot = (pos, name) => {
+        if (!pos) return `<div style="color:var(--sl-muted);font-size:.72rem">${escapeHtml(name)}: no data</div>`;
+        const pct = pos.longPct ?? 0;
+        const sentColor = pos.sentiment === 'bullish' ? '#c084fc' : pos.sentiment === 'bearish' ? '#f87171' : '#6b7280';
+        const sentLabel = pos.sentiment ? pos.sentiment.charAt(0).toUpperCase() + pos.sentiment.slice(1) : '—';
+        const weekChg = pos.weekChange;
+        const weekStr = weekChg == null ? '' : `${weekChg > 0 ? '+' : ''}${Math.round(weekChg).toLocaleString('en-AU')} wk`;
+        const netStr  = pos.netLong != null ? Math.round(pos.netLong).toLocaleString('en-AU') + ' net long' : '—';
+        return `<div style="padding:.6rem .75rem;background:rgba(255,255,255,.03);border-radius:6px;border:1px solid rgba(255,255,255,.06)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem">
+            <span style="font-family:var(--font-mono);font-size:.62rem;color:var(--sl-muted);text-transform:uppercase;letter-spacing:.06em">${escapeHtml(name)}</span>
+            <span style="font-size:.58rem;padding:.12rem .4rem;border-radius:3px;background:rgba(255,255,255,.06);color:${sentColor};font-family:var(--font-mono)">${escapeHtml(sentLabel)}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.45rem">
+            <div style="flex:1;height:6px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden">
+              <div style="height:100%;width:${pct.toFixed(1)}%;background:${sentColor};border-radius:3px;transition:width .5s"></div>
+            </div>
+            <span style="font-family:var(--font-mono);font-size:.65rem;color:var(--sl-text);white-space:nowrap">${pct.toFixed(1)}% long</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:.6rem;color:var(--sl-muted)">
+            <span>${escapeHtml(netStr)}</span>
+            <span>${weekStr ? escapeHtml(weekStr) : ''}</span>
+          </div>
+          ${pos.reportDate ? `<div style="font-family:var(--font-mono);font-size:.54rem;color:var(--sl-muted);margin-top:.3rem">As of ${escapeHtml(pos.reportDate)}</div>` : ''}
+        </div>`;
+      };
+      cotGrid.innerHTML = renderCot(data.cot.oil, 'WTI Crude Oil') + renderCot(data.cot.gold, 'Gold');
+    }
+  } catch(e) {
+    console.warn('FRED/CoT fetch failed:', e);
+    if (wrap) wrap.style.display = 'none';
+  }
 }
 
 async function loadMacroChart(symbol, range, btn) {
