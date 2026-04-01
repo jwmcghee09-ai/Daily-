@@ -2058,6 +2058,7 @@ h3 { font-size: 1.15rem; }
   position: relative;
   height: 160px;
   margin-bottom: 4px;
+  overflow: hidden;
 }
 .eq-movers-grid {
   display: grid;
@@ -2076,7 +2077,7 @@ h3 { font-size: 1.15rem; }
 .macro-rates-table { width: 100%; border-collapse: collapse; }
 .macro-rates-table td { padding: 8px 10px; font-size: 0.72rem; border-bottom: 1px solid rgba(255,255,255,.04); }
 .macro-rates-table td:last-child { text-align: right; font-family: var(--font-mono); }
-.macro-chart-wrap { position: relative; height: 155px; }
+.macro-chart-wrap { position: relative; height: 155px; overflow: hidden; }
 
 /* ── Earnings tab ────────────────────────────────────────────── */
 .earnings-grid {
@@ -2097,7 +2098,7 @@ h3 { font-size: 1.15rem; }
   grid-template-columns: 1fr 1fr;
   gap: 14px;
 }
-.crypto-tab-chart-wrap { position: relative; height: 155px; }
+.crypto-tab-chart-wrap { position: relative; height: 155px; overflow: hidden; }
 .crypto-big-price {
   font-family: var(--font-mono);
   font-size: 1.7rem;
@@ -2648,9 +2649,6 @@ h3 { font-size: 1.15rem; }
 .mover-row:last-child { border-bottom: none !important; }
 
 /* ── Chart wrappers ────────────────────── */
-.macro-chart-wrap { height: 155px !important; }
-.crypto-tab-chart-wrap { height: 160px !important; }
-.sector-chart-wrap { height: 165px !important; }
 #eq-stock-chart-wrap { height: 240px !important; }
 
 /* ── Asset market depth rows ────────────────────── */
@@ -3742,7 +3740,7 @@ h3 { font-size: 1.15rem; }
         </div>
       </div>
       <div class="eq-stock-sub" id="eq-stock-meta">Select any row below to load an individual ASX chart.</div>
-      <div class="macro-chart-wrap" id="eq-stock-chart-wrap" style="height:260px"><canvas id="eq-stock-chart"></canvas></div>
+      <div class="macro-chart-wrap" id="eq-stock-chart-wrap"><canvas id="eq-stock-chart"></canvas></div>
     </div>
 
     <!-- Full ASX stocks table -->
@@ -4140,7 +4138,7 @@ h3 { font-size: 1.15rem; }
           <button class="time-pill" onclick="loadCryptoChart('sol','1y',this)">1Y</button>
         </div>
       </div>
-      <div style="position:relative;height:200px;"><canvas id="ct-sol-chart"></canvas></div>
+      <div class="crypto-tab-chart-wrap"><canvas id="ct-sol-chart"></canvas></div>
     </div>
 
   </div><!-- /rtab-crypto -->
