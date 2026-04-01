@@ -1138,24 +1138,34 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
 
     <!-- Ask AI card -->
     <div class="ai-input-card" style="max-width:720px;margin:1.5rem 0 0">
-      <textarea id="pro-ai-question" class="ai-input-textarea" maxlength="700" placeholder="Ask anything about your portfolio…"></textarea>
-      <div class="ai-input-footer">
-        <div class="ai-input-chips" id="pro-ai-chips">
-          <button type="button" class="ai-chip" data-q="What is driving my returns right now?">What's driving my returns?</button>
-          <button type="button" class="ai-chip" data-q="Where is my risk concentrated and what should I watch?">Where is my risk concentrated?</button>
-          <button type="button" class="ai-chip" data-q="Are there any sector headwinds affecting my holdings?">Any sector headwinds?</button>
-          <button type="button" class="ai-chip" data-q="Give me a concise summary of my current portfolio.">Summarise my portfolio</button>
+      <!-- Input mode -->
+      <div id="ai-input-mode">
+        <textarea id="pro-ai-question" class="ai-input-textarea" maxlength="700" placeholder="Ask anything about your portfolio…"></textarea>
+        <div class="ai-input-footer">
+          <div class="ai-input-chips" id="pro-ai-chips">
+            <button type="button" class="ai-chip" data-q="What is driving my returns right now?">What's driving my returns?</button>
+            <button type="button" class="ai-chip" data-q="Where is my risk concentrated and what should I watch?">Where is my risk concentrated?</button>
+            <button type="button" class="ai-chip" data-q="Are there any sector headwinds affecting my holdings?">Any sector headwinds?</button>
+            <button type="button" class="ai-chip" data-q="Give me a concise summary of my current portfolio.">Summarise my portfolio</button>
+          </div>
+          <button type="button" id="pro-ai-ask-btn" class="ai-send-btn">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            <span id="pro-ai-ask-label">Ask AI</span>
+          </button>
         </div>
-        <button type="button" id="pro-ai-ask-btn" class="ai-send-btn">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-          <span id="pro-ai-ask-label">Ask AI</span>
-        </button>
+      </div>
+      <!-- Output mode — shown while streaming and after complete -->
+      <div id="pro-ai-output" style="display:none">
+        <div id="pro-ai-output-inner" style="min-height:120px;max-height:480px;overflow-y:auto;padding-bottom:.5rem"></div>
+        <div style="margin-top:1rem;padding-top:.75rem;border-top:1px solid rgba(255,255,255,.07);display:flex;justify-content:space-between;align-items:center">
+          <span id="pro-ai-meta" style="font-family:var(--mono);font-size:.58rem;color:var(--muted);letter-spacing:.08em"></span>
+          <button type="button" id="ai-new-question-btn" style="background:none;border:1px solid rgba(255,255,255,.12);border-radius:6px;font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;color:var(--muted2);cursor:pointer;padding:.3rem .75rem;text-transform:uppercase">New question</button>
+        </div>
       </div>
     </div>
     <button type="button" id="refresh-prices-btn" style="display:none">Refresh</button>
 
     <div class="console-ai-error" id="pro-ai-error" hidden></div>
-    <div class="ai-hero-output" id="pro-ai-output"></div>
 
     <!-- KPI strip -->
     <div class="ai-kpi-strip">
@@ -3459,9 +3469,16 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     const metaEl = document.getElementById("pro-ai-meta");
     const errorEl = document.getElementById("pro-ai-error");
     const outputEl = document.getElementById("pro-ai-output");
-    if (!(askButton instanceof HTMLButtonElement) || !(questionInput instanceof HTMLTextAreaElement) || !metaEl || !errorEl || !outputEl) {
+    const outputInner = document.getElementById("pro-ai-output-inner");
+    const inputMode = document.getElementById("ai-input-mode");
+    if (!(askButton instanceof HTMLButtonElement) || !(questionInput instanceof HTMLTextAreaElement) || !errorEl || !outputEl || !outputInner || !inputMode) {
       return;
     }
+
+    // Toggle between input and output mode within the same card
+    const showOutput = state.holdingsAiLoading || !!state.holdingsAi || !!state.holdingsAiError;
+    inputMode.style.display = showOutput ? "none" : "";
+    outputEl.style.display = showOutput ? "" : "none";
 
     const hasHoldings = Array.isArray(state.portfolio?.holdings) && state.portfolio.holdings.length > 0;
     const limit = state.aiMonthlyLimit;
@@ -3512,28 +3529,34 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
 
     // Show streaming text while response is arriving
     if (state.holdingsAiLoading && state.holdingsAiStreamText) {
-      metaEl.textContent = "Analyzing…";
-      outputEl.innerHTML = `<div class="console-ai-block"><h4>Answer</h4><p id="pro-ai-stream-text" class="stream-text stream-cursor">${escapeHtml(state.holdingsAiStreamText)}</p></div>`;
+      if (metaEl) metaEl.textContent = "Analyzing…";
+      // Append incrementally — find existing stream el or create it
+      let streamEl = document.getElementById("pro-ai-stream-text");
+      if (!streamEl) {
+        outputInner.innerHTML = `<p id="pro-ai-stream-text" class="stream-text stream-cursor" style="font-size:.92rem;line-height:1.75;color:var(--text);white-space:pre-wrap"></p>`;
+        streamEl = document.getElementById("pro-ai-stream-text");
+      }
+      if (streamEl) streamEl.textContent = state.holdingsAiStreamText;
+      // Auto-scroll to bottom as text streams in
+      outputInner.scrollTop = outputInner.scrollHeight;
       return;
     }
 
     const analysis = state.holdingsAi;
     if (!analysis) {
       if (state.holdingsAiLoading) {
-        metaEl.textContent = "Analyzing…";
-        outputEl.innerHTML = `<div class="console-ai-block"><h4>Portfolio Analysis</h4><p style="opacity:.6">Generating analysis — please wait…</p></div>`;
+        if (metaEl) metaEl.textContent = "Analyzing…";
+        outputInner.innerHTML = `<p style="opacity:.5;font-size:.88rem">Generating analysis…</p>`;
       } else if (!hasHoldings) {
-        metaEl.textContent = "";
-        outputEl.innerHTML = `<div class="console-ai-block" style="text-align:center;padding:2rem 1rem"><h4 style="margin-bottom:.6rem">No Holdings Yet</h4><p style="color:var(--muted);margin-bottom:.9rem">Upload your portfolio on the <strong style="color:var(--text)">Quant</strong> tab to unlock AI-powered analysis of your holdings, risk exposure, and sector concentration.</p><button type="button" class="btn-primary" style="font-size:.72rem;padding:.45rem 1.2rem" onclick="document.querySelectorAll('.nav-tab')[0]?.click()">Go to Quant →</button></div>`;
+        if (metaEl) metaEl.textContent = "";
+        outputInner.innerHTML = `<div style="text-align:center;padding:1.5rem 1rem"><p style="color:var(--muted);margin-bottom:.9rem;font-size:.88rem">Upload your portfolio on the <strong style="color:var(--text)">Quant</strong> tab to unlock AI analysis.</p><button type="button" class="btn-primary" style="font-size:.72rem;padding:.45rem 1.2rem" onclick="document.querySelectorAll('.nav-tab')[0]?.click()">Go to Quant →</button></div>`;
       } else {
-        metaEl.textContent = "Analysis pending";
-        outputEl.innerHTML = `<div class="console-ai-block"><h4>Portfolio Analysis</h4><p style="opacity:.6">Analysis will appear here once complete.</p></div>`;
+        return; // stay in input mode
       }
       return;
     }
 
     const generatedAt = analysis.generatedAt ? formatDateTime(analysis.generatedAt) : "Now";
-    metaEl.textContent = `${generatedAt} via ${analysis.model || "AI model"}`;
 
     const breakdown = Array.isArray(analysis.holdingBreakdown) ? analysis.holdingBreakdown.slice(0, 10) : [];
     const breakdownHtml = breakdown.length === 0
@@ -3563,7 +3586,8 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
         </div>
       `;
 
-    outputEl.innerHTML = `
+    if (metaEl) metaEl.textContent = `${generatedAt} via ${analysis.model || "AI model"}`;
+    outputInner.innerHTML = `
       <div class="console-ai-block">
         <h4>Answer</h4>
         <p>${escapeHtml(String(analysis.answer || ""))}</p>
@@ -3595,6 +3619,14 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       streamEl.textContent = state.holdingsAiStreamText || "";
     }
   }
+
+  // "New question" button resets back to input mode
+  document.getElementById("ai-new-question-btn")?.addEventListener("click", () => {
+    state.holdingsAi = null;
+    state.holdingsAiStreamText = "";
+    state.holdingsAiError = "";
+    renderHoldingsAi();
+  });
 
   async function runHoldingsAi() {
     if (state.demoMode) {
