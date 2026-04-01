@@ -112,7 +112,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;background:rgba(5,5,10,.92);
 .nav-ticker-chg.neg{color:#f87171}
 
 /* ── HERO HEADER ── */
-.hero{padding:130px 0 5rem;display:grid;grid-template-columns:minmax(0,1fr) 600px;gap:5rem;align-items:start;position:relative;z-index:2}
+.hero{padding:100px 0 3.5rem;display:grid;grid-template-columns:minmax(0,1fr) 480px;gap:4rem;align-items:start;position:relative;z-index:2}
 .hero-left{max-width:780px}
 .hero-gl{position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(rgba(155,93,229,.022) 1px,transparent 1px),linear-gradient(90deg,rgba(155,93,229,.022) 1px,transparent 1px);background-size:58px 58px;mask-image:radial-gradient(ellipse 90% 80% at 40% 45%,black 0%,transparent 100%)}
 .hero-glow{position:absolute;top:-180px;left:-120px;width:800px;height:700px;pointer-events:none;background:radial-gradient(ellipse,rgba(100,40,180,.16) 0%,rgba(80,20,140,.05) 45%,transparent 70%);z-index:1}
@@ -175,11 +175,11 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;background:rgba(5,5,10,.92);
   color:var(--muted2);
 }
 .hero-kicker-sep{color:rgba(255,255,255,.24)}
-.hero-meta{display:flex;flex-direction:column;gap:1rem;max-width:760px;padding-top:2rem;border-top:1px solid var(--border)}
+.hero-meta{display:flex;flex-direction:column;gap:.6rem;max-width:760px;padding-top:1.4rem;border-top:1px solid var(--border)}
 .meta-row{display:grid;grid-template-columns:170px minmax(0,1fr);align-items:center;gap:1.8rem}
 .meta-lbl{font-family:var(--mono);font-size:.56rem;letter-spacing:.24em;text-transform:uppercase;color:var(--muted);min-width:0}
 .meta-val{font-family:var(--mono);font-size:.78rem;color:var(--muted2)}
-.hero-actions{display:flex;gap:.75rem;flex-wrap:wrap;margin:0 0 2.8rem}
+.hero-actions{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;margin:0 0 1.8rem}
 .plan-chip{font-family:var(--mono);font-size:.5rem;letter-spacing:.14em;text-transform:uppercase;padding:.18rem .55rem;border-radius:3px;font-weight:600}
 .plan-chip.pro{background:var(--accent-dim);color:var(--purple-hi);border:1px solid rgba(217,70,239,.22)}
 .plan-chip.starter{background:rgba(255,255,255,.05);color:var(--muted2);border:1px solid var(--border2)}
@@ -191,14 +191,14 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;background:rgba(5,5,10,.92);
 .btn-ghost{font-family:var(--sans);font-size:.85rem;font-weight:600;color:var(--text);background:transparent;border:1px solid var(--border2);border-radius:999px;padding:.72rem 1.8rem;cursor:pointer;transition:transform .2s,border-color .2s;text-decoration:none;display:inline-flex;align-items:center;gap:.4rem}
 .btn-ghost:hover{transform:translateY(-1px);border-color:rgba(255,255,255,.28)}
 
-.meta-panel{background:var(--card2);border:1px solid var(--border2);border-radius:8px;padding:1.6rem;box-shadow:0 0 32px rgba(124,77,255,.08),inset 0 0 0 1px rgba(208,179,255,.06)}
-.meta-panel-title{font-family:var(--mono);font-size:.62rem;letter-spacing:.22em;text-transform:uppercase;color:var(--purple-hi);margin-bottom:1.5rem}
-.kpi-grid-mini{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.2rem}
-.kpi-mini{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:1.25rem 1.35rem}
-.kpi-mini-lbl{font-family:var(--mono);font-size:.54rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:.55rem}
-.kpi-mini-val{font-family:var(--disp);font-size:1.9rem;letter-spacing:.04em;color:var(--text)}
-.kpi-mini-val.accent{color:var(--orange);text-shadow:0 0 16px rgba(255,106,61,.22)}
-.risk-bar-wrap{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:1.35rem 1.5rem}
+.meta-panel{background:var(--card2);border:1px solid var(--border2);border-radius:12px;padding:1.4rem;box-shadow:0 0 32px rgba(124,77,255,.08),inset 0 0 0 1px rgba(208,179,255,.06)}
+.meta-panel-title{font-family:var(--mono);font-size:.58rem;letter-spacing:.2em;text-transform:uppercase;color:var(--purple-hi);margin-bottom:1.1rem}
+.kpi-grid-mini{display:grid;grid-template-columns:1fr 1fr;gap:.65rem;margin-bottom:.75rem}
+.kpi-mini{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:.95rem 1.1rem}
+.kpi-mini-lbl{font-family:var(--mono);font-size:.52rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-bottom:.4rem}
+.kpi-mini-val{font-family:var(--disp);font-size:1.55rem;letter-spacing:.02em;color:var(--text)}
+.kpi-mini-val.accent{color:var(--orange)}
+.risk-bar-wrap{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:1rem 1.1rem}
 .risk-bar-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.9rem}
 .risk-bar-lbl{font-family:var(--mono);font-size:.54rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
 .risk-bar-val{font-family:var(--disp);font-size:2.2rem;letter-spacing:.04em;color:var(--orange)}
@@ -982,7 +982,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
   background:var(--card) !important;
   border:1px solid var(--border) !important;
 }
-.kpi-mini-val{ font-family:var(--mono) !important; font-size:1.6rem !important; font-weight:700 !important }
+.kpi-mini-val{ font-family:var(--mono) !important; font-size:1.45rem !important; font-weight:700 !important }
 .kpi-mini-val.accent{ color:var(--orange) !important }
 .risk-bar-val{ color:var(--orange) !important }
 
@@ -1073,21 +1073,9 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       <p class="hero-sub">Upload super, ASX, crypto, index, mutual fund, and ABC Bullion CSV reports to track exposure, concentration, and downside risk in one private workspace.</p>
       <div class="hero-actions">
         <button type="button" class="btn-primary hero-primary" id="hero-refresh-prices-btn">Refresh Prices</button>
-        <button type="button" class="btn-ghost hero-secondary" id="hero-clear-data-btn">Clear Data</button>
+        <button type="button" id="hero-clear-data-btn" style="background:none;border:none;font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;color:var(--muted);cursor:pointer;padding:.25rem .5rem;opacity:.6;text-transform:uppercase">Clear Data</button>
       </div>
       <div class="hero-meta">
-        <div class="meta-row">
-          <span class="meta-lbl">Account</span>
-          <span class="meta-val" id="hero-meta-account">—</span>
-        </div>
-        <div class="meta-row">
-          <span class="meta-lbl">Plan</span>
-          <span class="meta-val" id="hero-meta-plan">—</span>
-        </div>
-        <div class="meta-row">
-          <span class="meta-lbl">Holdings</span>
-          <span class="meta-val" id="hero-meta-holdings">—</span>
-        </div>
         <div class="meta-row">
           <span class="meta-lbl">Latest Report</span>
           <span class="meta-val" id="hero-meta-report">—</span>
