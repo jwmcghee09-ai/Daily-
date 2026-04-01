@@ -1238,40 +1238,43 @@ h3 { font-size: 1.15rem; }
 }
 
 /* Sector bars */
-.sector-bar-list { display: flex; flex-direction: column; gap: 8px; }
+.sector-bar-list { display: flex; flex-direction: column; gap: 5px; }
 
 .sector-bar-item {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  padding: 4px 0;
 }
 
 .sector-bar-name {
-  width: 90px;
-  font-size: 0.68rem;
-  color: var(--sl-muted);
+  width: 130px;
+  font-size: 0.66rem;
+  color: var(--sl-text);
   flex-shrink: 0;
+  font-family: var(--font-mono);
+  letter-spacing: .02em;
 }
 
 .sector-bar-track {
   flex: 1;
-  height: 20px;
-  background: rgba(255, 255, 255, 0.04);
-  border-radius: 4px;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 3px;
   overflow: hidden;
 }
 
 .sector-bar-fill {
   height: 100%;
-  border-radius: 4px;
+  border-radius: 3px;
   transition: width 1s ease;
   width: 0;
 }
 
 .sector-bar-val {
   font-family: var(--font-mono);
-  font-size: 0.68rem;
-  color: var(--sl-text);
+  font-size: 0.65rem;
+  color: var(--sl-muted);
   width: 65px;
   text-align: right;
   flex-shrink: 0;
@@ -2645,9 +2648,10 @@ h3 { font-size: 1.15rem; }
 .mover-row:last-child { border-bottom: none !important; }
 
 /* ── Chart wrappers — taller ────────────────────── */
-.macro-chart-wrap { height: 165px !important; }
-.crypto-tab-chart-wrap { height: 170px !important; }
-.sector-chart-wrap { height: 170px !important; }
+.macro-chart-wrap { height: 200px !important; }
+.crypto-tab-chart-wrap { height: 190px !important; }
+.sector-chart-wrap { height: 200px !important; }
+#eq-stock-chart-wrap { height: 260px !important; }
 
 /* ── Asset market depth rows ────────────────────── */
 .asset-metric-row {
@@ -3738,7 +3742,7 @@ h3 { font-size: 1.15rem; }
         </div>
       </div>
       <div class="eq-stock-sub" id="eq-stock-meta">Select any row below to load an individual ASX chart.</div>
-      <div class="macro-chart-wrap"><canvas id="eq-stock-chart"></canvas></div>
+      <div class="macro-chart-wrap" id="eq-stock-chart-wrap" style="height:260px"><canvas id="eq-stock-chart"></canvas></div>
     </div>
 
     <!-- Full ASX stocks table -->
@@ -4582,13 +4586,16 @@ function buildSectorBars() {
   if (!sorted.length) return;
   const max = sorted[0][1];
   const colors = {
-    'Financials': 'linear-gradient(90deg, #22c55e, #4ade80)',
-    'Materials': 'linear-gradient(90deg, #9b5de5, #c084fc)',
-    'Consumer': 'linear-gradient(90deg, #fbbf24, #f59e0b)',
-    'Energy': 'linear-gradient(90deg, #ff4b33, #ff7a68)',
-    'Healthcare': 'linear-gradient(90deg, #38bdf8, #0ea5e9)',
-    'Comms': 'linear-gradient(90deg, #a78bfa, #8b5cf6)',
-    'Real Estate': 'linear-gradient(90deg, #2dd4bf, #14b8a6)'
+    'Financials':    'linear-gradient(90deg, #a855f7, #c084fc)',
+    'Materials':     'linear-gradient(90deg, #9b5de5, #c084fc)',
+    'Consumer':      'linear-gradient(90deg, #d946ef, #a855f7)',
+    'Energy':        'linear-gradient(90deg, #ff7a30, #ffb347)',
+    'Healthcare':    'linear-gradient(90deg, #38bdf8, #818cf8)',
+    'Comms':         'linear-gradient(90deg, #a78bfa, #8b5cf6)',
+    'Real Estate':   'linear-gradient(90deg, #c084fc, #818cf8)',
+    'Industrials':   'linear-gradient(90deg, #818cf8, #a855f7)',
+    'Technology':    'linear-gradient(90deg, #a855f7, #d946ef)',
+    'Utilities':     'linear-gradient(90deg, #6366f1, #818cf8)',
   };
   const container = document.getElementById('sectorBars');
   container.innerHTML = sorted.map(([name, cap]) => {
@@ -5997,7 +6004,7 @@ function populateEquitiesTab() {
     const sectors = fmp.sectorPerformance.slice(0, 11);
     const labels = sectors.map(s => s.sector || s.name || '');
     const values = sectors.map(s => parseFloat(s.changesPercentage ?? s.changePct ?? 0));
-    const colors = values.map(v => v >= 0 ? 'rgba(34,197,94,0.75)' : 'rgba(239,68,68,0.75)');
+    const colors = values.map(v => v >= 0 ? 'rgba(168,85,247,0.85)' : 'rgba(248,113,113,0.8)');
     makeCjsBarChart('eq-sector-chart', labels, values, colors);
   } else {
     setChartEmpty('eq-sector-chart', 'No FMP sector feed', 90);
@@ -6052,36 +6059,47 @@ function populateEquitiesTab() {
 }
 
 function populateEquitiesMovers() {
-  const movers = DATA.usMovers;
   const gainersEl = document.getElementById('eq-gainers-list');
-  const losersEl = document.getElementById('eq-losers-list');
+  const losersEl  = document.getElementById('eq-losers-list');
 
-  function moverRow(m) {
-    const pct = parseFloat(m.changePct ?? m.changesPercentage ?? 0);
+  // Use ASX constituents (live quotes) — far more relevant than US movers for an ASX terminal
+  const constituents = window._liveQuotesData?.asxConstituents ?? [];
+  const universe = constituents.length ? constituents : getEquityUniverse();
+
+  const withChange = universe
+    .map(q => {
+      const pct = (q.price != null && q.prevClose != null && q.prevClose > 0)
+        ? ((q.price - q.prevClose) / q.prevClose) * 100
+        : null;
+      return { ...q, _pct: pct };
+    })
+    .filter(q => q._pct != null && q.price != null);
+
+  const gainers = [...withChange].sort((a,b) => b._pct - a._pct).slice(0, 8);
+  const losers  = [...withChange].sort((a,b) => a._pct - b._pct).slice(0, 8);
+
+  function moverRow(q) {
+    const pct = q._pct;
     const cls = pct >= 0 ? 'pos' : 'neg';
-    const spark = renderLineSparkline(m.sparkline || [], pct >= 0) || generateSparkline(
-      Math.max((Number(m.price) || 0) * 0.92, 0.01),
-      Math.max((Number(m.price) || 0) * 1.08, 0.02),
-      Number(m.price) || 0,
-      pct
-    );
-    return `<div class="mover-row">
-      <div>
-        <div>
-          <span class="mono" style="font-weight:600;font-size:0.78rem;">${escapeHtml(m.symbol || m.ticker || '')}</span>
-          <span style="color:var(--sl-muted);font-size:0.62rem;margin-left:8px;">${escapeHtml((m.name || m.companyName || '').substring(0,32))}</span>
-        </div>
-        ${spark}
+    const sym = (q.symbol || '').replace('.AX','');
+    const price = q.price != null ? '$' + q.price.toFixed(2) : '—';
+    const mcap  = q.marketCap ? fmtCompactCurrency(q.marketCap) : '';
+    return `<div class="mover-row" style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+      <div style="min-width:0">
+        <span class="mono" style="font-weight:700;font-size:.8rem">${escapeHtml(sym)}</span>
+        <span style="color:var(--sl-muted);font-size:.6rem;margin-left:7px">${escapeHtml((q.name||'').slice(0,28))}</span>
+        ${mcap ? `<span style="color:var(--sl-muted);font-size:.58rem;margin-left:6px">${escapeHtml(mcap)}</span>` : ''}
       </div>
-      <div style="text-align:right;">
-        <div class="mono" style="font-size:0.75rem;">$${parseFloat(m.price||0).toFixed(2)}</div>
-        <div class="mono ${cls}" style="font-size:0.68rem;">${pct>=0?'+':''}${pct.toFixed(2)}%</div>
+      <div style="text-align:right;flex-shrink:0;margin-left:.75rem">
+        <div class="mono" style="font-size:.76rem">${escapeHtml(price)}</div>
+        <div class="mono ${cls}" style="font-size:.7rem;font-weight:600">${pct>=0?'+':''}${pct.toFixed(2)}%</div>
       </div>
     </div>`;
   }
 
-  if (gainersEl) gainersEl.innerHTML = movers.gainers.length ? movers.gainers.slice(0,8).map(moverRow).join('') : '<div style="color:var(--sl-muted);font-size:0.72rem;">No FMP gainers feed.</div>';
-  if (losersEl) losersEl.innerHTML = movers.losers.length ? movers.losers.slice(0,8).map(moverRow).join('') : '<div style="color:var(--sl-muted);font-size:0.72rem;">No FMP losers feed.</div>';
+  const empty = '<div style="color:var(--sl-muted);font-size:.72rem;padding:8px 0">No live ASX data yet.</div>';
+  if (gainersEl) gainersEl.innerHTML = gainers.length ? gainers.map(moverRow).join('') : empty;
+  if (losersEl)  losersEl.innerHTML  = losers.length  ? losers.map(moverRow).join('')  : empty;
 }
 
 // ─── MACRO TAB ────────────────────────────────────────────────────
