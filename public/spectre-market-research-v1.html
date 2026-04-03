@@ -2862,6 +2862,182 @@ h3 { font-size: 1.15rem; }
   animation: brandSlide 4s linear infinite !important;
   border-bottom-color: #a855f7 !important;
 }
+
+/* ── Mobile overhaul ── */
+
+/* Bottom tab bar (mobile-only, fixed like native iOS) */
+.mobile-tab-bar{
+  display:none;
+  position:fixed;
+  bottom:0;left:0;right:0;
+  z-index:950;
+  height:64px;
+  background:rgba(12,8,23,.96);
+  backdrop-filter:blur(24px) saturate(1.5);
+  -webkit-backdrop-filter:blur(24px) saturate(1.5);
+  border-top:1px solid rgba(255,255,255,.08);
+  padding-bottom:env(safe-area-inset-bottom,0);
+}
+.mobile-tab-bar-inner{
+  display:flex;
+  height:64px;
+  align-items:stretch;
+}
+.mobile-tab-btn{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  background:none;
+  border:none;
+  cursor:pointer;
+  color:rgba(200,192,230,.42);
+  font-family:var(--font-mono);
+  font-size:.5rem;
+  letter-spacing:.13em;
+  text-transform:uppercase;
+  text-decoration:none;
+  padding:0;
+  transition:color .18s;
+  -webkit-tap-highlight-color:transparent;
+  user-select:none;
+}
+.mobile-tab-btn svg{
+  width:22px;height:22px;
+  stroke:currentColor;
+  stroke-width:1.6;
+  fill:none;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+.mobile-tab-btn.active{ color:#c084fc }
+.mobile-tab-btn.active svg{ stroke:#c084fc }
+.mobile-tab-btn:active{ opacity:.7 }
+
+/* Tablet — 768px */
+@media(max-width:768px){
+  .mobile-tab-bar{display:block}
+  .nav-tab-group{display:none!important}
+  body{padding-bottom:72px}
+
+  /* Hero workspace: single column */
+  .workspace-hero-grid{grid-template-columns:1fr!important}
+  .workspace-meta-card{width:100%!important}
+
+  /* Main content grid: single column */
+  .main-grid{grid-template-columns:1fr!important}
+  .right-col{display:grid;grid-template-columns:1fr 1fr!important;gap:16px}
+
+  /* Tables: horizontal scroll with touch momentum */
+  .table-wrap{
+    overflow-x:auto!important;
+    -webkit-overflow-scrolling:touch!important;
+  }
+
+  /* Card padding reduction */
+  .card{padding:14px!important;border-radius:12px!important}
+
+  /* Research tab nav: allow wrapping */
+  .research-tab-nav{flex-wrap:wrap!important;gap:4px!important}
+  .rtab{flex:1 1 30%!important;text-align:center}
+
+  /* Hero heading font shrink */
+  .workspace-title{font-size:clamp(2rem,7vw,3rem)!important}
+
+  /* Page header compact */
+  .page-header{padding:9px 14px!important}
+}
+
+/* iPhone — 430px */
+@media(max-width:430px){
+  /* Container */
+  .container{padding:0 12px!important}
+  .nav-inner{padding:0 14px!important}
+
+  /* Hero workspace */
+  .workspace-hero{padding:16px!important;border-radius:14px!important;margin:12px 0 10px!important}
+  .workspace-title{font-size:clamp(1.8rem,8vw,2.4rem)!important}
+  .workspace-sub{font-size:.84rem!important;line-height:1.55!important;margin-top:10px!important}
+  .workspace-strip{font-size:.6rem!important;gap:6px!important;margin-bottom:12px!important}
+  .workspace-meta-grid{grid-template-columns:1fr!important}
+  .workspace-meta-item.wide{grid-column:auto!important}
+
+  /* Hero KPI grid: 2-col on iPhone */
+  .hero-grid{grid-template-columns:1fr 1fr!important;gap:8px!important;margin:10px 0!important}
+  .hero-card{padding:10px 12px!important}
+  .hero-card .label{font-size:.55rem!important;margin-bottom:4px!important}
+  .hero-card .value{font-size:1.2rem!important}
+  .hero-card .change{font-size:.65rem!important}
+
+  /* Cards */
+  .card{padding:12px!important;border-radius:11px!important}
+  .card:hover{transform:none!important}
+
+  /* Right col: single column */
+  .right-col{grid-template-columns:1fr!important}
+
+  /* Table: full bleed scroll */
+  .table-wrap{
+    margin:0 -12px!important;
+    padding:0!important;
+    border-radius:0!important;
+    -webkit-overflow-scrolling:touch!important;
+  }
+  .data-table thead th{font-size:.54rem!important;padding:8px 7px!important}
+  .data-table tbody td{font-size:.66rem!important;padding:8px 7px!important}
+
+  /* Research tab nav: wrap to 3 per row */
+  .research-tab-nav{flex-wrap:wrap!important;gap:4px!important;padding:6px!important}
+  .rtab{flex:1 1 28%!important;font-size:.58rem!important;padding:6px 8px!important;text-align:center!important}
+
+  /* Chart */
+  .chart-title-group .chart-val{font-size:1.55rem!important}
+  .time-pills{flex-wrap:wrap!important;gap:3px!important;justify-content:flex-end!important}
+  .time-pill{font-size:.58rem!important;padding:4px 8px!important}
+  .chart-svg{height:180px!important}
+
+  /* Page header */
+  .page-header{flex-direction:column!important;align-items:flex-start!important;gap:4px!important;padding:10px 12px!important}
+
+  /* Macro grids: 1-col */
+  .macro-3col,.macro-2col,.macro-grid,.eq-movers-grid,.earnings-grid{grid-template-columns:1fr!important}
+  .fmp-section.in-tab.cols-3,.fmp-section.in-tab.cols-2{grid-template-columns:1fr!important}
+  .index-grid{grid-template-columns:1fr 1fr!important}
+  .fx-grid{grid-template-columns:1fr!important}
+  .crypto-tab-grid{grid-template-columns:1fr!important}
+  .metric-card-grid{grid-template-columns:1fr!important}
+
+  /* Economic calendar: compact layout */
+  .econ-item{grid-template-columns:58px 22px 1fr auto!important;gap:5px!important}
+  .econ-val+.econ-val{display:none}
+
+  /* Earnings: hide EPS on very small */
+  .earn-eps{display:none!important}
+  .earn-item{grid-template-columns:70px 60px 1fr!important}
+
+  /* KPI boxes */
+  .kpi-row{gap:8px!important;flex-wrap:wrap!important}
+  .kpi-box{flex:1 1 calc(50% - 4px)!important;min-width:0!important;padding:10px 8px!important}
+
+  /* Footer */
+  .footer{padding:20px 12px!important}
+
+  /* Base font bump for retina */
+  body{font-size:15px}
+
+  /* iOS zoom prevention */
+  input,select,textarea{font-size:16px!important}
+
+  /* Toast above bottom bar */
+  .system-toast,.toast{bottom:72px!important;right:12px!important}
+
+  /* Hide nav user email */
+  .nav-user{display:none!important}
+  #nav-market-status{font-size:.54rem!important;padding:2px 8px!important}
+}
+
 </style>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 </head>
@@ -4150,6 +4326,24 @@ h3 { font-size: 1.15rem; }
     SPECTRE Market Research · Live market data · Built for Plus and Pro workspaces
   </p>
 </footer>
+
+<!-- MOBILE BOTTOM TAB BAR -->
+<div class="mobile-tab-bar" id="mobile-tab-bar" aria-label="Mobile navigation">
+  <div class="mobile-tab-bar-inner">
+    <a href="/dashboard?tab=quant" class="mobile-tab-btn" aria-label="Quant tab">
+      <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Quant
+    </a>
+    <a href="/dashboard?tab=ai" class="mobile-tab-btn" aria-label="AI tab">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+      AI
+    </a>
+    <span class="mobile-tab-btn active" aria-label="Research tab (current)">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      Research
+    </span>
+  </div>
+</div>
 
 <script>
 const state = {

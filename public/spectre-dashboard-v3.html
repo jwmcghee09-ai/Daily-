@@ -1010,6 +1010,129 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
 
 /* Upgrade card */
 .upgrade-panel{ border-color:rgba(168,85,247,.25) !important; background:rgba(168,85,247,.05) !important }
+
+
+/* ── Mobile overhaul ── */
+
+/* Bottom tab bar (mobile-only, fixed like native iOS) */
+.mobile-tab-bar{
+  display:none;
+  position:fixed;
+  bottom:0;left:0;right:0;
+  z-index:950;
+  height:64px;
+  background:rgba(5,5,10,.96);
+  backdrop-filter:blur(24px) saturate(1.5);
+  -webkit-backdrop-filter:blur(24px) saturate(1.5);
+  border-top:1px solid rgba(255,255,255,.08);
+  padding-bottom:env(safe-area-inset-bottom,0);
+}
+.mobile-tab-bar-inner{
+  display:flex;
+  height:64px;
+  align-items:stretch;
+}
+.mobile-tab-btn{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  background:none;
+  border:none;
+  cursor:pointer;
+  color:rgba(200,192,230,.42);
+  font-family:var(--mono);
+  font-size:.5rem;
+  letter-spacing:.13em;
+  text-transform:uppercase;
+  text-decoration:none;
+  padding:0;
+  transition:color .18s;
+  -webkit-tap-highlight-color:transparent;
+  user-select:none;
+}
+.mobile-tab-btn svg{
+  width:22px;height:22px;
+  stroke:currentColor;
+  stroke-width:1.6;
+  fill:none;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+.mobile-tab-btn.active{ color:#c084fc }
+.mobile-tab-btn.active svg{ stroke:#c084fc }
+.mobile-tab-btn:active{ opacity:.7 }
+
+/* Tablet — 768px */
+@media(max-width:768px){
+  .mobile-tab-bar{display:block}
+  .nav-tabs{display:none!important}
+  body{padding-bottom:72px}
+  .hero{grid-template-columns:1fr!important;padding:88px 0 2rem!important;gap:1.25rem!important}
+  .hero-left,.meta-panel{width:100%!important;max-width:100%!important}
+  .kpi-row{grid-template-columns:repeat(2,1fr)!important}
+  .upload-grid{grid-template-columns:repeat(2,1fr)!important}
+  .table-wrap{overflow-x:auto!important;-webkit-overflow-scrolling:touch!important;margin:0 -1rem;padding:0 1rem}
+  table{min-width:640px}
+  .card,.panel,.upload-card,.signal-card,.chart-card,.alert-card,.bullion-card,.quality-card,.console-card,.panel-half,.kpi-card{padding:14px!important}
+  .panel-split{grid-template-columns:1fr!important}
+  .sec{padding:2.8rem 0!important}
+  .ai-input-card{width:100%!important;border-radius:14px}
+  .ai-hero-wrap{padding:90px 0 40px!important}
+  .ai-hero-title{font-size:clamp(1.9rem,6vw,2.6rem)!important}
+  .ai-kpi-strip{flex-direction:column!important}
+  .ai-kpi{padding:.75rem 1.1rem!important;border-right:none!important;border-bottom:1px solid var(--border)}
+  .ai-kpi-divider{display:none!important}
+  .console-grid{grid-template-columns:1fr!important}
+}
+
+/* iPhone — 430px */
+@media(max-width:430px){
+  .wrap{padding:0 1rem!important}
+  .nav-inner{padding:0 1rem!important}
+  .hero{padding:82px 0 1.5rem!important;gap:1rem!important}
+  .hero-brand{font-size:clamp(2rem,9vw,2.8rem)!important;margin-bottom:.75rem!important}
+  .hero-title{font-size:clamp(2.4rem,11vw,3.4rem)!important}
+  .hero-sub{font-size:.83rem!important;line-height:1.68!important;margin-bottom:1.1rem!important}
+  .hero-kicker{font-size:.56rem!important;gap:.45rem!important;margin-bottom:1rem!important}
+  .hero-system{font-size:.5rem!important;gap:.6rem!important}
+  .hero-actions{flex-direction:column!important;gap:.55rem!important;align-items:stretch!important}
+  .hero-primary,.hero-secondary{width:100%!important;min-width:0!important;justify-content:center!important}
+  .hero-meta{padding-top:1rem!important}
+  .meta-row{grid-template-columns:1fr!important;gap:.3rem!important}
+  .meta-panel{padding:1rem!important}
+  .kpi-grid-mini{grid-template-columns:1fr 1fr!important;gap:.5rem!important}
+  .kpi-mini{padding:.85rem!important}
+  .kpi-mini-val{font-size:1.3rem!important}
+  .kpi-row{grid-template-columns:1fr!important}
+  .kpi-val{font-size:1.3rem!important}
+  .upload-grid{grid-template-columns:1fr!important}
+  .sec{padding:2rem 0!important}
+  .sec-head{margin-bottom:1.2rem!important}
+  .table-wrap{margin:0 -1rem!important;padding:0!important;border-radius:0!important}
+  table{min-width:540px}
+  .card,.panel,.upload-card,.signal-card,.chart-card,.alert-card,.bullion-card,.quality-card,.console-card,.panel-half,.kpi-card{padding:12px!important}
+  .bullion-grid,.quality-grid,.risk-grid,.stress-grid{grid-template-columns:1fr!important}
+  .chart-grid{grid-template-columns:1fr!important}
+  .chart-card.full{grid-column:span 1!important}
+  .signal-grid{grid-template-columns:1fr!important}
+  .alert-row,.alert-form{grid-template-columns:1fr!important}
+  .ai-hero-wrap{padding:78px 0 32px!important}
+  .ai-hero-inner{padding:0 1rem!important}
+  .ai-input-card{padding:14px 14px 12px!important;border-radius:12px!important}
+  .ai-input-textarea{font-size:.95rem!important;min-height:80px!important}
+  .ai-hero-title{font-size:clamp(1.7rem,7vw,2.2rem)!important}
+  .ai-hero-sub{font-size:.82rem!important}
+  .console-ai-grid,.console-ai-holding-grid{grid-template-columns:1fr!important}
+  .foot-inner{flex-direction:column!important;align-items:center!important;text-align:center!important;gap:.5rem!important}
+  body{font-size:15px}
+  input,select,textarea{font-size:16px!important}
+  .system-toast{bottom:72px!important;right:12px!important}
+  #export-csv-btn{display:none!important}
+  .nav-user{display:none!important}
+}
 </style>
 </head>
 <body class="boot-pending">
@@ -1982,6 +2105,24 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     </div>
     <div class="foot-email">Contact us: <a href="mailto:admin@spectre-assets.com">admin@spectre-assets.com</a></div>
   </footer>
+</div>
+
+<!-- MOBILE BOTTOM TAB BAR -->
+<div class="mobile-tab-bar" id="mobile-tab-bar" aria-label="Mobile navigation">
+  <div class="mobile-tab-bar-inner">
+    <button type="button" class="mobile-tab-btn active" data-tab="quant" id="mtab-quant" aria-label="Quant tab">
+      <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Quant
+    </button>
+    <button type="button" class="mobile-tab-btn" data-tab="ai" id="mtab-ai" aria-label="AI tab">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+      AI
+    </button>
+    <a href="/research" class="mobile-tab-btn" id="mtab-research" aria-label="Research tab">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      Research
+    </a>
+  </div>
 </div>
 
 <div id="system-toast" class="system-toast" role="status" aria-live="polite"></div>
@@ -4998,12 +5139,26 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     document.querySelectorAll('.nav-tab').forEach(function(btn) {
       btn.classList.toggle('nav-tab-active', btn.getAttribute('data-tab') === tab);
     });
+    // Sync mobile bottom tab bar
+    document.querySelectorAll('.mobile-tab-btn[data-tab]').forEach(function(btn) {
+      btn.classList.toggle('active', btn.getAttribute('data-tab') === tab);
+    });
     window.scrollTo({ top: 0, behavior: 'instant' });
   }
 
   document.querySelectorAll('.nav-tab').forEach(function(btn) {
     btn.addEventListener('click', function() {
       var tab = btn.getAttribute('data-tab');
+      if (tab === 'research') { window.location.href = '/research'; return; }
+      switchTab(tab);
+    });
+  });
+
+  // Mobile bottom tab bar click handlers
+  document.querySelectorAll('.mobile-tab-btn[data-tab]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var tab = btn.getAttribute('data-tab');
+      if (!tab) return;
       if (tab === 'research') { window.location.href = '/research'; return; }
       switchTab(tab);
     });
