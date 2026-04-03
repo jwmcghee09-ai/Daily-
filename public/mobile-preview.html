@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SPECTRE — Mobile Preview</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0a0714;
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+    gap: 32px;
+  }
+
+  .toolbar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .toolbar-label {
+    font-size: 11px;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: rgba(200,192,230,.4);
+  }
+
+  .device-btn {
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 8px;
+    color: rgba(200,192,230,.7);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: .1em;
+    padding: 6px 14px;
+    cursor: pointer;
+    transition: all .18s;
+  }
+
+  .device-btn:hover, .device-btn.active {
+    border-color: #a855f7;
+    color: #fff;
+    background: rgba(168,85,247,.1);
+  }
+
+  .page-btn {
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 8px;
+    color: rgba(200,192,230,.7);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: .1em;
+    padding: 6px 14px;
+    cursor: pointer;
+    transition: all .18s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .page-btn:hover, .page-btn.active {
+    border-color: #ff7a30;
+    color: #fff;
+    background: rgba(255,122,48,.1);
+  }
+
+  .sep { width: 1px; height: 24px; background: rgba(255,255,255,.1); }
+
+  /* Phone frame */
+  .phone-wrap {
+    position: relative;
+    filter: drop-shadow(0 40px 80px rgba(0,0,0,.8)) drop-shadow(0 0 40px rgba(168,85,247,.12));
+    transition: all .3s ease;
+  }
+
+  .phone-frame {
+    position: relative;
+    background: #1a1a2e;
+    border-radius: 54px;
+    padding: 14px;
+    border: 1px solid rgba(255,255,255,.12);
+    box-shadow:
+      inset 0 0 0 1px rgba(255,255,255,.06),
+      0 0 0 1px rgba(0,0,0,.8);
+  }
+
+  .phone-frame::before {
+    content: '';
+    position: absolute;
+    top: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120px;
+    height: 34px;
+    background: #0d0d1a;
+    border-radius: 0 0 20px 20px;
+    z-index: 10;
+    box-shadow: inset 0 -2px 4px rgba(0,0,0,.5);
+  }
+
+  /* Dynamic island */
+  .phone-frame::after {
+    content: '';
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 88px;
+    height: 28px;
+    background: #000;
+    border-radius: 20px;
+    z-index: 11;
+  }
+
+  .phone-screen {
+    border-radius: 42px;
+    overflow: hidden;
+    background: #0a0714;
+    position: relative;
+  }
+
+  .phone-screen iframe {
+    display: block;
+    border: none;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Side buttons */
+  .btn-volume-up, .btn-volume-down, .btn-silent, .btn-power {
+    position: absolute;
+    background: #2a2a3e;
+    border-radius: 3px;
+  }
+
+  .btn-silent {
+    left: -4px;
+    top: 100px;
+    width: 4px;
+    height: 32px;
+  }
+
+  .btn-volume-up {
+    left: -4px;
+    top: 148px;
+    width: 4px;
+    height: 52px;
+  }
+
+  .btn-volume-down {
+    left: -4px;
+    top: 212px;
+    width: 4px;
+    height: 52px;
+  }
+
+  .btn-power {
+    right: -4px;
+    top: 160px;
+    width: 4px;
+    height: 72px;
+  }
+
+  /* Sizes */
+  .size-se    .phone-screen { width: 320px; height: 568px; }
+  .size-14    .phone-screen { width: 390px; height: 844px; }
+  .size-14pro .phone-screen { width: 393px; height: 852px; }
+  .size-14max .phone-screen { width: 430px; height: 932px; }
+
+  /* Tablet */
+  .size-ipad .phone-frame {
+    border-radius: 28px;
+    padding: 12px;
+  }
+  .size-ipad .phone-frame::before,
+  .size-ipad .phone-frame::after { display: none; }
+  .size-ipad .phone-screen {
+    border-radius: 18px;
+    width: 768px;
+    height: 1024px;
+  }
+
+  .dim-label {
+    font-size: 10px;
+    letter-spacing: .15em;
+    color: rgba(200,192,230,.3);
+    text-align: center;
+    margin-top: 12px;
+    text-transform: uppercase;
+  }
+
+  .heading {
+    font-size: 11px;
+    letter-spacing: .3em;
+    text-transform: uppercase;
+    background: linear-gradient(90deg, #a855f7, #ff7a30);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+</style>
+</head>
+<body>
+
+<div class="heading">SPECTRE · Mobile Preview</div>
+
+<div class="toolbar">
+  <span class="toolbar-label">Device</span>
+  <button class="device-btn" onclick="setSize('se')">SE (320)</button>
+  <button class="device-btn active" onclick="setSize('14')">iPhone 14 (390)</button>
+  <button class="device-btn" onclick="setSize('14pro')">14 Pro (393)</button>
+  <button class="device-btn" onclick="setSize('14max')">14 Max (430)</button>
+  <button class="device-btn" onclick="setSize('ipad')">iPad (768)</button>
+
+  <div class="sep"></div>
+
+  <span class="toolbar-label">Page</span>
+  <button class="page-btn active" onclick="setPage('/dashboard')">Dashboard</button>
+  <button class="page-btn" onclick="setPage('/research')">Research</button>
+
+  <div class="sep"></div>
+
+  <button class="device-btn" onclick="reloadFrame()">↺ Reload</button>
+</div>
+
+<div class="phone-wrap size-14" id="phone-wrap">
+  <div class="phone-frame">
+    <div class="btn-silent"></div>
+    <div class="btn-volume-up"></div>
+    <div class="btn-volume-down"></div>
+    <div class="btn-power"></div>
+    <div class="phone-screen" id="phone-screen">
+      <iframe id="preview-frame" src="/dashboard" title="SPECTRE Mobile Preview"></iframe>
+    </div>
+  </div>
+</div>
+
+<div class="dim-label" id="dim-label">390 × 844 · iPhone 14</div>
+
+<script>
+  const SIZES = {
+    se:     { w: 320, h: 568, label: '320 × 568 · iPhone SE' },
+    '14':   { w: 390, h: 844, label: '390 × 844 · iPhone 14' },
+    '14pro':{ w: 393, h: 852, label: '393 × 852 · iPhone 14 Pro' },
+    '14max':{ w: 430, h: 932, label: '430 × 932 · iPhone 14 Plus' },
+    ipad:   { w: 768, h: 1024, label: '768 × 1024 · iPad' },
+  };
+
+  let currentSize = '14';
+  let currentPage = '/dashboard';
+
+  function setSize(size) {
+    currentSize = size;
+    const wrap = document.getElementById('phone-wrap');
+    wrap.className = `phone-wrap size-${size}`;
+    document.querySelectorAll('.device-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById('dim-label').textContent = SIZES[size].label;
+  }
+
+  function setPage(page) {
+    currentPage = page;
+    document.getElementById('preview-frame').src = page;
+    document.querySelectorAll('.page-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+  }
+
+  function reloadFrame() {
+    const f = document.getElementById('preview-frame');
+    f.src = f.src;
+  }
+</script>
+</body>
+</html>
