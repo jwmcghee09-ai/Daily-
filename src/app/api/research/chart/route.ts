@@ -51,36 +51,45 @@ async function fetchChart(range: string, yahooSymbol: string): Promise<ChartPayl
   const cfg = RANGE_CONFIG[range];
   if (!cfg) return null;
 
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${yahooSymbol}?interval=${cfg.interval}&range=${cfg.range}&includePrePost=false`;
-  const res = await fetch(url, {
-    headers: { "User-Agent": "Mozilla/5.0", Accept: "application/json" },
-    signal: AbortSignal.timeout(8000),
-  });
-  if (!res.ok) return null;
+  const hosts = ["query1.finance.yahoo.com", "query2.finance.yahoo.com"];
+  for (const host of hosts) {
+    try {
+      const url = `https://${host}/v8/finance/chart/${yahooSymbol}?interval=${cfg.interval}&range=${cfg.range}&includePrePost=false`;
+      const res = await fetch(url, {
+        headers: { "User-Agent": "Mozilla/5.0", Accept: "application/json" },
+        signal: AbortSignal.timeout(8000),
+      });
+      if (!res.ok) continue;
 
-  const json = await res.json();
-  const result = json?.chart?.result?.[0];
-  if (!result) return null;
+      const json = await res.json();
+      const result = json?.chart?.result?.[0];
+      if (!result) continue;
 
-  const timestamps: number[] = result.timestamp ?? [];
-  const closes: number[] = result.indicators?.quote?.[0]?.close ?? [];
+      const timestamps: number[] = result.timestamp ?? [];
+      const closes: number[] = result.indicators?.quote?.[0]?.close ?? [];
 
-  // Filter out nulls (market closed gaps)
-  const pairs: [number, number][] = [];
-  for (let i = 0; i < timestamps.length; i++) {
-    if (closes[i] != null) pairs.push([timestamps[i], closes[i]]);
+      // Filter out nulls (market closed gaps)
+      const pairs: [number, number][] = [];
+      for (let i = 0; i < timestamps.length; i++) {
+        if (closes[i] != null) pairs.push([timestamps[i], closes[i]]);
+      }
+      if (!pairs.length) continue;
+
+      const allCloses = pairs.map((p) => p[1]);
+      return {
+        timestamps: pairs.map((p) => p[0]),
+        closes: allCloses,
+        high: Math.max(...allCloses),
+        low: Math.min(...allCloses),
+        range,
+        symbol: yahooSymbol,
+      };
+    } catch {
+      continue;
+    }
   }
-  if (!pairs.length) return null;
 
-  const allCloses = pairs.map((p) => p[1]);
-  return {
-    timestamps: pairs.map((p) => p[0]),
-    closes: allCloses,
-    high: Math.max(...allCloses),
-    low: Math.min(...allCloses),
-    range,
-    symbol: yahooSymbol,
-  };
+  return null;
 }
 
 export async function GET(req: NextRequest) {

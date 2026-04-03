@@ -2175,6 +2175,77 @@ h3 { font-size: 1.15rem; }
   color: var(--sl-muted);
   margin-bottom: 10px;
 }
+.chart-panel {
+  position: relative;
+  overflow: hidden;
+}
+.chart-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at top right, rgba(155,93,229,0.08) 0%, transparent 36%),
+    linear-gradient(180deg, rgba(255,255,255,0.02) 0%, transparent 35%);
+  pointer-events: none;
+}
+.chart-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin: 12px 0 14px;
+}
+.chart-stat {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,.05);
+  background: linear-gradient(180deg, rgba(255,255,255,.04) 0%, rgba(255,255,255,.02) 100%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.03);
+}
+.chart-stat-label {
+  display: block;
+  font-size: 0.55rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sl-muted);
+  font-family: var(--font-mono);
+}
+.chart-stat-value {
+  display: block;
+  margin-top: 5px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--sl-text);
+  font-family: var(--font-mono);
+}
+.chart-stat-empty .chart-stat-value { color: rgba(255,255,255,.56); }
+.chart-surface {
+  position: relative;
+  overflow: hidden;
+  border-radius: 14px;
+  border: 1px solid rgba(155,93,229,.12);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.03) 0%, rgba(255,255,255,.01) 100%),
+    linear-gradient(135deg, rgba(17,12,28,.96) 0%, rgba(10,8,18,.98) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.04),
+    inset 0 -24px 40px rgba(0,0,0,.24);
+}
+.chart-surface::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.05) 0%, transparent 18%),
+    radial-gradient(circle at top right, rgba(155,93,229,.09) 0%, transparent 40%);
+  pointer-events: none;
+}
+.chart-surface canvas {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
 .chart-empty {
   min-height: 88px !important;
   height: 88px !important;
@@ -2362,6 +2433,7 @@ h3 { font-size: 1.15rem; }
 @media (max-width: 900px) {
   .macro-grid, .eq-movers-grid, .earnings-grid, .crypto-tab-charts, .earnings-grid-2, .metric-card-grid { grid-template-columns: 1fr !important; }
   .crypto-tab-grid { grid-template-columns: 1fr 1fr !important; }
+  .chart-summary { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
   .fmp-section.in-tab.cols-3, .fmp-section.in-tab.cols-2 { grid-template-columns: 1fr !important; }
   .workspace-hero-grid { grid-template-columns: 1fr; }
   .workspace-wordmark { width: min(280px, 72%); }
@@ -2647,8 +2719,16 @@ h3 { font-size: 1.15rem; }
 .mover-row:hover { background: rgba(155,93,229,.05); }
 .mover-row:last-child { border-bottom: none !important; }
 
-/* ── Chart wrappers ────────────────────── */
+/* ── Chart wrappers — taller ────────────────────── */
 #eq-stock-chart-wrap { height: 240px !important; }
+.macro-chart-wrap { height: 220px !important; }
+.crypto-tab-chart-wrap { height: 220px !important; }
+.crypto-tab-chart-wrap-lg { height: 242px !important; }
+.sector-chart-wrap { height: 210px !important; }
+
+.chart-summary.compact {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
 
 /* ── Asset market depth rows ────────────────────── */
 .asset-metric-row {
@@ -2801,6 +2881,10 @@ h3 { font-size: 1.15rem; }
   .rtab { flex: 1 1 30%; }
   .crypto-tab-grid { grid-template-columns: 1fr !important; }
   .crypto-big-price { font-size: 1.75rem !important; }
+  .chart-summary { gap: 8px; }
+  .chart-stat { padding: 9px 10px; }
+  .macro-chart-wrap, .crypto-tab-chart-wrap, .sector-chart-wrap { height: 196px !important; }
+  .crypto-tab-chart-wrap.crypto-tab-chart-wrap-lg { height: 214px !important; }
 }
 
 /* ── Dashboard-aligned tab nav ── */
@@ -3169,7 +3253,7 @@ h3 { font-size: 1.15rem; }
 
     <!-- Gold -->
     <div class="card hero-card card-glow">
-      <div class="label">Gold (XAU/AUD)</div>
+      <div class="label">Gold (XAU/USD)</div>
       <div class="value"><span id="hero-gold-price" class="mono" style="font-size:1.8rem;font-weight:600;">Loading…</span></div>
       <div id="hero-gold-chg" class="change" style="margin-top:6px;">—</div>
     </div>
@@ -3885,9 +3969,9 @@ h3 { font-size: 1.15rem; }
     </div>
 
     <!-- Sector performance bar chart -->
-    <div class="card reveal" style="margin-bottom:14px;">
-      <div class="section-label">Sector Performance (US Proxy — FMP)</div>
-      <div class="sector-chart-wrap">
+    <div class="card reveal chart-panel" style="margin-bottom:14px;">
+      <div class="section-label">Sector Performance (ASX Basket)</div>
+      <div class="sector-chart-wrap chart-surface">
         <canvas id="eq-sector-chart"></canvas>
       </div>
     </div>
@@ -3904,7 +3988,7 @@ h3 { font-size: 1.15rem; }
       </div>
     </div>
 
-    <div class="card reveal" style="margin:14px 0;">
+    <div class="card reveal chart-panel" style="margin:14px 0;">
       <div class="eq-stock-header">
         <div class="section-label" id="eq-stock-chart-label">ASX Stock Detail</div>
         <div class="time-pills" style="margin-top:0;">
@@ -3915,7 +3999,8 @@ h3 { font-size: 1.15rem; }
         </div>
       </div>
       <div class="eq-stock-sub" id="eq-stock-meta">Select any row below to load an individual ASX chart.</div>
-      <div class="macro-chart-wrap" id="eq-stock-chart-wrap"><canvas id="eq-stock-chart"></canvas></div>
+      <div class="chart-summary" id="eq-stock-summary"></div>
+      <div class="macro-chart-wrap chart-surface" id="eq-stock-chart-wrap"><canvas id="eq-stock-chart"></canvas></div>
     </div>
 
     <!-- Full ASX stocks table -->
@@ -3945,7 +4030,7 @@ h3 { font-size: 1.15rem; }
     <!-- Analyst consensus -->
     <div class="card reveal" style="margin-top:14px;">
         <div class="section-label">Analyst Consensus — ASX Watchlist</div>
-        <div class="section-kicker" id="eq-analyst-kicker">FMP price-target coverage</div>
+        <div class="section-kicker" id="eq-analyst-kicker">ASX analyst coverage</div>
         <div class="analyst-grid" id="eq-analyst-grid">
           <div style="color:var(--sl-muted);font-size:0.72rem;">Loading…</div>
         </div>
@@ -4010,7 +4095,7 @@ h3 { font-size: 1.15rem; }
 
     <!-- ── 3-col: AUD/USD chart | FX pairs | Commodities ── -->
     <div class="macro-3col">
-      <div class="card reveal">
+      <div class="card reveal chart-panel">
         <div class="section-label" style="display:flex;justify-content:space-between;align-items:center;">
           <span>AUD / USD</span>
           <div class="time-pills" style="margin-top:0;">
@@ -4020,7 +4105,8 @@ h3 { font-size: 1.15rem; }
             <button class="time-pill" onclick="loadMacroChart('aud','1y',this)">1Y</button>
           </div>
         </div>
-        <div class="macro-chart-wrap"><canvas id="macro-aud-chart"></canvas></div>
+        <div class="chart-summary compact" id="macro-aud-summary"></div>
+        <div class="macro-chart-wrap chart-surface"><canvas id="macro-aud-chart"></canvas></div>
       </div>
       <div class="card reveal">
         <div class="section-label">AUD Currency Pairs</div>
@@ -4043,7 +4129,7 @@ h3 { font-size: 1.15rem; }
 
     <!-- ── 2-col: Gold chart | Oil chart ── -->
     <div class="macro-2col">
-      <div class="card reveal">
+      <div class="card reveal chart-panel">
         <div class="section-label" style="display:flex;justify-content:space-between;align-items:center;">
           <span>Gold (XAU/USD)</span>
           <div class="time-pills" style="margin-top:0;">
@@ -4053,7 +4139,8 @@ h3 { font-size: 1.15rem; }
             <button class="time-pill" onclick="loadMacroChart('gold','1y',this)">1Y</button>
           </div>
         </div>
-        <div class="macro-chart-wrap"><canvas id="macro-gold-chart"></canvas></div>
+        <div class="chart-summary compact" id="macro-gold-summary"></div>
+        <div class="macro-chart-wrap chart-surface"><canvas id="macro-gold-chart"></canvas></div>
       </div>
       <div class="card reveal">
         <div class="section-label" style="display:flex;justify-content:space-between;align-items:center;">
@@ -4065,7 +4152,8 @@ h3 { font-size: 1.15rem; }
             <button class="time-pill" onclick="loadMacroChart('oil','1y',this)">1Y</button>
           </div>
         </div>
-        <div class="macro-chart-wrap"><canvas id="macro-oil-chart"></canvas></div>
+        <div class="chart-summary compact" id="macro-oil-summary"></div>
+        <div class="macro-chart-wrap chart-surface"><canvas id="macro-oil-chart"></canvas></div>
       </div>
     </div>
 
@@ -4113,10 +4201,10 @@ h3 { font-size: 1.15rem; }
           <div style="color:var(--sl-muted);font-size:0.72rem;">Loading…</div>
         </div>
       </div>
-      <div class="card reveal">
+      <div class="card reveal chart-panel">
         <div class="section-label">EPS Estimates vs Actuals</div>
-        <div class="chart-note" id="earn-surprise-note">Latest reported earnings from the live FMP feed.</div>
-        <div class="macro-chart-wrap"><canvas id="earn-surprise-chart"></canvas></div>
+        <div class="chart-note" id="earn-surprise-note">Latest reported earnings available for the research feed.</div>
+        <div class="macro-chart-wrap chart-surface"><canvas id="earn-surprise-chart"></canvas></div>
       </div>
     </div>
 
@@ -4186,7 +4274,7 @@ h3 { font-size: 1.15rem; }
 
     <!-- Live market news (FMP) -->
     <div class="card reveal" style="margin-top:14px;">
-      <div class="section-label">Live Market News — FMP</div>
+      <div class="section-label">Live Market News</div>
       <div class="fmp-news-list" id="earn-news-list">
         <div style="color:var(--sl-muted);font-size:0.72rem;">Loading…</div>
       </div>
@@ -4276,7 +4364,7 @@ h3 { font-size: 1.15rem; }
 
     <!-- Charts -->
     <div class="crypto-tab-charts">
-      <div class="card reveal">
+      <div class="card reveal chart-panel">
         <div class="section-label" style="display:flex;justify-content:space-between;align-items:center;">
           <span>Bitcoin (BTC/USD)</span>
           <div class="time-pills" style="margin-top:0;">
@@ -4286,9 +4374,10 @@ h3 { font-size: 1.15rem; }
             <button class="time-pill" onclick="loadCryptoChart('btc','1y',this)">1Y</button>
           </div>
         </div>
-        <div class="crypto-tab-chart-wrap"><canvas id="ct-btc-chart"></canvas></div>
+        <div class="chart-summary compact" id="ct-btc-summary"></div>
+        <div class="crypto-tab-chart-wrap chart-surface"><canvas id="ct-btc-chart"></canvas></div>
       </div>
-      <div class="card reveal">
+      <div class="card reveal chart-panel">
         <div class="section-label" style="display:flex;justify-content:space-between;align-items:center;">
           <span>Ethereum (ETH/USD)</span>
           <div class="time-pills" style="margin-top:0;">
@@ -4298,12 +4387,13 @@ h3 { font-size: 1.15rem; }
             <button class="time-pill" onclick="loadCryptoChart('eth','1y',this)">1Y</button>
           </div>
         </div>
-        <div class="crypto-tab-chart-wrap"><canvas id="ct-eth-chart"></canvas></div>
+        <div class="chart-summary compact" id="ct-eth-summary"></div>
+        <div class="crypto-tab-chart-wrap chart-surface"><canvas id="ct-eth-chart"></canvas></div>
       </div>
     </div>
 
     <!-- Solana chart full-width + market cap strip -->
-    <div class="card reveal" style="margin-top:14px;">
+    <div class="card reveal chart-panel" style="margin-top:14px;">
       <div class="section-label" style="display:flex;justify-content:space-between;align-items:center;">
         <span>Solana (SOL/USD)</span>
         <div class="time-pills" style="margin-top:0;">
@@ -4313,7 +4403,8 @@ h3 { font-size: 1.15rem; }
           <button class="time-pill" onclick="loadCryptoChart('sol','1y',this)">1Y</button>
         </div>
       </div>
-      <div class="crypto-tab-chart-wrap"><canvas id="ct-sol-chart"></canvas></div>
+      <div class="chart-summary" id="ct-sol-summary"></div>
+      <div class="crypto-tab-chart-wrap crypto-tab-chart-wrap-lg chart-surface"><canvas id="ct-sol-chart"></canvas></div>
     </div>
 
   </div><!-- /rtab-crypto -->
@@ -5337,6 +5428,9 @@ document.addEventListener('DOMContentLoaded', () => {
   animateBars();
   initReveal();
   applyModeChrome();
+  Object.keys(_chartSummaryConfig).forEach((summaryId) => {
+    renderChartSummary(summaryId, null, _chartSummaryConfig[summaryId]);
+  });
 
   // Fix nav tab links to preserve account/demo mode when returning to dashboard
   const modeParam = state.demoMode ? 'demo=1' : 'mode=account';
@@ -5579,6 +5673,15 @@ const _tabInit = { overview: true, equities: false, macro: false, earnings: fals
 
 // Chart.js instances keyed by canvas id
 const _cjsCharts = {};
+const _chartSummaryConfig = {
+  'eq-stock-summary': { valueType: 'price', latestLabel: 'Last' },
+  'macro-aud-summary': { valueType: 'fx', latestLabel: 'Spot' },
+  'macro-gold-summary': { valueType: 'price', latestLabel: 'Spot' },
+  'macro-oil-summary': { valueType: 'price', latestLabel: 'Spot' },
+  'ct-btc-summary': { valueType: 'price', latestLabel: 'Spot' },
+  'ct-eth-summary': { valueType: 'price', latestLabel: 'Spot' },
+  'ct-sol-summary': { valueType: 'price', latestLabel: 'Spot' },
+};
 
 function setChartEmpty(canvasId, message, compactHeight) {
   const canvas = document.getElementById(canvasId);
@@ -5630,7 +5733,93 @@ function drawFallbackGrid(ctx, width, height, pad) {
   }
 }
 
-function drawFallbackLineChart(canvasId, labels, values, color) {
+function roundedRectPath(ctx, x, y, width, height, radius) {
+  const r = Math.min(radius, width / 2, height / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + width - r, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+  ctx.lineTo(x + width, y + height - r);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+  ctx.lineTo(x + r, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+function formatChartValue(value, kind) {
+  if (value == null || !isFinite(value)) return '—';
+  const abs = Math.abs(value);
+  if (kind === 'fx') {
+    return value.toLocaleString('en-AU', { minimumFractionDigits: 4, maximumFractionDigits: 4 });
+  }
+  if (kind === 'number') {
+    if (abs >= 1000) return value.toLocaleString('en-AU', { maximumFractionDigits: 0 });
+    if (abs >= 10) return value.toLocaleString('en-AU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return value.toLocaleString('en-AU', { minimumFractionDigits: 4, maximumFractionDigits: 4 });
+  }
+  if (abs >= 10000) return '$' + (value / 1000).toFixed(1) + 'k';
+  if (abs >= 1000) return '$' + value.toLocaleString('en-AU', { maximumFractionDigits: 0 });
+  if (abs >= 1) return '$' + value.toLocaleString('en-AU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return '$' + value.toLocaleString('en-AU', { minimumFractionDigits: 4, maximumFractionDigits: 4 });
+}
+
+function formatChartTick(value, kind) {
+  if (value == null || !isFinite(value)) return '—';
+  const abs = Math.abs(value);
+  if (kind === 'fx') return value.toFixed(4);
+  if (kind === 'number') {
+    if (abs >= 1000) return (value / 1000).toFixed(1) + 'k';
+    if (abs >= 10) return value.toFixed(2);
+    return value.toFixed(4);
+  }
+  if (abs >= 10000) return (value / 1000).toFixed(1) + 'k';
+  if (abs >= 1000) return '$' + (value / 1000).toFixed(1) + 'k';
+  if (abs >= 1) return '$' + value.toFixed(2);
+  return '$' + value.toFixed(4);
+}
+
+function renderChartSummary(summaryId, values, options) {
+  const el = document.getElementById(summaryId);
+  if (!el) return;
+  const labels = {
+    latest: options?.latestLabel || 'Last',
+    move: options?.moveLabel || 'Move',
+    high: options?.highLabel || 'High',
+    low: options?.lowLabel || 'Low',
+  };
+  if (!values?.length) {
+    el.innerHTML = [labels.latest, labels.move, labels.high, labels.low].map((label) => `
+      <div class="chart-stat chart-stat-empty">
+        <span class="chart-stat-label">${label}</span>
+        <span class="chart-stat-value">—</span>
+      </div>
+    `).join('');
+    return;
+  }
+  const first = values[0];
+  const last = values[values.length - 1];
+  const high = Math.max(...values);
+  const low = Math.min(...values);
+  const movePct = first ? ((last - first) / first) * 100 : null;
+  const moveText = movePct == null || !isFinite(movePct)
+    ? '—'
+    : `${movePct >= 0 ? '+' : ''}${movePct.toFixed(2)}%`;
+  el.innerHTML = [
+    { label: labels.latest, value: formatChartValue(last, options?.valueType) },
+    { label: labels.move, value: moveText },
+    { label: labels.high, value: formatChartValue(high, options?.valueType) },
+    { label: labels.low, value: formatChartValue(low, options?.valueType) },
+  ].map((item) => `
+    <div class="chart-stat">
+      <span class="chart-stat-label">${item.label}</span>
+      <span class="chart-stat-value ${item.label === labels.move ? chgClass(movePct) : ''}">${item.value}</span>
+    </div>
+  `).join('');
+}
+
+function drawFallbackLineChart(canvasId, labels, values, color, options) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
   const { ctx, width, height } = setupCanvas(canvas);
@@ -5645,17 +5834,73 @@ function drawFallbackLineChart(canvasId, labels, values, color) {
   const right = width - pad.right;
   const top = pad.top;
   const bottom = height - pad.bottom;
+  const points = values.map((value, index) => ({
+    x: left + (index / Math.max(values.length - 1, 1)) * (right - left),
+    y: bottom - ((value - min) / range) * (bottom - top),
+  }));
+
+  const areaGradient = ctx.createLinearGradient(0, top, 0, bottom);
+  areaGradient.addColorStop(0, color + '40');
+  areaGradient.addColorStop(1, color + '00');
 
   ctx.beginPath();
-  values.forEach((value, index) => {
-    const x = left + (index / Math.max(values.length - 1, 1)) * (right - left);
-    const y = bottom - ((value - min) / range) * (bottom - top);
-    if (index === 0) ctx.moveTo(x, y);
-    else ctx.lineTo(x, y);
+  points.forEach((point, index) => {
+    if (index === 0) ctx.moveTo(point.x, point.y);
+    else ctx.lineTo(point.x, point.y);
+  });
+  ctx.lineTo(right, bottom);
+  ctx.lineTo(left, bottom);
+  ctx.closePath();
+  ctx.fillStyle = areaGradient;
+  ctx.fill();
+
+  ctx.beginPath();
+  points.forEach((point, index) => {
+    if (index === 0) ctx.moveTo(point.x, point.y);
+    else ctx.lineTo(point.x, point.y);
   });
   ctx.strokeStyle = color;
-  ctx.lineWidth = 2;
+  ctx.lineWidth = 2.4;
+  ctx.shadowColor = color + '88';
+  ctx.shadowBlur = 14;
   ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  const lastPoint = points[points.length - 1];
+  const lastValue = values[values.length - 1];
+  ctx.beginPath();
+  ctx.strokeStyle = color + '55';
+  ctx.setLineDash([4, 4]);
+  ctx.moveTo(lastPoint.x, lastPoint.y);
+  ctx.lineTo(right, lastPoint.y);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.beginPath();
+  ctx.fillStyle = color;
+  ctx.arc(lastPoint.x, lastPoint.y, 4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.fillStyle = '#fff';
+  ctx.arc(lastPoint.x, lastPoint.y, 1.6, 0, Math.PI * 2);
+  ctx.fill();
+
+  const badgeText = formatChartValue(lastValue, options?.valueType);
+  ctx.font = '10px "DM Mono", monospace';
+  const badgeW = ctx.measureText(badgeText).width + 16;
+  const badgeH = 20;
+  const badgeX = Math.min(right - badgeW, lastPoint.x + 10);
+  const badgeY = Math.max(top + 2, Math.min(bottom - badgeH - 2, lastPoint.y - badgeH - 8));
+  roundedRectPath(ctx, badgeX, badgeY, badgeW, badgeH, 10);
+  ctx.fillStyle = 'rgba(10,7,20,0.94)';
+  ctx.strokeStyle = color + '88';
+  ctx.lineWidth = 1;
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = '#f2eeff';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(badgeText, badgeX + 8, badgeY + badgeH / 2);
+  ctx.textBaseline = 'alphabetic';
 
   ctx.font = '10px "DM Mono", monospace';
   ctx.fillStyle = '#8a86a8';
@@ -5735,7 +5980,7 @@ function destroyCjsChart(id) {
   }
 }
 
-function makeCjsLineChart(canvasId, labels, values, color, label) {
+function makeCjsLineChart(canvasId, labels, values, color, label, options) {
   destroyCjsChart(canvasId);
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
@@ -5745,10 +5990,11 @@ function makeCjsLineChart(canvasId, labels, values, color, label) {
   }
   clearChartEmpty(canvasId);
   if (typeof Chart === 'undefined') {
-    drawFallbackLineChart(canvasId, labels, values, color);
+    drawFallbackLineChart(canvasId, labels, values, color, options);
     return;
   }
   const ctx = canvas.getContext('2d');
+  const valueKind = options?.valueType || 'price';
 
   // Use getBoundingClientRect() to force reflow and get the actual rendered height
   // canvas.offsetHeight returns 0 when parent was just made visible — this fixes the gradient bug
@@ -5761,43 +6007,87 @@ function makeCjsLineChart(canvasId, labels, values, color, label) {
   gradient.addColorStop(0.6, color + '18');
   gradient.addColorStop(1, color + '00');
 
-  // Smart number formatting: fewer decimals for large values, more for small (e.g. FX rates)
   const maxVal = Math.max(...values);
   const minVal = Math.min(...values);
-  const fmtVal = v => {
-    if (v >= 10000) return '$' + (v/1000).toFixed(1) + 'k';
-    if (v >= 1000)  return '$' + v.toLocaleString('en-AU', { maximumFractionDigits: 0 });
-    if (v >= 10)    return v.toLocaleString('en-AU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    return v.toLocaleString('en-AU', { minimumFractionDigits: 4, maximumFractionDigits: 4 });
-  };
-  const fmtTick = v => {
-    if (v >= 10000) return (v/1000).toFixed(1) + 'k';
-    if (v >= 1000)  return (v/1000).toFixed(2) + 'k';
-    if (v >= 10)    return v.toFixed(2);
-    return v.toFixed(4);
-  };
+  const fmtVal = (v) => formatChartValue(v, valueKind);
+  const fmtTick = (v) => formatChartTick(v, valueKind);
   // Explicit Y-axis bounds: pad by 8% of the data range so the line fills the chart area
   // without this Chart.js sometimes starts Y near 0 which crushes FX/small-range data
   const dataRange = maxVal - minVal || maxVal * 0.02;
   const yPad = dataRange * 0.08;
   const yMin = minVal - yPad;
   const yMax = maxVal + yPad;
+  const lineChromePlugin = {
+    id: `spectre-line-chrome-${canvasId}`,
+    afterDatasetsDraw(chart) {
+      const meta = chart.getDatasetMeta(0);
+      const points = meta?.data || [];
+      if (!points.length) return;
+      const lastPoint = points[points.length - 1];
+      const lastValue = chart.data.datasets?.[0]?.data?.[points.length - 1];
+      if (!lastPoint || lastValue == null) return;
+      const { chartArea } = chart;
+      const drawCtx = chart.ctx;
+      const x = lastPoint.x;
+      const y = lastPoint.y;
+      const text = fmtVal(Number(lastValue));
+      drawCtx.save();
+      drawCtx.strokeStyle = color + '55';
+      drawCtx.lineWidth = 1;
+      drawCtx.setLineDash([4, 4]);
+      drawCtx.beginPath();
+      drawCtx.moveTo(x, y);
+      drawCtx.lineTo(chartArea.right, y);
+      drawCtx.stroke();
+      drawCtx.setLineDash([]);
+
+      drawCtx.shadowColor = color + '88';
+      drawCtx.shadowBlur = 18;
+      drawCtx.beginPath();
+      drawCtx.fillStyle = color;
+      drawCtx.arc(x, y, 4, 0, Math.PI * 2);
+      drawCtx.fill();
+      drawCtx.shadowBlur = 0;
+      drawCtx.beginPath();
+      drawCtx.fillStyle = '#fff';
+      drawCtx.arc(x, y, 1.7, 0, Math.PI * 2);
+      drawCtx.fill();
+
+      drawCtx.font = '10px "DM Mono", monospace';
+      const boxW = drawCtx.measureText(text).width + 16;
+      const boxH = 20;
+      const boxX = Math.max(chartArea.left + 4, Math.min(chartArea.right - boxW - 4, x + 10));
+      const boxY = Math.max(chartArea.top + 4, Math.min(chartArea.bottom - boxH - 4, y - boxH - 8));
+      roundedRectPath(drawCtx, boxX, boxY, boxW, boxH, 10);
+      drawCtx.fillStyle = 'rgba(10,7,20,0.94)';
+      drawCtx.strokeStyle = color + '88';
+      drawCtx.lineWidth = 1;
+      drawCtx.fill();
+      drawCtx.stroke();
+      drawCtx.fillStyle = '#f2eeff';
+      drawCtx.textBaseline = 'middle';
+      drawCtx.fillText(text, boxX + 8, boxY + boxH / 2);
+      drawCtx.restore();
+    },
+  };
 
   _cjsCharts[canvasId] = new Chart(ctx, {
     type: 'line',
+    plugins: [lineChromePlugin],
     data: {
       labels,
       datasets: [{
         label: label || 'Price',
         data: values,
         borderColor: color,
-        borderWidth: 1.8,
+        borderWidth: 2.2,
         backgroundColor: gradient,
         fill: true,
-        tension: 0.25,
+        tension: 0.34,
         spanGaps: true,
         pointRadius: 0,
-        pointHoverRadius: 5,
+        pointHitRadius: 16,
+        pointHoverRadius: 0,
         pointHoverBackgroundColor: color,
         pointHoverBorderColor: '#fff',
         pointHoverBorderWidth: 1.5,
@@ -5849,7 +6139,7 @@ function makeCjsLineChart(canvasId, labels, values, color, label) {
             color: '#6b6886',
             font: { family: 'DM Mono', size: 9 },
             maxTicksLimit: 5,
-            callback: fmtTick,
+            callback: (value) => fmtTick(Number(value)),
           },
           border: { display: false },
         },
@@ -6119,11 +6409,14 @@ async function loadEquityChart(range, btn) {
     const data = await apiJson(`/api/research/chart?ticker=${encodeURIComponent(symbol)}&range=${range}${demoParam}`);
     if (data?.closes?.length) {
       const { labels, values } = parseChartData(data, range);
-      makeCjsLineChart('eq-stock-chart', labels, values, '#c084fc', symbol.replace('.AX',''));
+      renderChartSummary('eq-stock-summary', values, _chartSummaryConfig['eq-stock-summary']);
+      makeCjsLineChart('eq-stock-chart', labels, values, '#c084fc', symbol.replace('.AX',''), _chartSummaryConfig['eq-stock-summary']);
     } else {
+      renderChartSummary('eq-stock-summary', null, _chartSummaryConfig['eq-stock-summary']);
       setChartEmpty('eq-stock-chart', 'No equity chart data', 92);
     }
   } catch (e) {
+    renderChartSummary('eq-stock-summary', null, _chartSummaryConfig['eq-stock-summary']);
     setChartEmpty('eq-stock-chart', 'No equity chart data', 92);
     console.warn('Equity chart failed:', e);
   }
@@ -6198,7 +6491,7 @@ function populateEquitiesTab() {
     const colors = values.map(v => v >= 0 ? 'rgba(168,85,247,0.85)' : 'rgba(248,113,113,0.8)');
     makeCjsBarChart('eq-sector-chart', labels, values, colors);
   } else {
-    setChartEmpty('eq-sector-chart', 'No FMP sector feed', 90);
+    setChartEmpty('eq-sector-chart', 'No sector data available', 90);
   }
 
   // Stocks table
@@ -6208,7 +6501,7 @@ function populateEquitiesTab() {
     const selected = syncEquitySelection(equities);
     updateEquitySelectionCard(selected);
     if (tableTitleEl) {
-      tableTitleEl.textContent = `ASX Constituents — ${equities.length} FMP names`;
+      tableTitleEl.textContent = `ASX Constituents — ${equities.length} live names`;
     }
     const rows = equities.map((q) => {
       if (!q?.symbol) return '';
@@ -6236,7 +6529,7 @@ function populateEquitiesTab() {
       const activeBtn = document.querySelector('#rtab-equities .time-pill.active');
       void loadEquityChart(_equityState.range, activeBtn);
     } else {
-      setChartEmpty('eq-stock-chart', 'Select an FMP equity row', 92);
+      setChartEmpty('eq-stock-chart', 'Select an equity row', 92);
     }
   }
 
@@ -6360,7 +6653,7 @@ function populateMacroTab() {
         <div class="metric-card-value">${ind.value != null ? `${fmtCompactNumber(ind.value, 2)}${ind.unit || ''}` : '—'}</div>
         <div class="metric-card-sub">${ind.date ? `As of ${escapeHtml(new Date(ind.date).toLocaleDateString('en-AU',{ day:'numeric', month:'short', year:'numeric' }))}` : 'Economic indicator'}</div>
       </div>
-    `).join('') : '<div class="metric-card"><div class="metric-card-label">Macro Indicators</div><div class="metric-card-value">—</div><div class="metric-card-sub">No FMP indicator data available.</div></div>';
+    `).join('') : '<div class="metric-card"><div class="metric-card-label">Macro Indicators</div><div class="metric-card-value">—</div><div class="metric-card-sub">No macro indicator data available.</div></div>';
   }
 
   // Commodities (macro)
@@ -6473,16 +6766,27 @@ async function loadMacroChart(symbol, range, btn) {
   const canvasId = symbol === 'gold' ? 'macro-gold-chart' : symbol === 'oil' ? 'macro-oil-chart' : 'macro-aud-chart';
   const color = symbol === 'gold' ? '#ffb547' : symbol === 'oil' ? '#6b7280' : '#9b5de5';
   const label = symbol === 'gold' ? 'Gold (USD)' : symbol === 'oil' ? 'WTI Crude (USD)' : 'AUD/USD';
+  const summaryId = symbol === 'gold'
+    ? 'macro-gold-summary'
+    : symbol === 'oil'
+      ? 'macro-oil-summary'
+      : 'macro-aud-summary';
   const demoParam = state.demoMode ? '&demo=1' : '';
   try {
     const data = await apiJson(`/api/research/chart?symbol=${symbol}&range=${range}${demoParam}`);
     if (data?.closes?.length) {
       const { labels, values } = parseChartData(data, range);
-      makeCjsLineChart(canvasId, labels, values, color, label);
+      renderChartSummary(summaryId, values, _chartSummaryConfig[summaryId]);
+      makeCjsLineChart(canvasId, labels, values, color, label, _chartSummaryConfig[summaryId]);
     } else {
+      renderChartSummary(summaryId, null, _chartSummaryConfig[summaryId]);
       setChartEmpty(canvasId, 'No macro chart data', 90);
     }
-  } catch(e) { setChartEmpty(canvasId, 'No macro chart data', 90); console.warn('Macro chart failed:', e); }
+  } catch(e) {
+    renderChartSummary(summaryId, null, _chartSummaryConfig[summaryId]);
+    setChartEmpty(canvasId, 'No macro chart data', 90);
+    console.warn('Macro chart failed:', e);
+  }
 }
 
 // ─── EARNINGS TAB ─────────────────────────────────────────────────
@@ -6509,7 +6813,7 @@ function populateEarningsTab() {
   const chartItems = surprises.slice(0, 6).reverse();
   const noteEl = document.getElementById('earn-surprise-note');
   if (noteEl) {
-    noteEl.textContent = chartItems.length ? `Latest ${chartItems.length} reported earnings from the live FMP feed.` : 'Latest reported earnings from the live FMP feed.';
+    noteEl.textContent = chartItems.length ? `Latest ${chartItems.length} reported earnings in the research feed.` : 'Latest reported earnings in the research feed.';
   }
   if (chartItems.length) {
     makeCjsCompareBarChart(
@@ -6520,7 +6824,7 @@ function populateEarningsTab() {
     );
   } else {
     destroyCjsChart('earn-surprise-chart');
-    setChartEmpty('earn-surprise-chart', 'No FMP earnings history yet', 92);
+    setChartEmpty('earn-surprise-chart', 'No earnings history available yet', 92);
   }
 
   // Earnings calendar
@@ -6665,11 +6969,20 @@ async function loadCryptoChart(symbol, range, btn) {
     const data = await apiJson(`/api/research/chart?symbol=${symbol}&range=${range}${demoParam}`);
     if (data?.closes?.length) {
       const { labels, values } = parseChartData(data, range);
-      makeCjsLineChart(canvasId, labels, values, color, labelMap[symbol]);
+      const summaryId = `ct-${symbol}-summary`;
+      renderChartSummary(summaryId, values, _chartSummaryConfig[summaryId]);
+      makeCjsLineChart(canvasId, labels, values, color, labelMap[symbol], _chartSummaryConfig[summaryId]);
     } else {
+      const summaryId = `ct-${symbol}-summary`;
+      renderChartSummary(summaryId, null, _chartSummaryConfig[summaryId]);
       setChartEmpty(canvasId, 'No crypto chart data', 90);
     }
-  } catch(e) { setChartEmpty(canvasId, 'No crypto chart data', 90); console.warn('Crypto chart failed:', e); }
+  } catch(e) {
+    const summaryId = `ct-${symbol}-summary`;
+    renderChartSummary(summaryId, null, _chartSummaryConfig[summaryId]);
+    setChartEmpty(canvasId, 'No crypto chart data', 90);
+    console.warn('Crypto chart failed:', e);
+  }
 }
 
 // Live quotes stored globally via window._liveQuotesData in fetchLiveQuotes()

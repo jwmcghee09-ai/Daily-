@@ -378,17 +378,8 @@ export async function GET(request: NextRequest) {
     };
   }
 
-  // Convert gold USD→AUD; prefer XAUUSD=X, fall back to GC=F (COMEX futures)
+  // Gold stays in USD so the live cards match the macro gold chart (GC=F / XAUUSD context).
   const goldUsd = bySymbol["XAUUSD=X"]?.price ? bySymbol["XAUUSD=X"] : bySymbol["GC=F"];
-  const audUsdQ = bySymbol["AUDUSD=X"];
-  let goldAudPrice: number | null = null;
-  let goldAudPrevClose: number | null = null;
-  if (goldUsd?.price && audUsdQ?.price && audUsdQ.price > 0) {
-    goldAudPrice = goldUsd.price / audUsdQ.price;
-    if (goldUsd.prevClose && audUsdQ.prevClose && audUsdQ.prevClose > 0) {
-      goldAudPrevClose = goldUsd.prevClose / audUsdQ.prevClose;
-    }
-  }
 
   const mergedAsxConstituents = asxConstituents.map((item) => {
     const live = bySymbol[item.symbol];
@@ -431,7 +422,16 @@ export async function GET(request: NextRequest) {
       btc: bySymbol["BTC-USD"],
       eth: bySymbol["ETH-USD"],
       sol: bySymbol["SOL-USD"] ?? nullQuote("SOL-USD"),
-      gold: { symbol: "XAUAUD", price: goldAudPrice, prevClose: goldAudPrevClose, yearHigh: null, yearLow: null, pe: null, divYield: null, name: "Gold" },
+      gold: {
+        symbol: "XAUUSD",
+        price: goldUsd?.price ?? null,
+        prevClose: goldUsd?.prevClose ?? null,
+        yearHigh: goldUsd?.yearHigh ?? null,
+        yearLow: goldUsd?.yearLow ?? null,
+        pe: null,
+        divYield: null,
+        name: "Gold",
+      },
       oil: bySymbol["CL=F"] ?? { symbol: "CL=F", price: null, prevClose: null, yearHigh: null, yearLow: null, pe: null, divYield: null, name: "WTI Crude" },
     },
   };
