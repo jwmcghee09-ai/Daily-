@@ -58,3 +58,4 @@ backups/
 # Screenshots and local captures
 screenshots/
 public/*.png
+.claude/
