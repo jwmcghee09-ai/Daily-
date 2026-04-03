@@ -1770,6 +1770,48 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
   </section>
 </div>
 
+<!-- MONTE CARLO SIMULATION -->
+<div class="divider" data-page="quant"></div>
+<div class="wrap" data-page="quant" id="monte-carlo-wrap">
+  <section class="sec sec-alt" id="monte-carlo">
+    <div class="sec-head">
+      <h2 class="sec-title">Monte Carlo Simulation</h2>
+      <div class="sec-line"></div>
+      <span class="sec-label">Portfolio Projection</span>
+    </div>
+    <div id="mc-horizon-btns" style="display:flex;gap:0.4rem;margin-bottom:1rem;flex-wrap:wrap">
+      <button type="button" class="mc-horizon-btn active" data-days="30"  style="font-family:var(--mono);font-size:0.56rem;letter-spacing:0.1em;text-transform:uppercase;background:rgba(168,85,247,0.15);border:1px solid rgba(168,85,247,0.6);border-radius:4px;color:#fff;padding:0.3rem 0.6rem;cursor:pointer;transition:border-color 0.18s,color 0.18s">30D</button>
+      <button type="button" class="mc-horizon-btn" data-days="90"  style="font-family:var(--mono);font-size:0.56rem;letter-spacing:0.1em;text-transform:uppercase;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:4px;color:var(--muted2);padding:0.3rem 0.6rem;cursor:pointer;transition:border-color 0.18s,color 0.18s">90D</button>
+      <button type="button" class="mc-horizon-btn" data-days="180" style="font-family:var(--mono);font-size:0.56rem;letter-spacing:0.1em;text-transform:uppercase;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:4px;color:var(--muted2);padding:0.3rem 0.6rem;cursor:pointer;transition:border-color 0.18s,color 0.18s">180D</button>
+      <button type="button" class="mc-horizon-btn" data-days="365" style="font-family:var(--mono);font-size:0.56rem;letter-spacing:0.1em;text-transform:uppercase;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:4px;color:var(--muted2);padding:0.3rem 0.6rem;cursor:pointer;transition:border-color 0.18s,color 0.18s">1Y</button>
+    </div>
+    <div id="mc-loading" style="display:none;font-family:var(--mono);font-size:0.65rem;color:var(--muted2);padding:1rem 0">Running simulation…</div>
+    <div id="mc-fallback-notice" style="display:none;font-family:var(--mono);font-size:0.62rem;color:var(--muted2);margin-bottom:0.6rem;padding:0.35rem 0.6rem;background:rgba(168,85,247,0.07);border-radius:4px;border:1px solid rgba(168,85,247,0.18)">Insufficient history (&lt;20 days). Using parametric fallback: 8% annual return, 15% volatility.</div>
+    <div style="position:relative">
+      <canvas id="c-monte-carlo" height="260"></canvas>
+    </div>
+    <div id="mc-stats" style="display:flex;gap:0.75rem;margin-top:1rem;flex-wrap:wrap">
+      <div class="mc-stat-box" style="flex:1;min-width:120px;background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.22);border-radius:6px;padding:0.65rem 0.85rem">
+        <div style="font-family:var(--mono);font-size:0.55rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted2);margin-bottom:0.3rem">Median (P50)</div>
+        <div id="mc-stat-p50" style="font-family:var(--mono);font-size:1rem;font-weight:600;color:#f2eeff">—</div>
+      </div>
+      <div class="mc-stat-box" style="flex:1;min-width:120px;background:rgba(34,197,94,0.07);border:1px solid rgba(34,197,94,0.2);border-radius:6px;padding:0.65rem 0.85rem">
+        <div style="font-family:var(--mono);font-size:0.55rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted2);margin-bottom:0.3rem">Bull Case (P90)</div>
+        <div id="mc-stat-p90" style="font-family:var(--mono);font-size:1rem;font-weight:600;color:#4ade80">—</div>
+      </div>
+      <div class="mc-stat-box" style="flex:1;min-width:120px;background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.2);border-radius:6px;padding:0.65rem 0.85rem">
+        <div style="font-family:var(--mono);font-size:0.55rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted2);margin-bottom:0.3rem">Bear Case (P10)</div>
+        <div id="mc-stat-p10" style="font-family:var(--mono);font-size:1rem;font-weight:600;color:#f87171">—</div>
+      </div>
+    </div>
+    <div style="margin-top:0.75rem;display:flex;gap:0.75rem;flex-wrap:wrap;align-items:center">
+      <div style="display:flex;align-items:center;gap:0.35rem"><span style="display:inline-block;width:28px;height:2px;background:#a855f7;border-radius:1px"></span><span style="font-family:var(--mono);font-size:0.56rem;color:var(--muted2)">Median (P50)</span></div>
+      <div style="display:flex;align-items:center;gap:0.35rem"><span style="display:inline-block;width:16px;height:10px;background:rgba(168,85,247,0.25);border-radius:2px"></span><span style="font-family:var(--mono);font-size:0.56rem;color:var(--muted2)">P25–P75</span></div>
+      <div style="display:flex;align-items:center;gap:0.35rem"><span style="display:inline-block;width:16px;height:10px;background:rgba(168,85,247,0.10);border-radius:2px"></span><span style="font-family:var(--mono);font-size:0.56rem;color:var(--muted2)">P10–P90</span></div>
+    </div>
+  </section>
+</div>
+
 <!-- DIP ALERTS -->
 <div class="wrap" data-page="quant">
   <section class="sec" id="alerts">
@@ -2416,6 +2458,8 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     if (navAlertsLink) navAlertsLink.style.display = hasProAccess ? "" : "none";
     if (alertsSection) alertsSection.style.display = hasProAccess ? "" : "none";
     if (stressPanel) stressPanel.style.display = hasProAccess ? "" : "none";
+    const monteCarloWrap = document.getElementById("monte-carlo-wrap");
+    if (monteCarloWrap) monteCarloWrap.style.display = hasProAccess ? "" : "none";
     if (metricsPanelSplit) metricsPanelSplit.classList.toggle("starter-layout", !hasProAccess);
     if (riskWindowTabs) riskWindowTabs.style.display = hasProAccess ? "" : "none";
     if (riskGrid) riskGrid.classList.toggle("starter-layout", !hasProAccess);
@@ -4077,6 +4121,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     _fullHistory = metrics.history || [];
     _historyCostBase = metrics.totalCost;
     drawHistoryLine(_fullHistory, _historyCostBase);
+    runMonteCarlo();
     renderHoldingsAi();
 
     /* --- History range buttons --- */
@@ -4109,6 +4154,225 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
         drawHistoryLine(filtered, _historyCostBase);
       });
     });
+  }
+
+  /* =========================================================
+     MONTE CARLO SIMULATION ENGINE
+     ========================================================= */
+
+  let _mcHorizon = 30; // currently selected horizon in trading days
+  let _mcHorizonBtnsWired = false;
+
+  function runMonteCarlo() {
+    const isPro = Boolean(state.demoMode || state.sessionUser?.proEnabled);
+    const wrap = document.getElementById("monte-carlo-wrap");
+    if (wrap) wrap.style.display = isPro ? "" : "none";
+    if (!isPro) return;
+
+    const canvas = document.getElementById("c-monte-carlo");
+    const loadingEl = document.getElementById("mc-loading");
+    const fallbackEl = document.getElementById("mc-fallback-notice");
+    if (!canvas) return;
+
+    if (loadingEl) loadingEl.style.display = "";
+
+    // Wire horizon buttons once
+    if (!_mcHorizonBtnsWired) {
+      _mcHorizonBtnsWired = true;
+      document.querySelectorAll(".mc-horizon-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          document.querySelectorAll(".mc-horizon-btn").forEach((b) => {
+            b.style.background = "rgba(255,255,255,0.04)";
+            b.style.borderColor = "rgba(255,255,255,0.1)";
+            b.style.color = "var(--muted2)";
+            b.classList.remove("active");
+          });
+          btn.style.background = "rgba(168,85,247,0.15)";
+          btn.style.borderColor = "rgba(168,85,247,0.6)";
+          btn.style.color = "#fff";
+          btn.classList.add("active");
+          _mcHorizon = Number(btn.dataset.days) || 30;
+          runMonteCarlo();
+        });
+      });
+    }
+
+    // Gather daily returns from history
+    const history = (state.portfolio?.snapshots || []).slice().sort((a, b) => String(a.date).localeCompare(String(b.date)));
+    // De-duplicate by date (keep latest per day)
+    const byDay = new Map();
+    history.forEach((s) => { byDay.set(String(s.date).slice(0, 10), s); });
+    const histItems = Array.from(byDay.values()).sort((a, b) => String(a.date).localeCompare(String(b.date)));
+
+    const histValues = histItems.map((s) => Number(s.value)).filter((v) => Number.isFinite(v) && v > 0);
+    const rawReturns = [];
+    for (let i = 1; i < histValues.length; i++) {
+      const r = histValues[i] / histValues[i - 1] - 1;
+      if (Number.isFinite(r) && Math.abs(r) < 0.5) rawReturns.push(r); // exclude extreme outliers
+    }
+
+    const useFallback = rawReturns.length < 20;
+    if (fallbackEl) fallbackEl.style.display = useFallback ? "" : "none";
+
+    // Parameters
+    let dailyMean, dailySigma;
+    if (useFallback) {
+      // Parametric: 8% annual return, 15% annual volatility
+      dailyMean = 0.08 / 252;
+      dailySigma = 0.15 / Math.sqrt(252);
+    } else {
+      const n = rawReturns.length;
+      dailyMean = sum(rawReturns) / n;
+      const variance = sum(rawReturns.map((r) => (r - dailyMean) ** 2)) / (n - 1);
+      dailySigma = Math.sqrt(variance);
+    }
+
+    const startValue = histValues.length > 0 ? histValues[histValues.length - 1] : 100000;
+    const N_PATHS = 500;
+    const N_DAYS = _mcHorizon;
+
+    // Box-Muller normal variate
+    function randn() {
+      let u, v;
+      do { u = Math.random(); } while (u === 0);
+      do { v = Math.random(); } while (v === 0);
+      return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+    }
+
+    // Run simulations — store values at each step across all paths
+    // paths[day][path] = value
+    const paths = [];
+    for (let d = 0; d <= N_DAYS; d++) paths.push(new Float64Array(N_PATHS));
+    for (let p = 0; p < N_PATHS; p++) paths[0][p] = startValue;
+    for (let d = 1; d <= N_DAYS; d++) {
+      for (let p = 0; p < N_PATHS; p++) {
+        const shock = dailyMean + dailySigma * randn();
+        paths[d][p] = paths[d - 1][p] * (1 + shock);
+      }
+    }
+
+    // Collect percentile bands at each day
+    function pctAtDay(day, q) {
+      const sorted = Array.from(paths[day]).sort((a, b) => a - b);
+      const idx = (sorted.length - 1) * q;
+      const lo = Math.floor(idx);
+      const hi = Math.ceil(idx);
+      return sorted[lo] + (sorted[hi] - sorted[lo]) * (idx - lo);
+    }
+
+    const p10 = [], p25 = [], p50 = [], p75 = [], p90 = [];
+    for (let d = 0; d <= N_DAYS; d++) {
+      p10.push(pctAtDay(d, 0.10));
+      p25.push(pctAtDay(d, 0.25));
+      p50.push(pctAtDay(d, 0.50));
+      p75.push(pctAtDay(d, 0.75));
+      p90.push(pctAtDay(d, 0.90));
+    }
+
+    // Summary stats
+    const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    const fmtAUD = (v) => formatCurrency(v, {});
+    setText("mc-stat-p50", fmtAUD(p50[N_DAYS]));
+    setText("mc-stat-p90", fmtAUD(p90[N_DAYS]));
+    setText("mc-stat-p10", fmtAUD(p10[N_DAYS]));
+
+    if (loadingEl) loadingEl.style.display = "none";
+
+    // Draw fan chart on canvas
+    drawMonteCarloFan(canvas, { p10, p25, p50, p75, p90, startValue });
+  }
+
+  function drawMonteCarloFan(canvas, { p10, p25, p50, p75, p90, startValue }) {
+    const sized = dpr(canvas);
+    if (!sized) return;
+    const { ctx, w, h } = sized;
+    ctx.clearRect(0, 0, w, h);
+
+    const n = p50.length; // N_DAYS + 1 points
+    const pad = { t: 18, r: 14, b: 36, l: 14 };
+    const cw = w - pad.l - pad.r;
+    const ch = h - pad.t - pad.b;
+
+    const allVals = [...p10, ...p90];
+    const minV = Math.min(...allVals) * 0.995;
+    const maxV = Math.max(...allVals) * 1.005;
+
+    const px = (i) => pad.l + (i / (n - 1)) * cw;
+    const py = (v) => pad.t + ch - ((v - minV) / (maxV - minV || 1)) * ch;
+
+    // Grid lines
+    ctx.strokeStyle = M;
+    ctx.lineWidth = 1;
+    [0, 0.25, 0.5, 0.75, 1].forEach((f) => {
+      const y = pad.t + ch * (1 - f);
+      ctx.beginPath();
+      ctx.moveTo(pad.l, y);
+      ctx.lineTo(pad.l + cw, y);
+      ctx.stroke();
+    });
+
+    // Y-axis labels
+    ctx.font = `400 9px ${MONO}`;
+    ctx.fillStyle = TEXT;
+    ctx.textAlign = "right";
+    [0, 0.25, 0.5, 0.75, 1].forEach((f) => {
+      const v = minV + (maxV - minV) * f;
+      const y = pad.t + ch * (1 - f);
+      ctx.fillText(formatCurrency(v, { compact: true }), pad.l - 2, y + 3);
+    });
+
+    // X-axis labels
+    ctx.textAlign = "center";
+    const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    const today = new Date();
+    const labelIndices = n <= 2 ? [0, n - 1] : [0, Math.round((n - 1) * 0.25), Math.round((n - 1) * 0.5), Math.round((n - 1) * 0.75), n - 1];
+    labelIndices.forEach((idx) => {
+      const d = new Date(today);
+      d.setDate(d.getDate() + idx);
+      const label = idx === 0 ? "Today" : `${d.getDate()} ${MONTHS[d.getMonth()]}`;
+      ctx.fillStyle = TEXT;
+      ctx.fillText(label, px(idx), pad.t + ch + 20);
+    });
+
+    // Helper to draw a filled band between two arrays
+    function drawBand(upper, lower, color) {
+      ctx.beginPath();
+      for (let i = 0; i < n; i++) {
+        const x = px(i), y = py(upper[i]);
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      for (let i = n - 1; i >= 0; i--) {
+        ctx.lineTo(px(i), py(lower[i]));
+      }
+      ctx.closePath();
+      ctx.fillStyle = color;
+      ctx.fill();
+    }
+
+    // P10–P90 outer band
+    drawBand(p90, p10, "rgba(168,85,247,0.07)");
+    // P25–P75 inner band
+    drawBand(p75, p25, "rgba(168,85,247,0.18)");
+
+    // P50 median line
+    ctx.strokeStyle = "#a855f7";
+    ctx.lineWidth = 2;
+    ctx.lineJoin = "round";
+    ctx.beginPath();
+    for (let i = 0; i < n; i++) {
+      const x = px(i), y = py(p50[i]);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    // Start dot
+    ctx.beginPath();
+    ctx.arc(px(0), py(startValue), 4, 0, Math.PI * 2);
+    ctx.fillStyle = "#fff";
+    ctx.fill();
+    ctx.strokeStyle = "#a855f7";
+    ctx.lineWidth = 2;
+    ctx.stroke();
   }
 
   function normalizeSlices(slices) {
