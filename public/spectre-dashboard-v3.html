@@ -633,12 +633,12 @@ td.accent{color:var(--orange)}
 
 /* ── FOOTER ── */
 footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-index:2;margin-top:2rem}
-.foot-inner{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1.2rem}
-.foot-logo{font-family:var(--disp);font-size:1.25rem;letter-spacing:.14em;background:linear-gradient(120deg,var(--purple-hi),var(--orange));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.foot-disc{font-family:var(--mono);font-size:.55rem;color:rgba(138,134,168,.4);max-width:540px;text-align:center;line-height:1.8}
+.foot-inner{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}
+.foot-logo{font-family:var(--disp);font-size:1.1rem;letter-spacing:.14em;background:linear-gradient(120deg,var(--purple-hi),var(--orange));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;flex-shrink:0}
+.foot-disc{font-family:var(--mono);font-size:.54rem;color:rgba(138,134,168,.38);text-align:center;line-height:1.7;flex:1;padding:0 1rem}
 .foot-link{font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-decoration:none}
 .foot-link:hover{color:var(--text)}
-.foot-email{width:100%;text-align:center;font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;color:var(--muted2)}
+.foot-email{font-family:var(--mono);font-size:.54rem;letter-spacing:.06em;color:var(--muted2);flex-shrink:0;white-space:nowrap}
 .foot-email a{color:var(--orange);text-decoration:none}
 .foot-email a:hover{color:#ff9c83}
 
@@ -1193,7 +1193,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       </div>
       <div class="hero-system">System for Portfolio Exposure, Correlation, Threat &amp; Risk Evaluation</div>
       <div class="hero-brand">SPECTRE</div>
-      <p class="hero-sub">Upload super, ASX, crypto, index, mutual fund, and ABC Bullion CSV reports to track exposure, concentration, and downside risk in one private workspace.</p>
+      <p class="hero-sub">Private portfolio risk tracking — upload CSV reports from your broker, super fund, or exchange to get started.</p>
       <div class="hero-actions">
         <button type="button" class="btn-primary hero-primary" id="hero-refresh-prices-btn">Refresh Prices</button>
         <button type="button" id="hero-clear-data-btn" style="background:none;border:none;font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;color:var(--muted);cursor:pointer;padding:.25rem .5rem;opacity:.6;text-transform:uppercase">Clear Data</button>
@@ -2101,9 +2101,9 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
   <footer>
     <div class="foot-inner">
       <span class="foot-logo">SPECTRE</span>
-      <span class="foot-disc">For informational purposes only. Not financial advice. Data sourced from user-uploaded files and live price feeds. Always verify with your financial institution.</span>
+      <span class="foot-disc">For informational purposes only. Not financial advice. Always verify with your financial institution.</span>
+      <span class="foot-email"><a href="mailto:admin@spectre-assets.com">admin@spectre-assets.com</a></span>
     </div>
-    <div class="foot-email">Contact us: <a href="mailto:admin@spectre-assets.com">admin@spectre-assets.com</a></div>
   </footer>
 </div>
 
