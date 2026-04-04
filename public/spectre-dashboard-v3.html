@@ -1207,22 +1207,10 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
         <span class="hero-kicker-sep">·</span>
         <span id="hero-kicker-holdings">0 positions</span>
       </div>
-      <div class="hero-system">System for Portfolio Exposure, Correlation, Threat &amp; Risk Evaluation</div>
       <div class="hero-brand">SPECTRE</div>
-      <p class="hero-sub">Private portfolio risk tracking — upload CSV reports from your broker, super fund, or exchange to get started.</p>
+      <p class="hero-sub">Private AI portfolio intelligence for broker, super, crypto, fund, and bullion imports.</p>
       <div class="hero-actions">
         <button type="button" class="btn-primary hero-primary" id="hero-refresh-prices-btn">Refresh Prices</button>
-        <button type="button" id="hero-clear-data-btn" style="background:none;border:none;font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;color:var(--muted);cursor:pointer;padding:.25rem .5rem;opacity:.6;text-transform:uppercase">Clear Data</button>
-      </div>
-      <div class="hero-meta">
-        <div class="meta-row">
-          <span class="meta-lbl">Latest Report</span>
-          <span class="meta-val" id="hero-meta-report">—</span>
-        </div>
-        <div class="meta-row">
-          <span class="meta-lbl">Prices Updated</span>
-          <span class="meta-val" id="hero-meta-prices">—</span>
-        </div>
       </div>
     </div>
     <aside class="meta-panel">
@@ -1745,19 +1733,19 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
         <div class="risk-sub" id="risk-hhi-sub">Moderate concentration</div>
       </div>
       <div class="risk-card">
-        <div class="risk-lbl">Relative Strength Index (RSI) <button type="button" class="risk-help" aria-label="RSI help">?<span class="risk-help-tip">RSI (0-100) measures speed and magnitude of recent price changes. Above 70 can indicate overbought risk, below 30 can indicate oversold conditions.</span></button></div>
-        <div class="risk-val" id="risk-rsi">56.2</div>
-        <div class="risk-sub" id="risk-rsi-sub">Neutral range</div>
+        <div class="risk-lbl">Relative Strength Index (RSI) <button type="button" class="risk-help" aria-label="RSI help">?<span class="risk-help-tip">14-period momentum oscillator. Above 70 can suggest overbought conditions; below 30 can suggest oversold conditions. When snapshot history is thin, SPECTRE falls back to a Yahoo-derived portfolio proxy.</span></button></div>
+        <div class="risk-val" id="risk-rsi">—</div>
+        <div class="risk-sub" id="risk-rsi-sub">Needs more history</div>
       </div>
       <div class="risk-card">
-        <div class="risk-lbl">Stochastic Oscillator <button type="button" class="risk-help" aria-label="Stochastic oscillator help">?<span class="risk-help-tip">Stochastic (0-100) compares the latest close to the recent range. Above 80 can indicate overbought conditions, below 20 can indicate oversold conditions.</span></button></div>
-        <div class="risk-val" id="risk-stochastic">61.8</div>
-        <div class="risk-sub" id="risk-stochastic-sub">Neutral range</div>
+        <div class="risk-lbl">Stochastic Oscillator <button type="button" class="risk-help" aria-label="Stochastic oscillator help">?<span class="risk-help-tip">Compares the latest portfolio level with its recent 14-period range. Above 80 can suggest overbought conditions; below 20 can suggest oversold conditions. Yahoo proxy fallback is used when snapshot history is limited.</span></button></div>
+        <div class="risk-val" id="risk-stochastic">—</div>
+        <div class="risk-sub" id="risk-stochastic-sub">Needs more history</div>
       </div>
       <div class="risk-card">
-        <div class="risk-lbl">On-Balance Volume (OBV) <button type="button" class="risk-help" aria-label="OBV help">?<span class="risk-help-tip">OBV tracks directional flow to infer buying/selling pressure. This portfolio-level OBV uses snapshot value-flow as a proxy because raw traded volume is not uploaded.</span></button></div>
-        <div class="risk-val" id="risk-obv">+0</div>
-        <div class="risk-sub" id="risk-obv-sub">Flat flow</div>
+        <div class="risk-lbl">On-Balance Volume (OBV) <button type="button" class="risk-help" aria-label="OBV help">?<span class="risk-help-tip">Portfolio flow proxy derived from directional changes over time. This is an internal pressure signal, not exchange-reported trading volume. Yahoo fallback is less reliable than your own snapshot history.</span></button></div>
+        <div class="risk-val" id="risk-obv">—</div>
+        <div class="risk-sub" id="risk-obv-sub">Needs more history</div>
       </div>
       <div class="risk-card pro-risk">
         <div class="risk-lbl">1-Day VaR 95% <button type="button" class="risk-help" aria-label="VaR help">?<span class="risk-help-tip">95% historical Value at Risk using the 5th percentile of daily returns in the selected risk window.</span></button></div>
@@ -1789,10 +1777,10 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
         <div class="risk-val" id="risk-tracking-error">14.2%</div>
         <div class="risk-sub" id="risk-tracking-error-sub">vs benchmark</div>
       </div>
-      <div class="risk-card plus-risk">
-        <div class="risk-lbl">Cornish-Fisher VaR <button type="button" class="risk-help" aria-label="Cornish-Fisher VaR help">?<span class="risk-help-tip">VaR adjusted for return skewness and excess kurtosis via Cornish-Fisher expansion — more accurate than historical percentile when portfolio returns are non-normal.</span></button></div>
+      <div class="risk-card pro-risk">
+        <div class="risk-lbl">Cornish-Fisher VaR <button type="button" class="risk-help" aria-label="Cornish-Fisher VaR help">?<span class="risk-help-tip">VaR adjusted for skew and kurtosis rather than assuming a normal return distribution. This is currently estimated from Yahoo-derived return history and should be treated as a proxy.</span></button></div>
         <div class="risk-val danger" id="risk-cf-var95">—</div>
-        <div class="risk-sub" id="risk-cf-var95-sub">Skew/kurtosis adjusted</div>
+        <div class="risk-sub" id="risk-cf-var95-sub">Needs 20+ data points</div>
       </div>
       <div class="risk-card pro-risk">
         <div class="risk-lbl">Market Regime <button type="button" class="risk-help" aria-label="Market regime help">?<span class="risk-help-tip">Market risk regime classified by VIX level. Risk-On (VIX&lt;15): low fear, favour growth. Neutral (15–25): moderate uncertainty. Risk-Off (VIX&gt;25): elevated fear, favour defensives.</span></button></div>
@@ -2368,6 +2356,17 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     if (!overlay) return;
     overlay.classList.add("open");
     overlay.onclick = (e) => { if (e.target === overlay) overlay.classList.remove("open"); };
+  }
+
+  function buildAiLimitMessage(limit) {
+    const tier = state.sessionUser?.proEnabled ? "pro" : String(state.sessionUser?.planTier || "none");
+    if (tier === "plus") {
+      return `You've reached your ${limit} Ask AI sessions for this month. Upgrade to Pro for unlimited Ask AI.`;
+    }
+    if (tier === "pro") {
+      return `You've reached your Ask AI limit for this month. Please try again shortly.`;
+    }
+    return `You've reached your ${limit} Ask AI sessions for this month. Upgrade to Plus for 20/month or Pro for unlimited Ask AI.`;
   }
 
   function setText(id, value) {
@@ -3857,6 +3856,9 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       if (state.holdingsAiLoading) {
         if (metaEl) metaEl.textContent = "Analyzing…";
         outputInner.innerHTML = `<p style="opacity:.5;font-size:.88rem">Generating analysis…</p>`;
+      } else if (atLimit) {
+        if (metaEl) metaEl.textContent = "";
+        outputInner.innerHTML = `<div style="text-align:center;padding:1.5rem 1rem"><p style="color:var(--muted);margin-bottom:.9rem;font-size:.88rem">${escapeHtml(buildAiLimitMessage(limit))}</p><button type="button" class="btn-primary" style="font-size:.72rem;padding:.45rem 1.2rem" onclick="showUpgradeModal()">See plans →</button></div>`;
       } else if (!hasHoldings) {
         if (metaEl) metaEl.textContent = "";
         outputInner.innerHTML = `<div style="text-align:center;padding:1.5rem 1rem"><p style="color:var(--muted);margin-bottom:.9rem;font-size:.88rem">Upload your portfolio on the <strong style="color:var(--text)">Quant</strong> tab to unlock AI analysis.</p><button type="button" class="btn-primary" style="font-size:.72rem;padding:.45rem 1.2rem" onclick="document.querySelectorAll('.nav-tab')[0]?.click()">Go to Quant →</button></div>`;
@@ -3985,7 +3987,14 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
         let message = `Request failed (${response.status})`;
         try {
           const errPayload = await response.json();
-          if (errPayload?.error) message = errPayload.error;
+          if (typeof errPayload?.aiUsed === "number") state.aiUsedThisMonth = errPayload.aiUsed;
+          if (typeof errPayload?.aiLimit === "number") state.aiMonthlyLimit = errPayload.aiLimit;
+          if (response.status === 429) {
+            const limit = Number.isFinite(Number(errPayload?.aiLimit)) ? Number(errPayload.aiLimit) : state.aiMonthlyLimit;
+            message = buildAiLimitMessage(limit > 0 ? limit : 3);
+          } else if (errPayload?.error) {
+            message = errPayload.error;
+          }
         } catch {}
         throw new Error(message);
       }
@@ -4065,12 +4074,21 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     const effectiveCvar95Pct = metrics.cvar95Pct ?? state.historicalRiskEstimate?.cvar95Pct ?? null;
     const effectiveMaxDrawdownPct = metrics.maxDrawdownPct ?? state.historicalRiskEstimate?.maxDrawdownPct ?? null;
     const effectiveVolatilityPct = metrics.volatilityAnnualPct ?? state.historicalRiskEstimate?.volatilityAnnualPct ?? null;
+    const effectiveRsi = Number.isFinite(metrics.rsi14) ? metrics.rsi14 : state.historicalRiskEstimate?.rsi14 ?? null;
+    const effectiveStochastic = Number.isFinite(metrics.stochastic14)
+      ? metrics.stochastic14
+      : state.historicalRiskEstimate?.stochastic14 ?? null;
+    const effectiveObvValue = Number.isFinite(metrics.obvValue) ? metrics.obvValue : state.historicalRiskEstimate?.obvValue ?? null;
+    const effectiveObvTrend = metrics.obvTrend || state.historicalRiskEstimate?.obvTrend || null;
     const effectiveBeta = state.historicalRiskEstimate?.betaToBenchmark ?? null;
     const effectiveTrackingError = state.historicalRiskEstimate?.trackingErrorAnnualPct ?? null;
     const usingYahooVar95 = metrics.var95Pct == null && Number.isFinite(state.historicalRiskEstimate?.var95Pct);
     const usingYahooCvar95 = metrics.cvar95Pct == null && Number.isFinite(state.historicalRiskEstimate?.cvar95Pct);
     const usingYahooDrawdown = metrics.maxDrawdownPct == null && Number.isFinite(state.historicalRiskEstimate?.maxDrawdownPct);
     const usingYahooVolatility = metrics.volatilityAnnualPct == null && Number.isFinite(state.historicalRiskEstimate?.volatilityAnnualPct);
+    const usingYahooRsi = !Number.isFinite(metrics.rsi14) && Number.isFinite(state.historicalRiskEstimate?.rsi14);
+    const usingYahooStochastic = !Number.isFinite(metrics.stochastic14) && Number.isFinite(state.historicalRiskEstimate?.stochastic14);
+    const usingYahooObv = !Number.isFinite(metrics.obvValue) && Number.isFinite(state.historicalRiskEstimate?.obvValue);
     const usingYahooBeta = Number.isFinite(state.historicalRiskEstimate?.betaToBenchmark);
     const usingYahooTrackingError = Number.isFinite(state.historicalRiskEstimate?.trackingErrorAnnualPct);
     const isPro = Boolean(state.sessionUser?.proEnabled);
@@ -4213,36 +4231,55 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       "risk-hhi",
       `risk-val ${metrics.hhi >= 2500 ? "danger" : metrics.hhi >= 1500 ? "purple" : ""}`.trim(),
     );
-    setText("risk-rsi", Number.isFinite(metrics.rsi14) ? Number(metrics.rsi14).toFixed(1) : "—");
+    setText("risk-rsi", Number.isFinite(effectiveRsi) ? Number(effectiveRsi).toFixed(1) : "—");
     setText(
       "risk-rsi-sub",
-      !Number.isFinite(metrics.rsi14)
+      !Number.isFinite(effectiveRsi)
         ? "Needs more history"
-        : metrics.rsi14 > 70
-          ? "Overbought (>70)"
-          : metrics.rsi14 < 30
-            ? "Oversold (<30)"
-            : "Neutral range",
+        : usingYahooRsi
+          ? effectiveRsi > 70
+            ? "Yahoo proxy, less reliable · overbought"
+            : effectiveRsi < 30
+              ? "Yahoo proxy, less reliable · oversold"
+              : "Yahoo proxy, less reliable · neutral"
+          : effectiveRsi > 70
+            ? "Overbought (>70)"
+            : effectiveRsi < 30
+              ? "Oversold (<30)"
+              : "Neutral range",
     );
-    setClass("risk-rsi", `risk-val ${metrics.rsi14 > 70 ? "danger" : metrics.rsi14 < 30 ? "purple" : ""}`.trim());
-    setText("risk-stochastic", Number.isFinite(metrics.stochastic14) ? Number(metrics.stochastic14).toFixed(1) : "—");
+    setClass("risk-rsi", `risk-val ${effectiveRsi > 70 ? "danger" : effectiveRsi < 30 ? "purple" : ""}`.trim());
+    setText("risk-stochastic", Number.isFinite(effectiveStochastic) ? Number(effectiveStochastic).toFixed(1) : "—");
     setText(
       "risk-stochastic-sub",
-      !Number.isFinite(metrics.stochastic14)
+      !Number.isFinite(effectiveStochastic)
         ? "Needs more history"
-        : metrics.stochastic14 > 80
-          ? "Overbought (>80)"
-          : metrics.stochastic14 < 20
-            ? "Oversold (<20)"
-            : "Neutral range",
+        : usingYahooStochastic
+          ? effectiveStochastic > 80
+            ? "Yahoo proxy, less reliable · overbought"
+            : effectiveStochastic < 20
+              ? "Yahoo proxy, less reliable · oversold"
+              : "Yahoo proxy, less reliable · neutral"
+          : effectiveStochastic > 80
+            ? "Overbought (>80)"
+            : effectiveStochastic < 20
+              ? "Oversold (<20)"
+              : "Neutral range",
     );
     setClass(
       "risk-stochastic",
-      `risk-val ${metrics.stochastic14 > 80 ? "danger" : metrics.stochastic14 < 20 ? "purple" : ""}`.trim(),
+      `risk-val ${effectiveStochastic > 80 ? "danger" : effectiveStochastic < 20 ? "purple" : ""}`.trim(),
     );
-    setText("risk-obv", Number.isFinite(metrics.obvValue) ? formatSignedCompact(metrics.obvValue, { decimals: 1 }) : "—");
-    setText("risk-obv-sub", metrics.obvTrend || "Needs more history");
-    setClass("risk-obv", `risk-val ${metrics.obvValue < 0 ? "danger" : metrics.obvValue > 0 ? "purple" : ""}`.trim());
+    setText("risk-obv", Number.isFinite(effectiveObvValue) ? formatSignedCompact(effectiveObvValue, { decimals: 1 }) : "—");
+    setText(
+      "risk-obv-sub",
+      !effectiveObvTrend
+        ? "Needs more history"
+        : usingYahooObv
+          ? `Yahoo proxy, less reliable · ${effectiveObvTrend.toLowerCase()}`
+          : effectiveObvTrend,
+    );
+    setClass("risk-obv", `risk-val ${effectiveObvValue < 0 ? "danger" : effectiveObvValue > 0 ? "purple" : ""}`.trim());
     setText("risk-var95", effectiveVar95Pct != null ? formatPercent(effectiveVar95Pct, { negative: true, decimals: 1 }) : "—");
     setText("risk-cvar95", effectiveCvar95Pct != null ? formatPercent(effectiveCvar95Pct, { negative: true, decimals: 1 }) : "—");
     setText("risk-max-drawdown", effectiveMaxDrawdownPct != null ? formatPercent(effectiveMaxDrawdownPct, { negative: true, decimals: 1 }) : "—");
@@ -4259,7 +4296,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     // Cornish-Fisher VaR (plus+)
     const cfVar95Pct = state.historicalRiskEstimate?.cornishFisherVar95Pct ?? null;
     setText("risk-cf-var95", cfVar95Pct != null ? formatPercent(cfVar95Pct, { negative: true, decimals: 1 }) : "—");
-    setText("risk-cf-var95-sub", cfVar95Pct != null ? "Skew/kurtosis adjusted" : "Needs 20+ data points");
+    setText("risk-cf-var95-sub", cfVar95Pct != null ? "Yahoo proxy, less reliable · skew/kurtosis adjusted" : "Needs 20+ data points");
 
     // Market Regime (pro)
     const regime = state.historicalRiskEstimate?.regime ?? null;
@@ -4378,21 +4415,21 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
           usingYahooTrackingError
         );
       if (shouldShowEstimate) {
-        const details = [];
-        if (Number.isFinite(estimate.pointsUsed) && Number.isFinite(estimate.pointsTarget)) {
-          details.push(`${estimate.pointsUsed}/${estimate.pointsTarget} points`);
-        }
-        if (Array.isArray(estimate.usedTickers)) {
-          details.push(`${estimate.usedTickers.length} tickers`);
-        }
-        if (Number.isFinite(estimate.benchmarkPointsUsed)) {
-          details.push(`${estimate.benchmarkPointsUsed} benchmark days`);
-        }
+        const labels = [];
+        if (usingYahooVar95) labels.push("VaR");
+        if (usingYahooCvar95) labels.push("ES");
+        if (usingYahooDrawdown) labels.push("drawdown");
+        if (usingYahooVolatility) labels.push("volatility");
+        if (usingYahooBeta) labels.push("beta");
+        if (usingYahooTrackingError) labels.push("tracking error");
         const requestWindow = state.riskWindow;
         const yahooWindow = estimate.riskWindow || (RISK_API_WINDOW_MAP[requestWindow] || "3M");
-        const windowMessage = yahooWindow !== requestWindow ? `Yahoo proxy window ${yahooWindow} used for ${requestWindow}. ` : "";
+        const pointsSummary = Number.isFinite(estimate.pointsUsed) && Number.isFinite(estimate.pointsTarget)
+          ? ` ${estimate.pointsUsed}/${estimate.pointsTarget} points available.`
+          : "";
+        const windowMessage = yahooWindow !== requestWindow ? `${requestWindow} requested, ${yahooWindow} proxy used.` : `${requestWindow} proxy estimate used.`;
         estimateNote.hidden = false;
-        estimateNote.textContent = `${windowMessage}${estimate.note}${details.length ? ` (${details.join(", ")})` : ""}`;
+        estimateNote.textContent = `Limited snapshot history. ${labels.join(", ")} are using Yahoo fallback estimates. ${windowMessage}${pointsSummary}`;
       } else {
         estimateNote.hidden = true;
         estimateNote.textContent = "";

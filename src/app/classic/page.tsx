@@ -215,6 +215,12 @@ interface HistoricalRiskEstimatePayload {
   trackingErrorAnnualPct: number | null;
   correlationToBenchmark: number | null;
   outlierReturnsRemoved: number;
+  cornishFisherVar95Pct: number | null;
+  cornishFisherVar95Amount: number | null;
+  rsi14: number | null;
+  stochastic14: number | null;
+  obvValue: number | null;
+  obvTrend: string | null;
 }
 
 interface SessionUser {
