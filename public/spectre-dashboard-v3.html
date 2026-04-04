@@ -2620,6 +2620,8 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     const heroRefreshPricesButton = document.getElementById("hero-refresh-prices-btn");
     const dashboardLogo = document.getElementById("nav-dashboard-logo");
     const researchLink = document.getElementById("nav-research-link");
+    const mobileResearchLink = document.getElementById("mtab-research");
+    const researchHubLink = document.querySelector('#research-hub a[href^="/research"]');
     const settingsLink = document.getElementById("nav-settings-link");
 
     if (state.demoMode) {
@@ -2654,6 +2656,12 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       if (researchLink) {
         researchLink.setAttribute("href", "/research?demo=1");
       }
+      if (mobileResearchLink) {
+        mobileResearchLink.setAttribute("href", "/research?demo=1");
+      }
+      if (researchHubLink) {
+        researchHubLink.setAttribute("href", "/research?demo=1");
+      }
       if (dashboardLogo) {
         dashboardLogo.setAttribute("href", "/dashboard?demo=1");
       }
@@ -2682,6 +2690,12 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     }
     if (researchLink) {
       researchLink.setAttribute("href", "/research");
+    }
+    if (mobileResearchLink) {
+      mobileResearchLink.setAttribute("href", "/research");
+    }
+    if (researchHubLink) {
+      researchHubLink.setAttribute("href", "/research");
     }
     if (dashboardLogo) {
       dashboardLogo.setAttribute("href", "/dashboard?mode=account");
@@ -5414,7 +5428,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
   document.querySelectorAll('.nav-tab').forEach(function(btn) {
     btn.addEventListener('click', function() {
       var tab = btn.getAttribute('data-tab');
-      if (tab === 'research') { window.location.href = '/research'; return; }
+      if (tab === 'research') { window.location.href = (state.demoMode ? '/research?demo=1' : '/research'); return; }
       switchTab(tab);
     });
   });
@@ -5424,7 +5438,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     btn.addEventListener('click', function() {
       var tab = btn.getAttribute('data-tab');
       if (!tab) return;
-      if (tab === 'research') { window.location.href = '/research'; return; }
+      if (tab === 'research') { window.location.href = (state.demoMode ? '/research?demo=1' : '/research'); return; }
       switchTab(tab);
     });
   });
