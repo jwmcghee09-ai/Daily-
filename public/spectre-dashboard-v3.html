@@ -902,6 +902,25 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 .ai-send-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;filter:none}
 .ai-send-arrow{font-size:.75rem;line-height:1}
 
+/* ── AI PAGE: sidebar + layout ──────────────────────────────────── */
+.ai-page-layout{display:flex;align-items:flex-start;gap:0;min-height:calc(100vh - 60px)}
+.ai-sidebar{width:210px;flex-shrink:0;border-right:1px solid var(--border);min-height:calc(100vh - 60px);display:flex;flex-direction:column;background:rgba(0,0,0,.12)}
+.ai-sidebar-head{display:flex;align-items:center;justify-content:space-between;padding:.8rem 1rem;border-bottom:1px solid var(--border)}
+.ai-sidebar-title{font-family:var(--mono);font-size:.54rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.ai-new-btn{display:flex;align-items:center;gap:.25rem;font-family:var(--mono);font-size:.52rem;letter-spacing:.06em;color:var(--muted2);background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.2);border-radius:5px;padding:.28rem .55rem;cursor:pointer;transition:all .15s}
+.ai-new-btn:hover{color:#c084fc;border-color:rgba(168,85,247,.4)}
+.ai-history-list{flex:1;overflow-y:auto;padding:.4rem .5rem}
+.ai-history-empty{font-family:var(--mono);font-size:.56rem;color:var(--muted);text-align:center;padding:1.5rem .75rem;opacity:.55}
+.ai-history-item{display:block;width:100%;text-align:left;background:transparent;border:none;border-radius:6px;padding:.5rem .6rem;cursor:pointer;transition:background .15s;margin-bottom:1px}
+.ai-history-item:hover{background:rgba(255,255,255,.05)}
+.ai-history-item.active{background:rgba(168,85,247,.12);border:1px solid rgba(168,85,247,.18)}
+.ai-history-item-q{font-family:var(--sans);font-size:.7rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:.15rem;display:block}
+.ai-history-item-ts{font-family:var(--mono);font-size:.52rem;color:var(--muted)}
+/* Cycling placeholder */
+.ai-ph-cycle{position:absolute;top:0;left:0;pointer-events:none;font-family:var(--sans);font-size:1rem;line-height:1.6;color:rgba(157,151,183,.45);transition:opacity .4s ease;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.ai-ph-cycle.fading{opacity:0}
+@media(max-width:700px){.ai-sidebar{display:none}.ai-page-layout{display:block}}
+
 /* Hero output */
 .ai-hero-output{width:100%;text-align:left;margin-top:1.5rem}
 .console-ai-footer-note{padding:.6rem 0;font-size:.68rem;text-align:center;color:var(--muted)}
@@ -1239,81 +1258,102 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
 
 <div class="divider" data-page="quant"></div>
 
-<!-- AI HERO -->
+<!-- AI PAGE -->
 <div class="ai-hero-wrap" id="dashboard-top" data-page="ai">
-  <div class="ai-hero-inner">
+  <div class="ai-page-layout">
 
-    <!-- Account strip -->
-    <div class="ai-hero-strip">
-      <span id="meta-account-name" class="ai-strip-name">—</span>
-      <span class="ai-strip-sep">·</span>
-      <span class="plan-chip pro" id="meta-plan-chip">Pro Active</span>
-      <span class="ai-strip-sep">·</span>
-      <span id="meta-holdings-count" class="ai-strip-meta">—</span>
-      <span class="ai-strip-sep">·</span>
-      <span id="meta-latest-report" class="ai-strip-meta"></span>
-      <span class="ai-strip-sep" id="ai-strip-sep-prices">·</span>
-      <span id="meta-prices-updated" class="ai-strip-meta"></span>
-    </div>
+    <!-- Left sidebar: history -->
+    <aside class="ai-sidebar">
+      <div class="ai-sidebar-head">
+        <span class="ai-sidebar-title">History</span>
+        <button type="button" class="ai-new-btn" id="ai-new-chat-btn" title="New conversation">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New
+        </button>
+      </div>
+      <div class="ai-history-list" id="ai-history-list">
+        <div class="ai-history-empty" id="ai-history-empty">No conversations yet</div>
+      </div>
+    </aside>
 
-    <!-- Ask AI card -->
-    <div class="ai-input-card" style="max-width:720px;margin:1.5rem 0 0">
-      <!-- Input mode -->
-      <div id="ai-input-mode">
-        <textarea id="pro-ai-question" class="ai-input-textarea" maxlength="700" placeholder="Ask anything about your portfolio…"></textarea>
-        <div class="ai-input-footer">
-          <div class="ai-input-chips" id="pro-ai-chips">
-            <button type="button" class="ai-chip" data-q="What is driving my returns right now?">What's driving my returns?</button>
-            <button type="button" class="ai-chip" data-q="Where is my risk concentrated and what should I watch?">Where is my risk concentrated?</button>
-            <button type="button" class="ai-chip" data-q="Are there any sector headwinds affecting my holdings?">Any sector headwinds?</button>
-            <button type="button" class="ai-chip" data-q="Give me a concise summary of my current portfolio.">Summarise my portfolio</button>
+    <!-- Right: main area (unchanged internals) -->
+    <div class="ai-hero-inner">
+
+      <!-- Account strip -->
+      <div class="ai-hero-strip">
+        <span id="meta-account-name" class="ai-strip-name">—</span>
+        <span class="ai-strip-sep">·</span>
+        <span class="plan-chip pro" id="meta-plan-chip">Pro Active</span>
+        <span class="ai-strip-sep">·</span>
+        <span id="meta-holdings-count" class="ai-strip-meta">—</span>
+        <span class="ai-strip-sep">·</span>
+        <span id="meta-latest-report" class="ai-strip-meta"></span>
+        <span class="ai-strip-sep" id="ai-strip-sep-prices">·</span>
+        <span id="meta-prices-updated" class="ai-strip-meta"></span>
+      </div>
+
+      <!-- Ask AI card — internals identical, just textarea gets cycling placeholder -->
+      <div class="ai-input-card" style="max-width:720px;margin:1.5rem 0 0">
+        <div id="ai-input-mode">
+          <div style="position:relative">
+            <textarea id="pro-ai-question" class="ai-input-textarea" maxlength="700" placeholder="Ask anything about your portfolio…"></textarea>
+            <div class="ai-ph-cycle" id="ai-ph-cycle" aria-hidden="true">Ask anything about your portfolio…</div>
           </div>
-          <button type="button" id="pro-ai-ask-btn" class="ai-send-btn">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-            <span id="pro-ai-ask-label">Ask AI</span>
-          </button>
+          <div class="ai-input-footer">
+            <div class="ai-input-chips" id="pro-ai-chips">
+              <button type="button" class="ai-chip" data-q="What is driving my returns right now?">What's driving my returns?</button>
+              <button type="button" class="ai-chip" data-q="Where is my risk concentrated and what should I watch?">Risk concentration</button>
+              <button type="button" class="ai-chip" data-q="Are there any sector headwinds affecting my holdings?">Sector headwinds</button>
+              <button type="button" class="ai-chip" data-q="Give me a concise summary of my current portfolio.">Portfolio summary</button>
+              <button type="button" class="ai-chip" data-q="How is my portfolio positioned for a market downturn?">Downturn positioning</button>
+            </div>
+            <button type="button" id="pro-ai-ask-btn" class="ai-send-btn">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              <span id="pro-ai-ask-label">Ask AI</span>
+            </button>
+          </div>
+        </div>
+        <!-- Output mode — identical to original -->
+        <div id="pro-ai-output" style="display:none">
+          <div id="pro-ai-output-inner" style="min-height:120px;max-height:480px;overflow-y:auto;padding-bottom:.5rem"></div>
+          <div style="margin-top:1rem;padding-top:.75rem;border-top:1px solid rgba(255,255,255,.07);display:flex;justify-content:space-between;align-items:center">
+            <span id="pro-ai-meta" style="font-family:var(--mono);font-size:.58rem;color:var(--muted);letter-spacing:.08em"></span>
+            <button type="button" id="ai-new-question-btn" style="background:none;border:1px solid rgba(255,255,255,.12);border-radius:6px;font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;color:var(--muted2);cursor:pointer;padding:.3rem .75rem;text-transform:uppercase">New question</button>
+          </div>
         </div>
       </div>
-      <!-- Output mode — shown while streaming and after complete -->
-      <div id="pro-ai-output" style="display:none">
-        <div id="pro-ai-output-inner" style="min-height:120px;max-height:480px;overflow-y:auto;padding-bottom:.5rem"></div>
-        <div style="margin-top:1rem;padding-top:.75rem;border-top:1px solid rgba(255,255,255,.07);display:flex;justify-content:space-between;align-items:center">
-          <span id="pro-ai-meta" style="font-family:var(--mono);font-size:.58rem;color:var(--muted);letter-spacing:.08em"></span>
-          <button type="button" id="ai-new-question-btn" style="background:none;border:1px solid rgba(255,255,255,.12);border-radius:6px;font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;color:var(--muted2);cursor:pointer;padding:.3rem .75rem;text-transform:uppercase">New question</button>
+      <button type="button" id="refresh-prices-btn" style="display:none">Refresh</button>
+
+      <div class="console-ai-error" id="pro-ai-error" hidden></div>
+
+      <!-- KPI strip — identical -->
+      <div class="ai-kpi-strip">
+        <div class="ai-kpi">
+          <span class="ai-kpi-lbl">Total Value</span>
+          <span class="ai-kpi-val" id="mini-total-value">—</span>
         </div>
+        <div class="ai-kpi-divider"></div>
+        <div class="ai-kpi">
+          <span class="ai-kpi-lbl">Unrealised P/L</span>
+          <span class="ai-kpi-val" id="mini-unrealised-pnl">—</span>
+        </div>
+        <div class="ai-kpi-divider"></div>
+        <div class="ai-kpi">
+          <span class="ai-kpi-lbl">Today</span>
+          <span class="ai-kpi-val" id="mini-day-change">—</span>
+        </div>
+        <div class="ai-kpi-divider"></div>
+        <div class="ai-kpi">
+          <span class="ai-kpi-lbl">Risk Score</span>
+          <span class="ai-kpi-val" id="risk-bar-value">—</span>
+          <div class="risk-track" style="margin-top:.3rem;width:80px"><div class="risk-fill" id="risk-bar-fill"></div></div>
+        </div>
+        <div style="flex:1"></div>
+        <button class="btn-ghost ai-clear-btn" id="clear-data-btn" style="font-size:.6rem;opacity:.55;padding:.25rem .6rem;align-self:center">Clear Data</button>
       </div>
-    </div>
-    <button type="button" id="refresh-prices-btn" style="display:none">Refresh</button>
 
-    <div class="console-ai-error" id="pro-ai-error" hidden></div>
-
-    <!-- KPI strip -->
-    <div class="ai-kpi-strip">
-      <div class="ai-kpi">
-        <span class="ai-kpi-lbl">Total Value</span>
-        <span class="ai-kpi-val" id="mini-total-value">—</span>
-      </div>
-      <div class="ai-kpi-divider"></div>
-      <div class="ai-kpi">
-        <span class="ai-kpi-lbl">Unrealised P/L</span>
-        <span class="ai-kpi-val" id="mini-unrealised-pnl">—</span>
-      </div>
-      <div class="ai-kpi-divider"></div>
-      <div class="ai-kpi">
-        <span class="ai-kpi-lbl">Today</span>
-        <span class="ai-kpi-val" id="mini-day-change">—</span>
-      </div>
-      <div class="ai-kpi-divider"></div>
-      <div class="ai-kpi">
-        <span class="ai-kpi-lbl">Risk Score</span>
-        <span class="ai-kpi-val" id="risk-bar-value">—</span>
-        <div class="risk-track" style="margin-top:.3rem;width:80px"><div class="risk-fill" id="risk-bar-fill"></div></div>
-      </div>
-      <div style="flex:1"></div>
-      <button class="btn-ghost ai-clear-btn" id="clear-data-btn" style="font-size:.6rem;opacity:.55;padding:.25rem .6rem;align-self:center">Clear Data</button>
-    </div>
-
-  </div>
+    </div><!-- /ai-hero-inner -->
+  </div><!-- /ai-page-layout -->
 </div>
 
 <!-- RESEARCH TAB — link to research terminal -->
@@ -3917,6 +3957,11 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
               if (typeof evt.aiUsed === "number") state.aiUsedThisMonth = evt.aiUsed;
               if (typeof evt.aiLimit === "number") state.aiMonthlyLimit = evt.aiLimit;
               showToast("Ask AI analysis updated.");
+              try {
+                const _q = document.getElementById("pro-ai-question");
+                const _qText = _q instanceof HTMLTextAreaElement ? _q.value.trim() : "";
+                saveAiHistoryItem(_qText || "Portfolio analysis", evt.analysis?.answer || "");
+              } catch {}
             }
             return;
           }
@@ -4906,7 +4951,18 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       const q = chip.dataset.q;
       if (!q) return;
       const input = document.getElementById("pro-ai-question");
-      if (input instanceof HTMLTextAreaElement) input.value = q;
+      if (input instanceof HTMLTextAreaElement) {
+        input.value = q;
+        input.dispatchEvent(new Event("input"));
+      }
+    });
+
+    // AI page extras: cycling placeholder + history
+    initAiPlaceholder();
+    renderAiHistory();
+    document.getElementById("ai-new-chat-btn")?.addEventListener("click", () => {
+      document.getElementById("ai-new-question-btn")?.click();
+      document.querySelectorAll(".ai-history-item").forEach(el => el.classList.remove("active"));
     });
 
     document.getElementById("alerts-list")?.addEventListener("click", (event) => {
@@ -5236,6 +5292,78 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     tryPortfolioTicker();
     if (attempts >= 20) clearInterval(poll);
   }, 1500);
+// ── AI CYCLING PLACEHOLDER ──────────────────────────────────────────────────
+const _AI_PH = [
+  "What is driving my returns right now?",
+  "Where is my risk most concentrated?",
+  "Are there sector headwinds in my holdings?",
+  "How would a 10% market drop affect me?",
+  "Which holding has the most downside risk?",
+  "How diversified am I across sectors?",
+  "Give me a concise portfolio summary.",
+  "What should I watch most closely right now?",
+];
+function initAiPlaceholder() {
+  const ph = document.getElementById("ai-ph-cycle");
+  const ta = document.getElementById("pro-ai-question");
+  if (!ph || !ta) return;
+  let i = 0;
+  const cycle = () => {
+    ph.classList.add("fading");
+    setTimeout(() => { i = (i + 1) % _AI_PH.length; ph.textContent = _AI_PH[i]; ph.classList.remove("fading"); }, 420);
+  };
+  const sync = () => { ph.style.display = ta.value.length ? "none" : ""; };
+  ta.addEventListener("input", sync);
+  ph.textContent = _AI_PH[0];
+  setInterval(cycle, 3400);
+  // Also: Enter = send (Shift+Enter = newline)
+  ta.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); document.getElementById("pro-ai-ask-btn")?.click(); }
+  });
+}
+
+// ── AI CHAT HISTORY ─────────────────────────────────────────────────────────
+const _AI_HK = "spectre_ai_history_v1";
+function _loadHist() { try { return JSON.parse(localStorage.getItem(_AI_HK) || "[]"); } catch { return []; } }
+function saveAiHistoryItem(q, ans) {
+  const h = _loadHist();
+  h.unshift({ id: Date.now().toString(36), q: q.slice(0,120), ans: (ans||"").slice(0,600), ts: new Date().toISOString() });
+  if (h.length > 30) h.length = 30;
+  try { localStorage.setItem(_AI_HK, JSON.stringify(h)); } catch {}
+  renderAiHistory();
+}
+function renderAiHistory() {
+  const list = document.getElementById("ai-history-list");
+  const empty = document.getElementById("ai-history-empty");
+  if (!list) return;
+  const h = _loadHist();
+  list.querySelectorAll(".ai-history-item").forEach(el => el.remove());
+  if (!h.length) { if (empty) empty.style.display = ""; return; }
+  if (empty) empty.style.display = "none";
+  h.forEach(item => {
+    const btn = document.createElement("button");
+    btn.type = "button"; btn.className = "ai-history-item"; btn.dataset.id = item.id;
+    const d = new Date(item.ts);
+    const ds = d.toLocaleDateString("en-AU",{day:"numeric",month:"short"});
+    const ts = d.toLocaleTimeString("en-AU",{hour:"2-digit",minute:"2-digit",hour12:false});
+    btn.innerHTML = `<span class="ai-history-item-q">${escapeHtml(item.q)}</span><span class="ai-history-item-ts">${escapeHtml(ds)} · ${escapeHtml(ts)}</span>`;
+    btn.addEventListener("click", () => {
+      // Load the saved Q into the textarea and show saved answer in output
+      const ta = document.getElementById("pro-ai-question");
+      if (ta instanceof HTMLTextAreaElement) { ta.value = item.q; ta.dispatchEvent(new Event("input")); }
+      const oi = document.getElementById("pro-ai-output-inner");
+      const oe = document.getElementById("pro-ai-output");
+      const im = document.getElementById("ai-input-mode");
+      if (oi) oi.innerHTML = `<div style="white-space:pre-wrap;font-size:.9rem;line-height:1.75">${escapeHtml(item.ans)}</div><p style="font-family:var(--mono);font-size:.54rem;color:var(--muted);margin-top:.75rem">Saved · ${escapeHtml(ds)} ${escapeHtml(ts)}</p>`;
+      if (oe) oe.style.display = "";
+      if (im) im.style.display = "none";
+      document.querySelectorAll(".ai-history-item").forEach(el => el.classList.remove("active"));
+      btn.classList.add("active");
+    });
+    list.appendChild(btn);
+  });
+}
+
 })();
 </script>
 </body>
