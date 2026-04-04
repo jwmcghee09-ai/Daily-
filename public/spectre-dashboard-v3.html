@@ -112,8 +112,8 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;background:rgba(5,5,10,.92);
 .nav-ticker-chg.neg{color:#f87171}
 
 /* ── HERO HEADER ── */
-.hero{padding:100px 0 3.5rem;display:grid;grid-template-columns:minmax(0,1fr) 480px;gap:4rem;align-items:start;position:relative;z-index:2}
-.hero-left{max-width:780px}
+.hero{padding:100px 0 3.5rem;display:grid;grid-template-columns:minmax(0,1fr) 480px;gap:4rem;align-items:center;position:relative;z-index:2}
+.hero-left{max-width:780px;padding-top:1.25rem}
 .hero-gl{position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(rgba(155,93,229,.022) 1px,transparent 1px),linear-gradient(90deg,rgba(155,93,229,.022) 1px,transparent 1px);background-size:58px 58px;mask-image:radial-gradient(ellipse 90% 80% at 40% 45%,black 0%,transparent 100%)}
 .hero-glow{position:absolute;top:-180px;left:-120px;width:800px;height:700px;pointer-events:none;background:radial-gradient(ellipse,rgba(100,40,180,.16) 0%,rgba(80,20,140,.05) 45%,transparent 70%);z-index:1}
 .hero-eyebrow{display:inline-flex;align-items:center;gap:.65rem;padding:.45rem 1rem;border-radius:999px;border:1px solid transparent;background:linear-gradient(var(--bg),var(--bg)) padding-box,linear-gradient(90deg,var(--purple),var(--orange)) border-box;font-family:var(--mono);font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:var(--text);margin-bottom:1.1rem}
@@ -1941,6 +1941,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
         <div class="chart-card-sub">Total value over time</div>
         <div style="position:relative">
           <canvas id="c-history" height="200"></canvas>
+          <div id="history-empty-state" hidden style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:1rem;font-family:var(--mono);font-size:0.62rem;letter-spacing:0.04em;color:var(--muted2);background:linear-gradient(180deg,rgba(11,10,20,.12),rgba(11,10,20,.4));border-radius:8px">Import reports and refresh prices over time to build your portfolio history.</div>
           <div id="history-tooltip" style="display:none;position:absolute;pointer-events:none;background:rgba(10,6,20,0.95);border:1px solid rgba(255,255,255,0.15);border-radius:6px;padding:0.45rem 0.65rem;font-family:var(--mono);font-size:0.62rem;color:#f2eeff;white-space:nowrap;z-index:10;box-shadow:0 8px 24px rgba(0,0,0,0.5)"></div>
         </div>
         <div id="history-range" style="display:flex;gap:0.4rem;margin-top:0.5rem;flex-wrap:wrap">
@@ -1978,6 +1979,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     <div id="mc-fallback-notice" style="display:none;font-family:var(--mono);font-size:0.62rem;color:var(--muted2);margin-bottom:0.6rem;padding:0.35rem 0.6rem;background:rgba(168,85,247,0.07);border-radius:4px;border:1px solid rgba(168,85,247,0.18)">Insufficient history (&lt;20 days). Using parametric fallback: 8% annual return, 15% volatility.</div>
     <div style="position:relative">
       <canvas id="c-monte-carlo" height="260"></canvas>
+      <div id="mc-empty-state" hidden style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:1rem;font-family:var(--mono);font-size:0.62rem;letter-spacing:0.04em;color:var(--muted2);background:linear-gradient(180deg,rgba(11,10,20,.12),rgba(11,10,20,.4));border-radius:8px">Monte Carlo needs at least 2 portfolio snapshots to simulate a projection.</div>
     </div>
     <div id="mc-stats" style="display:flex;gap:0.75rem;margin-top:1rem;flex-wrap:wrap">
       <div class="mc-stat-box" style="flex:1;min-width:120px;background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.22);border-radius:6px;padding:0.65rem 0.85rem">
@@ -3314,6 +3316,54 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
   /* --- History chart state for range filtering --- */
   let _fullHistory = [];
   let _historyCostBase = 0;
+  let _historyRange = "all";
+  let _historyRangeBtnsWired = false;
+
+  function setHidden(id, hidden) {
+    const el = document.getElementById(id);
+    if (el) el.hidden = Boolean(hidden);
+  }
+
+  function setHistoryRangeButtonState(activeRange) {
+    document.querySelectorAll(".history-range-btn").forEach((btn) => {
+      const isActive = btn.dataset.range === activeRange;
+      btn.style.background = isActive ? "rgba(255,106,61,0.12)" : "rgba(255,255,255,0.04)";
+      btn.style.borderColor = isActive ? "rgba(255,106,61,0.6)" : "rgba(255,255,255,0.1)";
+      btn.style.color = isActive ? "#fff" : "var(--muted2)";
+      btn.classList.toggle("active", isActive);
+    });
+  }
+
+  function getFilteredHistory(historyItems, range) {
+    const source = Array.isArray(historyItems) ? historyItems : [];
+    if (range === "all" || source.length === 0) return source;
+    const now = new Date();
+    const cutoff = new Date(now);
+    if (range === "1m") cutoff.setMonth(now.getMonth() - 1);
+    else if (range === "3m") cutoff.setMonth(now.getMonth() - 3);
+    else if (range === "6m") cutoff.setMonth(now.getMonth() - 6);
+    else if (range === "1y") cutoff.setFullYear(now.getFullYear() - 1);
+    const cutoffStr = cutoff.toISOString().slice(0, 10);
+    return source.filter((item) => item.date >= cutoffStr);
+  }
+
+  function renderHistoryRange() {
+    const filtered = getFilteredHistory(_fullHistory, _historyRange);
+    const series = filtered.length >= 2 ? filtered : _fullHistory;
+    drawHistoryLine(series, _historyCostBase);
+  }
+
+  function wireHistoryRangeButtons() {
+    if (_historyRangeBtnsWired) return;
+    _historyRangeBtnsWired = true;
+    document.querySelectorAll(".history-range-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        _historyRange = btn.dataset.range || "all";
+        setHistoryRangeButtonState(_historyRange);
+        renderHistoryRange();
+      });
+    });
+  }
 
   function drawHistoryLine(historyItems, costBaseValue) { window.drawHistoryLine = drawHistoryLine; window._fullHistory = historyItems; window._historyCostBase = costBaseValue;
     const canvas = document.getElementById("c-history");
@@ -3322,7 +3372,14 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     if (!sized) return;
     const { ctx, w, h } = sized;
     ctx.clearRect(0, 0, w, h);
-    const items = historyItems.length >= 2 ? historyItems : [{ date: "", value: 1 }, { date: "", value: 1 }];
+    const tooltip = document.getElementById("history-tooltip");
+    const hasEnoughHistory = Array.isArray(historyItems) && historyItems.length >= 2;
+    setHidden("history-empty-state", hasEnoughHistory);
+    if (!hasEnoughHistory) {
+      if (tooltip) tooltip.style.display = "none";
+      return;
+    }
+    const items = historyItems;
     const rawVals = items.map((item) => item.value);
     const dates = items.map((item) => item.date || "");
     const costBase = rawVals.map(() => (Number.isFinite(costBaseValue) && costBaseValue > 0 ? costBaseValue : rawVals[0]));
@@ -3404,7 +3461,6 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     }
 
     /* --- Hover tooltip --- */
-    const tooltip = document.getElementById("history-tooltip");
     const dprRatio = window.devicePixelRatio || 1;
     function onMove(e) {
       const rect = canvas.getBoundingClientRect();
@@ -4526,40 +4582,11 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     drawHoldingsBars(window._lastHoldingsBars);
     _fullHistory = metrics.history || []; window._fullHistory = _fullHistory;
     _historyCostBase = metrics.totalCost; window._historyCostBase = _historyCostBase;
-    drawHistoryLine(_fullHistory, _historyCostBase);
+    wireHistoryRangeButtons();
+    setHistoryRangeButtonState(_historyRange);
+    renderHistoryRange();
     runMonteCarlo();
     renderHoldingsAi();
-
-    /* --- History range buttons --- */
-    const rangeBtns = document.querySelectorAll(".history-range-btn");
-    rangeBtns.forEach((btn) => {
-      btn.addEventListener("click", () => {
-        rangeBtns.forEach((b) => {
-          b.style.background = "rgba(255,255,255,0.04)";
-          b.style.borderColor = "rgba(255,255,255,0.1)";
-          b.style.color = "var(--muted2)";
-          b.classList.remove("active");
-        });
-        btn.style.background = "rgba(255,106,61,0.12)";
-        btn.style.borderColor = "rgba(255,106,61,0.6)";
-        btn.style.color = "#fff";
-        btn.classList.add("active");
-        const range = btn.dataset.range;
-        let filtered = _fullHistory;
-        if (range !== "all" && _fullHistory.length > 0) {
-          const now = new Date();
-          let cutoff = new Date();
-          if (range === "1m") cutoff.setMonth(now.getMonth() - 1);
-          else if (range === "3m") cutoff.setMonth(now.getMonth() - 3);
-          else if (range === "6m") cutoff.setMonth(now.getMonth() - 6);
-          else if (range === "1y") cutoff.setFullYear(now.getFullYear() - 1);
-          const cutoffStr = cutoff.toISOString().slice(0, 10);
-          filtered = _fullHistory.filter((item) => item.date >= cutoffStr);
-          if (filtered.length < 2) filtered = _fullHistory;
-        }
-        drawHistoryLine(filtered, _historyCostBase);
-      });
-    });
   }
 
   /* =========================================================
@@ -4611,6 +4638,19 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     const histItems = Array.from(byDay.values()).sort((a, b) => String(a.date).localeCompare(String(b.date)));
 
     const histValues = histItems.map((s) => Number(s.value)).filter((v) => Number.isFinite(v) && v > 0);
+    if (histValues.length < 2) {
+      if (loadingEl) loadingEl.style.display = "none";
+      if (fallbackEl) fallbackEl.style.display = "none";
+      setHidden("mc-empty-state", false);
+      ["mc-stat-p50", "mc-stat-p90", "mc-stat-p10"].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = "—";
+      });
+      const sized = dpr(canvas);
+      if (sized) sized.ctx.clearRect(0, 0, sized.w, sized.h);
+      return;
+    }
+    setHidden("mc-empty-state", true);
     const rawReturns = [];
     for (let i = 1; i < histValues.length; i++) {
       const r = histValues[i] / histValues[i - 1] - 1;
