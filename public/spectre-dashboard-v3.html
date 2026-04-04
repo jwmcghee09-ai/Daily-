@@ -4320,6 +4320,95 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     setText("risk-beta-sub", usingYahooBeta ? "Yahoo estimate vs ASX 200" : "Market sensitivity");
     setText("risk-tracking-error-sub", usingYahooTrackingError ? "Yahoo estimate vs ASX 200" : "vs benchmark");
 
+    // Cornish-Fisher VaR (plus+)
+    const cfVar95Pct = state.historicalRiskEstimate?.cornishFisherVar95Pct ?? null;
+    setText("risk-cf-var95", cfVar95Pct != null ? formatPercent(cfVar95Pct, { negative: true, decimals: 1 }) : "—");
+    setText("risk-cf-var95-sub", cfVar95Pct != null ? "Skew/kurtosis adjusted" : "Needs 20+ data points");
+
+    // Market Regime (pro)
+    const regime = state.historicalRiskEstimate?.regime ?? null;
+    if (regime) {
+      setText("risk-regime", regime.label);
+      setText("risk-regime-sub", regime.vix != null ? `VIX ${Number(regime.vix).toFixed(1)}` : "Based on VIX level");
+      setClass("risk-regime", `risk-val ${regime.cssClass}`);
+    }
+
+    // Correlation matrix (plus+)
+    const corrMatrix = state.historicalRiskEstimate?.correlationMatrix ?? null;
+    const corrContainer = document.getElementById("corr-matrix-container");
+    const corrNote = document.getElementById("corr-matrix-note");
+    if (corrContainer) {
+      if (corrMatrix && corrMatrix.tickers.length >= 2) {
+        const n = corrMatrix.tickers.length;
+        // Build grid: (n+1) columns × (n+1) rows
+        let html = `<div class="corr-matrix" style="grid-template-columns:4.5rem repeat(${n},2.4rem)">`;
+        // Top-left empty corner
+        html += `<div class="corr-cell corr-label" style="height:4.5rem"></div>`;
+        // Top row labels (vertical text)
+        for (const t of corrMatrix.tickers) {
+          const short = t.length > 6 ? t.slice(0, 6) : t;
+          html += `<div class="corr-cell corr-label-top" title="${t}">${short}</div>`;
+        }
+        // Data rows
+        for (let i = 0; i < n; i++) {
+          const shortLabel = corrMatrix.tickers[i].length > 10 ? corrMatrix.tickers[i].slice(0, 10) : corrMatrix.tickers[i];
+          html += `<div class="corr-cell corr-label" title="${corrMatrix.tickers[i]}">${shortLabel}</div>`;
+          for (let j = 0; j < n; j++) {
+            const val = corrMatrix.matrix[i][j];
+            const intensity = Math.abs(val);
+            let bg;
+            if (val >= 0) {
+              // positive: purple tones
+              bg = `rgba(138,92,246,${0.15 + intensity * 0.7})`;
+            } else {
+              // negative: orange tones
+              bg = `rgba(255,100,40,${0.15 + intensity * 0.7})`;
+            }
+            const display = i === j ? "1.00" : val.toFixed(2);
+            html += `<div class="corr-cell" style="background:${bg}" title="${corrMatrix.tickers[i]} vs ${corrMatrix.tickers[j]}: ${val.toFixed(3)}">${display}</div>`;
+          }
+        }
+        html += `</div>`;
+        corrContainer.innerHTML = html;
+        if (corrNote) corrNote.textContent = `${n} holdings shown · ${state.riskWindow} window · Yahoo price history`;
+      } else {
+        corrContainer.innerHTML = `<p style="font-family:var(--mono);font-size:.54rem;color:var(--muted)">Need at least 2 holdings with price history to compute correlations.</p>`;
+        if (corrNote) corrNote.textContent = "";
+      }
+    }
+
+    // Factor exposure (pro)
+    const factorExposure = state.historicalRiskEstimate?.factorExposure ?? null;
+    const marketBeta = factorExposure?.marketBeta ?? null;
+    const sizeBeta = factorExposure?.sizeBeta ?? null;
+    // Market beta bar: centre at 50%, scale ±2 → ±50%
+    if (Number.isFinite(marketBeta)) {
+      const clampedMkt = Math.max(-2, Math.min(2, marketBeta));
+      const pct = Math.abs(clampedMkt) / 2 * 50;
+      const bar = document.getElementById("factor-market-bar");
+      if (bar) {
+        bar.style.width = pct + "%";
+        bar.style.left = clampedMkt >= 0 ? "50%" : (50 - pct) + "%";
+        bar.className = `factor-bar-fill ${clampedMkt >= 0 ? "pos" : "neg"}`;
+      }
+      setText("factor-market-val", Number(marketBeta).toFixed(2));
+    } else {
+      setText("factor-market-val", "—");
+    }
+    if (Number.isFinite(sizeBeta)) {
+      const clampedSz = Math.max(-2, Math.min(2, sizeBeta));
+      const pct = Math.abs(clampedSz) / 2 * 50;
+      const bar = document.getElementById("factor-size-bar");
+      if (bar) {
+        bar.style.width = pct + "%";
+        bar.style.left = clampedSz >= 0 ? "50%" : (50 - pct) + "%";
+        bar.className = `factor-bar-fill ${clampedSz >= 0 ? "pos" : "neg"}`;
+      }
+      setText("factor-size-val", Number(sizeBeta).toFixed(2));
+    } else {
+      setText("factor-size-val", "—");
+    }
+
     setText("pro-expected-shortfall", effectiveCvar95Pct != null ? formatPercent(effectiveCvar95Pct, { negative: true, decimals: 1 }) : "—");
     setText("pro-beta", Number.isFinite(effectiveBeta) ? Number(effectiveBeta).toFixed(2) : "—");
     setText("pro-tracking-error", Number.isFinite(effectiveTrackingError) ? formatPercent(effectiveTrackingError, { decimals: 1 }) : "—");
