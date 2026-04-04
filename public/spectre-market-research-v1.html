@@ -1670,6 +1670,39 @@ h3 { font-size: 1.15rem; }
   color: var(--sl-muted);
   letter-spacing: 0.06em;
 }
+.demo-preview-banner{
+  display:none;
+  margin:14px 0 0;
+  padding:12px 14px;
+  border:1px solid rgba(217,70,239,.22);
+  border-radius:12px;
+  background:
+    linear-gradient(180deg, rgba(168,85,247,.1), rgba(217,70,239,.04)),
+    rgba(7,6,14,.82);
+  color:var(--sl-text);
+  box-shadow:0 16px 40px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.04);
+}
+.demo-preview-banner strong{ color:var(--sl-purple-hi); }
+.demo-preview-banner-copy{
+  font-size:.82rem;
+  line-height:1.6;
+  color:rgba(242,238,255,.84);
+}
+.demo-preview-locked .research-tab-nav .rtab,
+.demo-preview-locked .time-pill,
+.demo-preview-locked .tab-btn{
+  pointer-events:none;
+  cursor:default;
+  opacity:.42;
+  filter:saturate(.7);
+}
+.demo-preview-locked .research-tab-nav .rtab.active,
+.demo-preview-locked .time-pill.active,
+.demo-preview-locked .tab-btn.active{
+  opacity:1;
+  filter:none;
+}
+.demo-preview-locked .demo-preview-banner{ display:block; }
 
 /* ── Restored SPECTRE workspace hero ─────────────────────────── */
 .workspace-hero {
@@ -3224,6 +3257,12 @@ h3 { font-size: 1.15rem; }
     <button class="rtab" data-tab="earnings" onclick="switchResearchTab('earnings',this)">Earnings</button>
     <button class="rtab" data-tab="crypto" onclick="switchResearchTab('crypto',this)">Crypto</button>
   </nav>
+  <div class="demo-preview-banner" id="demo-preview-banner">
+    <div class="demo-preview-banner-copy">
+      <strong>Frozen preview.</strong> Demo mode shows a fixed research snapshot from 28 Mar 2025.
+      Live updates, alternate tabs, and chart-range changes unlock inside a real workspace.
+    </div>
+  </div>
 
   <!-- ===== TAB: OVERVIEW ===== -->
   <div id="rtab-overview" class="rtab-panel active">
@@ -5124,7 +5163,7 @@ function applyModeChrome() {
 
   if (state.demoMode) {
     setText('nav-user-email', 'Demo workspace');
-    if (heroBadge) heroBadge.textContent = 'Demo';
+    if (heroBadge) heroBadge.textContent = 'Frozen Demo';
     if (signOutButton) {
       signOutButton.textContent = 'Exit Demo';
       signOutButton.setAttribute('href', '#');
@@ -5143,6 +5182,15 @@ function applyModeChrome() {
   if (dashboardLink) dashboardLink.setAttribute('href', '/dashboard?mode=account');
   if (dashboardLogo) dashboardLogo.setAttribute('href', '/dashboard?mode=account');
   if (settingsLink) settingsLink.setAttribute('href', '/settings');
+}
+
+function activateDemoResearchPreview() {
+  document.body.classList.add('demo-preview-locked');
+  switchResearchTab('overview', document.querySelector('.research-tab-nav .rtab[data-tab="overview"]'));
+  const noteEl = document.getElementById('workspace-meta-note');
+  if (noteEl) {
+    noteEl.textContent = 'Demo research is a frozen market snapshot for preview only. Live data and deeper terminal navigation unlock inside a real SPECTRE workspace.';
+  }
 }
 
 async function loadSession() {
@@ -5431,6 +5479,7 @@ async function fetchLiveQuotes() {
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', () => {
   state.demoMode = isDemoMode();
+  if (state.demoMode) activateDemoResearchPreview();
   buildTicker();
   buildStockTable();
   buildNews();
