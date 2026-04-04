@@ -2178,7 +2178,69 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
   </div>
 </div>
 
-<script>
+<script>/* ── AI PAGE: cycling placeholder + chat history ─── */
+(function() {
+  var _AI_PH = [
+    "What is driving my returns right now?",
+    "Where is my risk most concentrated?",
+    "Are there sector headwinds in my holdings?",
+    "How would a 10% market drop affect me?",
+    "Which holding has the most downside risk?",
+    "How diversified am I across sectors?",
+    "Give me a concise portfolio summary.",
+    "What should I watch most closely right now?",
+  ];
+  var _AI_HK = "spectre_ai_history_v1";
+  function _esc(s) { return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+  window.initAiPlaceholder = function() {
+    var ph = document.getElementById("ai-ph-cycle");
+    var ta = document.getElementById("pro-ai-question");
+    if (!ph || !ta) return;
+    var i = 0;
+    function cycle() { ph.classList.add("fading"); setTimeout(function() { i=(i+1)%_AI_PH.length; ph.textContent=_AI_PH[i]; ph.classList.remove("fading"); },420); }
+    ta.addEventListener("input", function() { ph.style.display = ta.value.length ? "none" : ""; });
+    ph.textContent = _AI_PH[0];
+    setInterval(cycle, 3400);
+    ta.addEventListener("keydown", function(e) { if (e.key==="Enter"&&!e.shiftKey) { e.preventDefault(); var b=document.getElementById("pro-ai-ask-btn"); if(b&&!b.disabled) b.click(); } });
+  };
+
+  function _loadHist() { try { return JSON.parse(localStorage.getItem(_AI_HK)||"[]"); } catch { return []; } }
+
+  window.saveAiHistoryItem = function(q, ans) {
+    var h = _loadHist();
+    h.unshift({ id: Date.now().toString(36), q: String(q||"").slice(0,120), ans: String(ans||"").slice(0,600), ts: new Date().toISOString() });
+    if (h.length > 30) h.length = 30;
+    try { localStorage.setItem(_AI_HK, JSON.stringify(h)); } catch {}
+    if (window.renderAiHistory) window.renderAiHistory();
+  };
+
+  window.renderAiHistory = function() {
+    var list = document.getElementById("ai-history-list");
+    var empty = document.getElementById("ai-history-empty");
+    if (!list) return;
+    var h = _loadHist();
+    list.querySelectorAll(".ai-history-item").forEach(function(el){el.remove();});
+    if (!h.length) { if(empty) empty.style.display=""; return; }
+    if (empty) empty.style.display = "none";
+    h.forEach(function(item) {
+      var btn = document.createElement("button");
+      btn.type="button"; btn.className="ai-history-item"; btn.dataset.id=item.id;
+      var d=new Date(item.ts), ds=d.toLocaleDateString("en-AU",{day:"numeric",month:"short"}), ts=d.toLocaleTimeString("en-AU",{hour:"2-digit",minute:"2-digit",hour12:false});
+      btn.innerHTML='<span class="ai-history-item-q">'+_esc(item.q)+'</span><span class="ai-history-item-ts">'+_esc(ds)+' · '+_esc(ts)+'</span>';
+      btn.addEventListener("click", function() {
+        var ta=document.getElementById("pro-ai-question"); if(ta){ta.value=item.q;ta.dispatchEvent(new Event("input"));}
+        var oi=document.getElementById("pro-ai-output-inner"), oe=document.getElementById("pro-ai-output"), im=document.getElementById("ai-input-mode");
+        if(oi) oi.innerHTML='<div style="white-space:pre-wrap;font-size:.9rem;line-height:1.75">'+_esc(item.ans)+'</div><p style="font-size:.54rem;color:#888;margin-top:.75rem">Saved · '+_esc(ds)+' '+_esc(ts)+'</p>';
+        if(oe) oe.style.display=""; if(im) im.style.display="none";
+        document.querySelectorAll(".ai-history-item").forEach(function(el){el.classList.remove("active");}); btn.classList.add("active");
+      });
+      list.appendChild(btn);
+    });
+  };
+})();
+
+
 (() => {
   const O = "#ff7a30";
   const P = "#a855f7";
@@ -3957,11 +4019,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
               if (typeof evt.aiUsed === "number") state.aiUsedThisMonth = evt.aiUsed;
               if (typeof evt.aiLimit === "number") state.aiMonthlyLimit = evt.aiLimit;
               showToast("Ask AI analysis updated.");
-              try {
-                const _q = document.getElementById("pro-ai-question");
-                const _qText = _q instanceof HTMLTextAreaElement ? _q.value.trim() : "";
-                saveAiHistoryItem(_qText || "Portfolio analysis", evt.analysis?.answer || "");
-              } catch {}
+              try { const _q=document.getElementById("pro-ai-question"); const _qText=_q instanceof HTMLTextAreaElement?_q.value.trim():""; if(window.saveAiHistoryItem) window.saveAiHistoryItem(_qText||"Portfolio analysis",evt.analysis?.answer||""); } catch {}
             }
             return;
           }
@@ -4958,8 +5016,8 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     });
 
     // AI page extras: cycling placeholder + history
-    initAiPlaceholder();
-    renderAiHistory();
+    window.initAiPlaceholder && window.initAiPlaceholder();
+    window.renderAiHistory && window.renderAiHistory();
     document.getElementById("ai-new-chat-btn")?.addEventListener("click", () => {
       document.getElementById("ai-new-question-btn")?.click();
       document.querySelectorAll(".ai-history-item").forEach(el => el.classList.remove("active"));
@@ -5292,78 +5350,6 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     tryPortfolioTicker();
     if (attempts >= 20) clearInterval(poll);
   }, 1500);
-// ── AI CYCLING PLACEHOLDER ──────────────────────────────────────────────────
-const _AI_PH = [
-  "What is driving my returns right now?",
-  "Where is my risk most concentrated?",
-  "Are there sector headwinds in my holdings?",
-  "How would a 10% market drop affect me?",
-  "Which holding has the most downside risk?",
-  "How diversified am I across sectors?",
-  "Give me a concise portfolio summary.",
-  "What should I watch most closely right now?",
-];
-function initAiPlaceholder() {
-  const ph = document.getElementById("ai-ph-cycle");
-  const ta = document.getElementById("pro-ai-question");
-  if (!ph || !ta) return;
-  let i = 0;
-  const cycle = () => {
-    ph.classList.add("fading");
-    setTimeout(() => { i = (i + 1) % _AI_PH.length; ph.textContent = _AI_PH[i]; ph.classList.remove("fading"); }, 420);
-  };
-  const sync = () => { ph.style.display = ta.value.length ? "none" : ""; };
-  ta.addEventListener("input", sync);
-  ph.textContent = _AI_PH[0];
-  setInterval(cycle, 3400);
-  // Also: Enter = send (Shift+Enter = newline)
-  ta.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); document.getElementById("pro-ai-ask-btn")?.click(); }
-  });
-}
-
-// ── AI CHAT HISTORY ─────────────────────────────────────────────────────────
-const _AI_HK = "spectre_ai_history_v1";
-function _loadHist() { try { return JSON.parse(localStorage.getItem(_AI_HK) || "[]"); } catch { return []; } }
-function saveAiHistoryItem(q, ans) {
-  const h = _loadHist();
-  h.unshift({ id: Date.now().toString(36), q: q.slice(0,120), ans: (ans||"").slice(0,600), ts: new Date().toISOString() });
-  if (h.length > 30) h.length = 30;
-  try { localStorage.setItem(_AI_HK, JSON.stringify(h)); } catch {}
-  renderAiHistory();
-}
-function renderAiHistory() {
-  const list = document.getElementById("ai-history-list");
-  const empty = document.getElementById("ai-history-empty");
-  if (!list) return;
-  const h = _loadHist();
-  list.querySelectorAll(".ai-history-item").forEach(el => el.remove());
-  if (!h.length) { if (empty) empty.style.display = ""; return; }
-  if (empty) empty.style.display = "none";
-  h.forEach(item => {
-    const btn = document.createElement("button");
-    btn.type = "button"; btn.className = "ai-history-item"; btn.dataset.id = item.id;
-    const d = new Date(item.ts);
-    const ds = d.toLocaleDateString("en-AU",{day:"numeric",month:"short"});
-    const ts = d.toLocaleTimeString("en-AU",{hour:"2-digit",minute:"2-digit",hour12:false});
-    btn.innerHTML = `<span class="ai-history-item-q">${escapeHtml(item.q)}</span><span class="ai-history-item-ts">${escapeHtml(ds)} · ${escapeHtml(ts)}</span>`;
-    btn.addEventListener("click", () => {
-      // Load the saved Q into the textarea and show saved answer in output
-      const ta = document.getElementById("pro-ai-question");
-      if (ta instanceof HTMLTextAreaElement) { ta.value = item.q; ta.dispatchEvent(new Event("input")); }
-      const oi = document.getElementById("pro-ai-output-inner");
-      const oe = document.getElementById("pro-ai-output");
-      const im = document.getElementById("ai-input-mode");
-      if (oi) oi.innerHTML = `<div style="white-space:pre-wrap;font-size:.9rem;line-height:1.75">${escapeHtml(item.ans)}</div><p style="font-family:var(--mono);font-size:.54rem;color:var(--muted);margin-top:.75rem">Saved · ${escapeHtml(ds)} ${escapeHtml(ts)}</p>`;
-      if (oe) oe.style.display = "";
-      if (im) im.style.display = "none";
-      document.querySelectorAll(".ai-history-item").forEach(el => el.classList.remove("active"));
-      btn.classList.add("active");
-    });
-    list.appendChild(btn);
-  });
-}
-
 })();
 </script>
 </body>
