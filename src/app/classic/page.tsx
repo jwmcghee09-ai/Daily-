@@ -772,11 +772,6 @@ export default function Home() {
       return;
     }
 
-    if (!sessionUser.proEnabled) {
-      setBanner({ type: "error", message: "Upgrade to Pro to use Ask AI for holdings." });
-      return;
-    }
-
     if (state.holdings.length === 0) {
       setHoldingsAiError("Import holdings first, then run Ask AI.");
       return;
@@ -1001,6 +996,7 @@ export default function Home() {
   const benchmarkBeta = historicalRiskEstimate?.betaToBenchmark ?? null;
   const benchmarkTrackingErrorAnnualPct = historicalRiskEstimate?.trackingErrorAnnualPct ?? null;
   const proAnalyticsEnabled = sessionUser?.proEnabled === true;
+  const askAiEnabled = sessionUser != null;
   const starterPlan = !proAnalyticsEnabled;
   const dipAlertSlotsRemaining = Math.max(0, dipAlertMax - dipAlerts.length);
   const dipAlertPlanMessage = proAnalyticsEnabled
@@ -3027,7 +3023,7 @@ export default function Home() {
             <strong>{proAnalyticsEnabled ? aiRiskAdjustmentLabel : "LOCKED"}</strong>
           </article>
         </div>
-        {proAnalyticsEnabled ? (
+        {askAiEnabled ? (
           <div className="holdings-ai-panel">
             <div className="holdings-ai-head">
               <h3>Ask AI: Holdings Drivers</h3>
@@ -3145,7 +3141,7 @@ export default function Home() {
 
       {activePage === "ai" ? (
         <section className="ai-page-section">
-          {proAnalyticsEnabled ? (
+          {askAiEnabled ? (
             <div className="holdings-ai-panel">
               <div className="holdings-ai-head">
                 <h3>Ask AI: Holdings Drivers</h3>
