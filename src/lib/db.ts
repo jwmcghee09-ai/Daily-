@@ -249,6 +249,11 @@ export interface HistoricalRiskEstimateResult {
   trackingErrorAnnualPct: number | null;
   correlationToBenchmark: number | null;
   outlierReturnsRemoved: number;
+  cornishFisherVar95Pct: number | null;
+  cornishFisherVar95Amount: number | null;
+  correlationMatrix: { tickers: string[]; matrix: number[][] } | null;
+  regime: { vix: number | null; label: string; cssClass: string } | null;
+  factorExposure: { marketBeta: number | null; sizeBeta: number | null } | null;
 }
 
 export interface PriceDipAlertSetting {
@@ -1142,6 +1147,75 @@ function winsorize(values: number[], lowerP: number, upperP: number): number[] {
   });
 }
 
+function calcSkewness(values: number[]): number {
+  if (values.length < 3) return 0;
+  const n = values.length;
+  const mean = values.reduce((a, b) => a + b, 0) / n;
+  const m2 = values.reduce((a, b) => a + (b - mean) ** 2, 0) / n;
+  const m3 = values.reduce((a, b) => a + (b - mean) ** 3, 0) / n;
+  const sigma = Math.sqrt(m2);
+  return sigma > 0 ? m3 / sigma ** 3 : 0;
+}
+
+function calcExcessKurtosis(values: number[]): number {
+  if (values.length < 4) return 0;
+  const n = values.length;
+  const mean = values.reduce((a, b) => a + b, 0) / n;
+  const m2 = values.reduce((a, b) => a + (b - mean) ** 2, 0) / n;
+  const m4 = values.reduce((a, b) => a + (b - mean) ** 4, 0) / n;
+  return m2 > 0 ? m4 / m2 ** 2 - 3 : 0;
+}
+
+// Returns VaR as a positive fraction (e.g. 0.02 = 2% daily loss)
+function cornishFisherVar95(returns: number[]): number | null {
+  const vals = returns.filter(Number.isFinite);
+  if (vals.length < 20) return null;
+  const n = vals.length;
+  const mean = vals.reduce((a, b) => a + b, 0) / n;
+  const sigma = stdDev(vals);
+  if (sigma <= 0) return null;
+  const s = calcSkewness(vals);
+  const k = calcExcessKurtosis(vals);
+  const z = -1.6449; // 5th percentile z-score
+  // Cornish-Fisher expansion
+  const zCF = z + (z ** 2 - 1) * s / 6 + (z ** 3 - 3 * z) * k / 24 - (2 * z ** 3 - 5 * z) * s ** 2 / 36;
+  return -(mean + zCF * sigma);
+}
+
+function calcCorrelationMatrix(
+  returnsByTicker: Map<string, Map<string, number>>,
+  valueByTicker: Map<string, { value: number; label: string }>,
+  selectedDates: string[],
+  maxTickers = 10,
+): { tickers: string[]; matrix: number[][] } | null {
+  const sortedKeys = Array.from(returnsByTicker.keys())
+    .sort((a, b) => (valueByTicker.get(b)?.value || 0) - (valueByTicker.get(a)?.value || 0))
+    .slice(0, maxTickers);
+  if (sortedKeys.length < 2) return null;
+  const tickers = sortedKeys.map((k) => valueByTicker.get(k)?.label || k);
+  const returnArrays = sortedKeys.map((k) => {
+    const map = returnsByTicker.get(k)!;
+    return selectedDates.map((d) => map.get(d) ?? 0);
+  });
+  const n = sortedKeys.length;
+  const matrix: number[][] = Array.from({ length: n }, () => Array(n).fill(0) as number[]);
+  for (let i = 0; i < n; i++) {
+    for (let j = 0; j <= i; j++) {
+      if (i === j) {
+        matrix[i][j] = 1;
+      } else {
+        const cov = covariance(returnArrays[i], returnArrays[j]);
+        const sigI = stdDev(returnArrays[i]);
+        const sigJ = stdDev(returnArrays[j]);
+        const corr = cov != null && sigI > 0 && sigJ > 0 ? Math.max(-1, Math.min(1, cov / (sigI * sigJ))) : 0;
+        matrix[i][j] = corr;
+        matrix[j][i] = corr;
+      }
+    }
+  }
+  return { tickers, matrix };
+}
+
 function intersectReturnDates(returnsByTicker: Map<string, Map<string, number>>): string[] {
   let commonDates: Set<string> | null = null;
 
@@ -1639,6 +1713,11 @@ export async function estimateHistoricalRiskFromYahoo(
       trackingErrorAnnualPct: null,
       correlationToBenchmark: null,
       outlierReturnsRemoved: 0,
+      cornishFisherVar95Pct: null,
+      cornishFisherVar95Amount: null,
+      correlationMatrix: null,
+      regime: null,
+      factorExposure: null,
     };
   }
 
@@ -1727,6 +1806,11 @@ export async function estimateHistoricalRiskFromYahoo(
       trackingErrorAnnualPct: null,
       correlationToBenchmark: null,
       outlierReturnsRemoved,
+      cornishFisherVar95Pct: null,
+      cornishFisherVar95Amount: null,
+      correlationMatrix: null,
+      regime: null,
+      factorExposure: null,
     };
   }
 
@@ -1762,6 +1846,11 @@ export async function estimateHistoricalRiskFromYahoo(
       trackingErrorAnnualPct: null,
       correlationToBenchmark: null,
       outlierReturnsRemoved,
+      cornishFisherVar95Pct: null,
+      cornishFisherVar95Amount: null,
+      correlationMatrix: null,
+      regime: null,
+      factorExposure: null,
     };
   }
 
@@ -1792,6 +1881,15 @@ export async function estimateHistoricalRiskFromYahoo(
   const cvar95Raw = portfolioReturns.length >= 20 ? expectedShortfall95(portfolioReturns) : null;
   const cvar95Pct = cvar95Raw != null ? Math.max(0, -cvar95Raw * 100) : null;
   const cvar95Amount = cvar95Pct != null ? (cvar95Pct / 100) * usedValueTotal : null;
+
+  // Cornish-Fisher adjusted VaR
+  const cfVar95Raw = cornishFisherVar95(portfolioReturns);
+  const cornishFisherVar95Pct = cfVar95Raw != null ? Math.max(0, cfVar95Raw * 100) : null;
+  const cornishFisherVar95Amount = cornishFisherVar95Pct != null ? (cornishFisherVar95Pct / 100) * usedValueTotal : null;
+
+  // Correlation matrix (top 10 holdings by value)
+  const correlationMatrix = calcCorrelationMatrix(returnsByTicker, valueByTicker, selectedDates);
+
   let benchmarkPointsUsed = 0;
   let betaToBenchmark: number | null = null;
   let trackingErrorAnnualPct: number | null = null;
@@ -1844,6 +1942,40 @@ export async function estimateHistoricalRiskFromYahoo(
     }
   }
 
+  // Regime detection via VIX
+  let regime: { vix: number | null; label: string; cssClass: string } | null = null;
+  const vixSeries = await fetchYahooSeriesBySymbol("^VIX", windowSettings.yahooRange);
+  if (vixSeries && vixSeries.length > 0) {
+    const latestVix = vixSeries[vixSeries.length - 1].close;
+    const vixLabel = latestVix < 15 ? "Risk-On" : latestVix < 25 ? "Neutral" : "Risk-Off";
+    const vixCssClass = latestVix < 15 ? "accent" : latestVix < 25 ? "purple" : "danger";
+    regime = { vix: latestVix, label: vixLabel, cssClass: vixCssClass };
+  }
+
+  // Factor exposure — size factor via ASX Small Ords (^AXSO) as SMB proxy
+  let sizeBeta: number | null = null;
+  const smallOrdsSeries = await fetchYahooSeriesBySymbol("^AXSO", windowSettings.yahooRange);
+  if (smallOrdsSeries && smallOrdsSeries.length >= 2 && benchmarkPointsUsed >= 2) {
+    const rawSmallOrdsReturns = calculateReturnsFromPrices(smallOrdsSeries);
+    const cleanedSmallOrdsReturns = cleanReturnsForRisk(rawSmallOrdsReturns);
+    const smallOrdsMap = new Map(cleanedSmallOrdsReturns.map((p) => [p.date, p.value]));
+    const benchmarkMap2 = new Map(
+      cleanReturnsForRisk(calculateReturnsFromPrices(
+        (await fetchAsx200SeriesFromYahoo(windowSettings.yahooRange)) || []
+      )).map((p) => [p.date, p.value])
+    );
+    const portfolioReturnByDate2 = new Map(selectedDates.map((date, i) => [date, portfolioReturns[i]]));
+    const smbDates = selectedDates.filter((d) => smallOrdsMap.has(d) && benchmarkMap2.has(d) && portfolioReturnByDate2.has(d));
+    if (smbDates.length >= 10) {
+      const smbReturns = smbDates.map((d) => (smallOrdsMap.get(d) || 0) - (benchmarkMap2.get(d) || 0));
+      const portfolioForSmb = smbDates.map((d) => portfolioReturnByDate2.get(d) || 0);
+      const smbCov = covariance(portfolioForSmb, smbReturns);
+      const smbVar = stdDev(smbReturns) ** 2;
+      sizeBeta = smbCov != null && smbVar > 0 ? smbCov / smbVar : null;
+    }
+  }
+  const factorExposure = { marketBeta: betaToBenchmark, sizeBeta };
+
   const noteParts = [
     `Estimated from Yahoo adjusted-close history with date-aligned returns and current portfolio weights (${windowSettings.label} window).`,
     "This is less accurate than your own portfolio snapshot history.",
@@ -1888,6 +2020,11 @@ export async function estimateHistoricalRiskFromYahoo(
     trackingErrorAnnualPct,
     correlationToBenchmark,
     outlierReturnsRemoved,
+    cornishFisherVar95Pct,
+    cornishFisherVar95Amount,
+    correlationMatrix,
+    regime,
+    factorExposure,
   };
 }
 
