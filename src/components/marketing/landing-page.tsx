@@ -20,69 +20,70 @@ type WorkflowStep = MarketingCard & {
 const tickerItems = [
   ["BHP", "45.82", "+1.2%", "up"],
   ["CBA", "131.44", "-0.4%", "dn"],
+  ["AUD/USD", "0.629", "+0.2%", "up"],
+  ["GOLD", "3112", "+0.8%", "up"],
+  ["WTI", "69.86", "-1.9%", "dn"],
+  ["BTC", "84.2k", "+1.4%", "up"],
+  ["ETH", "1,965", "+2.3%", "up"],
   ["CSL", "288.10", "+0.7%", "up"],
-  ["WES", "77.30", "-1.1%", "dn"],
-  ["ANZ", "29.55", "+0.3%", "up"],
-  ["NAB", "38.20", "+0.5%", "up"],
-  ["FMG", "18.44", "-2.1%", "dn"],
-  ["RIO", "112.60", "+0.9%", "up"],
   ["MQG", "218.75", "+1.4%", "up"],
-  ["WBC", "32.10", "-0.2%", "dn"],
+  ["FMG", "18.44", "-2.1%", "dn"],
+  ["VIX", "21.4", "-6.1%", "dn"],
 ] as const;
 
 const workflowSteps: readonly WorkflowStep[] = [
   {
     number: "01 — IMPORT",
-    title: "Import Reports",
-    copy: "Drop in CSV or XLSX exports from any Australian broker, exchange, or fund.",
+    title: "Import Every Source",
+    copy: "Bring in broker, super, crypto, fund, savings, tax, and bullion exports without rebuilding your spreadsheet stack.",
     icon: <UploadIcon />,
   },
   {
     number: "02 — NORMALIZE",
-    title: "Normalize Exposure",
-    copy: "Holdings combined by source, sector, and instrument into one view.",
+    title: "Build Portfolio Context",
+    copy: "SPECTRE merges holdings, prices, sectors, account buckets, snapshots, and benchmark context into one AI-ready workspace.",
     icon: <GridIcon />,
     alt: true,
   },
   {
     number: "03 — REVIEW",
-    title: "Act on Risk Signals",
-    copy: "Risk score, concentration alerts, VaR95, and dip emails — all in one place.",
+    title: "Ask, Simulate, Monitor",
+    copy: "Run AI analysis, Monte Carlo scenarios, VaR and drawdown checks, and live dip alerts from the same system.",
     icon: <PulseIcon />,
   },
 ] as const;
 
 const features: readonly MarketingCard[] = [
   {
-    title: "Multi-Source Import",
-    copy: "Super, ASX, crypto, funds, and bullion — one import flow.",
+    title: "AI Portfolio Analyst",
+    copy: "Natural-language answers grounded in holdings, weights, live pricing, snapshots, and research context.",
     icon: <UploadIcon />,
   },
   {
-    title: "Risk Score",
-    copy: "One number. Five signal dimensions. Live dashboard.",
+    title: "Cross-Source Ingestion",
+    copy: "CommSec, broker exports, super, ETFs, funds, crypto, savings, tax reports, and bullion in one workflow.",
     icon: <PulseIcon />,
     alt: true,
   },
   {
+    title: "Quant Risk Engine",
+    copy: "Risk score, VaR95, Expected Shortfall, beta, tracking error, correlation, drawdown, and data-quality checks.",
+    icon: <BarsIcon />,
+  },
+  {
     title: "Research Terminal",
-    copy: "ASX, macro, earnings, and crypto — all in one tab.",
+    copy: "ASX, macro, earnings, crypto, commodities, FRED signals, central-bank rates, and CFTC positioning.",
     icon: <BarsIcon />,
   },
   {
-    title: "Session Movers",
-    copy: "Today's biggest ASX movers with dip email alerts.",
-    icon: <BarsIcon />,
-  },
-  {
-    title: "Snapshot History",
-    copy: "Historical risk snapshots with data quality signals.",
+    title: "Monte Carlo & Stress",
+    copy: "500-path portfolio projections with bull, base, and bear outcomes tied to your imported holdings.",
     icon: <ClockIcon />,
     alt: true,
   },
   {
-    title: "Dip Alerts",
-    copy: "Email alerts when your holdings hit your thresholds.",
+    title: "Alerts & History",
+    copy: "Snapshot history, data-quality confidence, and dip alerts so AI has memory and you have follow-through.",
     icon: <BellIcon />,
     alt: true,
   },
@@ -90,30 +91,27 @@ const features: readonly MarketingCard[] = [
 
 const riskSignals = [
   { label: "Concentration", value: 82, tone: "purple" },
-  { label: "VaR 95%", value: 68, tone: "pink" },
-  { label: "Drawdown", value: 55, tone: "orange" },
-  { label: "Volatility", value: 47, tone: "amber" },
+  { label: "Expected Shortfall", value: 74, tone: "pink" },
+  { label: "Tracking Error", value: 58, tone: "orange" },
+  { label: "Beta vs ASX 200", value: 63, tone: "amber" },
   { label: "Data Quality", value: 91, tone: "soft" },
 ] as const;
 
 const sectorConcentration = [
-  { label: "Materials", value: 28 },
-  { label: "Financials", value: 22 },
-  { label: "Healthcare", value: 16 },
-  { label: "Energy", value: 14 },
-  { label: "Consumer", value: 10 },
-  { label: "Other", value: 10 },
+  { label: "ASX Equities", value: 32 },
+  { label: "Super", value: 28 },
+  { label: "Funds / ETFs", value: 16 },
+  { label: "Crypto", value: 12 },
+  { label: "Bullion", value: 8 },
+  { label: "Cash", value: 4 },
 ] as const;
 
 const sessionMovers = [
-  { symbol: "BHP", change: "+1.2%", width: 78, tone: "up" },
-  { symbol: "MQG", change: "+1.4%", width: 92, tone: "up" },
-  { symbol: "RIO", change: "+0.9%", width: 58, tone: "up" },
-  { symbol: "CSL", change: "+0.7%", width: 44, tone: "up" },
-  { symbol: "WBC", change: "-0.2%", width: 14, tone: "down" },
-  { symbol: "CBA", change: "-0.4%", width: 28, tone: "down" },
-  { symbol: "WES", change: "-1.1%", width: 72, tone: "down" },
-  { symbol: "FMG", change: "-2.1%", width: 100, tone: "down" },
+  { symbol: "P90", change: "$1.62M", width: 100, tone: "up" },
+  { symbol: "P75", change: "$1.49M", width: 82, tone: "up" },
+  { symbol: "P50", change: "$1.36M", width: 66, tone: "up" },
+  { symbol: "P25", change: "$1.22M", width: 46, tone: "down" },
+  { symbol: "P10", change: "$1.08M", width: 28, tone: "down" },
 ] as const;
 
 const securityCards: readonly MarketingCard[] = [
@@ -155,12 +153,17 @@ const faqs = [
   {
     question: "What is the SPECTRE risk score?",
     answer:
-      "The risk score is a 0 to 100 composite metric built from concentration, VaR95, maximum drawdown, historical volatility, and data quality confidence.",
+      "The risk score is a 0 to 100 portfolio health signal built from concentration, drawdown, VaR and Expected Shortfall, benchmark sensitivity, volatility, and data quality confidence.",
   },
   {
     question: "How is AI analysis different on Pro vs Free?",
     answer:
-      "AI holdings analysis is available on all plans including Free. Every tier gets a natural-language console where you can ask questions about your holdings. Pro unlocks unlimited AI queries, while Free and Plus include a daily allowance.",
+      "Every plan gets the same holdings-aware AI workflow, but usage limits differ. Free includes 3 AI sessions per month, Plus includes 20 per month, and Pro unlocks unlimited AI plus the deepest quant analytics.",
+  },
+  {
+    question: "What data does the research terminal include?",
+    answer:
+      "The research terminal covers ASX equities, earnings, macro, crypto, commodities, oil, gold, central-bank rates, treasury curves, FRED macro signals, CFTC positioning, analyst targets, and live market news.",
   },
   {
     question: "Can I cancel anytime?",
@@ -187,6 +190,7 @@ export default function LandingPage({
     const reveals = document.querySelectorAll<HTMLElement>(
       `.${styles.reveal}, .${styles.revealLeft}, .${styles.revealRight}, .${styles.revealScale}, .${styles.revealUp}`,
     );
+    const compactMotion = typeof window !== "undefined" && window.innerWidth <= 960;
 
     const revealObserver = new IntersectionObserver(
       (entries) => {
@@ -196,7 +200,10 @@ export default function LandingPage({
           revealObserver.unobserve(entry.target);
         });
       },
-      { threshold: 0.08 },
+      {
+        threshold: compactMotion ? 0.03 : 0.08,
+        rootMargin: compactMotion ? "0px 0px -10% 0px" : "0px",
+      },
     );
 
     reveals.forEach((element) => revealObserver.observe(element));
@@ -251,12 +258,18 @@ export default function LandingPage({
 
   useEffect(() => {
     const onScroll = () => {
+      const compactMotion = window.innerWidth <= 960;
       const heroProduct = heroProductRef.current;
       if (heroProduct) {
         const p = Math.min(window.scrollY / window.innerHeight, 1);
         const e = 1 - Math.pow(1 - p, 2.5);
-        heroProduct.style.transform = `scale(${(0.82 + e * 0.18).toFixed(4)}) translateY(${((1 - e) * 60).toFixed(1)}px)`;
-        heroProduct.style.opacity = (0.35 + e * 0.65).toFixed(3);
+        const startScale = compactMotion ? 0.92 : 0.82;
+        const scaleRange = compactMotion ? 0.08 : 0.18;
+        const startOffset = compactMotion ? 24 : 60;
+        const startOpacity = compactMotion ? 0.72 : 0.35;
+        const opacityRange = compactMotion ? 0.28 : 0.65;
+        heroProduct.style.transform = `scale(${(startScale + e * scaleRange).toFixed(4)}) translateY(${((1 - e) * startOffset).toFixed(1)}px)`;
+        heroProduct.style.opacity = (startOpacity + e * opacityRange).toFixed(3);
       }
       const sticky = stickySectionRef.current;
       if (sticky) {
@@ -273,8 +286,12 @@ export default function LandingPage({
         const rect = aiSection.getBoundingClientRect();
         const p = Math.max(0, Math.min(1, (window.innerHeight - rect.top) / (window.innerHeight * 0.72)));
         const e = 1 - Math.pow(1 - p, 3);
-        aiConsole.style.transform = `scale(${(0.72 + e * 0.28).toFixed(4)}) translateY(${((1 - e) * 50).toFixed(1)}px)`;
-        aiConsole.style.opacity = e.toFixed(3);
+        const startScale = compactMotion ? 0.9 : 0.72;
+        const scaleRange = compactMotion ? 0.1 : 0.28;
+        const startOffset = compactMotion ? 18 : 50;
+        const startOpacity = compactMotion ? 0.5 : 0;
+        aiConsole.style.transform = `scale(${(startScale + e * scaleRange).toFixed(4)}) translateY(${((1 - e) * startOffset).toFixed(1)}px)`;
+        aiConsole.style.opacity = (startOpacity + e * (1 - startOpacity)).toFixed(3);
       }
     };
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -300,7 +317,7 @@ export default function LandingPage({
           <div className={styles.navLinks}>
             <a href="#workflow">Workflow</a>
             <a href="#features">Features</a>
-            <a href="#pro-ai">AI Analysis</a>
+            <a href="#ai">AI Analysis</a>
             <a href="#pricing">Pricing</a>
             <a href="#security">Security</a>
           </div>
@@ -341,12 +358,12 @@ export default function LandingPage({
           ) : null}
 
           <div className={styles.heroIntro}>
-            <div className={`${styles.heroBadge} ${styles.reveal}`}>SPECTRE — ASX Portfolio Risk</div>
+            <div className={`${styles.heroBadge} ${styles.reveal}`}>SPECTRE — AI Portfolio Intelligence</div>
             <h1 className={`${styles.heroTitle} ${styles.reveal}`}>
-              Your portfolio risk,<br /><span>seen clearly.</span>
+              The AI operating system<br /><span>for your portfolio.</span>
             </h1>
             <p className={`${styles.heroSub} ${styles.reveal}`}>
-              Turn CSV exports from super, ASX, crypto, and funds into one unified risk view — in minutes.
+              SPECTRE turns holdings, research, and market data into one AI-native workspace for quant analysis, live research, and faster portfolio decisions.
             </p>
             <div className={`${styles.heroActions} ${styles.reveal}`}>
               <Link href="/signin?mode=register&plan=free" className={`${styles.button} ${styles.primaryButton} ${styles.heroButton}`}>
@@ -367,14 +384,14 @@ export default function LandingPage({
 
             <div className={styles.dashboardStats}>
               <StatCard label="Portfolio Value" value="$1.27M" sub="+2.1% MTD" tone="up" />
-              <StatCard label="Holdings" value="24" sub="Across 6 sources" />
-              <StatCard label="VaR 95%" value="2.1%" sub="Elevated" tone="down" />
-              <StatCard label="Max Drawdown" value="11%" sub="12-month window" />
+              <StatCard label="Import Sources" value="8" sub="Broker, super, crypto, bullion" />
+              <StatCard label="AI Coverage" value="24" sub="Holdings + research context" />
+              <StatCard label="Monte Carlo" value="500" sub="1Y simulation paths" />
             </div>
 
             <div className={styles.dashboardCharts}>
               <div className={styles.chartBox}>
-                <div className={styles.chartTitle}>Risk Score Trend — 72 / 100 (Elevated)</div>
+                <div className={styles.chartTitle}>AI Risk Snapshot — 72 / 100 (Elevated)</div>
                 <svg className={styles.sparkline} viewBox="0 0 400 60" aria-hidden="true">
                   <defs>
                     <linearGradient id="landingLineGrad" x1="0" y1="0" x2="1" y2="0">
@@ -398,14 +415,14 @@ export default function LandingPage({
                     fill="url(#landingFillGrad)"
                   />
                 </svg>
-                <div className={styles.riskMeta}>Concentration · Drawdown · VaR95 · Volatility</div>
+                <div className={styles.riskMeta}>Concentration · VaR95 · Expected Shortfall · Beta · Tracking Error</div>
                 <div className={styles.riskBar}>
                   <div className={styles.riskBarFill} />
                 </div>
               </div>
 
               <div className={styles.chartBox}>
-                <div className={styles.chartTitle}>Allocation</div>
+                <div className={styles.chartTitle}>Source Mix</div>
                 <div className={styles.donutWrap}>
                   <svg width="88" height="88" viewBox="0 0 80 80" aria-hidden="true">
                     <circle cx="40" cy="40" r="28" fill="none" stroke="#111318" strokeWidth="16" />
@@ -415,10 +432,10 @@ export default function LandingPage({
                     <circle cx="40" cy="40" r="28" fill="none" stroke="#fb923c" strokeWidth="16" strokeDasharray="18 95" strokeDashoffset="-135" transform="rotate(-90 40 40)" />
                   </svg>
                   <div className={styles.legend}>
-                    <LegendItem color="#a855f7" label="Equities" value="46%" />
+                    <LegendItem color="#a855f7" label="ASX Equities" value="32%" />
                     <LegendItem color="#ff7a30" label="Super" value="28%" />
-                    <LegendItem color="#e879f9" label="Bullion" value="16%" />
-                    <LegendItem color="#fb923c" label="Cash" value="10%" />
+                    <LegendItem color="#e879f9" label="Funds / ETFs" value="16%" />
+                    <LegendItem color="#fb923c" label="Crypto + Bullion" value="24%" />
                   </div>
                 </div>
               </div>
@@ -432,10 +449,10 @@ export default function LandingPage({
         <div className={styles.container}>
           <div className={styles.statsGrid}>
             {[
-              { val: "24+", label: "File Formats" },
-              { val: "6", label: "Risk Metrics" },
-              { val: "5", label: "Research Tabs" },
-              { val: "$0", label: "To Start" },
+              { val: "8", label: "Import Sources" },
+              { val: "12+", label: "Risk Signals" },
+              { val: "500", label: "Monte Carlo Paths" },
+              { val: "3", label: "Quant · AI · Research" },
             ].map(({ val, label }) => (
               <div key={label} className={styles.statStat}>
                 <div className={styles.statStatVal}>{val}</div>
@@ -449,12 +466,12 @@ export default function LandingPage({
       <section className={styles.aiRevealSection} id="ai" ref={aiSectionRef}>
         <div className={styles.container}>
           <div className={styles.aiRevealHead}>
-            <div className={`${styles.sectionLabel} ${styles.reveal}`}>SPECTRE AI</div>
+            <div className={`${styles.sectionLabel} ${styles.reveal}`}>AI Portfolio Analyst</div>
             <h2 className={`${styles.aiRevealTitle} ${styles.reveal}`} style={{ transitionDelay: "0.07s" }}>
-              Ask your portfolio<br /><span>anything.</span>
+              Ask your portfolio<br /><span>with context.</span>
             </h2>
             <p className={`${styles.aiRevealSub} ${styles.reveal}`} style={{ transitionDelay: "0.14s" }}>
-              Grounded in your live holdings and real-time market data. Available on every plan.
+              Not generic finance chat. SPECTRE AI reads your holdings, live pricing, benchmark risk, research terminal data, and saved snapshots before it answers.
             </p>
           </div>
           <div ref={aiConsoleRef} className={styles.aiConsoleReveal}>
@@ -465,20 +482,20 @@ export default function LandingPage({
                 <span className={styles.proTag} style={{ marginLeft: "auto" }}>All Plans</span>
               </div>
               <div className={styles.aiConsole}>
-                <div className={styles.aiPrompt}>› What&apos;s driving BHP&apos;s recent price action in my portfolio?</div>
+                <div className={styles.aiPrompt}>› What is most likely influencing the value of my current holdings right now?</div>
                 <div className={styles.aiResponse}>
-                  <strong>BHP (7.3% of portfolio)</strong> is showing positive momentum driven by iron ore spot prices rebounding above USD 110/t. Concentration is near threshold — monitor if it exceeds <strong>8%</strong>. Upside driver: China stimulus expectations. Downside risk: USD strength.
+                  <strong>Your top drivers today</strong> are bank concentration, AUD weakness, and the commodity sleeve. CBA and NAB are lifting portfolio value, while FMG and WTI-linked energy exposure are adding downside volatility. Risk remains elevated because the top 3 positions are <strong>42%</strong> of the book and 1-day <strong>VaR 95%</strong> is above your recent median.
                   <span className={styles.aiCursor} />
                 </div>
               </div>
               <div className={styles.miniGrid} style={{ marginTop: "14px" }}>
                 <div className={styles.miniCard}>
                   <div className={styles.smallLabel}>What AI Reads</div>
-                  <p>Holdings, weights, live prices, technical signals, concentration.</p>
+                  <p>Holdings, weights, live quotes, sector mix, benchmark risk, research signals, and snapshot history.</p>
                 </div>
                 <div className={styles.miniCard}>
-                  <div className={styles.smallLabel}>What You Get</div>
-                  <p>Top drivers, confidence analysis, and follow-up review points.</p>
+                  <div className={styles.smallLabel}>What AI Returns</div>
+                  <p>Portfolio drivers, holding-level explanations, risk flags, next actions, and confidence-based follow-up checks.</p>
                 </div>
               </div>
               <div className={styles.aiRevealCta}>
@@ -495,20 +512,20 @@ export default function LandingPage({
 
       <section className={styles.section} id="research">
         <div className={styles.container}>
-          <div className={`${styles.sectionLabel} ${styles.reveal}`}>Market Research</div>
-          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`} style={{ transitionDelay: "0.07s" }}>Market context before you act.</h2>
+          <div className={`${styles.sectionLabel} ${styles.reveal}`}>Research Terminal</div>
+          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`} style={{ transitionDelay: "0.07s" }}>Live market context for every answer.</h2>
           <p className={`${styles.sectionSub} ${styles.reveal}`} style={{ transitionDelay: "0.14s" }}>
-            A 5-tab terminal for Plus and Pro — macro, equities, earnings, sector, and crypto in one place.
+            The same research system feeding the product: ASX, macro, earnings, crypto, commodities, oil, gold, treasury curves, and FRED/CFTC signals in one place.
           </p>
 
           <div className={styles.researchHighlights}>
             {[
-              { name: "Live Indices", sub: "ASX 200, AUD/USD, VIX, Gold, BTC, ETH — refreshed every 5 minutes", alt: false },
-              { name: "12 Earnings Snapshots", sub: "BHP, CBA, CSL, WES, ANZ, NAB, WBC, MQG, RIO, FMG, WDS, TLS", alt: false },
-              { name: "Sector Charts", sub: "Interactive bar and line charts for sector performance and macro data", alt: false },
-              { name: "US Market Movers", sub: "Live gainers, losers, and most active each session", alt: true },
-              { name: "News Feed", sub: "FMP and Yahoo Finance headlines with economic calendar", alt: true },
-              { name: "Analyst Context", sub: "Bull/bear cases and earnings beat/miss status per stock", alt: true },
+              { name: "Live Core Tape", sub: "ASX 200, AUD/USD, VIX, gold, WTI crude, BTC, ETH, and SOL with live hero cards.", alt: false },
+              { name: "ASX Equities", sub: "Top constituents, sector breadth, gainers/losers, analyst targets, and interactive stock charts.", alt: false },
+              { name: "Macro & Commodities", sub: "Treasury curve, central-bank rates, FX, gold, oil, inflation, and risk-on / risk-off context.", alt: false },
+              { name: "FRED + CFTC", sub: "Credit spreads, breakevens, money supply, Fed balance sheet, and managed-money positioning.", alt: true },
+              { name: "12 ASX Earnings Names", sub: "Calendar, surprises, fundamentals, and preview context for banks, miners, healthcare, and energy.", alt: true },
+              { name: "News + Calendar", sub: "Headline feed, economic calendar, and session context ready to feed the AI workflow.", alt: true },
             ].map((tile, index) => (
               <div key={tile.name} className={`${styles.researchTile} ${styles.reveal}`} style={{ transitionDelay: `${index * 0.08}s` }}>
                 <div className={`${styles.researchTileIcon} ${tile.alt ? styles.researchTileIconAlt : ""}`}>
@@ -635,7 +652,7 @@ export default function LandingPage({
       <section className={styles.section} id="features">
         <div className={styles.container}>
           <div className={`${styles.sectionLabel} ${styles.reveal}`}>Features</div>
-          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`} style={{ transitionDelay: "0.07s" }}>Everything you need, nothing you don&apos;t.</h2>
+          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`} style={{ transitionDelay: "0.07s" }}>One AI-native workspace across quant, research, and monitoring.</h2>
 
           <div className={styles.featureGrid}>
             {features.map((feature, index) => (
@@ -654,13 +671,13 @@ export default function LandingPage({
       <section className={styles.section} id="charts">
         <div className={styles.container}>
           <div className={`${styles.sectionLabel} ${styles.reveal}`}>Dashboard Preview</div>
-          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`} style={{ transitionDelay: "0.07s" }}>This is what your data looks like.</h2>
+          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`} style={{ transitionDelay: "0.07s" }}>What the live system actually tracks.</h2>
 
           <div className={styles.chartsGrid}>
             <article className={`${styles.chartCard} ${styles.chartTall} ${styles.revealLeft}`}>
               <div className={styles.chartCardHeader}>
-                <span className={styles.chartCardTitle}>Risk Signal Levels</span>
-                <span className={styles.chartBadge}>Live Metrics</span>
+                <span className={styles.chartCardTitle}>Risk Engine Surface</span>
+                <span className={styles.chartBadge}>Quant Signals</span>
               </div>
 
               <div className={styles.metricBars}>
@@ -681,7 +698,7 @@ export default function LandingPage({
               </div>
 
               <div className={styles.chartFooter}>
-                Concentration and VaR95 are your primary signals.
+                The production dashboard combines concentration, tail-risk, benchmark, and data-confidence layers.
               </div>
             </article>
 
@@ -722,14 +739,14 @@ export default function LandingPage({
               </div>
 
               <div className={styles.chartFooter}>
-                Peak-to-trough decline over the trailing 12 months.
+                Snapshot history lets AI compare current stress to prior portfolio states.
               </div>
             </article>
 
             <article className={`${styles.chartCard} ${styles.reveal}`} style={{ transitionDelay: "0.1s" }}>
               <div className={styles.chartCardHeader}>
-                <span className={styles.chartCardTitle}>Sector Concentration</span>
-                <span className={styles.chartBadge}>Top-3 = 42%</span>
+                <span className={styles.chartCardTitle}>Portfolio Exposure Mix</span>
+                <span className={styles.chartBadge}>Cross-Source</span>
               </div>
 
               <div className={styles.concentrationList}>
@@ -745,14 +762,14 @@ export default function LandingPage({
               </div>
 
               <div className={styles.chartFooter}>
-                Top-3 at 42% exceeds the 35% caution threshold.
+                SPECTRE understands asset-type and source exposure, not just ticker counts.
               </div>
             </article>
 
             <article className={`${styles.chartCard} ${styles.reveal}`} style={{ transitionDelay: "0.18s" }}>
               <div className={styles.chartCardHeader}>
-                <span className={styles.chartCardTitle}>ASX Session Movers</span>
-                <span className={`${styles.chartBadge} ${styles.chartBadgeOrange}`}>Today</span>
+                <span className={styles.chartCardTitle}>Monte Carlo Projection (1Y)</span>
+                <span className={`${styles.chartBadge} ${styles.chartBadgeOrange}`}>500 Paths</span>
               </div>
 
               <div className={styles.moversList}>
@@ -773,7 +790,7 @@ export default function LandingPage({
               </div>
 
               <div className={styles.chartFooter}>
-                Dip alerts trigger when holdings hit your thresholds.
+                Pro workspaces project P10 to P90 outcomes from the imported portfolio, not a generic model portfolio.
               </div>
             </article>
           </div>
@@ -808,8 +825,8 @@ export default function LandingPage({
       <section className={styles.section} id="pricing">
         <div className={styles.container}>
           <div className={`${styles.sectionLabel} ${styles.reveal}`}>Pricing</div>
-          <h2 className={`${styles.sectionTitle} ${styles.centered} ${styles.reveal}`} style={{ transitionDelay: "0.07s" }}>Simple pricing, low barrier to start.</h2>
-          <p className={`${styles.sectionSub} ${styles.centeredSub} ${styles.reveal}`} style={{ transitionDelay: "0.14s" }}>One private workspace per account. Cancel anytime through Stripe.</p>
+          <h2 className={`${styles.sectionTitle} ${styles.centered} ${styles.reveal}`} style={{ transitionDelay: "0.07s" }}>Start with the AI workspace you need.</h2>
+          <p className={`${styles.sectionSub} ${styles.centeredSub} ${styles.reveal}`} style={{ transitionDelay: "0.14s" }}>One private workspace per account. Upgrade from quant + AI basics to full research and pro analytics anytime.</p>
 
           <div className={styles.pricingGrid}>
             <article className={`${styles.planCard} ${styles.reveal}`}>
@@ -818,11 +835,11 @@ export default function LandingPage({
                 <span>$0</span>
                 <small>/month</small>
               </div>
-              <p>A private workspace and full risk dashboard at no cost.</p>
+              <p>Your private quant dashboard with foundational AI access.</p>
               <ul>
                 <li>Multi-source CSV/XLSX import</li>
-                <li>Risk score and dashboard charts</li>
-                <li>AI holdings analysis — daily queries</li>
+                <li>Quant dashboard with risk score, VaR, drawdown, and exposure views</li>
+                <li>3 AI sessions per month</li>
               </ul>
               <Link href="/signin?mode=register&plan=free" className={`${styles.button} ${styles.outlineButton} ${styles.blockButton}`}>
                 Get Started Free
@@ -836,12 +853,12 @@ export default function LandingPage({
                 <span>$2.99</span>
                 <small>/month</small>
               </div>
-              <p>Free, plus research terminal and snapshot history.</p>
+              <p>The full research stack plus more AI usage.</p>
               <ul>
                 <li>Everything in Free</li>
+                <li>20 AI sessions per month</li>
                 <li>Market research terminal</li>
-                <li>Dip alert emails</li>
-                <li>Snapshot history</li>
+                <li>Dip alerts and snapshot history</li>
               </ul>
               <Link href="/signin?mode=register&plan=plus" className={`${styles.button} ${styles.primaryButton} ${styles.blockButton}`}>
                 Get Plus
@@ -854,12 +871,12 @@ export default function LandingPage({
                 <span>$9.99</span>
                 <small>/month</small>
               </div>
-              <p>Plus, unlimited AI queries and advanced analytics.</p>
+              <p>The full AI analyst workflow with the deepest quant tooling.</p>
               <ul>
                 <li>Everything in Plus</li>
                 <li>Unlimited AI queries</li>
-                <li>Expected Shortfall (ES 95)</li>
-                <li>Beta &amp; tracking error vs ASX 200</li>
+                <li>Monte Carlo simulation and stress projections</li>
+                <li>Expected Shortfall, beta, tracking error, and deeper benchmark analytics</li>
               </ul>
               <Link href="/signin?mode=register&plan=pro" className={`${styles.button} ${styles.outlineButton} ${styles.blockButton}`}>
                 Get Pro
@@ -874,28 +891,28 @@ export default function LandingPage({
       <section className={styles.section}>
         <div className={styles.container}>
           <div className={`${styles.sectionLabel} ${styles.reveal}`}>Why SPECTRE?</div>
-          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`} style={{ transitionDelay: "0.07s" }}>Built different.</h2>
+          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`} style={{ transitionDelay: "0.07s" }}>An AI company built around portfolio context.</h2>
 
           <div className={styles.compareGrid}>
             <div className={`${styles.compareColumn} ${styles.revealLeft}`}>
               <div className={styles.compareHead}>Other Approaches</div>
-              <CompareItem tone="bad">Scattered spreadsheets, no unified risk view</CompareItem>
-              <CompareItem tone="bad">Manual tracking across multiple platforms</CompareItem>
-              <CompareItem tone="bad">Hidden concentration goes undetected</CompareItem>
-              <CompareItem tone="bad">No VaR, drawdown, or correlation analysis</CompareItem>
-              <CompareItem tone="bad">No dip alerts or market-linked signals</CompareItem>
+              <CompareItem tone="bad">Generic chat tools with no view of your actual holdings</CompareItem>
+              <CompareItem tone="bad">Portfolio apps with charts but no real research context</CompareItem>
+              <CompareItem tone="bad">Manual spreadsheets for super, crypto, bullion, and broker accounts</CompareItem>
+              <CompareItem tone="bad">No Monte Carlo, benchmark sensitivity, or tail-risk layer</CompareItem>
+              <CompareItem tone="bad">No alerts, snapshots, or memory between decisions</CompareItem>
             </div>
 
             <div className={`${styles.compareColumn} ${styles.compareHighlight} ${styles.revealRight}`}>
               <div className={styles.compareHead}>
                 SPECTRE
-                <span className={styles.compareTag}>Risk-Ready</span>
+                <span className={styles.compareTag}>AI-Native</span>
               </div>
-              <CompareItem tone="good">One unified risk dashboard across all sources</CompareItem>
-              <CompareItem tone="good">Automated CSV normalization in seconds</CompareItem>
-              <CompareItem tone="good">Concentration alerts with threshold scoring</CompareItem>
-              <CompareItem tone="good">VaR95, drawdown, volatility &amp; benchmark analytics</CompareItem>
-              <CompareItem tone="good">ASX session movers with dip email alerts</CompareItem>
+              <CompareItem tone="good">AI answers grounded in holdings, pricing, benchmarks, and research</CompareItem>
+              <CompareItem tone="good">One unified workspace across quant, AI, and live research</CompareItem>
+              <CompareItem tone="good">Automated normalization across super, broker, crypto, bullion, and funds</CompareItem>
+              <CompareItem tone="good">VaR, ES, drawdown, beta, tracking error, and Monte Carlo in one system</CompareItem>
+              <CompareItem tone="good">Alerts, snapshots, and market-linked monitoring built in</CompareItem>
             </div>
           </div>
         </div>
@@ -938,8 +955,8 @@ export default function LandingPage({
         <div className={`${styles.container} ${styles.revealScale}`}>
           <div className={styles.ctaPanel}>
             <div className={styles.heroBadge}>Start free — no card required</div>
-            <h2>See your risk clearly.</h2>
-            <p>Import your first CSV and get a risk score in minutes.</p>
+            <h2>Give your portfolio an AI analyst.</h2>
+            <p>Import your first files and open Quant, AI, and Research in one private workspace.</p>
             <div className={styles.heroActions}>
               <Link href="/signin?mode=register&plan=free" className={`${styles.button} ${styles.primaryButton} ${styles.heroButton}`}>
                 Get Started Free
@@ -958,7 +975,7 @@ export default function LandingPage({
             <div>
               <div className={styles.brand}>SPECTRE</div>
               <p className={styles.footerTagline}>
-                System for Portfolio Exposure, Correlation, Threat &amp; Risk Evaluation. Purpose-built for investors managing multi-source portfolios.
+                AI portfolio intelligence for Australian investors managing multi-source portfolios across quant, research, and live monitoring.
               </p>
             </div>
             <div>
@@ -966,7 +983,7 @@ export default function LandingPage({
               <ul>
                 <li><a href="#workflow">How It Works</a></li>
                 <li><a href="#features">Features</a></li>
-                <li><a href="#pro-ai">AI Analysis</a></li>
+                <li><a href="#ai">AI Analysis</a></li>
                 <li><a href="#pricing">Pricing</a></li>
                 <li><Link href="/dashboard?demo=1">Live Demo</Link></li>
               </ul>

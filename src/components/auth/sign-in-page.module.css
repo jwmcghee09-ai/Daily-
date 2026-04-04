@@ -217,6 +217,54 @@
   font-size: 30px;
 }
 
+.modeCard {
+  margin-top: 18px;
+  padding: 16px 18px;
+  border: 1px solid rgba(160, 100, 255, 0.16);
+  border-radius: 16px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.02)),
+    rgba(15, 11, 28, 0.82);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.modeCardTitle {
+  margin-bottom: 10px;
+  color: #f4f0ff;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.modeCardList {
+  list-style: none;
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+}
+
+.modeCardList li {
+  position: relative;
+  padding-left: 18px;
+  color: #b3a7d3;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.modeCardList li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 10px;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #a855f7, #ff7a30);
+  box-shadow: 0 0 12px rgba(255, 122, 48, 0.24);
+}
+
 .banner {
   padding: 14px 16px;
   border-radius: 12px;
@@ -460,28 +508,35 @@
   width: 100%;
 }
 
+.forgotLink {
+  display: inline-flex;
+  justify-self: start;
+  align-items: center;
+  width: auto;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #d9c8ff;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.3;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.2s ease, transform 0.2s ease, text-shadow 0.2s ease;
+}
+
+.forgotLink:hover,
+.forgotLink:focus-visible {
+  color: #ffb27e;
+  text-shadow: 0 0 18px rgba(255, 122, 48, 0.24);
+  transform: translateY(-1px);
+  outline: 0;
+}
+
 .sessionActions {
   display: grid;
   gap: 14px;
   margin-top: 24px;
-}
-
-.forgotLink {
-  display: block;
-  width: 100%;
-  text-align: center;
-  border: 0;
-  background: transparent;
-  color: #9b8fbb;
-  font-size: 13px;
-  font-weight: 500;
-  padding: 6px 0 0;
-  cursor: pointer;
-  transition: color 0.2s ease;
-}
-
-.forgotLink:hover {
-  color: #e3d7ff;
 }
 
 /* ── Password reset flow ── */
