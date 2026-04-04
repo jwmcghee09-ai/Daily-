@@ -485,6 +485,19 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;background:rgba(5,5,10,.92);
 .risk-val.danger{color:var(--orange);text-shadow:0 0 16px rgba(255,77,26,.25)}
 .risk-val.purple{color:var(--purple-hi)}
 .risk-sub{font-family:var(--mono);font-size:.54rem;color:var(--muted);margin-top:.3rem}
+.corr-matrix{display:grid;gap:2px;margin-top:1rem;width:fit-content;max-width:100%;overflow-x:auto}
+.corr-cell{width:2.4rem;height:2.4rem;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:.42rem;color:rgba(255,255,255,.7);border-radius:2px;transition:opacity .2s}
+.corr-cell.corr-label{background:transparent;font-size:.45rem;color:var(--muted);justify-content:flex-end;padding-right:.3rem;width:4.5rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.corr-cell.corr-label-top{height:4.5rem;width:2.4rem;writing-mode:vertical-rl;transform:rotate(180deg);justify-content:flex-start;padding-bottom:.3rem;font-size:.45rem}
+.factor-bars{display:flex;flex-direction:column;gap:1rem;margin-top:1rem}
+.factor-row{display:flex;align-items:center;gap:1rem}
+.factor-row-label{font-family:var(--mono);font-size:.52rem;color:var(--muted);width:9rem;text-align:right;flex-shrink:0}
+.factor-bar-wrap{flex:1;background:rgba(255,255,255,.06);border-radius:3px;height:.7rem;position:relative;overflow:visible}
+.factor-bar-fill{height:100%;border-radius:3px;transition:width .5s ease}
+.factor-bar-fill.pos{background:var(--purple-hi)}
+.factor-bar-fill.neg{background:var(--orange)}
+.factor-bar-zero{position:absolute;top:-3px;bottom:-3px;width:1px;background:rgba(255,255,255,.2);left:50%}
+.factor-val{font-family:var(--mono);font-size:.56rem;color:var(--text);width:3.5rem;flex-shrink:0}
 .risk-window{font-family:var(--mono);font-size:.55rem;color:var(--muted);margin-bottom:1rem}
 .risk-window span{color:var(--purple-hi)}
 .risk-estimate-note{
@@ -1779,7 +1792,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
         <div class="risk-val danger" id="risk-var95">−8.4%</div>
         <div class="risk-sub" id="risk-var95-sub">Max expected loss</div>
       </div>
-      <div class="risk-card pro-risk">
+      <div class="risk-card">
         <div class="risk-lbl">Expected Shortfall <button type="button" class="risk-help" aria-label="Expected shortfall help">?<span class="risk-help-tip">Average loss inside the worst 5% of daily returns in the selected risk window.</span></button></div>
         <div class="risk-val danger" id="risk-cvar95">−9.9%</div>
         <div class="risk-sub" id="risk-cvar95-sub">CVaR beyond VaR</div>
@@ -1803,6 +1816,62 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
         <div class="risk-lbl">Tracking Error <button type="button" class="risk-help" aria-label="Tracking error help">?<span class="risk-help-tip">Standard deviation of active return (portfolio return minus ASX 200 return), annualised from daily data.</span></button></div>
         <div class="risk-val" id="risk-tracking-error">14.2%</div>
         <div class="risk-sub" id="risk-tracking-error-sub">vs benchmark</div>
+      </div>
+      <div class="risk-card plus-risk">
+        <div class="risk-lbl">Cornish-Fisher VaR <button type="button" class="risk-help" aria-label="Cornish-Fisher VaR help">?<span class="risk-help-tip">VaR adjusted for return skewness and excess kurtosis via Cornish-Fisher expansion — more accurate than historical percentile when portfolio returns are non-normal.</span></button></div>
+        <div class="risk-val danger" id="risk-cf-var95">—</div>
+        <div class="risk-sub" id="risk-cf-var95-sub">Skew/kurtosis adjusted</div>
+      </div>
+      <div class="risk-card pro-risk">
+        <div class="risk-lbl">Market Regime <button type="button" class="risk-help" aria-label="Market regime help">?<span class="risk-help-tip">Market risk regime classified by VIX level. Risk-On (VIX&lt;15): low fear, favour growth. Neutral (15–25): moderate uncertainty. Risk-Off (VIX&gt;25): elevated fear, favour defensives.</span></button></div>
+        <div class="risk-val" id="risk-regime">—</div>
+        <div class="risk-sub" id="risk-regime-sub">Based on VIX level</div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="divider" data-page="quant" id="correlation-wrap-divider"></div>
+
+<div class="wrap" data-page="quant" id="correlation-matrix-wrap">
+  <section class="sec sec-alt">
+    <div class="sec-head">
+      <h2 class="sec-title">Holding Correlations</h2>
+      <div class="sec-line"></div>
+      <span class="sec-label">Top 10 by value</span>
+    </div>
+    <p class="sec-desc">How your largest holdings move together. High correlation (dark purple) means positions tend to rise and fall in unison — low diversification benefit. Low or negative correlation (dark orange) means they diverge — better natural hedging.</p>
+    <div id="corr-matrix-container" style="overflow-x:auto"></div>
+    <p class="sec-note" id="corr-matrix-note" style="margin-top:.8rem;font-family:var(--mono);font-size:.52rem;color:var(--muted)"></p>
+  </section>
+</div>
+
+<div class="divider" data-page="quant" id="factor-exposure-divider"></div>
+
+<div class="wrap" data-page="quant" id="factor-exposure-wrap">
+  <section class="sec">
+    <div class="sec-head">
+      <h2 class="sec-title">Factor Exposure</h2>
+      <div class="sec-line"></div>
+      <span class="sec-label">Fama-French proxies</span>
+    </div>
+    <p class="sec-desc">How your portfolio loads on systematic return factors. Market beta measures sensitivity to broad market moves. Size beta (SMB proxy via ASX Small Ords) measures tilt toward small-cap vs large-cap stocks — positive means small-cap tilt, negative means large-cap tilt.</p>
+    <div class="factor-bars" id="factor-bars-container">
+      <div class="factor-row">
+        <div class="factor-row-label">Market (β)</div>
+        <div class="factor-bar-wrap">
+          <div class="factor-bar-zero"></div>
+          <div class="factor-bar-fill" id="factor-market-bar" style="width:0%"></div>
+        </div>
+        <div class="factor-val" id="factor-market-val">—</div>
+      </div>
+      <div class="factor-row">
+        <div class="factor-row-label">Size SMB (β)</div>
+        <div class="factor-bar-wrap">
+          <div class="factor-bar-zero"></div>
+          <div class="factor-bar-fill" id="factor-size-bar" style="width:0%"></div>
+        </div>
+        <div class="factor-val" id="factor-size-val">—</div>
       </div>
     </div>
   </section>
@@ -2687,6 +2756,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
 
   function applyPlanVisibility() {
     const hasProAccess = Boolean(state.demoMode || state.sessionUser?.proEnabled);
+    const hasPlusAccess = Boolean(state.demoMode || state.sessionUser?.proEnabled || state.sessionUser?.planTier === "plus");
     const navAlertsLink = document.getElementById("nav-alerts-link");
     const alertsSection = document.getElementById("alerts");
     const stressPanel = document.getElementById("stress-panel");
@@ -2694,6 +2764,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     const riskWindowTabs = document.getElementById("risk-window-tabs");
     const riskGrid = document.querySelector(".risk-grid");
     const proRiskCards = Array.from(document.querySelectorAll(".pro-risk"));
+    const plusRiskCards = Array.from(document.querySelectorAll(".plus-risk"));
 
     if (navAlertsLink) navAlertsLink.style.display = hasProAccess ? "" : "none";
     if (alertsSection) alertsSection.style.display = hasProAccess ? "" : "none";
@@ -2706,6 +2777,17 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     proRiskCards.forEach((card) => {
       card.style.display = hasProAccess ? "" : "none";
     });
+    plusRiskCards.forEach((card) => {
+      card.style.display = hasPlusAccess ? "" : "none";
+    });
+    const corrWrap = document.getElementById("correlation-matrix-wrap");
+    const corrDivider = document.getElementById("correlation-wrap-divider");
+    if (corrWrap) corrWrap.style.display = hasPlusAccess ? "" : "none";
+    if (corrDivider) corrDivider.style.display = hasPlusAccess ? "" : "none";
+    const factorWrap = document.getElementById("factor-exposure-wrap");
+    const factorDivider = document.getElementById("factor-exposure-divider");
+    if (factorWrap) factorWrap.style.display = hasProAccess ? "" : "none";
+    if (factorDivider) factorDivider.style.display = hasProAccess ? "" : "none";
   }
 
   function detectBullionMetal(holding) {
