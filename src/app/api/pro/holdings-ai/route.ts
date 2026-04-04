@@ -546,32 +546,40 @@ export async function POST(request: Request) {
   //   data: {"t":"chunk text"}\n\n  — incremental content
   //   data: {"done":true,"analysis":{...},"aiUsed":N,"aiLimit":N}\n\n  — final parsed analysis
   let accumulated = "";
+  let sseBuffer = "";
   const enc = new TextEncoder();
+  const decoder = new TextDecoder();
 
   const transform = new TransformStream<Uint8Array, Uint8Array>({
     transform(chunk, controller) {
-      const text = new TextDecoder().decode(chunk);
-      for (const rawLine of text.split("\n")) {
-        const line = rawLine.trim();
-        if (!line.startsWith("data: ")) continue;
-        const data = line.slice(6);
-        if (data === "[DONE]") continue;
-        try {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const evt = JSON.parse(data) as any;
-          // OpenAI streams choices[0].delta.content
-          const delta: string = evt.choices?.[0]?.delta?.content ?? "";
-          if (delta) {
-            accumulated += delta;
-            controller.enqueue(enc.encode(`data: ${JSON.stringify({ t: delta })}\n\n`));
+      sseBuffer += decoder.decode(chunk, { stream: true });
+      const events = sseBuffer.split("\n\n");
+      sseBuffer = events.pop() ?? "";
+
+      for (const event of events) {
+        for (const rawLine of event.split("\n")) {
+          const line = rawLine.trim();
+          if (!line.startsWith("data: ")) continue;
+          const data = line.slice(6);
+          if (data === "[DONE]") continue;
+          try {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const evt = JSON.parse(data) as any;
+            // OpenAI streams choices[0].delta.content
+            const delta: string = evt.choices?.[0]?.delta?.content ?? "";
+            if (delta) {
+              accumulated += delta;
+              controller.enqueue(enc.encode(`data: ${JSON.stringify({ t: delta })}\n\n`));
+            }
+          } catch {
+            /* skip malformed SSE lines */
           }
-        } catch {
-          /* skip malformed SSE lines */
         }
       }
     },
     flush(controller) {
       clearTimeout(timeoutId);
+      sseBuffer += decoder.decode();
       const analysis = parseAiAnalysis(accumulated);
       if (analysis) {
         incrementAiUsage(sessionUser.id);

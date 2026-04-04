@@ -915,24 +915,11 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 .ai-send-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;filter:none}
 .ai-send-arrow{font-size:.75rem;line-height:1}
 
-/* ── AI PAGE: sidebar + layout ──────────────────────────────────── */
-.ai-page-layout{display:flex;align-items:flex-start;gap:0;min-height:calc(100vh - 60px)}
-.ai-sidebar{width:210px;flex-shrink:0;border-right:1px solid var(--border);min-height:calc(100vh - 60px);display:flex;flex-direction:column;background:rgba(0,0,0,.12)}
-.ai-sidebar-head{display:flex;align-items:center;justify-content:space-between;padding:.8rem 1rem;border-bottom:1px solid var(--border)}
-.ai-sidebar-title{font-family:var(--mono);font-size:.54rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
-.ai-new-btn{display:flex;align-items:center;gap:.25rem;font-family:var(--mono);font-size:.52rem;letter-spacing:.06em;color:var(--muted2);background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.2);border-radius:5px;padding:.28rem .55rem;cursor:pointer;transition:all .15s}
-.ai-new-btn:hover{color:#c084fc;border-color:rgba(168,85,247,.4)}
-.ai-history-list{flex:1;overflow-y:auto;padding:.4rem .5rem}
-.ai-history-empty{font-family:var(--mono);font-size:.56rem;color:var(--muted);text-align:center;padding:1.5rem .75rem;opacity:.55}
-.ai-history-item{display:block;width:100%;text-align:left;background:transparent;border:none;border-radius:6px;padding:.5rem .6rem;cursor:pointer;transition:background .15s;margin-bottom:1px}
-.ai-history-item:hover{background:rgba(255,255,255,.05)}
-.ai-history-item.active{background:rgba(168,85,247,.12);border:1px solid rgba(168,85,247,.18)}
-.ai-history-item-q{font-family:var(--sans);font-size:.7rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:.15rem;display:block}
-.ai-history-item-ts{font-family:var(--mono);font-size:.52rem;color:var(--muted)}
+/* ── AI PAGE: layout ────────────────────────────────────────────── */
+.ai-page-layout{display:block;min-height:calc(100vh - 60px)}
 /* Cycling placeholder */
 .ai-ph-cycle{position:absolute;top:0;left:0;pointer-events:none;font-family:var(--sans);font-size:1rem;line-height:1.6;color:rgba(157,151,183,.45);transition:opacity .4s ease;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .ai-ph-cycle.fading{opacity:0}
-@media(max-width:700px){.ai-sidebar{display:none}.ai-page-layout{display:block}}
 
 /* Hero output */
 .ai-hero-output{width:100%;text-align:left;margin-top:1.5rem}
@@ -1274,22 +1261,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
 <!-- AI PAGE -->
 <div class="ai-hero-wrap" id="dashboard-top" data-page="ai">
   <div class="ai-page-layout">
-
-    <!-- Left sidebar: history -->
-    <aside class="ai-sidebar">
-      <div class="ai-sidebar-head">
-        <span class="ai-sidebar-title">History</span>
-        <button type="button" class="ai-new-btn" id="ai-new-chat-btn" title="New conversation">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          New
-        </button>
-      </div>
-      <div class="ai-history-list" id="ai-history-list">
-        <div class="ai-history-empty" id="ai-history-empty">No conversations yet</div>
-      </div>
-    </aside>
-
-    <!-- Right: main area (unchanged internals) -->
+    
     <div class="ai-hero-inner">
 
       <!-- Account strip -->
@@ -2247,7 +2219,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
   </div>
 </div>
 
-<script>/* ── AI PAGE: cycling placeholder + chat history ─── */
+<script>/* ── AI PAGE: cycling placeholder ─── */
 (function() {
   var _AI_PH = [
     "What is driving my returns right now?",
@@ -2259,8 +2231,6 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     "Give me a concise portfolio summary.",
     "What should I watch most closely right now?",
   ];
-  var _AI_HK = "spectre_ai_history_v1";
-  function _esc(s) { return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 
   window.initAiPlaceholder = function() {
     var ph = document.getElementById("ai-ph-cycle");
@@ -2272,40 +2242,6 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     ph.textContent = _AI_PH[0];
     setInterval(cycle, 3400);
     ta.addEventListener("keydown", function(e) { if (e.key==="Enter"&&!e.shiftKey) { e.preventDefault(); var b=document.getElementById("pro-ai-ask-btn"); if(b&&!b.disabled) b.click(); } });
-  };
-
-  function _loadHist() { try { return JSON.parse(localStorage.getItem(_AI_HK)||"[]"); } catch { return []; } }
-
-  window.saveAiHistoryItem = function(q, ans) {
-    var h = _loadHist();
-    h.unshift({ id: Date.now().toString(36), q: String(q||"").slice(0,120), ans: String(ans||"").slice(0,600), ts: new Date().toISOString() });
-    if (h.length > 30) h.length = 30;
-    try { localStorage.setItem(_AI_HK, JSON.stringify(h)); } catch {}
-    if (window.renderAiHistory) window.renderAiHistory();
-  };
-
-  window.renderAiHistory = function() {
-    var list = document.getElementById("ai-history-list");
-    var empty = document.getElementById("ai-history-empty");
-    if (!list) return;
-    var h = _loadHist();
-    list.querySelectorAll(".ai-history-item").forEach(function(el){el.remove();});
-    if (!h.length) { if(empty) empty.style.display=""; return; }
-    if (empty) empty.style.display = "none";
-    h.forEach(function(item) {
-      var btn = document.createElement("button");
-      btn.type="button"; btn.className="ai-history-item"; btn.dataset.id=item.id;
-      var d=new Date(item.ts), ds=d.toLocaleDateString("en-AU",{day:"numeric",month:"short"}), ts=d.toLocaleTimeString("en-AU",{hour:"2-digit",minute:"2-digit",hour12:false});
-      btn.innerHTML='<span class="ai-history-item-q">'+_esc(item.q)+'</span><span class="ai-history-item-ts">'+_esc(ds)+' · '+_esc(ts)+'</span>';
-      btn.addEventListener("click", function() {
-        var ta=document.getElementById("pro-ai-question"); if(ta){ta.value=item.q;ta.dispatchEvent(new Event("input"));}
-        var oi=document.getElementById("pro-ai-output-inner"), oe=document.getElementById("pro-ai-output"), im=document.getElementById("ai-input-mode");
-        if(oi) oi.innerHTML='<div style="white-space:pre-wrap;font-size:.9rem;line-height:1.75">'+_esc(item.ans)+'</div><p style="font-size:.54rem;color:#888;margin-top:.75rem">Saved · '+_esc(ds)+' '+_esc(ts)+'</p>';
-        if(oe) oe.style.display=""; if(im) im.style.display="none";
-        document.querySelectorAll(".ai-history-item").forEach(function(el){el.classList.remove("active");}); btn.classList.add("active");
-      });
-      list.appendChild(btn);
-    });
   };
 })();
 
@@ -4101,7 +4037,6 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
               if (typeof evt.aiUsed === "number") state.aiUsedThisMonth = evt.aiUsed;
               if (typeof evt.aiLimit === "number") state.aiMonthlyLimit = evt.aiLimit;
               showToast("Ask AI analysis updated.");
-              try { const _q=document.getElementById("pro-ai-question"); const _qText=_q instanceof HTMLTextAreaElement?_q.value.trim():""; if(window.saveAiHistoryItem) window.saveAiHistoryItem(_qText||"Portfolio analysis",evt.analysis?.answer||""); } catch {}
             }
             return;
           }
@@ -5187,13 +5122,8 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       }
     });
 
-    // AI page extras: cycling placeholder + history
+    // AI page extras: cycling placeholder
     window.initAiPlaceholder && window.initAiPlaceholder();
-    window.renderAiHistory && window.renderAiHistory();
-    document.getElementById("ai-new-chat-btn")?.addEventListener("click", () => {
-      document.getElementById("ai-new-question-btn")?.click();
-      document.querySelectorAll(".ai-history-item").forEach(el => el.classList.remove("active"));
-    });
 
     document.getElementById("alerts-list")?.addEventListener("click", (event) => {
       const target = event.target;

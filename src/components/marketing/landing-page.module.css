@@ -356,7 +356,7 @@
 }
 
 .heroSub {
-  max-width: 560px;
+  max-width: 720px;
   margin-bottom: 38px;
   font-size: 18px;
 }
@@ -544,7 +544,7 @@
 }
 
 .sectionSub {
-  max-width: 620px;
+  max-width: 760px;
   font-size: 17px;
 }
 
@@ -2037,47 +2037,136 @@
 /* ─── Mobile overrides for new sections ─────────────────────── */
 
 @media (max-width: 960px) {
-  .heroProduct {
-    transform: none !important;
-    opacity: 1 !important;
-  }
-
   .statsGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .stickyWrap {
-    height: auto;
+    height: 270svh;
   }
 
   .stickyInner {
-    position: relative;
-    top: 0;
-    height: auto;
+    position: sticky;
+    top: calc(var(--navHeight) + var(--tickerHeight) + 10px);
+    height: calc(100svh - var(--navHeight) - var(--tickerHeight) - 20px);
     grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    background:
+      linear-gradient(180deg, rgba(13, 10, 20, 0.96), rgba(7, 6, 12, 0.98)),
+      var(--bg);
   }
 
   .stickyLeft {
     border-right: none;
     border-bottom: 1px solid var(--border);
-    padding: 40px 24px;
+    padding: 28px 24px 20px;
+    min-height: 0;
   }
 
   .stickyRight {
-    padding: 40px 24px;
+    padding: 22px 24px 28px;
+    min-height: 0;
+    align-items: flex-start;
   }
 
   .stickyPanels {
-    grid-template-rows: auto;
-    gap: 0;
+    height: 100%;
   }
 
   .stickyPreview,
   .stickyPanel {
-    grid-row: auto;
-    opacity: 1 !important;
-    transform: none !important;
-    pointer-events: auto;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .stickyPreview {
+    align-self: center;
+  }
+
+  .stickyPanel {
+    align-self: start;
+  }
+
+  .stickyPanelTitle {
+    margin: 10px 0 12px;
+    font-size: clamp(28px, 6.5vw, 44px);
+  }
+
+  .stickyPanelCopy {
+    max-width: none;
+    font-size: 16px;
+    line-height: 1.65;
+  }
+
+  .previewCard {
+    max-width: 560px;
+  }
+}
+
+@media (max-width: 640px) {
+  .stickyWrap {
+    height: 290svh;
+  }
+
+  .stickyInner {
+    top: calc(var(--navHeight) + var(--tickerHeight) + 8px);
+    height: calc(100svh - var(--navHeight) - var(--tickerHeight) - 16px);
+    grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .stickyLeft {
+    padding: 20px 16px 14px;
+  }
+
+  .stickyRight {
+    padding: 18px 16px 22px;
+  }
+
+  .stickyPreview,
+  .stickyPanel {
+    transition:
+      opacity 0.42s cubic-bezier(0.16, 1, 0.3, 1),
+      transform 0.42s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .previewCard {
+    max-width: 100%;
+    border-radius: 20px;
+  }
+
+  .previewHeader {
+    padding: 11px 14px;
+  }
+
+  .previewUploadZone {
+    padding: 22px 16px;
+  }
+
+  .previewTableHead,
+  .previewTableRow,
+  .previewFileRow {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .previewScoreVal {
+    font-size: 54px;
+  }
+
+  .stickyPanelTitle {
+    font-size: clamp(24px, 8vw, 34px);
+  }
+
+  .stickyPanelCopy {
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 960px) {
+  .aiConsoleReveal {
+    will-change: transform, opacity;
   }
 }
 
@@ -2174,11 +2263,6 @@
 /* ─── Mobile overrides for AI reveal ────────────────────────── */
 
 @media (max-width: 960px) {
-  .aiConsoleReveal {
-    transform: none !important;
-    opacity: 1 !important;
-  }
-
   .aiRevealSection {
     padding: 100px 0 80px;
   }

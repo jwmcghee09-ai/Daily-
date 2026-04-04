@@ -415,6 +415,14 @@ export default function SignInPage({
                   </div>
                   <h2>Forgot your password?</h2>
                   <p>Enter your account email and we&apos;ll send a reset link straight to your inbox.</p>
+                  <div className={styles.modeCard}>
+                    <div className={styles.modeCardTitle}>Recovery Steps</div>
+                    <ul className={styles.modeCardList}>
+                      <li>Use the same email tied to your SPECTRE workspace.</li>
+                      <li>We&apos;ll send a reset token and the next step by email.</li>
+                      <li>You can paste the token on the next screen as soon as it arrives.</li>
+                    </ul>
+                  </div>
 
                   {banner ? (
                     <div className={`${styles.banner} ${banner.tone === "success" ? styles.bannerSuccess : banner.tone === "error" ? styles.bannerError : styles.bannerInfo}`}>
@@ -467,6 +475,14 @@ export default function SignInPage({
                   </div>
                   <h2>Set a new password</h2>
                   <p>Paste the token from your email and choose a new password.</p>
+                  <div className={styles.modeCard}>
+                    <div className={styles.modeCardTitle}>Before you submit</div>
+                    <ul className={styles.modeCardList}>
+                      <li>Paste the full reset token exactly as it appears in the email.</li>
+                      <li>Choose a new password with at least 8 characters.</li>
+                      <li>After reset, sign in normally with your updated password.</li>
+                    </ul>
+                  </div>
 
                   {banner ? (
                     <div className={`${styles.banner} ${banner.tone === "success" ? styles.bannerSuccess : banner.tone === "error" ? styles.bannerError : styles.bannerInfo}`}>
