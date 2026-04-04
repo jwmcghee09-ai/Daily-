@@ -251,6 +251,10 @@ export interface HistoricalRiskEstimateResult {
   outlierReturnsRemoved: number;
   cornishFisherVar95Pct: number | null;
   cornishFisherVar95Amount: number | null;
+  rsi14: number | null;
+  stochastic14: number | null;
+  obvValue: number | null;
+  obvTrend: string | null;
   correlationMatrix: { tickers: string[]; matrix: number[][] } | null;
   regime: { vix: number | null; label: string; cssClass: string } | null;
   factorExposure: { marketBeta: number | null; sizeBeta: number | null } | null;
@@ -1276,6 +1280,100 @@ function calcMaxDrawdownFromReturns(returns: number[]): number {
   return maxDrawdown;
 }
 
+function buildSyntheticPriceSeriesFromReturns(returns: number[], startingValue: number): number[] {
+  if (!returns.length || !Number.isFinite(startingValue) || startingValue <= 0) {
+    return [];
+  }
+
+  const series: number[] = [startingValue];
+  let current = startingValue;
+
+  for (const dailyReturn of returns) {
+    if (!Number.isFinite(dailyReturn)) {
+      continue;
+    }
+    current *= 1 + dailyReturn;
+    if (!Number.isFinite(current) || current <= 0) {
+      continue;
+    }
+    series.push(current);
+  }
+
+  return series;
+}
+
+function computeRsi(values: number[], period = 14): number | null {
+  const closes = values.filter(Number.isFinite);
+  if (closes.length <= period) {
+    return null;
+  }
+
+  const start = Math.max(1, closes.length - period);
+  let gains = 0;
+  let losses = 0;
+
+  for (let i = start; i < closes.length; i += 1) {
+    const change = closes[i] - closes[i - 1];
+    if (change > 0) gains += change;
+    if (change < 0) losses += Math.abs(change);
+  }
+
+  const avgGain = gains / period;
+  const avgLoss = losses / period;
+  if (avgLoss === 0 && avgGain === 0) return 50;
+  if (avgLoss === 0) return 100;
+  const rs = avgGain / avgLoss;
+  return 100 - (100 / (1 + rs));
+}
+
+function computeStochastic(values: number[], period = 14): number | null {
+  const closes = values.filter(Number.isFinite);
+  if (closes.length < period) {
+    return null;
+  }
+
+  const window = closes.slice(-period);
+  const lowest = Math.min(...window);
+  const highest = Math.max(...window);
+  const current = closes[closes.length - 1];
+
+  if (!Number.isFinite(lowest) || !Number.isFinite(highest) || !Number.isFinite(current)) {
+    return null;
+  }
+
+  if (highest === lowest) {
+    return 50;
+  }
+
+  return Math.max(0, Math.min(100, ((current - lowest) / (highest - lowest)) * 100));
+}
+
+function computeObvProxy(values: number[]): { value: number | null; trend: string | null } {
+  const closes = values.filter(Number.isFinite);
+  if (closes.length < 2) {
+    return { value: null, trend: null };
+  }
+
+  let obv = 0;
+  const series = [0];
+
+  for (let i = 1; i < closes.length; i += 1) {
+    const prev = closes[i - 1];
+    const current = closes[i];
+    const flowMagnitude = Math.abs(current - prev);
+    if (current > prev) obv += flowMagnitude;
+    if (current < prev) obv -= flowMagnitude;
+    series.push(obv);
+  }
+
+  const lookback = Math.min(5, series.length - 1);
+  const trendDelta = lookback > 0 ? series[series.length - 1] - series[series.length - 1 - lookback] : 0;
+  const trend =
+    trendDelta > 0 ? "Rising buying pressure" : trendDelta < 0 ? "Falling buying pressure" : "Flat flow";
+
+  return { value: obv, trend };
+}
+
 export function countUserHoldings(userId: string): number {
   const db = getDb();
   const row = db
@@ -1715,6 +1813,10 @@ export async function estimateHistoricalRiskFromYahoo(
       outlierReturnsRemoved: 0,
       cornishFisherVar95Pct: null,
       cornishFisherVar95Amount: null,
+      rsi14: null,
+      stochastic14: null,
+      obvValue: null,
+      obvTrend: null,
       correlationMatrix: null,
       regime: null,
       factorExposure: null,
@@ -1808,6 +1910,10 @@ export async function estimateHistoricalRiskFromYahoo(
       outlierReturnsRemoved,
       cornishFisherVar95Pct: null,
       cornishFisherVar95Amount: null,
+      rsi14: null,
+      stochastic14: null,
+      obvValue: null,
+      obvTrend: null,
       correlationMatrix: null,
       regime: null,
       factorExposure: null,
@@ -1848,6 +1954,10 @@ export async function estimateHistoricalRiskFromYahoo(
       outlierReturnsRemoved,
       cornishFisherVar95Pct: null,
       cornishFisherVar95Amount: null,
+      rsi14: null,
+      stochastic14: null,
+      obvValue: null,
+      obvTrend: null,
       correlationMatrix: null,
       regime: null,
       factorExposure: null,
@@ -1886,6 +1996,10 @@ export async function estimateHistoricalRiskFromYahoo(
   const cfVar95Raw = cornishFisherVar95(portfolioReturns);
   const cornishFisherVar95Pct = cfVar95Raw != null ? Math.max(0, cfVar95Raw * 100) : null;
   const cornishFisherVar95Amount = cornishFisherVar95Pct != null ? (cornishFisherVar95Pct / 100) * usedValueTotal : null;
+  const syntheticPortfolioCurve = buildSyntheticPriceSeriesFromReturns(portfolioReturns, usedValueTotal);
+  const rsi14 = computeRsi(syntheticPortfolioCurve, 14);
+  const stochastic14 = computeStochastic(syntheticPortfolioCurve, 14);
+  const obvProxy = computeObvProxy(syntheticPortfolioCurve);
 
   // Correlation matrix (top 10 holdings by value)
   const correlationMatrix = calcCorrelationMatrix(returnsByTicker, valueByTicker, selectedDates);
@@ -2022,6 +2136,10 @@ export async function estimateHistoricalRiskFromYahoo(
     outlierReturnsRemoved,
     cornishFisherVar95Pct,
     cornishFisherVar95Amount,
+    rsi14,
+    stochastic14,
+    obvValue: obvProxy.value,
+    obvTrend: obvProxy.trend,
     correlationMatrix,
     regime,
     factorExposure,
