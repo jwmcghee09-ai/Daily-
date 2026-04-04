@@ -633,12 +633,12 @@ td.accent{color:var(--orange)}
 
 /* ── FOOTER ── */
 footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-index:2;margin-top:2rem}
-.foot-inner{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}
-.foot-logo{font-family:var(--disp);font-size:1.1rem;letter-spacing:.14em;background:linear-gradient(120deg,var(--purple-hi),var(--orange));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;flex-shrink:0}
-.foot-disc{font-family:var(--mono);font-size:.54rem;color:rgba(138,134,168,.38);text-align:center;line-height:1.7;flex:1;padding:0 1rem}
+.foot-inner{display:flex;flex-direction:column;align-items:center;text-align:center;gap:.55rem}
+.foot-logo{font-family:var(--disp);font-size:1.1rem;letter-spacing:.14em;background:linear-gradient(120deg,var(--purple-hi),var(--orange));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.foot-disc{font-family:var(--mono);font-size:.53rem;color:rgba(138,134,168,.35);text-align:center;line-height:1.65;max-width:560px}
 .foot-link{font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-decoration:none}
 .foot-link:hover{color:var(--text)}
-.foot-email{font-family:var(--mono);font-size:.54rem;letter-spacing:.06em;color:var(--muted2);flex-shrink:0;white-space:nowrap}
+.foot-email{font-family:var(--mono);font-size:.53rem;letter-spacing:.06em;color:var(--muted2)}
 .foot-email a{color:var(--orange);text-decoration:none}
 .foot-email a:hover{color:#ff9c83}
 
@@ -795,10 +795,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   .sec-line{width:100%}
   .panel-half-title{justify-content:center}
   .stress-grid{grid-template-columns:1fr}
-  .foot-inner{
-    justify-content:center;
-    text-align:center;
-  }
+  /* foot-inner is already column+centered */
   .alert-form{padding:1rem}
   .table-wrap{padding-bottom:.35rem}
   table{min-width:760px}
