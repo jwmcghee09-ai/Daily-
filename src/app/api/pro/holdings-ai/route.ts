@@ -513,6 +513,7 @@ export async function POST(request: Request) {
         max_tokens: 4096,
         stream: true,
         temperature: 0.1,
+        response_format: { type: "json_object" },
         messages: [
           { role: "system", content: buildSystemPrompt() },
           { role: "user", content: JSON.stringify(context) },
