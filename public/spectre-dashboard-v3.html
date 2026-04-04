@@ -3237,7 +3237,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     });
   }
 
-  function drawHoldingsBars(data) {
+  function drawHoldingsBars(data) { window.drawHoldingsBars = drawHoldingsBars;
     const canvas = document.getElementById("c-holdings");
     if (!canvas) return;
     const sized = dpr(canvas);
@@ -3284,7 +3284,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
   let _fullHistory = [];
   let _historyCostBase = 0;
 
-  function drawHistoryLine(historyItems, costBaseValue) {
+  function drawHistoryLine(historyItems, costBaseValue) { window.drawHistoryLine = drawHistoryLine; window._fullHistory = historyItems; window._historyCostBase = costBaseValue;
     const canvas = document.getElementById("c-history");
     if (!canvas) return;
     const sized = dpr(canvas);
@@ -4365,9 +4365,10 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     renderLegend(legends[0], normalizedAccount);
     renderLegend(legends[1], normalizedSector);
 
-    drawHoldingsBars(metrics.topHoldings.map((item) => ({ label: String(item.ticker || "—").slice(0, 6), val: item.value || 0 })));
-    _fullHistory = metrics.history || [];
-    _historyCostBase = metrics.totalCost;
+    window._lastHoldingsBars = metrics.topHoldings.map((item) => ({ label: String(item.ticker || "—").slice(0, 6), val: item.value || 0 }));
+    drawHoldingsBars(window._lastHoldingsBars);
+    _fullHistory = metrics.history || []; window._fullHistory = _fullHistory;
+    _historyCostBase = metrics.totalCost; window._historyCostBase = _historyCostBase;
     drawHistoryLine(_fullHistory, _historyCostBase);
     runMonteCarlo();
     renderHoldingsAi();
@@ -4411,7 +4412,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
   let _mcHorizon = 30; // currently selected horizon in trading days
   let _mcHorizonBtnsWired = false;
 
-  function runMonteCarlo() {
+  function runMonteCarlo() { window.runMonteCarlo = runMonteCarlo;
     const isPro = Boolean(state.demoMode || state.sessionUser?.proEnabled);
     const wrap = document.getElementById("monte-carlo-wrap");
     if (wrap) wrap.style.display = isPro ? "" : "none";
@@ -5262,6 +5263,18 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       btn.classList.toggle('active', btn.getAttribute('data-tab') === tab);
     });
     window.scrollTo({ top: 0, behavior: 'instant' });
+    // Re-draw canvases after tab becomes visible (they were 0-width when hidden)
+    if (tab === 'quant') {
+      requestAnimationFrame(function() {
+        if (typeof drawHistoryLine === 'function' && window._fullHistory) {
+          drawHistoryLine(window._fullHistory, window._historyCostBase || 0);
+        }
+        if (typeof runMonteCarlo === 'function') runMonteCarlo();
+        if (typeof drawHoldingsBars === 'function' && window._lastHoldingsBars) {
+          drawHoldingsBars(window._lastHoldingsBars);
+        }
+      });
+    }
   }
 
   document.querySelectorAll('.nav-tab').forEach(function(btn) {
