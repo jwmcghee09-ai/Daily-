@@ -3485,6 +3485,21 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     });
   }
 
+  function buildSeededDemoHistory() {
+    const totalValue = sum((state.portfolio?.holdings || []).map((holding) => Number(holding?.value) || 0));
+    const base = Number.isFinite(totalValue) && totalValue > 0 ? totalValue : 100000;
+    const points = [0.93, 0.95, 0.94, 0.97, 0.99, 1.01, 1.0, 1.03];
+    const today = new Date();
+    return points.map((multiplier, index) => {
+      const d = new Date(today);
+      d.setDate(today.getDate() - ((points.length - 1 - index) * 4));
+      return {
+        date: d.toISOString().slice(0, 10),
+        value: base * multiplier,
+      };
+    });
+  }
+
   function drawHistoryLine(historyItems, costBaseValue) { window.drawHistoryLine = drawHistoryLine; window._fullHistory = historyItems; window._historyCostBase = costBaseValue;
     const canvas = document.getElementById("c-history");
     if (!canvas) return;
@@ -3494,12 +3509,15 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     ctx.clearRect(0, 0, w, h);
     const tooltip = document.getElementById("history-tooltip");
     const hasEnoughHistory = Array.isArray(historyItems) && historyItems.length >= 2;
-    setHidden("history-empty-state", hasEnoughHistory);
-    if (!hasEnoughHistory) {
+    const seededDemoHistory = !hasEnoughHistory && state.demoMode
+      ? buildSeededDemoHistory()
+      : null;
+    const items = hasEnoughHistory ? historyItems : seededDemoHistory;
+    setHidden("history-empty-state", Boolean(items && items.length >= 2));
+    if (!items || items.length < 2) {
       if (tooltip) tooltip.style.display = "none";
       return;
     }
-    const items = historyItems;
     const rawVals = items.map((item) => item.value);
     const dates = items.map((item) => item.date || "");
     const costBase = rawVals.map(() => (Number.isFinite(costBaseValue) && costBaseValue > 0 ? costBaseValue : rawVals[0]));
