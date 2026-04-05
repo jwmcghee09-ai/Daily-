@@ -7074,8 +7074,30 @@ async function _demoSnapshot(url) {
   if (u.endsWith('/api/research/quotes')) return data.quotes;
   if (u.endsWith('/api/research/fmp'))    return data.fmp;
   if (u.endsWith('/api/research/fred'))   return data.fred;
-  if (u.endsWith('/api/research/news'))   return { articles: data.fmp.news };
-  if (u.endsWith('/api/research/movers')) return { gainers: [], losers: [] };
+  if (u.endsWith('/api/research/news'))   return { news: data.fmp.news };
+  if (u.endsWith('/api/research/movers')) return {
+    gainers: [
+      { symbol: "NVDA", name: "NVIDIA Corp",            price: 875.40, changePct: 4.82 },
+      { symbol: "META", name: "Meta Platforms",         price: 521.30, changePct: 3.47 },
+      { symbol: "AVGO", name: "Broadcom Inc",           price: 168.90, changePct: 2.91 },
+      { symbol: "MSFT", name: "Microsoft Corp",         price: 415.60, changePct: 2.15 },
+      { symbol: "AMZN", name: "Amazon.com Inc",         price: 186.45, changePct: 1.73 },
+    ],
+    losers: [
+      { symbol: "PFE",  name: "Pfizer Inc",             price:  28.12, changePct: -3.94 },
+      { symbol: "CVS",  name: "CVS Health Corp",        price:  53.40, changePct: -2.81 },
+      { symbol: "BA",   name: "Boeing Co",              price: 168.55, changePct: -2.34 },
+      { symbol: "DIS",  name: "Walt Disney Co",         price:  95.20, changePct: -1.62 },
+      { symbol: "XOM",  name: "Exxon Mobil Corp",       price: 110.75, changePct: -1.18 },
+    ],
+    mostActive: [
+      { symbol: "TSLA", name: "Tesla Inc",              price: 175.20, changePct:  1.44 },
+      { symbol: "AAPL", name: "Apple Inc",              price: 221.80, changePct:  0.83 },
+      { symbol: "SPY",  name: "SPDR S&P 500 ETF",       price: 505.60, changePct:  0.62 },
+      { symbol: "AMD",  name: "Advanced Micro Devices", price: 162.30, changePct: -0.91 },
+      { symbol: "INTC", name: "Intel Corp",             price:  30.55, changePct: -1.05 },
+    ],
+  };
   if (u.endsWith('/api/research/chart')) {
     const sym = (params.get('symbol') || 'asx200').toLowerCase();
     const range = params.get('range') || '1m';

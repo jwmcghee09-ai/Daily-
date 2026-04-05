@@ -2558,7 +2558,8 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     const snapshots = [];
     const startMs = Date.UTC(2025, 11, 5, 6, 0, 0);
     const endMs = Date.now();
-    const days = Math.max(1, Math.floor((endMs - startMs) / (24 * 60 * 60 * 1000)));
+    // Use ceil + 1 so the loop always includes today's date
+    const days = Math.max(1, Math.ceil((endMs - startMs) / (24 * 60 * 60 * 1000))) + 1;
     let value = finalValue * 0.88;
 
     for (let index = 0; index < days; index += 1) {
@@ -2577,8 +2578,10 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
         value = finalValue;
       }
 
+      // Last entry: clamp to today so chart always ends on the current date
+      const snapshotDate = index === days - 1 ? new Date() : new Date(startMs + index * 24 * 60 * 60 * 1000);
       snapshots.push({
-        date: new Date(startMs + index * 24 * 60 * 60 * 1000).toISOString(),
+        date: snapshotDate.toISOString(),
         value: Number(value.toFixed(2)),
       });
     }
