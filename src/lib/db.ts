@@ -258,6 +258,9 @@ export interface HistoricalRiskEstimateResult {
   correlationMatrix: { tickers: string[]; matrix: number[][] } | null;
   regime: { vix: number | null; label: string; cssClass: string } | null;
   factorExposure: { marketBeta: number | null; sizeBeta: number | null } | null;
+  sharpeRatioAnnual: number | null;
+  sortinoRatioAnnual: number | null;
+  returnSkewness: number | null;
 }
 
 export interface PriceDipAlertSetting {
