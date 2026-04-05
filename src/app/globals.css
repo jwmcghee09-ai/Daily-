@@ -27,11 +27,13 @@ html,
 body {
   width: 100%;
   min-height: 100%;
+  background: #05050a;
 }
 
 body {
   font-family: "Avenir Next", "Avenir", "Segoe UI", sans-serif;
   color: var(--text);
+  background-color: #05050a;
   background:
     radial-gradient(circle at 84% 12%, rgba(255, 75, 51, 0.18) 0%, transparent 32%),
     radial-gradient(circle at 18% 88%, rgba(255, 75, 51, 0.12) 0%, transparent 30%),

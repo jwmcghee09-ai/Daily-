@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import { DM_Mono, DM_Sans, Geist, Geist_Mono, Sora, Space_Grotesk } from "next/font/google";
 import "./globals.css";
@@ -40,6 +40,14 @@ const spaceGrotesk = Space_Grotesk({
 export const metadata: Metadata = {
   title: "SPECTRE - System for Portfolio Exposure, Correlation, Threat & Risk Evaluation",
   description: "SPECTRE portfolio dashboard for consolidated holdings and risk analytics.",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#05050a",
+  colorScheme: "dark",
 };
 
 const cloudflareAnalyticsToken = process.env.NEXT_PUBLIC_CF_WEB_ANALYTICS_TOKEN?.trim();
