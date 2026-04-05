@@ -224,6 +224,9 @@ interface HistoricalRiskEstimatePayload {
   correlationMatrix: { tickers: string[]; matrix: number[][] } | null;
   regime: { vix: number | null; label: string; cssClass: string } | null;
   factorExposure: { marketBeta: number | null; sizeBeta: number | null } | null;
+  sharpeRatioAnnual: number | null;
+  sortinoRatioAnnual: number | null;
+  returnSkewness: number | null;
 }
 
 interface SessionUser {
@@ -1360,9 +1363,59 @@ export default function Home() {
         "Std dev of (portfolio return - ASX 200 return), annualized from daily data.",
       ),
     );
+    flags.push(
+      toRiskFlag(
+        "CF-adjusted VaR 95",
+        historicalRiskEstimate?.cornishFisherVar95Pct ?? null,
+        1.5,
+        3.0,
+        "%",
+        "Cornish-Fisher VaR adjusts the standard normal quantile for return skewness and excess kurtosis, giving a more accurate tail-risk estimate for non-normal portfolios.",
+      ),
+    );
+    flags.push(
+      toRiskFlag(
+        "Correlation to ASX 200",
+        historicalRiskEstimate?.correlationToBenchmark ?? null,
+        0.8,
+        0.92,
+        "",
+        "Pearson correlation of daily portfolio returns to the ASX 200. Values near 1.0 mean the portfolio largely tracks the index with limited diversification benefit.",
+      ),
+    );
+    flags.push(
+      toRiskFlagLow(
+        "Sharpe ratio (annualized)",
+        historicalRiskEstimate?.sharpeRatioAnnual ?? null,
+        0.5,
+        0,
+        "",
+        "Annualized excess return (above ~4.35% RBA cash rate) per unit of total volatility. Below 0.5 is below market average; below 0 means returns failed to beat the risk-free rate.",
+      ),
+    );
+    flags.push(
+      toRiskFlagLow(
+        "Sortino ratio (annualized)",
+        historicalRiskEstimate?.sortinoRatioAnnual ?? null,
+        0.7,
+        0,
+        "",
+        "Like Sharpe but only penalizes downside volatility, ignoring upside moves. Below 0.7 suggests weak risk-adjusted performance; below 0 means negative excess return.",
+      ),
+    );
+    const skewVal = historicalRiskEstimate?.returnSkewness ?? null;
+    if (skewVal != null && Number.isFinite(skewVal)) {
+      const skewTone: "green" | "yellow" | "red" = skewVal <= -1.0 ? "red" : skewVal <= -0.5 ? "yellow" : "green";
+      flags.push({
+        label: "Return skewness",
+        value: skewVal.toFixed(2),
+        tone: skewTone,
+        help: "Negative skewness means the return distribution has a fatter left tail — more frequent or larger losses than gains. Below -0.5 warrants attention; below -1.0 indicates significant crash risk.",
+      });
+    }
 
     return flags.filter((flag) => flag.value !== "N/A");
-  }, [benchmarkBeta, benchmarkTrackingErrorAnnualPct, effectiveCvar95Pct, effectiveMaxDrawdownPct, effectiveVar95Pct, effectiveVolatilityAnnualPct, metrics.hhi, metrics.largestAccountPct, metrics.top3ConcentrationPct, starterPlan]);
+  }, [benchmarkBeta, benchmarkTrackingErrorAnnualPct, effectiveCvar95Pct, effectiveMaxDrawdownPct, effectiveVar95Pct, effectiveVolatilityAnnualPct, historicalRiskEstimate?.cornishFisherVar95Pct, historicalRiskEstimate?.correlationToBenchmark, historicalRiskEstimate?.returnSkewness, historicalRiskEstimate?.sharpeRatioAnnual, historicalRiskEstimate?.sortinoRatioAnnual, metrics.hhi, metrics.largestAccountPct, metrics.top3ConcentrationPct, starterPlan]);
 
   const latestReportDate = useMemo(() => {
     if (state.holdings.length === 0) {
@@ -3807,6 +3860,30 @@ function toRiskFlag(
   return { label, value: `${value.toFixed(2)}${suffix}`, tone: "green", help };
 }
 
+// For metrics where lower = worse (e.g. Sharpe, Sortino)
+function toRiskFlagLow(
+  label: string,
+  value: number | null,
+  yellowThreshold: number,
+  redThreshold: number,
+  suffix: string,
+  help: string,
+): RiskFlag {
+  if (value == null || !Number.isFinite(value)) {
+    return { label, value: "N/A", tone: "green", help };
+  }
+
+  if (value <= redThreshold) {
+    return { label, value: `${value.toFixed(2)}${suffix}`, tone: "red", help };
+  }
+
+  if (value <= yellowThreshold) {
+    return { label, value: `${value.toFixed(2)}${suffix}`, tone: "yellow", help };
+  }
+
+  return { label, value: `${value.toFixed(2)}${suffix}`, tone: "green", help };
+}
+
 function getSydneyClockParts(date: Date): { weekday: string; hour: number; minute: number } | null {
   const parts = new Intl.DateTimeFormat("en-AU", {
     timeZone: "Australia/Sydney",
@@ -4496,6 +4573,9 @@ function buildDemoHistoricalRiskEstimate(
           obvTrend: "Accumulation bias",
           regime: { vix: 15.9, label: "Risk-On", cssClass: "purple" },
           factorExposure: { marketBeta: 0.84, sizeBeta: -0.12 },
+          sharpeRatioAnnual: 0.74,
+          sortinoRatioAnnual: 1.02,
+          returnSkewness: -0.28,
         }
       : riskWindow === "1Y"
         ? {
@@ -4516,6 +4596,9 @@ function buildDemoHistoricalRiskEstimate(
             obvTrend: "Steady accumulation",
             regime: { vix: 19.6, label: "Watchful", cssClass: "danger" },
             factorExposure: { marketBeta: 0.97, sizeBeta: -0.05 },
+            sharpeRatioAnnual: 0.41,
+            sortinoRatioAnnual: 0.58,
+            returnSkewness: -0.67,
           }
         : {
             pointsTarget: 63,
@@ -4535,6 +4618,9 @@ function buildDemoHistoricalRiskEstimate(
             obvTrend: "Positive participation",
             regime: { vix: 17.8, label: "Balanced", cssClass: "purple" },
             factorExposure: { marketBeta: 0.91, sizeBeta: -0.08 },
+            sharpeRatioAnnual: 0.58,
+            sortinoRatioAnnual: 0.81,
+            returnSkewness: -0.44,
           };
 
   const var95Amount = Number(((profile.var95Pct / 100) * totalValue).toFixed(2));
@@ -4578,6 +4664,9 @@ function buildDemoHistoricalRiskEstimate(
     },
     regime: profile.regime,
     factorExposure: profile.factorExposure,
+    sharpeRatioAnnual: profile.sharpeRatioAnnual,
+    sortinoRatioAnnual: profile.sortinoRatioAnnual,
+    returnSkewness: profile.returnSkewness,
   };
 }
 

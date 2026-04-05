@@ -1996,6 +1996,30 @@ export async function estimateHistoricalRiskFromYahoo(
   const cfVar95Raw = cornishFisherVar95(portfolioReturns);
   const cornishFisherVar95Pct = cfVar95Raw != null ? Math.max(0, cfVar95Raw * 100) : null;
   const cornishFisherVar95Amount = cornishFisherVar95Pct != null ? (cornishFisherVar95Pct / 100) * usedValueTotal : null;
+
+  // Sharpe & Sortino ratios (annualized, RBA cash rate ~4.35% p.a.)
+  const ANNUAL_RF = 0.0435;
+  const meanDailyReturn = portfolioReturns.length >= 20
+    ? portfolioReturns.reduce((a, b) => a + b, 0) / portfolioReturns.length
+    : null;
+  const annualMeanReturn = meanDailyReturn != null ? meanDailyReturn * 252 : null;
+  const sharpeRatioAnnual =
+    annualMeanReturn != null && volatilityAnnualPct != null && volatilityAnnualPct > 0
+      ? (annualMeanReturn - ANNUAL_RF) / (volatilityAnnualPct / 100)
+      : null;
+  const downsideReturns = portfolioReturns.filter((r) => r < 0);
+  const downsideDevAnnual =
+    downsideReturns.length >= 5
+      ? Math.sqrt(downsideReturns.reduce((a, r) => a + r ** 2, 0) / portfolioReturns.length) * Math.sqrt(252)
+      : null;
+  const sortinoRatioAnnual =
+    annualMeanReturn != null && downsideDevAnnual != null && downsideDevAnnual > 0
+      ? (annualMeanReturn - ANNUAL_RF) / downsideDevAnnual
+      : null;
+
+  // Return distribution skewness
+  const returnSkewness = portfolioReturns.length >= 10 ? calcSkewness(portfolioReturns) : null;
+
   const syntheticPortfolioCurve = buildSyntheticPriceSeriesFromReturns(portfolioReturns, usedValueTotal);
   const rsi14 = computeRsi(syntheticPortfolioCurve, 14);
   const stochastic14 = computeStochastic(syntheticPortfolioCurve, 14);
@@ -2149,6 +2173,9 @@ export async function estimateHistoricalRiskFromYahoo(
     correlationMatrix,
     regime,
     factorExposure,
+    sharpeRatioAnnual,
+    sortinoRatioAnnual,
+    returnSkewness,
   };
 }
 
