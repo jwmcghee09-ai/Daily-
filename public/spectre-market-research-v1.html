@@ -1701,7 +1701,7 @@ h3 { font-size: 1.15rem; }
   line-height:1.6;
   color:rgba(242,238,255,.84);
 }
-.demo-preview-locked .research-tab-nav .rtab,
+.demo-preview-locked .research-tab-nav .rtab:not(.demo-preview-enabled),
 .demo-preview-locked .time-pill,
 .demo-preview-locked .tab-btn{
   pointer-events:none;
@@ -1709,6 +1709,7 @@ h3 { font-size: 1.15rem; }
   opacity:.42;
   filter:saturate(.7);
 }
+.demo-preview-locked .research-tab-nav .rtab.demo-preview-enabled,
 .demo-preview-locked .research-tab-nav .rtab.active,
 .demo-preview-locked .time-pill.active,
 .demo-preview-locked .tab-btn.active{
@@ -5184,10 +5185,14 @@ function applyModeChrome() {
 
 function activateDemoResearchPreview() {
   document.body.classList.add('demo-preview-locked');
+  document.querySelectorAll('.research-tab-nav .rtab').forEach((tab) => {
+    const enabled = ['overview', 'equities', 'crypto'].includes(tab.dataset.tab);
+    tab.classList.toggle('demo-preview-enabled', enabled);
+  });
   switchResearchTab('overview', document.querySelector('.research-tab-nav .rtab[data-tab="overview"]'));
   const noteEl = document.getElementById('workspace-meta-note');
   if (noteEl) {
-    noteEl.textContent = 'Demo research is a frozen market snapshot for preview only. Live data and deeper terminal navigation unlock inside a real SPECTRE workspace.';
+    noteEl.textContent = 'Demo research is a frozen market snapshot for preview only. Overview, Equities, and Crypto stay open for preview; live updates, deeper macro views, and terminal controls unlock inside a real SPECTRE workspace.';
   }
 }
 
