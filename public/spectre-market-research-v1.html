@@ -5506,13 +5506,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  if (state.demoMode) {
-    window.addEventListener('pageshow', function(event) {
-      if (!event.persisted) return;
-      window.location.reload();
-    });
-  }
-
   updateWorkspaceClock();
   updateWorkspaceHeroIdentity();
   updateWorkspacePortfolioSummary(null);

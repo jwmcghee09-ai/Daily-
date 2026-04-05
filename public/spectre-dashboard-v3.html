@@ -5668,10 +5668,6 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
   });
 
   window.addEventListener('pageshow', function(event) {
-    if (state.demoMode && event.persisted) {
-      window.location.reload();
-      return;
-    }
     var activeTab = document.querySelector('.nav-tab.nav-tab-active')?.getAttribute('data-tab') || 'quant';
     if (activeTab === 'quant') {
       scheduleQuantRerender();
