@@ -379,7 +379,7 @@ export default function Home() {
   const [holdingsAiLoading, setHoldingsAiLoading] = useState(false);
   const [holdingsAiError, setHoldingsAiError] = useState("");
   const [holdingsAiResult, setHoldingsAiResult] = useState<HoldingsAiAnalysis | null>(null);
-  const [activePage, setActivePage] = useState<"quant" | "ai" | "research" | "settings">("quant");
+  const [activePage, setActivePage] = useState<"quant" | "ai" | "import" | "settings">("quant");
 
   // Trigger Recharts ResponsiveContainer to remeasure after tab switch
   useEffect(() => {
@@ -2595,7 +2595,8 @@ export default function Home() {
           <div className="spectre-app-nav-tabs">
             <button type="button" className={`nav-tab${activePage === "quant" ? " nav-tab-active" : ""}`} onClick={() => setActivePage("quant")}>Quant</button>
             <button type="button" className={`nav-tab${activePage === "ai" ? " nav-tab-active" : ""}`} onClick={() => setActivePage("ai")}>AI</button>
-            <button type="button" className={`nav-tab${activePage === "research" ? " nav-tab-active" : ""}`} onClick={() => setActivePage("research")}>Research</button>
+            <a href="/research" className="nav-tab">Research</a>
+            <button type="button" className={`nav-tab${activePage === "import" ? " nav-tab-active" : ""}`} onClick={() => setActivePage("import")}>Import</button>
           </div>
           <div className="nav-right">
             <button
@@ -2808,7 +2809,7 @@ export default function Home() {
       </section>
       )}
 
-      {activePage === "research" && (
+      {activePage === "import" && (
       <>
       <section id="uploads" className="upload-grid">
         <UploadCard
