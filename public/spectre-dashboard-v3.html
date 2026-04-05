@@ -2731,14 +2731,15 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     plusRiskCards.forEach((card) => {
       card.style.display = hasPlusAccess ? "" : "none";
     });
+    // Correlation and factor sections are data-gated in renderPortfolio — hide by default here, shown only when data arrives
     const corrWrap = document.getElementById("correlation-matrix-wrap");
     const corrDivider = document.getElementById("correlation-wrap-divider");
-    if (corrWrap) corrWrap.style.display = hasPlusAccess ? "" : "none";
-    if (corrDivider) corrDivider.style.display = hasPlusAccess ? "" : "none";
+    if (corrWrap && !hasPlusAccess) corrWrap.style.display = "none";
+    if (corrDivider && !hasPlusAccess) corrDivider.style.display = "none";
     const factorWrap = document.getElementById("factor-exposure-wrap");
     const factorDivider = document.getElementById("factor-exposure-divider");
-    if (factorWrap) factorWrap.style.display = hasProAccess ? "" : "none";
-    if (factorDivider) factorDivider.style.display = hasProAccess ? "" : "none";
+    if (factorWrap && !hasProAccess) factorWrap.style.display = "none";
+    if (factorDivider && !hasProAccess) factorDivider.style.display = "none";
   }
 
   function detectBullionMetal(holding) {
@@ -4375,55 +4376,50 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       setClass("risk-regime", `risk-val ${regime.cssClass}`);
     }
 
-    // Correlation matrix (plus+)
+    // Correlation matrix (plus+) — only show when data is available
     const corrMatrix = state.historicalRiskEstimate?.correlationMatrix ?? null;
     const corrContainer = document.getElementById("corr-matrix-container");
     const corrNote = document.getElementById("corr-matrix-note");
-    if (corrContainer) {
-      if (corrMatrix && corrMatrix.tickers.length >= 2) {
-        const n = corrMatrix.tickers.length;
-        // Build grid: (n+1) columns × (n+1) rows
-        let html = `<div class="corr-matrix" style="grid-template-columns:4.5rem repeat(${n},2.4rem)">`;
-        // Top-left empty corner
-        html += `<div class="corr-cell corr-label" style="height:4.5rem"></div>`;
-        // Top row labels (vertical text)
-        for (const t of corrMatrix.tickers) {
-          const short = t.length > 6 ? t.slice(0, 6) : t;
-          html += `<div class="corr-cell corr-label-top" title="${t}">${short}</div>`;
-        }
-        // Data rows
-        for (let i = 0; i < n; i++) {
-          const shortLabel = corrMatrix.tickers[i].length > 10 ? corrMatrix.tickers[i].slice(0, 10) : corrMatrix.tickers[i];
-          html += `<div class="corr-cell corr-label" title="${corrMatrix.tickers[i]}">${shortLabel}</div>`;
-          for (let j = 0; j < n; j++) {
-            const val = corrMatrix.matrix[i][j];
-            const intensity = Math.abs(val);
-            let bg;
-            if (val >= 0) {
-              // positive: purple tones
-              bg = `rgba(138,92,246,${0.15 + intensity * 0.7})`;
-            } else {
-              // negative: orange tones
-              bg = `rgba(255,100,40,${0.15 + intensity * 0.7})`;
-            }
-            const display = i === j ? "1.00" : val.toFixed(2);
-            html += `<div class="corr-cell" style="background:${bg}" title="${corrMatrix.tickers[i]} vs ${corrMatrix.tickers[j]}: ${val.toFixed(3)}">${display}</div>`;
-          }
-        }
-        html += `</div>`;
-        corrContainer.innerHTML = html;
-        if (corrNote) corrNote.textContent = `${n} holdings shown · ${state.riskWindow} window · Yahoo price history`;
-      } else {
-        corrContainer.innerHTML = `<p style="font-family:var(--mono);font-size:.54rem;color:var(--muted)">Need at least 2 holdings with price history to compute correlations.</p>`;
-        if (corrNote) corrNote.textContent = "";
+    const corrWrapEl = document.getElementById("correlation-matrix-wrap");
+    const corrDividerEl = document.getElementById("correlation-wrap-divider");
+    const hasCorrData = corrMatrix && corrMatrix.tickers.length >= 2;
+    if (corrWrapEl) corrWrapEl.style.display = hasPlusAccess && hasCorrData ? "" : "none";
+    if (corrDividerEl) corrDividerEl.style.display = hasPlusAccess && hasCorrData ? "" : "none";
+    if (corrContainer && hasCorrData) {
+      const n = corrMatrix.tickers.length;
+      let html = `<div class="corr-matrix" style="grid-template-columns:4.5rem repeat(${n},2.4rem)">`;
+      html += `<div class="corr-cell corr-label" style="height:4.5rem"></div>`;
+      for (const t of corrMatrix.tickers) {
+        const short = t.length > 6 ? t.slice(0, 6) : t;
+        html += `<div class="corr-cell corr-label-top" title="${t}">${short}</div>`;
       }
+      for (let i = 0; i < n; i++) {
+        const shortLabel = corrMatrix.tickers[i].length > 10 ? corrMatrix.tickers[i].slice(0, 10) : corrMatrix.tickers[i];
+        html += `<div class="corr-cell corr-label" title="${corrMatrix.tickers[i]}">${shortLabel}</div>`;
+        for (let j = 0; j < n; j++) {
+          const val = corrMatrix.matrix[i][j];
+          const intensity = Math.abs(val);
+          const bg = val >= 0
+            ? `rgba(138,92,246,${0.15 + intensity * 0.7})`
+            : `rgba(255,100,40,${0.15 + intensity * 0.7})`;
+          const display = i === j ? "1.00" : val.toFixed(2);
+          html += `<div class="corr-cell" style="background:${bg}" title="${corrMatrix.tickers[i]} vs ${corrMatrix.tickers[j]}: ${val.toFixed(3)}">${display}</div>`;
+        }
+      }
+      html += `</div>`;
+      corrContainer.innerHTML = html;
+      if (corrNote) corrNote.textContent = `${n} holdings shown · ${state.riskWindow} window · Yahoo price history`;
     }
 
-    // Factor exposure (pro)
+    // Factor exposure (pro) — only show when market beta is available
     const factorExposure = state.historicalRiskEstimate?.factorExposure ?? null;
     const marketBeta = factorExposure?.marketBeta ?? null;
     const sizeBeta = factorExposure?.sizeBeta ?? null;
-    // Market beta bar: centre at 50%, scale ±2 → ±50%
+    const hasFactorData = Number.isFinite(marketBeta);
+    const factorWrapEl = document.getElementById("factor-exposure-wrap");
+    const factorDividerEl = document.getElementById("factor-exposure-divider");
+    if (factorWrapEl) factorWrapEl.style.display = hasProAccess && hasFactorData ? "" : "none";
+    if (factorDividerEl) factorDividerEl.style.display = hasProAccess && hasFactorData ? "" : "none";
     if (Number.isFinite(marketBeta)) {
       const clampedMkt = Math.max(-2, Math.min(2, marketBeta));
       const pct = Math.abs(clampedMkt) / 2 * 50;
