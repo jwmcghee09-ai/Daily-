@@ -5186,13 +5186,13 @@ function applyModeChrome() {
 function activateDemoResearchPreview() {
   document.body.classList.add('demo-preview-locked');
   document.querySelectorAll('.research-tab-nav .rtab').forEach((tab) => {
-    const enabled = ['overview', 'equities', 'crypto'].includes(tab.dataset.tab);
+    const enabled = ['overview', 'equities', 'macro', 'earnings', 'crypto'].includes(tab.dataset.tab);
     tab.classList.toggle('demo-preview-enabled', enabled);
   });
   switchResearchTab('overview', document.querySelector('.research-tab-nav .rtab[data-tab="overview"]'));
   const noteEl = document.getElementById('workspace-meta-note');
   if (noteEl) {
-    noteEl.textContent = 'Demo research is a frozen market snapshot for preview only. Overview, Equities, and Crypto stay open for preview; live updates, deeper macro views, and terminal controls unlock inside a real SPECTRE workspace.';
+    noteEl.textContent = 'Demo research is a frozen market snapshot for preview only. Overview, Equities, Macro, Earnings, and Crypto stay open for preview; live updates and terminal controls unlock inside a real SPECTRE workspace.';
   }
 }
 
