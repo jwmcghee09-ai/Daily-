@@ -5534,6 +5534,15 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
 
 // ── TAB NAVIGATION ──
 (function() {
+  function rerenderQuantTab() {
+    if (!state.portfolio) return;
+    requestAnimationFrame(function() {
+      requestAnimationFrame(function() {
+        renderPortfolio();
+      });
+    });
+  }
+
   function switchTab(tab) {
     document.querySelectorAll('[data-page]').forEach(function(el) {
       var t = el.getAttribute('data-page');
@@ -5548,17 +5557,11 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       btn.classList.toggle('active', btn.getAttribute('data-tab') === tab);
     });
     window.scrollTo({ top: 0, behavior: 'instant' });
-    // Re-draw canvases after tab becomes visible (they were 0-width when hidden)
+    // Re-render the full Quant view after it becomes visible.
+    // This avoids partial canvas restores where only some charts redraw after
+    // returning from Research or browser back/forward cache.
     if (tab === 'quant') {
-      requestAnimationFrame(function() {
-        if (typeof drawHistoryLine === 'function' && window._fullHistory) {
-          drawHistoryLine(window._fullHistory, window._historyCostBase || 0);
-        }
-        if (typeof runMonteCarlo === 'function') runMonteCarlo();
-        if (typeof drawHoldingsBars === 'function' && window._lastHoldingsBars) {
-          drawHoldingsBars(window._lastHoldingsBars);
-        }
-      });
+      rerenderQuantTab();
     }
   }
 
@@ -5583,6 +5586,14 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
   var _initTab = new URLSearchParams(window.location.search).get('tab') || 'quant';
   if (_initTab === 'research') _initTab = 'quant';
   switchTab(_initTab);
+
+  window.addEventListener('pageshow', function(event) {
+    if (!event.persisted) return;
+    var activeTab = document.querySelector('.nav-tab.nav-tab-active')?.getAttribute('data-tab') || 'quant';
+    if (activeTab === 'quant') {
+      rerenderQuantTab();
+    }
+  });
 })();
 
 /* ── TICKER BAR ── */
