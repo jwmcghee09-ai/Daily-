@@ -380,6 +380,13 @@ export default function Home() {
   const [holdingsAiError, setHoldingsAiError] = useState("");
   const [holdingsAiResult, setHoldingsAiResult] = useState<HoldingsAiAnalysis | null>(null);
   const [activePage, setActivePage] = useState<"quant" | "ai" | "research" | "settings">("quant");
+
+  // Trigger Recharts ResponsiveContainer to remeasure after tab switch
+  useEffect(() => {
+    const t = setTimeout(() => window.dispatchEvent(new Event("resize")), 30);
+    return () => clearTimeout(t);
+  }, [activePage]);
+
   const refreshInFlight = useRef(false);
   const lastAutoRefreshAttemptAtRef = useRef(0);
 
@@ -2634,8 +2641,7 @@ export default function Home() {
           <span className="ti"><span className="ti-sym">WBC</span>32.10<span className="ti-dn">-0.2%</span></span>
         </div>
       </div>
-      {activePage === "quant" && (
-      <header id="dashboard-top" className="hero">
+      <header id="dashboard-top" className="hero" style={{display: activePage === "quant" ? undefined : "none"}}>
         <div className="hero-copy">
           <h1><Image src="/spectre-wordmark-plain.svg" alt="SPECTRE" width={620} height={148} className="hero-wordmark-image" priority /></h1>
           <p className="hero-tagline">System for Portfolio Exposure, Correlation, Threat & Risk Evaluation</p>
@@ -2677,7 +2683,6 @@ export default function Home() {
           </div>
         </div>
       </header>
-      )}
 
       {demoMode ? (
         <div className="banner info">
@@ -2994,8 +2999,7 @@ export default function Home() {
       ) : null}
 
 
-      {activePage === "quant" && (
-      <>
+      <div style={{display: activePage === "quant" ? undefined : "none"}}>
       <section id="metrics" className="kpi-grid">
         <KpiCard label="Total Portfolio" value={formatCurrency(metrics.totalValue)} help="Current market value across all imported holdings." />
         <KpiCard label="Cost Base" value={formatCurrency(metrics.totalCost)} help="Total invested amount from imported cost-base values." />
@@ -3204,11 +3208,9 @@ export default function Home() {
           </div>
         ) : null}
       </section>
-      </>
-      )}
+      </div>
 
-      {activePage === "ai" ? (
-        <section className="ai-page-section">
+      <section className="ai-page-section" style={{display: activePage === "ai" ? undefined : "none"}}>
           {askAiEnabled ? (
             <div className="holdings-ai-panel">
               <div className="holdings-ai-head">
@@ -3322,10 +3324,8 @@ export default function Home() {
             </div>
           ) : null}
         </section>
-      ) : null}
 
-      {activePage === "quant" && (
-      <>
+      <div style={{display: activePage === "quant" ? undefined : "none"}}>
       <section id="insights" className="insights-section">
         <h2>{proAnalyticsEnabled ? "Performance & Stress" : "Performance"}</h2>
         <div className="insights-grid">
@@ -3632,8 +3632,7 @@ export default function Home() {
           </div>
         )}
       </section>
-      </>
-      )}
+      </div>
 
       <footer className="footer-note">
         <p className="footer-disclaimer">Disclaimer: SPECTRE provides informational analytics only. It is not financial, investment, tax, or legal advice, and no result is guaranteed to be complete, current, or accurate.</p>
