@@ -352,9 +352,9 @@ export default function SignInPage({
             <Link href="/" className={`${styles.button} ${styles.ghostButton}`}>
               Back
             </Link>
-            <Link href="/dashboard?demo=1" className={`${styles.button} ${styles.demoButton}`}>
+            <a href="/dashboard?demo=1" className={`${styles.button} ${styles.demoButton}`}>
               Live Demo
-            </Link>
+            </a>
           </div>
         </div>
 
@@ -378,7 +378,7 @@ export default function SignInPage({
             <div className={styles.sideMeta}>
               <div>
                 <span>Live demo</span>
-                <Link href="/dashboard?demo=1">Explore</Link>
+                <a href="/dashboard?demo=1">Explore</a>
               </div>
               <div>
                 <span>Terms</span>
