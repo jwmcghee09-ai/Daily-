@@ -449,7 +449,7 @@ export default function LandingPage({
           <div className={styles.statsGrid}>
             {[
               { val: "8", label: "Import Sources" },
-              { val: "12+", label: "Risk Signals" },
+              { val: "14+", label: "Risk Signals" },
               { val: "500", label: "Monte Carlo Paths" },
               { val: "3", label: "Quant · AI · Research" },
             ].map(({ val, label }) => (
