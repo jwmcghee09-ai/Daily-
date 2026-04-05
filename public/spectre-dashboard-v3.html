@@ -5534,6 +5534,22 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
 
 // ── TAB NAVIGATION ──
 (function() {
+  var _quantRestoreTimer = null;
+
+  function scheduleQuantRerender() {
+    if (_quantRestoreTimer) {
+      clearTimeout(_quantRestoreTimer);
+      _quantRestoreTimer = null;
+    }
+    rerenderQuantTab();
+    _quantRestoreTimer = window.setTimeout(function() {
+      rerenderQuantTab();
+    }, 180);
+    window.setTimeout(function() {
+      rerenderQuantTab();
+    }, 520);
+  }
+
   function rerenderQuantTab() {
     if (!state.portfolio) return;
     requestAnimationFrame(function() {
@@ -5561,7 +5577,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     // This avoids partial canvas restores where only some charts redraw after
     // returning from Research or browser back/forward cache.
     if (tab === 'quant') {
-      rerenderQuantTab();
+      scheduleQuantRerender();
     }
   }
 
@@ -5587,11 +5603,25 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
   if (_initTab === 'research') _initTab = 'quant';
   switchTab(_initTab);
 
-  window.addEventListener('pageshow', function(event) {
-    if (!event.persisted) return;
+  window.addEventListener('load', function() {
     var activeTab = document.querySelector('.nav-tab.nav-tab-active')?.getAttribute('data-tab') || 'quant';
     if (activeTab === 'quant') {
-      rerenderQuantTab();
+      scheduleQuantRerender();
+    }
+  });
+
+  window.addEventListener('pageshow', function(event) {
+    var activeTab = document.querySelector('.nav-tab.nav-tab-active')?.getAttribute('data-tab') || 'quant';
+    if (activeTab === 'quant') {
+      scheduleQuantRerender();
+    }
+  });
+
+  document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState !== 'visible') return;
+    var activeTab = document.querySelector('.nav-tab.nav-tab-active')?.getAttribute('data-tab') || 'quant';
+    if (activeTab === 'quant') {
+      scheduleQuantRerender();
     }
   });
 })();
