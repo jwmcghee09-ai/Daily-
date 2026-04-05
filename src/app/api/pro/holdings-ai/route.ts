@@ -1,6 +1,15 @@
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
-import { readPortfolioState, readUserEntitlements, getAiUsageThisMonth, reserveAiUsageIfAvailable, releaseReservedAiUsage, PlanTier } from "@/lib/db";
+import {
+  readPortfolioState,
+  readUserEntitlements,
+  getAiUsageThisMonth,
+  reserveAiUsageIfAvailable,
+  releaseReservedAiUsage,
+  readPriceDipAlerts,
+  estimateHistoricalRiskFromYahoo,
+  PlanTier,
+} from "@/lib/db";
 import { computeMetrics } from "@/lib/portfolio";
 
 const AI_MONTHLY_LIMITS: Record<PlanTier, number> = {
@@ -59,6 +68,60 @@ interface HoldingsAiAnalysis {
   holdingBreakdown: AiHoldingBreakdown[];
   riskChecks: string[];
   nextActions: string[];
+}
+
+interface ResearchQuotesContext {
+  fetchedAt?: string;
+  indices?: {
+    asx200?: { price?: number | null; prevClose?: number | null };
+    allOrds?: { price?: number | null; prevClose?: number | null };
+    audUsd?: { price?: number | null; prevClose?: number | null };
+    vix?: { price?: number | null; prevClose?: number | null };
+  };
+  crypto?: Record<string, { price?: number | null; prevClose?: number | null; name?: string | null }>;
+  asx?: Record<string, { price?: number | null; prevClose?: number | null; name?: string | null }>;
+  asxConstituents?: Array<{
+    symbol?: string;
+    price?: number | null;
+    prevClose?: number | null;
+    marketCap?: number | null;
+    sector?: string | null;
+    volume?: number | null;
+    name?: string | null;
+  }>;
+}
+
+interface ResearchFmpContext {
+  fetchedAt?: string;
+  indices?: Array<{ symbol?: string; name?: string; price?: number | null; changePct?: number | null }>;
+  commodities?: Array<{ symbol?: string; name?: string; price?: number | null; changePct?: number | null; unit?: string }>;
+  fx?: Array<{ pair?: string; label?: string; rate?: number | null; changePct?: number | null }>;
+  macroRates?: Array<{ key?: string; label?: string; value?: string | null; actual?: number | null; date?: string | null; event?: string | null }>;
+  macroIndicators?: Array<{ key?: string; label?: string; value?: number | null; unit?: string; date?: string | null }>;
+  treasuryRates?: { date?: string; m3?: number | null; y1?: number | null; y2?: number | null; y5?: number | null; y10?: number | null; y30?: number | null } | null;
+  sectorPerformance?: Array<{ sector?: string; changePct?: number }>;
+  earningsCalendar?: Array<{ date?: string; symbol?: string; name?: string; epsEstimate?: number | null; revenueEstimate?: number | null }>;
+  earningsSurprises?: Array<{ symbol?: string; name?: string; date?: string; actualEps?: number | null; estimatedEps?: number | null; surprisePct?: number | null }>;
+  analystRatings?: Array<{ symbol?: string; name?: string; targetConsensus?: number | null; targetLow?: number | null; targetHigh?: number | null; analystCount?: number }>;
+  news?: Array<{ title?: string; publishedDate?: string; symbol?: string; site?: string }>;
+  cryptoMarket?: {
+    btcDominance?: number | null;
+    ethDominance?: number | null;
+    totalMarketCapUsd?: number | null;
+    totalVolume24hUsd?: number | null;
+    fearGreedValue?: number | null;
+    fearGreedLabel?: string | null;
+    assets?: Array<{ symbol?: string; name?: string; price?: number | null; changePct24h?: number | null; marketCap?: number | null }>;
+  };
+}
+
+interface ResearchFredContext {
+  fetchedAt?: string;
+  series?: Array<{ id?: string; label?: string; value?: number | null; change?: number | null; unit?: string; date?: string | null; description?: string }>;
+  cot?: {
+    oil?: { netLong?: number | null; longPct?: number | null; weekChange?: number | null; sentiment?: string | null; reportDate?: string | null };
+    gold?: { netLong?: number | null; longPct?: number | null; weekChange?: number | null; sentiment?: string | null; reportDate?: string | null };
+  };
 }
 
 function clampInteger(raw: string | undefined, fallback: number, min: number, max: number): number {
@@ -362,15 +425,19 @@ function buildSystemPrompt(): string {
     "You are SPECTRE Pro's portfolio analyst for Australian investors. " +
     "Output valid JSON only — no markdown, no prose outside the JSON object. " +
     'Use this exact schema: {"answer":"string","portfolioDrivers":["string"],"holdingBreakdown":[{"ticker":"string","summary":"string","influences":["string"],"riskFlags":["string"],"confidence":0}],"riskChecks":["string"],"nextActions":["string"]}. ' +
-    "\n\nA live market snapshot is included in the context. Use it to ground your analysis in current conditions:\n" +
+    "\n\nA live market snapshot, quant risk context, and filtered research-terminal context are included. Use them to ground your analysis in current conditions:\n" +
     "- Reference ASX200 level and direction when discussing equity holdings\n" +
     "- Reference AUD/USD when discussing import-sensitive stocks, global earners, and gold\n" +
     "- Reference VIX as the current volatility regime indicator\n" +
     "- Reference BTC/ETH prices and 24h change for crypto holdings\n" +
     "- Reference gold AUD price for bullion holdings\n" +
+    "- Use quant signals like VaR, CVaR, drawdown, beta, tracking error, correlation, factor exposure, Sharpe/Sortino, and regime when available\n" +
+    "- Use research context like macro indicators, yield curve, sector performance, analyst ratings, earnings, and relevant news when available\n" +
     "\nRules:\n" +
     "- Do NOT invent company announcements, earnings dates, or specific events not present in the provided data\n" +
     "- DO reference current market levels from the snapshot where relevant\n" +
+    "- If a signal is flagged as Yahoo estimate or fallback, mention that it is lower-confidence rather than stating it as exact fact\n" +
+    "- Prefer holdings-specific research items, then sector-level items, then broad market context\n" +
     "- holdingBreakdown must cover all tickers in holdings, sorted by weightPct descending\n" +
     "- riskFlags use standard labels: Concentration, FX Risk, Sector Overlap, High Volatility, Correlation Risk, Drawdown Risk, Liquidity Risk\n" +
     "- confidence: 85-100 when market price + cost base both available; 50-75 when estimated or stale\n" +
@@ -380,14 +447,238 @@ function buildSystemPrompt(): string {
   );
 }
 
-function buildPromptContext(
+function normalizeSymbol(value: string): string {
+  return String(value || "")
+    .trim()
+    .toUpperCase()
+    .replace(/\.AX$/i, "")
+    .replace(/-USD$/i, "")
+    .replace(/[^A-Z0-9]/g, "");
+}
+
+function toChangePct(price: number | null | undefined, prevClose: number | null | undefined): number | null {
+  if (!Number.isFinite(price) || !Number.isFinite(prevClose) || !prevClose || prevClose <= 0) return null;
+  return toRounded((((price as number) - (prevClose as number)) / (prevClose as number)) * 100);
+}
+
+async function fetchInternalJson<T>(origin: string, path: string, cookieHeader: string): Promise<T | null> {
+  try {
+    const response = await fetch(`${origin}${path}`, {
+      cache: "no-store",
+      headers: {
+        Accept: "application/json",
+        ...(cookieHeader ? { cookie: cookieHeader } : {}),
+      },
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!response.ok) return null;
+    return (await response.json()) as T;
+  } catch {
+    return null;
+  }
+}
+
+async function buildResearchContext(
+  origin: string,
+  cookieHeader: string,
+  heldTickerSet: Set<string>,
+) {
+  const [quotes, fmp, fred] = await Promise.all([
+    fetchInternalJson<ResearchQuotesContext>(origin, "/api/research/quotes", cookieHeader),
+    fetchInternalJson<ResearchFmpContext>(origin, "/api/research/fmp", cookieHeader),
+    fetchInternalJson<ResearchFredContext>(origin, "/api/research/fred", cookieHeader),
+  ]);
+
+  const heldConstituents = (quotes?.asxConstituents ?? [])
+    .filter((item) => heldTickerSet.has(normalizeSymbol(item.symbol ?? "")))
+    .slice(0, 12)
+    .map((item) => ({
+      symbol: normalizeSymbol(item.symbol ?? ""),
+      name: item.name ?? normalizeSymbol(item.symbol ?? ""),
+      price: item.price ?? null,
+      changePct: toChangePct(item.price, item.prevClose),
+      marketCap: item.marketCap ?? null,
+      sector: item.sector ?? null,
+      volume: item.volume ?? null,
+    }));
+
+  const heldAnalystRatings = (fmp?.analystRatings ?? [])
+    .filter((item) => heldTickerSet.has(normalizeSymbol(item.symbol ?? "")))
+    .slice(0, 10)
+    .map((item) => ({
+      symbol: normalizeSymbol(item.symbol ?? ""),
+      name: item.name ?? normalizeSymbol(item.symbol ?? ""),
+      targetConsensus: item.targetConsensus ?? null,
+      targetLow: item.targetLow ?? null,
+      targetHigh: item.targetHigh ?? null,
+      analystCount: item.analystCount ?? 0,
+    }));
+
+  const heldEarningsCalendar = (fmp?.earningsCalendar ?? [])
+    .filter((item) => heldTickerSet.has(normalizeSymbol(item.symbol ?? "")))
+    .slice(0, 10)
+    .map((item) => ({
+      symbol: normalizeSymbol(item.symbol ?? ""),
+      name: item.name ?? normalizeSymbol(item.symbol ?? ""),
+      date: item.date ?? null,
+      epsEstimate: item.epsEstimate ?? null,
+      revenueEstimate: item.revenueEstimate ?? null,
+    }));
+
+  const heldEarningsSurprises = (fmp?.earningsSurprises ?? [])
+    .filter((item) => heldTickerSet.has(normalizeSymbol(item.symbol ?? "")))
+    .slice(0, 10)
+    .map((item) => ({
+      symbol: normalizeSymbol(item.symbol ?? ""),
+      name: item.name ?? normalizeSymbol(item.symbol ?? ""),
+      date: item.date ?? null,
+      actualEps: item.actualEps ?? null,
+      estimatedEps: item.estimatedEps ?? null,
+      surprisePct: item.surprisePct ?? null,
+    }));
+
+  const relevantNews = (fmp?.news ?? [])
+    .filter((item) => {
+      const normalized = normalizeSymbol(item.symbol ?? "");
+      return heldTickerSet.has(normalized) || ["ASX", "MKT", "RBA", "GOLD", "OIL", "BTC"].includes(normalized);
+    })
+    .slice(0, 10)
+    .map((item) => ({
+      title: item.title ?? "",
+      symbol: normalizeSymbol(item.symbol ?? ""),
+      site: item.site ?? "",
+      publishedDate: item.publishedDate ?? null,
+    }));
+
+  return {
+    quotesFetchedAt: quotes?.fetchedAt ?? null,
+    fmpFetchedAt: fmp?.fetchedAt ?? null,
+    fredFetchedAt: fred?.fetchedAt ?? null,
+    heldQuotes: heldConstituents,
+    indices: {
+      asx200: quotes?.indices?.asx200
+        ? {
+            price: quotes.indices.asx200.price ?? null,
+            changePct: toChangePct(quotes.indices.asx200.price, quotes.indices.asx200.prevClose),
+          }
+        : null,
+      allOrds: quotes?.indices?.allOrds
+        ? {
+            price: quotes.indices.allOrds.price ?? null,
+            changePct: toChangePct(quotes.indices.allOrds.price, quotes.indices.allOrds.prevClose),
+          }
+        : null,
+      audUsd: quotes?.indices?.audUsd
+        ? {
+            price: quotes.indices.audUsd.price ?? null,
+            changePct: toChangePct(quotes.indices.audUsd.price, quotes.indices.audUsd.prevClose),
+          }
+        : null,
+      vix: quotes?.indices?.vix
+        ? {
+            price: quotes.indices.vix.price ?? null,
+            changePct: toChangePct(quotes.indices.vix.price, quotes.indices.vix.prevClose),
+          }
+        : null,
+    },
+    cryptoAndCommodities: {
+      btc: quotes?.crypto?.btc
+        ? { price: quotes.crypto.btc.price ?? null, changePct: toChangePct(quotes.crypto.btc.price, quotes.crypto.btc.prevClose) }
+        : null,
+      eth: quotes?.crypto?.eth
+        ? { price: quotes.crypto.eth.price ?? null, changePct: toChangePct(quotes.crypto.eth.price, quotes.crypto.eth.prevClose) }
+        : null,
+      sol: quotes?.crypto?.sol
+        ? { price: quotes.crypto.sol.price ?? null, changePct: toChangePct(quotes.crypto.sol.price, quotes.crypto.sol.prevClose) }
+        : null,
+      gold: quotes?.crypto?.gold
+        ? { price: quotes.crypto.gold.price ?? null, changePct: toChangePct(quotes.crypto.gold.price, quotes.crypto.gold.prevClose) }
+        : null,
+      oil: quotes?.crypto?.oil
+        ? { price: quotes.crypto.oil.price ?? null, changePct: toChangePct(quotes.crypto.oil.price, quotes.crypto.oil.prevClose) }
+        : null,
+    },
+    macro: {
+      macroRates: (fmp?.macroRates ?? []).slice(0, 8).map((item) => ({
+        key: item.key ?? "",
+        label: item.label ?? "",
+        value: item.value ?? null,
+        actual: item.actual ?? null,
+        date: item.date ?? null,
+        event: item.event ?? null,
+      })),
+      macroIndicators: (fmp?.macroIndicators ?? []).slice(0, 8).map((item) => ({
+        key: item.key ?? "",
+        label: item.label ?? "",
+        value: item.value ?? null,
+        unit: item.unit ?? "",
+        date: item.date ?? null,
+      })),
+      treasuryRates: fmp?.treasuryRates ?? null,
+      fredSeries: (fred?.series ?? []).slice(0, 8).map((item) => ({
+        id: item.id ?? "",
+        label: item.label ?? "",
+        value: item.value ?? null,
+        change: item.change ?? null,
+        unit: item.unit ?? "",
+        date: item.date ?? null,
+      })),
+      cot: fred?.cot ?? null,
+    },
+    sectors: (fmp?.sectorPerformance ?? []).slice(0, 10).map((item) => ({
+      sector: item.sector ?? "",
+      changePct: item.changePct ?? null,
+    })),
+    analystRatings: heldAnalystRatings,
+    earningsCalendar: heldEarningsCalendar,
+    earningsSurprises: heldEarningsSurprises,
+    news: relevantNews,
+    cryptoMarket: fmp?.cryptoMarket
+      ? {
+          btcDominance: fmp.cryptoMarket.btcDominance ?? null,
+          ethDominance: fmp.cryptoMarket.ethDominance ?? null,
+          totalMarketCapUsd: fmp.cryptoMarket.totalMarketCapUsd ?? null,
+          totalVolume24hUsd: fmp.cryptoMarket.totalVolume24hUsd ?? null,
+          fearGreedValue: fmp.cryptoMarket.fearGreedValue ?? null,
+          fearGreedLabel: fmp.cryptoMarket.fearGreedLabel ?? null,
+          assets: (fmp.cryptoMarket.assets ?? []).slice(0, 5).map((item) => ({
+            symbol: normalizeSymbol(item.symbol ?? ""),
+            name: item.name ?? normalizeSymbol(item.symbol ?? ""),
+            price: item.price ?? null,
+            changePct24h: item.changePct24h ?? null,
+            marketCap: item.marketCap ?? null,
+          })),
+        }
+      : null,
+  };
+}
+
+async function buildPromptContext(
   userEmail: string,
   question: string,
   userId: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   marketSnapshot: any,
+  origin: string,
+  cookieHeader: string,
 ) {
   const { state, metrics, allHoldings, topGainers, topLosers } = buildHoldingsSummary(userId);
+  const heldTickerSet = new Set(allHoldings.map((holding) => normalizeSymbol(holding.ticker)));
+  const [historicalRiskEstimate, priceDipAlerts, researchContext] = await Promise.all([
+    estimateHistoricalRiskFromYahoo(userId, "3M").catch(() => null),
+    Promise.resolve(
+      readPriceDipAlerts(userId)
+        .filter((alert) => alert.enabled)
+        .slice(0, 20)
+        .map((alert) => ({
+          ticker: normalizeSymbol(alert.ticker),
+          dropPctThreshold: toRounded(alert.dropPctThreshold),
+          enabled: alert.enabled,
+          lastTriggeredAt: alert.lastTriggeredAt || null,
+        })),
+    ),
+    buildResearchContext(origin, cookieHeader, heldTickerSet),
+  ]);
 
   return {
     generatedAt: new Date().toISOString(),
@@ -418,6 +709,59 @@ function buildPromptContext(
       updatedAt: state.updatedAt || null,
       lastPriceRefreshAt: state.lastPriceRefreshAt || null,
     },
+    quant: {
+      riskEstimate3M: historicalRiskEstimate
+        ? {
+            source: historicalRiskEstimate.source,
+            lessAccurateThanSnapshots: historicalRiskEstimate.lessAccurateThanSnapshots,
+            note: historicalRiskEstimate.note,
+            benchmarkSymbol: historicalRiskEstimate.benchmarkSymbol,
+            benchmarkName: historicalRiskEstimate.benchmarkName,
+            riskWindow: historicalRiskEstimate.riskWindow,
+            pointsUsed: historicalRiskEstimate.pointsUsed,
+            returnsCount: historicalRiskEstimate.returnsCount,
+            benchmarkPointsUsed: historicalRiskEstimate.benchmarkPointsUsed,
+            volatilityAnnualPct: historicalRiskEstimate.volatilityAnnualPct == null ? null : toRounded(historicalRiskEstimate.volatilityAnnualPct),
+            maxDrawdownPct: historicalRiskEstimate.maxDrawdownPct == null ? null : toRounded(historicalRiskEstimate.maxDrawdownPct),
+            var95Pct: historicalRiskEstimate.var95Pct == null ? null : toRounded(historicalRiskEstimate.var95Pct),
+            cvar95Pct: historicalRiskEstimate.cvar95Pct == null ? null : toRounded(historicalRiskEstimate.cvar95Pct),
+            cornishFisherVar95Pct:
+              historicalRiskEstimate.cornishFisherVar95Pct == null ? null : toRounded(historicalRiskEstimate.cornishFisherVar95Pct),
+            betaToBenchmark: historicalRiskEstimate.betaToBenchmark == null ? null : toRounded(historicalRiskEstimate.betaToBenchmark, 3),
+            trackingErrorAnnualPct:
+              historicalRiskEstimate.trackingErrorAnnualPct == null ? null : toRounded(historicalRiskEstimate.trackingErrorAnnualPct),
+            correlationToBenchmark:
+              historicalRiskEstimate.correlationToBenchmark == null ? null : toRounded(historicalRiskEstimate.correlationToBenchmark, 3),
+            rsi14: historicalRiskEstimate.rsi14 == null ? null : toRounded(historicalRiskEstimate.rsi14),
+            stochastic14: historicalRiskEstimate.stochastic14 == null ? null : toRounded(historicalRiskEstimate.stochastic14),
+            obvValue: historicalRiskEstimate.obvValue == null ? null : toRounded(historicalRiskEstimate.obvValue),
+            obvTrend: historicalRiskEstimate.obvTrend ?? null,
+            regime: historicalRiskEstimate.regime ?? null,
+            factorExposure: historicalRiskEstimate.factorExposure ?? null,
+            sharpeRatioAnnual: historicalRiskEstimate.sharpeRatioAnnual == null ? null : toRounded(historicalRiskEstimate.sharpeRatioAnnual, 3),
+            sortinoRatioAnnual: historicalRiskEstimate.sortinoRatioAnnual == null ? null : toRounded(historicalRiskEstimate.sortinoRatioAnnual, 3),
+            returnSkewness: historicalRiskEstimate.returnSkewness == null ? null : toRounded(historicalRiskEstimate.returnSkewness, 3),
+            usedTickers: historicalRiskEstimate.usedTickers,
+            failedTickers: historicalRiskEstimate.failedTickers,
+            correlationHighlights: historicalRiskEstimate.correlationMatrix
+              ? historicalRiskEstimate.correlationMatrix.tickers.slice(0, 6).map((ticker, rowIndex) => ({
+                  ticker,
+                  strongestPositive: historicalRiskEstimate.correlationMatrix!.tickers.reduce<{ ticker: string | null; value: number | null }>(
+                    (best, candidate, colIndex) => {
+                      if (colIndex === rowIndex) return best;
+                      const value = historicalRiskEstimate.correlationMatrix!.matrix[rowIndex]?.[colIndex];
+                      if (!Number.isFinite(value)) return best;
+                      if (best.value == null || value > best.value) return { ticker: candidate, value: toRounded(value, 3) };
+                      return best;
+                    },
+                    { ticker: null, value: null },
+                  ),
+                }))
+              : [],
+          }
+        : null,
+      dipAlerts: priceDipAlerts,
+    },
     topGainers,
     topLosers,
     holdings: allHoldings,
@@ -436,6 +780,7 @@ function buildPromptContext(
       date: point.date,
       value: toRounded(point.value),
     })),
+    research: researchContext,
   };
 }
 
@@ -515,7 +860,9 @@ export async function POST(request: Request) {
 
   // Fetch live market data in parallel with no extra latency
   const marketSnapshot = await fetchMarketSnapshot();
-  const context = buildPromptContext(sessionUser.email, question, sessionUser.id, marketSnapshot);
+  const origin = new URL(request.url).origin;
+  const cookieHeader = request.headers.get("cookie") ?? "";
+  const context = await buildPromptContext(sessionUser.email, question, sessionUser.id, marketSnapshot, origin, cookieHeader);
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), HOLDINGS_AI_TIMEOUT_MS);

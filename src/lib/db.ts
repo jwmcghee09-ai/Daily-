@@ -3393,7 +3393,8 @@ export function reserveAiUsageIfAvailable(userId: string, limit: number): { allo
     return { allowed: true, used: getAiUsageThisMonth(userId) };
   }
 
-  const tx = db.transaction(() => {
+  db.exec("BEGIN IMMEDIATE");
+  try {
     db.prepare(
       "INSERT INTO ai_usage (user_id, month, call_count) VALUES (?, ?, 0) " +
         "ON CONFLICT(user_id, month) DO NOTHING",
@@ -3401,26 +3402,30 @@ export function reserveAiUsageIfAvailable(userId: string, limit: number): { allo
 
     const update = db
       .prepare("UPDATE ai_usage SET call_count = call_count + 1 WHERE user_id = ? AND month = ? AND call_count < ?")
-      .run(userId, month, limit);
+      .run(userId, month, limit) as { changes?: number };
 
     const row = db
       .prepare("SELECT call_count FROM ai_usage WHERE user_id = ? AND month = ? LIMIT 1")
       .get(userId, month) as { call_count: number } | undefined;
 
-    return {
-      allowed: update.changes > 0,
+    const result = {
+      allowed: Number(update.changes || 0) > 0,
       used: row?.call_count ?? 0,
     };
-  });
-
-  return tx();
+    db.exec("COMMIT");
+    return result;
+  } catch (error) {
+    db.exec("ROLLBACK");
+    throw error;
+  }
 }
 
 export function releaseReservedAiUsage(userId: string): number {
   const db = getDb();
   const month = currentYearMonth();
 
-  const tx = db.transaction(() => {
+  db.exec("BEGIN IMMEDIATE");
+  try {
     db.prepare(
       "UPDATE ai_usage SET call_count = CASE WHEN call_count > 0 THEN call_count - 1 ELSE 0 END WHERE user_id = ? AND month = ?",
     ).run(userId, month);
@@ -3429,8 +3434,11 @@ export function releaseReservedAiUsage(userId: string): number {
       .prepare("SELECT call_count FROM ai_usage WHERE user_id = ? AND month = ? LIMIT 1")
       .get(userId, month) as { call_count: number } | undefined;
 
-    return row?.call_count ?? 0;
-  });
-
-  return tx();
+    const result = row?.call_count ?? 0;
+    db.exec("COMMIT");
+    return result;
+  } catch (error) {
+    db.exec("ROLLBACK");
+    throw error;
+  }
 }
