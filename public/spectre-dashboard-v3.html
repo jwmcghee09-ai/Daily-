@@ -4372,7 +4372,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     const regime = state.historicalRiskEstimate?.regime ?? null;
     if (regime) {
       setText("risk-regime", regime.label);
-      setText("risk-regime-sub", regime.vix != null ? `VIX ${Number(regime.vix).toFixed(1)}` : "Based on VIX level");
+      setText("risk-regime-sub", regime.vix != null ? `VIX ${Number(regime.vix).toFixed(1)}` : "Portfolio vol proxy");
       setClass("risk-regime", `risk-val ${regime.cssClass}`);
     }
 
