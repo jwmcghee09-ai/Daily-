@@ -2370,7 +2370,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     const params = new URLSearchParams(window.location.search);
     if (params.get("demo") === "1" || params.get("mode") === "demo") return true;
     if (params.get("mode") === "account") return false;
-    return true;
+    return false;
   }
 
   function getDemoUploadsRemaining() {
