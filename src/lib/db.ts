@@ -1823,6 +1823,9 @@ export async function estimateHistoricalRiskFromYahoo(
       correlationMatrix: null,
       regime: null,
       factorExposure: null,
+      sharpeRatioAnnual: null,
+      sortinoRatioAnnual: null,
+      returnSkewness: null,
     };
   }
 
@@ -1920,6 +1923,9 @@ export async function estimateHistoricalRiskFromYahoo(
       correlationMatrix: null,
       regime: null,
       factorExposure: null,
+      sharpeRatioAnnual: null,
+      sortinoRatioAnnual: null,
+      returnSkewness: null,
     };
   }
 
@@ -1964,6 +1970,9 @@ export async function estimateHistoricalRiskFromYahoo(
       correlationMatrix: null,
       regime: null,
       factorExposure: null,
+      sharpeRatioAnnual: null,
+      sortinoRatioAnnual: null,
+      returnSkewness: null,
     };
   }
 
