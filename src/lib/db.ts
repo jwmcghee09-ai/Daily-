@@ -3384,3 +3384,53 @@ export function incrementAiUsage(userId: string): void {
       "ON CONFLICT(user_id, month) DO UPDATE SET call_count = call_count + 1",
   ).run(userId, currentYearMonth());
 }
+
+export function reserveAiUsageIfAvailable(userId: string, limit: number): { allowed: boolean; used: number } {
+  const db = getDb();
+  const month = currentYearMonth();
+
+  if (limit === -1) {
+    return { allowed: true, used: getAiUsageThisMonth(userId) };
+  }
+
+  const tx = db.transaction(() => {
+    db.prepare(
+      "INSERT INTO ai_usage (user_id, month, call_count) VALUES (?, ?, 0) " +
+        "ON CONFLICT(user_id, month) DO NOTHING",
+    ).run(userId, month);
+
+    const update = db
+      .prepare("UPDATE ai_usage SET call_count = call_count + 1 WHERE user_id = ? AND month = ? AND call_count < ?")
+      .run(userId, month, limit);
+
+    const row = db
+      .prepare("SELECT call_count FROM ai_usage WHERE user_id = ? AND month = ? LIMIT 1")
+      .get(userId, month) as { call_count: number } | undefined;
+
+    return {
+      allowed: update.changes > 0,
+      used: row?.call_count ?? 0,
+    };
+  });
+
+  return tx();
+}
+
+export function releaseReservedAiUsage(userId: string): number {
+  const db = getDb();
+  const month = currentYearMonth();
+
+  const tx = db.transaction(() => {
+    db.prepare(
+      "UPDATE ai_usage SET call_count = CASE WHEN call_count > 0 THEN call_count - 1 ELSE 0 END WHERE user_id = ? AND month = ?",
+    ).run(userId, month);
+
+    const row = db
+      .prepare("SELECT call_count FROM ai_usage WHERE user_id = ? AND month = ? LIMIT 1")
+      .get(userId, month) as { call_count: number } | undefined;
+
+    return row?.call_count ?? 0;
+  });
+
+  return tx();
+}

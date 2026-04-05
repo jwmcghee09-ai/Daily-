@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
-import { readPortfolioState, readUserEntitlements, getAiUsageThisMonth, incrementAiUsage, PlanTier } from "@/lib/db";
+import { readPortfolioState, readUserEntitlements, getAiUsageThisMonth, reserveAiUsageIfAvailable, releaseReservedAiUsage, PlanTier } from "@/lib/db";
 import { computeMetrics } from "@/lib/portfolio";
 
 const AI_MONTHLY_LIMITS: Record<PlanTier, number> = {
@@ -468,8 +468,29 @@ export async function POST(request: Request) {
     );
   }
 
+  const reservation = reserveAiUsageIfAvailable(sessionUser.id, monthlyLimit);
+  if (monthlyLimit !== -1 && !reservation.allowed) {
+    const upgradeHint =
+      entitlements.planTier === "none"
+        ? " Upgrade to Plus for 20/month, or Pro for unlimited."
+        : entitlements.planTier === "plus"
+          ? " Upgrade to Pro for unlimited Ask AI."
+          : "";
+    return NextResponse.json(
+      {
+        error: `You've used all ${monthlyLimit} Ask AI sessions for this month.${upgradeHint}`,
+        aiUsed: reservation.used,
+        aiLimit: monthlyLimit,
+      },
+      { status: 429 },
+    );
+  }
+
   const state = readPortfolioState(sessionUser.id);
   if (state.holdings.length === 0) {
+    if (reservation.allowed && monthlyLimit !== -1) {
+      releaseReservedAiUsage(sessionUser.id);
+    }
     return NextResponse.json({ error: "Import holdings first to run Ask AI analysis." }, { status: 400 });
   }
 
@@ -522,6 +543,9 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     clearTimeout(timeoutId);
+    if (reservation.allowed && monthlyLimit !== -1) {
+      releaseReservedAiUsage(sessionUser.id);
+    }
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to reach OpenAI." },
       { status: 502 },
@@ -530,6 +554,9 @@ export async function POST(request: Request) {
 
   if (!openAiRes.ok) {
     clearTimeout(timeoutId);
+    if (reservation.allowed && monthlyLimit !== -1) {
+      releaseReservedAiUsage(sessionUser.id);
+    }
     let detail = "";
     try {
       const payload = (await openAiRes.json()) as { error?: { message?: string } };
@@ -582,14 +609,16 @@ export async function POST(request: Request) {
       sseBuffer += decoder.decode();
       const analysis = parseAiAnalysis(accumulated);
       if (analysis) {
-        incrementAiUsage(sessionUser.id);
-        const newUsed = usedThisMonth + 1;
+        const newUsed = monthlyLimit === -1 ? usedThisMonth : reservation.used;
         controller.enqueue(
           enc.encode(
             `data: ${JSON.stringify({ done: true, analysis, aiUsed: newUsed, aiLimit: monthlyLimit })}\n\n`,
           ),
         );
       } else {
+        if (reservation.allowed && monthlyLimit !== -1) {
+          releaseReservedAiUsage(sessionUser.id);
+        }
         controller.enqueue(
           enc.encode(`data: ${JSON.stringify({ done: true, error: "AI response could not be parsed." })}\n\n`),
         );
