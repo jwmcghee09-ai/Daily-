@@ -2400,19 +2400,16 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     const sourceCount = document.getElementById("uploads-source-count");
 
     if (state.demoMode) {
-      const remaining = getDemoUploadsRemaining();
       if (sourceCount) {
-        sourceCount.textContent = hasDemoGuestWorkspace()
-          ? `8 sources · ${remaining} guest upload${remaining === 1 ? "" : "s"} left`
-          : "8 sources · Sample portfolio loaded";
+        sourceCount.textContent = "8 sources · Preview only";
       }
       uploads.forEach((card) => {
-        const disabled = remaining <= 0;
-        card.style.opacity = disabled ? "0.6" : "";
-        card.setAttribute("aria-disabled", disabled ? "true" : "false");
+        card.style.opacity = "0.62";
+        card.style.cursor = "not-allowed";
+        card.setAttribute("aria-disabled", "true");
         const action = card.querySelector(".upload-action");
         if (action) {
-          action.textContent = disabled ? "Demo Limit Reached" : "Upload File";
+          action.textContent = "Create Account to Upload";
         }
       });
       return;
@@ -2423,6 +2420,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     }
     uploads.forEach((card) => {
       card.style.opacity = "";
+      card.style.cursor = "";
       card.removeAttribute("aria-disabled");
       const action = card.querySelector(".upload-action");
       if (action) action.textContent = "Upload File";
@@ -3989,12 +3987,18 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     const outputEl = document.getElementById("pro-ai-output");
     const outputInner = document.getElementById("pro-ai-output-inner");
     const inputMode = document.getElementById("ai-input-mode");
+    const chipsEl = document.getElementById("pro-ai-chips");
+    const newQuestionBtn = document.getElementById("ai-new-question-btn");
     if (!(askButton instanceof HTMLButtonElement) || !(questionInput instanceof HTMLTextAreaElement) || !errorEl || !outputEl || !outputInner || !inputMode) {
       return;
     }
 
+    if (state.demoMode && !state.holdingsAi && !state.holdingsAiLoading) {
+      state.holdingsAi = buildDemoHoldingsAiAnalysis(HOLDINGS_AI_DEFAULT_QUESTION);
+    }
+
     // Toggle between input and output mode within the same card
-    const showOutput = state.holdingsAiLoading || !!state.holdingsAi || !!state.holdingsAiError;
+    const showOutput = state.demoMode || state.holdingsAiLoading || !!state.holdingsAi || !!state.holdingsAiError;
     inputMode.style.display = showOutput ? "none" : "";
     outputEl.style.display = showOutput ? "" : "none";
 
@@ -4003,12 +4007,19 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     const used = state.aiUsedThisMonth;
     const atLimit = limit !== -1 && used >= limit;
 
-    askButton.disabled = state.holdingsAiLoading || !hasHoldings || atLimit;
+    askButton.disabled = state.demoMode || state.holdingsAiLoading || !hasHoldings || atLimit;
+    questionInput.readOnly = state.demoMode;
+    questionInput.disabled = state.demoMode;
+    if (chipsEl) chipsEl.style.display = state.demoMode ? "none" : "";
+    if (newQuestionBtn) newQuestionBtn.style.display = state.demoMode ? "none" : "";
 
     const labelEl = document.getElementById("pro-ai-ask-label");
     if (state.holdingsAiLoading) {
       if (labelEl) labelEl.textContent = "Analyzing...";
       else askButton.textContent = "Analyzing...";
+    } else if (state.demoMode) {
+      if (labelEl) labelEl.textContent = "Preview Only";
+      else askButton.textContent = "Preview Only";
     } else {
       if (labelEl) labelEl.textContent = "Ask AI";
       else askButton.textContent = "Ask AI";
@@ -4023,7 +4034,10 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       const card = document.getElementById("ai-hero-card");
       if (card?.parentNode) card.parentNode.insertBefore(usageEl, card.nextSibling);
     }
-    if (limit === -1) {
+    if (state.demoMode) {
+      usageEl.textContent = "Demo preview only. Create an account to ask portfolio questions.";
+      usageEl.className = "ai-usage-counter";
+    } else if (limit === -1) {
       usageEl.textContent = "";
     } else if (atLimit) {
       usageEl.textContent = `You've used all ${limit} Ask AI sessions for this month.`;
@@ -4143,6 +4157,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
 
   // "New question" button resets back to input mode
   document.getElementById("ai-new-question-btn")?.addEventListener("click", () => {
+    if (state.demoMode) return;
     state.holdingsAi = null;
     state.holdingsAiStreamText = "";
     state.holdingsAiError = "";
@@ -4151,22 +4166,11 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
 
   async function runHoldingsAi() {
     if (state.demoMode) {
-      const questionInput = document.getElementById("pro-ai-question");
-      const question = questionInput instanceof HTMLTextAreaElement && questionInput.value.trim().length > 0
-        ? questionInput.value.trim().slice(0, 700)
-        : HOLDINGS_AI_DEFAULT_QUESTION;
-
-      state.holdingsAiLoading = true;
+      state.holdingsAi = buildDemoHoldingsAiAnalysis(HOLDINGS_AI_DEFAULT_QUESTION);
+      state.holdingsAiLoading = false;
       state.holdingsAiError = "";
       renderHoldingsAi();
-
-      await new Promise((resolve) => { window.setTimeout(resolve, 350); });
-
-      state.holdingsAi = buildDemoHoldingsAiAnalysis(question);
-      state.holdingsAiLoading = false;
-      renderHoldingsAi();
-      renderPortfolio();
-      showToast("Demo Ask AI analysis updated.");
+      showToast("Ask AI is preview-only in demo. Create an account to run your own questions.");
       return;
     }
 
@@ -5351,6 +5355,10 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     document.getElementById("add-alert-btn")?.addEventListener("click", addAlert);
     document.getElementById("pro-ai-ask-btn")?.addEventListener("click", runHoldingsAi);
     document.getElementById("pro-ai-chips")?.addEventListener("click", (e) => {
+      if (state.demoMode) {
+        showToast("Ask AI is preview-only in demo. Create an account to ask your own questions.");
+        return;
+      }
       const chip = e.target instanceof HTMLElement ? e.target.closest(".ai-chip") : null;
       if (!(chip instanceof HTMLElement)) return;
       const q = chip.dataset.q;
@@ -5375,8 +5383,8 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
 
     uploads.forEach((card) => {
       card.addEventListener("click", () => {
-        if (state.demoMode && getDemoUploadsRemaining() <= 0) {
-          showToast("Demo upload limit reached. Create an account for unlimited imports.", "error", INVALID_UPLOAD_MESSAGE_TTL_MS);
+        if (state.demoMode) {
+          showToast("Uploads are locked in demo. Create an account to import your own reports.", "error", INVALID_UPLOAD_MESSAGE_TTL_MS);
           return;
         }
         if (!state.demoMode && state.sessionUser?.planTier === "none" && (state.portfolio?.holdings?.length ?? 0) >= 4) {
@@ -5391,6 +5399,11 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     });
 
     uploadInput?.addEventListener("change", async (event) => {
+      if (state.demoMode) {
+        uploadInput.value = "";
+        showToast("Uploads are locked in demo. Create an account to import your own reports.", "error", INVALID_UPLOAD_MESSAGE_TTL_MS);
+        return;
+      }
       const target = event.target;
       if (!(target instanceof HTMLInputElement)) return;
       const file = target.files && target.files[0];
@@ -5401,6 +5414,11 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
 
     document.getElementById("pro-ai-question")?.addEventListener("keydown", (event) => {
       if (!(event instanceof KeyboardEvent)) return;
+      if (state.demoMode) {
+        event.preventDefault();
+        showToast("Ask AI is preview-only in demo. Create an account to ask your own questions.");
+        return;
+      }
       if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
         event.preventDefault();
         void runHoldingsAi();
@@ -5457,11 +5475,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
           renderPortfolio();
         }
       });
-      // Auto-run AI only in demo mode — real users ask manually
-      if (state.demoMode && !state.holdingsAi && !state.holdingsAiLoading) {
-        window.setTimeout(() => { runHoldingsAi(); }, 800);
-      }
-    } catch (error) {
+      } catch (error) {
       showToast(error instanceof Error ? error.message : "Failed to load dashboard.", "error");
     } finally {
       window.clearTimeout(bootSafetyTimer);
