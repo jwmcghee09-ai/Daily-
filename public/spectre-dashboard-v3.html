@@ -2586,6 +2586,132 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     return snapshots;
   }
 
+  function buildDemoHistoricalRiskEstimate(portfolio, riskWindow) {
+    const holdings = Array.isArray(portfolio?.holdings) ? portfolio.holdings : [];
+    const totalValue = Math.max(
+      sum(holdings.map((holding) => Number(holding?.value) || 0)),
+      sum((DEMO_PORTFOLIO_STATE.holdings || []).map((holding) => Number(holding?.value) || 0)),
+    );
+    const marketTickers = Array.from(
+      new Set(
+        holdings
+          .filter((holding) => ["asx", "crypto", "index", "fund", "gold"].includes(String(holding?.source || "")))
+          .map((holding) => String(holding?.ticker || "").trim().toUpperCase())
+          .filter((ticker) => ticker.length > 0),
+      ),
+    );
+    const usedTickers = (marketTickers.length > 0 ? marketTickers : ["CBA", "BHP", "MQG", "BTC", "ETH", "VAS"]).slice(0, 6);
+    const corrTickers = (usedTickers.length >= 4 ? usedTickers : ["CBA", "BHP", "MQG", "BTC"]).slice(0, 4);
+    const baseMatrix = [
+      [1, 0.74, 0.66, 0.24],
+      [0.74, 1, 0.59, 0.19],
+      [0.66, 0.59, 1, 0.21],
+      [0.24, 0.19, 0.21, 1],
+    ];
+    const profiles = {
+      "1M": {
+        pointsTarget: 22,
+        pointsUsed: 22,
+        benchmarkPointsUsed: 22,
+        volatilityAnnualPct: 16.8,
+        maxDrawdownPct: 7.4,
+        var95Pct: 1.9,
+        cvar95Pct: 2.8,
+        betaToBenchmark: 0.84,
+        trackingErrorAnnualPct: 5.6,
+        correlationToBenchmark: 0.72,
+        cornishFisherVar95Pct: 2.1,
+        rsi14: 57.8,
+        stochastic14: 61.4,
+        obvValue: 1840000,
+        obvTrend: "Accumulation bias",
+        regime: { vix: 15.9, label: "Risk-On", cssClass: "purple" },
+        factorExposure: { marketBeta: 0.84, sizeBeta: -0.12 },
+      },
+      "3M": {
+        pointsTarget: 63,
+        pointsUsed: 63,
+        benchmarkPointsUsed: 63,
+        volatilityAnnualPct: 18.6,
+        maxDrawdownPct: 10.8,
+        var95Pct: 2.4,
+        cvar95Pct: 3.5,
+        betaToBenchmark: 0.91,
+        trackingErrorAnnualPct: 7.4,
+        correlationToBenchmark: 0.76,
+        cornishFisherVar95Pct: 2.7,
+        rsi14: 59.6,
+        stochastic14: 64.8,
+        obvValue: 2310000,
+        obvTrend: "Positive participation",
+        regime: { vix: 17.8, label: "Balanced", cssClass: "purple" },
+        factorExposure: { marketBeta: 0.91, sizeBeta: -0.08 },
+      },
+      "1Y": {
+        pointsTarget: 252,
+        pointsUsed: 118,
+        benchmarkPointsUsed: 118,
+        volatilityAnnualPct: 21.2,
+        maxDrawdownPct: 14.9,
+        var95Pct: 2.9,
+        cvar95Pct: 4.1,
+        betaToBenchmark: 0.97,
+        trackingErrorAnnualPct: 8.8,
+        correlationToBenchmark: 0.79,
+        cornishFisherVar95Pct: 3.2,
+        rsi14: 56.2,
+        stochastic14: 58.9,
+        obvValue: 2670000,
+        obvTrend: "Steady accumulation",
+        regime: { vix: 19.6, label: "Watchful", cssClass: "danger" },
+        factorExposure: { marketBeta: 0.97, sizeBeta: -0.05 },
+      },
+    };
+    const profile = profiles[riskWindow] || profiles["3M"];
+    const var95Amount = Number(((profile.var95Pct / 100) * totalValue).toFixed(2));
+    const cvar95Amount = Number(((profile.cvar95Pct / 100) * totalValue).toFixed(2));
+    const cornishFisherVar95Amount = Number(((profile.cornishFisherVar95Pct / 100) * totalValue).toFixed(2));
+
+    return {
+      source: "yahoo_estimate",
+      lessAccurateThanSnapshots: true,
+      note: "Demo showcase values seed the benchmark, factor, and regime analytics so every risk card is populated.",
+      benchmarkSymbol: "^AXJO",
+      benchmarkName: "S&P/ASX 200",
+      riskWindow,
+      pointsTarget: profile.pointsTarget,
+      pointsUsed: profile.pointsUsed,
+      returnsCount: profile.pointsUsed,
+      benchmarkPointsUsed: profile.benchmarkPointsUsed,
+      usedTickers,
+      failedTickers: [],
+      volatilityAnnualPct: profile.volatilityAnnualPct,
+      maxDrawdownPct: profile.maxDrawdownPct,
+      var95Pct: profile.var95Pct,
+      var95Amount,
+      cvar95Pct: profile.cvar95Pct,
+      cvar95Amount,
+      betaToBenchmark: profile.betaToBenchmark,
+      trackingErrorAnnualPct: profile.trackingErrorAnnualPct,
+      correlationToBenchmark: profile.correlationToBenchmark,
+      outlierReturnsRemoved: 0,
+      cornishFisherVar95Pct: profile.cornishFisherVar95Pct,
+      cornishFisherVar95Amount,
+      rsi14: profile.rsi14,
+      stochastic14: profile.stochastic14,
+      obvValue: profile.obvValue,
+      obvTrend: profile.obvTrend,
+      correlationMatrix: {
+        tickers: corrTickers,
+        matrix: corrTickers.map((_, rowIndex) =>
+          corrTickers.map((_, colIndex) => baseMatrix[rowIndex]?.[colIndex] ?? (rowIndex === colIndex ? 1 : 0.35)),
+        ),
+      },
+      regime: profile.regime,
+      factorExposure: profile.factorExposure,
+    };
+  }
+
   function applyModeChrome() {
     const signOutButton = document.getElementById("sign-out-btn");
     const clearDataButton = document.getElementById("clear-data-btn");
@@ -3746,16 +3872,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
 
   async function loadHistoricalRisk() {
     if (state.demoMode) {
-      if (!hasDemoGuestWorkspace()) {
-        state.historicalRiskEstimate = null;
-        return;
-      }
-      const apiWindow = RISK_API_WINDOW_MAP[state.riskWindow] || "3M";
-      try {
-        state.historicalRiskEstimate = await apiJson(`/api/risk/estimate?demo=1&window=${apiWindow}`, { method: "POST" });
-      } catch {
-        state.historicalRiskEstimate = null;
-      }
+      state.historicalRiskEstimate = buildDemoHistoricalRiskEstimate(state.portfolio, state.riskWindow);
       return;
     }
     const apiWindow = RISK_API_WINDOW_MAP[state.riskWindow] || "3M";
@@ -4332,13 +4449,13 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     setText("risk-cvar95-sub", usingYahooCvar95 ? "Yahoo estimate fallback" : "CVaR beyond VaR");
     setText("risk-max-drawdown-sub", usingYahooDrawdown ? "Yahoo estimate fallback" : "Worst peak to trough");
     setText("risk-volatility-sub", usingYahooVolatility ? "Yahoo estimate fallback" : "Annualised std dev");
-    setText("risk-beta-sub", usingYahooBeta ? "Yahoo estimate vs ASX 200" : "Market sensitivity");
-    setText("risk-tracking-error-sub", usingYahooTrackingError ? "Yahoo estimate vs ASX 200" : "vs benchmark");
+    setText("risk-beta-sub", state.demoMode ? "Demo benchmark sensitivity" : usingYahooBeta ? "Yahoo estimate vs ASX 200" : "Market sensitivity");
+    setText("risk-tracking-error-sub", state.demoMode ? "Demo benchmark dispersion" : usingYahooTrackingError ? "Yahoo estimate vs ASX 200" : "vs benchmark");
 
     // Cornish-Fisher VaR (plus+)
     const cfVar95Pct = state.historicalRiskEstimate?.cornishFisherVar95Pct ?? null;
     setText("risk-cf-var95", cfVar95Pct != null ? formatPercent(cfVar95Pct, { negative: true, decimals: 1 }) : "—");
-    setText("risk-cf-var95-sub", cfVar95Pct != null ? "Yahoo proxy, less reliable · skew/kurtosis adjusted" : "Needs 20+ data points");
+    setText("risk-cf-var95-sub", cfVar95Pct != null ? (state.demoMode ? "Demo tail-risk adjustment" : "Yahoo proxy, less reliable · skew/kurtosis adjusted") : "Needs 20+ data points");
 
     // Market Regime (pro)
     const regime = state.historicalRiskEstimate?.regime ?? null;
@@ -4458,7 +4575,10 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
           usingYahooBeta ||
           usingYahooTrackingError
         );
-      if (shouldShowEstimate) {
+      if (state.demoMode && estimate) {
+        estimateNote.hidden = false;
+        estimateNote.textContent = "Demo mode uses seeded benchmark, factor, and regime values so the full analytics stack stays populated.";
+      } else if (shouldShowEstimate) {
         const labels = [];
         if (usingYahooVar95) labels.push("VaR");
         if (usingYahooCvar95) labels.push("ES");
@@ -4904,7 +5024,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       state.portfolio = cloneData(DEMO_PORTFOLIO_STATE);
       state.alerts = cloneData(DEMO_DIP_ALERTS);
       state.availableAlertTickers = [...DEMO_AVAILABLE_TICKERS];
-      state.historicalRiskEstimate = null;
+      state.historicalRiskEstimate = buildDemoHistoricalRiskEstimate(state.portfolio, state.riskWindow);
       state.holdingsAi = null;
       state.holdingsAiError = "";
       state.holdingsAiLoading = false;

@@ -221,6 +221,9 @@ interface HistoricalRiskEstimatePayload {
   stochastic14: number | null;
   obvValue: number | null;
   obvTrend: string | null;
+  correlationMatrix: { tickers: string[]; matrix: number[][] } | null;
+  regime: { vix: number | null; label: string; cssClass: string } | null;
+  factorExposure: { marketBeta: number | null; sizeBeta: number | null } | null;
 }
 
 interface SessionUser {
@@ -422,7 +425,7 @@ export default function Home() {
       if (demoMode) {
         setSessionUser(DEMO_SESSION_USER);
         setState(DEMO_PORTFOLIO_STATE);
-        setHistoricalRiskEstimate(null);
+        setHistoricalRiskEstimate(buildDemoHistoricalRiskEstimate(DEMO_PORTFOLIO_STATE, riskWindow));
         setDipAlerts(DEMO_DIP_ALERTS);
         setAvailableDipTickers(DEMO_AVAILABLE_TICKERS);
         setDipAlertMax(10);
@@ -467,7 +470,7 @@ export default function Home() {
     };
 
     void loadSessionAndState();
-  }, [demoMode]);
+  }, [demoMode, riskWindow]);
 
   useEffect(() => {
     if (!banner || banner.message !== INVALID_UPLOAD_FORMAT_MESSAGE) {
@@ -949,7 +952,13 @@ export default function Home() {
   const needsYahooEstimate = metrics.dailyReturns.length < 20 && state.holdings.length > 0;
 
   useEffect(() => {
-    if (!sessionUser || loading || demoMode) {
+    if (demoMode) {
+      setHistoricalRiskEstimate(buildDemoHistoricalRiskEstimate(DEMO_PORTFOLIO_STATE, riskWindow));
+      setLoadingHistoricalEstimate(false);
+      return;
+    }
+
+    if (!sessionUser || loading) {
       setHistoricalRiskEstimate(null);
       setLoadingHistoricalEstimate(false);
       return;
@@ -1587,7 +1596,7 @@ export default function Home() {
   const clearData = async () => {
     if (demoMode) {
       setState(DEMO_PORTFOLIO_STATE);
-      setHistoricalRiskEstimate(null);
+      setHistoricalRiskEstimate(buildDemoHistoricalRiskEstimate(DEMO_PORTFOLIO_STATE, riskWindow));
       setDipAlerts(DEMO_DIP_ALERTS);
       setAvailableDipTickers(DEMO_AVAILABLE_TICKERS);
       setDipAlertMax(10);
@@ -4440,6 +4449,136 @@ function createDemoSnapshots(finalValue: number): PortfolioSnapshot[] {
   });
 
   return snapshots;
+}
+
+function buildDemoHistoricalRiskEstimate(
+  portfolioState: PortfolioState,
+  riskWindow: RiskWindow,
+): HistoricalRiskEstimatePayload {
+  const fallbackTotalValue = DEMO_PORTFOLIO_STATE.holdings.reduce((sum, holding) => sum + holding.value, 0);
+  const totalValue = Math.max(
+    portfolioState.holdings.reduce((sum, holding) => sum + (Number.isFinite(holding.value) ? holding.value : 0), 0),
+    fallbackTotalValue,
+  );
+  const marketTickers = Array.from(
+    new Set(
+      portfolioState.holdings
+        .filter((holding) => ["asx", "crypto", "index", "fund", "gold"].includes(holding.source))
+        .map((holding) => holding.ticker.trim().toUpperCase())
+        .filter((ticker) => ticker.length > 0),
+    ),
+  );
+  const usedTickers = (marketTickers.length > 0 ? marketTickers : ["CBA", "BHP", "MQG", "BTC", "ETH", "VAS"]).slice(0, 6);
+  const correlationTickers = (usedTickers.length >= 4 ? usedTickers : ["CBA", "BHP", "MQG", "BTC"]).slice(0, 4);
+  const baseMatrix = [
+    [1, 0.74, 0.66, 0.24],
+    [0.74, 1, 0.59, 0.19],
+    [0.66, 0.59, 1, 0.21],
+    [0.24, 0.19, 0.21, 1],
+  ];
+  const profile =
+    riskWindow === "1M"
+      ? {
+          pointsTarget: 22,
+          pointsUsed: 22,
+          benchmarkPointsUsed: 22,
+          volatilityAnnualPct: 16.8,
+          maxDrawdownPct: 7.4,
+          var95Pct: 1.9,
+          cvar95Pct: 2.8,
+          betaToBenchmark: 0.84,
+          trackingErrorAnnualPct: 5.6,
+          correlationToBenchmark: 0.72,
+          cornishFisherVar95Pct: 2.1,
+          rsi14: 57.8,
+          stochastic14: 61.4,
+          obvValue: 1_840_000,
+          obvTrend: "Accumulation bias",
+          regime: { vix: 15.9, label: "Risk-On", cssClass: "purple" },
+          factorExposure: { marketBeta: 0.84, sizeBeta: -0.12 },
+        }
+      : riskWindow === "1Y"
+        ? {
+            pointsTarget: 252,
+            pointsUsed: 118,
+            benchmarkPointsUsed: 118,
+            volatilityAnnualPct: 21.2,
+            maxDrawdownPct: 14.9,
+            var95Pct: 2.9,
+            cvar95Pct: 4.1,
+            betaToBenchmark: 0.97,
+            trackingErrorAnnualPct: 8.8,
+            correlationToBenchmark: 0.79,
+            cornishFisherVar95Pct: 3.2,
+            rsi14: 56.2,
+            stochastic14: 58.9,
+            obvValue: 2_670_000,
+            obvTrend: "Steady accumulation",
+            regime: { vix: 19.6, label: "Watchful", cssClass: "danger" },
+            factorExposure: { marketBeta: 0.97, sizeBeta: -0.05 },
+          }
+        : {
+            pointsTarget: 63,
+            pointsUsed: 63,
+            benchmarkPointsUsed: 63,
+            volatilityAnnualPct: 18.6,
+            maxDrawdownPct: 10.8,
+            var95Pct: 2.4,
+            cvar95Pct: 3.5,
+            betaToBenchmark: 0.91,
+            trackingErrorAnnualPct: 7.4,
+            correlationToBenchmark: 0.76,
+            cornishFisherVar95Pct: 2.7,
+            rsi14: 59.6,
+            stochastic14: 64.8,
+            obvValue: 2_310_000,
+            obvTrend: "Positive participation",
+            regime: { vix: 17.8, label: "Balanced", cssClass: "purple" },
+            factorExposure: { marketBeta: 0.91, sizeBeta: -0.08 },
+          };
+
+  const var95Amount = Number(((profile.var95Pct / 100) * totalValue).toFixed(2));
+  const cvar95Amount = Number(((profile.cvar95Pct / 100) * totalValue).toFixed(2));
+  const cornishFisherVar95Amount = Number(((profile.cornishFisherVar95Pct / 100) * totalValue).toFixed(2));
+
+  return {
+    source: "yahoo_estimate",
+    lessAccurateThanSnapshots: true,
+    note: "Demo showcase values seed the benchmark, factor, and regime analytics so every risk card is populated.",
+    benchmarkSymbol: "^AXJO",
+    benchmarkName: "S&P/ASX 200",
+    riskWindow,
+    pointsTarget: profile.pointsTarget,
+    pointsUsed: profile.pointsUsed,
+    returnsCount: profile.pointsUsed,
+    benchmarkPointsUsed: profile.benchmarkPointsUsed,
+    usedTickers,
+    failedTickers: [],
+    volatilityAnnualPct: profile.volatilityAnnualPct,
+    maxDrawdownPct: profile.maxDrawdownPct,
+    var95Pct: profile.var95Pct,
+    var95Amount,
+    cvar95Pct: profile.cvar95Pct,
+    cvar95Amount,
+    betaToBenchmark: profile.betaToBenchmark,
+    trackingErrorAnnualPct: profile.trackingErrorAnnualPct,
+    correlationToBenchmark: profile.correlationToBenchmark,
+    outlierReturnsRemoved: 0,
+    cornishFisherVar95Pct: profile.cornishFisherVar95Pct,
+    cornishFisherVar95Amount,
+    rsi14: profile.rsi14,
+    stochastic14: profile.stochastic14,
+    obvValue: profile.obvValue,
+    obvTrend: profile.obvTrend,
+    correlationMatrix: {
+      tickers: correlationTickers,
+      matrix: correlationTickers.map((_, rowIndex) =>
+        correlationTickers.map((_, columnIndex) => baseMatrix[rowIndex]?.[columnIndex] ?? (rowIndex === columnIndex ? 1 : 0.35)),
+      ),
+    },
+    regime: profile.regime,
+    factorExposure: profile.factorExposure,
+  };
 }
 
 function superTemplateCsv(): string {
