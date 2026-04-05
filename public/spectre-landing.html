@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#0c0817" />
 <title>SPECTRE — AI-Powered Portfolio Risk Intelligence</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -29,13 +30,13 @@
   --r: 8px;
 }
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; background: #0c0817; }
 body { font-family: var(--sans); background: var(--bg); color: var(--text); min-height: 100vh; -webkit-font-smoothing: antialiased; }
 body::before { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: -2; background: radial-gradient(ellipse 72% 110% at -8% 44%, #34145f 0%, #1c0c35 30%, transparent 62%), radial-gradient(ellipse 34% 74% at 102% 16%, rgba(255,106,61,0.18) 0%, rgba(255,106,61,0.04) 34%, transparent 62%), linear-gradient(140deg, #170a2b 0%, #11071d 42%, #120816 70%, #170b13 100%); }
 body::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: -1; background-image: radial-gradient(rgba(255,255,255,0.03) 0.6px, transparent 0.6px); background-size: 3px 3px; opacity: 0.42; }
 .wrap { width: 100%; max-width: var(--max); margin: 0 auto; padding-inline: 2.5rem; }
 a { text-decoration: none; color: inherit; }
-.nav { position: fixed; top: 0; left: 0; right: 0; z-index: 900; height: 60px; background: rgba(10,6,20,0.88); backdrop-filter: blur(24px); border-bottom: 1px solid var(--border); }
+.nav { position: fixed; top: 0; left: 0; right: 0; z-index: 900; height: 60px; background: #0c0817; backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border-bottom: 1px solid var(--border); }
 .nav-in { height: 100%; display: grid; grid-template-columns: max-content 1fr max-content; align-items: center; gap: 1rem; }
 .logo { font-family: var(--disp); font-size: 1.45rem; letter-spacing: 0.14em; background: linear-gradient(120deg, var(--purple-hi), var(--orange)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
 .nav-links { display: flex; align-items: center; justify-self: center; gap: 1.4rem; }
