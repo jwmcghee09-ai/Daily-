@@ -5601,13 +5601,19 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       clearTimeout(_quantRestoreTimer);
       _quantRestoreTimer = null;
     }
+    // Dispatch resize so canvas elements re-measure their dimensions
+    // after being made visible. Run immediately and at staggered delays
+    // to handle slow reflows and back/forward cache restores.
+    window.dispatchEvent(new Event('resize'));
     rerenderQuantTab();
     _quantRestoreTimer = window.setTimeout(function() {
+      window.dispatchEvent(new Event('resize'));
       rerenderQuantTab();
-    }, 180);
+    }, 100);
     window.setTimeout(function() {
+      window.dispatchEvent(new Event('resize'));
       rerenderQuantTab();
-    }, 520);
+    }, 400);
   }
 
   function rerenderQuantTab() {
