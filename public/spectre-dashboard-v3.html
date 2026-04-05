@@ -4749,7 +4749,11 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     const histItems = Array.from(byDay.values()).sort((a, b) => String(a.date).localeCompare(String(b.date)));
 
     const histValues = histItems.map((s) => Number(s.value)).filter((v) => Number.isFinite(v) && v > 0);
-    if (histValues.length < 2) {
+    const currentPortfolioValue = sum((state.portfolio?.holdings || []).map((holding) => Number(holding?.value) || 0));
+    const demoSeedValue = Number.isFinite(currentPortfolioValue) && currentPortfolioValue > 0 ? currentPortfolioValue : 100000;
+    const hasEnoughHistory = histValues.length >= 2;
+
+    if (!hasEnoughHistory && !state.demoMode) {
       if (loadingEl) loadingEl.style.display = "none";
       if (fallbackEl) fallbackEl.style.display = "none";
       setHidden("mc-empty-state", false);
@@ -4768,8 +4772,13 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       if (Number.isFinite(r) && Math.abs(r) < 0.5) rawReturns.push(r); // exclude extreme outliers
     }
 
-    const useFallback = rawReturns.length < 20;
-    if (fallbackEl) fallbackEl.style.display = useFallback ? "" : "none";
+    const useFallback = state.demoMode || rawReturns.length < 20;
+    if (fallbackEl) {
+      fallbackEl.style.display = useFallback ? "" : "none";
+      fallbackEl.textContent = state.demoMode
+        ? "Demo projection uses a seeded preview model from the frozen workspace."
+        : "Insufficient history (<20 days). Using parametric fallback: 8% annual return, 15% volatility.";
+    }
 
     // Parameters
     let dailyMean, dailySigma;
@@ -4784,7 +4793,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       dailySigma = Math.sqrt(variance);
     }
 
-    const startValue = histValues.length > 0 ? histValues[histValues.length - 1] : 100000;
+    const startValue = histValues.length > 0 ? histValues[histValues.length - 1] : demoSeedValue;
     const N_PATHS = 500;
     const N_DAYS = _mcHorizon;
 
