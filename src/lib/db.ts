@@ -1169,7 +1169,7 @@ function calcExcessKurtosis(values: number[]): number {
 // Returns VaR as a positive fraction (e.g. 0.02 = 2% daily loss)
 function cornishFisherVar95(returns: number[]): number | null {
   const vals = returns.filter(Number.isFinite);
-  if (vals.length < 20) return null;
+  if (vals.length < 10) return null;
   const n = vals.length;
   const mean = vals.reduce((a, b) => a + b, 0) / n;
   const sigma = stdDev(vals);
@@ -1942,7 +1942,7 @@ export async function estimateHistoricalRiskFromYahoo(
     }
   }
 
-  // Regime detection via VIX
+  // Regime detection — try VIX first, fall back to annualised portfolio volatility
   let regime: { vix: number | null; label: string; cssClass: string } | null = null;
   const vixSeries = await fetchYahooSeriesBySymbol("^VIX", windowSettings.yahooRange);
   if (vixSeries && vixSeries.length > 0) {
@@ -1950,6 +1950,12 @@ export async function estimateHistoricalRiskFromYahoo(
     const vixLabel = latestVix < 15 ? "Risk-On" : latestVix < 25 ? "Neutral" : "Risk-Off";
     const vixCssClass = latestVix < 15 ? "accent" : latestVix < 25 ? "purple" : "danger";
     regime = { vix: latestVix, label: vixLabel, cssClass: vixCssClass };
+  } else if (volatilityAnnualPct != null) {
+    // Fallback: classify using annualised portfolio vol (low <12%, high >25%)
+    const volPct = volatilityAnnualPct;
+    const vixLabel = volPct < 12 ? "Risk-On" : volPct < 25 ? "Neutral" : "Risk-Off";
+    const vixCssClass = volPct < 12 ? "accent" : volPct < 25 ? "purple" : "danger";
+    regime = { vix: null, label: vixLabel, cssClass: vixCssClass };
   }
 
   // Factor exposure — size factor via ASX Small Ords (^AXSO) as SMB proxy
