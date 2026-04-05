@@ -178,7 +178,7 @@ export default function LandingPage({
   checkoutState: "success" | "cancelled" | null;
   checkoutPlan: CheckoutPlan;
 }) {
-  const [activeFaqIndex, setActiveFaqIndex] = useState(0);
+  const [activeFaqIndex, setActiveFaqIndex] = useState(-1);
   const heroProductRef = useRef<HTMLDivElement>(null);
   const stickySectionRef = useRef<HTMLElement>(null);
   const aiConsoleRef = useRef<HTMLDivElement>(null);
