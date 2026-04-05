@@ -5644,11 +5644,10 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
   document.querySelectorAll('.nav-tab').forEach(function(btn) {
     btn.addEventListener('click', function() {
       var tab = btn.getAttribute('data-tab');
-      if (state.demoMode) {
-        window.location.assign(demoNavUrl(tab));
+      if (tab === 'research') {
+        window.location.href = state.demoMode ? '/research?demo=1' : '/research';
         return;
       }
-      if (tab === 'research') { window.location.href = '/research'; return; }
       switchTab(tab);
     });
   });
@@ -5658,11 +5657,10 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     btn.addEventListener('click', function() {
       var tab = btn.getAttribute('data-tab');
       if (!tab) return;
-      if (state.demoMode) {
-        window.location.assign(demoNavUrl(tab));
+      if (tab === 'research') {
+        window.location.href = state.demoMode ? '/research?demo=1' : '/research';
         return;
       }
-      if (tab === 'research') { window.location.href = '/research'; return; }
       switchTab(tab);
     });
   });
