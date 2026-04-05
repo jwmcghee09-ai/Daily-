@@ -5,6 +5,8 @@ import { readUserEntitlements } from "@/lib/db";
 export const runtime = "nodejs";
 
 const CACHE_TTL_MS = 30 * 60 * 1000; // 30 min — FRED updates intraday but daily is fine
+const DEMO_CACHE_HEADERS = { "Cache-Control": "public, max-age=1800, s-maxage=1800, stale-while-revalidate=3600" };
+const DEFAULT_HEADERS = { "Cache-Control": "no-store" };
 let cache: { data: FredPayload; expiresAt: number } | null = null;
 
 interface FredSeries {
@@ -149,24 +151,41 @@ const STATIC_COT: FredPayload["cot"] = {
   gold: { market: "Gold",          reportDate: "03/25/2025", netLong: 201500, longPct: 71.4, weekChange:  8200,  sentiment: "bullish" },
 };
 
+function buildStaticPayload(): FredPayload {
+  return {
+    fetchedAt: new Date().toISOString(),
+    series: STATIC_FRED,
+    cot: { oil: STATIC_COT.oil, gold: STATIC_COT.gold },
+  };
+}
+
 // ── Route handler ─────────────────────────────────────────────────────────────
-export async function GET() {
-  // Auth: free tier gets FRED/CoT data too — it's macro, not portfolio
-  const sessionUser = await getAuthenticatedUser();
-  if (!sessionUser) {
-    return NextResponse.json({ error: "Sign in required." }, { status: 401 });
-  }
-  const entitlements = readUserEntitlements(sessionUser.id);
-  if (entitlements.planTier === "none" && !entitlements.proEnabled) {
-    return NextResponse.json({ error: "Subscription required." }, { status: 403 });
+export async function GET(request: Request) {
+  const isDemo = new URL(request.url).searchParams.get("demo") === "1";
+  if (!isDemo) {
+    // Auth: free tier gets FRED/CoT data too — it's macro, not portfolio
+    const sessionUser = await getAuthenticatedUser();
+    if (!sessionUser) {
+      return NextResponse.json({ error: "Sign in required." }, { status: 401 });
+    }
+    const entitlements = readUserEntitlements(sessionUser.id);
+    if (entitlements.planTier === "none" && !entitlements.proEnabled) {
+      return NextResponse.json({ error: "Subscription required." }, { status: 403 });
+    }
   }
 
   const now = Date.now();
   if (cache && now < cache.expiresAt) {
-    return NextResponse.json(cache.data, { headers: { "Cache-Control": "no-store" } });
+    return NextResponse.json(cache.data, { headers: isDemo ? DEMO_CACHE_HEADERS : DEFAULT_HEADERS });
   }
 
   const fredApiKey = String(process.env.FRED_API_KEY ?? "").trim();
+
+  if (isDemo && !fredApiKey) {
+    const payload = buildStaticPayload();
+    cache = { data: payload, expiresAt: now + CACHE_TTL_MS };
+    return NextResponse.json(payload, { headers: DEMO_CACHE_HEADERS });
+  }
 
   const [fredSeries, oilCot, goldCot] = await Promise.allSettled([
     fredApiKey ? fetchAllFredSeries(fredApiKey) : Promise.resolve(null),
@@ -188,5 +207,5 @@ export async function GET() {
   };
 
   cache = { data: payload, expiresAt: now + CACHE_TTL_MS };
-  return NextResponse.json(payload, { headers: { "Cache-Control": "no-store" } });
+  return NextResponse.json(payload, { headers: isDemo ? DEMO_CACHE_HEADERS : DEFAULT_HEADERS });
 }

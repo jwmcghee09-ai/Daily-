@@ -5,6 +5,8 @@ import { readUserEntitlements } from "@/lib/db";
 export const runtime = "nodejs";
 
 const CACHE_TTL_MS = 15 * 60 * 1000;
+const DEMO_CACHE_HEADERS = { "Cache-Control": "public, max-age=300, s-maxage=300, stale-while-revalidate=900" };
+const DEFAULT_HEADERS = { "Cache-Control": "no-store" };
 let cache: { data: FmpPayload; expiresAt: number } | null = null;
 let lastGoodPayload: FmpPayload | null = null;
 
@@ -426,7 +428,7 @@ const ASX_SECTOR_BASKETS: { sector: string; symbols: string[] }[] = [
   { sector: "Telecommunications", symbols: ["TLS.AX", "TPG.AX"] },
 ];
 
-async function fetchSectorPerformance(_apiKey: string): Promise<SectorPerf[]> {
+async function fetchSectorPerformance(): Promise<SectorPerf[]> {
   const results = await Promise.all(
     ASX_SECTOR_BASKETS.map(async ({ sector, symbols }) => {
       const quotes = await Promise.allSettled(symbols.map((sym) => yahooQuote(sym)));
@@ -898,7 +900,7 @@ export async function GET(request: NextRequest) {
 
   const now = Date.now();
   if (cache && now < cache.expiresAt) {
-    return NextResponse.json(cache.data, { headers: { "Cache-Control": "no-store" } });
+    return NextResponse.json(cache.data, { headers: isDemo ? DEMO_CACHE_HEADERS : DEFAULT_HEADERS });
   }
 
   const [indices, commodities, fx, sectorPerformance, economicCalendar, macroIndicators, earningsCalendar, earningsSurprises, analystRatings, news, cryptoMarket, treasuryRates] =
@@ -906,7 +908,7 @@ export async function GET(request: NextRequest) {
       fetchIndices(apiKey),
       fetchCommodities(apiKey),
       fetchFx(apiKey),
-      fetchSectorPerformance(apiKey),
+      fetchSectorPerformance(),
       fetchEconomicCalendar(apiKey),
       fetchMacroIndicators(apiKey),
       fetchEarningsCalendar(apiKey),
@@ -938,5 +940,5 @@ export async function GET(request: NextRequest) {
 
   cache = { data: payload, expiresAt: now + CACHE_TTL_MS };
   lastGoodPayload = payload;
-  return NextResponse.json(payload, { headers: { "Cache-Control": "no-store" } });
+  return NextResponse.json(payload, { headers: isDemo ? DEMO_CACHE_HEADERS : DEFAULT_HEADERS });
 }

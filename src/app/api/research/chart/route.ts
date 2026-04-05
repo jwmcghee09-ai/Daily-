@@ -3,6 +3,8 @@ import { getAuthenticatedUser } from "@/lib/auth";
 import { readUserEntitlements } from "@/lib/db";
 
 export const runtime = "nodejs";
+const DEMO_CACHE_HEADERS = { "Cache-Control": "public, max-age=300, s-maxage=300, stale-while-revalidate=900" };
+const DEFAULT_HEADERS = { "Cache-Control": "no-store" };
 
 // Cache per range+symbol: { timestamps: number[], closes: number[], high: number, low: number }
 const cache: Record<string, { data: ChartPayload; expiresAt: number }> = {};
@@ -125,7 +127,7 @@ export async function GET(req: NextRequest) {
   const now = Date.now();
   const cached = cache[cacheKey];
   if (cached && cached.expiresAt > now) {
-    return NextResponse.json(cached.data, { headers: { "Cache-Control": "no-store" } });
+    return NextResponse.json(cached.data, { headers: demo ? DEMO_CACHE_HEADERS : DEFAULT_HEADERS });
   }
 
   try {
@@ -134,7 +136,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Failed to fetch chart data" }, { status: 502 });
     }
     cache[cacheKey] = { data, expiresAt: now + RANGE_CONFIG[range].ttlMs };
-    return NextResponse.json(data, { headers: { "Cache-Control": "no-store" } });
+    return NextResponse.json(data, { headers: demo ? DEMO_CACHE_HEADERS : DEFAULT_HEADERS });
   } catch {
     return NextResponse.json({ error: "Chart fetch failed" }, { status: 502 });
   }

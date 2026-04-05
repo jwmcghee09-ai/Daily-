@@ -12,6 +12,8 @@ const YAHOO_HEADERS = {
   "User-Agent": "Mozilla/5.0 (compatible; SPECTRE/1.0)",
   Accept: "application/json",
 };
+const DEMO_CACHE_HEADERS = { "Cache-Control": "public, max-age=300, s-maxage=300, stale-while-revalidate=900" };
+const DEFAULT_HEADERS = { "Cache-Control": "no-store" };
 
 // 5-minute server-side cache shared across all users
 const QUOTES_CACHE_TTL_MS = 5 * 60 * 1000;
@@ -306,7 +308,7 @@ export async function GET(request: NextRequest) {
   // Serve from cache if fresh — all users share one fetch cycle
   const now = Date.now();
   if (quotesCache && now < quotesCache.expiresAt) {
-    return NextResponse.json(quotesCache.data, { headers: { "Cache-Control": "no-store" } });
+    return NextResponse.json(quotesCache.data, { headers: isDemo ? DEMO_CACHE_HEADERS : DEFAULT_HEADERS });
   }
 
   const fmpApiKey = process.env.FMP_API_KEY ?? "";
@@ -437,5 +439,5 @@ export async function GET(request: NextRequest) {
   };
 
   quotesCache = { data: payload, expiresAt: now + QUOTES_CACHE_TTL_MS };
-  return NextResponse.json(payload, { headers: { "Cache-Control": "no-store" } });
+  return NextResponse.json(payload, { headers: isDemo ? DEMO_CACHE_HEADERS : DEFAULT_HEADERS });
 }
