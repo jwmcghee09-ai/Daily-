@@ -17,6 +17,7 @@
   --radiusLg: 22px;
   --navHeight: 56px;
   --tickerHeight: 32px;
+  --safeTop: env(safe-area-inset-top, 0px);
   min-height: 100vh;
   color: var(--text);
   background:
@@ -34,7 +35,8 @@
   position: fixed;
   inset: 0 0 auto;
   z-index: 50;
-  height: var(--navHeight);
+  height: calc(var(--navHeight) + var(--safeTop));
+  padding-top: var(--safeTop);
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   background: rgba(5, 5, 10, 0.85);
   backdrop-filter: blur(28px) saturate(1.4);
@@ -176,7 +178,7 @@
 
 .ticker {
   position: fixed;
-  inset: var(--navHeight) 0 auto;
+  inset: calc(var(--navHeight) + var(--safeTop)) 0 auto;
   z-index: 45;
   overflow: hidden;
   height: var(--tickerHeight);
@@ -241,7 +243,7 @@
 .hero {
   position: relative;
   min-height: 100vh;
-  padding: calc(var(--navHeight) + var(--tickerHeight) + 72px) 0 80px;
+  padding: calc(var(--navHeight) + var(--tickerHeight) + 72px + var(--safeTop)) 0 80px;
   overflow: hidden;
 }
 
@@ -1447,7 +1449,7 @@
 @media (max-width: 960px) {
   .nav {
     height: auto;
-    padding: 12px 0;
+    padding: calc(12px + var(--safeTop)) 0 12px;
   }
 
   .navInner,
@@ -1498,11 +1500,11 @@
   }
 
   .ticker {
-    top: 94px;
+    top: calc(94px + var(--safeTop));
   }
 
   .hero {
-    padding-top: 170px;
+    padding-top: calc(170px + var(--safeTop));
   }
 }
 
