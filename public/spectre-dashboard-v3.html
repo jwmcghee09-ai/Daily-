@@ -3122,6 +3122,17 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     }
 
     const history = Array.from(latestSnapshotByDay.values()).sort((a, b) => String(a.date).localeCompare(String(b.date)));
+
+    // If there are fewer than 2 historical snapshots but we have live holdings,
+    // append today's current portfolio value so the chart always renders.
+    if (history.length < 2 && totalValue > 0) {
+      const nowIso = new Date().toISOString();
+      const lastDate = history.length > 0 ? history[history.length - 1].date : "";
+      if (nowIso > lastDate) {
+        history.push({ date: nowIso, value: totalValue });
+      }
+    }
+
     const riskHistory = applyRiskWindow(history, riskWindow);
     const rawDailyReturns = calculateReturns(riskHistory.map((item) => item.value));
     const dailyReturns = cleanReturnsForRisk(rawDailyReturns);
