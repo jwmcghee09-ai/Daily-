@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { useRouter } from "next/navigation";
 import styles from "./landing-page.module.css";
 
 type CheckoutPlan = "free" | "plus" | "pro";
@@ -323,10 +322,10 @@ export default function LandingPage({
           </div>
 
           <div className={styles.navActions}>
-            <Link href="/dashboard?demo=1" className={`${styles.button} ${styles.demoButton}`}>
+            <a href="/dashboard?demo=1" className={`${styles.button} ${styles.demoButton}`}>
               <span className={styles.demoDot} />
               Live Demo
-            </Link>
+            </a>
             <Link href="/signin" className={`${styles.button} ${styles.ghostButton}`}>
               Sign In
             </Link>
@@ -369,9 +368,9 @@ export default function LandingPage({
               <Link href="/signin?mode=register&plan=free" className={`${styles.button} ${styles.primaryButton} ${styles.heroButton}`}>
                 Get Started Free
               </Link>
-              <Link href="/dashboard?demo=1" className={`${styles.button} ${styles.outlineButton} ${styles.heroButton}`}>
+              <a href="/dashboard?demo=1" className={`${styles.button} ${styles.outlineButton} ${styles.heroButton}`}>
                 See Live Demo →
-              </Link>
+              </a>
             </div>
 
           </div>
@@ -540,9 +539,9 @@ export default function LandingPage({
           </div>
 
           <div className={styles.researchCtaRow}>
-            <Link href="/research?demo=1" className={`${styles.button} ${styles.primaryButton}`}>
+            <a href="/research?demo=1" className={`${styles.button} ${styles.primaryButton}`}>
               See Research Demo
-            </Link>
+            </a>
             <Link href="/signin?mode=register&plan=plus" className={`${styles.button} ${styles.outlineButton}`}>
               Included in Plus
             </Link>
@@ -961,9 +960,9 @@ export default function LandingPage({
               <Link href="/signin?mode=register&plan=free" className={`${styles.button} ${styles.primaryButton} ${styles.heroButton}`}>
                 Get Started Free
               </Link>
-              <Link href="/dashboard?demo=1" className={`${styles.button} ${styles.outlineButton} ${styles.heroButton}`}>
+              <a href="/dashboard?demo=1" className={`${styles.button} ${styles.outlineButton} ${styles.heroButton}`}>
                 See Live Demo
-              </Link>
+              </a>
             </div>
           </div>
         </div>
@@ -985,7 +984,7 @@ export default function LandingPage({
                 <li><a href="#features">Features</a></li>
                 <li><a href="#ai">AI Analysis</a></li>
                 <li><a href="#pricing">Pricing</a></li>
-                <li><Link href="/dashboard?demo=1">Live Demo</Link></li>
+                <li><a href="/dashboard?demo=1">Live Demo</a></li>
               </ul>
             </div>
             <div>
