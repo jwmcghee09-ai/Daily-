@@ -2823,7 +2823,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     if (alertsSection) alertsSection.style.display = hasProAccess ? "" : "none";
     if (stressPanel) stressPanel.style.display = hasProAccess ? "" : "none";
     const monteCarloWrap = document.getElementById("monte-carlo-wrap");
-    if (monteCarloWrap) monteCarloWrap.style.display = hasProAccess ? "" : "none";
+    setQuantSectionVisibility(monteCarloWrap, hasProAccess);
     if (metricsPanelSplit) metricsPanelSplit.classList.toggle("starter-layout", !hasProAccess);
     if (riskWindowTabs) riskWindowTabs.style.display = hasProAccess ? "" : "none";
     if (riskGrid) riskGrid.classList.toggle("starter-layout", !hasProAccess);
@@ -2836,12 +2836,12 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     // Correlation and factor sections are data-gated in renderPortfolio — hide by default here, shown only when data arrives
     const corrWrap = document.getElementById("correlation-matrix-wrap");
     const corrDivider = document.getElementById("correlation-wrap-divider");
-    if (corrWrap && !hasPlusAccess) corrWrap.style.display = "none";
-    if (corrDivider && !hasPlusAccess) corrDivider.style.display = "none";
+    setQuantSectionVisibility(corrWrap, hasPlusAccess);
+    setQuantSectionVisibility(corrDivider, hasPlusAccess);
     const factorWrap = document.getElementById("factor-exposure-wrap");
     const factorDivider = document.getElementById("factor-exposure-divider");
-    if (factorWrap && !hasProAccess) factorWrap.style.display = "none";
-    if (factorDivider && !hasProAccess) factorDivider.style.display = "none";
+    setQuantSectionVisibility(factorWrap, hasProAccess);
+    setQuantSectionVisibility(factorDivider, hasProAccess);
   }
 
   function detectBullionMetal(holding) {
@@ -3046,6 +3046,23 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     if (Number.isFinite(units) && units > 0) return units;
     if (Number.isFinite(value) && Number.isFinite(price) && value > 0 && price > 0) return value / price;
     return 0;
+  }
+
+  function getActiveDashboardTab() {
+    return document.querySelector(".nav-tab.nav-tab-active")?.getAttribute("data-tab")
+      || new URLSearchParams(window.location.search).get("tab")
+      || "quant";
+  }
+
+  function setQuantSectionVisibility(target, available) {
+    const el = typeof target === "string" ? document.getElementById(target) : target;
+    if (!el) return;
+    el.dataset.quantAvailable = available ? "1" : "0";
+    if (!available) {
+      el.style.display = "none";
+      return;
+    }
+    el.style.display = getActiveDashboardTab() === "quant" ? "" : "none";
   }
 
   function computeMetrics(holdings, snapshots, riskWindow) {
@@ -4478,8 +4495,8 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     const _hasPlusAccess = Boolean(state.demoMode || state.sessionUser?.proEnabled || state.sessionUser?.planTier === "plus");
     const _hasProAccess = Boolean(state.demoMode || state.sessionUser?.proEnabled);
     const hasCorrData = corrMatrix && corrMatrix.tickers.length >= 2;
-    if (corrWrapEl) corrWrapEl.style.display = _hasPlusAccess && hasCorrData ? "" : "none";
-    if (corrDividerEl) corrDividerEl.style.display = _hasPlusAccess && hasCorrData ? "" : "none";
+    setQuantSectionVisibility(corrWrapEl, _hasPlusAccess && hasCorrData);
+    setQuantSectionVisibility(corrDividerEl, _hasPlusAccess && hasCorrData);
     if (corrContainer && hasCorrData) {
       const n = corrMatrix.tickers.length;
       let html = `<div class="corr-matrix" style="grid-template-columns:4.5rem repeat(${n},2.4rem)">`;
@@ -4513,8 +4530,8 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     const hasFactorData = Number.isFinite(marketBeta);
     const factorWrapEl = document.getElementById("factor-exposure-wrap");
     const factorDividerEl = document.getElementById("factor-exposure-divider");
-    if (factorWrapEl) factorWrapEl.style.display = _hasProAccess && hasFactorData ? "" : "none";
-    if (factorDividerEl) factorDividerEl.style.display = _hasProAccess && hasFactorData ? "" : "none";
+    setQuantSectionVisibility(factorWrapEl, _hasProAccess && hasFactorData);
+    setQuantSectionVisibility(factorDividerEl, _hasProAccess && hasFactorData);
     if (Number.isFinite(marketBeta)) {
       const clampedMkt = Math.max(-2, Math.min(2, marketBeta));
       const pct = Math.abs(clampedMkt) / 2 * 50;
@@ -4693,7 +4710,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
   function runMonteCarlo() { window.runMonteCarlo = runMonteCarlo;
     const isPro = Boolean(state.demoMode || state.sessionUser?.proEnabled);
     const wrap = document.getElementById("monte-carlo-wrap");
-    if (wrap) wrap.style.display = isPro ? "" : "none";
+    setQuantSectionVisibility(wrap, isPro);
     if (!isPro) return;
 
     const canvas = document.getElementById("c-monte-carlo");
