@@ -11,6 +11,7 @@
         "start": "next start",
         "lint": "eslint",
         "load:test": "node scripts/load-test.mjs",
+        "load:soak": "node scripts/load-test.mjs --profile=soak",
         "backup:db": "node scripts/backup-db.mjs",
         "restore:test": "node scripts/restore-test.mjs",
         "restore:db": "node scripts/restore-db.mjs",
