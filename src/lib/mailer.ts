@@ -236,7 +236,7 @@ async function sendEmail(content: EmailContent): Promise<void> {
 export async function sendPasswordResetEmail(input: PasswordResetEmailInput): Promise<void> {
   const appUrl = getAppBaseUrl();
   const token = input.resetToken;
-  const tokenEntryUrl = `${appUrl}/`;
+  const tokenEntryUrl = `${appUrl}/signin?flow=reset&token=${encodeURIComponent(token)}`;
 
   const subject = "SPECTRE password reset";
   const text = [
@@ -246,12 +246,10 @@ export async function sendPasswordResetEmail(input: PasswordResetEmailInput): Pr
     "",
     `Reset token: ${token}`,
     "",
-    "Use the token in the app:",
-    "1. Open the sign-in screen",
-    "2. Click 'Reset With Token'",
-    "3. Paste the token and choose a new password",
+    "Use the reset link below to open SPECTRE with the token preloaded.",
+    "If needed, you can still paste the token manually on the sign-in reset screen.",
     "",
-    `App URL: ${tokenEntryUrl}`,
+    `Reset URL: ${tokenEntryUrl}`,
     "",
     "If you did not request this, you can ignore this email.",
   ].join("\n");
@@ -262,13 +260,17 @@ export async function sendPasswordResetEmail(input: PasswordResetEmailInput): Pr
       <p>Hi ${escapeHtml(input.displayName)},</p>
       <p>A password reset was requested for your SPECTRE account.</p>
       <p><strong>Reset token:</strong><br /><code style="font-size:14px;">${escapeHtml(token)}</code></p>
-      <p>Use the token in the app:</p>
-      <ol>
-        <li>Open the sign-in screen</li>
-        <li>Click <strong>Reset With Token</strong></li>
-        <li>Paste the token and choose a new password</li>
-      </ol>
-      <p><a href="${escapeAttribute(tokenEntryUrl)}">Open SPECTRE</a></p>
+      <p>Use the button below to open the reset screen with your token preloaded.</p>
+      <p>
+        <a
+          href="${escapeAttribute(tokenEntryUrl)}"
+          style="display:inline-block;background:#ff4b33;color:#fff;text-decoration:none;padding:10px 14px;border-radius:8px;"
+        >
+          Reset Password
+        </a>
+      </p>
+      <p style="font-size:13px;color:#555;word-break:break-all;">If the button does not work, use this link:<br />${escapeHtml(tokenEntryUrl)}</p>
+      <p style="font-size:13px;color:#555;">You can also paste the token manually on the reset screen if needed.</p>
       <p style="color:#555;">If you did not request this, you can ignore this email.</p>
     </div>
   `;

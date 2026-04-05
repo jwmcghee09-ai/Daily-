@@ -14,6 +14,10 @@ export default async function SignInRoute(props: { searchParams: SearchParams })
   const user = await getAuthenticatedUser();
   const searchParams = await props.searchParams;
   const plan = readSingleParam(searchParams.plan);
+  const flow = readSingleParam(searchParams.flow);
+  const token = readSingleParam(searchParams.token);
+  const initialSubMode = flow === "reset" ? "reset" : "default";
+  const initialResetToken = flow === "reset" && token ? token : "";
 
   return (
     <SignInPage
@@ -21,6 +25,8 @@ export default async function SignInRoute(props: { searchParams: SearchParams })
       initialMode={readSingleParam(searchParams.mode) === "register" ? "register" : "login"}
       initialPlan={plan === "pro" ? "pro" : plan === "plus" ? "plus" : plan === "free" ? "free" : null}
       verificationState={readSingleParam(searchParams.verified)}
+      initialSubMode={initialSubMode}
+      initialResetToken={initialResetToken}
     />
   );
 }

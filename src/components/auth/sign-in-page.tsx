@@ -36,15 +36,19 @@ export default function SignInPage({
   initialMode,
   initialPlan,
   verificationState,
+  initialSubMode,
+  initialResetToken,
 }: {
   authenticatedUser: { email: string; displayName: string } | null;
   initialMode: AuthMode;
   initialPlan: CheckoutPlan | null;
   verificationState: string | null;
+  initialSubMode: SubMode;
+  initialResetToken: string;
 }) {
   const router = useRouter();
   const [authMode, setAuthMode] = useState<AuthMode>(initialMode);
-  const [subMode, setSubMode] = useState<SubMode>("default");
+  const [subMode, setSubMode] = useState<SubMode>(initialSubMode);
   const [selectedPlan, setSelectedPlan] = useState<CheckoutPlan>(initialPlan ?? "free");
   const [hasRequestedCheckout, setHasRequestedCheckout] = useState(Boolean(initialPlan));
   const [email, setEmail] = useState(authenticatedUser?.email ?? "");
@@ -52,7 +56,7 @@ export default function SignInPage({
   const [displayName, setDisplayName] = useState(authenticatedUser?.displayName ?? "");
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [resetToken, setResetToken] = useState("");
+  const [resetToken, setResetToken] = useState(initialResetToken);
   const [newPassword, setNewPassword] = useState("");
   const [working, setWorking] = useState(false);
   const [checkoutWorking, setCheckoutWorking] = useState(false);
@@ -65,6 +69,7 @@ export default function SignInPage({
   useEffect(() => {
     if (verificationState === "success") {
       setAuthMode("login");
+      setSubMode("default");
       setBanner({ tone: "success", message: "Email verified. You can now sign in." });
     } else if (verificationState === "invalid") {
       setBanner({ tone: "error", message: "Verification link is invalid or expired." });
@@ -73,6 +78,21 @@ export default function SignInPage({
       setBanner({ tone: "error", message: "Too many verification attempts. Please wait and try again." });
     }
   }, [verificationState]);
+
+  useEffect(() => {
+    setAuthMode(initialMode);
+  }, [initialMode]);
+
+  useEffect(() => {
+    setSubMode(initialSubMode);
+    if (initialSubMode === "reset") {
+      setAuthMode("login");
+      if (initialResetToken) {
+        setResetToken(initialResetToken);
+        setBanner({ tone: "info", message: "Reset link opened. Choose a new password to complete recovery." });
+      }
+    }
+  }, [initialSubMode, initialResetToken]);
 
   useEffect(() => {
     let cancelled = false;
