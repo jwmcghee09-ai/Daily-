@@ -917,9 +917,6 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 
 /* ── AI PAGE: layout ────────────────────────────────────────────── */
 .ai-page-layout{display:block;min-height:calc(100vh - 60px)}
-/* Cycling placeholder */
-.ai-ph-cycle{position:absolute;top:0;left:0;pointer-events:none;font-family:var(--sans);font-size:1rem;line-height:1.6;color:rgba(157,151,183,.45);transition:opacity .4s ease;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
-.ai-ph-cycle.fading{opacity:0}
 
 /* Hero output */
 .ai-hero-output{width:100%;text-align:left;margin-top:1.5rem}
@@ -1270,7 +1267,6 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
         <div id="ai-input-mode">
           <div style="position:relative">
             <textarea id="pro-ai-question" class="ai-input-textarea" maxlength="700" placeholder="Ask anything about your portfolio…"></textarea>
-            <div class="ai-ph-cycle" id="ai-ph-cycle" aria-hidden="true">Ask anything about your portfolio…</div>
           </div>
           <div class="ai-input-footer">
             <div class="ai-input-chips" id="pro-ai-chips">
@@ -2209,31 +2205,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
   </div>
 </div>
 
-<script>/* ── AI PAGE: cycling placeholder ─── */
-(function() {
-  var _AI_PH = [
-    "What is driving my returns right now?",
-    "Where is my risk most concentrated?",
-    "Are there sector headwinds in my holdings?",
-    "How would a 10% market drop affect me?",
-    "Which holding has the most downside risk?",
-    "How diversified am I across sectors?",
-    "Give me a concise portfolio summary.",
-    "What should I watch most closely right now?",
-  ];
-
-  window.initAiPlaceholder = function() {
-    var ph = document.getElementById("ai-ph-cycle");
-    var ta = document.getElementById("pro-ai-question");
-    if (!ph || !ta) return;
-    var i = 0;
-    function cycle() { ph.classList.add("fading"); setTimeout(function() { i=(i+1)%_AI_PH.length; ph.textContent=_AI_PH[i]; ph.classList.remove("fading"); },420); }
-    ta.addEventListener("input", function() { ph.style.display = ta.value.length ? "none" : ""; });
-    ph.textContent = _AI_PH[0];
-    setInterval(cycle, 3400);
-    ta.addEventListener("keydown", function(e) { if (e.key==="Enter"&&!e.shiftKey) { e.preventDefault(); var b=document.getElementById("pro-ai-ask-btn"); if(b&&!b.disabled) b.click(); } });
-  };
-})();
+<script>
 
 
 (() => {
@@ -5212,7 +5184,6 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     });
 
     // AI page extras: cycling placeholder
-    window.initAiPlaceholder && window.initAiPlaceholder();
 
     document.getElementById("alerts-list")?.addEventListener("click", (event) => {
       const target = event.target;
