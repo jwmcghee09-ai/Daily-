@@ -2725,6 +2725,8 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     const mobileResearchLink = document.getElementById("mtab-research");
     const researchHubLink = document.querySelector('#research-hub a[href^="/research"]');
     const settingsLink = document.getElementById("nav-settings-link");
+    const historyEmptyState = document.getElementById("history-empty-state");
+    const mcEmptyState = document.getElementById("mc-empty-state");
 
     if (state.demoMode) {
       setText("nav-user-email", "Demo workspace");
@@ -2767,6 +2769,16 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       if (dashboardLogo) {
         dashboardLogo.setAttribute("href", "/dashboard?demo=1");
       }
+      if (historyEmptyState) {
+        historyEmptyState.hidden = true;
+        historyEmptyState.style.display = "none";
+        historyEmptyState.textContent = "";
+      }
+      if (mcEmptyState) {
+        mcEmptyState.hidden = true;
+        mcEmptyState.style.display = "none";
+        mcEmptyState.textContent = "";
+      }
       applyUploadChrome();
       return;
     }
@@ -2801,6 +2813,14 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     }
     if (dashboardLogo) {
       dashboardLogo.setAttribute("href", "/dashboard?mode=account");
+    }
+    if (historyEmptyState) {
+      historyEmptyState.style.display = "";
+      historyEmptyState.textContent = "Import reports and refresh prices over time to build your portfolio history.";
+    }
+    if (mcEmptyState) {
+      mcEmptyState.style.display = "";
+      mcEmptyState.textContent = "Monte Carlo needs at least 2 portfolio snapshots to simulate a projection.";
     }
     applyUploadChrome();
   }
