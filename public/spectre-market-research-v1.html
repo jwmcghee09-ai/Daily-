@@ -3157,6 +3157,16 @@ h3 { font-size: 1.15rem; }
 /* Narrow iPhone fit fixes */
 @media (max-width: 480px) {
   .container { padding: 0 10px !important; }
+  .main-grid > *,
+  .left-col,
+  .right-col,
+  .chart-panel,
+  .table-wrap {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
   .workspace-hero,
   .page-header,
   .card { border-radius: 12px !important; }
@@ -3329,12 +3339,13 @@ h3 { font-size: 1.15rem; }
   .fx-chg { font-size: 0.6rem !important; }
 
   .table-wrap {
-    margin: 0 -10px !important;
-    padding: 0 10px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border-radius: 12px !important;
     overflow-x: auto !important;
     -webkit-overflow-scrolling: touch !important;
   }
-  .data-table { min-width: 720px !important; }
+  .data-table { min-width: 680px !important; }
   .data-table thead th,
   .data-table tbody td {
     white-space: nowrap !important;
