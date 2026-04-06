@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
-import { readBillingSubscription } from "@/lib/db";
+import { readBillingSubscription, upsertBillingSubscriptionForUser } from "@/lib/db";
 import { getAppBaseUrl, getStripeClient } from "@/lib/stripe";
+import Stripe from "stripe";
 
 export const runtime = "nodejs";
 
@@ -10,14 +11,6 @@ export async function POST(request: Request) {
     const user = await getAuthenticatedUser();
     if (!user) {
       return NextResponse.json({ error: "Sign in is required." }, { status: 401 });
-    }
-
-    const subscription = readBillingSubscription(user.id);
-    if (!subscription?.stripeCustomerId) {
-      return NextResponse.json(
-        { error: "No active billing profile was found for this account." },
-        { status: 400 },
-      );
     }
 
     let stripe;
@@ -30,11 +23,63 @@ export async function POST(request: Request) {
       );
     }
 
-    const baseUrl = getAppBaseUrl(request);
-    const portalSession = await stripe.billingPortal.sessions.create({
-      customer: subscription.stripeCustomerId,
-      return_url: `${baseUrl}/settings`,
+    const subscription = readBillingSubscription(user.id);
+    const stripeCustomerId = await resolveStripeCustomerId({
+      stripe,
+      userId: user.id,
+      email: user.email,
+      subscription,
     });
+
+    if (!stripeCustomerId) {
+      return NextResponse.json(
+        {
+          error:
+            "Your billing profile could not be linked yet. Please start checkout again or contact support.",
+        },
+        { status: 400 },
+      );
+    }
+
+    const baseUrl = getAppBaseUrl(request);
+    let portalSession: Stripe.BillingPortal.Session;
+    try {
+      portalSession = await stripe.billingPortal.sessions.create({
+        customer: stripeCustomerId,
+        return_url: `${baseUrl}/settings`,
+      });
+    } catch (error) {
+      if (!isMissingStripeResource(error, "customer")) {
+        throw error;
+      }
+
+      upsertBillingSubscriptionForUser({
+        userId: user.id,
+        stripeCustomerId: null,
+      });
+
+      const recoveredCustomerId = await resolveStripeCustomerId({
+        stripe,
+        userId: user.id,
+        email: user.email,
+        subscription: readBillingSubscription(user.id),
+      });
+
+      if (!recoveredCustomerId) {
+        return NextResponse.json(
+          {
+            error:
+              "Your billing profile could not be linked yet. Please start checkout again or contact support.",
+          },
+          { status: 400 },
+        );
+      }
+
+      portalSession = await stripe.billingPortal.sessions.create({
+        customer: recoveredCustomerId,
+        return_url: `${baseUrl}/settings`,
+      });
+    }
 
     if (!portalSession.url) {
       return NextResponse.json({ error: "Billing portal URL was not generated." }, { status: 502 });
@@ -45,4 +90,140 @@ export async function POST(request: Request) {
     console.error("Stripe billing portal session creation failed", error);
     return NextResponse.json({ error: "Unable to open billing portal." }, { status: 500 });
   }
+}
+
+async function resolveStripeCustomerId(input: {
+  stripe: Stripe;
+  userId: string;
+  email: string;
+  subscription: ReturnType<typeof readBillingSubscription>;
+}): Promise<string | null> {
+  const localCustomerId = (input.subscription?.stripeCustomerId || "").trim();
+  if (localCustomerId) {
+    return localCustomerId;
+  }
+
+  const subscriptionCustomerId = await recoverCustomerIdFromSubscription(input);
+  if (subscriptionCustomerId) {
+    return subscriptionCustomerId;
+  }
+
+  return recoverCustomerIdFromEmail(input);
+}
+
+async function recoverCustomerIdFromSubscription(input: {
+  stripe: Stripe;
+  userId: string;
+  subscription: ReturnType<typeof readBillingSubscription>;
+}): Promise<string | null> {
+  const subscriptionId = (input.subscription?.stripeSubscriptionId || "").trim();
+  if (!subscriptionId) {
+    return null;
+  }
+
+  let stripeSubscription: Stripe.Subscription;
+  try {
+    stripeSubscription = await input.stripe.subscriptions.retrieve(subscriptionId);
+  } catch (error) {
+    if (!isMissingStripeResource(error, "subscription")) {
+      throw error;
+    }
+
+    upsertBillingSubscriptionForUser({
+      userId: input.userId,
+      stripeSubscriptionId: null,
+      status: null,
+    });
+    return null;
+  }
+
+  const customerId = extractStripeId(stripeSubscription.customer);
+  if (!customerId) {
+    return null;
+  }
+
+  upsertBillingSubscriptionForUser({
+    userId: input.userId,
+    stripeCustomerId: customerId,
+    stripeSubscriptionId: stripeSubscription.id,
+    stripePriceId: stripeSubscription.items.data[0]?.price.id ?? undefined,
+    status: stripeSubscription.status || undefined,
+  });
+
+  return customerId;
+}
+
+async function recoverCustomerIdFromEmail(input: {
+  stripe: Stripe;
+  userId: string;
+  email: string;
+}): Promise<string | null> {
+  const normalizedEmail = (input.email || "").trim().toLowerCase();
+  if (!normalizedEmail) {
+    return null;
+  }
+
+  const customers = await input.stripe.customers.list({
+    email: normalizedEmail,
+    limit: 10,
+  });
+
+  const activeCustomer = customers.data.find((customer) => !customer.deleted) || null;
+  if (!activeCustomer) {
+    return null;
+  }
+
+  upsertBillingSubscriptionForUser({
+    userId: input.userId,
+    stripeCustomerId: activeCustomer.id,
+  });
+
+  return activeCustomer.id;
+}
+
+function extractStripeId(value: string | Stripe.Customer | Stripe.DeletedCustomer | null | undefined): string | null {
+  if (typeof value === "string") {
+    return value.trim() || null;
+  }
+
+  if (value && typeof value === "object" && "id" in value) {
+    return typeof value.id === "string" && value.id.trim() ? value.id.trim() : null;
+  }
+
+  return null;
+}
+
+function getStripeErrorCode(error: unknown): string {
+  const code = Reflect.get(error as object, "code");
+  return typeof code === "string" ? code : "";
+}
+
+function getStripeErrorParam(error: unknown): string {
+  const param = Reflect.get(error as object, "param");
+  return typeof param === "string" ? param : "";
+}
+
+function getStripeErrorMessage(error: unknown): string {
+  const message = Reflect.get(error as object, "message");
+  return typeof message === "string" ? message : "";
+}
+
+function isMissingStripeResource(error: unknown, resource: "customer" | "subscription"): boolean {
+  const code = getStripeErrorCode(error);
+  const param = getStripeErrorParam(error).toLowerCase();
+  const message = getStripeErrorMessage(error).toLowerCase();
+
+  if (message.includes(`no such ${resource}`)) {
+    return true;
+  }
+
+  if (code !== "resource_missing") {
+    return false;
+  }
+
+  if (!param) {
+    return true;
+  }
+
+  return param.includes(resource);
 }
