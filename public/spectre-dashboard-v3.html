@@ -3542,7 +3542,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       ? buildSeededDemoHistory()
       : null;
     const items = hasEnoughHistory ? historyItems : seededDemoHistory;
-    setHidden("history-empty-state", Boolean(items && items.length >= 2));
+    setHidden("history-empty-state", state.demoMode || Boolean(items && items.length >= 2));
     if (!items || items.length < 2) {
       if (tooltip) tooltip.style.display = "none";
       return;
