@@ -499,6 +499,20 @@ function initSchema(db: DatabaseSync): void {
     );
   `);
 
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS ai_conversation_messages (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      conversation_id TEXT NOT NULL,
+      role TEXT NOT NULL CHECK(role IN ('user','assistant')),
+      content TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now')),
+      FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS idx_ai_conv_lookup
+      ON ai_conversation_messages(user_id, conversation_id, created_at);
+  `);
+
 }
 
 function normalizeSource(value: unknown): DataSource {
@@ -3441,4 +3455,42 @@ export function releaseReservedAiUsage(userId: string): number {
     db.exec("ROLLBACK");
     throw error;
   }
+}
+
+// ── AI Conversation History ────────────────────────────────────────────────────
+
+export interface AiConversationMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export function getAiConversation(
+  userId: string,
+  conversationId: string,
+  limit: number,
+): AiConversationMessage[] {
+  const db = getDb();
+  const rows = db
+    .prepare(
+      `SELECT role, content FROM ai_conversation_messages
+       WHERE user_id = ? AND conversation_id = ?
+       ORDER BY created_at DESC LIMIT ?`,
+    )
+    .all(userId, conversationId, limit) as { role: string; content: string }[];
+  // Reverse so oldest-first for the prompt
+  return rows.reverse().map((r) => ({ role: r.role as "user" | "assistant", content: r.content }));
+}
+
+export function appendAiMessage(
+  userId: string,
+  conversationId: string,
+  role: "user" | "assistant",
+  content: string,
+): void {
+  const db = getDb();
+  const id = crypto.randomUUID();
+  db.prepare(
+    `INSERT INTO ai_conversation_messages (id, user_id, conversation_id, role, content)
+     VALUES (?, ?, ?, ?, ?)`,
+  ).run(id, userId, conversationId, role, content);
 }

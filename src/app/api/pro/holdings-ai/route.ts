@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
 import {
@@ -8,9 +9,20 @@ import {
   releaseReservedAiUsage,
   readPriceDipAlerts,
   estimateHistoricalRiskFromYahoo,
+  getAiConversation,
+  appendAiMessage,
+  AiConversationMessage,
   PlanTier,
 } from "@/lib/db";
 import { computeMetrics } from "@/lib/portfolio";
+
+// Max conversation turns (pairs) loaded from DB per plan
+const CONVERSATION_HISTORY_TURNS: Record<PlanTier, number> = {
+  none: 0,
+  free: 0,
+  plus: 3,   // last 3 turns = 6 messages
+  pro: 10,   // last 10 turns = 20 messages
+};
 
 const AI_MONTHLY_LIMITS: Record<PlanTier, number> = {
   none: 3,
@@ -33,6 +45,7 @@ const DEFAULT_QUESTION = "What is most likely influencing the value of my curren
 
 interface AskHoldingsBody {
   question?: unknown;
+  conversationId?: unknown;
 }
 
 interface HoldingPromptSummary {
@@ -443,7 +456,8 @@ function buildSystemPrompt(): string {
     "- confidence: 85-100 when market price + cost base both available; 50-75 when estimated or stale\n" +
     "- answer field: minimum 150 words, address the user's specific question directly\n" +
     "- nextActions: specific and actionable, not generic advice\n" +
-    "- Keep sentences short and operator-focused"
+    "- Keep sentences short and operator-focused\n" +
+    "- If conversationHistory is present in the context, use it to maintain continuity — refer back to prior exchanges naturally without restating them verbatim"
   );
 }
 
@@ -661,6 +675,7 @@ async function buildPromptContext(
   marketSnapshot: any,
   origin: string,
   cookieHeader: string,
+  conversationHistory: AiConversationMessage[] = [],
 ) {
   const { state, metrics, allHoldings, topGainers, topLosers } = buildHoldingsSummary(userId);
   const heldTickerSet = new Set(allHoldings.map((holding) => normalizeSymbol(holding.ticker)));
@@ -685,6 +700,7 @@ async function buildPromptContext(
     timezone: "Australia/Sydney",
     user: userEmail,
     question,
+    ...(conversationHistory.length > 0 ? { conversationHistory } : {}),
     marketSnapshot,
     portfolio: {
       holdingsCount: state.holdings.length,
@@ -851,6 +867,17 @@ export async function POST(request: Request) {
       ? body.question.trim().slice(0, 700)
       : DEFAULT_QUESTION;
 
+  // Conversation history — Pro/Plus only
+  const historyTurns = CONVERSATION_HISTORY_TURNS[entitlements.planTier] ?? 0;
+  const conversationId =
+    typeof body.conversationId === "string" && body.conversationId.trim().length > 0
+      ? body.conversationId.trim().slice(0, 64)
+      : crypto.randomUUID();
+  const conversationHistory: AiConversationMessage[] =
+    historyTurns > 0
+      ? getAiConversation(sessionUser.id, conversationId, historyTurns * 2)
+      : [];
+
   const apiKey = String(process.env.OPENAI_API_KEY || "").trim();
   if (!apiKey) {
     return NextResponse.json({ error: "OPENAI_API_KEY is not configured." }, { status: 503 });
@@ -862,7 +889,7 @@ export async function POST(request: Request) {
   const marketSnapshot = await fetchMarketSnapshot();
   const origin = new URL(request.url).origin;
   const cookieHeader = request.headers.get("cookie") ?? "";
-  const context = await buildPromptContext(sessionUser.email, question, sessionUser.id, marketSnapshot, origin, cookieHeader);
+  const context = await buildPromptContext(sessionUser.email, question, sessionUser.id, marketSnapshot, origin, cookieHeader, conversationHistory);
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), HOLDINGS_AI_TIMEOUT_MS);
@@ -956,10 +983,17 @@ export async function POST(request: Request) {
       sseBuffer += decoder.decode();
       const analysis = parseAiAnalysis(accumulated);
       if (analysis) {
+        // Persist Q&A to conversation history (best-effort)
+        if (historyTurns > 0) {
+          try {
+            appendAiMessage(sessionUser.id, conversationId, "user", question);
+            appendAiMessage(sessionUser.id, conversationId, "assistant", analysis.answer || accumulated.slice(0, 4000));
+          } catch { /* non-fatal */ }
+        }
         const newUsed = monthlyLimit === -1 ? usedThisMonth : reservation.used;
         controller.enqueue(
           enc.encode(
-            `data: ${JSON.stringify({ done: true, analysis, aiUsed: newUsed, aiLimit: monthlyLimit })}\n\n`,
+            `data: ${JSON.stringify({ done: true, analysis, conversationId, aiUsed: newUsed, aiLimit: monthlyLimit })}\n\n`,
           ),
         );
       } else {

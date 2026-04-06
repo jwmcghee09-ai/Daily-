@@ -758,6 +758,13 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 .console-ai-holding-head span{font-family:var(--mono);font-size:.5rem;color:var(--muted)}
 .console-ai-risk{margin-top:.35rem;font-family:var(--mono);font-size:.56rem;color:#ffb38f}
 @media(max-width:760px){.console-ai-grid,.console-ai-holding-grid{grid-template-columns:1fr}}
+/* AI conversation thread */
+.ai-conv-user{padding:.55rem .7rem;margin-bottom:.55rem;background:rgba(255,255,255,.04);border-radius:8px;border-left:2px solid rgba(255,255,255,.12)}
+.ai-conv-user .ai-conv-you{display:block;font-family:var(--mono);font-size:.5rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:.28rem}
+.ai-conv-user p{font-size:.78rem;color:var(--text);line-height:1.6;margin:0}
+.ai-conv-assistant{margin-bottom:.8rem}
+.ai-conv-past{padding:.55rem .7rem;background:rgba(168,85,247,.05);border-radius:8px;border-left:2px solid rgba(168,85,247,.25);opacity:.7}
+.ai-conv-past p{font-size:.76rem;color:var(--muted2);line-height:1.6;margin:0}
 
 /* ── MOBILE CENTERING (in-app dashboard) ── */
 @media(max-width:1024px){
@@ -2305,6 +2312,8 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     holdingsAiError: "",
     holdingsAiLoading: false,
     holdingsAiStreamText: "",
+    aiConversationId: null,
+    aiConversationMessages: [],  // [{role:"user"|"assistant", text, analysis}]
     aiUsedThisMonth: 0,
     aiMonthlyLimit: -1,
     riskWindow: "6M",
@@ -3884,6 +3893,8 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       state.holdingsAi = null;
       state.holdingsAiError = "";
       state.holdingsAiLoading = false;
+      state.aiConversationId = null;
+      state.aiConversationMessages = [];
     }
     applyModeChrome();
     applyPlanVisibility();
@@ -4079,22 +4090,22 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       errorEl.textContent = "";
     }
 
-    // Show streaming text while response is arriving
-    if (state.holdingsAiLoading && state.holdingsAiStreamText) {
+    // Show streaming text while response is arriving (no conversation thread yet)
+    if (state.holdingsAiLoading && state.holdingsAiStreamText && state.aiConversationMessages.length <= 1) {
       if (metaEl) metaEl.textContent = "Analyzing…";
-      // Append incrementally — find existing stream el or create it
       let streamEl = document.getElementById("pro-ai-stream-text");
       if (!streamEl) {
         outputInner.innerHTML = `<p id="pro-ai-stream-text" class="stream-text stream-cursor" style="font-size:.92rem;line-height:1.75;color:var(--text);white-space:pre-wrap"></p>`;
         streamEl = document.getElementById("pro-ai-stream-text");
       }
       if (streamEl) streamEl.textContent = state.holdingsAiStreamText;
-      // Auto-scroll to bottom as text streams in
       outputInner.scrollTop = outputInner.scrollHeight;
       return;
     }
 
     const analysis = state.holdingsAi;
+    const hasConversation = state.aiConversationMessages.length > 0;
+
     if (!analysis) {
       if (state.holdingsAiLoading) {
         if (metaEl) metaEl.textContent = "Analyzing…";
@@ -4111,72 +4122,101 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       return;
     }
 
-    const generatedAt = analysis.generatedAt ? formatDateTime(analysis.generatedAt) : "Now";
-
-    const breakdown = Array.isArray(analysis.holdingBreakdown) ? analysis.holdingBreakdown.slice(0, 10) : [];
-    const breakdownHtml = breakdown.length === 0
-      ? `<p>No holding-level breakdown returned.</p>`
-      : `
-        <div class="console-ai-holding-grid">
-          ${breakdown.map((row) => {
+    function renderAnalysisBlock(a) {
+      const breakdown = Array.isArray(a.holdingBreakdown) ? a.holdingBreakdown.slice(0, 10) : [];
+      const breakdownHtml = breakdown.length === 0
+        ? `<p>No holding-level breakdown returned.</p>`
+        : `<div class="console-ai-holding-grid">${breakdown.map((row) => {
             const influences = Array.isArray(row.influences) && row.influences.length > 0
               ? `<ul>${row.influences.slice(0, 6).map((item) => `<li>${escapeHtml(String(item || ""))}</li>`).join("")}</ul>`
               : "";
             const riskFlags = Array.isArray(row.riskFlags) && row.riskFlags.length > 0
               ? `<div class="console-ai-risk">Risk: ${escapeHtml(row.riskFlags.join(" | "))}</div>`
               : "";
+            return `<div class="console-ai-holding"><div class="console-ai-holding-head"><strong>${escapeHtml(String(row.ticker || "—"))}</strong><span>Confidence ${Number.isFinite(Number(row.confidence)) ? Math.round(Number(row.confidence)) : 0}%</span></div><p>${escapeHtml(String(row.summary || ""))}</p>${influences}${riskFlags}</div>`;
+          }).join("")}</div>`;
+      return `
+        <div class="console-ai-block"><h4>Answer</h4><p>${escapeHtml(String(a.answer || ""))}</p></div>
+        <div class="console-ai-block"><h4>Portfolio Drivers</h4>${renderAiList(a.portfolioDrivers, "No portfolio drivers returned.")}</div>
+        <div class="console-ai-block"><h4>Holding-Level Influences</h4>${breakdownHtml}</div>
+        <div class="console-ai-grid">
+          <div class="console-ai-block"><h4>Risk Checks</h4>${renderAiList(a.riskChecks, "No risk checks returned.")}</div>
+          <div class="console-ai-block"><h4>Next Actions</h4>${renderAiList(a.nextActions, "No next actions returned.")}</div>
+        </div>`;
+    }
 
-            return `
-              <div class="console-ai-holding">
-                <div class="console-ai-holding-head">
-                  <strong>${escapeHtml(String(row.ticker || "—"))}</strong>
-                  <span>Confidence ${Number.isFinite(Number(row.confidence)) ? Math.round(Number(row.confidence)) : 0}%</span>
-                </div>
-                <p>${escapeHtml(String(row.summary || ""))}</p>
-                ${influences}
-                ${riskFlags}
-              </div>
-            `;
-          }).join("")}
-        </div>
-      `;
+    // Build full conversation thread
+    const msgs = state.aiConversationMessages;
+    let threadHtml = "";
+    for (let i = 0; i < msgs.length; i++) {
+      const msg = msgs[i];
+      if (msg.role === "user") {
+        threadHtml += `<div class="ai-conv-user"><span class="ai-conv-you">You</span><p>${escapeHtml(msg.text || "")}</p></div>`;
+      } else {
+        const isLatest = (i === msgs.length - 1);
+        if (isLatest && !state.holdingsAiLoading) {
+          threadHtml += `<div class="ai-conv-assistant">${renderAnalysisBlock(msg.analysis || analysis)}</div>`;
+        } else if (!isLatest) {
+          // Collapsed previous AI replies — just show answer text
+          threadHtml += `<div class="ai-conv-assistant ai-conv-past"><p>${escapeHtml(String(msg.text || ""))}</p></div>`;
+        }
+      }
+    }
 
+    // Streaming response for in-progress assistant turn
+    if (state.holdingsAiLoading && state.holdingsAiStreamText) {
+      threadHtml += `<div class="ai-conv-assistant"><p id="pro-ai-stream-text" class="stream-text stream-cursor" style="white-space:pre-wrap">${escapeHtml(state.holdingsAiStreamText)}</p></div>`;
+    }
+
+    // Follow-up input (shown when conversation has at least one complete exchange and not currently loading)
+    const showFollowUp = hasConversation && !state.holdingsAiLoading && !state.demoMode && !atLimit && hasHoldings;
+    const followUpHtml = showFollowUp ? `
+      <div class="ai-followup-row" style="margin-top:1.25rem;padding-top:1rem;border-top:1px solid rgba(255,255,255,.07);display:flex;gap:.6rem;align-items:flex-end">
+        <textarea id="ai-followup-input" class="ai-input-textarea" maxlength="700" rows="2" placeholder="Ask a follow-up…" style="flex:1;min-height:48px;resize:vertical"></textarea>
+        <button type="button" id="ai-followup-send" class="ai-send-btn" style="flex-shrink:0;align-self:flex-end">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>` : "";
+
+    const generatedAt = analysis.generatedAt ? formatDateTime(analysis.generatedAt) : "Now";
     if (metaEl) metaEl.textContent = `${generatedAt} via ${analysis.model || "AI model"}`;
-    outputInner.innerHTML = `
-      <div class="console-ai-block">
-        <h4>Answer</h4>
-        <p>${escapeHtml(String(analysis.answer || ""))}</p>
-      </div>
-      <div class="console-ai-block">
-        <h4>Portfolio Drivers</h4>
-        ${renderAiList(analysis.portfolioDrivers, "No portfolio drivers returned.")}
-      </div>
-      <div class="console-ai-block">
-        <h4>Holding-Level Influences</h4>
-        ${breakdownHtml}
-      </div>
-      <div class="console-ai-grid">
-        <div class="console-ai-block">
-          <h4>Risk Checks</h4>
-          ${renderAiList(analysis.riskChecks, "No risk checks returned.")}
-        </div>
-        <div class="console-ai-block">
-          <h4>Next Actions</h4>
-          ${renderAiList(analysis.nextActions, "No next actions returned.")}
-        </div>
-      </div>
-    `;
+
+    outputInner.innerHTML = threadHtml + followUpHtml;
+    outputInner.scrollTop = outputInner.scrollHeight;
+
+    // Wire follow-up send button
+    const followUpSend = document.getElementById("ai-followup-send");
+    const followUpInput = document.getElementById("ai-followup-input");
+    if (followUpSend && followUpInput instanceof HTMLTextAreaElement) {
+      followUpSend.addEventListener("click", () => {
+        const q = followUpInput.value.trim();
+        if (!q) return;
+        const mainInput = document.getElementById("pro-ai-question");
+        if (mainInput instanceof HTMLTextAreaElement) mainInput.value = q;
+        void runHoldingsAi();
+      });
+      followUpInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          followUpSend.click();
+        }
+      });
+    }
   }
 
   function renderHoldingsAiStream() {
     const streamEl = document.getElementById("pro-ai-stream-text");
     if (streamEl) {
       streamEl.textContent = state.holdingsAiStreamText || "";
+      const outputInner = document.getElementById("pro-ai-output-inner");
+      if (outputInner) outputInner.scrollTop = outputInner.scrollHeight;
     }
   }
 
   // "New question" button resets back to input mode
   document.getElementById("ai-new-question-btn")?.addEventListener("click", () => {
+    state.aiConversationId = null;
+    state.aiConversationMessages = [];
     if (state.demoMode) return;
     state.holdingsAi = null;
     state.holdingsAiStreamText = "";
@@ -4204,6 +4244,8 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       ? questionInput.value.trim().slice(0, 700)
       : HOLDINGS_AI_DEFAULT_QUESTION;
 
+    // Push user message into conversation thread immediately
+    state.aiConversationMessages = state.aiConversationMessages.concat([{ role: "user", text: question }]);
     state.holdingsAiLoading = true;
     state.holdingsAiStreamText = "";
     state.holdingsAiError = "";
@@ -4213,7 +4255,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       const response = await fetch("/api/pro/holdings-ai", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question }),
+        body: JSON.stringify({ question, conversationId: state.aiConversationId || undefined }),
       });
 
       if (!response.ok || !response.body) {
@@ -4277,6 +4319,11 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
               state.holdingsAi = evt.analysis;
               state.holdingsAiStreamText = "";
               state.holdingsAiError = "";
+              if (typeof evt.conversationId === "string") state.aiConversationId = evt.conversationId;
+              // Append assistant reply to conversation thread
+              state.aiConversationMessages = state.aiConversationMessages.concat([
+                { role: "assistant", text: evt.analysis.answer || "", analysis: evt.analysis }
+              ]);
               if (typeof evt.aiUsed === "number") state.aiUsedThisMonth = evt.aiUsed;
               if (typeof evt.aiLimit === "number") state.aiMonthlyLimit = evt.aiLimit;
               showToast("Ask AI analysis updated.");
@@ -4288,6 +4335,8 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
 
       throw new Error("AI stream ended without a complete response.");
     } catch (error) {
+      // Remove the optimistic user message if the request failed
+      state.aiConversationMessages = state.aiConversationMessages.slice(0, -1);
       state.holdingsAiError = error instanceof Error ? error.message : "Failed to run Ask AI analysis.";
       showToast(state.holdingsAiError, "error");
     } finally {
