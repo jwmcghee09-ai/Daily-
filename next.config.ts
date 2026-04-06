@@ -40,7 +40,7 @@ if (isProd) {
 
 const nextConfig: NextConfig = {
   turbopack: {
-    root: __dirname,
+    root: process.cwd(),
   },
   async headers() {
     return [
