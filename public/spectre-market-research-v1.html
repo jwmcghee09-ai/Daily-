@@ -7055,6 +7055,140 @@ async function loadCryptoChart(symbol, range, btn) {
 // shell stays lighter under load.
 let _demoDataPromise = null;
 
+function buildDemoTreasuryRates() {
+  return {
+    date: '2025-03-28',
+    m3: 5.34,
+    y1: 4.78,
+    y2: 4.21,
+    y5: 4.05,
+    y10: 4.12,
+    y30: 4.28,
+  };
+}
+
+function buildDemoMacroIndicators() {
+  return [
+    { key: 'inflation-rate', label: 'Inflation Rate', value: 2.8, unit: '%', date: '2025-03-01' },
+    { key: 'unemployment-rate', label: 'Unemployment Rate', value: 4.1, unit: '%', date: '2025-03-01' },
+    { key: 'gdp-growth', label: 'GDP Growth', value: 1.6, unit: '%', date: '2024-12-31' },
+    { key: 'retail-sales', label: 'Retail Sales', value: 0.3, unit: '%', date: '2025-02-01' },
+  ];
+}
+
+function buildDemoEarningsSurprises(snapshot) {
+  const lookup = Object.fromEntries((snapshot?.fmp?.analystRatings || []).map((item) => [String(item.symbol || '').replace('.AX','').toUpperCase(), item]));
+  const rows = [
+    ['CBA', '2025-02-12', 2.61, 2.45],
+    ['BHP', '2025-02-18', 1.95, 1.82],
+    ['CSL', '2025-02-11', 4.02, 3.88],
+    ['NAB', '2025-02-14', 1.10, 1.04],
+    ['WBC', '2025-02-17', 1.18, 1.11],
+    ['WES', '2025-02-20', 1.63, 1.56],
+  ];
+  return rows.map(([symbol, date, actualEps, estimatedEps]) => {
+    const surprise = Number(actualEps) - Number(estimatedEps);
+    return {
+      symbol: `${symbol}.AX`,
+      name: lookup[symbol]?.name || symbol,
+      date,
+      actualEps,
+      estimatedEps,
+      surprise,
+      surprisePct: estimatedEps ? (surprise / estimatedEps) * 100 : null,
+    };
+  });
+}
+
+function buildDemoCryptoMarket(snapshot) {
+  const quotes = snapshot?.quotes?.crypto || {};
+  const btc = quotes.btc || {};
+  const eth = quotes.eth || {};
+  const sol = quotes.sol || {};
+  return {
+    btcDominance: 53.8,
+    ethDominance: 17.2,
+    totalMarketCapUsd: 2860000000000,
+    totalVolume24hUsd: 124000000000,
+    fearGreedValue: 67,
+    fearGreedLabel: 'Greed',
+    assets: [
+      {
+        symbol: 'BTC',
+        name: 'Bitcoin',
+        price: btc.price ?? 84250,
+        marketCap: 1660000000000,
+        volume24h: 52000000000,
+        changePct24h: btc.price && btc.prevClose ? ((btc.price - btc.prevClose) / btc.prevClose) * 100 : 2.62,
+        high24h: 85400,
+        low24h: 82120,
+      },
+      {
+        symbol: 'ETH',
+        name: 'Ethereum',
+        price: eth.price ?? 1965,
+        marketCap: 237000000000,
+        volume24h: 24800000000,
+        changePct24h: eth.price && eth.prevClose ? ((eth.price - eth.prevClose) / eth.prevClose) * 100 : 2.34,
+        high24h: 1998,
+        low24h: 1896,
+      },
+      {
+        symbol: 'SOL',
+        name: 'Solana',
+        price: sol.price ?? 138.5,
+        marketCap: 68000000000,
+        volume24h: 5100000000,
+        changePct24h: sol.price && sol.prevClose ? ((sol.price - sol.prevClose) / sol.prevClose) * 100 : 3.20,
+        high24h: 141.4,
+        low24h: 132.8,
+      },
+    ],
+  };
+}
+
+function augmentDemoSnapshot(snapshot) {
+  const data = snapshot || {};
+  data.quotes = data.quotes || {};
+  data.fmp = data.fmp || {};
+  data.fred = data.fred || {};
+
+  if (!Array.isArray(data.fmp.macroIndicators) || !data.fmp.macroIndicators.length) {
+    data.fmp.macroIndicators = buildDemoMacroIndicators();
+  }
+  if (!data.fmp.treasuryRates) {
+    data.fmp.treasuryRates = buildDemoTreasuryRates();
+  }
+  if (!Array.isArray(data.fmp.earningsSurprises) || !data.fmp.earningsSurprises.length) {
+    data.fmp.earningsSurprises = buildDemoEarningsSurprises(data);
+  }
+  if (!data.fmp.cryptoMarket) {
+    data.fmp.cryptoMarket = buildDemoCryptoMarket(data);
+  }
+  if (Array.isArray(data.fmp.news)) {
+    data.fmp.news = data.fmp.news.map((item) => ({
+      ...item,
+      site: item.site || item.source || '',
+    }));
+  }
+  if (!Array.isArray(data.quotes.asxConstituents) || !data.quotes.asxConstituents.length) {
+    const asx = data.quotes.asx || {};
+    data.quotes.asxConstituents = Object.keys(asx).map((sym) => {
+      const quote = asx[sym] || {};
+      return {
+        ...quote,
+        symbol: quote.symbol || `${sym}.AX`,
+        name: quote.name || sym,
+        marketCap: null,
+        sector: null,
+        volume: null,
+        exchange: 'ASX',
+      };
+    });
+  }
+  return data;
+}
+
 async function loadDemoData() {
   if (!_demoDataPromise) {
     _demoDataPromise = fetch('/demo/research-snapshot.json', { cache: 'force-cache' })
@@ -7062,6 +7196,7 @@ async function loadDemoData() {
         if (!response.ok) throw new Error('Failed to load demo snapshot');
         return response.json();
       })
+      .then((data) => augmentDemoSnapshot(data))
       .catch((error) => {
         _demoDataPromise = null;
         throw error;

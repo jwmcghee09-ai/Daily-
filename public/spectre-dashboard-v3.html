@@ -2536,6 +2536,67 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     };
   }
 
+  function buildDemoHoldingsAiConversation() {
+    const firstQuestion = "What may be influencing the value of my current holdings?";
+    const secondQuestion = "Where is the main risk concentration in this portfolio?";
+    const firstAnalysis = buildDemoHoldingsAiAnalysis(firstQuestion);
+    const secondAnalysis = {
+      generatedAt: "2026-03-06T06:15:00.000Z",
+      model: "SPECTRE Demo AI",
+      question: secondQuestion,
+      answer: "The main concentration risk sits across three layers at once: the super sleeve dominates account weight, listed equities are heavily anchored by large Australian financial and materials names, and the crypto sleeve adds a second source of concentration through volatility rather than dollar weight alone.",
+      portfolioDrivers: [
+        "Super is the largest account, so account-level concentration remains elevated.",
+        "CBA, BHP, and MQG cluster the listed-book into a narrow set of ASX drivers.",
+        "BTC and ETH amplify downside sensitivity even without being the largest dollar positions.",
+        "Gold improves shock balance, but it is not large enough to fully neutralize concentrated equity and crypto risk.",
+      ],
+      holdingBreakdown: [
+        {
+          ticker: "SUPBAL",
+          summary: "The super option is the largest single sleeve and dominates account-level exposure.",
+          influences: ["Largest allocation in the workspace", "Sets the baseline risk mix for the rest of the portfolio"],
+          riskFlags: ["Account concentration"],
+          confidence: 90,
+        },
+        {
+          ticker: "CBA",
+          summary: "CBA concentrates the ASX book into bank sensitivity and domestic rate expectations.",
+          influences: ["Large weight inside listed equities", "Adds overlap with other Australian financial exposures"],
+          riskFlags: ["Sector overlap", "Concentration"],
+          confidence: 82,
+        },
+        {
+          ticker: "BTC",
+          summary: "Bitcoin adds tail-risk concentration because its volatility contribution is larger than its weight contribution.",
+          influences: ["Raises VaR and drawdown sensitivity", "Can dominate short-window risk signals during stress"],
+          riskFlags: ["High volatility", "Tail risk"],
+          confidence: 85,
+        },
+      ],
+      riskChecks: [
+        "Top holdings and the super sleeve still account for most portfolio influence.",
+        "Crypto remains the clearest source of downside shock concentration.",
+        "Financials and materials are the most important ASX factor clusters in the demo set.",
+      ],
+      nextActions: [
+        "Reduce position overlap across the largest ASX names if you want a cleaner concentration profile.",
+        "Treat the crypto sleeve as a deliberate risk budget rather than passive ballast.",
+        "Use fresh snapshots over time to verify whether concentration is falling or just being masked by market strength.",
+      ],
+    };
+
+    return {
+      latest: secondAnalysis,
+      messages: [
+        { role: "user", text: firstQuestion },
+        { role: "assistant", text: firstAnalysis.answer, analysis: firstAnalysis },
+        { role: "user", text: secondQuestion },
+        { role: "assistant", text: secondAnalysis.answer, analysis: secondAnalysis },
+      ],
+    };
+  }
+
   function createDemoPortfolioState() {
     const now = new Date();
     const reportDate = now.toISOString().slice(0, 10);
@@ -4025,7 +4086,9 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     }
 
     if (state.demoMode && !state.holdingsAi && !state.holdingsAiLoading) {
-      state.holdingsAi = buildDemoHoldingsAiAnalysis(HOLDINGS_AI_DEFAULT_QUESTION);
+      const preview = buildDemoHoldingsAiConversation();
+      state.holdingsAi = preview.latest;
+      state.aiConversationMessages = preview.messages.slice();
     }
 
     // Toggle between input and output mode within the same card
@@ -4226,7 +4289,9 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
 
   async function runHoldingsAi() {
     if (state.demoMode) {
-      state.holdingsAi = buildDemoHoldingsAiAnalysis(HOLDINGS_AI_DEFAULT_QUESTION);
+      const preview = buildDemoHoldingsAiConversation();
+      state.holdingsAi = preview.latest;
+      state.aiConversationMessages = preview.messages.slice();
       state.holdingsAiLoading = false;
       state.holdingsAiError = "";
       renderHoldingsAi();
