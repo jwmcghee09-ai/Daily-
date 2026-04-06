@@ -49,7 +49,7 @@ export default function SignInPage({
   const router = useRouter();
   const [authMode, setAuthMode] = useState<AuthMode>(initialMode);
   const [subMode, setSubMode] = useState<SubMode>(initialSubMode);
-  const [selectedPlan, setSelectedPlan] = useState<CheckoutPlan>(initialPlan ?? "free");
+  const [selectedPlan, setSelectedPlan] = useState<CheckoutPlan>(initialPlan === "pro" ? "pro" : "plus");
   const [hasRequestedCheckout, setHasRequestedCheckout] = useState(Boolean(initialPlan));
   const [email, setEmail] = useState(authenticatedUser?.email ?? "");
   const [password, setPassword] = useState("");
@@ -680,24 +680,40 @@ export default function SignInPage({
                     </form>
                   ) : (
                     <div className={styles.sessionActions}>
-                      {!activeSessionHasPaidAccess ? (
-                        <button
-                          type="button"
-                          className={`${styles.button} ${styles.primaryButton} ${styles.fullButton}`}
-                          onClick={() => {
-                            setHasRequestedCheckout(true);
-                            void startCheckout(selectedPlan);
-                          }}
-                          disabled={checkoutWorking}
-                        >
-                          {checkoutWorking ? "Redirecting..." : `Continue with ${planLabel}`}
-                        </button>
-                      ) : null}
-                      {activeSessionHasPaidAccess ? (
-                        <Link href="/dashboard?mode=account" className={`${styles.button} ${styles.outlineButton} ${styles.fullButton}`}>
-                          Open Dashboard
-                        </Link>
-                      ) : null}
+                      <fieldset className={styles.planPicker}>
+                        <legend>Choose your plan</legend>
+                        {(["plus", "pro"] as CheckoutPlan[]).map((plan) => (
+                          <label
+                            key={plan}
+                            className={`${styles.planOption} ${selectedPlan === plan ? styles.planOptionActive : ""}`}
+                          >
+                            <input
+                              type="radio"
+                              name="session-plan"
+                              checked={selectedPlan === plan}
+                              onChange={() => setSelectedPlan(plan)}
+                            />
+                            <div className={styles.planOptionInner}>
+                              <span className={styles.planOptionName}>{plan === "plus" ? "Plus" : "Pro"}</span>
+                              <span className={styles.planOptionPrice}>{plan === "plus" ? "$2.99 / mo" : "$9.99 / mo"}</span>
+                            </div>
+                          </label>
+                        ))}
+                      </fieldset>
+                      <button
+                        type="button"
+                        className={`${styles.button} ${styles.primaryButton} ${styles.fullButton}`}
+                        onClick={() => {
+                          setHasRequestedCheckout(true);
+                          void startCheckout(selectedPlan);
+                        }}
+                        disabled={checkoutWorking}
+                      >
+                        {checkoutWorking ? "Redirecting..." : `Continue with ${planLabel}`}
+                      </button>
+                      <Link href="/dashboard?mode=account" className={`${styles.button} ${styles.outlineButton} ${styles.fullButton}`}>
+                        Open Dashboard
+                      </Link>
                     </div>
                   )}
 

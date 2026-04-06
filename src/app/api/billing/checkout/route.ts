@@ -53,11 +53,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unable to determine checkout email." }, { status: 400 });
     }
 
-    if (user && plan === "pro") {
+    if (user) {
       const upgraded = await tryUpgradeExistingSubscription({
         userId: user.id,
         stripe,
-        proPriceId: priceId,
+        targetPriceId: priceId,
+        plan,
       });
       if (upgraded) {
         return NextResponse.json({ url: `${baseUrl}/settings` });
@@ -84,15 +85,8 @@ export async function POST(request: Request) {
       line_items: [{ price: priceId, quantity: 1 }],
       client_reference_id: user?.id,
       metadata,
-      subscription_data: {
-        metadata,
-      },
+      subscription_data: { metadata },
       allow_promotion_codes: true,
-      branding_settings: {
-        background_color: "#07070b",
-        button_color: "#ff4b33",
-        border_style: "rounded",
-      },
       success_url: `${baseUrl}/?checkout=success&plan=${encodeURIComponent(plan)}`,
       cancel_url: `${baseUrl}/?checkout=cancelled`,
       ...(checkoutCustomer ? { customer: checkoutCustomer } : { customer_email: checkoutEmail }),
@@ -122,7 +116,8 @@ const ACTIVE_OR_RECOVERABLE_STATUSES = new Set(["active", "trialing", "past_due"
 async function tryUpgradeExistingSubscription(input: {
   userId: string;
   stripe: Stripe;
-  proPriceId: string;
+  targetPriceId: string;
+  plan: BillingPlan;
 }): Promise<boolean> {
   const existing = readBillingSubscription(input.userId);
   const existingSubscriptionId = (existing?.stripeSubscriptionId || "").trim();
@@ -141,18 +136,19 @@ async function tryUpgradeExistingSubscription(input: {
     return false;
   }
 
-  if (currentItem.price.id === input.proPriceId) {
+  // Already on this plan — no-op, redirect to settings
+  if (currentItem.price.id === input.targetPriceId) {
     return true;
   }
 
   const updated = await input.stripe.subscriptions.update(subscription.id, {
     cancel_at_period_end: false,
     proration_behavior: "create_prorations",
-    items: [{ id: currentItem.id, price: input.proPriceId }],
+    items: [{ id: currentItem.id, price: input.targetPriceId }],
     metadata: {
       ...(subscription.metadata || {}),
-      plan: "pro",
-      priceId: input.proPriceId,
+      plan: input.plan,
+      priceId: input.targetPriceId,
       userId: input.userId,
     },
   });
@@ -161,7 +157,7 @@ async function tryUpgradeExistingSubscription(input: {
     userId: input.userId,
     stripeCustomerId: extractStripeId(updated.customer),
     stripeSubscriptionId: updated.id,
-    stripePriceId: input.proPriceId,
+    stripePriceId: input.targetPriceId,
     status: updated.status || existing?.status || null,
     currentPeriodEnd: unixSecondsToIso(updated.items.data[0]?.current_period_end),
   });
