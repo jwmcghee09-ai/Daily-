@@ -80,17 +80,41 @@ export async function POST(request: Request) {
     const checkoutCustomer =
       stripeCustomerId && stripeCustomerId.trim().length > 0 ? stripeCustomerId : null;
 
-    const checkoutSession = await stripe.checkout.sessions.create({
-      mode: "subscription",
-      line_items: [{ price: priceId, quantity: 1 }],
-      client_reference_id: user?.id,
-      metadata,
-      subscription_data: { metadata },
-      allow_promotion_codes: true,
-      success_url: `${baseUrl}/?checkout=success&plan=${encodeURIComponent(plan)}`,
-      cancel_url: `${baseUrl}/?checkout=cancelled`,
-      ...(checkoutCustomer ? { customer: checkoutCustomer } : { customer_email: checkoutEmail }),
-    });
+    let checkoutSession: Stripe.Checkout.Session;
+    try {
+      checkoutSession = await stripe.checkout.sessions.create({
+        mode: "subscription",
+        line_items: [{ price: priceId, quantity: 1 }],
+        client_reference_id: user?.id,
+        metadata,
+        subscription_data: { metadata },
+        allow_promotion_codes: true,
+        success_url: `${baseUrl}/?checkout=success&plan=${encodeURIComponent(plan)}`,
+        cancel_url: `${baseUrl}/?checkout=cancelled`,
+        ...(checkoutCustomer ? { customer: checkoutCustomer } : { customer_email: checkoutEmail }),
+      });
+    } catch (error) {
+      if (!checkoutCustomer || !user || !isMissingStripeResource(error, "customer")) {
+        throw error;
+      }
+
+      upsertBillingSubscriptionForUser({
+        userId: user.id,
+        stripeCustomerId: null,
+      });
+
+      checkoutSession = await stripe.checkout.sessions.create({
+        mode: "subscription",
+        line_items: [{ price: priceId, quantity: 1 }],
+        client_reference_id: user.id,
+        metadata,
+        subscription_data: { metadata },
+        allow_promotion_codes: true,
+        success_url: `${baseUrl}/?checkout=success&plan=${encodeURIComponent(plan)}`,
+        cancel_url: `${baseUrl}/?checkout=cancelled`,
+        customer_email: checkoutEmail,
+      });
+    }
 
     if (!checkoutSession.url) {
       return NextResponse.json({ error: "Stripe checkout URL was not generated." }, { status: 502 });
@@ -125,7 +149,21 @@ async function tryUpgradeExistingSubscription(input: {
     return false;
   }
 
-  const subscription = await input.stripe.subscriptions.retrieve(existingSubscriptionId);
+  let subscription: Stripe.Subscription;
+  try {
+    subscription = await input.stripe.subscriptions.retrieve(existingSubscriptionId);
+  } catch (error) {
+    if (!isMissingStripeResource(error, "subscription")) {
+      throw error;
+    }
+
+    upsertBillingSubscriptionForUser({
+      userId: input.userId,
+      stripeSubscriptionId: null,
+      status: null,
+    });
+    return false;
+  }
   const status = (subscription.status || "").trim().toLowerCase();
   if (!ACTIVE_OR_RECOVERABLE_STATUSES.has(status)) {
     return false;
@@ -163,6 +201,41 @@ async function tryUpgradeExistingSubscription(input: {
   });
 
   return true;
+}
+
+function getStripeErrorCode(error: unknown): string {
+  const code = Reflect.get(error as object, "code");
+  return typeof code === "string" ? code : "";
+}
+
+function getStripeErrorParam(error: unknown): string {
+  const param = Reflect.get(error as object, "param");
+  return typeof param === "string" ? param : "";
+}
+
+function getStripeErrorMessage(error: unknown): string {
+  const message = Reflect.get(error as object, "message");
+  return typeof message === "string" ? message : "";
+}
+
+function isMissingStripeResource(error: unknown, resource: "customer" | "subscription"): boolean {
+  const code = getStripeErrorCode(error);
+  const param = getStripeErrorParam(error).toLowerCase();
+  const message = getStripeErrorMessage(error).toLowerCase();
+
+  if (message.includes(`no such ${resource}`)) {
+    return true;
+  }
+
+  if (code !== "resource_missing") {
+    return false;
+  }
+
+  if (!param) {
+    return true;
+  }
+
+  return param.includes(resource);
 }
 
 function extractStripeId(value: unknown): string | null {
