@@ -841,10 +841,41 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   .hero-sub{font-size:.78rem;line-height:1.7;margin-bottom:1.2rem}
   .hero-actions{justify-content:center;gap:.5rem}
   .hero-primary,.hero-secondary{min-width:0;width:100%}
-  .meta-panel{padding:1rem}
-  .kpi-grid-mini{grid-template-columns:1fr}
-  .kpi-mini{padding:1rem}
-  .kpi-mini-val{font-size:1.45rem}
+  .meta-panel{
+    width:100% !important;
+    max-width:100% !important;
+    padding:.95rem !important;
+  }
+  .meta-panel-title{
+    margin-bottom:.8rem !important;
+    text-align:center;
+  }
+  .kpi-grid-mini{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:.55rem !important;
+    margin-bottom:.6rem !important;
+  }
+  .kpi-mini{
+    padding:.8rem .85rem !important;
+    min-width:0 !important;
+  }
+  .kpi-mini-lbl{
+    font-size:.46rem !important;
+    letter-spacing:.12em !important;
+    margin-bottom:.3rem !important;
+  }
+  .kpi-mini-val{
+    font-size:1.12rem !important;
+    line-height:1.05 !important;
+    word-break:break-word;
+  }
+  .risk-bar-wrap{
+    padding:.85rem .9rem !important;
+    margin-top:.1rem !important;
+  }
+  .risk-bar-top{margin-bottom:.65rem !important}
+  .risk-bar-lbl{font-size:.5rem !important}
+  .risk-bar-val{font-size:1.7rem !important}
 
   /* Section spacing */
   .sec{padding:2rem 0}
@@ -1123,10 +1154,13 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
   .hero-primary,.hero-secondary{width:100%!important;min-width:0!important;justify-content:center!important}
   .hero-meta{padding-top:1rem!important}
   .meta-row{grid-template-columns:1fr!important;gap:.3rem!important}
-  .meta-panel{padding:1rem!important}
-  .kpi-grid-mini{grid-template-columns:1fr 1fr!important;gap:.5rem!important}
-  .kpi-mini{padding:.85rem!important}
-  .kpi-mini-val{font-size:1.3rem!important}
+  .meta-panel{padding:.95rem!important}
+  .kpi-grid-mini{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:.5rem!important}
+  .kpi-mini{padding:.78rem .82rem!important}
+  .kpi-mini-lbl{font-size:.45rem!important;letter-spacing:.12em!important}
+  .kpi-mini-val{font-size:1.08rem!important;line-height:1.05!important}
+  .risk-bar-wrap{padding:.8rem .85rem!important}
+  .risk-bar-val{font-size:1.6rem!important}
   .kpi-row{grid-template-columns:1fr!important}
   .kpi-val{font-size:1.3rem!important}
   .upload-grid{grid-template-columns:1fr!important}
