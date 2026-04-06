@@ -4,7 +4,7 @@ import {
   deleteAuthSessionsByUserId,
   updateAuthUserPasswordHash,
 } from "@/lib/db";
-import { getClientAddress, hashPassword, hashPasswordResetToken } from "@/lib/auth";
+import { getClientAddress, hashPassword, hashPasswordResetToken, readAuthBody } from "@/lib/auth";
 import { consumeRateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
@@ -28,7 +28,16 @@ export async function POST(request: Request) {
       );
     }
 
-    const payload = (await request.json()) as PasswordResetSubmitPayload;
+    const rawBody = await readAuthBody(request);
+    if (rawBody === null) {
+      return NextResponse.json({ error: "Request body too large." }, { status: 413 });
+    }
+    let payload: PasswordResetSubmitPayload;
+    try {
+      payload = JSON.parse(rawBody) as PasswordResetSubmitPayload;
+    } catch {
+      return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+    }
     const token = (payload.token || "").trim();
     const newPassword = payload.newPassword || "";
 

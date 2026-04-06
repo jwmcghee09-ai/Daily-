@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { consumeEmailVerificationRecord } from "@/lib/db";
-import { getClientAddress, hashEmailVerificationToken } from "@/lib/auth";
+import { getClientAddress, hashEmailVerificationToken, readAuthBody } from "@/lib/auth";
 import { consumeRateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
@@ -49,7 +49,16 @@ export async function POST(request: Request) {
       );
     }
 
-    const payload = (await request.json()) as VerifyPayload;
+    const rawBody = await readAuthBody(request);
+    if (rawBody === null) {
+      return NextResponse.json({ error: "Request body too large." }, { status: 413 });
+    }
+    let payload: VerifyPayload;
+    try {
+      payload = JSON.parse(rawBody) as VerifyPayload;
+    } catch {
+      return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+    }
     const token = (payload.token || "").trim();
 
     if (token.length < 20) {

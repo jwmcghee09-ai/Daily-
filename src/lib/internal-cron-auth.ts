@@ -15,20 +15,6 @@ function getHeaderToken(request: Request): string {
   return direct.trim();
 }
 
-function getQueryToken(request: Request): string {
-  try {
-    const url = new URL(request.url);
-    return (
-      url.searchParams.get("backup_cron_token") ||
-      url.searchParams.get("cron_token") ||
-      url.searchParams.get("token") ||
-      ""
-    ).trim();
-  } catch {
-    return "";
-  }
-}
-
 function normalizeToken(raw: string): string {
   const trimmed = String(raw || "").trim();
   if (!trimmed) {
@@ -59,7 +45,7 @@ export function assertCronTokenAuthorized(request: Request): { ok: true } {
     throw new Error("BACKUP_CRON_TOKEN is not configured.");
   }
 
-  const presented = normalizeToken(getBearerToken(request) || getHeaderToken(request) || getQueryToken(request));
+  const presented = normalizeToken(getBearerToken(request) || getHeaderToken(request));
 
   if (!presented || !timingSafeStringEquals(presented, expected)) {
     const error = new Error("Unauthorized");

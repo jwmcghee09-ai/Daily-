@@ -7,6 +7,7 @@ import {
   hashEmailVerificationToken,
   isLikelyEmail,
   normalizeEmail,
+  readAuthBody,
 } from "@/lib/auth";
 import { isEmailDeliveryConfigured, sendAccountVerificationEmail } from "@/lib/mailer";
 import { consumeRateLimit } from "@/lib/rate-limit";
@@ -32,7 +33,16 @@ export async function POST(request: Request) {
       );
     }
 
-    const payload = (await request.json()) as ResendPayload;
+    const rawBody = await readAuthBody(request);
+    if (rawBody === null) {
+      return NextResponse.json({ error: "Request body too large." }, { status: 413 });
+    }
+    let payload: ResendPayload;
+    try {
+      payload = JSON.parse(rawBody) as ResendPayload;
+    } catch {
+      return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+    }
     const email = normalizeEmail(payload.email || "");
 
     if (!isLikelyEmail(email)) {

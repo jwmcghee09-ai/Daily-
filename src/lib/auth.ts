@@ -8,6 +8,21 @@ export const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 export const PASSWORD_RESET_TTL_MS = 60 * 60 * 1000;
 export const EMAIL_VERIFICATION_TTL_MS = 24 * 60 * 60 * 1000;
 
+/** Max body size for auth JSON payloads (2 KB — email + password is tiny). */
+const AUTH_MAX_BODY_BYTES = 2048;
+
+/**
+ * Reads and returns the raw body text from an auth request, enforcing a 2 KB
+ * size limit. Returns null and the caller should respond 413 if exceeded.
+ */
+export async function readAuthBody(request: Request): Promise<string | null> {
+  const declared = Number(request.headers.get("content-length") || "0");
+  if (Number.isFinite(declared) && declared > AUTH_MAX_BODY_BYTES) return null;
+  const raw = await request.text();
+  if (new TextEncoder().encode(raw).length > AUTH_MAX_BODY_BYTES) return null;
+  return raw;
+}
+
 export function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
 }

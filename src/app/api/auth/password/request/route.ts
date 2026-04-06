@@ -7,6 +7,7 @@ import {
   hashPasswordResetToken,
   isLikelyEmail,
   normalizeEmail,
+  readAuthBody,
 } from "@/lib/auth";
 import { isEmailDeliveryConfigured, sendPasswordResetEmail } from "@/lib/mailer";
 import { consumeRateLimit } from "@/lib/rate-limit";
@@ -32,7 +33,16 @@ export async function POST(request: Request) {
       );
     }
 
-    const payload = (await request.json()) as PasswordResetRequestPayload;
+    const rawBody = await readAuthBody(request);
+    if (rawBody === null) {
+      return NextResponse.json({ error: "Request body too large." }, { status: 413 });
+    }
+    let payload: PasswordResetRequestPayload;
+    try {
+      payload = JSON.parse(rawBody) as PasswordResetRequestPayload;
+    } catch {
+      return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+    }
     const email = normalizeEmail(payload.email || "");
 
     if (!isLikelyEmail(email)) {

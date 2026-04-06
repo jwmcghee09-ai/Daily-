@@ -14,6 +14,7 @@ import {
   isLikelyEmail,
   normalizeDisplayName,
   normalizeEmail,
+  readAuthBody,
 } from "@/lib/auth";
 import { isEmailDeliveryConfigured, isOperationalAlertConfigured, sendAccountVerificationEmail, sendOperationalAlertEmail } from "@/lib/mailer";
 import { consumeRateLimit } from "@/lib/rate-limit";
@@ -41,7 +42,16 @@ export async function POST(request: Request) {
       );
     }
 
-    const payload = (await request.json()) as RegisterPayload;
+    const rawBody = await readAuthBody(request);
+    if (rawBody === null) {
+      return NextResponse.json({ error: "Request body too large." }, { status: 413 });
+    }
+    let payload: RegisterPayload;
+    try {
+      payload = JSON.parse(rawBody) as RegisterPayload;
+    } catch {
+      return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+    }
 
     const email = normalizeEmail(payload.email || "");
     const password = payload.password || "";
@@ -82,7 +92,7 @@ export async function POST(request: Request) {
     const existing = findAuthUserByEmail(email);
     if (existing) {
       return NextResponse.json({ error: "An account with this email already exists." }, { status: 409 });
-    }
+    }
 
     const passwordHash = hashPassword(password);
     const termsAcceptedAt = new Date().toISOString();

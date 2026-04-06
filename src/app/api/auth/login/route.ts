@@ -9,6 +9,7 @@ import {
   getClientAddress,
   isLikelyEmail,
   normalizeEmail,
+  readAuthBody,
   verifyPassword,
 } from "@/lib/auth";
 import { consumeRateLimit } from "@/lib/rate-limit";
@@ -55,7 +56,16 @@ export async function POST(request: Request) {
       );
     }
 
-    const payload = (await request.json()) as LoginPayload;
+    const rawBody = await readAuthBody(request);
+    if (rawBody === null) {
+      return NextResponse.json({ error: "Request body too large." }, { status: 413 });
+    }
+    let payload: LoginPayload;
+    try {
+      payload = JSON.parse(rawBody) as LoginPayload;
+    } catch {
+      return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+    }
 
     const email = normalizeEmail(payload.email || "");
     const password = payload.password || "";
