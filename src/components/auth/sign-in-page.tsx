@@ -50,7 +50,6 @@ export default function SignInPage({
   const [authMode, setAuthMode] = useState<AuthMode>(initialMode);
   const [subMode, setSubMode] = useState<SubMode>(initialSubMode);
   const [selectedPlan, setSelectedPlan] = useState<CheckoutPlan>(initialPlan === "pro" ? "pro" : "plus");
-  const [hasRequestedCheckout, setHasRequestedCheckout] = useState(Boolean(initialPlan));
   const [email, setEmail] = useState(authenticatedUser?.email ?? "");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState(authenticatedUser?.displayName ?? "");
@@ -82,6 +81,12 @@ export default function SignInPage({
   useEffect(() => {
     setAuthMode(initialMode);
   }, [initialMode]);
+
+  useEffect(() => {
+    if (initialPlan === "pro" || initialPlan === "plus" || initialPlan === "free") {
+      setSelectedPlan(initialPlan);
+    }
+  }, [initialMode, initialPlan]);
 
   useEffect(() => {
     setSubMode(initialSubMode);
@@ -122,7 +127,6 @@ export default function SignInPage({
   function switchToLogin() {
     setAuthMode("login");
     setSubMode("default");
-    setHasRequestedCheckout(false);
     setAcceptTerms(false);
     setShowPassword(false);
     setAuthError("");
@@ -132,7 +136,6 @@ export default function SignInPage({
   function switchToRegister() {
     setAuthMode("register");
     setSubMode("default");
-    setHasRequestedCheckout(true);
     setAcceptTerms(false);
     setShowPassword(false);
     setAuthError("");
@@ -203,14 +206,14 @@ export default function SignInPage({
       setAcceptTerms(false);
       setBanner({ tone: "success", message: `Welcome, ${normalizedUser.displayName}.` });
 
-      if (selectedPlan === "free") {
+      if (authMode === "register") {
+        if (selectedPlan !== "free") {
+          await startCheckout(selectedPlan, normalizedUser.email);
+          return;
+        }
+
         router.push("/dashboard?mode=account");
         router.refresh();
-        return;
-      }
-
-      if (authMode === "register" || hasRequestedCheckout || !userHasPaidAccess(normalizedUser)) {
-        await startCheckout(selectedPlan, normalizedUser.email);
         return;
       }
 
@@ -636,7 +639,6 @@ export default function SignInPage({
                                   checked={selectedPlan === plan}
                                   onChange={() => {
                                     setSelectedPlan(plan);
-                                    setHasRequestedCheckout(plan !== "free");
                                   }}
                                 />
                                 <div className={styles.planOptionInner}>
@@ -704,7 +706,6 @@ export default function SignInPage({
                         type="button"
                         className={`${styles.button} ${styles.primaryButton} ${styles.fullButton}`}
                         onClick={() => {
-                          setHasRequestedCheckout(true);
                           void startCheckout(selectedPlan);
                         }}
                         disabled={checkoutWorking}
