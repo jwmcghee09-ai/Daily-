@@ -108,6 +108,11 @@ async function resolveStripeCustomerId(input: {
     return subscriptionCustomerId;
   }
 
+  const searchedCustomerId = await recoverCustomerIdFromSubscriptionSearch(input);
+  if (searchedCustomerId) {
+    return searchedCustomerId;
+  }
+
   return recoverCustomerIdFromEmail(input);
 }
 
@@ -163,6 +168,24 @@ async function recoverCustomerIdFromEmail(input: {
     return null;
   }
 
+  try {
+    const searchResult = await input.stripe.customers.search({
+      query: `email:'${escapeStripeSearchString(normalizedEmail)}'`,
+      limit: 5,
+    });
+    const searchedCustomer = searchResult.data.find((customer) => !customer.deleted) || null;
+    if (searchedCustomer) {
+      upsertBillingSubscriptionForUser({
+        userId: input.userId,
+        stripeCustomerId: searchedCustomer.id,
+      });
+
+      return searchedCustomer.id;
+    }
+  } catch {
+    // Fallback to the broader list API below.
+  }
+
   const customers = await input.stripe.customers.list({
     email: normalizedEmail,
     limit: 10,
@@ -179,6 +202,54 @@ async function recoverCustomerIdFromEmail(input: {
   });
 
   return activeCustomer.id;
+}
+
+async function recoverCustomerIdFromSubscriptionSearch(input: {
+  stripe: Stripe;
+  userId: string;
+  email: string;
+}): Promise<string | null> {
+  const queries = [
+    `metadata['userId']:'${escapeStripeSearchString(input.userId)}'`,
+    `metadata['checkoutEmail']:'${escapeStripeSearchString((input.email || "").trim().toLowerCase())}'`,
+  ].filter(Boolean);
+
+  for (const query of queries) {
+    try {
+      const result = await input.stripe.subscriptions.search({
+        query,
+        limit: 5,
+      });
+
+      const match = result.data.find((subscription) => {
+        const status = (subscription.status || "").toLowerCase();
+        return ["active", "trialing", "past_due", "unpaid"].includes(status);
+      });
+
+      if (!match) {
+        continue;
+      }
+
+      const customerId = extractStripeId(match.customer);
+      if (!customerId) {
+        continue;
+      }
+
+      upsertBillingSubscriptionForUser({
+        userId: input.userId,
+        stripeCustomerId: customerId,
+        stripeSubscriptionId: match.id,
+        stripePriceId: match.items.data[0]?.price.id ?? undefined,
+        status: match.status || undefined,
+      });
+
+      return customerId;
+    } catch {
+      // Search is a recovery path only; keep trying the next option.
+    }
+  }
+
+  return null;
 }
 
 function extractStripeId(value: string | Stripe.Customer | Stripe.DeletedCustomer | null | undefined): string | null {
@@ -226,4 +297,8 @@ function isMissingStripeResource(error: unknown, resource: "customer" | "subscri
   }
 
   return param.includes(resource);
+}
+
+function escapeStripeSearchString(value: string): string {
+  return value.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
 }
