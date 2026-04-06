@@ -76,7 +76,7 @@ const features: readonly MarketingCard[] = [
   },
   {
     title: "Monte Carlo & Stress",
-    copy: "500-path portfolio projections with bull, base, and bear outcomes tied to your imported holdings.",
+    copy: "10,000-path portfolio projections with bull, base, and bear outcomes tied to your imported holdings.",
     icon: <ClockIcon />,
     alt: true,
   },
@@ -385,7 +385,7 @@ export default function LandingPage({
               <StatCard label="Portfolio Value" value="$1.27M" sub="+2.1% MTD" tone="up" />
               <StatCard label="Import Sources" value="8" sub="Broker, super, crypto, bullion" />
               <StatCard label="AI Coverage" value="24" sub="Holdings + research context" />
-              <StatCard label="Monte Carlo" value="500" sub="1Y simulation paths" />
+              <StatCard label="Monte Carlo" value="10,000" sub="1Y simulation paths" />
             </div>
 
             <div className={styles.dashboardCharts}>
@@ -450,7 +450,7 @@ export default function LandingPage({
             {[
               { val: "8", label: "Import Sources" },
               { val: "14+", label: "Risk Signals" },
-              { val: "500", label: "Monte Carlo Paths" },
+              { val: "10,000", label: "Monte Carlo Paths" },
               { val: "3", label: "Quant · AI · Research" },
             ].map(({ val, label }) => (
               <div key={label} className={styles.statStat}>
