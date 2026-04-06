@@ -4847,9 +4847,11 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     }
 
     const startValue = histValues.length > 0 ? histValues[histValues.length - 1] : demoSeedValue;
-    const N_PATHS = 500;
+    const N_PATHS = 10000;
     const N_DAYS = _mcHorizon;
 
+    // Defer heavy simulation off the main thread so tab switching stays responsive
+    setTimeout(function() {
     // Box-Muller normal variate
     function randn() {
       let u, v;
@@ -4899,6 +4901,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
 
     // Draw fan chart on canvas
     drawMonteCarloFan(canvas, { p10, p25, p50, p75, p90, startValue });
+    }, 0);
   }
 
   function drawMonteCarloFan(canvas, { p10, p25, p50, p75, p90, startValue }) {
