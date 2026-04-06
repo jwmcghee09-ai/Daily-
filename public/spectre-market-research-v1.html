@@ -3071,6 +3071,23 @@ h3 { font-size: 1.15rem; }
   /* Container */
   .container{padding:0 12px!important}
   .nav-inner{padding:0 14px!important}
+  .ticker-wrap{height:24px!important}
+  .ticker-wrap::before,.ticker-wrap::after{width:28px!important}
+  .ticker-track{
+    animation-duration:42s!important;
+    will-change:transform;
+  }
+  .ticker-item{
+    gap:.3rem!important;
+    padding:0 12px!important;
+    font-size:.52rem!important;
+  }
+  .ticker-item .sym{
+    font-size:.5rem!important;
+    letter-spacing:.06em!important;
+  }
+  .ticker-item .price{display:none!important}
+  .ticker-item .chg{font-size:.5rem!important}
 
   /* Hero workspace */
   .workspace-hero{padding:16px!important;border-radius:14px!important;margin:12px 0 10px!important}

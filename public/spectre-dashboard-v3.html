@@ -1144,6 +1144,24 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
 @media(max-width:430px){
   .wrap{padding:0 1rem!important}
   .nav-inner{padding:0 1rem!important}
+  .nav-ticker-bar{height:24px!important}
+  .nav-ticker-bar::before,.nav-ticker-bar::after{width:28px!important}
+  .nav-ticker-track{
+    animation-duration:42s!important;
+    will-change:transform;
+  }
+  .nav-ticker-item{
+    gap:.3rem!important;
+    padding:0 .8rem!important;
+    font-size:.52rem!important;
+  }
+  .nav-ticker-sym{
+    font-size:.5rem!important;
+    letter-spacing:.06em!important;
+  }
+  .nav-ticker-price{display:none!important}
+  .nav-ticker-chg{font-size:.5rem!important}
+  .nav-ticker-sep{height:8px!important;margin:0 .1rem!important}
   .hero{padding:82px 0 1.5rem!important;gap:1rem!important}
   .hero-brand{font-size:clamp(2rem,9vw,2.8rem)!important;margin-bottom:.75rem!important}
   .hero-title{font-size:clamp(2.4rem,11vw,3.4rem)!important}
