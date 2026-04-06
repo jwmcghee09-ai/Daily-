@@ -3154,6 +3154,193 @@ h3 { font-size: 1.15rem; }
   #nav-market-status{font-size:.54rem!important;padding:2px 8px!important}
 }
 
+/* Narrow iPhone fit fixes */
+@media (max-width: 480px) {
+  .container { padding: 0 10px !important; }
+  .workspace-hero,
+  .page-header,
+  .card { border-radius: 12px !important; }
+  .workspace-hero,
+  .page-header,
+  .card,
+  .research-tab-nav,
+  .hero-grid,
+  .market-pulse-strip,
+  .eq-summary-strip,
+  .macro-rates-strip,
+  .treasury-strip {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .main-grid,
+  .left-col,
+  .right-col,
+  .macro-grid,
+  .macro-2col,
+  .macro-3col,
+  .eq-movers-grid,
+  .earnings-grid,
+  .earnings-grid-2,
+  .crypto-tab-grid,
+  .crypto-tab-charts,
+  .metric-card-grid,
+  .fmp-section.in-tab.cols-2,
+  .fmp-section.in-tab.cols-3 {
+    gap: 10px !important;
+  }
+
+  .chart-panel .section-label,
+  .card .section-label[style*="justify-content:space-between"] {
+    flex-wrap: wrap !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+  }
+  .chart-panel .time-pills,
+  .card .section-label[style*="justify-content:space-between"] .time-pills {
+    width: 100% !important;
+    justify-content: flex-start !important;
+    flex-wrap: wrap !important;
+    gap: 4px !important;
+    margin-top: 0 !important;
+  }
+
+  .chart-summary,
+  .chart-summary.compact,
+  #eq-stock-summary {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+  .chart-stat {
+    padding: 9px 10px !important;
+    border-radius: 9px !important;
+  }
+  .chart-stat-value { font-size: 0.82rem !important; }
+  .macro-chart-wrap,
+  .crypto-tab-chart-wrap,
+  .sector-chart-wrap { height: 176px !important; }
+  .crypto-tab-chart-wrap.crypto-tab-chart-wrap-lg,
+  #eq-stock-chart-wrap { height: 198px !important; }
+
+  .hero-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    background: transparent !important;
+    border: none !important;
+    overflow: visible !important;
+  }
+  .hero-card {
+    border: 1px solid rgba(255,255,255,.06) !important;
+    border-radius: 10px !important;
+    background: rgba(14,10,24,.88) !important;
+  }
+
+  .eq-summary-strip,
+  .macro-rates-strip,
+  .treasury-strip {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    background: transparent !important;
+    border: none !important;
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+  .eq-summary-cell,
+  .macro-rate-cell,
+  .treasury-cell {
+    min-width: 0 !important;
+    padding: 12px 12px 11px !important;
+    border: 1px solid rgba(255,255,255,.06) !important;
+    border-right: none !important;
+    border-radius: 10px !important;
+    background: rgba(14,10,24,.88) !important;
+  }
+  .eq-summary-cell:last-child,
+  .macro-rate-cell:last-child,
+  .treasury-cell:last-child { border-right: none !important; }
+  .eq-summary-cell:last-child,
+  .treasury-cell[style*="flex:2"] {
+    grid-column: 1 / -1 !important;
+  }
+  .macro-rate-name,
+  .eq-summary-label,
+  .treasury-label {
+    font-size: 0.52rem !important;
+    letter-spacing: 0.09em !important;
+  }
+  .macro-rate-val,
+  .eq-summary-val,
+  .treasury-val {
+    font-size: 1rem !important;
+    line-height: 1.08 !important;
+  }
+  .macro-rate-dir,
+  .eq-summary-sub { font-size: 0.56rem !important; }
+
+  .index-grid { grid-template-columns: 1fr !important; }
+  .metric-card-grid,
+  #fred-signals-grid { grid-template-columns: 1fr !important; }
+  #fred-signals-grid > [style*="grid-column:span 2"] { grid-column: auto !important; }
+  .analyst-item {
+    grid-template-columns: 52px 58px 1fr !important;
+    gap: 8px !important;
+    padding: 10px 12px !important;
+  }
+  .sector-perf-row {
+    padding: 8px 10px !important;
+    gap: 8px !important;
+  }
+  .sector-perf-bar-wrap { flex: 1.25 !important; }
+  .sector-perf-val {
+    min-width: 44px !important;
+    font-size: 0.64rem !important;
+  }
+
+  .econ-item {
+    grid-template-columns: 54px 20px minmax(0, 1fr) auto !important;
+    gap: 4px !important;
+    padding: 8px 9px !important;
+  }
+  .earn-item {
+    grid-template-columns: 64px 52px minmax(0, 1fr) !important;
+    gap: 6px !important;
+    padding: 8px 9px !important;
+  }
+  .earn-date,
+  .earn-sym,
+  .earn-name { min-width: 0 !important; }
+  .earn-name {
+    white-space: normal !important;
+    line-height: 1.35 !important;
+  }
+
+  .fx-grid { gap: 6px !important; }
+  .fx-row {
+    padding: 9px 10px !important;
+    border: 1px solid rgba(255,255,255,.05) !important;
+    border-radius: 8px !important;
+    background: rgba(255,255,255,.025) !important;
+  }
+  .fx-pair { font-size: 0.6rem !important; }
+  .fx-rate { font-size: 0.72rem !important; }
+  .fx-chg { font-size: 0.6rem !important; }
+
+  .table-wrap {
+    margin: 0 -10px !important;
+    padding: 0 10px !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  .data-table { min-width: 720px !important; }
+  .data-table thead th,
+  .data-table tbody td {
+    white-space: nowrap !important;
+  }
+}
+
 </style>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 </head>
