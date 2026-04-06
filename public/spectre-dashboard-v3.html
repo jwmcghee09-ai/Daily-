@@ -1134,9 +1134,29 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
   .ai-input-card{width:100%!important;border-radius:14px}
   .ai-hero-wrap{padding:90px 0 40px!important}
   .ai-hero-title{font-size:clamp(1.9rem,6vw,2.6rem)!important}
-  .ai-kpi-strip{flex-direction:column!important}
-  .ai-kpi{padding:.75rem 1.1rem!important;border-right:none!important;border-bottom:1px solid var(--border)}
-  .ai-kpi-divider{display:none!important}
+  .ai-kpi-strip{
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:.55rem!important;
+    padding:.65rem!important;
+    align-items:stretch!important;
+  }
+  .ai-kpi{
+    min-width:0!important;
+    padding:.8rem .95rem!important;
+    border:1px solid var(--border)!important;
+    border-radius:10px!important;
+    background:rgba(10,7,18,.72)!important;
+  }
+  .ai-kpi-divider,
+  .ai-kpi-strip > div[style*="flex:1"]{display:none!important}
+  #clear-data-btn{
+    grid-column:1 / -1!important;
+    width:100%!important;
+    justify-content:center!important;
+    margin-top:.1rem!important;
+    opacity:.8!important;
+  }
   .console-grid{grid-template-columns:1fr!important}
 }
 
@@ -1198,6 +1218,29 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
   .ai-input-textarea{font-size:.95rem!important;min-height:80px!important}
   .ai-hero-title{font-size:clamp(1.7rem,7vw,2.2rem)!important}
   .ai-hero-sub{font-size:.82rem!important}
+  .ai-kpi-strip{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:.5rem!important;
+    padding:.55rem!important;
+    margin-top:1.1rem!important;
+  }
+  .ai-kpi{
+    padding:.72rem .78rem!important;
+    border-radius:9px!important;
+  }
+  .ai-kpi-lbl{
+    font-size:.44rem!important;
+    letter-spacing:.1em!important;
+  }
+  .ai-kpi-val{
+    font-size:.74rem!important;
+    line-height:1.15!important;
+  }
+  #risk-bar-value{font-size:.84rem!important}
+  #clear-data-btn{
+    font-size:.55rem!important;
+    padding:.45rem .7rem!important;
+  }
   .console-ai-grid,.console-ai-holding-grid{grid-template-columns:1fr!important}
   .foot-inner{flex-direction:column!important;align-items:center!important;text-align:center!important;gap:.5rem!important}
   body{font-size:15px}
