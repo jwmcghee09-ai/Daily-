@@ -101,7 +101,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;background:rgba(5,5,10,.92);
 .nav-ticker-bar::before,.nav-ticker-bar::after{content:'';position:absolute;top:0;bottom:0;width:72px;z-index:2;pointer-events:none}
 .nav-ticker-bar::before{left:0;background:linear-gradient(to right,rgba(5,5,10,.95),transparent)}
 .nav-ticker-bar::after{right:0;background:linear-gradient(to left,rgba(5,5,10,.95),transparent)}
-.nav-ticker-track{display:flex;align-items:center;gap:0;white-space:nowrap;animation:tickerScroll 60s linear infinite}
+.nav-ticker-track{display:flex;align-items:center;gap:0;white-space:nowrap;width:max-content;flex-shrink:0;animation:tickerScroll 60s linear infinite}
 .nav-ticker-track:hover{animation-play-state:paused}
 @keyframes tickerScroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
 .nav-ticker-item{display:inline-flex;align-items:center;gap:.45rem;padding:0 1.6rem;font-family:var(--mono);font-size:.58rem;letter-spacing:.05em}
@@ -1168,6 +1168,8 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
   .nav-ticker-bar::before,.nav-ticker-bar::after{width:28px!important}
   .nav-ticker-track{
     animation-duration:42s!important;
+    width:max-content!important;
+    flex-shrink:0!important;
     will-change:transform;
   }
   .nav-ticker-item{
