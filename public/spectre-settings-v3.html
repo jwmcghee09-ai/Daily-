@@ -113,6 +113,19 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
 .system-toast{position:fixed;right:1rem;bottom:1rem;z-index:990;padding:.7rem .9rem;border:1px solid rgba(255,255,255,.14);border-radius:8px;background:rgba(10,8,18,.94);color:var(--text);font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;opacity:0;transform:translateY(10px);transition:all .2s}
 .system-toast.show{opacity:1;transform:translateY(0)}
 .system-toast.error{border-color:rgba(255,77,26,.45);color:#ffd9d2}
+.settings-card--danger::before{background:linear-gradient(90deg,rgba(255,75,51,.72),rgba(255,45,20,.42))!important}
+.settings-title--danger{color:rgba(255,140,130,.9)}
+.btn-danger{font-family:var(--mono);font-size:.62rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#fff;background:linear-gradient(135deg,#c0392b 0%,#e74c3c 100%);border:1px solid rgba(255,75,51,.35);border-radius:999px;padding:.8rem 1.3rem;cursor:pointer;box-shadow:0 8px 20px rgba(255,75,51,.22);transition:all .2s}
+.btn-danger:hover{transform:translateY(-1px);box-shadow:0 12px 26px rgba(255,75,51,.32)}
+.btn-danger:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.modal-overlay{position:fixed;inset:0;z-index:9000;background:rgba(5,3,12,.82);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:1rem}
+.modal-box{position:relative;background:linear-gradient(180deg,rgba(24,12,20,.98),rgba(16,8,14,.98));border:1px solid rgba(255,75,51,.28);border-radius:18px;padding:1.7rem 1.8rem;max-width:420px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,.7)}
+.modal-box::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,rgba(255,75,51,.8),rgba(255,45,20,.5));border-radius:18px 18px 0 0}
+.modal-title{font-family:var(--mono);font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,140,130,.9);margin-bottom:.9rem}
+.modal-body{font-size:.8rem;color:var(--muted2);line-height:1.65}
+.modal-input{width:100%;margin-top:.9rem;background:rgba(12,8,18,.7);border:1px solid rgba(255,75,51,.3);border-radius:8px;padding:.65rem .8rem;font-family:var(--mono);font-size:.78rem;color:var(--text);outline:none;transition:border-color .2s}
+.modal-input:focus{border-color:rgba(255,75,51,.65)}
+.modal-actions{display:flex;gap:.6rem;margin-top:1.1rem;flex-wrap:wrap}
 @media(max-width:860px){.settings-grid{grid-template-columns:1fr}.nav-links{display:none}.nav-user{max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}
 @media(max-width:480px){
   /* Nav */
@@ -196,8 +209,29 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
           Data Security: Clear Data removes imported holdings, snapshots, and dip alerts from server storage. Your sign-in email and password stay active for account access.
         </p>
       </article>
+      <article class="settings-card settings-card--danger">
+        <div class="settings-title settings-title--danger">Danger Zone</div>
+        <p class="settings-note">Permanently cancel your subscription and delete your account. All data — holdings, snapshots, alerts, and billing — will be removed and cannot be recovered.</p>
+        <div class="settings-actions" style="margin-top:1rem">
+          <button class="btn-danger" id="settings-cancel-account-btn">Cancel Account</button>
+        </div>
+      </article>
     </div>
   </section>
+</div>
+
+<!-- Cancel Account Confirmation Modal -->
+<div id="cancel-account-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title" style="display:none">
+  <div class="modal-box">
+    <div class="modal-title" id="modal-title">Cancel Account</div>
+    <p class="modal-body">This will immediately cancel your subscription and permanently delete your account and all data. This cannot be undone.</p>
+    <p class="modal-body" style="margin-top:.6rem">Type <strong>CANCEL</strong> below to confirm:</p>
+    <input type="text" id="cancel-confirm-input" class="modal-input" placeholder="Type CANCEL to confirm" autocomplete="off" spellcheck="false"/>
+    <div class="modal-actions">
+      <button class="btn-ghost" id="modal-dismiss-btn">Go Back</button>
+      <button class="btn-danger" id="modal-confirm-btn" disabled>Delete My Account</button>
+    </div>
+  </div>
 </div>
 
 <div class="wrap">
@@ -425,9 +459,52 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
     window.location.href = "/";
   }
 
+  function openCancelModal() {
+    if (state.demoMode) { showToast("Account cancellation is not available in demo mode.", "error"); return; }
+    const modal = document.getElementById("cancel-account-modal");
+    const input = document.getElementById("cancel-confirm-input");
+    const confirmBtn = document.getElementById("modal-confirm-btn");
+    if (!modal || !input || !confirmBtn) return;
+    input.value = "";
+    confirmBtn.disabled = true;
+    modal.style.display = "flex";
+    setTimeout(() => input.focus(), 80);
+  }
+
+  function closeCancelModal() {
+    const modal = document.getElementById("cancel-account-modal");
+    if (modal) modal.style.display = "none";
+  }
+
+  async function confirmCancelAccount() {
+    const input = document.getElementById("cancel-confirm-input");
+    if (!input || input.value.trim().toUpperCase() !== "CANCEL") return;
+    const confirmBtn = document.getElementById("modal-confirm-btn");
+    if (confirmBtn) { confirmBtn.textContent = "Cancelling..."; confirmBtn.disabled = true; }
+    try {
+      await apiJson("/api/auth/account", { method: "DELETE" });
+      showToast("Account cancelled. Redirecting…", "success");
+      setTimeout(() => window.location.assign("/"), 1600);
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : "Failed to cancel account.";
+      showToast(msg, "error");
+      if (confirmBtn) { confirmBtn.textContent = "Delete My Account"; confirmBtn.disabled = false; }
+    }
+  }
+
   function bindEvents() {
     document.getElementById("settings-billing-btn")?.addEventListener("click", openBillingPortal);
     document.getElementById("sign-out-btn")?.addEventListener("click", signOut);
+    document.getElementById("settings-cancel-account-btn")?.addEventListener("click", openCancelModal);
+    document.getElementById("modal-dismiss-btn")?.addEventListener("click", closeCancelModal);
+    document.getElementById("modal-confirm-btn")?.addEventListener("click", confirmCancelAccount);
+    document.getElementById("cancel-confirm-input")?.addEventListener("input", function() {
+      const confirmBtn = document.getElementById("modal-confirm-btn");
+      if (confirmBtn) confirmBtn.disabled = this.value.trim().toUpperCase() !== "CANCEL";
+    });
+    document.getElementById("cancel-account-modal")?.addEventListener("click", function(e) {
+      if (e.target === this) closeCancelModal();
+    });
   }
 
   async function boot() {
