@@ -141,6 +141,7 @@ h3 { font-size: 1.15rem; }
   backdrop-filter: blur(28px) saturate(1.4);
   -webkit-backdrop-filter: blur(28px) saturate(1.4);
   border-bottom: 1px solid rgba(255,255,255,.06);
+  padding-top: env(safe-area-inset-top, 0);
 }
 
 .nav-inner {
@@ -2064,7 +2065,12 @@ h3 { font-size: 1.15rem; }
   padding: 12px 0 0;
   border-bottom: 1px solid var(--sl-border);
   margin-bottom: 18px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
+.research-tab-nav::-webkit-scrollbar { display: none; }
 .rtab {
   background: none;
   border: none;
@@ -2072,6 +2078,8 @@ h3 { font-size: 1.15rem; }
   color: var(--sl-muted);
   font-family: var(--font-mono);
   font-size: 0.65rem;
+  flex-shrink: 0;
+  white-space: nowrap;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   padding: 8px 16px 10px;

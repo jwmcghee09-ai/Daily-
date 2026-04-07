@@ -350,8 +350,14 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
     const billingButton = document.getElementById("settings-billing-btn");
     if (billingButton) {
       const hasMembership = membershipStatus !== "NOT ACTIVE";
-      billingButton.textContent = hasMembership ? "Manage / Change Plan" : "No Active Membership";
-      billingButton.disabled = !hasMembership;
+      if (hasMembership) {
+        billingButton.textContent = "Manage / Change Plan";
+        billingButton.disabled = false;
+      } else {
+        billingButton.textContent = "Upgrade to Plus or Pro";
+        billingButton.disabled = false;
+        billingButton.dataset.upgradeMode = "1";
+      }
     }
     const settingsEmailLink = document.getElementById("settings-contact-email");
     if (settingsEmailLink) {
@@ -368,6 +374,11 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
       return;
     }
     const billingButton = document.getElementById("settings-billing-btn");
+    // No subscription — go straight to upgrade flow
+    if (billingButton && billingButton.dataset.upgradeMode === "1") {
+      window.location.assign("/signin?plan=plus");
+      return;
+    }
     const original = billingButton ? billingButton.textContent : "Manage / Change Plan";
     if (billingButton) {
       billingButton.textContent = "Opening...";
@@ -378,7 +389,13 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
       if (!payload || !payload.url) throw new Error("Billing portal URL was not generated.");
       window.location.assign(payload.url);
     } catch (error) {
-      showToast(error instanceof Error ? error.message : "Unable to open billing settings.", "error");
+      const msg = error instanceof Error ? error.message : "Unable to open billing settings.";
+      if (msg.includes("billing profile") || msg.includes("No active")) {
+        showToast("No billing profile found — redirecting to upgrade.", "error");
+        setTimeout(() => window.location.assign("/signin?plan=plus"), 1500);
+      } else {
+        showToast(msg, "error");
+      }
       if (billingButton) {
         billingButton.textContent = original;
         billingButton.disabled = false;

@@ -64,7 +64,7 @@ body::after{
 @media(max-width:600px){.wrap{padding:0 1.1rem}}
 
 /* ── NAV ── */
-nav{position:fixed;top:0;left:0;right:0;z-index:900;background:rgba(5,5,10,.92);backdrop-filter:blur(28px) saturate(1.4);-webkit-backdrop-filter:blur(28px) saturate(1.4);border-bottom:1px solid rgba(255,255,255,.06)}
+nav{position:fixed;top:0;left:0;right:0;z-index:900;background:rgba(5,5,10,.92);backdrop-filter:blur(28px) saturate(1.4);-webkit-backdrop-filter:blur(28px) saturate(1.4);border-bottom:1px solid rgba(255,255,255,.06);padding-top:env(safe-area-inset-top,0)}
 .nav-inner{max-width:var(--max);margin:0 auto;padding:0 2.5rem;height:56px;display:flex;align-items:center;justify-content:space-between;gap:2rem}
 .nav-logo{
   font-family:var(--disp);
@@ -1121,8 +1121,8 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
 @media(max-width:768px){
   .mobile-tab-bar{display:block}
   .nav-tabs{display:none!important}
-  body{padding-bottom:72px}
-  .hero{grid-template-columns:1fr!important;padding:88px 0 2rem!important;gap:1.25rem!important}
+  body{padding-bottom:max(72px,calc(56px + env(safe-area-inset-bottom,0px)))}
+  .hero{grid-template-columns:1fr!important;padding:calc(88px + env(safe-area-inset-top,0px)) 0 2rem!important;gap:1.25rem!important}
   .hero-left,.meta-panel{width:100%!important;max-width:100%!important}
   .kpi-row{grid-template-columns:repeat(2,1fr)!important}
   .upload-grid{grid-template-columns:repeat(2,1fr)!important}
@@ -1182,7 +1182,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
   .nav-ticker-price{display:none!important}
   .nav-ticker-chg{font-size:.5rem!important}
   .nav-ticker-sep{height:8px!important;margin:0 .1rem!important}
-  .hero{padding:82px 0 1.5rem!important;gap:1rem!important}
+  .hero{padding:calc(82px + env(safe-area-inset-top,0px)) 0 1.5rem!important;gap:1rem!important}
   .hero-brand{font-size:clamp(2rem,9vw,2.8rem)!important;margin-bottom:.75rem!important}
   .hero-title{font-size:clamp(2.4rem,11vw,3.4rem)!important}
   .hero-sub{font-size:.83rem!important;line-height:1.68!important;margin-bottom:1.1rem!important}
@@ -1205,7 +1205,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
   .sec{padding:2rem 0!important}
   .sec-head{margin-bottom:1.2rem!important}
   .table-wrap{margin:0 -1rem!important;padding:0!important;border-radius:0!important}
-  table{min-width:540px}
+  table{min-width:460px}
   .card,.panel,.upload-card,.signal-card,.chart-card,.alert-card,.bullion-card,.quality-card,.console-card,.panel-half,.kpi-card{padding:12px!important}
   .bullion-grid,.quality-grid,.risk-grid,.stress-grid{grid-template-columns:1fr!important}
   .chart-grid{grid-template-columns:1fr!important}
@@ -1245,7 +1245,8 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
   .foot-inner{flex-direction:column!important;align-items:center!important;text-align:center!important;gap:.5rem!important}
   body{font-size:15px}
   input,select,textarea{font-size:16px!important}
-  .system-toast{bottom:72px!important;right:12px!important}
+  .system-toast{bottom:max(72px,calc(56px + env(safe-area-inset-bottom,0px)))!important;right:12px!important}
+  .mc-stat-box{min-width:0!important;flex:1 1 calc(33% - 0.5rem)!important}
   #export-csv-btn{display:none!important}
   .nav-user{display:none!important}
 }
@@ -1270,7 +1271,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       <a href="/research" class="nav-tab" data-tab="research" id="nav-research-link">Research</a>
     </div>
     <div class="nav-right">
-      <div id="notif-dropdown" style="display:none;position:absolute;top:62px;right:0;width:340px;max-height:420px;overflow-y:auto;background:var(--card);border:1px solid var(--border2);border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,.45);z-index:9999;padding:0.5rem 0">
+      <div id="notif-dropdown" style="display:none;position:absolute;top:62px;right:0;width:min(340px,calc(100vw - 1rem));max-height:420px;overflow-y:auto;background:var(--card);border:1px solid var(--border2);border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,.45);z-index:9999;padding:0.5rem 0">
         <div style="padding:0.4rem 0.8rem;font-family:var(--mono);font-size:0.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border2)">Notifications</div>
         <div id="notif-list" style="padding:0.25rem 0"></div>
         <div id="notif-empty" style="display:none;padding:1.2rem 0.8rem;text-align:center;font-family:var(--mono);font-size:0.54rem;color:var(--muted)">No notifications yet.</div>
@@ -5120,7 +5121,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     ctx.clearRect(0, 0, w, h);
 
     const n = p50.length; // N_DAYS + 1 points
-    const pad = { t: 18, r: 14, b: 36, l: 14 };
+    const pad = { t: 18, r: 14, b: 36, l: 58 };
     const cw = w - pad.l - pad.r;
     const ch = h - pad.t - pad.b;
 
