@@ -226,10 +226,10 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
     <div class="modal-title" id="modal-title">Cancel Account</div>
     <p class="modal-body">This will immediately cancel your subscription and permanently delete your account and all data. This cannot be undone.</p>
     <p class="modal-body" style="margin-top:.6rem">Type <strong>CANCEL</strong> below to confirm:</p>
-    <input type="text" id="cancel-confirm-input" class="modal-input" placeholder="Type CANCEL to confirm" autocomplete="off" spellcheck="false"/>
+    <input type="text" id="cancel-confirm-input" class="modal-input" placeholder="Type CANCEL to confirm" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false"/>
     <div class="modal-actions">
-      <button class="btn-ghost" id="modal-dismiss-btn">Go Back</button>
-      <button class="btn-danger" id="modal-confirm-btn" disabled>Delete My Account</button>
+      <button type="button" class="btn-ghost" id="modal-dismiss-btn">Go Back</button>
+      <button type="button" class="btn-danger" id="modal-confirm-btn" disabled>Delete My Account</button>
     </div>
   </div>
 </div>
@@ -498,10 +498,14 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
     document.getElementById("settings-cancel-account-btn")?.addEventListener("click", openCancelModal);
     document.getElementById("modal-dismiss-btn")?.addEventListener("click", closeCancelModal);
     document.getElementById("modal-confirm-btn")?.addEventListener("click", confirmCancelAccount);
-    document.getElementById("cancel-confirm-input")?.addEventListener("input", function() {
+    const syncConfirmBtn = function() {
       const confirmBtn = document.getElementById("modal-confirm-btn");
-      if (confirmBtn) confirmBtn.disabled = this.value.trim().toUpperCase() !== "CANCEL";
-    });
+      const input = document.getElementById("cancel-confirm-input");
+      if (confirmBtn && input) confirmBtn.disabled = input.value.trim().toUpperCase() !== "CANCEL";
+    };
+    document.getElementById("cancel-confirm-input")?.addEventListener("input", syncConfirmBtn);
+    document.getElementById("cancel-confirm-input")?.addEventListener("change", syncConfirmBtn);
+    document.getElementById("cancel-confirm-input")?.addEventListener("keyup", syncConfirmBtn);
     document.getElementById("cancel-account-modal")?.addEventListener("click", function(e) {
       if (e.target === this) closeCancelModal();
     });
