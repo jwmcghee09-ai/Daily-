@@ -63,6 +63,7 @@ export default function SignInPage({
   const [banner, setBanner] = useState<{ tone: "success" | "info" | "error"; message: string } | null>(null);
   const [sessionUser, setSessionUser] = useState<SessionUser | null>(null);
   const [showVerificationLinks, setShowVerificationLinks] = useState(false);
+  const [redirecting, setRedirecting] = useState(false);
   const activeSessionHasPaidAccess = sessionUser ? userHasPaidAccess(sessionUser) : false;
 
   useEffect(() => {
@@ -201,22 +202,23 @@ export default function SignInPage({
       }
 
       const normalizedUser = normalizeSessionUser(payload.user);
-      setSessionUser(normalizedUser);
       setPassword("");
       setAcceptTerms(false);
-      setBanner({ tone: "success", message: `Welcome, ${normalizedUser.displayName}.` });
 
       if (authMode === "register") {
         if (selectedPlan !== "free") {
+          setSessionUser(normalizedUser);
           await startCheckout(selectedPlan, normalizedUser.email);
           return;
         }
 
+        setRedirecting(true);
         router.push("/dashboard?mode=account");
         router.refresh();
         return;
       }
 
+      setRedirecting(true);
       router.push("/dashboard?mode=account");
       router.refresh();
     } catch (error) {
@@ -228,6 +230,7 @@ export default function SignInPage({
 
   async function startCheckout(plan: CheckoutPlan, guestEmail?: string) {
     if (plan === "free") {
+      setRedirecting(true);
       router.push("/dashboard?mode=account");
       router.refresh();
       return;
@@ -261,6 +264,7 @@ export default function SignInPage({
         throw new Error("Stripe checkout URL was missing.");
       }
 
+      setRedirecting(true);
       window.location.assign(payload.url);
     } catch (error) {
       setAuthError(error instanceof Error ? error.message : "Unable to start Stripe checkout.");
@@ -574,7 +578,7 @@ export default function SignInPage({
                   ) : null}
                   {authError ? <div className={`${styles.banner} ${styles.bannerError}`}>{authError}</div> : null}
 
-                  {!sessionUser ? (
+                  {!sessionUser || redirecting ? (
                     <form className={styles.formGrid} onSubmit={submitAuth}>
                       <label>
                         <span>Email</span>
