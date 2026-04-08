@@ -38,9 +38,10 @@ export async function DELETE() {
     clearSessionCookie(response);
     return response;
   } catch (error) {
-    console.error("Account deletion failed", error);
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error("[account/delete] Account deletion failed:", msg, error);
     return NextResponse.json(
-      { error: "Account deletion failed. Please contact support." },
+      { error: `Account deletion failed: ${msg}` },
       { status: 500 },
     );
   }

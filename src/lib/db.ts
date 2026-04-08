@@ -2674,6 +2674,13 @@ export function deleteUserAccountData(userId: string): boolean {
     db.prepare("DELETE FROM price_dip_alerts WHERE user_id = ?").run(userId);
     db.prepare("DELETE FROM billing_subscriptions WHERE user_id = ?").run(userId);
     db.prepare("DELETE FROM pre_signup_billing WHERE email = ?").run(normalizedEmail);
+    // Delete child-table rows that reference users (avoids FK violations if enforcement is on)
+    db.prepare("DELETE FROM notifications WHERE user_id = ?").run(userId);
+    db.prepare("DELETE FROM ai_usage WHERE user_id = ?").run(userId);
+    db.prepare("DELETE FROM ai_conversation_messages WHERE user_id = ?").run(userId);
+    db.prepare("DELETE FROM user_totp WHERE user_id = ?").run(userId);
+    db.prepare("DELETE FROM totp_challenges WHERE user_id = ?").run(userId);
+    db.prepare("DELETE FROM rate_limits WHERE key LIKE ?").run(scopedPattern);
     db.prepare("DELETE FROM users WHERE id = ?").run(userId);
     db.exec("COMMIT");
     return true;
