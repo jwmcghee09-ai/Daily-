@@ -662,7 +662,7 @@ export default function SignInPage({
                                     {plan === "free" ? "Free" : plan === "plus" ? "Plus" : "Pro"}
                                   </span>
                                   <span className={styles.planOptionPrice}>
-                                    {plan === "free" ? "No cost" : plan === "plus" ? "$2.99 / mo" : "$9.99 / mo"}
+                                    {plan === "free" ? "No cost" : plan === "plus" ? "$2.99 / month" : "$9.99 / month"}
                                   </span>
                                 </div>
                               </label>
@@ -713,7 +713,7 @@ export default function SignInPage({
                             />
                             <div className={styles.planOptionInner}>
                               <span className={styles.planOptionName}>{plan === "plus" ? "Plus" : "Pro"}</span>
-                              <span className={styles.planOptionPrice}>{plan === "plus" ? "$2.99 / mo" : "$9.99 / mo"}</span>
+                              <span className={styles.planOptionPrice}>{plan === "plus" ? "$2.99 / month" : "$9.99 / month"}</span>
                             </div>
                           </label>
                         ))}
