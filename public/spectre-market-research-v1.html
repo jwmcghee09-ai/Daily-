@@ -76,6 +76,45 @@ body {
   /* offset for fixed nav (56px) + ticker bar (28px) */
   padding-top: 84px;
 }
+body.boot-pending > *:not(#boot-splash):not(script) { display: none !important; }
+body.boot-ready #boot-splash { opacity: 0; pointer-events: none; }
+body.page-transitioning #boot-splash { opacity: 1; pointer-events: auto; }
+body.page-transitioning > *:not(#boot-splash):not(script) { visibility: hidden !important; }
+
+#boot-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 1600;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  transition: opacity .22s ease;
+}
+
+.boot-shell {
+  min-width: 220px;
+  text-align: center;
+  border: 1px solid var(--sl-border2);
+  border-radius: 12px;
+  background: linear-gradient(160deg, rgba(15,10,28,.97) 0%, rgba(10,7,18,.96) 100%);
+  box-shadow: 0 24px 60px rgba(0,0,0,.42);
+  padding: 1rem 1.2rem;
+}
+
+.boot-label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: .56rem;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--sl-orange);
+  margin-bottom: .35rem;
+}
+
+.boot-copy {
+  font-size: .82rem;
+  color: var(--sl-muted2);
+}
 
 /* Dashboard-matching background — subtle purple bloom at top */
 body::before {
@@ -3380,7 +3419,14 @@ h3 { font-size: 1.15rem; }
 </style>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 </head>
-<body>
+<body class="boot-pending">
+
+<div id="boot-splash" role="status" aria-live="polite">
+  <div class="boot-shell">
+    <span class="boot-label">SPECTRE</span>
+    <p class="boot-copy">Loading terminal...</p>
+  </div>
+</div>
 
 <!-- ===== STICKY NAV ===== -->
 <nav class="nav">
@@ -4702,6 +4748,7 @@ const state = {
   demoMode: false,
   sessionUser: null,
   portfolioState: null,
+  redirecting: false,
 };
 
 const DEMO_SESSION_USER = {
@@ -5353,6 +5400,46 @@ function isDemoMode() {
   return new URLSearchParams(window.location.search).get('demo') === '1';
 }
 
+function markBootReady() {
+  if (typeof document === 'undefined') return;
+  document.body.classList.add('boot-ready');
+  document.body.classList.remove('boot-pending');
+  document.body.classList.remove('page-transitioning');
+}
+
+function startPageTransition(url, copy) {
+  if (typeof window === 'undefined' || !url) return;
+  if (document.body.classList.contains('page-transitioning')) return;
+  state.redirecting = true;
+  const splashCopy = document.querySelector('#boot-splash .boot-copy');
+  if (splashCopy && copy) splashCopy.textContent = copy;
+  document.body.classList.remove('boot-ready');
+  document.body.classList.add('page-transitioning');
+  window.setTimeout(() => {
+    window.location.href = url;
+  }, 70);
+}
+
+function navigateTo(url, copy) {
+  startPageTransition(url, copy || 'Opening terminal...');
+}
+
+function enablePageTransitions() {
+  document.addEventListener('click', (event) => {
+    if (event.defaultPrevented || state.redirecting) return;
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    const anchor = event.target instanceof Element ? event.target.closest('a[href]') : null;
+    if (!anchor) return;
+    const href = anchor.getAttribute('href') || '';
+    if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:') || href.startsWith('javascript:')) return;
+    if (anchor.getAttribute('target') === '_blank' || anchor.hasAttribute('download')) return;
+    const nextUrl = new URL(anchor.href, window.location.href);
+    if (nextUrl.origin !== window.location.origin || nextUrl.href === window.location.href) return;
+    event.preventDefault();
+    startPageTransition(nextUrl.href, 'Opening terminal...');
+  }, true);
+}
+
 async function apiJson(url, options = {}) {
   // In demo mode, intercept known research API routes and serve static snapshots
   if (state.demoMode && !options.method) {
@@ -5367,7 +5454,7 @@ async function apiJson(url, options = {}) {
     payload = null;
   }
   if (response.status === 401) {
-    window.location.href = '/signin';
+    navigateTo('/signin', 'Opening sign in...');
     throw new Error('Please sign in first.');
   }
   if (!response.ok) {
@@ -5429,7 +5516,7 @@ async function loadSession() {
 
   const payload = await apiJson('/api/auth/session', { cache: 'no-store' });
   if (!payload.authenticated || !payload.user) {
-    window.location.href = '/signin';
+    navigateTo('/signin', 'Opening sign in...');
     return;
   }
 
@@ -5447,7 +5534,7 @@ async function signOut(event) {
     } catch {
       // best effort cleanup
     }
-    window.location.href = '/';
+    navigateTo('/', 'Leaving terminal...');
     return;
   }
   try {
@@ -5455,7 +5542,7 @@ async function signOut(event) {
   } catch {
     // best effort
   }
-  window.location.href = '/';
+  navigateTo('/', 'Leaving terminal...');
 }
 
 // ===== LIVE QUOTES =====
@@ -5703,8 +5790,13 @@ async function fetchLiveQuotes() {
 }
 
 // ===== INIT =====
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   state.demoMode = isDemoMode();
+  state.redirecting = false;
+  enablePageTransitions();
+  const bootSafetyTimer = window.setTimeout(() => {
+    if (!state.redirecting) markBootReady();
+  }, 8000);
   if (state.demoMode) activateDemoResearchPreview();
   buildTicker();
   buildStockTable();
@@ -5734,13 +5826,20 @@ document.addEventListener('DOMContentLoaded', () => {
   updateWorkspacePortfolioSummary(null);
 
   document.getElementById('sign-out-btn')?.addEventListener('click', signOut);
-  void loadSession();
-  void fetchPortfolioSummary();
-  void fetchLiveQuotes();
-  void fetchLiveMovers();
-  void loadChart('6m', null);
-  void fetchLiveNews();
-  void fetchFmpData();
+  try {
+    await loadSession();
+    await Promise.allSettled([
+      fetchPortfolioSummary(),
+      fetchLiveQuotes(),
+      fetchLiveMovers(),
+      loadChart('6m', null),
+      fetchLiveNews(),
+      fetchFmpData(),
+    ]);
+  } finally {
+    window.clearTimeout(bootSafetyTimer);
+    if (!state.redirecting) markBootReady();
+  }
   setInterval(updateWorkspaceClock, 60 * 1000);
   setInterval(() => { void fetchLiveQuotes(); }, 5 * 60 * 1000);
   setInterval(() => { void fetchLiveMovers(); }, 10 * 60 * 1000);

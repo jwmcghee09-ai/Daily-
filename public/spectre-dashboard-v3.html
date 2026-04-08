@@ -42,6 +42,9 @@ html{scroll-behavior:smooth;background:#05050a}
 
 body{background:var(--bg);color:var(--text);font-family:var(--sans);font-weight:400;line-height:1.7;overflow-x:hidden}
 body.boot-pending > *:not(#boot-splash):not(script){display:none!important}
+body.boot-ready #boot-splash{opacity:0;pointer-events:none}
+body.page-transitioning #boot-splash{opacity:1;pointer-events:auto}
+body.page-transitioning > *:not(#boot-splash):not(script){visibility:hidden!important}
 
 /* BACKGROUND — exact landing page */
 body::before{
@@ -688,6 +691,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   display:grid;
   place-items:center;
   padding:1rem;
+  transition:opacity .22s ease;
 }
 .boot-shell{
   min-width:220px;
@@ -2465,9 +2469,38 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
 
   function markBootReady() {
     if (typeof document === "undefined") return;
+    document.body.classList.add("boot-ready");
     document.body.classList.remove("boot-pending");
-    const splash = document.getElementById("boot-splash");
-    if (splash) splash.remove();
+    document.body.classList.remove("page-transitioning");
+  }
+
+  function startPageTransition(url, copy) {
+    if (typeof window === "undefined" || !url) return;
+    if (document.body.classList.contains("page-transitioning")) return;
+    state.redirecting = true;
+    const splashCopy = document.querySelector("#boot-splash .boot-copy");
+    if (splashCopy && copy) splashCopy.textContent = copy;
+    document.body.classList.remove("boot-ready");
+    document.body.classList.add("page-transitioning");
+    window.setTimeout(() => {
+      window.location.href = url;
+    }, 70);
+  }
+
+  function enablePageTransitions() {
+    document.addEventListener("click", (event) => {
+      if (event.defaultPrevented || state.redirecting) return;
+      if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      const anchor = event.target instanceof Element ? event.target.closest("a[href]") : null;
+      if (!anchor) return;
+      const href = anchor.getAttribute("href") || "";
+      if (!href || href.startsWith("#") || href.startsWith("mailto:") || href.startsWith("tel:") || href.startsWith("javascript:")) return;
+      if (anchor.getAttribute("target") === "_blank" || anchor.hasAttribute("download")) return;
+      const nextUrl = new URL(anchor.href, window.location.href);
+      if (nextUrl.origin !== window.location.origin || nextUrl.href === window.location.href) return;
+      event.preventDefault();
+      startPageTransition(nextUrl.href, "Opening workspace...");
+    }, true);
   }
 
   function isDemoMode() {
@@ -3985,8 +4018,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     }
 
     if (response.status === 401) {
-      state.redirecting = true;
-      window.location.href = "/signin";
+      startPageTransition("/signin", "Opening sign in...");
       throw new Error("Please sign in first.");
     }
 
@@ -5264,7 +5296,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       } catch {
         // best effort for demo cleanup
       }
-      window.location.assign("/");
+      startPageTransition("/", "Leaving workspace...");
       return;
     }
 
@@ -5676,6 +5708,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
         markBootReady();
       }
     }, 8000);
+    enablePageTransitions();
     bindEvents();
     applyModeChrome();
     try {
@@ -5898,7 +5931,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     btn.addEventListener('click', function() {
       var tab = btn.getAttribute('data-tab');
       if (tab === 'research') {
-        window.location.href = state.demoMode ? '/research?demo=1' : '/research';
+        startPageTransition(state.demoMode ? '/research?demo=1' : '/research', 'Opening terminal...');
         return;
       }
       switchTab(tab);
@@ -5911,7 +5944,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       var tab = btn.getAttribute('data-tab');
       if (!tab) return;
       if (tab === 'research') {
-        window.location.href = state.demoMode ? '/research?demo=1' : '/research';
+        startPageTransition(state.demoMode ? '/research?demo=1' : '/research', 'Opening terminal...');
         return;
       }
       switchTab(tab);

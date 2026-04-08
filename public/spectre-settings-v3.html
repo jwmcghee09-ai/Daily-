@@ -38,6 +38,10 @@
   --shadow:0 18px 42px -28px rgba(0,0,0,.72);
 }
 body{background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.7;overflow-x:hidden}
+body.boot-pending > *:not(#boot-splash):not(script){display:none!important}
+body.boot-ready #boot-splash{opacity:0;pointer-events:none}
+body.page-transitioning #boot-splash{opacity:1;pointer-events:auto}
+body.page-transitioning > *:not(#boot-splash):not(script){visibility:hidden!important}
 body::before{
   content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   background:
@@ -113,6 +117,10 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
 .system-toast{position:fixed;right:1rem;bottom:1rem;z-index:9999;padding:.7rem .9rem;border:1px solid rgba(255,255,255,.14);border-radius:8px;background:rgba(10,8,18,.94);color:var(--text);font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;opacity:0;transform:translateY(10px);transition:all .2s}
 .system-toast.show{opacity:1;transform:translateY(0)}
 .system-toast.error{border-color:rgba(255,77,26,.45);color:#ffd9d2}
+#boot-splash{position:fixed;inset:0;z-index:1600;display:grid;place-items:center;padding:1rem;transition:opacity .22s ease}
+.boot-shell{min-width:220px;text-align:center;border:1px solid var(--border2);border-radius:12px;background:linear-gradient(160deg,rgba(15,10,28,.97) 0%,rgba(10,7,18,.96) 100%);box-shadow:var(--shadow);padding:1rem 1.2rem}
+.boot-label{display:block;font-family:var(--mono);font-size:.56rem;letter-spacing:.18em;text-transform:uppercase;color:var(--orange);margin-bottom:.35rem}
+.boot-copy{font-size:.82rem;color:var(--muted2)}
 .settings-card--danger::before{background:linear-gradient(90deg,rgba(255,75,51,.72),rgba(255,45,20,.42))!important}
 .settings-title--danger{color:rgba(255,140,130,.9)}
 .btn-danger{font-family:var(--mono);font-size:.62rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#fff;background:linear-gradient(135deg,#c0392b 0%,#e74c3c 100%);border:1px solid rgba(255,75,51,.35);border-radius:999px;padding:.8rem 1.3rem;cursor:pointer;box-shadow:0 8px 20px rgba(255,75,51,.22);transition:all .2s}
@@ -158,7 +166,13 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
 }
 </style>
 </head>
-<body>
+<body class="boot-pending">
+<div id="boot-splash" role="status" aria-live="polite">
+  <div class="boot-shell">
+    <span class="boot-label">SPECTRE</span>
+    <p class="boot-copy">Loading settings...</p>
+  </div>
+</div>
 <nav>
   <div class="nav-inner">
     <a href="/dashboard?mode=account" class="nav-logo">SPECTRE</a>
@@ -260,7 +274,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
     subscriptionStatus: "active",
   };
   const toastEl = document.getElementById("system-toast");
-  const state = { sessionUser: null, demoMode: false };
+  const state = { sessionUser: null, demoMode: false, redirecting: false };
 
   function showToast(message, tone = "success") {
     if (!toastEl) return;
@@ -275,6 +289,46 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
   function setText(id, value) {
     const el = document.getElementById(id);
     if (el) el.textContent = value;
+  }
+
+  function markBootReady() {
+    if (typeof document === "undefined") return;
+    document.body.classList.add("boot-ready");
+    document.body.classList.remove("boot-pending");
+    document.body.classList.remove("page-transitioning");
+  }
+
+  function startPageTransition(url, copy) {
+    if (typeof window === "undefined" || !url) return;
+    if (document.body.classList.contains("page-transitioning")) return;
+    state.redirecting = true;
+    const splashCopy = document.querySelector("#boot-splash .boot-copy");
+    if (splashCopy && copy) splashCopy.textContent = copy;
+    document.body.classList.remove("boot-ready");
+    document.body.classList.add("page-transitioning");
+    window.setTimeout(() => {
+      window.location.href = url;
+    }, 70);
+  }
+
+  function navigateTo(url, copy) {
+    startPageTransition(url, copy || "Opening workspace...");
+  }
+
+  function enablePageTransitions() {
+    document.addEventListener("click", (event) => {
+      if (event.defaultPrevented || state.redirecting) return;
+      if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      const anchor = event.target instanceof Element ? event.target.closest("a[href]") : null;
+      if (!anchor) return;
+      const href = anchor.getAttribute("href") || "";
+      if (!href || href.startsWith("#") || href.startsWith("mailto:") || href.startsWith("tel:") || href.startsWith("javascript:")) return;
+      if (anchor.getAttribute("target") === "_blank" || anchor.hasAttribute("download")) return;
+      const nextUrl = new URL(anchor.href, window.location.href);
+      if (nextUrl.origin !== window.location.origin || nextUrl.href === window.location.href) return;
+      event.preventDefault();
+      startPageTransition(nextUrl.href, "Opening workspace...");
+    }, true);
   }
 
   function isDemoMode() {
@@ -342,7 +396,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
       payload = null;
     }
     if (response.status === 401) {
-      window.location.href = "/signin";
+      navigateTo("/signin", "Opening sign in...");
       throw new Error("Please sign in first.");
     }
     if (!response.ok) {
@@ -366,7 +420,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
 
     const payload = await apiJson("/api/auth/session", { cache: "no-store" });
     if (!payload.authenticated || !payload.user) {
-      window.location.href = "/signin";
+      navigateTo("/signin", "Opening sign in...");
       return;
     }
     state.sessionUser = payload.user;
@@ -405,13 +459,13 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
   async function openBillingPortal() {
     if (!state.sessionUser) return;
     if (state.demoMode) {
-      window.location.assign("/signin");
+      navigateTo("/signin", "Opening sign in...");
       return;
     }
     const billingButton = document.getElementById("settings-billing-btn");
     // No subscription — go straight to upgrade flow
     if (billingButton && billingButton.dataset.upgradeMode === "1") {
-      window.location.assign("/signin?plan=plus");
+      navigateTo("/signin?plan=plus", "Opening checkout...");
       return;
     }
     const original = billingButton ? billingButton.textContent : "Manage / Change Plan";
@@ -427,7 +481,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
       const msg = error instanceof Error ? error.message : "Unable to open billing settings.";
       if (msg.includes("billing profile") || msg.includes("No active")) {
         showToast("No billing profile found — redirecting to upgrade.", "error");
-        setTimeout(() => window.location.assign("/signin?plan=plus"), 1500);
+        setTimeout(() => navigateTo("/signin?plan=plus", "Opening checkout..."), 1500);
       } else {
         showToast(msg, "error");
       }
@@ -449,7 +503,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
       } catch {
         // best effort for demo cleanup
       }
-      window.location.href = targetHref;
+      navigateTo(targetHref, "Leaving settings...");
       return;
     }
     try {
@@ -457,7 +511,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
     } catch {
       // best effort
     }
-    window.location.href = "/";
+    navigateTo("/", "Leaving settings...");
   }
 
   function openCancelModal() {
@@ -488,7 +542,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
       await apiJson("/api/auth/account", { method: "DELETE" });
       closeCancelModal();
       showToast("Account cancelled. Redirecting…", "success");
-      setTimeout(() => window.location.assign("/"), 1600);
+      setTimeout(() => navigateTo("/", "Leaving workspace..."), 1600);
     } catch (error) {
       const msg = error instanceof Error ? error.message : "Failed to cancel account.";
       if (errorEl) { errorEl.textContent = msg; errorEl.style.display = "block"; }
@@ -517,12 +571,20 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
 
   async function boot() {
     state.demoMode = isDemoMode();
+    state.redirecting = false;
+    enablePageTransitions();
+    const bootSafetyTimer = window.setTimeout(() => {
+      if (!state.redirecting) markBootReady();
+    }, 8000);
     bindEvents();
     applyModeChrome();
     try {
       await loadSession();
     } catch (error) {
       showToast(error instanceof Error ? error.message : "Failed to load settings.", "error");
+    } finally {
+      window.clearTimeout(bootSafetyTimer);
+      if (!state.redirecting) markBootReady();
     }
   }
 
