@@ -180,7 +180,18 @@ export default function SignInPage({
       });
 
       if (!response.ok) {
-        throw new Error(await parseApiError(response, "Authentication failed."));
+        const errorMessage = await parseApiError(response, "Authentication failed.");
+        if (response.status === 403 && errorMessage.toLowerCase().includes("verify your email")) {
+          setAuthMode("login");
+          setSubMode("default");
+          setPassword("");
+          setShowVerificationLinks(true);
+          setBanner({
+            tone: "info",
+            message: "Your account exists but email verification is still required. Use the resend verification link below if needed.",
+          });
+        }
+        throw new Error(errorMessage);
       }
 
       const payload = (await response.json()) as AuthSessionPayload;
@@ -294,6 +305,7 @@ export default function SignInPage({
       }
 
       const payload = (await response.json()) as { message?: string };
+      setShowVerificationLinks(true);
       setBanner({ tone: "info", message: payload.message || "If the account exists, a verification email was sent." });
     } catch (error) {
       setAuthError(error instanceof Error ? error.message : "Could not resend verification email.");
