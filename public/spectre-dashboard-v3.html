@@ -5949,20 +5949,19 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
 
 /* ── TICKER BAR ── */
 (function() {
-  // Default fallback tickers (ASX blue chips) — overridden once portfolio loads
   var FALLBACK = [
+    {sym:'ASX200',price:'8,150',chg:'+0.4%',pos:true},
+    {sym:'BTC',price:'83,240',chg:'+1.2%',pos:true},
+    {sym:'GOLD',price:'3,024',chg:'+0.8%',pos:true},
+    {sym:'AUD/USD',price:'0.6312',chg:'-0.3%',pos:false},
     {sym:'CBA',price:'131.44',chg:'+0.4%',pos:true},
     {sym:'BHP',price:'45.82',chg:'+1.2%',pos:true},
     {sym:'ANZ',price:'29.55',chg:'+0.3%',pos:true},
     {sym:'NAB',price:'38.20',chg:'+0.5%',pos:true},
     {sym:'WBC',price:'32.10',chg:'-0.2%',pos:false},
-    {sym:'MQG',price:'218.75',chg:'+1.4%',pos:true},
     {sym:'RIO',price:'112.60',chg:'+0.9%',pos:true},
-    {sym:'FMG',price:'18.44',chg:'-2.1%',pos:false},
     {sym:'CSL',price:'288.10',chg:'+0.7%',pos:true},
-    {sym:'WDS',price:'26.80',chg:'-0.6%',pos:false},
-    {sym:'TLS',price:'3.92',chg:'+0.3%',pos:true},
-    {sym:'GMG',price:'37.15',chg:'+1.8%',pos:true},
+    {sym:'MQG',price:'218.75',chg:'+1.4%',pos:true},
   ];
 
   function buildItem(sym, price, chg, pos) {
@@ -5970,46 +5969,83 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       + '<span class="nav-ticker-sym">' + sym + '</span>'
       + '<span class="nav-ticker-price">' + price + '</span>'
       + '<span class="nav-ticker-chg ' + (pos ? 'pos' : 'neg') + '">' + chg + '</span>'
+      + '<span class="nav-ticker-sep"></span>'
       + '</span>';
   }
 
   function renderTicker(items) {
-    var html = items.map(function(i) { return buildItem(i.sym, i.price, i.chg, i.pos); }).join('');
-    // duplicate for seamless loop
+    if (!items || !items.length) return;
     var track = document.getElementById('nav-ticker-track');
-    if (track) track.innerHTML = html + html;
+    if (!track) return;
+    var html = items.map(function(i) { return buildItem(i.sym, i.price, i.chg, i.pos); }).join('');
+    track.innerHTML = html + html;
   }
 
-  // Try to pull from live portfolio state once it's available
-  function tryPortfolioTicker() {
-    if (window.state && window.state.portfolio && window.state.portfolio.holdings && window.state.portfolio.holdings.length) {
-      var holdings = window.state.portfolio.holdings;
-      var items = holdings
-        .filter(function(h) { return h.source === 'asx' && h.price && h.prevClose; })
-        .slice(0, 16)
-        .map(function(h) {
-          var chgPct = ((h.price - h.prevClose) / h.prevClose * 100);
-          var pos = chgPct >= 0;
-          return {
-            sym: h.ticker,
-            price: h.price.toFixed(2),
-            chg: (pos ? '+' : '') + chgPct.toFixed(1) + '%',
-            pos: pos
-          };
-        });
-      if (items.length >= 4) { renderTicker(items); return; }
-    }
-    renderTicker(FALLBACK);
-  }
-
-  // Render fallback immediately, then refresh when portfolio is ready
+  // Render immediately with fallback
   renderTicker(FALLBACK);
-  var attempts = 0;
-  var poll = setInterval(function() {
-    attempts++;
-    tryPortfolioTicker();
-    if (attempts >= 20) clearInterval(poll);
-  }, 1500);
+
+  // Also re-render after a short delay (nav may be hidden during boot)
+  setTimeout(function() { renderTicker(FALLBACK); }, 200);
+  setTimeout(function() { renderTicker(FALLBACK); }, 800);
+
+  // Fetch live data from quotes API and update ticker
+  function fetchLiveTicker() {
+    fetch('/api/research/quotes')
+      .then(function(r) { return r.ok ? r.json() : null; })
+      .then(function(data) {
+        if (!data) return;
+        var items = [];
+        var idx = data.indices || {};
+        var cry = data.crypto || {};
+
+        function fmtPct(price, prev) {
+          if (!price || !prev || prev <= 0) return null;
+          var pct = (price - prev) / prev * 100;
+          return { chg: (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%', pos: pct >= 0 };
+        }
+
+        if (idx.asx200 && idx.asx200.price) {
+          var p = fmtPct(idx.asx200.price, idx.asx200.prevClose);
+          items.push({ sym: 'ASX200', price: idx.asx200.price.toLocaleString('en-AU', {maximumFractionDigits:1}), chg: p ? p.chg : '—', pos: p ? p.pos : true });
+        }
+        if (cry.btc && cry.btc.price) {
+          var p = fmtPct(cry.btc.price, cry.btc.prevClose);
+          items.push({ sym: 'BTC', price: cry.btc.price.toLocaleString('en-AU', {maximumFractionDigits:0}), chg: p ? p.chg : '—', pos: p ? p.pos : true });
+        }
+        if (cry.gold && cry.gold.price) {
+          var p = fmtPct(cry.gold.price, cry.gold.prevClose);
+          items.push({ sym: 'GOLD', price: cry.gold.price.toLocaleString('en-AU', {maximumFractionDigits:0}), chg: p ? p.chg : '—', pos: p ? p.pos : true });
+        }
+        if (idx.audUsd && idx.audUsd.price) {
+          var p = fmtPct(idx.audUsd.price, idx.audUsd.prevClose);
+          items.push({ sym: 'AUD/USD', price: idx.audUsd.price.toFixed(4), chg: p ? p.chg : '—', pos: p ? p.pos : true });
+        }
+        if (cry.eth && cry.eth.price) {
+          var p = fmtPct(cry.eth.price, cry.eth.prevClose);
+          items.push({ sym: 'ETH', price: cry.eth.price.toLocaleString('en-AU', {maximumFractionDigits:0}), chg: p ? p.chg : '—', pos: p ? p.pos : true });
+        }
+        if (cry.oil && cry.oil.price) {
+          var p = fmtPct(cry.oil.price, cry.oil.prevClose);
+          items.push({ sym: 'OIL', price: cry.oil.price.toFixed(2), chg: p ? p.chg : '—', pos: p ? p.pos : true });
+        }
+        // Top ASX stocks from asx object
+        var asxTickers = ['CBA','BHP','CSL','ANZ','NAB','WBC','MQG','RIO','FMG','WDS','TLS','GMG'];
+        var asx = data.asx || {};
+        asxTickers.forEach(function(tk) {
+          var q = asx[tk];
+          if (!q || !q.price) return;
+          var prev = q.prevClose && q.prevClose > 0 ? q.prevClose : q.price;
+          var pct = (q.price - prev) / prev * 100;
+          items.push({ sym: tk, price: q.price.toFixed(2), chg: (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%', pos: pct >= 0 });
+        });
+
+        if (items.length >= 4) renderTicker(items);
+      })
+      .catch(function() { /* keep fallback */ });
+  }
+
+  // Fetch live data after a brief delay so it doesn't compete with page load
+  setTimeout(fetchLiveTicker, 1200);
 })();
 </script>
 </body>
