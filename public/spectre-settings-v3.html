@@ -110,7 +110,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
 .foot-logo{font-family:var(--sans);font-size:1.05rem;font-weight:800;letter-spacing:.12em;background:linear-gradient(90deg,var(--purple) 0%,var(--purple-hi) 35%,var(--orange) 72%,#ffb347 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .foot-disc{font-size:.72rem;color:var(--muted);max-width:740px}
 .foot-link{font-family:var(--mono);font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted2);text-decoration:none}
-.system-toast{position:fixed;right:1rem;bottom:1rem;z-index:990;padding:.7rem .9rem;border:1px solid rgba(255,255,255,.14);border-radius:8px;background:rgba(10,8,18,.94);color:var(--text);font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;opacity:0;transform:translateY(10px);transition:all .2s}
+.system-toast{position:fixed;right:1rem;bottom:1rem;z-index:9999;padding:.7rem .9rem;border:1px solid rgba(255,255,255,.14);border-radius:8px;background:rgba(10,8,18,.94);color:var(--text);font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;opacity:0;transform:translateY(10px);transition:all .2s}
 .system-toast.show{opacity:1;transform:translateY(0)}
 .system-toast.error{border-color:rgba(255,77,26,.45);color:#ffd9d2}
 .settings-card--danger::before{background:linear-gradient(90deg,rgba(255,75,51,.72),rgba(255,45,20,.42))!important}
@@ -227,6 +227,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
     <p class="modal-body">This will immediately cancel your subscription and permanently delete your account and all data. This cannot be undone.</p>
     <p class="modal-body" style="margin-top:.6rem">Type <strong>CANCEL</strong> below to confirm:</p>
     <input type="text" id="cancel-confirm-input" class="modal-input" placeholder="Type CANCEL to confirm" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false"/>
+    <div id="modal-error" style="display:none;margin-top:.7rem;font-family:var(--mono);font-size:.58rem;color:#ffa09a;letter-spacing:.04em"></div>
     <div class="modal-actions">
       <button type="button" class="btn-ghost" id="modal-dismiss-btn">Go Back</button>
       <button type="button" class="btn-danger" id="modal-confirm-btn" disabled>Delete My Account</button>
@@ -478,16 +479,19 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
 
   async function confirmCancelAccount() {
     const input = document.getElementById("cancel-confirm-input");
-    if (!input || input.value.trim().toUpperCase() !== "CANCEL") return;
     const confirmBtn = document.getElementById("modal-confirm-btn");
+    const errorEl = document.getElementById("modal-error");
+    if (errorEl) errorEl.style.display = "none";
+    if (!input || input.value.trim().toUpperCase() !== "CANCEL") return;
     if (confirmBtn) { confirmBtn.textContent = "Cancelling..."; confirmBtn.disabled = true; }
     try {
       await apiJson("/api/auth/account", { method: "DELETE" });
+      closeCancelModal();
       showToast("Account cancelled. Redirecting…", "success");
       setTimeout(() => window.location.assign("/"), 1600);
     } catch (error) {
       const msg = error instanceof Error ? error.message : "Failed to cancel account.";
-      showToast(msg, "error");
+      if (errorEl) { errorEl.textContent = msg; errorEl.style.display = "block"; }
       if (confirmBtn) { confirmBtn.textContent = "Delete My Account"; confirmBtn.disabled = false; }
     }
   }
