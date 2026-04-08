@@ -1292,9 +1292,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
   </div>
   <!-- TICKER BAR -->
   <div class="nav-ticker-bar">
-    <div class="nav-ticker-track" id="nav-ticker-track">
-      <!-- populated by JS after portfolio loads -->
-    </div>
+    <div class="nav-ticker-track" id="nav-ticker-track"><span class="nav-ticker-item"><span class="nav-ticker-sym">ASX200</span><span class="nav-ticker-price">8,150</span><span class="nav-ticker-chg pos">+0.4%</span></span><span class="nav-ticker-item"><span class="nav-ticker-sym">BTC</span><span class="nav-ticker-price">83,240</span><span class="nav-ticker-chg pos">+1.2%</span></span><span class="nav-ticker-item"><span class="nav-ticker-sym">GOLD</span><span class="nav-ticker-price">3,024</span><span class="nav-ticker-chg pos">+0.8%</span></span><span class="nav-ticker-item"><span class="nav-ticker-sym">AUD/USD</span><span class="nav-ticker-price">0.6312</span><span class="nav-ticker-chg neg">-0.3%</span></span><span class="nav-ticker-item"><span class="nav-ticker-sym">CBA</span><span class="nav-ticker-price">131.44</span><span class="nav-ticker-chg pos">+0.4%</span></span><span class="nav-ticker-item"><span class="nav-ticker-sym">BHP</span><span class="nav-ticker-price">45.82</span><span class="nav-ticker-chg pos">+1.2%</span></span><span class="nav-ticker-item"><span class="nav-ticker-sym">ANZ</span><span class="nav-ticker-price">29.55</span><span class="nav-ticker-chg pos">+0.3%</span></span><span class="nav-ticker-item"><span class="nav-ticker-sym">NAB</span><span class="nav-ticker-price">38.20</span><span class="nav-ticker-chg pos">+0.5%</span></span><span class="nav-ticker-item"><span class="nav-ticker-sym">CSL</span><span class="nav-ticker-price">288.10</span><span class="nav-ticker-chg pos">+0.7%</span></span><span class="nav-ticker-item"><span class="nav-ticker-sym">MQG</span><span class="nav-ticker-price">218.75</span><span class="nav-ticker-chg pos">+1.4%</span></span><span class="nav-ticker-item"><span class="nav-ticker-sym">RIO</span><span class="nav-ticker-price">112.60</span><span class="nav-ticker-chg pos">+0.9%</span></span><span class="nav-ticker-item"><span class="nav-ticker-sym">WBC</span><span class="nav-ticker-price">32.10</span><span class="nav-ticker-chg neg">-0.2%</span></span><span class="nav-ticker-item"><span class="nav-ticker-sym">ASX200</span><span class="nav-ticker-price">8,150</span><span class="nav-ticker-chg pos">+0.4%</span></span><span class="nav-ticker-item"><span class="nav-ticker-sym">BTC</span><span class="nav-ticker-price">83,240</span><span class="nav-ticker-chg pos">+1.2%</span></span><span class="nav-ticker-item"><span class="nav-ticker-sym">GOLD</span><span class="nav-ticker-price">3,024</span><span class="nav-ticker-chg pos">+0.8%</span></span><span class="nav-ticker-item"><span class="nav-ticker-sym">AUD/USD</span><span class="nav-ticker-price">0.6312</span><span class="nav-ticker-chg neg">-0.3%</span></span><span class="nav-ticker-item"><span class="nav-ticker-sym">CBA</span><span class="nav-ticker-price">131.44</span><span class="nav-ticker-chg pos">+0.4%</span></span><span class="nav-ticker-item"><span class="nav-ticker-sym">BHP</span><span class="nav-ticker-price">45.82</span><span class="nav-ticker-chg pos">+1.2%</span></span><span class="nav-ticker-item"><span class="nav-ticker-sym">ANZ</span><span class="nav-ticker-price">29.55</span><span class="nav-ticker-chg pos">+0.3%</span></span><span class="nav-ticker-item"><span class="nav-ticker-sym">NAB</span><span class="nav-ticker-price">38.20</span><span class="nav-ticker-chg pos">+0.5%</span></span><span class="nav-ticker-item"><span class="nav-ticker-sym">CSL</span><span class="nav-ticker-price">288.10</span><span class="nav-ticker-chg pos">+0.7%</span></span><span class="nav-ticker-item"><span class="nav-ticker-sym">MQG</span><span class="nav-ticker-price">218.75</span><span class="nav-ticker-chg pos">+1.4%</span></span><span class="nav-ticker-item"><span class="nav-ticker-sym">RIO</span><span class="nav-ticker-price">112.60</span><span class="nav-ticker-chg pos">+0.9%</span></span><span class="nav-ticker-item"><span class="nav-ticker-sym">WBC</span><span class="nav-ticker-price">32.10</span><span class="nav-ticker-chg neg">-0.2%</span></span></div>
   </div>
 </nav>
 
@@ -5947,29 +5945,13 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
   });
 })();
 
-/* ── TICKER BAR ── */
+/* ── TICKER BAR — live price update ── */
 (function() {
-  var FALLBACK = [
-    {sym:'ASX200',price:'8,150',chg:'+0.4%',pos:true},
-    {sym:'BTC',price:'83,240',chg:'+1.2%',pos:true},
-    {sym:'GOLD',price:'3,024',chg:'+0.8%',pos:true},
-    {sym:'AUD/USD',price:'0.6312',chg:'-0.3%',pos:false},
-    {sym:'CBA',price:'131.44',chg:'+0.4%',pos:true},
-    {sym:'BHP',price:'45.82',chg:'+1.2%',pos:true},
-    {sym:'ANZ',price:'29.55',chg:'+0.3%',pos:true},
-    {sym:'NAB',price:'38.20',chg:'+0.5%',pos:true},
-    {sym:'WBC',price:'32.10',chg:'-0.2%',pos:false},
-    {sym:'RIO',price:'112.60',chg:'+0.9%',pos:true},
-    {sym:'CSL',price:'288.10',chg:'+0.7%',pos:true},
-    {sym:'MQG',price:'218.75',chg:'+1.4%',pos:true},
-  ];
-
   function buildItem(sym, price, chg, pos) {
     return '<span class="nav-ticker-item">'
       + '<span class="nav-ticker-sym">' + sym + '</span>'
       + '<span class="nav-ticker-price">' + price + '</span>'
       + '<span class="nav-ticker-chg ' + (pos ? 'pos' : 'neg') + '">' + chg + '</span>'
-      + '<span class="nav-ticker-sep"></span>'
       + '</span>';
   }
 
@@ -5980,13 +5962,6 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     var html = items.map(function(i) { return buildItem(i.sym, i.price, i.chg, i.pos); }).join('');
     track.innerHTML = html + html;
   }
-
-  // Render immediately with fallback
-  renderTicker(FALLBACK);
-
-  // Also re-render after a short delay (nav may be hidden during boot)
-  setTimeout(function() { renderTicker(FALLBACK); }, 200);
-  setTimeout(function() { renderTicker(FALLBACK); }, 800);
 
   // Fetch live data from quotes API and update ticker
   function fetchLiveTicker() {
