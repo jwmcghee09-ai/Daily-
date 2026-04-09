@@ -24,7 +24,9 @@ export function normalizeDisplayName(displayName: string, email: string): string
 
 export function isLikelyEmail(email: string): boolean {
   const value = normalizeEmail(email);
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+  // Require non-empty local part, domain with at least one dot, and TLD of 2+ chars.
+  // Disallow whitespace and control characters anywhere in the address.
+  return /^[^\s@\x00-\x1f]+@[^\s@\x00-\x1f]+\.[a-zA-Z]{2,}$/.test(value);
 }
 
 export function hashPassword(password: string): string {

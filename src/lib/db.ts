@@ -496,6 +496,14 @@ function initSchema(db: DatabaseSync): void {
     );
   `);
 
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS processed_webhook_events (
+      event_id TEXT PRIMARY KEY,
+      event_type TEXT NOT NULL,
+      processed_at TEXT NOT NULL
+    );
+  `);
+
 }
 
 function normalizeSource(value: unknown): DataSource {
@@ -3344,4 +3352,61 @@ export function incrementAiUsage(userId: string): void {
     "INSERT INTO ai_usage (user_id, month, call_count) VALUES (?, ?, 1) " +
       "ON CONFLICT(user_id, month) DO UPDATE SET call_count = call_count + 1",
   ).run(userId, currentYearMonth());
+}
+
+export function hasProcessedWebhookEvent(eventId: string): boolean {
+  const db = getDb();
+  const row = db
+    .prepare("SELECT 1 AS ok FROM processed_webhook_events WHERE event_id = ? LIMIT 1")
+    .get(eventId) as { ok: number } | undefined;
+  return row !== undefined;
+}
+
+export function markWebhookEventProcessed(eventId: string, eventType: string): void {
+  const db = getDb();
+  db.prepare(
+    "INSERT OR IGNORE INTO processed_webhook_events (event_id, event_type, processed_at) VALUES (?, ?, ?)",
+  ).run(eventId, eventType, new Date().toISOString());
+}
+
+export function findUserByStripeCustomerId(stripeCustomerId: string): AuthUserWithPassword | null {
+  const db = getDb();
+  const normalized = (stripeCustomerId || "").trim();
+  if (!normalized) {
+    return null;
+  }
+
+  const row = db
+    .prepare(
+      "SELECT u.id, u.email, u.display_name, u.password_hash, u.created_at, u.email_verified_at " +
+      "FROM billing_subscriptions bs " +
+      "JOIN users u ON u.id = bs.user_id " +
+      "WHERE bs.stripe_customer_id = ? LIMIT 1",
+    )
+    .get(normalized) as (UserRow & { email_verified_at: string | null }) | undefined;
+
+  if (!row) {
+    return null;
+  }
+
+  return {
+    id: row.id,
+    email: row.email,
+    displayName: row.display_name,
+    createdAt: row.created_at,
+    passwordHash: row.password_hash,
+    emailVerifiedAt: row.email_verified_at ?? null,
+  };
+}
+
+export function runInDbTransaction(fn: () => void): void {
+  const db = getDb();
+  db.exec("BEGIN");
+  try {
+    fn();
+    db.exec("COMMIT");
+  } catch (e) {
+    db.exec("ROLLBACK");
+    throw e;
+  }
 }

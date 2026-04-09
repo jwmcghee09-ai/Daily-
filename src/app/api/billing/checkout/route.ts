@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getAuthenticatedUser, isLikelyEmail, normalizeEmail } from "@/lib/auth";
 import { readBillingSubscription, upsertBillingSubscriptionForUser } from "@/lib/db";
 import { BillingPlan, getAppBaseUrl, getPriceIdForPlan, getStripeClient } from "@/lib/stripe";
+import { consumeRateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 
@@ -20,8 +21,22 @@ function toGuestEmail(input: unknown): string | null {
   return isLikelyEmail(email) ? email : null;
 }
 
+const CHECKOUT_RATE_LIMIT = 10;
+const CHECKOUT_RATE_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
+
 export async function POST(request: Request) {
   try {
+    const ip =
+      (request.headers.get("x-forwarded-for") || "").split(",")[0].trim() ||
+      "unknown";
+    const rl = consumeRateLimit(`checkout:${ip}`, CHECKOUT_RATE_LIMIT, CHECKOUT_RATE_WINDOW_MS);
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: "Too many checkout attempts. Please try again later." },
+        { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } },
+      );
+    }
+
     const user = await getAuthenticatedUser();
     let body: CheckoutRequestBody = {};
 
