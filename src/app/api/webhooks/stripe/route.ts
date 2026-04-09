@@ -5,7 +5,11 @@ import { notifyWebhookFailure } from "@/lib/alerts";
 import {
   createEmailVerificationRecord,
   findAuthUserByEmail,
+  findUserByStripeCustomerId,
   hasActiveEmailVerificationForUser,
+  hasProcessedWebhookEvent,
+  markWebhookEventProcessed,
+  runInDbTransaction,
   updateBillingSubscriptionByStripeCustomerId,
   updateBillingSubscriptionByStripeSubscriptionId,
   updatePreSignupBillingByStripeCustomerId,
@@ -17,6 +21,7 @@ import { captureMonitoringException } from "@/lib/monitoring";
 import {
   isEmailDeliveryConfigured,
   sendAccountVerificationEmail,
+  sendPaymentFailedEmail,
 } from "@/lib/mailer";
 import { getStripeClient, getStripeWebhookSecret } from "@/lib/stripe";
 import {
@@ -101,6 +106,11 @@ export async function POST(request: Request) {
 }
 
 async function handleStripeEvent(event: Stripe.Event): Promise<void> {
+  // Idempotency: skip events we have already successfully processed.
+  if (hasProcessedWebhookEvent(event.id)) {
+    return;
+  }
+
   switch (event.type) {
     case "checkout.session.completed": {
       const session = event.data.object as Stripe.Checkout.Session;
@@ -113,35 +123,37 @@ async function handleStripeEvent(event: Stripe.Event): Promise<void> {
       const stripePriceId = sanitizeMaybeString(session.metadata?.priceId);
       const status = checkoutStatusToSubscriptionStatus(session.payment_status);
 
-      if (checkoutEmail) {
-        upsertPreSignupBillingByEmail({
-          email: checkoutEmail,
-          stripeCustomerId: customerId,
-          stripeSubscriptionId: subscriptionId,
-          stripePriceId,
-          status,
-          checkoutCompletedAt: new Date().toISOString(),
-        });
-      }
+      runInDbTransaction(() => {
+        if (checkoutEmail) {
+          upsertPreSignupBillingByEmail({
+            email: checkoutEmail,
+            stripeCustomerId: customerId,
+            stripeSubscriptionId: subscriptionId,
+            stripePriceId,
+            status,
+            checkoutCompletedAt: new Date().toISOString(),
+          });
+        }
+
+        const userId =
+          sanitizeMaybeString(session.metadata?.userId) ||
+          sanitizeMaybeString(session.client_reference_id) ||
+          findUserIdByEmail(checkoutEmail);
+
+        if (userId) {
+          upsertBillingSubscriptionForUser({
+            userId,
+            stripeCustomerId: customerId,
+            stripeSubscriptionId: subscriptionId,
+            stripePriceId,
+            status,
+          });
+        }
+
+        markWebhookEventProcessed(event.id, event.type);
+      });
 
       await sendVerificationAfterCheckout(checkoutEmail);
-
-      const userId =
-        sanitizeMaybeString(session.metadata?.userId) ||
-        sanitizeMaybeString(session.client_reference_id) ||
-        findUserIdByEmail(checkoutEmail);
-
-      if (!userId) {
-        return;
-      }
-
-      upsertBillingSubscriptionForUser({
-        userId,
-        stripeCustomerId: customerId,
-        stripeSubscriptionId: subscriptionId,
-        stripePriceId,
-        status,
-      });
       return;
     }
 
@@ -163,24 +175,50 @@ async function handleStripeEvent(event: Stripe.Event): Promise<void> {
         currentPeriodEnd,
       };
 
-      if (userId) {
-        upsertBillingSubscriptionForUser({ userId, ...patch });
-      }
+      runInDbTransaction(() => {
+        if (userId) {
+          upsertBillingSubscriptionForUser({ userId, ...patch });
+        }
 
-      if (subscriptionId) {
-        updateBillingSubscriptionByStripeSubscriptionId(subscriptionId, patch);
-        updatePreSignupBillingByStripeSubscriptionId(subscriptionId, patch);
-      }
+        if (subscriptionId) {
+          updateBillingSubscriptionByStripeSubscriptionId(subscriptionId, patch);
+          updatePreSignupBillingByStripeSubscriptionId(subscriptionId, patch);
+        }
 
-      if (customerId) {
-        updateBillingSubscriptionByStripeCustomerId(customerId, patch);
-        updatePreSignupBillingByStripeCustomerId(customerId, patch);
-      }
+        if (customerId) {
+          updateBillingSubscriptionByStripeCustomerId(customerId, patch);
+          updatePreSignupBillingByStripeCustomerId(customerId, patch);
+        }
 
+        markWebhookEventProcessed(event.id, event.type);
+      });
+      return;
+    }
+
+    case "invoice.payment_failed": {
+      const invoice = event.data.object as Stripe.Invoice;
+      const customerId = extractStripeId(invoice.customer);
+      const email = sanitizeMaybeString(invoice.customer_email);
+
+      const user = email
+        ? findAuthUserByEmail(email)
+        : customerId
+          ? findUserByStripeCustomerId(customerId)
+          : null;
+
+      markWebhookEventProcessed(event.id, event.type);
+
+      if (user && isEmailDeliveryConfigured()) {
+        await sendPaymentFailedEmail({
+          toEmail: user.email,
+          displayName: user.displayName,
+        });
+      }
       return;
     }
 
     default:
+      markWebhookEventProcessed(event.id, event.type);
       return;
   }
 }

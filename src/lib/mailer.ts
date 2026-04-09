@@ -409,6 +409,41 @@ export async function sendPriceDipAlertEmail(input: PriceDipAlertEmailInput): Pr
   });
 }
 
+export async function sendPaymentFailedEmail(input: { toEmail: string; displayName: string }): Promise<void> {
+  const appUrl = getAppBaseUrl();
+  const subject = "SPECTRE: payment failed — action required";
+  const text = [
+    `Hi ${input.displayName},`,
+    "",
+    "We were unable to process your SPECTRE subscription payment.",
+    "",
+    "Please update your payment method to keep your subscription active:",
+    `${appUrl}/settings`,
+    "",
+    "If you have any questions, reply to this email.",
+  ].join("\n");
+
+  const html = `
+    <div style="font-family:Arial,sans-serif;line-height:1.5;color:#111;max-width:560px;">
+      <h2 style="margin:0 0 12px 0;">Payment failed</h2>
+      <p>Hi ${escapeHtml(input.displayName)},</p>
+      <p>We were unable to process your SPECTRE subscription payment.</p>
+      <p>Please update your payment method to keep your subscription active.</p>
+      <p>
+        <a
+          href="${escapeAttribute(appUrl + "/settings")}"
+          style="display:inline-block;background:#ff4b33;color:#fff;text-decoration:none;padding:10px 14px;border-radius:8px;"
+        >
+          Update Payment Method
+        </a>
+      </p>
+      <p style="color:#555;">If you have any questions, reply to this email.</p>
+    </div>
+  `;
+
+  await sendEmail({ to: input.toEmail, subject, text, html });
+}
+
 function escapeHtml(value: string): string {
   return value
     .replace(/&/g, "&amp;")
