@@ -1,6 +1,6 @@
 import Stripe from "stripe";
 import { NextResponse } from "next/server";
-import { getAuthenticatedUser, isLikelyEmail, normalizeEmail } from "@/lib/auth";
+import { getAuthenticatedUser, getClientAddress, isLikelyEmail, normalizeEmail } from "@/lib/auth";
 import { readBillingSubscription, upsertBillingSubscriptionForUser } from "@/lib/db";
 import { BillingPlan, getAppBaseUrl, getPriceIdForPlan, getStripeClient } from "@/lib/stripe";
 import { consumeRateLimit } from "@/lib/rate-limit";
@@ -26,9 +26,7 @@ const CHECKOUT_RATE_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
 
 export async function POST(request: Request) {
   try {
-    const ip =
-      (request.headers.get("x-forwarded-for") || "").split(",")[0].trim() ||
-      "unknown";
+    const ip = getClientAddress(request);
     const rl = consumeRateLimit(`checkout:${ip}`, CHECKOUT_RATE_LIMIT, CHECKOUT_RATE_WINDOW_MS);
     if (!rl.allowed) {
       return NextResponse.json(
