@@ -942,7 +942,6 @@ async function fetchUsSeriesFromYahoo(ticker: string, range: string): Promise<Da
 
   return fetchYahooSeriesBySymbol(symbol, range);
 }
-
 function detectBullionMetal(holding: { name: string; ticker: string; sector: string }): "gold" | "silver" {
   const text = `${holding.name} ${holding.ticker} ${holding.sector}`.toLowerCase();
   if (text.includes("silver") || /(^|\W)ag(\W|$)/.test(text)) {
@@ -1040,6 +1039,24 @@ async function fetchBullionSpotFromYahoo(metal: "gold" | "silver"): Promise<AsxQ
     price: priceAud,
     prevClose: prevCloseAud,
   };
+}
+
+async function fetchUsQuoteFromYahoo(ticker: string): Promise<AsxQuoteData | null> {
+  const symbol = toUsYahooSymbol(ticker);
+  if (!symbol) {
+    return null;
+  }
+
+  return fetchYahooQuoteBySymbol(symbol);
+}
+
+async function fetchUsSeriesFromYahoo(ticker: string, range: string): Promise<DatedPricePoint[] | null> {
+  const symbol = toUsYahooSymbol(ticker);
+  if (!symbol) {
+    return null;
+  }
+
+  return fetchYahooSeriesBySymbol(symbol, range);
 }
 
 async function yahooFetchWithRetry(url: string, signal: AbortSignal): Promise<Response | null> {
