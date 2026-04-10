@@ -55,8 +55,11 @@ function timingSafeStringEquals(a: string, b: string): boolean {
 export function assertCronTokenAuthorized(request: Request): { ok: true } {
   const expected = normalizeToken(process.env.BACKUP_CRON_TOKEN || "");
 
+  // Treat unconfigured token the same as wrong token — no info leakage.
   if (expected.length === 0) {
-    throw new Error("BACKUP_CRON_TOKEN is not configured.");
+    const error = new Error("Unauthorized");
+    error.name = "UnauthorizedError";
+    throw error;
   }
 
   const presented = normalizeToken(getBearerToken(request) || getHeaderToken(request) || getQueryToken(request));
