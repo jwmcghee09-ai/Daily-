@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Script from "next/script";
+import { Suspense } from "react";
 import { DM_Mono, DM_Sans, Geist, Geist_Mono, Sora, Space_Grotesk } from "next/font/google";
 import "./globals.css";
+import NavigationProgress from "@/components/navigation-progress";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -57,6 +59,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${dmSans.variable} ${dmMono.variable} ${sora.variable} ${spaceGrotesk.variable}`}
       >
+        <Suspense fallback={null}>
+          <NavigationProgress />
+        </Suspense>
         {children}
       </body>
       {cloudflareBeaconConfig ? (
