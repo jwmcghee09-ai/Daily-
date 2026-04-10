@@ -535,6 +535,10 @@ function normalizeSource(value: unknown): DataSource {
     return "crypto";
   }
 
+  if (value === "us") {
+    return "us";
+  }
+
   return "asx";
 }
 
@@ -648,7 +652,9 @@ function sanitizeHolding(raw: PortfolioHolding, source: DataSource, index: numbe
               ? "Mutual Funds"
               : source === "crypto"
                 ? "Crypto Wallet"
-                : "Brokerage",
+                : source === "us"
+                  ? "Global Holdings"
+                  : "Brokerage",
     ),
     ticker: sanitizeString(raw.ticker, "UNKNOWN").toUpperCase(),
     name: sanitizeString(raw.name, "Unnamed Holding"),
@@ -673,7 +679,9 @@ function sanitizeHolding(raw: PortfolioHolding, source: DataSource, index: numbe
               ? "Mutual Fund"
               : source === "crypto"
                 ? "Crypto"
-                : "Equity",
+                : source === "us"
+                  ? "Equity"
+                  : "Equity",
     ),
     reportDate: sanitizeDate(raw.reportDate),
     importedAt: sanitizeString(raw.importedAt, new Date().toISOString()),
@@ -783,6 +791,14 @@ function getHoldingPricingDescriptor(holding: {
         label: isListed ? "Live" : "From uploaded report",
         refreshableTicker: isListed ? listedTicker : null,
       };
+    case "us": {
+      const usListed = isLikelyUsListedTicker(holding.ticker);
+      return {
+        mode: usListed ? "live" : "file",
+        label: usListed ? "Live (USD→AUD)" : "From uploaded report",
+        refreshableTicker: usListed ? listedTicker : null,
+      };
+    }
     case "index":
     case "fund":
     case "super":
@@ -872,6 +888,26 @@ function toCryptoYahooSymbol(ticker: string): string {
   }
 
   return `${clean}-USD`;
+}
+
+function toUsYahooSymbol(ticker: string): string {
+  const clean = normalizeListedTicker(ticker);
+  // US tickers are used as-is on Yahoo Finance (AAPL, TSLA, BRK.B, ^GSPC, etc.)
+  return clean;
+}
+
+function isLikelyUsListedTicker(ticker: string): boolean {
+  const normalized = normalizeListedTicker(ticker);
+  if (!normalized) {
+    return false;
+  }
+
+  if (normalized.startsWith("^")) {
+    return true;
+  }
+
+  // Standard NYSE/NASDAQ format: 1–5 letters, optional class suffix (BRK.B, BF.B)
+  return /^[A-Z]{1,5}(\.[A-Z]{1,3})?$/.test(normalized);
 }
 
 function detectBullionMetal(holding: { name: string; ticker: string; sector: string }): "gold" | "silver" {
@@ -971,6 +1007,24 @@ async function fetchBullionSpotFromYahoo(metal: "gold" | "silver"): Promise<AsxQ
     price: priceAud,
     prevClose: prevCloseAud,
   };
+}
+
+async function fetchUsQuoteFromYahoo(ticker: string): Promise<AsxQuoteData | null> {
+  const symbol = toUsYahooSymbol(ticker);
+  if (!symbol) {
+    return null;
+  }
+
+  return fetchYahooQuoteBySymbol(symbol);
+}
+
+async function fetchUsSeriesFromYahoo(ticker: string, range: string): Promise<DatedPricePoint[] | null> {
+  const symbol = toUsYahooSymbol(ticker);
+  if (!symbol) {
+    return null;
+  }
+
+  return fetchYahooSeriesBySymbol(symbol, range);
 }
 
 async function yahooFetchWithRetry(url: string, signal: AbortSignal): Promise<Response | null> {
@@ -1551,6 +1605,14 @@ export async function refreshAsxPrices(userId: string): Promise<PriceRefreshResu
     `)
     .all(scopedPattern) as BullionHoldingRow[];
 
+  const usRows = db
+    .prepare(`
+      SELECT ticker, units, source, name, sector
+      FROM holdings
+      WHERE source = 'us' AND id LIKE ?
+    `)
+    .all(scopedPattern) as (HoldingTickerRow & { source: string; name: string; sector: string })[];
+
   const asxLikeTickerRows = new Map<string, Array<{ source: DataSource; rawTicker: string }>>();
   for (const row of asxLikeRows) {
     const pricing = getHoldingPricingDescriptor(row);
@@ -1577,7 +1639,22 @@ export async function refreshAsxPrices(userId: string): Promise<PriceRefreshResu
     ),
   );
 
-  if (uniqueAsxLikeTickers.length === 0 && uniqueCryptoTickers.length === 0 && bullionRows.length === 0) {
+  const usTickerRows = new Map<string, Array<{ rawTicker: string }>>();
+  for (const row of usRows) {
+    const pricing = getHoldingPricingDescriptor(row);
+    const ticker = pricing.refreshableTicker;
+    if (pricing.mode !== "live" || !ticker) {
+      continue;
+    }
+
+    if (!usTickerRows.has(ticker)) {
+      usTickerRows.set(ticker, []);
+    }
+    usTickerRows.get(ticker)!.push({ rawTicker: row.ticker });
+  }
+  const uniqueUsTickers = Array.from(usTickerRows.keys());
+
+  if (uniqueAsxLikeTickers.length === 0 && uniqueCryptoTickers.length === 0 && bullionRows.length === 0 && uniqueUsTickers.length === 0) {
     setScopedMetaValue(db, userId, LAST_PRICE_REFRESH_KEY, nowIso);
     return {
       state: readPortfolioState(userId),
@@ -1663,6 +1740,47 @@ export async function refreshAsxPrices(userId: string): Promise<PriceRefreshResu
         updatedLabels.add(metal === "gold" ? "XAU (gold)" : "XAG (silver)");
       } else {
         failedTickers.push(metal === "gold" ? "XAU (gold)" : "XAG (silver)");
+      }
+    }
+  }
+
+  if (uniqueUsTickers.length > 0) {
+    // Fetch AUD/USD once and reuse for all US stock conversions
+    const audUsdQuote = await fetchYahooQuoteBySymbol("AUDUSD=X");
+    const audUsdRate = sanitizeNumber(audUsdQuote?.price, Number.NaN);
+    const audUsdPrevRate = sanitizeNumber(audUsdQuote?.prevClose, audUsdRate);
+
+    if (!Number.isFinite(audUsdRate) || audUsdRate <= 0) {
+      for (const ticker of uniqueUsTickers) {
+        failedTickers.push(`${ticker} (us)`);
+      }
+    } else {
+      for (const ticker of uniqueUsTickers) {
+        let quote = await fetchUsQuoteFromYahoo(ticker);
+        if (!quote) {
+          quote = await fetchUsQuoteFromYahoo(ticker);
+        }
+        const usdPrice = sanitizeNumber(quote?.price, Number.NaN);
+        const usdPrevClose = sanitizeNumber(quote?.prevClose, usdPrice);
+
+        if (Number.isFinite(usdPrice) && usdPrice > 0) {
+          const audPrice = usdPrice / audUsdRate;
+          const prevRate = Number.isFinite(audUsdPrevRate) && audUsdPrevRate > 0 ? audUsdPrevRate : audUsdRate;
+          const audPrevClose = Number.isFinite(usdPrevClose) && usdPrevClose > 0 ? usdPrevClose / prevRate : audPrice;
+
+          const rowsForTicker = usTickerRows.get(ticker) ?? [{ rawTicker: ticker }];
+          for (const row of rowsForTicker) {
+            quoteUpdates.push({
+              source: "us",
+              ticker: row.rawTicker,
+              price: audPrice,
+              prevClose: audPrevClose,
+            });
+          }
+          updatedLabels.add(`${ticker} (us)`);
+        } else {
+          failedTickers.push(`${ticker} (us)`);
+        }
       }
     }
   }
@@ -1868,7 +1986,9 @@ export async function estimateHistoricalRiskFromYahoo(
   for (const [key, holding] of valueByTicker.entries()) {
     const series = holding.source === "crypto"
       ? await fetchCryptoSeriesFromYahoo(holding.ticker, windowSettings.yahooRange)
-      : await fetchAsxSeriesFromYahoo(holding.ticker, windowSettings.yahooRange);
+      : holding.source === "us"
+        ? await fetchUsSeriesFromYahoo(holding.ticker, windowSettings.yahooRange)
+        : await fetchAsxSeriesFromYahoo(holding.ticker, windowSettings.yahooRange);
 
     if (!series || series.length < 2) {
       failedTickers.push(holding.label);
