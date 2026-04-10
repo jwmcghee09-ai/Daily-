@@ -7585,5 +7585,210 @@ async function _demoSnapshot(url) {
 // Live quotes stored globally via window._liveQuotesData in fetchLiveQuotes()
 </script>
 
+<!-- ===== SPECTRE DESIGN POLISH — smooth animations & transitions ===== -->
+<style>
+/* ── Scroll reveal: smoother spring easing + stagger ── */
+.reveal {
+  opacity: 0;
+  transform: translateY(22px);
+  transition:
+    opacity  0.65s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Hero metric cards stagger */
+.hero-grid > .card:nth-child(1) { transition-delay:   0ms; }
+.hero-grid > .card:nth-child(2) { transition-delay:  55ms; }
+.hero-grid > .card:nth-child(3) { transition-delay: 110ms; }
+.hero-grid > .card:nth-child(4) { transition-delay: 165ms; }
+.hero-grid > .card:nth-child(5) { transition-delay: 220ms; }
+.hero-grid > .card:nth-child(6) { transition-delay: 275ms; }
+.hero-grid > .card:nth-child(7) { transition-delay: 330ms; }
+
+/* Right-col cards stagger */
+.right-col > .reveal:nth-child(1) { transition-delay:  80ms; }
+.right-col > .reveal:nth-child(2) { transition-delay: 140ms; }
+.right-col > .reveal:nth-child(3) { transition-delay: 200ms; }
+.right-col > .reveal:nth-child(4) { transition-delay: 260ms; }
+
+/* ── Tab panel fade-in ── */
+.rtab-panel.active {
+  animation: _panel-in 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes _panel-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Card shimmer sweep on hover ── */
+.card::after {
+  transition: left 0s;
+  will-change: left;
+}
+.card:hover::after {
+  animation: _card-shimmer 0.72s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+@keyframes _card-shimmer {
+  from { left: -55%; }
+  to   { left: 115%; }
+}
+
+/* ── Live value flash when data updates ── */
+@keyframes _val-flash {
+  0%   { color: inherit; text-shadow: none; }
+  28%  { color: #ffb547; text-shadow: 0 0 12px rgba(255,181,71,0.45); }
+  100% { color: inherit; text-shadow: none; }
+}
+.val-updated {
+  animation: _val-flash 0.75s ease;
+}
+
+/* ── Skeleton pulse for loading placeholders ── */
+@keyframes _skeleton {
+  0%, 100% { opacity: 0.3; }
+  50%       { opacity: 0.6; }
+}
+.mono:empty::after,
+[id$="-price"]:empty::after,
+[id$="-chg"]:empty::after {
+  content: '——';
+  animation: _skeleton 1.4s ease-in-out infinite;
+  color: var(--sl-muted);
+}
+
+/* ── Smoother table row hover ── */
+.data-table tbody tr {
+  transition: background 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Improved time-pill / tab-btn transitions ── */
+.time-pill,
+.tab-btn,
+.rtab {
+  transition:
+    color      0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    background 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* ── Nav button lift ── */
+.nav-btn, .nav-links a {
+  transition:
+    color        0.18s ease,
+    background   0.18s ease,
+    border-color 0.18s ease,
+    transform    0.18s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+.nav-btn:hover  { transform: translateY(-1px); }
+
+/* ── Card lift: softer spring ── */
+.card {
+  transition:
+    transform    0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow   0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
+    border-color 0.22s ease !important;
+}
+
+/* ── Ticker tape: slightly faster, eased start/end ── */
+.ticker-track {
+  animation: ticker-scroll 36s linear infinite !important;
+}
+
+/* ── Market pulse meter: smoother spring ── */
+.pulse-marker {
+  transition: left 1s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+/* ── Sector + fundamentals bar fills ── */
+.sector-perf-bar,
+[class$="-bar-fill"],
+[class*="bar-fill"] {
+  transition: width 1.1s cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+/* ── Page entrance ── */
+#terminal {
+  animation: _page-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes _page-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Workspace hero fade-up on load ── */
+.workspace-hero {
+  animation: _hero-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both !important;
+  transition: none !important;
+}
+@keyframes _hero-in {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Research tab nav buttons ── */
+.research-tab-nav .rtab {
+  position: relative;
+  overflow: hidden;
+}
+.research-tab-nav .rtab::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.06) 50%, transparent 60%);
+  transform: translateX(-100%);
+  transition: transform 0s;
+  pointer-events: none;
+}
+.research-tab-nav .rtab:hover::after {
+  animation: _tab-shimmer 0.5s ease forwards;
+}
+@keyframes _tab-shimmer {
+  to { transform: translateX(200%); }
+}
+</style>
+
+<script>
+/* ── Upgraded reveal: tighter threshold, remove delay after trigger ── */
+(function patchReveal() {
+  // Wait for original initReveal to have run, then upgrade the observer
+  const _origInit = window.initReveal;
+  window.initReveal = function () {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          // Clear stagger delay after animation so hover states aren't delayed
+          setTimeout(() => { entry.target.style.transitionDelay = ''; }, 900);
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.05, rootMargin: '0px 0px -30px 0px' });
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+  };
+})();
+
+/* ── Flash live values when they update ── */
+(function patchSetText() {
+  const _orig = window.setText;
+  if (typeof _orig !== 'function') return;
+  window.setText = function(id, value) {
+    _orig(id, value);
+    const el = document.getElementById(id);
+    if (el && value && value !== '—' && value !== 'Loading…') {
+      el.classList.remove('val-updated');
+      // Force reflow so re-adding the class retriggers the animation
+      void el.offsetWidth;
+      el.classList.add('val-updated');
+    }
+  };
+})();
+</script>
+
+
 </body>
 </html>
