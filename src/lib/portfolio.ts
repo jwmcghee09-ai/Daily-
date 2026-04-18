@@ -1,4 +1,4 @@
-export type DataSource = "super" | "asx" | "gold" | "index" | "fund" | "crypto" | "tax" | "savings";
+export type DataSource = "super" | "asx" | "us" | "gold" | "index" | "fund" | "crypto" | "tax" | "savings";
 
 export interface CsvRow {
   [key: string]: string | number | null | undefined;
@@ -86,6 +86,7 @@ const SOURCE_RISK_MULTIPLIER: Record<DataSource, number> = {
   fund: 0.7,
   gold: 0.75,
   asx: 1,
+  us: 1,
   crypto: 1.6,
 };
 
@@ -97,6 +98,7 @@ const SOURCE_CONCENTRATION_MULTIPLIER: Record<DataSource, number> = {
   fund: 0.45,
   gold: 0.8,
   asx: 1,
+  us: 1,
   crypto: 1.25,
 };
 
@@ -574,6 +576,8 @@ function toHolding(
               ? "Tax Records"
             : source === "crypto"
               ? "Crypto Wallet"
+            : source === "us"
+              ? "Global Holdings"
               : "Brokerage");
 
   const tickerRaw = readFirst(row, FIELD_ALIASES.ticker);

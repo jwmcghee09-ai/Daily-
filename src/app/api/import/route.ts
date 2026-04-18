@@ -14,7 +14,7 @@ interface ImportPayload {
 }
 
 function isValidSource(value: unknown): value is DataSource {
-  return value === "super" || value === "asx" || value === "gold" || value === "index" || value === "fund" || value === "crypto" || value === "tax" || value === "savings";
+  return value === "super" || value === "asx" || value === "us" || value === "gold" || value === "index" || value === "fund" || value === "crypto" || value === "tax" || value === "savings";
 }
 
 function parseImportPayload(rawBody: string): ImportPayload {
@@ -54,7 +54,7 @@ export async function POST(request: Request) {
     }
 
     if (!isValidSource(payload.source)) {
-      return NextResponse.json({ error: "Invalid source. Must be 'super', 'asx', 'gold', 'index', 'fund', 'crypto', 'tax', or 'savings'." }, { status: 400 });
+      return NextResponse.json({ error: "Invalid source. Must be 'super', 'asx', 'us', 'gold', 'index', 'fund', 'crypto', 'tax', or 'savings'." }, { status: 400 });
     }
 
     if (!Array.isArray(payload.holdings) || payload.holdings.length === 0) {
