@@ -1086,7 +1086,7 @@ export default function Home() {
     const grouped = new Map<string, { changeAmount: number; previousValue: number; currentValue: number }>();
 
     for (const holding of state.holdings) {
-      if (holding.source !== "asx") {
+      if (holding.source !== "asx" && holding.source !== "us") {
         continue;
       }
 
@@ -1210,7 +1210,7 @@ export default function Home() {
   const todayTopLoser = todayMovers.length > 0 ? todayMovers[todayMovers.length - 1] : null;
 
   const dataQualityRows = useMemo(() => {
-    const marketHoldings = state.holdings.filter((holding) => holding.source === "asx" || holding.source === "crypto");
+    const marketHoldings = state.holdings.filter((holding) => holding.source === "asx" || holding.source === "us" || holding.source === "crypto");
     const marketTickers = new Set(marketHoldings.map((holding) => holding.ticker.toUpperCase()));
     const pricedTickers = new Set(
       marketHoldings
@@ -1463,6 +1463,7 @@ export default function Home() {
     const superValue = state.holdings.filter((holding) => holding.source === "super").reduce((acc, holding) => acc + holding.value, 0);
     const savingsValue = state.holdings.filter((holding) => holding.source === "savings").reduce((acc, holding) => acc + holding.value, 0);
     const asxValue = state.holdings.filter((holding) => holding.source === "asx").reduce((acc, holding) => acc + holding.value, 0);
+    const usValue = state.holdings.filter((holding) => holding.source === "us").reduce((acc, holding) => acc + holding.value, 0);
     const cryptoValue = state.holdings.filter((holding) => holding.source === "crypto").reduce((acc, holding) => acc + holding.value, 0);
     const indexValue = state.holdings.filter((holding) => holding.source === "index").reduce((acc, holding) => acc + holding.value, 0);
     const fundValue = state.holdings.filter((holding) => holding.source === "fund").reduce((acc, holding) => acc + holding.value, 0);
@@ -1473,6 +1474,7 @@ export default function Home() {
       { name: "Super", value: superValue },
       { name: "Savings", value: savingsValue },
       { name: "ASX Shares", value: asxValue },
+      { name: "Global Stocks", value: usValue },
       { name: "Crypto", value: cryptoValue },
       { name: "Indices", value: indexValue },
       { name: "Mutual Funds", value: fundValue },
@@ -1524,7 +1526,7 @@ export default function Home() {
           if (source === "crypto") {
             return -0.08;
           }
-          return source === "asx" || source === "super" || source === "index" || source === "fund" ? -0.05 : 0;
+          return source === "asx" || source === "us" || source === "super" || source === "index" || source === "fund" ? -0.05 : 0;
         },
       },
       {
@@ -1534,7 +1536,7 @@ export default function Home() {
       {
         name: "Mixed Shock",
         shock: (source: DataSource, metal: "gold" | "silver") => {
-          if (source === "asx") {
+          if (source === "asx" || source === "us") {
             return -0.06;
           }
 
@@ -2829,6 +2831,16 @@ export default function Home() {
           onUpload={(event) => onUpload(event, "asx")}
           template={asxTemplateCsv()}
           templateName="asx-template.csv"
+          disabled={working || loading || demoMode}
+          disabledLabel={demoMode ? "Create account to upload" : undefined}
+        />
+        <UploadCard
+          title="Global Stocks Report File"
+          description="Upload NYSE, NASDAQ, or other international holdings."
+          help="Imports US and global equity holdings. Prices are fetched in USD via Yahoo Finance and converted to AUD automatically."
+          onUpload={(event) => onUpload(event, "us")}
+          template={usTemplateCsv()}
+          templateName="global-stocks-template.csv"
           disabled={working || loading || demoMode}
           disabledLabel={demoMode ? "Create account to upload" : undefined}
         />
@@ -4683,6 +4695,15 @@ function asxTemplateCsv(): string {
     "account,ticker,name,units,price,value,cost base,sector,date",
     "SelfWealth,IVV,ISHARES S&P 500 ETF,40,58.4,2336,2100,ETF,2026-02-18",
     "SelfWealth,WOW,Woolworths Group,35,34.7,1214.5,1180,Consumer Staples,2026-02-18",
+  ].join("\n");
+}
+
+function usTemplateCsv(): string {
+  return [
+    "account,ticker,name,units,price,value,cost base,sector,date",
+    "Interactive Brokers,AAPL,Apple Inc,15,227.52,3412.8,2940,Technology,2026-02-18",
+    "Interactive Brokers,MSFT,Microsoft Corp,10,415.30,4153.0,3800,Technology,2026-02-18",
+    "Interactive Brokers,BRK.B,Berkshire Hathaway B,20,485.60,9712.0,8900,Financials,2026-02-18",
   ].join("\n");
 }
 

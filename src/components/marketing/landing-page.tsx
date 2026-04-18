@@ -16,19 +16,19 @@ type WorkflowStep = MarketingCard & {
   number: string;
 };
 
-const tickerItems = [
-  ["BHP", "45.82", "+1.2%", "up"],
-  ["CBA", "131.44", "-0.4%", "dn"],
-  ["AUD/USD", "0.629", "+0.2%", "up"],
-  ["GOLD", "3112", "+0.8%", "up"],
-  ["WTI", "69.86", "-1.9%", "dn"],
-  ["BTC", "84.2k", "+1.4%", "up"],
-  ["ETH", "1,965", "+2.3%", "up"],
-  ["CSL", "288.10", "+0.7%", "up"],
-  ["MQG", "218.75", "+1.4%", "up"],
-  ["FMG", "18.44", "-2.1%", "dn"],
-  ["VIX", "21.4", "-6.1%", "dn"],
-] as const;
+const TICKER_FALLBACK = [
+  { label: "BHP",     price: "45.82",  delta: "+1.2%", tone: "up" },
+  { label: "CBA",     price: "131.44", delta: "-0.4%", tone: "dn" },
+  { label: "AUD/USD", price: "0.6290", delta: "+0.2%", tone: "up" },
+  { label: "GOLD",    price: "3112",   delta: "+0.8%", tone: "up" },
+  { label: "WTI",     price: "69.86",  delta: "-1.9%", tone: "dn" },
+  { label: "BTC",     price: "84.2k",  delta: "+1.4%", tone: "up" },
+  { label: "ETH",     price: "1,965",  delta: "+2.3%", tone: "up" },
+  { label: "CSL",     price: "288.10", delta: "+0.7%", tone: "up" },
+  { label: "MQG",     price: "218.75", delta: "+1.4%", tone: "up" },
+  { label: "FMG",     price: "18.44",  delta: "-2.1%", tone: "dn" },
+  { label: "VIX",     price: "21.4",   delta: "-6.1%", tone: "dn" },
+] as { label: string; price: string; delta: string; tone: string }[];
 
 const workflowSteps: readonly WorkflowStep[] = [
   {
@@ -184,6 +184,28 @@ export default function LandingPage({
   const aiConsoleRef = useRef<HTMLDivElement>(null);
   const aiSectionRef = useRef<HTMLElement>(null);
   const [activeStickyPanel, setActiveStickyPanel] = useState(0);
+  const [tickerItems, setTickerItems] = useState(TICKER_FALLBACK);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function fetchTape() {
+      try {
+        const res = await fetch("/api/market/tape");
+        if (!res.ok) return;
+        const data = (await res.json()) as { tape: typeof TICKER_FALLBACK };
+        if (!cancelled && Array.isArray(data.tape) && data.tape.length > 0) {
+          setTickerItems(data.tape);
+        }
+      } catch {
+        // keep fallback
+      }
+    }
+
+    void fetchTape();
+    const interval = setInterval(() => { void fetchTape(); }, 60_000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, []);
 
   useEffect(() => {
     const reveals = document.querySelectorAll<HTMLElement>(
@@ -338,11 +360,11 @@ export default function LandingPage({
 
       <div className={styles.ticker}>
         <div className={styles.tickerTrack}>
-          {[...tickerItems, ...tickerItems].map(([symbol, price, delta, tone], index) => (
-            <span key={`${symbol}-${index}`} className={styles.tickerItem}>
-              <span className={styles.tickerSymbol}>{symbol}</span>
-              <span className={styles.tickerPrice}>{price}</span>
-              <span className={tone === "up" ? styles.up : styles.down}>{delta}</span>
+          {[...tickerItems, ...tickerItems].map((item, index) => (
+            <span key={`${item.label}-${index}`} className={styles.tickerItem}>
+              <span className={styles.tickerSymbol}>{item.label}</span>
+              <span className={styles.tickerPrice}>{item.price}</span>
+              <span className={item.tone === "up" ? styles.up : styles.down}>{item.delta}</span>
             </span>
           ))}
         </div>
