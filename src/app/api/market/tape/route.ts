@@ -7,6 +7,7 @@ interface YahooQuoteResult {
   meta?: {
     regularMarketPrice?: number;
     previousClose?: number;
+    currency?: string;
   };
 }
 
@@ -16,7 +17,7 @@ interface YahooChartResponse {
   };
 }
 
-const TAPE_SYMBOLS: Array<{ label: string; yahoo: string; fmt: "price" | "k" | "fx" }> = [
+const TAPE_SYMBOLS: Array<{ label: string; yahoo: string; fmt: "price" | "k" | "pct" | "fx" }> = [
   { label: "BHP",     yahoo: "BHP.AX",   fmt: "price" },
   { label: "CBA",     yahoo: "CBA.AX",   fmt: "price" },
   { label: "CSL",     yahoo: "CSL.AX",   fmt: "price" },
