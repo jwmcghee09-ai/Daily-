@@ -1,0 +1,11 @@
+<svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="SPECTRE mark">
+  <defs>
+    <linearGradient id="spectreGradient" x1="6" y1="6" x2="50" y2="50" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FF624B"/>
+      <stop offset="1" stop-color="#CF2E17"/>
+    </linearGradient>
+  </defs>
+  <rect x="4" y="4" width="48" height="48" rx="14" fill="url(#spectreGradient)"/>
+  <path d="M17 18.5H38.5L31.8 25.2H23.6V31.6H35.5L28.8 38.3H17V18.5Z" fill="#FFF6F4"/>
+  <path d="M17 35.8L23.2 29.7H32.8L26.6 35.8H17Z" fill="#FFD8D1"/>
+</svg>
