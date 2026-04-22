@@ -33,21 +33,21 @@ const TICKER_FALLBACK = [
 const workflowSteps: readonly WorkflowStep[] = [
   {
     number: "01 — IMPORT",
-    title: "Upload your reports",
-    copy: "CommSec, super, crypto exchange, bullion — export whatever your platform gives you and drop it in. SPECTRE handles the messy formats so you don't have to.",
+    title: "Import Every Source",
+    copy: "Bring in broker, super, crypto, fund, savings, tax, and bullion exports without rebuilding your spreadsheet stack.",
     icon: <UploadIcon />,
   },
   {
     number: "02 — NORMALIZE",
-    title: "It figures out the rest",
-    copy: "Live prices refresh automatically. Risk models run in the background. Your holdings, accounts, sectors, and history are consolidated into one picture without you touching a spreadsheet.",
+    title: "Build Portfolio Context",
+    copy: "SPECTRE merges holdings, prices, sectors, account buckets, snapshots, and benchmark context into one AI-ready workspace.",
     icon: <GridIcon />,
     alt: true,
   },
   {
-    number: "03 — ASK",
-    title: "Just ask a question",
-    copy: "\"Am I overexposed to banks?\" \"What happens if crypto drops 50%?\" \"Is my super actually diversified?\" Type it in plain English. The AI reads your real data before it answers.",
+    number: "03 — REVIEW",
+    title: "Ask, Simulate, Monitor",
+    copy: "Run AI analysis, Monte Carlo scenarios, VaR and drawdown checks, and live dip alerts from the same system.",
     icon: <PulseIcon />,
   },
 ] as const;
@@ -55,34 +55,34 @@ const workflowSteps: readonly WorkflowStep[] = [
 const features: readonly MarketingCard[] = [
   {
     title: "AI Portfolio Analyst",
-    copy: "Ask anything in plain English. SPECTRE reads your actual holdings, live prices, and market data before it answers — not generic finance advice.",
+    copy: "Natural-language answers grounded in holdings, weights, live pricing, snapshots, and research context.",
     icon: <UploadIcon />,
   },
   {
-    title: "All Your Accounts, One Place",
-    copy: "Shares, super, crypto, ETFs, managed funds, savings, bullion — upload whatever your platform exports and see everything consolidated instantly.",
+    title: "Cross-Source Ingestion",
+    copy: "CommSec, broker exports, super, ETFs, funds, crypto, savings, tax reports, and bullion in one workflow.",
     icon: <PulseIcon />,
     alt: true,
   },
   {
-    title: "Risk Engine (Running Silently)",
-    copy: "14+ risk signals — concentration, worst-loss estimate, drawdown, market sensitivity, tracking error — calculated automatically so you don't have to.",
+    title: "Quant Risk Engine",
+    copy: "Risk score, VaR95, Expected Shortfall, beta, tracking error, correlation, drawdown, and data-quality checks.",
     icon: <BarsIcon />,
   },
   {
-    title: "Live Market Research",
-    copy: "Shares, macro, earnings, crypto, commodities, central-bank rates, and global signals — all feeding your AI so its answers reflect what's actually happening.",
+    title: "Research Terminal",
+    copy: "ASX, macro, earnings, crypto, commodities, FRED signals, central-bank rates, and CFTC positioning.",
     icon: <BarsIcon />,
   },
   {
-    title: "See Your Best & Worst Case",
-    copy: "10,000 simulated outcomes show your likely, good, and bad scenarios — based on your real portfolio, not a hypothetical example.",
+    title: "Monte Carlo & Stress",
+    copy: "10,000-path portfolio projections with bull, base, and bear outcomes tied to your imported holdings.",
     icon: <ClockIcon />,
     alt: true,
   },
   {
-    title: "Price Alerts & History",
-    copy: "Get notified when a holding drops. Track how your portfolio has changed over time. AI uses your history to give better answers.",
+    title: "Alerts & History",
+    copy: "Snapshot history, data-quality confidence, and dip alerts so AI has memory and you have follow-through.",
     icon: <BellIcon />,
     alt: true,
   },
@@ -162,7 +162,7 @@ const faqs = [
   {
     question: "What data does the research terminal include?",
     answer:
-      "The research terminal covers shares, earnings, macro, crypto, commodities, oil, gold, central-bank rates, treasury curves, FRED macro signals, CFTC positioning, analyst targets, and live market news.",
+      "The research terminal covers ASX equities, earnings, macro, crypto, commodities, oil, gold, central-bank rates, treasury curves, FRED macro signals, CFTC positioning, analyst targets, and live market news.",
   },
   {
     question: "Can I cancel anytime?",
@@ -381,10 +381,10 @@ export default function LandingPage({
           <div className={styles.heroIntro}>
             <div className={`${styles.heroBadge} ${styles.reveal}`}>SPECTRE — AI Portfolio Intelligence</div>
             <h1 className={`${styles.heroTitle} ${styles.reveal}`}>
-              Hedge fund analytics.<br /><span>Just ask a question.</span>
+              The AI operating system<br /><span>for your portfolio.</span>
             </h1>
             <p className={`${styles.heroSub} ${styles.reveal}`}>
-              Behind the scenes: institutional-grade risk models, live market data, macro signals, and 10,000-path simulations. In front of you: a plain English question box. You don't need to understand any of it.
+              SPECTRE turns holdings, research, and market data into one AI-native workspace for quant analysis, live research, and faster portfolio decisions.
             </p>
             <div className={`${styles.heroActions} ${styles.reveal}`}>
               <Link href="/signin?mode=register&plan=free" className={`${styles.button} ${styles.primaryButton} ${styles.heroButton}`}>
@@ -453,7 +453,7 @@ export default function LandingPage({
                     <circle cx="40" cy="40" r="28" fill="none" stroke="#fb923c" strokeWidth="16" strokeDasharray="18 95" strokeDashoffset="-135" transform="rotate(-90 40 40)" />
                   </svg>
                   <div className={styles.legend}>
-                    <LegendItem color="#a855f7" label="Shares" value="32%" />
+                    <LegendItem color="#a855f7" label="ASX Equities" value="32%" />
                     <LegendItem color="#ff7a30" label="Super" value="28%" />
                     <LegendItem color="#e879f9" label="Funds / ETFs" value="16%" />
                     <LegendItem color="#fb923c" label="Crypto + Bullion" value="24%" />
@@ -471,9 +471,9 @@ export default function LandingPage({
           <div className={styles.statsGrid}>
             {[
               { val: "8", label: "Import Sources" },
-              { val: "14+", label: "Risk Signals Running Silently" },
-              { val: "10,000", label: "Simulation Paths Per Question" },
-              { val: "1", label: "Question. That's All You Need." },
+              { val: "14+", label: "Risk Signals" },
+              { val: "10,000", label: "Monte Carlo Paths" },
+              { val: "3", label: "Quant · AI · Research" },
             ].map(({ val, label }) => (
               <div key={label} className={styles.statStat}>
                 <div className={styles.statStatVal}>{val}</div>
@@ -489,10 +489,10 @@ export default function LandingPage({
           <div className={styles.aiRevealHead}>
             <div className={`${styles.sectionLabel} ${styles.reveal}`}>AI Portfolio Analyst</div>
             <h2 className={`${styles.aiRevealTitle} ${styles.reveal}`} style={{ transitionDelay: "0.07s" }}>
-              The scary numbers<br /><span>answer your questions.</span>
+              Ask your portfolio<br /><span>with context.</span>
             </h2>
             <p className={`${styles.aiRevealSub} ${styles.reveal}`} style={{ transitionDelay: "0.14s" }}>
-              Under the hood: VaR models, drawdown analysis, beta calculations, sector concentration, benchmark tracking, live prices, and macro signals. You just type a question. The AI reads all of it before it answers.
+              Not generic finance chat. SPECTRE AI reads your holdings, live pricing, benchmark risk, research terminal data, and saved snapshots before it answers.
             </p>
           </div>
           <div ref={aiConsoleRef} className={styles.aiConsoleReveal}>
@@ -503,20 +503,20 @@ export default function LandingPage({
                 <span className={styles.proTag} style={{ marginLeft: "auto" }}>All Plans</span>
               </div>
               <div className={styles.aiConsole}>
-                <div className={styles.aiPrompt}>› Am I going to be okay if the market drops 20%?</div>
+                <div className={styles.aiPrompt}>› What is most likely influencing the value of my current holdings right now?</div>
                 <div className={styles.aiResponse}>
-                  <strong>Based on your current holdings,</strong> a 20% market drop would likely reduce your portfolio by <strong>$47,200–$61,800</strong> depending on how correlated assets move together. Your super and index positions provide some cushion, but your bank concentration (42% of book) amplifies the downside. Your worst-month estimate is <strong>−8.3%</strong>. You're not dangerously exposed, but reducing CBA and NAB by ~$20k would bring your risk score from 72 to around 55.
+                  <strong>Your top drivers today</strong> are bank concentration, AUD weakness, and the commodity sleeve. CBA and NAB are lifting portfolio value, while FMG and WTI-linked energy exposure are adding downside volatility. Risk remains elevated because the top 3 positions are <strong>42%</strong> of the book and 1-day <strong>VaR 95%</strong> is above your recent median.
                   <span className={styles.aiCursor} />
                 </div>
               </div>
               <div className={styles.miniGrid} style={{ marginTop: "14px" }}>
                 <div className={styles.miniCard}>
-                  <div className={styles.smallLabel}>What runs silently</div>
-                  <p>VaR models, drawdown history, beta calculations, sector concentration, live prices, macro signals, earnings data, and 10,000-path simulations.</p>
+                  <div className={styles.smallLabel}>What AI Reads</div>
+                  <p>Holdings, weights, live quotes, sector mix, benchmark risk, research signals, and snapshot history.</p>
                 </div>
                 <div className={styles.miniCard}>
-                  <div className={styles.smallLabel}>What you see</div>
-                  <p>A plain English answer grounded in your actual portfolio. No jargon unless you want it. No generic advice — it knows your specific holdings.</p>
+                  <div className={styles.smallLabel}>What AI Returns</div>
+                  <p>Portfolio drivers, holding-level explanations, risk flags, next actions, and confidence-based follow-up checks.</p>
                 </div>
               </div>
               <div className={styles.aiRevealCta}>
@@ -534,9 +534,9 @@ export default function LandingPage({
       <section className={styles.section} id="research">
         <div className={styles.container}>
           <div className={`${styles.sectionLabel} ${styles.reveal}`}>Research Terminal</div>
-          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`} style={{ transitionDelay: "0.07s" }}>The research side is overwhelming. We handle it.</h2>
+          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`} style={{ transitionDelay: "0.07s" }}>Live market context for every answer.</h2>
           <p className={`${styles.sectionSub} ${styles.reveal}`} style={{ transitionDelay: "0.14s" }}>
-            Earnings calendars. Central bank rates. FRED macro signals. Treasury curves. CFTC positioning. Oil, gold, crypto. Share market breadth. Most investors ignore all of it because it's too much to process. SPECTRE reads it all and feeds it directly to your AI — so when you ask a question, the answer actually reflects what's happening in the world.
+            The same research system feeding the product: ASX, macro, earnings, crypto, commodities, oil, gold, treasury curves, and FRED/CFTC signals in one place.
           </p>
 
           <div className={styles.researchHighlights}>
@@ -545,7 +545,7 @@ export default function LandingPage({
               { name: "ASX Equities", sub: "Top constituents, sector breadth, gainers/losers, analyst targets, and interactive stock charts.", alt: false },
               { name: "Macro & Commodities", sub: "Treasury curve, central-bank rates, FX, gold, oil, inflation, and risk-on / risk-off context.", alt: false },
               { name: "FRED + CFTC", sub: "Credit spreads, breakevens, money supply, Fed balance sheet, and managed-money positioning.", alt: true },
-              { name: "12 Earnings Names", sub: "Calendar, surprises, fundamentals, and preview context for banks, miners, healthcare, and energy.", alt: true },
+              { name: "12 ASX Earnings Names", sub: "Calendar, surprises, fundamentals, and preview context for banks, miners, healthcare, and energy.", alt: true },
               { name: "News + Calendar", sub: "Headline feed, economic calendar, and session context ready to feed the AI workflow.", alt: true },
             ].map((tile, index) => (
               <div key={tile.name} className={`${styles.researchTile} ${styles.reveal}`} style={{ transitionDelay: `${index * 0.08}s` }}>
@@ -586,7 +586,7 @@ export default function LandingPage({
                   <div className={styles.previewUploadZone}>
                     <UploadIcon />
                     <span>Drop CSV or XLSX files here</span>
-                    <span className={styles.previewMuted}>Super · Shares · Crypto · Funds · Bullion</span>
+                    <span className={styles.previewMuted}>Super · ASX · Crypto · Funds · Bullion</span>
                   </div>
                   <div className={styles.previewFileList}>
                     {["commsec_export.csv", "spaceship_super.csv", "coinspot_wallet.xlsx"].map((f) => (
