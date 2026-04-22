@@ -379,14 +379,13 @@ export default function Home() {
   const [holdingsAiLoading, setHoldingsAiLoading] = useState(false);
   const [holdingsAiError, setHoldingsAiError] = useState("");
   const [holdingsAiResult, setHoldingsAiResult] = useState<HoldingsAiAnalysis | null>(null);
-  const [activePage, setActivePage] = useState<"quant" | "ai" | "import" | "settings">("quant");
+  const [aiLimitReached, setAiLimitReached] = useState(false);
+  const [activePage, setActivePage] = useState<"quant" | "ai" | "research" | "settings">("quant");
 
-  // Trigger Recharts ResponsiveContainer to remeasure after tab switch
   useEffect(() => {
     const t = setTimeout(() => window.dispatchEvent(new Event("resize")), 30);
     return () => clearTimeout(t);
   }, [activePage]);
-
   const refreshInFlight = useRef(false);
   const lastAutoRefreshAttemptAtRef = useRef(0);
 
@@ -807,6 +806,11 @@ export default function Home() {
         },
         body: JSON.stringify({ question }),
       });
+
+      if (response.status === 429) {
+        setAiLimitReached(true);
+        return;
+      }
 
       if (!response.ok) {
         throw new Error(await parseApiError(response, "Failed to run Ask AI holdings analysis."));
@@ -3084,8 +3088,21 @@ export default function Home() {
         <p className="pro-analytics-note">
           {proAnalyticsEnabled
             ? "Advanced quant analytics are active for this account."
-            : "Starter stays streamlined. Upgrade to Pro to unlock VaR, Expected Shortfall, benchmark beta, tracking error, and stress scenarios."}
+            : "Upgrade to Pro to unlock Expected Shortfall, benchmark beta, tracking error, and AI risk adjustment."}
         </p>
+        {!proAnalyticsEnabled && sessionUser && (
+          <div className="pro-locked-upgrade">
+            <span>These analytics are available on Pro</span>
+            <button
+              type="button"
+              className="upgrade-cta-btn upgrade-cta-btn-pro"
+              onClick={() => void startProCheckout(sessionUser.email)}
+              disabled={checkoutWorking}
+            >
+              {checkoutWorking ? "Redirecting..." : "Upgrade to Pro — $9.99/mo →"}
+            </button>
+          </div>
+        )}
         <div className="pro-analytics-grid">
           <article className="pro-analytics-card">
             <p>Expected Shortfall (ES 95)</p>
@@ -3119,20 +3136,46 @@ export default function Home() {
               ) : null}
             </div>
             <p className="holdings-ai-note">Ask what may be influencing value, momentum, risk, and concentration in your current portfolio.</p>
-            <form className="holdings-ai-form" onSubmit={(event) => void runHoldingsAi(event)}>
-              <textarea
-                value={holdingsAiQuestion}
-                onChange={(event) => setHoldingsAiQuestion(event.target.value)}
-                placeholder={HOLDINGS_AI_DEFAULT_PROMPT}
-                maxLength={700}
-                disabled={holdingsAiLoading}
-              />
-              <div className="holdings-ai-actions">
-                <button type="submit" className="refresh-btn" disabled={holdingsAiLoading || state.holdings.length === 0}>
-                  {holdingsAiLoading ? "Analyzing..." : "Ask AI"}
+            {aiLimitReached ? (
+              <div className="ai-limit-upgrade">
+                <div className="ai-limit-upgrade-icon">⚡</div>
+                <div className="ai-limit-upgrade-text">
+                  <strong>Monthly AI limit reached</strong>
+                  <span>
+                    {sessionUser && sessionUser.planTier === "none"
+                      ? "You've used your 3 free queries. Upgrade to Plus for 20/month or Pro for unlimited."
+                      : "You've used all 20 Plus queries this month. Upgrade to Pro for unlimited AI."}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  className="upgrade-cta-btn"
+                  onClick={() => {
+                    if (sessionUser) {
+                      void (sessionUser.planTier === "none" ? startPlusCheckout(sessionUser.email) : startProCheckout(sessionUser.email));
+                    }
+                  }}
+                  disabled={checkoutWorking}
+                >
+                  {checkoutWorking ? "Redirecting..." : sessionUser?.planTier === "none" ? "Upgrade to Plus →" : "Upgrade to Pro →"}
                 </button>
               </div>
-            </form>
+            ) : (
+              <form className="holdings-ai-form" onSubmit={(event) => void runHoldingsAi(event)}>
+                <textarea
+                  value={holdingsAiQuestion}
+                  onChange={(event) => setHoldingsAiQuestion(event.target.value)}
+                  placeholder={HOLDINGS_AI_DEFAULT_PROMPT}
+                  maxLength={700}
+                  disabled={holdingsAiLoading}
+                />
+                <div className="holdings-ai-actions">
+                  <button type="submit" className="refresh-btn" disabled={holdingsAiLoading || state.holdings.length === 0}>
+                    {holdingsAiLoading ? "Analyzing..." : "Ask AI"}
+                  </button>
+                </div>
+              </form>
+            )}
             {holdingsAiError ? <p className="holdings-ai-error">{holdingsAiError}</p> : null}
             {holdingsAiResult ? (
               <div className="holdings-ai-output">
