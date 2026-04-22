@@ -2435,9 +2435,26 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     }, durationMs);
   }
 
-  function showUpgradeModal() {
+  function showUpgradeModal(context) {
     const overlay = document.getElementById("upgrade-overlay");
     if (!overlay) return;
+    const title = overlay.querySelector("#upgrade-modal-title");
+    const body = overlay.querySelector(".upgrade-modal-body");
+    const actions = overlay.querySelector(".upgrade-modal-actions");
+    if (context === "ai") {
+      const tier = state.sessionUser?.planTier || "none";
+      if (title) title.textContent = "AI Limit Reached";
+      if (body) body.innerHTML = tier === "plus"
+        ? `You've used all your Plus AI sessions this month. Upgrade to <strong>Pro</strong> for unlimited Ask AI every month.`
+        : `You've used all your free AI sessions this month. Upgrade to <strong>Plus</strong> for 20/month, or <strong>Pro</strong> for unlimited.`;
+      if (actions) actions.innerHTML = tier === "plus"
+        ? `<a href="/signin?mode=login&plan=pro" class="upgrade-btn-primary">Upgrade to Pro</a><button class="upgrade-btn-secondary" onclick="document.getElementById('upgrade-overlay').classList.remove('open')">Not now</button>`
+        : `<a href="/signin?mode=login&plan=plus" class="upgrade-btn-primary">Upgrade to Plus</a><a href="/signin?mode=login&plan=pro" class="upgrade-btn-secondary" style="color:#fff">Go Pro (Unlimited)</a>`;
+    } else {
+      if (title) title.textContent = "Investment Limit Reached";
+      if (body) body.innerHTML = `Starter plan supports up to <strong>4 investments</strong>. Upgrade to Plus to import unlimited holdings and unlock full portfolio analytics.`;
+      if (actions) actions.innerHTML = `<a href="/signin?mode=login&plan=plus" class="upgrade-btn-primary">Upgrade to Plus</a><button class="upgrade-btn-secondary" onclick="document.getElementById('upgrade-overlay').classList.remove('open')">Not now</button>`;
+    }
     overlay.classList.add("open");
     overlay.onclick = (e) => { if (e.target === overlay) overlay.classList.remove("open"); };
   }
@@ -4260,10 +4277,17 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       usageEl.textContent = "Demo preview only. Create an account to ask portfolio questions.";
       usageEl.className = "ai-usage-counter";
     } else if (limit === -1) {
-      usageEl.textContent = "";
+      usageEl.innerHTML = "";
     } else if (atLimit) {
-      usageEl.textContent = `You've used all ${limit} Ask AI sessions for this month.`;
-      usageEl.className = "ai-usage-counter ai-usage-limit";
+      const tier = state.sessionUser?.planTier || "none";
+      const upgradeUrl = tier === "plus" ? "/signin?mode=login&plan=pro" : "/signin?mode=login&plan=plus";
+      const upgradeLabel = tier === "plus" ? "Upgrade to Pro — Unlimited AI" : "Upgrade to Plus — 20/month";
+      const upgradeMsg = tier === "plus"
+        ? `You've used all ${limit} AI sessions this month. Upgrade to Pro for unlimited.`
+        : `You've used all ${limit} free AI sessions this month. Upgrade for more.`;
+      usageEl.className = "ai-usage-counter";
+      usageEl.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.25);border-radius:10px;padding:.65rem 1rem;margin-top:.5rem;flex-wrap:wrap"><span style="font-size:.8rem;color:#c4b5fd;text-align:left">${escapeHtml(upgradeMsg)}</span><a href="${upgradeUrl}" style="display:inline-flex;align-items:center;padding:.4rem 1rem;background:rgba(168,85,247,.85);color:#fff;border-radius:7px;font-size:.75rem;font-weight:600;text-decoration:none;white-space:nowrap;flex-shrink:0">${escapeHtml(upgradeLabel)} →</a></div>`;
+      questionInput.disabled = true;
     } else {
       usageEl.textContent = `${used} / ${limit} Ask AI sessions used this month`;
       usageEl.className = "ai-usage-counter";
@@ -4303,7 +4327,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
         outputInner.innerHTML = `<p style="opacity:.5;font-size:.88rem">Generating analysis…</p>`;
       } else if (atLimit) {
         if (metaEl) metaEl.textContent = "";
-        outputInner.innerHTML = `<div style="text-align:center;padding:1.5rem 1rem"><p style="color:var(--muted);margin-bottom:.9rem;font-size:.88rem">${escapeHtml(buildAiLimitMessage(limit))}</p><button type="button" class="btn-primary" style="font-size:.72rem;padding:.45rem 1.2rem" onclick="showUpgradeModal()">See plans →</button></div>`;
+        outputInner.innerHTML = `<div style="text-align:center;padding:1.5rem 1rem"><p style="color:var(--muted);margin-bottom:.9rem;font-size:.88rem">${escapeHtml(buildAiLimitMessage(limit))}</p><button type="button" class="btn-primary" style="font-size:.72rem;padding:.45rem 1.2rem" onclick="showUpgradeModal('ai')">See plans →</button></div>`;
       } else if (!hasHoldings) {
         if (metaEl) metaEl.textContent = "";
         outputInner.innerHTML = `<div style="text-align:center;padding:1.5rem 1rem"><p style="color:var(--muted);margin-bottom:.9rem;font-size:.88rem">Upload your portfolio on the <strong style="color:var(--text)">Quant</strong> tab to unlock AI analysis.</p><button type="button" class="btn-primary" style="font-size:.72rem;padding:.45rem 1.2rem" onclick="document.querySelectorAll('.nav-tab')[0]?.click()">Go to Quant →</button></div>`;
