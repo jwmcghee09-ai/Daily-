@@ -34,6 +34,7 @@ import {
   extractCsvDataSection,
   parseRowsToHoldings,
 } from "@/lib/portfolio";
+import { trackMetaEvent } from "@/lib/meta-pixel";
 
 const ACCENT_COLOR = "#ff4b33";
 const PORTFOLIO_COLORS = ["#f8f8f8", "#d9d9d9", "#bababa", "#969696", "#707070", "#525252", "#3a3a3a", "#242424"];
@@ -346,6 +347,18 @@ const DEMO_DIP_ALERTS: PriceDipAlertSetting[] = [
 ];
 const DEMO_PORTFOLIO_STATE = createDemoPortfolioState();
 
+function checkoutPlanValue(plan: CheckoutPlan) {
+  if (plan === "pro") {
+    return 9.99;
+  }
+
+  if (plan === "plus") {
+    return 2.99;
+  }
+
+  return 0;
+}
+
 export default function Home() {
   const [demoMode, setDemoMode] = useState(false);
   const [state, setState] = useState<PortfolioState>(EMPTY_STATE);
@@ -496,6 +509,15 @@ export default function Home() {
   }, [banner]);
 
   useEffect(() => {
+    trackMetaEvent("ViewContent", {
+      content_name: "Spectre landing page",
+      content_category: "portfolio analytics",
+      content_type: "product",
+      currency: "AUD",
+    });
+  }, []);
+
+  useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const checkoutState = params.get("checkout");
     const checkoutPlan = toCheckoutPlan(params.get("plan"));
@@ -504,6 +526,13 @@ export default function Home() {
     if (checkoutState === "success") {
       const planLabel = checkoutPlan === "pro" ? "Pro" : "Plus";
       setBanner({ type: "success", message: `${planLabel} plan checkout complete. Your subscription will activate shortly.` });
+      trackMetaEvent("Subscribe", {
+        content_name: `Spectre ${planLabel}`,
+        content_category: "subscription",
+        content_type: "product",
+        currency: "AUD",
+        value: checkoutPlanValue(checkoutPlan),
+      });
     } else if (checkoutState === "cancelled") {
       setBanner({ type: "info", message: "Stripe checkout was cancelled." });
     }
@@ -1757,6 +1786,13 @@ export default function Home() {
         throw new Error("Stripe checkout URL was missing.");
       }
 
+      trackMetaEvent("InitiateCheckout", {
+        content_name: `Spectre ${planLabel}`,
+        content_category: "subscription",
+        content_type: "product",
+        currency: "AUD",
+        value: checkoutPlanValue(plan),
+      });
       window.location.assign(payload.url);
     } catch (error) {
       setBanner({ type: "error", message: error instanceof Error ? error.message : "Unable to start Stripe checkout." });
@@ -1856,6 +1892,14 @@ export default function Home() {
       }
 
       const payload = (await response.json()) as AuthSessionPayload;
+
+      if (authMode === "register") {
+        trackMetaEvent("CompleteRegistration", {
+          content_name: "Spectre account",
+          content_category: "account",
+          status: true,
+        });
+      }
 
       if (authMode === "register" && payload.verificationRequired && !payload.authenticated) {
         setAuthMode("login");
