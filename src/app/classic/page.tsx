@@ -1793,6 +1793,7 @@ export default function Home() {
         currency: "AUD",
         value: checkoutPlanValue(plan),
       });
+
       window.location.assign(payload.url);
     } catch (error) {
       setBanner({ type: "error", message: error instanceof Error ? error.message : "Unable to start Stripe checkout." });
@@ -1907,6 +1908,9 @@ export default function Home() {
         setAuthAcceptsTerms(false);
         setAuthError("");
         setBanner({ type: "info", message: payload.message || "Account created. Check your email to verify before signing in, then choose your plan from pricing or settings." });
+        if (typeof window !== "undefined" && typeof (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq === "function") {
+          (window as unknown as { fbq: (...args: unknown[]) => void }).fbq("track", "CompleteRegistration");
+        }
         return;
       }
 
