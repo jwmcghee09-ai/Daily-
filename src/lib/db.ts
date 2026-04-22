@@ -1041,24 +1041,6 @@ async function fetchBullionSpotFromYahoo(metal: "gold" | "silver"): Promise<AsxQ
   };
 }
 
-async function fetchUsQuoteFromYahoo(ticker: string): Promise<AsxQuoteData | null> {
-  const symbol = toUsYahooSymbol(ticker);
-  if (!symbol) {
-    return null;
-  }
-
-  return fetchYahooQuoteBySymbol(symbol);
-}
-
-async function fetchUsSeriesFromYahoo(ticker: string, range: string): Promise<DatedPricePoint[] | null> {
-  const symbol = toUsYahooSymbol(ticker);
-  if (!symbol) {
-    return null;
-  }
-
-  return fetchYahooSeriesBySymbol(symbol, range);
-}
-
 async function yahooFetchWithRetry(url: string, signal: AbortSignal): Promise<Response | null> {
   const delays = [1000, 2000];
   let attempt = 0;

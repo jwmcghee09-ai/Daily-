@@ -380,7 +380,7 @@ export default function Home() {
   const [holdingsAiError, setHoldingsAiError] = useState("");
   const [holdingsAiResult, setHoldingsAiResult] = useState<HoldingsAiAnalysis | null>(null);
   const [aiLimitReached, setAiLimitReached] = useState(false);
-  const [activePage, setActivePage] = useState<"quant" | "ai" | "research" | "settings">("quant");
+  const [activePage, setActivePage] = useState<"quant" | "ai" | "research" | "import" | "settings">("quant");
 
   useEffect(() => {
     const t = setTimeout(() => window.dispatchEvent(new Event("resize")), 30);
