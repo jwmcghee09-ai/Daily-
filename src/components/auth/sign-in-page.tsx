@@ -665,6 +665,15 @@ export default function SignInPage({
                                     {plan === "free" ? "No cost" : plan === "plus" ? "$2.99 / month" : "$9.99 / month"}
                                   </span>
                                 </div>
+                                <div className={styles.planOptionFeatures}>
+                                  {plan === "free" ? (
+                                    <span>3 AI queries/month · Basic dashboard</span>
+                                  ) : plan === "plus" ? (
+                                    <span>20 AI queries/month · Dip alerts · Full risk analytics</span>
+                                  ) : (
+                                    <span>Unlimited AI · Advanced quant console · Priority support</span>
+                                  )}
+                                </div>
                               </label>
                             ))}
                           </fieldset>
@@ -714,6 +723,13 @@ export default function SignInPage({
                             <div className={styles.planOptionInner}>
                               <span className={styles.planOptionName}>{plan === "plus" ? "Plus" : "Pro"}</span>
                               <span className={styles.planOptionPrice}>{plan === "plus" ? "$2.99 / month" : "$9.99 / month"}</span>
+                            </div>
+                            <div className={styles.planOptionFeatures}>
+                              {plan === "plus" ? (
+                                <span>20 AI queries/month · Dip alerts · Full risk analytics</span>
+                              ) : (
+                                <span>Unlimited AI · Advanced quant console · Priority support</span>
+                              )}
                             </div>
                           </label>
                         ))}

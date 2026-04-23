@@ -434,6 +434,18 @@
   text-align: right;
 }
 
+.planOptionFeatures {
+  grid-column: 1 / -1;
+  font-size: 11px;
+  color: #6d6489;
+  line-height: 1.4;
+  padding-top: 2px;
+}
+
+.planOptionActive .planOptionFeatures {
+  color: #a78bca;
+}
+
 .planOptionActive .planOptionPrice {
   color: #c084fc;
 }
