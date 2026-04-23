@@ -58,34 +58,78 @@ function buildUpgradeGate(): string {
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Research Terminal — SPECTRE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@700;800&family=DM+Sans:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{background:#05050a;color:#e2e8f0;font-family:'DM Sans',system-ui,sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem}
-  .gate{max-width:480px;width:100%;text-align:center}
-  .lock{font-size:3rem;margin-bottom:1.5rem}
-  .badge{display:inline-flex;align-items:center;gap:6px;background:rgba(168,85,247,.12);border:1px solid rgba(168,85,247,.3);border-radius:999px;padding:.3rem .9rem;font-size:.7rem;font-weight:700;letter-spacing:.1em;color:#c084fc;text-transform:uppercase;margin-bottom:1.25rem}
-  h1{font-size:1.75rem;font-weight:800;margin-bottom:.75rem;line-height:1.2}
-  p{color:#94a3b8;font-size:.9rem;line-height:1.6;margin-bottom:2rem}
-  .plans{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1.75rem}
-  .plan{background:#0d0b14;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:1.25rem;text-align:left}
-  .plan-name{font-size:.8rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#a78bfa;margin-bottom:.3rem}
-  .plan-price{font-size:1.3rem;font-weight:800;margin-bottom:.75rem}
-  .plan-price span{font-size:.75rem;font-weight:400;color:#64748b}
-  .plan-features{list-style:none;display:flex;flex-direction:column;gap:.4rem}
-  .plan-features li{font-size:.78rem;color:#94a3b8;display:flex;align-items:center;gap:.5rem}
-  .plan-features li::before{content:'✓';color:#a78bfa;font-weight:700;flex-shrink:0}
-  .actions{display:flex;flex-direction:column;gap:.75rem}
-  .btn-plus{background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;border:none;border-radius:10px;padding:.8rem 1.5rem;font-size:.9rem;font-weight:700;cursor:pointer;text-decoration:none;display:block}
-  .btn-pro{background:linear-gradient(135deg,#c2410c,#f97316);color:#fff;border:none;border-radius:10px;padding:.8rem 1.5rem;font-size:.9rem;font-weight:700;cursor:pointer;text-decoration:none;display:block}
-  .btn-back{background:transparent;border:1px solid rgba(255,255,255,.1);color:#64748b;border-radius:10px;padding:.7rem 1.5rem;font-size:.85rem;font-weight:500;cursor:pointer;text-decoration:none;display:block}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:#05050a;
+  background-image:
+    radial-gradient(circle at 80% 10%, rgba(255,75,51,.15) 0%, transparent 35%),
+    radial-gradient(circle at 15% 90%, rgba(255,75,51,.10) 0%, transparent 30%);
+  color:#e2e8f0;
+  font-family:'DM Sans',system-ui,sans-serif;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:2rem;
+}
+nav{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:.9rem 2rem;border-bottom:1px solid rgba(255,255,255,.06);background:rgba(5,5,10,.85);backdrop-filter:blur(12px);z-index:10}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.nav-logo-mark{width:28px;height:28px}
+.nav-logo-text{font-family:'Sora',sans-serif;font-size:.85rem;font-weight:800;letter-spacing:.18em;color:#f8f8fb;text-transform:uppercase}
+.nav-back{font-size:.78rem;color:#6b7280;text-decoration:none;border:1px solid rgba(255,255,255,.1);border-radius:7px;padding:.35rem .85rem;transition:color .15s,border-color .15s}
+.nav-back:hover{color:#e2e8f0;border-color:rgba(255,255,255,.25)}
+.gate{max-width:520px;width:100%;text-align:center;padding-top:4rem}
+.gate-icon{width:56px;height:56px;margin:0 auto 1.5rem;background:rgba(255,75,51,.1);border:1px solid rgba(255,75,51,.2);border-radius:16px;display:flex;align-items:center;justify-content:center}
+.gate-icon svg{width:26px;height:26px;fill:none;stroke:#ff4b33;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,75,51,.08);border:1px solid rgba(255,75,51,.22);border-radius:999px;padding:.28rem .9rem;font-family:'DM Mono',monospace;font-size:.65rem;font-weight:500;letter-spacing:.12em;color:#ff7a68;text-transform:uppercase;margin-bottom:1.25rem}
+.badge::before{content:'';width:6px;height:6px;border-radius:50%;background:#ff4b33;flex-shrink:0}
+h1{font-family:'Sora',sans-serif;font-size:2.2rem;font-weight:800;margin-bottom:.75rem;line-height:1.15;letter-spacing:-.02em}
+.sub{color:#6b7280;font-size:.9rem;line-height:1.65;margin-bottom:2.25rem;max-width:400px;margin-left:auto;margin-right:auto}
+.plans{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1.75rem;text-align:left}
+.plan{background:linear-gradient(160deg,#0e0c16,#0b0910);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:1.35rem;position:relative;overflow:hidden;transition:border-color .2s}
+.plan:hover{border-color:rgba(255,75,51,.3)}
+.plan::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,75,51,.06) 0%,transparent 60%);pointer-events:none}
+.plan-name{font-family:'DM Mono',monospace;font-size:.65rem;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:#ff7a68;margin-bottom:.5rem}
+.plan-price{font-family:'Sora',sans-serif;font-size:1.6rem;font-weight:800;margin-bottom:.9rem;color:#f8f8fb}
+.plan-price span{font-family:'DM Sans',sans-serif;font-size:.75rem;font-weight:400;color:#4b5563}
+.plan-features{list-style:none;display:flex;flex-direction:column;gap:.45rem}
+.plan-features li{font-size:.78rem;color:#9ca3af;display:flex;align-items:center;gap:.55rem;line-height:1.4}
+.plan-features li::before{content:'';width:14px;height:14px;flex-shrink:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 14 14' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='7' cy='7' r='6.5' stroke='%23ff4b33' stroke-opacity='.4'/%3E%3Cpath d='M4 7l2 2 4-4' stroke='%23ff4b33' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-size:contain;background-repeat:no-repeat}
+.actions{display:flex;flex-direction:column;gap:.65rem}
+.btn-plus{background:linear-gradient(135deg,#ff4b33,#ff2f14);color:#fff;border:none;border-radius:12px;padding:.85rem 1.5rem;font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:700;cursor:pointer;text-decoration:none;display:block;letter-spacing:.01em;transition:opacity .15s,transform .1s}
+.btn-plus:hover{opacity:.9;transform:translateY(-1px)}
+.btn-pro{background:rgba(255,255,255,.04);color:#e2e8f0;border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:.85rem 1.5rem;font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:600;cursor:pointer;text-decoration:none;display:block;transition:border-color .15s,background .15s}
+.btn-pro:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.22)}
+.btn-back{background:transparent;border:none;color:#4b5563;font-size:.8rem;cursor:pointer;text-decoration:none;display:block;padding:.5rem;transition:color .15s}
+.btn-back:hover{color:#9ca3af}
+@media(max-width:480px){.plans{grid-template-columns:1fr}h1{font-size:1.7rem}}
 </style>
 </head>
 <body>
+<nav>
+  <a href="/" class="nav-logo">
+    <svg class="nav-logo-mark" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs><linearGradient id="g" x1="6" y1="6" x2="50" y2="50" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FF624B"/><stop offset="1" stop-color="#CF2E17"/></linearGradient></defs>
+      <rect x="4" y="4" width="48" height="48" rx="14" fill="url(#g)"/>
+      <path d="M17 18.5H38.5L31.8 25.2H23.6V31.6H35.5L28.8 38.3H17V18.5Z" fill="#FFF6F4"/>
+      <path d="M17 35.8L23.2 29.7H32.8L26.6 35.8H17Z" fill="#FFD8D1"/>
+    </svg>
+    <span class="nav-logo-text">Spectre</span>
+  </a>
+  <a href="/dashboard" class="nav-back">← Dashboard</a>
+</nav>
+
 <div class="gate">
-  <div class="lock">🔒</div>
+  <div class="gate-icon">
+    <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+  </div>
   <div class="badge">Plus &amp; Pro Feature</div>
   <h1>Research Terminal</h1>
-  <p>Live ASX data, macro signals, earnings calendars, crypto, commodities, FRED indicators, and central-bank rates — all in one place. Available on Plus and Pro plans.</p>
+  <p class="sub">Live share data, macro signals, earnings calendars, crypto, commodities, FRED indicators, and central-bank rates — all in one place.</p>
   <div class="plans">
     <div class="plan">
       <div class="plan-name">Plus</div>
@@ -93,7 +137,7 @@ function buildUpgradeGate(): string {
       <ul class="plan-features">
         <li>Research terminal</li>
         <li>20 AI queries/month</li>
-        <li>Dip alerts</li>
+        <li>Price dip alerts</li>
         <li>Full risk analytics</li>
       </ul>
     </div>
@@ -102,7 +146,7 @@ function buildUpgradeGate(): string {
       <div class="plan-price">$9.99 <span>/ month</span></div>
       <ul class="plan-features">
         <li>Research terminal</li>
-        <li>Unlimited AI</li>
+        <li>Unlimited AI queries</li>
         <li>Advanced quant console</li>
         <li>Priority support</li>
       </ul>
