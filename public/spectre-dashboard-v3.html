@@ -3480,19 +3480,16 @@ fbq('track','ViewContent');
 
     if (hasSameDayImports || todaySnapshots.length === 0) {
       if (fallbackPreviousTotal > 0) {
-        // If no holding has a live prevClose, data isn't refreshed yet — return null so UI shows "—"
-        if (liveDataCount === 0) return { amount: null, pct: null };
         const amount = fallbackCurrentTotal - fallbackPreviousTotal;
-        return { amount, pct: (amount / fallbackPreviousTotal) * 100 };
+        return { amount, pct: (amount / fallbackPreviousTotal) * 100, stale: liveDataCount === 0 };
       }
       return { amount: null, pct: null };
     }
 
     const dayStartValue = Number(todaySnapshots[0].value) || 0;
     if (dayStartValue <= 0 && fallbackPreviousTotal > 0) {
-      if (liveDataCount === 0) return { amount: null, pct: null };
       const amount = fallbackCurrentTotal - fallbackPreviousTotal;
-      return { amount, pct: (amount / fallbackPreviousTotal) * 100 };
+      return { amount, pct: (amount / fallbackPreviousTotal) * 100, stale: liveDataCount === 0 };
     }
 
     const change = currentTotal - dayStartValue;
@@ -4668,11 +4665,11 @@ fbq('track','ViewContent');
 
     setText("mini-total-value", formatCurrency(metrics.totalValue));
     setText("mini-unrealised-pnl", formatSignedCurrency(metrics.pnl));
-    setText("mini-day-change", today.amount == null ? "—" : formatSignedCurrency(today.amount));
+    setText("mini-day-change", today.amount == null ? "—" : (today.stale ? "refresh" : formatSignedCurrency(today.amount)));
     setText("mini-var95", effectiveVar95Pct != null ? formatPercent(effectiveVar95Pct, { negative: true, decimals: 1 }) : "—");
     setText("hero-total-value", formatCurrency(metrics.totalValue));
     setText("hero-unrealised-pnl", formatSignedCurrency(metrics.pnl));
-    setText("hero-day-change", today.amount == null ? "—" : formatSignedCurrency(today.amount));
+    setText("hero-day-change", today.amount == null ? "—" : (today.stale ? "refresh prices" : formatSignedCurrency(today.amount)));
     setText("hero-var95", effectiveVar95Pct != null ? formatPercent(effectiveVar95Pct, { negative: true, decimals: 1 }) : "—");
     setClass("mini-unrealised-pnl", `ai-kpi-val ${metrics.pnl >= 0 ? "accent" : ""}`.trim());
     setClass("mini-day-change", `ai-kpi-val ${today.amount != null && today.amount < 0 ? "accent" : ""}`.trim());
@@ -4720,8 +4717,8 @@ fbq('track','ViewContent');
     setText("kpi-total-cost", formatCurrency(metrics.totalCost));
     setText("kpi-total-pnl", formatSignedCurrency(metrics.pnl));
     setText("kpi-total-pnl-sub", `${formatPercent(metrics.pnlPct, { signed: true, decimals: 1 })} since entry`);
-    setText("kpi-day-change", today.amount == null ? "—" : formatSignedCurrency(today.amount));
-    setText("kpi-day-change-sub", today.pct == null ? "Refresh prices to update" : `${formatPercent(today.pct, { signed: true, decimals: 2 })} on day`);
+    setText("kpi-day-change", today.amount == null ? "—" : (today.stale ? "—" : formatSignedCurrency(today.amount)));
+    setText("kpi-day-change-sub", (today.amount == null || today.stale) ? "Refresh prices to see today's change" : `${formatPercent(today.pct, { signed: true, decimals: 2 })} on day`);
     setText("kpi-risk-score", riskScore ? `${riskScore.score} / 100` : "—");
     setText("kpi-risk-score-sub", riskScore ? `${riskScore.label} exposure` : "Waiting for risk data");
     setText("kpi-var95", effectiveVar95Pct != null ? formatPercent(effectiveVar95Pct, { negative: true, decimals: 1 }) : "—");
