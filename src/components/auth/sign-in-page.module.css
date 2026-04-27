@@ -384,8 +384,10 @@
 
 .planOption {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
+  column-gap: 12px;
+  row-gap: 4px;
   padding: 12px 14px;
   border: 1px solid rgba(160, 100, 255, 0.14);
   border-radius: 10px;
@@ -435,11 +437,11 @@
 }
 
 .planOptionFeatures {
-  grid-column: 1 / -1;
+  width: 100%;
+  padding-left: 28px;
   font-size: 11px;
   color: #6d6489;
   line-height: 1.4;
-  padding-top: 2px;
 }
 
 .planOptionActive .planOptionFeatures {
