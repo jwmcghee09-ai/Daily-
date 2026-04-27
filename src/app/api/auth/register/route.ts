@@ -91,7 +91,10 @@ export async function POST(request: Request) {
 
     const existing = findAuthUserByEmail(email);
     if (existing) {
-      return NextResponse.json({ error: "An account with this email already exists." }, { status: 409 });
+      return NextResponse.json(
+        { error: "An account with this email already exists. Sign in, or reset your password if you've forgotten it." },
+        { status: 409 },
+      );
     }
 
     const passwordHash = hashPassword(password);

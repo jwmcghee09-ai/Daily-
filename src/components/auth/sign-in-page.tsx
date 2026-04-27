@@ -181,6 +181,16 @@ export default function SignInPage({
 
       if (!response.ok) {
         const errorMessage = await parseApiError(response, "Authentication failed.");
+        if (response.status === 409) {
+          setAuthMode("login");
+          setSubMode("default");
+          setPassword("");
+          setBanner({
+            tone: "info",
+            message: "You already have a Spectre account with this email. Sign in below — or reset your password if you've forgotten it.",
+          });
+          return;
+        }
         if (response.status === 403 && errorMessage.toLowerCase().includes("verify your email")) {
           setAuthMode("login");
           setSubMode("default");
