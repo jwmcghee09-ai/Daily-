@@ -50,7 +50,11 @@ export default function SignInPage({
   const [authMode, setAuthMode] = useState<AuthMode>(initialMode);
   const [subMode, setSubMode] = useState<SubMode>(initialSubMode);
   const [selectedPlan, setSelectedPlan] = useState<CheckoutPlan>(initialPlan === "pro" ? "pro" : "plus");
-  const [pendingCheckoutPlan, setPendingCheckoutPlan] = useState<CheckoutPlan | null>(null);
+  const [pendingCheckoutPlan, setPendingCheckoutPlan] = useState<CheckoutPlan | null>(() => {
+    if (typeof window === "undefined") return null;
+    const stored = sessionStorage.getItem("spectre_pending_plan");
+    return stored === "pro" || stored === "plus" ? stored : null;
+  });
   const [email, setEmail] = useState(authenticatedUser?.email ?? "");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState(authenticatedUser?.displayName ?? "");
@@ -214,6 +218,7 @@ export default function SignInPage({
         setShowVerificationLinks(true);
         if (selectedPlan !== "free") {
           setPendingCheckoutPlan(selectedPlan);
+          sessionStorage.setItem("spectre_pending_plan", selectedPlan);
         }
         setBanner({
           tone: "info",
@@ -244,6 +249,7 @@ export default function SignInPage({
       }
 
       if (pendingCheckoutPlan && pendingCheckoutPlan !== "free") {
+        sessionStorage.removeItem("spectre_pending_plan");
         setSessionUser(normalizedUser);
         await startCheckout(pendingCheckoutPlan, normalizedUser.email);
         return;
