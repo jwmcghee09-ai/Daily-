@@ -444,6 +444,31 @@ export async function sendPaymentFailedEmail(input: { toEmail: string; displayNa
   await sendEmail({ to: input.toEmail, subject, text, html });
 }
 
+export async function sendAccountDeletedEmail(input: { toEmail: string; displayName: string }): Promise<void> {
+  const subject = "Your SPECTRE account has been deleted";
+  const text = [
+    `Hi ${input.displayName},`,
+    "",
+    "Your SPECTRE account and all associated data have been permanently deleted.",
+    "",
+    "If you did not request this, please contact us immediately at admin@spectre-assets.com.",
+    "",
+    "If you change your mind, you're always welcome to create a new account at spectre-assets.com.",
+  ].join("\n");
+
+  const html = `
+    <div style="font-family:Arial,sans-serif;line-height:1.6;color:#111;max-width:560px;">
+      <h2 style="margin:0 0 12px 0;">Account deleted</h2>
+      <p>Hi ${escapeHtml(input.displayName)},</p>
+      <p>Your SPECTRE account and all associated data have been permanently deleted as requested.</p>
+      <p style="color:#555;">If you did not request this, please contact us immediately at <a href="mailto:admin@spectre-assets.com">admin@spectre-assets.com</a>.</p>
+      <p style="color:#555;">If you change your mind, you're always welcome to create a new account at <a href="https://spectre-assets.com">spectre-assets.com</a>.</p>
+    </div>
+  `;
+
+  await sendEmail({ to: input.toEmail, subject, text, html });
+}
+
 function escapeHtml(value: string): string {
   return value
     .replace(/&/g, "&amp;")
