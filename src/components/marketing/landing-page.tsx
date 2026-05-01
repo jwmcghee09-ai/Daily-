@@ -895,7 +895,7 @@ export default function LandingPage({
                 <span>$9.99</span>
                 <small>/month</small>
               </div>
-              <p>The full AI analyst workflow with the deepest quant tooling.</p>
+              <p>The full AI analytics workflow with the deepest quant tooling.</p>
               <ul>
                 <li>Everything in Plus</li>
                 <li>Unlimited AI queries</li>
@@ -979,7 +979,7 @@ export default function LandingPage({
         <div className={`${styles.container} ${styles.revealScale}`}>
           <div className={styles.ctaPanel}>
             <div className={styles.heroBadge}>Start free — no card required</div>
-            <h2>Give your portfolio an AI analyst.</h2>
+            <h2>Give your portfolio an AI analytics engine.</h2>
             <p>Import your first files and open Quant, AI, and Research in one private workspace.</p>
             <div className={styles.heroActions}>
               <Link href="/signin?mode=register&plan=free" className={`${styles.button} ${styles.primaryButton} ${styles.heroButton}`}>
@@ -1024,7 +1024,7 @@ export default function LandingPage({
 
           <div className={styles.footerBottom}>
             <p>
-              Disclaimer: SPECTRE provides informational analytics only. Not financial, investment, tax, or legal advice. No result is guaranteed to be complete, current, or accurate. Use at your own risk. Copyright 2026 SPECTRE.
+              SPECTRE does not hold an Australian Financial Services (AFS) Licence and does not provide financial product advice. All content is general information only and does not take into account your personal objectives, financial situation, or needs. Consider seeking advice from a licensed financial adviser before making investment decisions. Market data and AI outputs may contain errors or delays — verify independently before acting. © 2026 SPECTRE.
             </p>
             <a href="mailto:admin@spectre-assets.com">admin@spectre-assets.com</a>
           </div>
