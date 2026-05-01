@@ -50,6 +50,7 @@ export default function SignInPage({
   const [authMode, setAuthMode] = useState<AuthMode>(initialMode);
   const [subMode, setSubMode] = useState<SubMode>(initialSubMode);
   const [selectedPlan, setSelectedPlan] = useState<CheckoutPlan>(initialPlan === "pro" ? "pro" : "plus");
+  const [pendingCheckoutPlan, setPendingCheckoutPlan] = useState<CheckoutPlan | null>(null);
   const [email, setEmail] = useState(authenticatedUser?.email ?? "");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState(authenticatedUser?.displayName ?? "");
@@ -211,6 +212,9 @@ export default function SignInPage({
         setPassword("");
         setAcceptTerms(false);
         setShowVerificationLinks(true);
+        if (selectedPlan !== "free") {
+          setPendingCheckoutPlan(selectedPlan);
+        }
         setBanner({
           tone: "info",
           message: payload.message || `Account created! Check your email to verify, then sign in to continue with ${planLabel}.`,
@@ -236,6 +240,12 @@ export default function SignInPage({
         setRedirecting(true);
         router.push("/dashboard?mode=account");
         router.refresh();
+        return;
+      }
+
+      if (pendingCheckoutPlan && pendingCheckoutPlan !== "free") {
+        setSessionUser(normalizedUser);
+        await startCheckout(pendingCheckoutPlan, normalizedUser.email);
         return;
       }
 
