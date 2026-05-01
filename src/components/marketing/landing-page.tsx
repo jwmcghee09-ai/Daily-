@@ -387,13 +387,16 @@ export default function LandingPage({
               SPECTRE turns holdings, research, and market data into one AI-native workspace for quant analysis, live research, and faster portfolio decisions.
             </p>
             <div className={`${styles.heroActions} ${styles.reveal}`}>
-              <Link href="/signin?mode=register&plan=free" className={`${styles.button} ${styles.primaryButton} ${styles.heroButton}`}>
-                Get Started Free
-              </Link>
-              <a href="/dashboard?demo=1" className={`${styles.button} ${styles.outlineButton} ${styles.heroButton}`}>
+              <a href="/dashboard?demo=1" className={`${styles.button} ${styles.primaryButton} ${styles.heroButton}`}>
                 See Live Demo →
               </a>
+              <Link href="/signin?mode=register&plan=free" className={`${styles.button} ${styles.outlineButton} ${styles.heroButton}`}>
+                Get Started Free
+              </Link>
             </div>
+            <p className={`${styles.reveal}`} style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.35)", marginTop: "1rem", letterSpacing: "0.04em" }}>
+              Built for Australian investors · ASIC-compliant general advice guidelines · No card required
+            </p>
 
           </div>
 

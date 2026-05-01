@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
+import { isEmailDeliveryConfigured, sendAiLimitReachedEmail } from "@/lib/mailer";
 import {
   readPortfolioState,
   readUserEntitlements,
@@ -1006,6 +1007,14 @@ export async function POST(request: Request) {
             `data: ${JSON.stringify({ done: true, analysis, conversationId, aiUsed: newUsed, aiLimit: monthlyLimit })}\n\n`,
           ),
         );
+        // Send upgrade nudge email when the user just used their last query
+        if (monthlyLimit !== -1 && newUsed >= monthlyLimit && isEmailDeliveryConfigured()) {
+          sendAiLimitReachedEmail({
+            toEmail: sessionUser.email,
+            displayName: sessionUser.displayName,
+            plan: entitlements.planTier,
+          }).catch(() => { /* non-fatal */ });
+        }
       } else {
         if (reservation.allowed && monthlyLimit !== -1) {
           releaseReservedAiUsage(sessionUser.id);

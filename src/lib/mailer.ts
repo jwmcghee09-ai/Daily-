@@ -444,6 +444,47 @@ export async function sendPaymentFailedEmail(input: { toEmail: string; displayNa
   await sendEmail({ to: input.toEmail, subject, text, html });
 }
 
+export async function sendAiLimitReachedEmail(input: { toEmail: string; displayName: string; plan: string }): Promise<void> {
+  const appUrl = getAppBaseUrl();
+  const isPlus = input.plan === "plus";
+  const subject = "You've used all your SPECTRE AI queries this month";
+  const upgradeText = isPlus
+    ? "Upgrade to Pro for unlimited AI queries."
+    : "Upgrade to Plus ($2.99/mo) for 20 queries/month, or Pro ($9.99/mo) for unlimited.";
+  const upgradeUrl = `${appUrl}/signin?mode=login&plan=${isPlus ? "pro" : "plus"}`;
+
+  const text = [
+    `Hi ${input.displayName},`,
+    "",
+    "You've used all your Ask AI queries for this month on SPECTRE.",
+    "",
+    upgradeText,
+    upgradeUrl,
+    "",
+    "Your queries reset at the start of next month if you'd prefer to wait.",
+  ].join("\n");
+
+  const html = `
+    <div style="font-family:Arial,sans-serif;line-height:1.6;color:#111;max-width:560px;">
+      <h2 style="margin:0 0 12px 0;">You've used all your AI queries</h2>
+      <p>Hi ${escapeHtml(input.displayName)},</p>
+      <p>You've used all your Ask AI queries for this month on SPECTRE.</p>
+      <p>${escapeHtml(upgradeText)}</p>
+      <p>
+        <a
+          href="${escapeAttribute(upgradeUrl)}"
+          style="display:inline-block;background:#ff4b33;color:#fff;text-decoration:none;padding:10px 20px;border-radius:8px;font-weight:700;"
+        >
+          ${isPlus ? "Upgrade to Pro" : "Upgrade to Plus"}
+        </a>
+      </p>
+      <p style="color:#555;">Your queries reset at the start of next month if you'd prefer to wait.</p>
+    </div>
+  `;
+
+  await sendEmail({ to: input.toEmail, subject, text, html });
+}
+
 export async function sendAccountDeletedEmail(input: { toEmail: string; displayName: string }): Promise<void> {
   const subject = "Your SPECTRE account has been deleted";
   const text = [

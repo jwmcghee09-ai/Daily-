@@ -687,6 +687,9 @@ export default function SignInPage({
                                   <span className={styles.planOptionName}>
                                     {plan === "free" ? "Free" : plan === "plus" ? "Plus" : "Pro"}
                                   </span>
+                                  {plan === "plus" && (
+                                    <span className={styles.planPopularBadge}>Most Popular</span>
+                                  )}
                                   <span className={styles.planOptionPrice}>
                                     {plan === "free" ? "Free" : plan === "plus" ? "$2.99/mo" : "$9.99/mo"}
                                   </span>
