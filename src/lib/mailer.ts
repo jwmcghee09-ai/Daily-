@@ -442,6 +442,63 @@ export async function sendPaymentFailedEmail(input: { toEmail: string; displayNa
   await sendEmail({ to: input.toEmail, subject, text, html });
 }
 
+export async function sendAccountDeletedEmail(input: { toEmail: string; displayName: string }): Promise<void> {
+  const subject = "Your SPECTRE account has been deleted";
+  const text = [
+    `Hi ${input.displayName},`,
+    "",
+    "Your SPECTRE account and all associated data have been permanently deleted.",
+    "",
+    "If you did not request this, please contact us immediately by replying to this email.",
+  ].join("\n");
+
+  const html = `
+    <div style="font-family:Arial,sans-serif;line-height:1.5;color:#111;max-width:560px;">
+      <h2 style="margin:0 0 12px 0;">Account deleted</h2>
+      <p>Hi ${escapeHtml(input.displayName)},</p>
+      <p>Your SPECTRE account and all associated data have been permanently deleted as requested.</p>
+      <p style="color:#555;">If you did not request this deletion, please contact us immediately by replying to this email.</p>
+    </div>
+  `;
+
+  await sendEmail({ to: input.toEmail, subject, text, html });
+}
+
+export async function sendAiLimitReachedEmail(input: { toEmail: string; displayName: string; plan: string }): Promise<void> {
+  const appUrl = getAppBaseUrl();
+  const subject = "You've used all your SPECTRE AI sessions this month";
+  const text = [
+    `Hi ${input.displayName},`,
+    "",
+    "You've used all your AI analysis sessions for this month.",
+    "",
+    "Upgrade to Plus or Pro for more sessions:",
+    `${appUrl}/signin?mode=register&plan=plus`,
+    "",
+    "Your limit resets at the start of next month.",
+  ].join("\n");
+
+  const html = `
+    <div style="font-family:Arial,sans-serif;line-height:1.5;color:#111;max-width:560px;">
+      <h2 style="margin:0 0 12px 0;">Monthly AI limit reached</h2>
+      <p>Hi ${escapeHtml(input.displayName)},</p>
+      <p>You've used all your AI analysis sessions for this month on your ${escapeHtml(input.plan)} plan.</p>
+      <p>Upgrade for more sessions — Plus gives you 20/month, Pro is unlimited.</p>
+      <p>
+        <a
+          href="${escapeAttribute(appUrl + "/signin?mode=register&plan=plus")}"
+          style="display:inline-block;background:#ff4b33;color:#fff;text-decoration:none;padding:10px 14px;border-radius:8px;"
+        >
+          Upgrade Now
+        </a>
+      </p>
+      <p style="color:#555;">Your limit resets at the start of next month.</p>
+    </div>
+  `;
+
+  await sendEmail({ to: input.toEmail, subject, text, html });
+}
+
 function escapeHtml(value: string): string {
   return value
     .replace(/&/g, "&amp;")
