@@ -193,18 +193,7 @@ export default function LandingPage({
   const [tickerItems, setTickerItems] = useState(TICKER_FALLBACK);
 
   useEffect(() => {
-    const dismissed = localStorage.getItem("spectre_lead_dismissed");
-    if (dismissed) return;
-    const onScroll = () => {
-      const scrolled = window.scrollY + window.innerHeight;
-      const total = document.documentElement.scrollHeight;
-      if (scrolled / total > 0.45) {
-        setLeadPopupVisible(true);
-        window.removeEventListener("scroll", onScroll);
-      }
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    // Lead popup disabled
   }, []);
 
   async function submitLead(e: React.FormEvent) {
