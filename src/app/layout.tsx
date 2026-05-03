@@ -40,7 +40,7 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "SPECTRE - System for Portfolio Exposure, Correlation, Threat & Risk Evaluation",
+  title: "SPECTRE — AI Portfolio Intelligence for Australian Investors",
   description: "SPECTRE — AI portfolio intelligence for Australian investors. Risk scoring, Monte Carlo simulation, and AI analysis in one dashboard.",
 };
 
