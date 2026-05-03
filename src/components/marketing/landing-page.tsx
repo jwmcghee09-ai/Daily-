@@ -183,8 +183,50 @@ export default function LandingPage({
   const stickySectionRef = useRef<HTMLElement>(null);
   const aiConsoleRef = useRef<HTMLDivElement>(null);
   const aiSectionRef = useRef<HTMLElement>(null);
+  const [leadPopupVisible, setLeadPopupVisible] = useState(false);
+  const [leadEmail, setLeadEmail] = useState("");
+  const [leadConsent, setLeadConsent] = useState(false);
+  const [leadSubmitted, setLeadSubmitted] = useState(false);
+  const [leadError, setLeadError] = useState("");
+  const [leadWorking, setLeadWorking] = useState(false);
   const [activeStickyPanel, setActiveStickyPanel] = useState(0);
   const [tickerItems, setTickerItems] = useState(TICKER_FALLBACK);
+
+  useEffect(() => {
+    const dismissed = localStorage.getItem("spectre_lead_dismissed");
+    if (dismissed) return;
+    const timer = setTimeout(() => setLeadPopupVisible(true), 6000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  async function submitLead(e: React.FormEvent) {
+    e.preventDefault();
+    setLeadError("");
+    setLeadWorking(true);
+    try {
+      const res = await fetch("/api/marketing/lead", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: leadEmail, consent: leadConsent }),
+      });
+      if (!res.ok) {
+        const data = (await res.json()) as { error?: string };
+        setLeadError(data.error || "Something went wrong.");
+        return;
+      }
+      setLeadSubmitted(true);
+      localStorage.setItem("spectre_lead_dismissed", "1");
+    } catch {
+      setLeadError("Something went wrong. Please try again.");
+    } finally {
+      setLeadWorking(false);
+    }
+  }
+
+  function dismissLeadPopup() {
+    setLeadPopupVisible(false);
+    localStorage.setItem("spectre_lead_dismissed", "1");
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -1030,6 +1072,82 @@ export default function LandingPage({
           </div>
         </div>
       </footer>
+
+      {/* Lead capture + cookie consent popup */}
+      {leadPopupVisible && (
+        <div style={{
+          position: "fixed", bottom: "24px", left: "50%", transform: "translateX(-50%)",
+          width: "min(480px, calc(100vw - 32px))", zIndex: 9000,
+          background: "linear-gradient(160deg, #0e0b1a, #080510)",
+          border: "1px solid rgba(255,75,51,0.25)", borderRadius: "16px",
+          padding: "24px", boxShadow: "0 8px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,75,51,0.08)",
+          animation: "slideUp 0.3s ease",
+        }}>
+          <style>{`@keyframes slideUp { from { opacity:0; transform:translateX(-50%) translateY(16px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }`}</style>
+
+          <button onClick={dismissLeadPopup} style={{
+            position: "absolute", top: "12px", right: "14px",
+            background: "none", border: "none", color: "#6b7280", cursor: "pointer", fontSize: "18px", lineHeight: 1,
+          }}>×</button>
+
+          {leadSubmitted ? (
+            <div style={{ textAlign: "center", padding: "8px 0" }}>
+              <div style={{ fontSize: "1.5rem", marginBottom: "8px" }}>✓</div>
+              <p style={{ color: "#f4f0ff", fontWeight: 700, marginBottom: "4px" }}>You&apos;re on the list</p>
+              <p style={{ color: "#6b7280", fontSize: "0.82rem" }}>We&apos;ll be in touch. <a href="/signin?mode=register&plan=free" style={{ color: "#ff7a68" }}>Get started free →</a></p>
+            </div>
+          ) : (
+            <form onSubmit={(e) => { void submitLead(e); }}>
+              <p style={{ fontFamily: "'DM Mono', monospace", fontSize: "0.6rem", letterSpacing: "0.16em", textTransform: "uppercase", color: "#ff7a68", marginBottom: "8px" }}>● Free — No card required</p>
+              <h3 style={{ fontFamily: "'Sora', sans-serif", fontSize: "1.15rem", fontWeight: 800, color: "#f8f8fb", marginBottom: "6px", lineHeight: 1.2 }}>Start tracking your portfolio risk for free</h3>
+              <p style={{ fontSize: "0.78rem", color: "#6b7280", marginBottom: "16px", lineHeight: 1.5 }}>AI analysis, live prices, and risk scores for your ASX, crypto, and super holdings.</p>
+
+              <input
+                type="email"
+                placeholder="your@email.com"
+                value={leadEmail}
+                onChange={(e) => setLeadEmail(e.target.value)}
+                required
+                style={{
+                  width: "100%", padding: "10px 14px", marginBottom: "12px",
+                  background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)",
+                  borderRadius: "10px", color: "#f4f0ff", fontSize: "0.88rem", outline: "none",
+                }}
+              />
+
+              <label style={{ display: "flex", alignItems: "flex-start", gap: "10px", marginBottom: "8px", cursor: "pointer" }}>
+                <input
+                  type="checkbox"
+                  checked={leadConsent}
+                  onChange={(e) => setLeadConsent(e.target.checked)}
+                  style={{ marginTop: "2px", flexShrink: 0 }}
+                />
+                <span style={{ fontSize: "0.72rem", color: "#6b7280", lineHeight: 1.5 }}>
+                  I consent to receive promotional emails from SPECTRE. You can unsubscribe any time.
+                </span>
+              </label>
+
+              <label style={{ display: "flex", alignItems: "flex-start", gap: "10px", marginBottom: "16px", cursor: "pointer" }}>
+                <input type="checkbox" defaultChecked disabled style={{ marginTop: "2px", flexShrink: 0 }} />
+                <span style={{ fontSize: "0.72rem", color: "#6b7280", lineHeight: 1.5 }}>
+                  I accept the use of cookies for analytics and personalisation. <a href="/privacy" style={{ color: "#9ca3af" }}>Privacy Policy</a>
+                </span>
+              </label>
+
+              {leadError && <p style={{ fontSize: "0.78rem", color: "#ff7a68", marginBottom: "10px" }}>{leadError}</p>}
+
+              <button type="submit" disabled={leadWorking || !leadConsent} style={{
+                width: "100%", padding: "11px", background: "linear-gradient(135deg, #ff4b33, #ff2f14)",
+                border: "none", borderRadius: "10px", color: "#fff", fontWeight: 700,
+                fontSize: "0.88rem", cursor: leadConsent ? "pointer" : "not-allowed",
+                opacity: leadConsent ? 1 : 0.5, transition: "opacity 0.15s",
+              }}>
+                {leadWorking ? "..." : "Get Started Free →"}
+              </button>
+            </form>
+          )}
+        </div>
+      )}
     </main>
   );
 }
