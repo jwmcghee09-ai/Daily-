@@ -195,8 +195,16 @@ export default function LandingPage({
   useEffect(() => {
     const dismissed = localStorage.getItem("spectre_lead_dismissed");
     if (dismissed) return;
-    const timer = setTimeout(() => setLeadPopupVisible(true), 6000);
-    return () => clearTimeout(timer);
+    const onScroll = () => {
+      const scrolled = window.scrollY + window.innerHeight;
+      const total = document.documentElement.scrollHeight;
+      if (scrolled / total > 0.45) {
+        setLeadPopupVisible(true);
+        window.removeEventListener("scroll", onScroll);
+      }
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   async function submitLead(e: React.FormEvent) {
@@ -207,7 +215,7 @@ export default function LandingPage({
       const res = await fetch("/api/marketing/lead", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: leadEmail, consent: leadConsent }),
+        body: JSON.stringify({ email: leadEmail, consent: leadConsent, deal: "7day-pro-trial" }),
       });
       if (!res.ok) {
         const data = (await res.json()) as { error?: string };
@@ -1092,15 +1100,18 @@ export default function LandingPage({
 
           {leadSubmitted ? (
             <div style={{ textAlign: "center", padding: "8px 0" }}>
-              <div style={{ fontSize: "1.5rem", marginBottom: "8px" }}>✓</div>
-              <p style={{ color: "#f4f0ff", fontWeight: 700, marginBottom: "4px" }}>You&apos;re on the list</p>
-              <p style={{ color: "#6b7280", fontSize: "0.82rem" }}>We&apos;ll be in touch. <a href="/signin?mode=register&plan=free" style={{ color: "#ff7a68" }}>Get started free →</a></p>
+              <div style={{ fontSize: "1.4rem", marginBottom: "8px" }}>✓</div>
+              <p style={{ color: "#f4f0ff", fontWeight: 700, marginBottom: "6px" }}>Deal unlocked — check your inbox</p>
+              <p style={{ color: "#6b7280", fontSize: "0.82rem", lineHeight: 1.5 }}>We&apos;ll send your Pro trial link shortly. <a href="/signin?mode=register&plan=pro" style={{ color: "#ff7a68" }}>Or start now →</a></p>
             </div>
           ) : (
             <form onSubmit={(e) => { void submitLead(e); }}>
-              <p style={{ fontFamily: "'DM Mono', monospace", fontSize: "0.6rem", letterSpacing: "0.16em", textTransform: "uppercase", color: "#ff7a68", marginBottom: "8px" }}>● Free — No card required</p>
-              <h3 style={{ fontFamily: "'Sora', sans-serif", fontSize: "1.15rem", fontWeight: 800, color: "#f8f8fb", marginBottom: "6px", lineHeight: 1.2 }}>Start tracking your portfolio risk for free</h3>
-              <p style={{ fontSize: "0.78rem", color: "#6b7280", marginBottom: "16px", lineHeight: 1.5 }}>AI analysis, live prices, and risk scores for your ASX, crypto, and super holdings.</p>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "rgba(255,75,51,0.1)", border: "1px solid rgba(255,75,51,0.25)", borderRadius: "999px", padding: "3px 10px", marginBottom: "10px" }}>
+                <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#ff4b33", display: "inline-block", flexShrink: 0 }} />
+                <span style={{ fontFamily: "'DM Mono', monospace", fontSize: "0.58rem", letterSpacing: "0.14em", textTransform: "uppercase", color: "#ff7a68" }}>Limited offer</span>
+              </div>
+              <h3 style={{ fontFamily: "'Sora', sans-serif", fontSize: "1.15rem", fontWeight: 800, color: "#f8f8fb", marginBottom: "6px", lineHeight: 1.2 }}>Get 7 days of Pro free</h3>
+              <p style={{ fontSize: "0.78rem", color: "#6b7280", marginBottom: "16px", lineHeight: 1.5 }}>Unlimited AI, advanced quant console, live research terminal. No card required to claim.</p>
 
               <input
                 type="email"
@@ -1142,7 +1153,7 @@ export default function LandingPage({
                 fontSize: "0.88rem", cursor: leadConsent ? "pointer" : "not-allowed",
                 opacity: leadConsent ? 1 : 0.5, transition: "opacity 0.15s",
               }}>
-                {leadWorking ? "..." : "Get Started Free →"}
+                {leadWorking ? "..." : "Claim 7 Days Free →"}
               </button>
             </form>
           )}

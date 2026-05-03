@@ -14,9 +14,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Too many attempts." }, { status: 429 });
     }
 
-    const body = (await request.json()) as { email?: unknown; consent?: unknown };
+    const body = (await request.json()) as { email?: unknown; consent?: unknown; deal?: unknown };
     const email = normalizeEmail(String(body.email || ""));
     const consent = body.consent === true;
+    const deal = typeof body.deal === "string" ? body.deal : "";
 
     if (!isLikelyEmail(email)) {
       return NextResponse.json({ error: "Please enter a valid email." }, { status: 400 });
@@ -32,8 +33,9 @@ export async function POST(request: Request) {
         lines: [
           `Email: ${email}`,
           `Promotional consent: yes`,
+          deal ? `Deal: ${deal}` : "",
           `Time: ${new Date().toUTCString()}`,
-        ],
+        ].filter(Boolean),
       }).catch(() => {});
     }
 
