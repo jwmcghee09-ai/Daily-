@@ -53,7 +53,6 @@ export default function SignInPage({
   const [hasRequestedCheckout, setHasRequestedCheckout] = useState(Boolean(initialPlan));
   const [email, setEmail] = useState(authenticatedUser?.email ?? "");
   const [password, setPassword] = useState("");
-  const [displayName, setDisplayName] = useState(authenticatedUser?.displayName ?? "");
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [resetToken, setResetToken] = useState(initialResetToken ?? "");
@@ -91,7 +90,6 @@ export default function SignInPage({
 
         setSessionUser(normalizeSessionUser(payload.user));
         setEmail(payload.user.email);
-        setDisplayName(payload.user.displayName);
       } catch {
         // Keep the page usable even if session polling fails.
       }
@@ -154,7 +152,6 @@ export default function SignInPage({
         body: JSON.stringify({
           email,
           password,
-          displayName,
           acceptsTerms: authMode === "register" ? acceptTerms : undefined,
         }),
       });
@@ -595,18 +592,6 @@ export default function SignInPage({
 
                       {authMode === "register" ? (
                         <>
-                          <label>
-                            <span>Display Name</span>
-                            <input
-                              type="text"
-                              value={displayName}
-                              onChange={(e) => setDisplayName(e.target.value)}
-                              placeholder="Your name"
-                              autoComplete="name"
-                              maxLength={80}
-                            />
-                          </label>
-
                           <fieldset className={styles.planPicker}>
                             <legend>Choose your plan</legend>
                             {(["free", "plus", "pro"] as CheckoutPlan[]).map((plan) => (
