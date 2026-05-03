@@ -145,18 +145,12 @@
 .primaryButton {
   color: #fff;
   background: linear-gradient(135deg, #a855f7 0%, #d946ef 45%, #ff7a30 100%);
-  box-shadow: 0 4px 22px rgba(217, 70, 239, 0.35), 0 1px 0 rgba(255, 255, 255, 0.12) inset;
-  animation: ctaGlow 2.8s ease-in-out infinite;
+  box-shadow: 0 4px 28px rgba(217, 70, 239, 0.45), 0 1px 0 rgba(255, 255, 255, 0.12) inset;
 }
 
 .primaryButton:hover {
-  box-shadow: 0 6px 32px rgba(217, 70, 239, 0.55), 0 1px 0 rgba(255, 255, 255, 0.15) inset;
+  box-shadow: 0 6px 36px rgba(217, 70, 239, 0.65), 0 1px 0 rgba(255, 255, 255, 0.15) inset;
   filter: brightness(1.1);
-}
-
-@keyframes ctaGlow {
-  0%, 100% { box-shadow: 0 4px 22px rgba(217, 70, 239, 0.35), 0 1px 0 rgba(255, 255, 255, 0.12) inset; }
-  50%       { box-shadow: 0 4px 32px rgba(217, 70, 239, 0.6), 0 0 0 4px rgba(168, 85, 247, 0.12), 0 1px 0 rgba(255, 255, 255, 0.12) inset; }
 }
 
 .ghostButton,
