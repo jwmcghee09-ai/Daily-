@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Natural Floor — Room Carpet Preview</title>
+  <style>
+    :root {
+      --green: #2d5a3d;
+      --green-dark: #1f3f2b;
+      --green-light: #4a8060;
+      --tan: #c9a87c;
+      --light: #f5f0ea;
+      --lighter: #faf7f3;
+      --border: #e0d6cc;
+      --text: #2a2318;
+      --text-muted: #7a6e62;
+      --shadow: 0 2px 12px rgba(0,0,0,0.12);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Georgia', serif;
+      background: var(--light);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--green);
+      color: white;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    }
+    .logo { font-size: 18px; font-weight: bold; letter-spacing: 1px; }
+    .logo span { color: var(--tan); }
+    .header-sub { font-size: 12px; opacity: 0.75; letter-spacing: 2px; text-transform: uppercase; margin-top: 2px; }
+
+    /* ── Layout ── */
+    .app {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* ── Left controls ── */
+    .controls {
+      width: 220px;
+      background: var(--lighter);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 16px;
+      gap: 14px;
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+
+    .section-title {
+      font-size: 10px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: white;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn:hover { background: var(--green); color: white; border-color: var(--green); }
+    .btn.primary { background: var(--green); color: white; border-color: var(--green); }
+    .btn.primary:hover { background: var(--green-dark); }
+    .btn.active { background: var(--green); color: white; border-color: var(--green); }
+    .btn.danger { border-color: #c0392b; color: #c0392b; }
+    .btn.danger:hover { background: #c0392b; color: white; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+
+    .icon { font-size: 16px; line-height: 1; }
+
+    .step-indicator {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 10px;
+      background: #fff8e8;
+      border: 1px solid #f0d890;
+      border-radius: 6px;
+      font-size: 11px;
+      color: #7a6010;
+      line-height: 1.4;
+    }
+    .step-indicator .step-num {
+      width: 20px;
+      height: 20px;
+      background: var(--tan);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+
+    .divider { border: none; border-top: 1px solid var(--border); margin: 0; }
+
+    .cycle-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .cycle-row {
+      display: flex;
+      gap: 6px;
+    }
+    .cycle-row .btn {
+      flex: 1;
+      justify-content: center;
+      text-align: center;
+      font-size: 18px;
+      padding: 8px;
+    }
+    .cycle-speed {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .cycle-speed input[type=range] {
+      flex: 1;
+      accent-color: var(--green);
+    }
+
+    .opacity-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .opacity-row input[type=range] {
+      flex: 1;
+      accent-color: var(--green);
+    }
+
+    .point-list {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .point-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      padding: 3px 6px;
+      border-radius: 4px;
+      background: white;
+      border: 1px solid var(--border);
+    }
+    .point-badge .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--border);
+      flex-shrink: 0;
+    }
+    .point-badge.set .dot { background: var(--green); }
+    .point-badge.current .dot { background: var(--tan); animation: pulse 1s infinite; }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.4); opacity: 0.7; }
+    }
+
+    /* ── Room canvas area ── */
+    .canvas-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #2a2318;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #room-canvas {
+      max-width: 100%;
+      max-height: 100%;
+      display: block;
+      cursor: crosshair;
+    }
+
+    .carpet-proj-wrap {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #carpet-proj {
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      transform-origin: 0 0;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .empty-state {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      color: rgba(255,255,255,0.4);
+      text-align: center;
+      pointer-events: none;
+    }
+    .empty-state .big-icon { font-size: 64px; }
+    .empty-state p { font-size: 14px; max-width: 260px; line-height: 1.6; }
+
+    /* ── Carpet panel ── */
+    .carpet-panel {
+      width: 260px;
+      background: white;
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .carpet-panel-header {
+      padding: 12px 14px 8px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .carpet-panel-header h3 {
+      font-size: 13px;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .filter-row {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+    .filter-btn {
+      padding: 3px 8px;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      font-size: 10px;
+      cursor: pointer;
+      background: white;
+      color: var(--text-muted);
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+    .filter-btn:hover, .filter-btn.active {
+      background: var(--green);
+      color: white;
+      border-color: var(--green);
+    }
+
+    .carpet-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      align-content: start;
+    }
+
+    .carpet-card {
+      border: 2px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.15s;
+      background: white;
+    }
+    .carpet-card:hover {
+      border-color: var(--green-light);
+      box-shadow: 0 2px 8px rgba(45,90,61,0.15);
+      transform: translateY(-1px);
+    }
+    .carpet-card.selected {
+      border-color: var(--green);
+      box-shadow: 0 0 0 1px var(--green);
+    }
+
+    .carpet-swatch {
+      width: 100%;
+      height: 56px;
+      background-size: 16px 16px, 16px 16px, cover;
+      position: relative;
+    }
+    .carpet-swatch-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .carpet-card-info {
+      padding: 5px 6px;
+    }
+    .carpet-card-name {
+      font-size: 10px;
+      font-weight: bold;
+      color: var(--text);
+      line-height: 1.3;
+      margin-bottom: 2px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .carpet-card-price {
+      font-size: 10px;
+      color: var(--green);
+    }
+    .carpet-card-material {
+      font-size: 9px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .selected-carpet-bar {
+      padding: 10px 14px;
+      border-top: 1px solid var(--border);
+      background: var(--lighter);
+      flex-shrink: 0;
+    }
+    .selected-carpet-bar .name { font-size: 12px; font-weight: bold; }
+    .selected-carpet-bar .price { font-size: 12px; color: var(--green); }
+    .selected-carpet-bar .meta { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+
+    /* ── Webcam modal ── */
+    #cam-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    #cam-modal.open { display: flex; }
+    .cam-box {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      max-width: 500px;
+      width: 90%;
+    }
+    .cam-box h3 { font-size: 16px; }
+    #cam-video { width: 100%; border-radius: 8px; background: #000; max-height: 320px; }
+    .cam-actions { display: flex; gap: 10px; width: 100%; }
+    .cam-actions .btn { justify-content: center; }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--green-dark);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-size: 13px;
+      pointer-events: none;
+      transition: transform 0.3s;
+      z-index: 200;
+    }
+    #toast.show { transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo">Natural <span>Floor</span> — Carpet Preview</div>
+    <div class="header-sub">Established 1968 &bull; naturalfloor.com.au</div>
+  </div>
+  <div style="font-size:12px;opacity:0.6;text-align:right;">
+    Sydney &amp; Melbourne<br>
+    Free Samples Available
+  </div>
+</header>
+
+<div class="app">
+
+  <!-- Left controls -->
+  <div class="controls">
+
+    <div>
+      <div class="section-title">1. Room Photo</div>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px;">
+        <button class="btn" id="btn-upload"><span class="icon">📁</span> Upload Photo</button>
+        <button class="btn" id="btn-camera"><span class="icon">📷</span> Use Camera</button>
+      </div>
+      <input type="file" id="file-input" accept="image/*" style="display:none">
+    </div>
+
+    <hr class="divider">
+
+    <div>
+      <div class="section-title">2. Mark Floor Area</div>
+      <div style="margin-top:4px;display:flex;flex-direction:column;gap:6px;">
+        <button class="btn" id="btn-select-floor" disabled><span class="icon">✏️</span> Click 4 Floor Corners</button>
+        <div class="point-list" id="point-list">
+          <div class="point-badge" id="pb-0"><div class="dot"></div> Top-Left</div>
+          <div class="point-badge" id="pb-1"><div class="dot"></div> Top-Right</div>
+          <div class="point-badge" id="pb-2"><div class="dot"></div> Bottom-Right</div>
+          <div class="point-badge" id="pb-3"><div class="dot"></div> Bottom-Left</div>
+        </div>
+        <button class="btn danger" id="btn-reset-points" disabled><span class="icon">↺</span> Reset Points</button>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <div>
+      <div class="section-title">3. Carpet Opacity</div>
+      <div class="opacity-row" style="margin-top:6px;">
+        <span>0%</span>
+        <input type="range" id="opacity-slider" min="10" max="100" value="85">
+        <span>100%</span>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <div>
+      <div class="section-title">Cycle Carpets</div>
+      <div class="cycle-controls" style="margin-top:6px;">
+        <div class="cycle-row">
+          <button class="btn" id="btn-prev" disabled title="Previous">&#8592;</button>
+          <button class="btn" id="btn-auto" disabled title="Auto-cycle">&#9654;</button>
+          <button class="btn" id="btn-next" disabled title="Next">&#8594;</button>
+        </div>
+        <div class="cycle-speed">
+          <span>Speed</span>
+          <input type="range" id="speed-slider" min="1" max="10" value="4">
+          <span id="speed-label">2.5s</span>
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <div id="step-hint" class="step-indicator" style="display:none">
+      <div class="step-num">!</div>
+      <div id="step-hint-text">Upload a photo to begin.</div>
+    </div>
+
+  </div>
+
+  <!-- Canvas -->
+  <div class="canvas-wrap" id="canvas-wrap">
+    <canvas id="room-canvas"></canvas>
+    <div class="carpet-proj-wrap" id="proj-wrap">
+      <canvas id="carpet-proj"></canvas>
+    </div>
+    <div class="empty-state" id="empty-state">
+      <div class="big-icon">🏠</div>
+      <p>Upload a photo of your room or use your camera to see how our carpets look in your space.</p>
+    </div>
+  </div>
+
+  <!-- Carpet panel -->
+  <div class="carpet-panel">
+    <div class="carpet-panel-header">
+      <h3>Choose a Carpet</h3>
+      <div class="filter-row" id="filter-row">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="sisal">Sisal</button>
+        <button class="filter-btn" data-filter="wool">Wool</button>
+        <button class="filter-btn" data-filter="basquette">Basquette</button>
+      </div>
+    </div>
+    <div class="carpet-list" id="carpet-list"></div>
+    <div class="selected-carpet-bar" id="selected-bar" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;">
+        <span class="name" id="sel-name">—</span>
+        <span class="price" id="sel-price">—</span>
+      </div>
+      <div class="meta" id="sel-meta">—</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Camera modal -->
+<div id="cam-modal">
+  <div class="cam-box">
+    <h3>Take a Room Photo</h3>
+    <video id="cam-video" autoplay playsinline muted></video>
+    <div class="cam-actions">
+      <button class="btn primary" id="btn-snap" style="flex:1;justify-content:center;">
+        <span class="icon">📸</span> Capture
+      </button>
+      <button class="btn" id="btn-cam-close" style="flex:1;justify-content:center;">
+        Cancel
+      </button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── Carpet Catalog ──────────────────────────────────────────────────────────
+const CARPETS = [
+  { id: 2716, name: "Belgian Wild Rice Sisal",               price: 195, material: "Sisal",     type: "sisal",    color: "#C8AA7E" },
+  { id: 2761, name: "Belgian Panama Sisal",                  price: 120, material: "Sisal",     type: "sisal",    color: "#D6BE96" },
+  { id: 2853, name: "Tobacco Sisal",                         price:  75, material: "Sisal",     type: "sisal",    color: "#7A5238" },
+  { id: 2714, name: "Belgian Silver Birch Sisal",            price: 195, material: "Sisal",     type: "sisal",    color: "#BCBAB0" },
+  { id: 2867, name: "Oriental Rush Sisal",                   price:  85, material: "Sisal",     type: "sisal",    color: "#CCBA88" },
+  { id: 2876, name: "Oriental Deluxe Tawny Sisal",           price: 115, material: "Sisal",     type: "sisal",    color: "#A07850" },
+  { id: 2760, name: "Belgian Maze Sisal",                    price: 195, material: "Sisal",     type: "sisal",    color: "#B89C74" },
+  { id: 2753, name: "Brindle Sisal",                         price: 195, material: "Sisal",     type: "sisal",    color: "#96836E" },
+  { id: 2857, name: "Graphite Sisal",                        price:  85, material: "Sisal",     type: "sisal",    color: "#5C5C5C" },
+  { id: 2870, name: "Pepper and Salt Sisal",                 price:  75, material: "Sisal",     type: "sisal",    color: "#A0A094" },
+  { id: 2866, name: "Chestnut Sisal",                        price:  75, material: "Sisal",     type: "sisal",    color: "#8A5A34" },
+  { id: 2713, name: "Belgian Sisal Natural",                 price: 195, material: "Sisal",     type: "sisal",    color: "#C4AA80" },
+  { id: 2749, name: "Belgian Pebble Sisal",                  price: 195, material: "Sisal",     type: "sisal",    color: "#B0A890" },
+  { id: 2739, name: "Belgian Ecru Sisal",                    price: 195, material: "Sisal",     type: "sisal",    color: "#E8D8B8" },
+  { id: 2840, name: "Seagrass Natural Weave",                price:  80, material: "Seagrass",  type: "sisal",    color: "#8A9870" },
+  { id: 2883, name: "Coir Classic Natural",                  price:  65, material: "Coir",      type: "sisal",    color: "#A08060" },
+  { id: 2879, name: "Tatami Paper Weave",                    price:  90, material: "Paper",     type: "sisal",    color: "#D4C8A0" },
+  { id: 2878, name: "Sisal & Paper Blend",                   price:  95, material: "Sisal/Paper",type: "sisal",   color: "#C8B888" },
+  { id: 2875, name: "Oriental Deluxe Natural",               price: 115, material: "Sisal",     type: "sisal",    color: "#C0AA78" },
+  { id: 2660, name: "Coir Entrance Mat",                     price:  55, material: "Coir",      type: "sisal",    color: "#9A7A50" },
+  { id: 2723, name: "Belgian Platinum Lattice Wool & Sisal", price: 205, material: "Wool/Sisal", type: "wool",    color: "#C4C4BC" },
+  { id: 2715, name: "Belgian Champagne Basquette Wool & Sisal", price: 205, material: "Wool/Sisal", type: "basquette", color: "#D4C0A0" },
+  { id: 2732, name: "Belgian Ash Grey Basquette Wool & Sisal", price: 210, material: "Wool/Sisal", type: "basquette", color: "#A8A8A0" },
+  { id: 2728, name: "Belgian Linen Lattice Wool & Sisal",    price: 205, material: "Wool/Sisal", type: "wool",    color: "#D8C8B0" },
+  { id: 2727, name: "Belgian Lattice Wool & Sisal Natural",  price: 205, material: "Wool/Sisal", type: "wool",    color: "#C0B090" },
+  { id: 2730, name: "Belgian Wheat Lattice Wool & Sisal",    price: 205, material: "Wool/Sisal", type: "wool",    color: "#D4B87A" },
+  { id: 2724, name: "Belgian Espresso Lattice Wool & Sisal", price: 205, material: "Wool/Sisal", type: "wool",    color: "#6B4A35" },
+];
+
+// ── Texture Patterns ────────────────────────────────────────────────────────
+function hexToRgb(hex) {
+  const r = parseInt(hex.slice(1,3), 16);
+  const g = parseInt(hex.slice(3,5), 16);
+  const b = parseInt(hex.slice(5,7), 16);
+  return { r, g, b };
+}
+
+function darken(hex, amt = 0.25) {
+  const { r, g, b } = hexToRgb(hex);
+  const d = 1 - amt;
+  return `rgb(${Math.round(r*d)},${Math.round(g*d)},${Math.round(b*d)})`;
+}
+
+function lighten(hex, amt = 0.2) {
+  const { r, g, b } = hexToRgb(hex);
+  return `rgb(${Math.min(255,Math.round(r+(255-r)*amt))},${Math.min(255,Math.round(g+(255-g)*amt))},${Math.min(255,Math.round(b+(255-b)*amt))})`;
+}
+
+function buildTexture(carpet) {
+  const c = carpet.color;
+  const dark = darken(c, 0.3);
+  const light = lighten(c, 0.15);
+  const T = 16; // tile size
+  const offCanvas = document.createElement('canvas');
+  offCanvas.width = T; offCanvas.height = T;
+  const ctx = offCanvas.getContext('2d');
+  const { r, g, b } = hexToRgb(c);
+
+  if (carpet.type === 'basquette') {
+    // Basket-weave: alternating horizontal/vertical blocks
+    ctx.fillStyle = c;
+    ctx.fillRect(0, 0, T, T);
+    ctx.strokeStyle = `rgba(0,0,0,0.18)`;
+    ctx.lineWidth = 0.8;
+    // Top-left block: horizontal stripes
+    for (let y = 1; y < T/2; y += 2.5) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(T/2, y); ctx.stroke();
+    }
+    // Bottom-right block: vertical stripes
+    for (let x = T/2+1; x < T; x += 2.5) {
+      ctx.beginPath(); ctx.moveTo(x, T/2); ctx.lineTo(x, T); ctx.stroke();
+    }
+    // Top-right: vertical stripes
+    for (let x = T/2+1; x < T; x += 2.5) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, T/2); ctx.stroke();
+    }
+    // Bottom-left: horizontal stripes
+    for (let y = T/2+1; y < T; y += 2.5) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(T/2, y); ctx.stroke();
+    }
+    // Block dividers
+    ctx.strokeStyle = `rgba(0,0,0,0.12)`;
+    ctx.lineWidth = 0.5;
+    ctx.strokeRect(0, 0, T/2, T/2);
+    ctx.strokeRect(T/2, T/2, T/2, T/2);
+    ctx.strokeRect(T/2, 0, T/2, T/2);
+    ctx.strokeRect(0, T/2, T/2, T/2);
+
+  } else if (carpet.type === 'wool') {
+    // Wool lattice: open grid with slight offset between rows
+    ctx.fillStyle = c;
+    ctx.fillRect(0, 0, T, T);
+    // Main grid lines
+    ctx.strokeStyle = `rgba(0,0,0,0.15)`;
+    ctx.lineWidth = 0.7;
+    for (let i = 0; i <= T; i += T/4) {
+      ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(T, i); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, T); ctx.stroke();
+    }
+    // Diagonal accent (lattice cross)
+    ctx.strokeStyle = `rgba(0,0,0,0.08)`;
+    ctx.lineWidth = 0.5;
+    ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(T,T); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(T,0); ctx.lineTo(0,T); ctx.stroke();
+
+  } else {
+    // Sisal: tight diagonal crosshatch — the natural fiber look
+    ctx.fillStyle = c;
+    ctx.fillRect(0, 0, T, T);
+    const step = 4;
+    ctx.strokeStyle = `rgba(0,0,0,0.12)`;
+    ctx.lineWidth = 0.6;
+    // Horizontal warp threads
+    for (let y = 0; y < T; y += step) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(T, y); ctx.stroke();
+    }
+    // Vertical weft threads
+    ctx.strokeStyle = `rgba(0,0,0,0.08)`;
+    for (let x = 0; x < T; x += step) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, T); ctx.stroke();
+    }
+    // Diagonal twist (natural fiber characteristic)
+    ctx.strokeStyle = `rgba(0,0,0,0.05)`;
+    ctx.lineWidth = 0.5;
+    for (let d = -T; d < T*2; d += step*2) {
+      ctx.beginPath(); ctx.moveTo(d, 0); ctx.lineTo(d+T, T); ctx.stroke();
+    }
+  }
+
+  return offCanvas;
+}
+
+// ── State ───────────────────────────────────────────────────────────────────
+let roomImage = null;
+let displayScale = 1;
+let displayOffsetX = 0;
+let displayOffsetY = 0;
+let floorPoints = [];
+let selectingFloor = false;
+let activeCarpetIdx = 0;
+let filteredCarpets = [...CARPETS];
+let cycleInterval = null;
+let isCycling = false;
+const PROJ_SIZE = 600;
+const CARPET_LABELS = ['Top-Left','Top-Right','Bottom-Right','Bottom-Left'];
+
+// ── DOM refs ────────────────────────────────────────────────────────────────
+const canvas = document.getElementById('room-canvas');
+const ctx = canvas.getContext('2d');
+const carpetProj = document.getElementById('carpet-proj');
+const carpetProjCtx = carpetProj.getContext('2d');
+const projWrap = document.getElementById('proj-wrap');
+const canvasWrap = document.getElementById('canvas-wrap');
+const emptyState = document.getElementById('empty-state');
+const carpetList = document.getElementById('carpet-list');
+const selBar = document.getElementById('selected-bar');
+const stepHint = document.getElementById('step-hint');
+const stepHintText = document.getElementById('step-hint-text');
+
+// ── Toast ────────────────────────────────────────────────────────────────────
+let toastTimer;
+function toast(msg, dur = 2500) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), dur);
+}
+
+// ── Render room photo ────────────────────────────────────────────────────────
+function renderRoom() {
+  if (!roomImage) return;
+  const wrap = canvasWrap;
+  const ww = wrap.clientWidth;
+  const wh = wrap.clientHeight;
+  const ir = roomImage.width / roomImage.height;
+  const wr = ww / wh;
+  let dw, dh;
+  if (ir > wr) { dw = ww; dh = ww / ir; }
+  else          { dh = wh; dw = wh * ir; }
+
+  canvas.width  = dw;
+  canvas.height = dh;
+  canvas.style.position = 'absolute';
+  canvas.style.left = Math.round((ww - dw) / 2) + 'px';
+  canvas.style.top  = Math.round((wh - dh) / 2) + 'px';
+
+  displayScale   = dw / roomImage.width;
+  displayOffsetX = (ww - dw) / 2;
+  displayOffsetY = (wh - dh) / 2;
+
+  ctx.drawImage(roomImage, 0, 0, dw, dh);
+  drawFloorPoints();
+}
+
+function drawFloorPoints() {
+  if (floorPoints.length === 0) return;
+  ctx.drawImage(roomImage, 0, 0, canvas.width, canvas.height);
+
+  // Draw polygon fill if we have 4 points
+  if (floorPoints.length === 4) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(floorPoints[0].cx, floorPoints[0].cy);
+    for (let i = 1; i < 4; i++) ctx.lineTo(floorPoints[i].cx, floorPoints[i].cy);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(45,90,61,0.12)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(45,90,61,0.6)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6,3]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+  }
+
+  // Draw points
+  floorPoints.forEach((p, i) => {
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(p.cx, p.cy, 7, 0, Math.PI * 2);
+    ctx.fillStyle = 'white';
+    ctx.fill();
+    ctx.strokeStyle = '#2d5a3d';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+    ctx.fillStyle = '#2d5a3d';
+    ctx.font = 'bold 9px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(i + 1, p.cx, p.cy);
+    ctx.restore();
+  });
+}
+
+// ── Homography computation ───────────────────────────────────────────────────
+// Maps a WxH source element (carpet texture) to 4 destination points
+function computeMatrix3d(pts, W, H) {
+  const [p0, p1, p2, p3] = pts; // TL, TR, BR, BL
+
+  const dx1 = p1.x - p2.x, dy1 = p1.y - p2.y;
+  const dx2 = p3.x - p2.x, dy2 = p3.y - p2.y;
+  const sx = p0.x - p1.x + p2.x - p3.x;
+  const sy = p0.y - p1.y + p2.y - p3.y;
+  const det = dx1 * dy2 - dx2 * dy1;
+
+  let g = 0, h = 0;
+  if (Math.abs(det) > 1e-10) {
+    g = (sx * dy2 - dx2 * sy) / det;
+    h = (dx1 * sy - sx * dy1) / det;
+  }
+
+  const a = p1.x - p0.x + g * p1.x;
+  const b = p3.x - p0.x + h * p3.x;
+  const c = p0.x;
+  const d = p1.y - p0.y + g * p1.y;
+  const e = p3.y - p0.y + h * p3.y;
+  const f = p0.y;
+
+  // Scale so that source maps from [0,W]x[0,H] instead of unit square
+  const a_ = a / W, b_ = b / H, d_ = d / W, e_ = e / H;
+  const g_ = g / W, h_ = h / H;
+
+  // CSS matrix3d (column-major 4x4)
+  return `matrix3d(${a_},${d_},0,${g_},${b_},${e_},0,${h_},0,0,1,0,${c},${f},0,1)`;
+}
+
+// ── Carpet Projection ────────────────────────────────────────────────────────
+function buildCarpetCanvas(carpet) {
+  carpetProj.width  = PROJ_SIZE;
+  carpetProj.height = PROJ_SIZE;
+  carpetProjCtx.clearRect(0, 0, PROJ_SIZE, PROJ_SIZE);
+
+  const texCanvas = buildTexture(carpet);
+  const texPat = carpetProjCtx.createPattern(texCanvas, 'repeat');
+  carpetProjCtx.fillStyle = texPat;
+  carpetProjCtx.fillRect(0, 0, PROJ_SIZE, PROJ_SIZE);
+}
+
+function applyProjection() {
+  if (!roomImage || floorPoints.length < 4) {
+    carpetProj.style.opacity = '0';
+    return;
+  }
+
+  // Convert floor points from canvas coords to wrap coords
+  const ww = canvasWrap.clientWidth;
+  const wh = canvasWrap.clientHeight;
+  const dw = canvas.width;
+  const dh = canvas.height;
+  const ox = (ww - dw) / 2;
+  const oy = (wh - dh) / 2;
+
+  const pts = floorPoints.map(p => ({
+    x: p.cx + ox,
+    y: p.cy + oy
+  }));
+
+  const matrix = computeMatrix3d(pts, PROJ_SIZE, PROJ_SIZE);
+  carpetProj.style.transformOrigin = '0 0';
+  carpetProj.style.transform = matrix;
+  carpetProj.style.width  = PROJ_SIZE + 'px';
+  carpetProj.style.height = PROJ_SIZE + 'px';
+  carpetProj.style.position = 'absolute';
+  carpetProj.style.top  = '0';
+  carpetProj.style.left = '0';
+
+  const opacity = parseInt(document.getElementById('opacity-slider').value) / 100;
+  carpetProj.style.opacity = String(opacity);
+}
+
+// ── Carpet Card Rendering ─────────────────────────────────────────────────────
+function createSwatchStyle(carpet) {
+  const c = carpet.color;
+  const dark = darken(c, 0.3);
+  const step = carpet.type === 'basquette' ? '8px 8px' : '6px 6px';
+  // Use the 1x1 image as the base; layer a CSS pattern on top
+  return `
+    background-color: ${c};
+    background-image: url('https://nfcimg.sg-host.com/1x1_${carpet.id}.jpg?cb=2025033101');
+    background-size: cover;
+  `;
+}
+
+function renderCarpetList() {
+  carpetList.innerHTML = '';
+  filteredCarpets.forEach((carpet, i) => {
+    const isSelected = (carpet === CARPETS[activeCarpetIdx]);
+    const card = document.createElement('div');
+    card.className = 'carpet-card' + (isSelected ? ' selected' : '');
+    card.dataset.idx = CARPETS.indexOf(carpet);
+
+    const swatch = document.createElement('div');
+    swatch.className = 'carpet-swatch';
+    swatch.style.cssText = createSwatchStyle(carpet);
+
+    const info = document.createElement('div');
+    info.className = 'carpet-card-info';
+    info.innerHTML = `
+      <div class="carpet-card-name">${carpet.name}</div>
+      <div class="carpet-card-price">$${carpet.price}/m²</div>
+      <div class="carpet-card-material">${carpet.material}</div>
+    `;
+
+    card.appendChild(swatch);
+    card.appendChild(info);
+    card.addEventListener('click', () => selectCarpet(parseInt(card.dataset.idx)));
+    carpetList.appendChild(card);
+  });
+}
+
+function selectCarpet(idx) {
+  activeCarpetIdx = idx;
+  const carpet = CARPETS[idx];
+  buildCarpetCanvas(carpet);
+  applyProjection();
+
+  // Update selected bar
+  selBar.style.display = 'block';
+  document.getElementById('sel-name').textContent = carpet.name;
+  document.getElementById('sel-price').textContent = `$${carpet.price}/m²`;
+  document.getElementById('sel-meta').textContent = `${carpet.material} · 4m wide`;
+
+  // Update card selection
+  document.querySelectorAll('.carpet-card').forEach(c => c.classList.remove('selected'));
+  const filteredIdx = filteredCarpets.indexOf(carpet);
+  if (filteredIdx >= 0) {
+    carpetList.children[filteredIdx]?.classList.add('selected');
+    carpetList.children[filteredIdx]?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+
+  // Enable cycle buttons if floor is set
+  if (floorPoints.length === 4) {
+    document.getElementById('btn-prev').disabled = false;
+    document.getElementById('btn-next').disabled = false;
+    document.getElementById('btn-auto').disabled = false;
+  }
+}
+
+// ── Floor Point Selection ────────────────────────────────────────────────────
+function updatePointBadges() {
+  CARPET_LABELS.forEach((label, i) => {
+    const el = document.getElementById(`pb-${i}`);
+    el.className = 'point-badge';
+    if (i < floorPoints.length) el.classList.add('set');
+    else if (i === floorPoints.length && selectingFloor) el.classList.add('current');
+    el.querySelector('.dot').title = label;
+    el.childNodes[1].textContent = ' ' + label;
+  });
+}
+
+function startFloorSelection() {
+  floorPoints = [];
+  selectingFloor = true;
+  carpetProj.style.opacity = '0';
+  document.getElementById('btn-select-floor').classList.add('active');
+  document.getElementById('btn-reset-points').disabled = false;
+  updatePointBadges();
+  showHint(`Click the ${CARPET_LABELS[0]} corner of your floor`);
+  drawFloorPoints();
+}
+
+function showHint(msg) {
+  stepHint.style.display = 'flex';
+  stepHintText.textContent = msg;
+}
+
+function hideHint() {
+  stepHint.style.display = 'none';
+}
+
+canvas.addEventListener('click', (e) => {
+  if (!selectingFloor || !roomImage) return;
+  const rect = canvas.getBoundingClientRect();
+  const cx = e.clientX - rect.left;
+  const cy = e.clientY - rect.top;
+  floorPoints.push({ cx, cy });
+  updatePointBadges();
+  drawFloorPoints();
+
+  if (floorPoints.length < 4) {
+    showHint(`Click the ${CARPET_LABELS[floorPoints.length]} corner`);
+  } else {
+    selectingFloor = false;
+    document.getElementById('btn-select-floor').classList.remove('active');
+    hideHint();
+    buildCarpetCanvas(CARPETS[activeCarpetIdx]);
+    applyProjection();
+    toast('Floor area set! Now choose a carpet.');
+    document.getElementById('btn-prev').disabled = false;
+    document.getElementById('btn-next').disabled = false;
+    document.getElementById('btn-auto').disabled = false;
+  }
+});
+
+// ── Cycle Controls ───────────────────────────────────────────────────────────
+function nextCarpet() {
+  const next = (activeCarpetIdx + 1) % CARPETS.length;
+  selectCarpet(next);
+}
+
+function prevCarpet() {
+  const prev = (activeCarpetIdx - 1 + CARPETS.length) % CARPETS.length;
+  selectCarpet(prev);
+}
+
+function getCycleDelay() {
+  const v = parseInt(document.getElementById('speed-slider').value);
+  return Math.round(6000 / v); // 600ms – 6000ms
+}
+
+function updateSpeedLabel() {
+  const ms = getCycleDelay();
+  document.getElementById('speed-label').textContent = (ms / 1000).toFixed(1) + 's';
+}
+
+document.getElementById('speed-slider').addEventListener('input', () => {
+  updateSpeedLabel();
+  if (isCycling) {
+    clearInterval(cycleInterval);
+    cycleInterval = setInterval(nextCarpet, getCycleDelay());
+  }
+});
+updateSpeedLabel();
+
+document.getElementById('btn-prev').addEventListener('click', prevCarpet);
+document.getElementById('btn-next').addEventListener('click', nextCarpet);
+
+document.getElementById('btn-auto').addEventListener('click', () => {
+  const btn = document.getElementById('btn-auto');
+  if (isCycling) {
+    clearInterval(cycleInterval);
+    isCycling = false;
+    btn.textContent = '▶';
+    btn.title = 'Auto-cycle';
+    toast('Auto-cycle stopped');
+  } else {
+    isCycling = true;
+    btn.innerHTML = '⏸';
+    btn.title = 'Stop cycling';
+    cycleInterval = setInterval(nextCarpet, getCycleDelay());
+    toast('Auto-cycling through carpets…');
+  }
+});
+
+// ── Opacity Slider ────────────────────────────────────────────────────────────
+document.getElementById('opacity-slider').addEventListener('input', () => {
+  if (floorPoints.length === 4) {
+    const opacity = parseInt(document.getElementById('opacity-slider').value) / 100;
+    carpetProj.style.opacity = String(opacity);
+  }
+});
+
+// ── Filter ────────────────────────────────────────────────────────────────────
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const f = btn.dataset.filter;
+    filteredCarpets = f === 'all' ? [...CARPETS] : CARPETS.filter(c => c.type === f);
+    renderCarpetList();
+  });
+});
+
+// ── Reset Points ──────────────────────────────────────────────────────────────
+document.getElementById('btn-reset-points').addEventListener('click', () => {
+  floorPoints = [];
+  selectingFloor = false;
+  carpetProj.style.opacity = '0';
+  document.getElementById('btn-select-floor').classList.remove('active');
+  document.getElementById('btn-prev').disabled = true;
+  document.getElementById('btn-next').disabled = true;
+  document.getElementById('btn-auto').disabled = true;
+  if (isCycling) {
+    clearInterval(cycleInterval);
+    isCycling = false;
+    document.getElementById('btn-auto').textContent = '▶';
+  }
+  updatePointBadges();
+  if (roomImage) {
+    ctx.drawImage(roomImage, 0, 0, canvas.width, canvas.height);
+    showHint('Click "Click 4 Floor Corners" to start over.');
+  }
+});
+
+// ── Select Floor Btn ──────────────────────────────────────────────────────────
+document.getElementById('btn-select-floor').addEventListener('click', startFloorSelection);
+
+// ── File Upload ───────────────────────────────────────────────────────────────
+document.getElementById('btn-upload').addEventListener('click', () => {
+  document.getElementById('file-input').click();
+});
+
+document.getElementById('file-input').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => loadRoomImage(ev.target.result);
+  reader.readAsDataURL(file);
+  e.target.value = '';
+});
+
+function loadRoomImage(src) {
+  const img = new Image();
+  img.onload = () => {
+    roomImage = img;
+    emptyState.style.display = 'none';
+    canvas.style.display = 'block';
+    floorPoints = [];
+    carpetProj.style.opacity = '0';
+    selectingFloor = false;
+    document.getElementById('btn-select-floor').disabled = false;
+    document.getElementById('btn-select-floor').classList.remove('active');
+    document.getElementById('btn-prev').disabled = true;
+    document.getElementById('btn-next').disabled = true;
+    document.getElementById('btn-auto').disabled = true;
+    updatePointBadges();
+    renderRoom();
+    showHint('Room loaded! Click "Click 4 Floor Corners" then click the floor corners.');
+    toast('Photo loaded! Now mark your floor area.');
+  };
+  img.src = src;
+}
+
+// ── Camera ────────────────────────────────────────────────────────────────────
+let camStream = null;
+const camModal = document.getElementById('cam-modal');
+const camVideo = document.getElementById('cam-video');
+
+document.getElementById('btn-camera').addEventListener('click', async () => {
+  try {
+    camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+    camVideo.srcObject = camStream;
+    camModal.classList.add('open');
+  } catch (err) {
+    toast('Camera not available: ' + err.message, 3500);
+  }
+});
+
+document.getElementById('btn-snap').addEventListener('click', () => {
+  if (!camStream) return;
+  const snap = document.createElement('canvas');
+  snap.width  = camVideo.videoWidth;
+  snap.height = camVideo.videoHeight;
+  snap.getContext('2d').drawImage(camVideo, 0, 0);
+  stopCamera();
+  loadRoomImage(snap.toDataURL('image/jpeg', 0.9));
+});
+
+document.getElementById('btn-cam-close').addEventListener('click', stopCamera);
+
+function stopCamera() {
+  if (camStream) { camStream.getTracks().forEach(t => t.stop()); camStream = null; }
+  camVideo.srcObject = null;
+  camModal.classList.remove('open');
+}
+
+// ── Window resize ──────────────────────────────────────────────────────────────
+let resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    if (roomImage) {
+      renderRoom();
+      applyProjection();
+    }
+  }, 100);
+});
+
+// ── Keyboard shortcuts ────────────────────────────────────────────────────────
+window.addEventListener('keydown', (e) => {
+  if (!roomImage || floorPoints.length < 4) return;
+  if (e.key === 'ArrowRight') nextCarpet();
+  if (e.key === 'ArrowLeft')  prevCarpet();
+  if (e.key === ' ') {
+    e.preventDefault();
+    document.getElementById('btn-auto').click();
+  }
+});
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+renderCarpetList();
+selectCarpet(0);
+showHint('Upload a photo of your room or use your camera to get started.');
+
+</script>
+</body>
+</html>
