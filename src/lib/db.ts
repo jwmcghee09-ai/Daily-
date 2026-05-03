@@ -198,6 +198,7 @@ export interface AuthUserWithPassword extends AuthPublicUser {
 
 export interface AuthSessionUser extends AuthPublicUser {
   sessionExpiresAt: string;
+  emailVerifiedAt: string | null;
 }
 
 export interface BillingSubscription {
@@ -258,6 +259,9 @@ export interface HistoricalRiskEstimateResult {
   correlationMatrix: { tickers: string[]; matrix: number[][] } | null;
   regime: { vix: number | null; label: string; cssClass: string } | null;
   factorExposure: { marketBeta: number | null; sizeBeta: number | null } | null;
+  sharpeRatioAnnual: number | null;
+  sortinoRatioAnnual: number | null;
+  returnSkewness: number | null;
 }
 
 export interface PriceDipAlertSetting {
@@ -1946,6 +1950,9 @@ export async function estimateHistoricalRiskFromYahoo(
       correlationMatrix: null,
       regime: null,
       factorExposure: null,
+      sharpeRatioAnnual: null,
+      sortinoRatioAnnual: null,
+      returnSkewness: null,
     };
   }
 
@@ -2045,6 +2052,9 @@ export async function estimateHistoricalRiskFromYahoo(
       correlationMatrix: null,
       regime: null,
       factorExposure: null,
+      sharpeRatioAnnual: null,
+      sortinoRatioAnnual: null,
+      returnSkewness: null,
     };
   }
 
@@ -2089,6 +2099,9 @@ export async function estimateHistoricalRiskFromYahoo(
       correlationMatrix: null,
       regime: null,
       factorExposure: null,
+      sharpeRatioAnnual: null,
+      sortinoRatioAnnual: null,
+      returnSkewness: null,
     };
   }
 
@@ -2277,6 +2290,9 @@ export async function estimateHistoricalRiskFromYahoo(
     correlationMatrix,
     regime,
     factorExposure,
+    sharpeRatioAnnual: null,
+    sortinoRatioAnnual: null,
+    returnSkewness: null,
   };
 }
 
@@ -2439,13 +2455,13 @@ export function findAuthSessionUserByTokenHash(tokenHash: string): AuthSessionUs
 
   const row = db
     .prepare(`
-      SELECT s.user_id, s.expires_at, u.email, u.display_name, u.created_at
+      SELECT s.user_id, s.expires_at, u.email, u.display_name, u.created_at, u.email_verified_at
       FROM sessions s
       INNER JOIN users u ON u.id = s.user_id
       WHERE s.token_hash = ? AND s.expires_at >= ?
       LIMIT 1
     `)
-    .get(tokenHash, nowIso) as SessionUserRow | undefined;
+    .get(tokenHash, nowIso) as (SessionUserRow & { email_verified_at: string | null }) | undefined;
 
   if (!row) {
     return null;
@@ -2457,6 +2473,7 @@ export function findAuthSessionUserByTokenHash(tokenHash: string): AuthSessionUs
     displayName: row.display_name,
     createdAt: row.created_at,
     sessionExpiresAt: row.expires_at,
+    emailVerifiedAt: row.email_verified_at ?? null,
   };
 }
 
@@ -3472,6 +3489,72 @@ export function incrementAiUsage(userId: string): void {
     "INSERT INTO ai_usage (user_id, month, call_count) VALUES (?, ?, 1) " +
       "ON CONFLICT(user_id, month) DO UPDATE SET call_count = call_count + 1",
   ).run(userId, currentYearMonth());
+}
+
+export interface AiConversationMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export function reserveAiUsageIfAvailable(userId: string, monthlyLimit: number): { allowed: boolean; used: number } {
+  const db = getDb();
+  const month = currentYearMonth();
+  if (monthlyLimit === -1) {
+    return { allowed: true, used: getAiUsageThisMonth(userId) };
+  }
+  db.prepare(
+    "INSERT INTO ai_usage (user_id, month, call_count) VALUES (?, ?, 1) " +
+      "ON CONFLICT(user_id, month) DO UPDATE SET call_count = call_count + 1",
+  ).run(userId, month);
+  const used = getAiUsageThisMonth(userId);
+  if (used > monthlyLimit) {
+    db.prepare(
+      "UPDATE ai_usage SET call_count = call_count - 1 WHERE user_id = ? AND month = ?",
+    ).run(userId, month);
+    return { allowed: false, used: used - 1 };
+  }
+  return { allowed: true, used };
+}
+
+export function releaseReservedAiUsage(userId: string): void {
+  const db = getDb();
+  db.prepare(
+    "UPDATE ai_usage SET call_count = MAX(0, call_count - 1) WHERE user_id = ? AND month = ?",
+  ).run(userId, currentYearMonth());
+}
+
+function ensureAiConversationSchema(db: DatabaseSync): void {
+  db.exec(
+    "CREATE TABLE IF NOT EXISTS ai_conversation_messages (" +
+      "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+      "user_id TEXT NOT NULL," +
+      "conversation_id TEXT NOT NULL," +
+      "role TEXT NOT NULL," +
+      "content TEXT NOT NULL," +
+      "created_at TEXT NOT NULL" +
+    ")",
+  );
+  db.exec("CREATE INDEX IF NOT EXISTS idx_ai_conv_user_conv ON ai_conversation_messages (user_id, conversation_id, id)");
+}
+
+export function getAiConversation(userId: string, conversationId: string, limit: number): AiConversationMessage[] {
+  const db = getDb();
+  ensureAiConversationSchema(db);
+  const rows = db
+    .prepare(
+      "SELECT role, content FROM ai_conversation_messages " +
+        "WHERE user_id = ? AND conversation_id = ? ORDER BY id DESC LIMIT ?",
+    )
+    .all(userId, conversationId, limit) as { role: string; content: string }[];
+  return rows.reverse().map((r) => ({ role: r.role as "user" | "assistant", content: r.content }));
+}
+
+export function appendAiMessage(userId: string, conversationId: string, role: "user" | "assistant", content: string): void {
+  const db = getDb();
+  ensureAiConversationSchema(db);
+  db.prepare(
+    "INSERT INTO ai_conversation_messages (user_id, conversation_id, role, content, created_at) VALUES (?, ?, ?, ?, ?)",
+  ).run(userId, conversationId, role, content, new Date().toISOString());
 }
 
 export function hasProcessedWebhookEvent(eventId: string): boolean {

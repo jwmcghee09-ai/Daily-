@@ -36,15 +36,19 @@ export default function SignInPage({
   initialMode,
   initialPlan,
   verificationState,
+  initialSubMode,
+  initialResetToken,
 }: {
   authenticatedUser: { email: string; displayName: string } | null;
   initialMode: AuthMode;
   initialPlan: CheckoutPlan | null;
   verificationState: string | null;
+  initialSubMode?: string;
+  initialResetToken?: string;
 }) {
   const router = useRouter();
   const [authMode, setAuthMode] = useState<AuthMode>(initialMode);
-  const [subMode, setSubMode] = useState<SubMode>("default");
+  const [subMode, setSubMode] = useState<SubMode>(initialSubMode === "reset" || initialSubMode === "forgot" ? initialSubMode : "default");
   const [selectedPlan, setSelectedPlan] = useState<CheckoutPlan>(initialPlan ?? "free");
   const [hasRequestedCheckout, setHasRequestedCheckout] = useState(Boolean(initialPlan));
   const [email, setEmail] = useState(authenticatedUser?.email ?? "");
@@ -52,7 +56,7 @@ export default function SignInPage({
   const [displayName, setDisplayName] = useState(authenticatedUser?.displayName ?? "");
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [resetToken, setResetToken] = useState("");
+  const [resetToken, setResetToken] = useState(initialResetToken ?? "");
   const [newPassword, setNewPassword] = useState("");
   const [working, setWorking] = useState(false);
   const [checkoutWorking, setCheckoutWorking] = useState(false);
