@@ -158,7 +158,7 @@ const faqs = [
   {
     question: "How is AI analysis different on Pro vs Free?",
     answer:
-      "Every plan gets the same holdings-aware AI workflow, but usage limits differ. Free includes 3 AI sessions per month, Plus includes 20 per month, and Pro unlocks unlimited AI plus the deepest quant analytics.",
+      "Every plan gets the same holdings-aware AI workflow, but usage limits differ. Free includes 10 AI sessions per month, Plus includes 20 per month, and Pro unlocks unlimited AI plus the deepest quant analytics.",
   },
   {
     question: "What data does the research terminal include?",
@@ -360,10 +360,10 @@ export default function LandingPage({
           <div className={styles.heroIntro}>
             <div className={`${styles.heroBadge} ${styles.reveal}`}>SPECTRE — AI Portfolio Intelligence</div>
             <h1 className={`${styles.heroTitle} ${styles.reveal}`}>
-              The AI operating system<br /><span>for your portfolio.</span>
+              See your portfolio risk score<br /><span>in 60 seconds.</span>
             </h1>
             <p className={`${styles.heroSub} ${styles.reveal}`}>
-              SPECTRE turns holdings, research, and market data into one AI-native workspace for quant analysis, live research, and faster portfolio decisions.
+              Import your broker, super, and crypto holdings. SPECTRE calculates your risk score, runs Monte Carlo simulations, and lets you ask AI questions about your own portfolio — free to start.
             </p>
             <div className={`${styles.heroActions} ${styles.reveal}`}>
               <Link href="/signin?mode=register&plan=free" className={`${styles.button} ${styles.primaryButton} ${styles.heroButton}`}>
@@ -373,6 +373,9 @@ export default function LandingPage({
                 See Live Demo →
               </Link>
             </div>
+            <p className={`${styles.reveal}`} style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.35)", marginTop: "1rem", letterSpacing: "0.04em" }}>
+              Join 500+ Australian investors tracking their portfolio · No card required
+            </p>
 
           </div>
 

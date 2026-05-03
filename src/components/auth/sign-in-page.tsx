@@ -627,6 +627,15 @@ export default function SignInPage({
                                     {plan === "free" ? "No cost" : plan === "plus" ? "$2.99 / mo" : "$9.99 / mo"}
                                   </span>
                                 </div>
+                                <div className={styles.planOptionFeatures}>
+                                  {plan === "free" ? (
+                                    <span>10 AI queries/month · Full dashboard</span>
+                                  ) : plan === "plus" ? (
+                                    <span>20 AI queries/month · Dip alerts · Full risk analytics</span>
+                                  ) : (
+                                    <span>Unlimited AI · Advanced quant console · Priority support</span>
+                                  )}
+                                </div>
                               </label>
                             ))}
                           </fieldset>

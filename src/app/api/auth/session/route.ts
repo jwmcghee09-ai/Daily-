@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { clearSessionCookie, getAuthenticatedUser } from "@/lib/auth";
 import { readUserEntitlements, getAiUsageThisMonth } from "@/lib/db";
 
-const AI_MONTHLY_LIMITS: Record<string, number> = { none: 3, free: 3, plus: 20, pro: -1 };
+const AI_MONTHLY_LIMITS: Record<string, number> = { none: 10, free: 10, plus: 20, pro: -1 };
 
 export const runtime = "nodejs";
 
@@ -31,6 +31,7 @@ export async function GET() {
       subscriptionStatus: entitlements.subscriptionStatus,
       aiUsedThisMonth: aiUsed,
       aiMonthlyLimit: aiLimit,
+      emailVerified: !!sessionUser.emailVerifiedAt,
     },
   });
 }

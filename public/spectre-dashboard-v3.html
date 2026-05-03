@@ -3681,6 +3681,9 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     setText("meta-plan-chip", chipLabel);
     setText("hero-kicker-plan", chipLabel);
     setText("hero-meta-plan", chipLabel);
+    if (!payload.user.emailVerified) {
+      showToast("Check your email to verify your account — click the link we sent you.", "info", 8000);
+    }
     setText("pro-console-badge", chipLabel);
     const proConsole = document.getElementById("pro-console");
     if (proConsole) {

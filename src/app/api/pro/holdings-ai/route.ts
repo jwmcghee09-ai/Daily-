@@ -4,8 +4,8 @@ import { readPortfolioState, readUserEntitlements, getAiUsageThisMonth, incremen
 import { computeMetrics } from "@/lib/portfolio";
 
 const AI_MONTHLY_LIMITS: Record<PlanTier, number> = {
-  none: 3,
-  free: 3,
+  none: 10,
+  free: 10,
   plus: 20,
   pro: -1, // unlimited
 };

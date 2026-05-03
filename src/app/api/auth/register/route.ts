@@ -4,9 +4,12 @@ import {
   createEmailVerificationRecord,
   findAuthUserByEmail,
   linkPreSignupBillingToUser,
+  readUserEntitlements,
 } from "@/lib/db";
 import {
   EMAIL_VERIFICATION_TTL_MS,
+  applySessionCookie,
+  createAndPersistSession,
   generateEmailVerificationToken,
   getClientAddress,
   hashEmailVerificationToken,
@@ -14,6 +17,7 @@ import {
   isLikelyEmail,
   normalizeDisplayName,
   normalizeEmail,
+  readAuthBody,
 } from "@/lib/auth";
 import { isEmailDeliveryConfigured, isOperationalAlertConfigured, sendAccountVerificationEmail, sendOperationalAlertEmail } from "@/lib/mailer";
 import { consumeRateLimit } from "@/lib/rate-limit";
@@ -41,7 +45,16 @@ export async function POST(request: Request) {
       );
     }
 
-    const payload = (await request.json()) as RegisterPayload;
+    const rawBody = await readAuthBody(request);
+    if (rawBody === null) {
+      return NextResponse.json({ error: "Request body too large." }, { status: 413 });
+    }
+    let payload: RegisterPayload;
+    try {
+      payload = JSON.parse(rawBody) as RegisterPayload;
+    } catch {
+      return NextResponse.json({ error: "Invalid request." }, { status: 400 });
+    }
 
     const email = normalizeEmail(payload.email || "");
     const password = payload.password || "";
@@ -72,40 +85,30 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Password must contain non-whitespace characters." }, { status: 400 });
     }
 
-    if (!isEmailDeliveryConfigured()) {
-      return NextResponse.json(
-        { error: "Email verification is not configured yet. Please contact support." },
-        { status: 503 },
-      );
-    }
-
     const existing = findAuthUserByEmail(email);
     if (existing) {
-      return NextResponse.json({ error: "An account with this email already exists." }, { status: 409 });
-    }
+      return NextResponse.json(
+        { error: "An account with this email already exists. Sign in, or reset your password if you've forgotten it." },
+        { status: 409 },
+      );
+    }
 
     const passwordHash = hashPassword(password);
     const termsAcceptedAt = new Date().toISOString();
     const user = createAuthUser(email, passwordHash, displayName, termsAcceptedAt);
     linkPreSignupBillingToUser(user.id, user.email);
 
-    const verificationToken = generateEmailVerificationToken();
-    const verificationTokenHash = hashEmailVerificationToken(verificationToken);
-    const expiresAt = new Date(Date.now() + EMAIL_VERIFICATION_TTL_MS).toISOString();
-    createEmailVerificationRecord(user.id, verificationTokenHash, expiresAt);
-
-    try {
-      await sendAccountVerificationEmail({
+    // Send verification email in the background — don't block signup
+    if (isEmailDeliveryConfigured()) {
+      const verificationToken = generateEmailVerificationToken();
+      const verificationTokenHash = hashEmailVerificationToken(verificationToken);
+      const expiresAt = new Date(Date.now() + EMAIL_VERIFICATION_TTL_MS).toISOString();
+      createEmailVerificationRecord(user.id, verificationTokenHash, expiresAt);
+      sendAccountVerificationEmail({
         toEmail: user.email,
         displayName: user.displayName,
         verificationToken,
-      });
-    } catch (error) {
-      console.error("Account verification email send failed", error);
-      return NextResponse.json(
-        { error: "Account created, but verification email failed to send. Use resend verification." },
-        { status: 502 },
-      );
+      }).catch((err) => console.error("Verification email send failed", err));
     }
 
     if (isOperationalAlertConfigured()) {
@@ -119,11 +122,25 @@ export async function POST(request: Request) {
       }).catch((err) => console.error("New user alert email failed", err));
     }
 
-    return NextResponse.json({
-      authenticated: false,
+    // Auto-login — create session immediately so user lands straight in the dashboard
+    const entitlements = readUserEntitlements(user.id);
+    const session = createAndPersistSession(user.id);
+
+    const response = NextResponse.json({
+      authenticated: true,
       verificationRequired: true,
-      message: "Account created. Check your email to verify before signing in, then choose your plan from pricing or settings.",
+      user: {
+        id: user.id,
+        email: user.email,
+        displayName: user.displayName,
+        planTier: entitlements.planTier,
+        proEnabled: entitlements.proEnabled,
+        subscriptionStatus: entitlements.subscriptionStatus,
+      },
     });
+
+    applySessionCookie(response, session.token, session.expiresAt);
+    return response;
   } catch {
     return NextResponse.json({ error: "Failed to create account." }, { status: 500 });
   }
