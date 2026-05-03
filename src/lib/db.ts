@@ -258,9 +258,6 @@ export interface HistoricalRiskEstimateResult {
   correlationMatrix: { tickers: string[]; matrix: number[][] } | null;
   regime: { vix: number | null; label: string; cssClass: string } | null;
   factorExposure: { marketBeta: number | null; sizeBeta: number | null } | null;
-  sharpeRatioAnnual: number | null;
-  sortinoRatioAnnual: number | null;
-  returnSkewness: number | null;
 }
 
 export interface PriceDipAlertSetting {
@@ -505,20 +502,6 @@ function initSchema(db: DatabaseSync): void {
       event_type TEXT NOT NULL,
       processed_at TEXT NOT NULL
     );
-  `);
-
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS ai_conversation_messages (
-      id TEXT PRIMARY KEY,
-      user_id TEXT NOT NULL,
-      conversation_id TEXT NOT NULL,
-      role TEXT NOT NULL CHECK(role IN ('user','assistant')),
-      content TEXT NOT NULL,
-      created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now')),
-      FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
-    );
-    CREATE INDEX IF NOT EXISTS idx_ai_conv_lookup
-      ON ai_conversation_messages(user_id, conversation_id, created_at);
   `);
 
 }
@@ -909,6 +892,7 @@ function toCryptoYahooSymbol(ticker: string): string {
 
 function toUsYahooSymbol(ticker: string): string {
   const clean = normalizeListedTicker(ticker);
+  // US tickers are used as-is on Yahoo Finance (AAPL, TSLA, BRK.B, ^GSPC, etc.)
   return clean;
 }
 
@@ -922,26 +906,10 @@ function isLikelyUsListedTicker(ticker: string): boolean {
     return true;
   }
 
+  // Standard NYSE/NASDAQ format: 1–5 letters, optional class suffix (BRK.B, BF.B)
   return /^[A-Z]{1,5}(\.[A-Z]{1,3})?$/.test(normalized);
 }
 
-async function fetchUsQuoteFromYahoo(ticker: string): Promise<AsxQuoteData | null> {
-  const symbol = toUsYahooSymbol(ticker);
-  if (!symbol) {
-    return null;
-  }
-
-  return fetchYahooQuoteBySymbol(symbol);
-}
-
-async function fetchUsSeriesFromYahoo(ticker: string, range: string): Promise<DatedPricePoint[] | null> {
-  const symbol = toUsYahooSymbol(ticker);
-  if (!symbol) {
-    return null;
-  }
-
-  return fetchYahooSeriesBySymbol(symbol, range);
-}
 function detectBullionMetal(holding: { name: string; ticker: string; sector: string }): "gold" | "silver" {
   const text = `${holding.name} ${holding.ticker} ${holding.sector}`.toLowerCase();
   if (text.includes("silver") || /(^|\W)ag(\W|$)/.test(text)) {
@@ -1039,6 +1007,24 @@ async function fetchBullionSpotFromYahoo(metal: "gold" | "silver"): Promise<AsxQ
     price: priceAud,
     prevClose: prevCloseAud,
   };
+}
+
+async function fetchUsQuoteFromYahoo(ticker: string): Promise<AsxQuoteData | null> {
+  const symbol = toUsYahooSymbol(ticker);
+  if (!symbol) {
+    return null;
+  }
+
+  return fetchYahooQuoteBySymbol(symbol);
+}
+
+async function fetchUsSeriesFromYahoo(ticker: string, range: string): Promise<DatedPricePoint[] | null> {
+  const symbol = toUsYahooSymbol(ticker);
+  if (!symbol) {
+    return null;
+  }
+
+  return fetchYahooSeriesBySymbol(symbol, range);
 }
 
 async function yahooFetchWithRetry(url: string, signal: AbortSignal): Promise<Response | null> {
@@ -1759,6 +1745,7 @@ export async function refreshAsxPrices(userId: string): Promise<PriceRefreshResu
   }
 
   if (uniqueUsTickers.length > 0) {
+    // Fetch AUD/USD once and reuse for all US stock conversions
     const audUsdQuote = await fetchYahooQuoteBySymbol("AUDUSD=X");
     const audUsdRate = sanitizeNumber(audUsdQuote?.price, Number.NaN);
     const audUsdPrevRate = sanitizeNumber(audUsdQuote?.prevClose, audUsdRate);
@@ -1959,9 +1946,6 @@ export async function estimateHistoricalRiskFromYahoo(
       correlationMatrix: null,
       regime: null,
       factorExposure: null,
-      sharpeRatioAnnual: null,
-      sortinoRatioAnnual: null,
-      returnSkewness: null,
     };
   }
 
@@ -2061,9 +2045,6 @@ export async function estimateHistoricalRiskFromYahoo(
       correlationMatrix: null,
       regime: null,
       factorExposure: null,
-      sharpeRatioAnnual: null,
-      sortinoRatioAnnual: null,
-      returnSkewness: null,
     };
   }
 
@@ -2108,9 +2089,6 @@ export async function estimateHistoricalRiskFromYahoo(
       correlationMatrix: null,
       regime: null,
       factorExposure: null,
-      sharpeRatioAnnual: null,
-      sortinoRatioAnnual: null,
-      returnSkewness: null,
     };
   }
 
@@ -2146,30 +2124,6 @@ export async function estimateHistoricalRiskFromYahoo(
   const cfVar95Raw = cornishFisherVar95(portfolioReturns);
   const cornishFisherVar95Pct = cfVar95Raw != null ? Math.max(0, cfVar95Raw * 100) : null;
   const cornishFisherVar95Amount = cornishFisherVar95Pct != null ? (cornishFisherVar95Pct / 100) * usedValueTotal : null;
-
-  // Sharpe & Sortino ratios (annualized, RBA cash rate ~4.35% p.a.)
-  const ANNUAL_RF = 0.0435;
-  const meanDailyReturn = portfolioReturns.length >= 20
-    ? portfolioReturns.reduce((a, b) => a + b, 0) / portfolioReturns.length
-    : null;
-  const annualMeanReturn = meanDailyReturn != null ? meanDailyReturn * 252 : null;
-  const sharpeRatioAnnual =
-    annualMeanReturn != null && volatilityAnnualPct != null && volatilityAnnualPct > 0
-      ? (annualMeanReturn - ANNUAL_RF) / (volatilityAnnualPct / 100)
-      : null;
-  const downsideReturns = portfolioReturns.filter((r) => r < 0);
-  const downsideDevAnnual =
-    downsideReturns.length >= 5
-      ? Math.sqrt(downsideReturns.reduce((a, r) => a + r ** 2, 0) / portfolioReturns.length) * Math.sqrt(252)
-      : null;
-  const sortinoRatioAnnual =
-    annualMeanReturn != null && downsideDevAnnual != null && downsideDevAnnual > 0
-      ? (annualMeanReturn - ANNUAL_RF) / downsideDevAnnual
-      : null;
-
-  // Return distribution skewness
-  const returnSkewness = portfolioReturns.length >= 10 ? calcSkewness(portfolioReturns) : null;
-
   const syntheticPortfolioCurve = buildSyntheticPriceSeriesFromReturns(portfolioReturns, usedValueTotal);
   const rsi14 = computeRsi(syntheticPortfolioCurve, 14);
   const stochastic14 = computeStochastic(syntheticPortfolioCurve, 14);
@@ -2323,9 +2277,6 @@ export async function estimateHistoricalRiskFromYahoo(
     correlationMatrix,
     regime,
     factorExposure,
-    sharpeRatioAnnual,
-    sortinoRatioAnnual,
-    returnSkewness,
   };
 }
 
@@ -2798,16 +2749,7 @@ export function deleteUserAccountData(userId: string): boolean {
     db.prepare("DELETE FROM price_dip_alerts WHERE user_id = ?").run(userId);
     db.prepare("DELETE FROM billing_subscriptions WHERE user_id = ?").run(userId);
     db.prepare("DELETE FROM pre_signup_billing WHERE email = ?").run(normalizedEmail);
-    db.prepare("DELETE FROM notifications WHERE user_id = ?").run(userId);
-    db.prepare("DELETE FROM ai_usage WHERE user_id = ?").run(userId);
-    db.prepare("DELETE FROM ai_conversation_messages WHERE user_id = ?").run(userId);
-    db.prepare("DELETE FROM user_totp WHERE user_id = ?").run(userId);
-    db.prepare("DELETE FROM totp_challenges WHERE user_id = ?").run(userId);
-    db.prepare("DELETE FROM rate_limits WHERE key LIKE ?").run(scopedPattern);
     db.prepare("DELETE FROM users WHERE id = ?").run(userId);
-    // Belt-and-suspenders: remove any orphaned billing rows a delayed webhook may have
-    // re-inserted after the user_id-scoped delete above, keyed by email.
-    db.prepare("DELETE FROM billing_subscriptions WHERE user_id NOT IN (SELECT id FROM users)").run();
     db.exec("COMMIT");
     return true;
   } catch (error) {
@@ -3587,100 +3529,4 @@ export function runInDbTransaction(fn: () => void): void {
     db.exec("ROLLBACK");
     throw e;
   }
-}
-
-export function reserveAiUsageIfAvailable(userId: string, limit: number): { allowed: boolean; used: number } {
-  const db = getDb();
-  const month = currentYearMonth();
-
-  if (limit === -1) {
-    return { allowed: true, used: getAiUsageThisMonth(userId) };
-  }
-
-  db.exec("BEGIN IMMEDIATE");
-  try {
-    db.prepare(
-      "INSERT INTO ai_usage (user_id, month, call_count) VALUES (?, ?, 0) " +
-        "ON CONFLICT(user_id, month) DO NOTHING",
-    ).run(userId, month);
-
-    const update = db
-      .prepare("UPDATE ai_usage SET call_count = call_count + 1 WHERE user_id = ? AND month = ? AND call_count < ?")
-      .run(userId, month, limit) as { changes?: number };
-
-    const row = db
-      .prepare("SELECT call_count FROM ai_usage WHERE user_id = ? AND month = ? LIMIT 1")
-      .get(userId, month) as { call_count: number } | undefined;
-
-    const result = {
-      allowed: Number(update.changes || 0) > 0,
-      used: row?.call_count ?? 0,
-    };
-    db.exec("COMMIT");
-    return result;
-  } catch (error) {
-    db.exec("ROLLBACK");
-    throw error;
-  }
-}
-
-export function releaseReservedAiUsage(userId: string): number {
-  const db = getDb();
-  const month = currentYearMonth();
-
-  db.exec("BEGIN IMMEDIATE");
-  try {
-    db.prepare(
-      "UPDATE ai_usage SET call_count = CASE WHEN call_count > 0 THEN call_count - 1 ELSE 0 END WHERE user_id = ? AND month = ?",
-    ).run(userId, month);
-
-    const row = db
-      .prepare("SELECT call_count FROM ai_usage WHERE user_id = ? AND month = ? LIMIT 1")
-      .get(userId, month) as { call_count: number } | undefined;
-
-    const result = row?.call_count ?? 0;
-    db.exec("COMMIT");
-    return result;
-  } catch (error) {
-    db.exec("ROLLBACK");
-    throw error;
-  }
-}
-
-// ── AI Conversation History ────────────────────────────────────────────────────
-
-export interface AiConversationMessage {
-  role: "user" | "assistant";
-  content: string;
-}
-
-export function getAiConversation(
-  userId: string,
-  conversationId: string,
-  limit: number,
-): AiConversationMessage[] {
-  const db = getDb();
-  const rows = db
-    .prepare(
-      `SELECT role, content FROM ai_conversation_messages
-       WHERE user_id = ? AND conversation_id = ?
-       ORDER BY created_at DESC LIMIT ?`,
-    )
-    .all(userId, conversationId, limit) as { role: string; content: string }[];
-  // Reverse so oldest-first for the prompt
-  return rows.reverse().map((r) => ({ role: r.role as "user" | "assistant", content: r.content }));
-}
-
-export function appendAiMessage(
-  userId: string,
-  conversationId: string,
-  role: "user" | "assistant",
-  content: string,
-): void {
-  const db = getDb();
-  const id = crypto.randomUUID();
-  db.prepare(
-    `INSERT INTO ai_conversation_messages (id, user_id, conversation_id, role, content)
-     VALUES (?, ?, ?, ?, ?)`,
-  ).run(id, userId, conversationId, role, content);
 }

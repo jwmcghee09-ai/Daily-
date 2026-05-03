@@ -236,7 +236,7 @@ async function sendEmail(content: EmailContent): Promise<void> {
 export async function sendPasswordResetEmail(input: PasswordResetEmailInput): Promise<void> {
   const appUrl = getAppBaseUrl();
   const token = input.resetToken;
-  const tokenEntryUrl = `${appUrl}/signin?flow=reset&token=${encodeURIComponent(token)}`;
+  const tokenEntryUrl = `${appUrl}/`;
 
   const subject = "SPECTRE password reset";
   const text = [
@@ -246,10 +246,12 @@ export async function sendPasswordResetEmail(input: PasswordResetEmailInput): Pr
     "",
     `Reset token: ${token}`,
     "",
-    "Use the reset link below to open SPECTRE with the token preloaded.",
-    "If needed, you can still paste the token manually on the sign-in reset screen.",
+    "Use the token in the app:",
+    "1. Open the sign-in screen",
+    "2. Click 'Reset With Token'",
+    "3. Paste the token and choose a new password",
     "",
-    `Reset URL: ${tokenEntryUrl}`,
+    `App URL: ${tokenEntryUrl}`,
     "",
     "If you did not request this, you can ignore this email.",
   ].join("\n");
@@ -260,17 +262,13 @@ export async function sendPasswordResetEmail(input: PasswordResetEmailInput): Pr
       <p>Hi ${escapeHtml(input.displayName)},</p>
       <p>A password reset was requested for your SPECTRE account.</p>
       <p><strong>Reset token:</strong><br /><code style="font-size:14px;">${escapeHtml(token)}</code></p>
-      <p>Use the button below to open the reset screen with your token preloaded.</p>
-      <p>
-        <a
-          href="${escapeAttribute(tokenEntryUrl)}"
-          style="display:inline-block;background:#ff4b33;color:#fff;text-decoration:none;padding:10px 14px;border-radius:8px;"
-        >
-          Reset Password
-        </a>
-      </p>
-      <p style="font-size:13px;color:#555;word-break:break-all;">If the button does not work, use this link:<br />${escapeHtml(tokenEntryUrl)}</p>
-      <p style="font-size:13px;color:#555;">You can also paste the token manually on the reset screen if needed.</p>
+      <p>Use the token in the app:</p>
+      <ol>
+        <li>Open the sign-in screen</li>
+        <li>Click <strong>Reset With Token</strong></li>
+        <li>Paste the token and choose a new password</li>
+      </ol>
+      <p><a href="${escapeAttribute(tokenEntryUrl)}">Open SPECTRE</a></p>
       <p style="color:#555;">If you did not request this, you can ignore this email.</p>
     </div>
   `;
@@ -438,72 +436,6 @@ export async function sendPaymentFailedEmail(input: { toEmail: string; displayNa
         </a>
       </p>
       <p style="color:#555;">If you have any questions, reply to this email.</p>
-    </div>
-  `;
-
-  await sendEmail({ to: input.toEmail, subject, text, html });
-}
-
-export async function sendAiLimitReachedEmail(input: { toEmail: string; displayName: string; plan: string }): Promise<void> {
-  const appUrl = getAppBaseUrl();
-  const isPlus = input.plan === "plus";
-  const subject = "You've used all your SPECTRE AI queries this month";
-  const upgradeText = isPlus
-    ? "Upgrade to Pro for unlimited AI queries."
-    : "Upgrade to Plus ($2.99/mo) for 20 queries/month, or Pro ($9.99/mo) for unlimited.";
-  const upgradeUrl = `${appUrl}/signin?mode=login&plan=${isPlus ? "pro" : "plus"}`;
-
-  const text = [
-    `Hi ${input.displayName},`,
-    "",
-    "You've used all your Ask AI queries for this month on SPECTRE.",
-    "",
-    upgradeText,
-    upgradeUrl,
-    "",
-    "Your queries reset at the start of next month if you'd prefer to wait.",
-  ].join("\n");
-
-  const html = `
-    <div style="font-family:Arial,sans-serif;line-height:1.6;color:#111;max-width:560px;">
-      <h2 style="margin:0 0 12px 0;">You've used all your AI queries</h2>
-      <p>Hi ${escapeHtml(input.displayName)},</p>
-      <p>You've used all your Ask AI queries for this month on SPECTRE.</p>
-      <p>${escapeHtml(upgradeText)}</p>
-      <p>
-        <a
-          href="${escapeAttribute(upgradeUrl)}"
-          style="display:inline-block;background:#ff4b33;color:#fff;text-decoration:none;padding:10px 20px;border-radius:8px;font-weight:700;"
-        >
-          ${isPlus ? "Upgrade to Pro" : "Upgrade to Plus"}
-        </a>
-      </p>
-      <p style="color:#555;">Your queries reset at the start of next month if you'd prefer to wait.</p>
-    </div>
-  `;
-
-  await sendEmail({ to: input.toEmail, subject, text, html });
-}
-
-export async function sendAccountDeletedEmail(input: { toEmail: string; displayName: string }): Promise<void> {
-  const subject = "Your SPECTRE account has been deleted";
-  const text = [
-    `Hi ${input.displayName},`,
-    "",
-    "Your SPECTRE account and all associated data have been permanently deleted.",
-    "",
-    "If you did not request this, please contact us immediately at admin@spectre-assets.com.",
-    "",
-    "If you change your mind, you're always welcome to create a new account at spectre-assets.com.",
-  ].join("\n");
-
-  const html = `
-    <div style="font-family:Arial,sans-serif;line-height:1.6;color:#111;max-width:560px;">
-      <h2 style="margin:0 0 12px 0;">Account deleted</h2>
-      <p>Hi ${escapeHtml(input.displayName)},</p>
-      <p>Your SPECTRE account and all associated data have been permanently deleted as requested.</p>
-      <p style="color:#555;">If you did not request this, please contact us immediately at <a href="mailto:admin@spectre-assets.com">admin@spectre-assets.com</a>.</p>
-      <p style="color:#555;">If you change your mind, you're always welcome to create a new account at <a href="https://spectre-assets.com">spectre-assets.com</a>.</p>
     </div>
   `;
 

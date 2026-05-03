@@ -4,7 +4,7 @@ import { getAiUsageThisMonth, readBillingSubscription, readUserEntitlements, ups
 import { getStripeClient } from "@/lib/stripe";
 import Stripe from "stripe";
 
-const AI_MONTHLY_LIMITS: Record<string, number> = { none: 3, free: 3, plus: 20, pro: -1 };
+const AI_MONTHLY_LIMITS: Record<string, number> = { none: 10, free: 10, plus: 20, pro: -1 };
 
 export const runtime = "nodejs";
 
@@ -39,6 +39,7 @@ export async function GET() {
       subscriptionStatus: entitlements.subscriptionStatus,
       aiUsedThisMonth: aiUsed,
       aiMonthlyLimit: aiLimit,
+      emailVerified: !!sessionUser.emailVerifiedAt,
     },
   });
 }

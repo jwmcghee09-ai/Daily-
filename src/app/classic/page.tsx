@@ -34,7 +34,6 @@ import {
   extractCsvDataSection,
   parseRowsToHoldings,
 } from "@/lib/portfolio";
-import { trackMetaEvent } from "@/lib/meta-pixel";
 
 const ACCENT_COLOR = "#ff4b33";
 const PORTFOLIO_COLORS = ["#f8f8f8", "#d9d9d9", "#bababa", "#969696", "#707070", "#525252", "#3a3a3a", "#242424"];
@@ -222,12 +221,6 @@ interface HistoricalRiskEstimatePayload {
   stochastic14: number | null;
   obvValue: number | null;
   obvTrend: string | null;
-  correlationMatrix: { tickers: string[]; matrix: number[][] } | null;
-  regime: { vix: number | null; label: string; cssClass: string } | null;
-  factorExposure: { marketBeta: number | null; sizeBeta: number | null } | null;
-  sharpeRatioAnnual: number | null;
-  sortinoRatioAnnual: number | null;
-  returnSkewness: number | null;
 }
 
 interface SessionUser {
@@ -347,18 +340,6 @@ const DEMO_DIP_ALERTS: PriceDipAlertSetting[] = [
 ];
 const DEMO_PORTFOLIO_STATE = createDemoPortfolioState();
 
-function checkoutPlanValue(plan: CheckoutPlan) {
-  if (plan === "pro") {
-    return 9.99;
-  }
-
-  if (plan === "plus") {
-    return 2.99;
-  }
-
-  return 0;
-}
-
 export default function Home() {
   const [demoMode, setDemoMode] = useState(false);
   const [state, setState] = useState<PortfolioState>(EMPTY_STATE);
@@ -392,13 +373,7 @@ export default function Home() {
   const [holdingsAiLoading, setHoldingsAiLoading] = useState(false);
   const [holdingsAiError, setHoldingsAiError] = useState("");
   const [holdingsAiResult, setHoldingsAiResult] = useState<HoldingsAiAnalysis | null>(null);
-  const [aiLimitReached, setAiLimitReached] = useState(false);
-  const [activePage, setActivePage] = useState<"quant" | "ai" | "research" | "import" | "settings">("quant");
-
-  useEffect(() => {
-    const t = setTimeout(() => window.dispatchEvent(new Event("resize")), 30);
-    return () => clearTimeout(t);
-  }, [activePage]);
+  const [activePage, setActivePage] = useState<"quant" | "ai" | "research" | "settings">("quant");
   const refreshInFlight = useRef(false);
   const lastAutoRefreshAttemptAtRef = useRef(0);
 
@@ -447,7 +422,7 @@ export default function Home() {
       if (demoMode) {
         setSessionUser(DEMO_SESSION_USER);
         setState(DEMO_PORTFOLIO_STATE);
-        setHistoricalRiskEstimate(buildDemoHistoricalRiskEstimate(DEMO_PORTFOLIO_STATE, riskWindow));
+        setHistoricalRiskEstimate(null);
         setDipAlerts(DEMO_DIP_ALERTS);
         setAvailableDipTickers(DEMO_AVAILABLE_TICKERS);
         setDipAlertMax(10);
@@ -492,7 +467,7 @@ export default function Home() {
     };
 
     void loadSessionAndState();
-  }, [demoMode, riskWindow]);
+  }, [demoMode]);
 
   useEffect(() => {
     if (!banner || banner.message !== INVALID_UPLOAD_FORMAT_MESSAGE) {
@@ -509,15 +484,6 @@ export default function Home() {
   }, [banner]);
 
   useEffect(() => {
-    trackMetaEvent("ViewContent", {
-      content_name: "Spectre landing page",
-      content_category: "portfolio analytics",
-      content_type: "product",
-      currency: "AUD",
-    });
-  }, []);
-
-  useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const checkoutState = params.get("checkout");
     const checkoutPlan = toCheckoutPlan(params.get("plan"));
@@ -526,13 +492,6 @@ export default function Home() {
     if (checkoutState === "success") {
       const planLabel = checkoutPlan === "pro" ? "Pro" : "Plus";
       setBanner({ type: "success", message: `${planLabel} plan checkout complete. Your subscription will activate shortly.` });
-      trackMetaEvent("Subscribe", {
-        content_name: `Spectre ${planLabel}`,
-        content_category: "subscription",
-        content_type: "product",
-        currency: "AUD",
-        value: checkoutPlanValue(checkoutPlan),
-      });
     } else if (checkoutState === "cancelled") {
       setBanner({ type: "info", message: "Stripe checkout was cancelled." });
     }
@@ -836,11 +795,6 @@ export default function Home() {
         body: JSON.stringify({ question }),
       });
 
-      if (response.status === 429) {
-        setAiLimitReached(true);
-        return;
-      }
-
       if (!response.ok) {
         throw new Error(await parseApiError(response, "Failed to run Ask AI holdings analysis."));
       }
@@ -995,13 +949,7 @@ export default function Home() {
   const needsYahooEstimate = metrics.dailyReturns.length < 20 && state.holdings.length > 0;
 
   useEffect(() => {
-    if (demoMode) {
-      setHistoricalRiskEstimate(buildDemoHistoricalRiskEstimate(DEMO_PORTFOLIO_STATE, riskWindow));
-      setLoadingHistoricalEstimate(false);
-      return;
-    }
-
-    if (!sessionUser || loading) {
+    if (!sessionUser || loading || demoMode) {
       setHistoricalRiskEstimate(null);
       setLoadingHistoricalEstimate(false);
       return;
@@ -1403,59 +1351,9 @@ export default function Home() {
         "Std dev of (portfolio return - ASX 200 return), annualized from daily data.",
       ),
     );
-    flags.push(
-      toRiskFlag(
-        "CF-adjusted VaR 95",
-        historicalRiskEstimate?.cornishFisherVar95Pct ?? null,
-        1.5,
-        3.0,
-        "%",
-        "Cornish-Fisher VaR adjusts the standard normal quantile for return skewness and excess kurtosis, giving a more accurate tail-risk estimate for non-normal portfolios.",
-      ),
-    );
-    flags.push(
-      toRiskFlag(
-        "Correlation to ASX 200",
-        historicalRiskEstimate?.correlationToBenchmark ?? null,
-        0.8,
-        0.92,
-        "",
-        "Pearson correlation of daily portfolio returns to the ASX 200. Values near 1.0 mean the portfolio largely tracks the index with limited diversification benefit.",
-      ),
-    );
-    flags.push(
-      toRiskFlagLow(
-        "Sharpe ratio (annualized)",
-        historicalRiskEstimate?.sharpeRatioAnnual ?? null,
-        0.5,
-        0,
-        "",
-        "Annualized excess return (above ~4.35% RBA cash rate) per unit of total volatility. Below 0.5 is below market average; below 0 means returns failed to beat the risk-free rate.",
-      ),
-    );
-    flags.push(
-      toRiskFlagLow(
-        "Sortino ratio (annualized)",
-        historicalRiskEstimate?.sortinoRatioAnnual ?? null,
-        0.7,
-        0,
-        "",
-        "Like Sharpe but only penalizes downside volatility, ignoring upside moves. Below 0.7 suggests weak risk-adjusted performance; below 0 means negative excess return.",
-      ),
-    );
-    const skewVal = historicalRiskEstimate?.returnSkewness ?? null;
-    if (skewVal != null && Number.isFinite(skewVal)) {
-      const skewTone: "green" | "yellow" | "red" = skewVal <= -1.0 ? "red" : skewVal <= -0.5 ? "yellow" : "green";
-      flags.push({
-        label: "Return skewness",
-        value: skewVal.toFixed(2),
-        tone: skewTone,
-        help: "Negative skewness means the return distribution has a fatter left tail — more frequent or larger losses than gains. Below -0.5 warrants attention; below -1.0 indicates significant crash risk.",
-      });
-    }
 
     return flags.filter((flag) => flag.value !== "N/A");
-  }, [benchmarkBeta, benchmarkTrackingErrorAnnualPct, effectiveCvar95Pct, effectiveMaxDrawdownPct, effectiveVar95Pct, effectiveVolatilityAnnualPct, historicalRiskEstimate?.cornishFisherVar95Pct, historicalRiskEstimate?.correlationToBenchmark, historicalRiskEstimate?.returnSkewness, historicalRiskEstimate?.sharpeRatioAnnual, historicalRiskEstimate?.sortinoRatioAnnual, metrics.hhi, metrics.largestAccountPct, metrics.top3ConcentrationPct, starterPlan]);
+  }, [benchmarkBeta, benchmarkTrackingErrorAnnualPct, effectiveCvar95Pct, effectiveMaxDrawdownPct, effectiveVar95Pct, effectiveVolatilityAnnualPct, metrics.hhi, metrics.largestAccountPct, metrics.top3ConcentrationPct, starterPlan]);
 
   const latestReportDate = useMemo(() => {
     if (state.holdings.length === 0) {
@@ -1691,7 +1589,7 @@ export default function Home() {
   const clearData = async () => {
     if (demoMode) {
       setState(DEMO_PORTFOLIO_STATE);
-      setHistoricalRiskEstimate(buildDemoHistoricalRiskEstimate(DEMO_PORTFOLIO_STATE, riskWindow));
+      setHistoricalRiskEstimate(null);
       setDipAlerts(DEMO_DIP_ALERTS);
       setAvailableDipTickers(DEMO_AVAILABLE_TICKERS);
       setDipAlertMax(10);
@@ -1785,14 +1683,6 @@ export default function Home() {
       if (!payload.url) {
         throw new Error("Stripe checkout URL was missing.");
       }
-
-      trackMetaEvent("InitiateCheckout", {
-        content_name: `Spectre ${planLabel}`,
-        content_category: "subscription",
-        content_type: "product",
-        currency: "AUD",
-        value: checkoutPlanValue(plan),
-      });
 
       window.location.assign(payload.url);
     } catch (error) {
@@ -1894,23 +1784,12 @@ export default function Home() {
 
       const payload = (await response.json()) as AuthSessionPayload;
 
-      if (authMode === "register") {
-        trackMetaEvent("CompleteRegistration", {
-          content_name: "Spectre account",
-          content_category: "account",
-          status: true,
-        });
-      }
-
       if (authMode === "register" && payload.verificationRequired && !payload.authenticated) {
         setAuthMode("login");
         setAuthPassword("");
         setAuthAcceptsTerms(false);
         setAuthError("");
         setBanner({ type: "info", message: payload.message || "Account created. Check your email to verify before signing in, then choose your plan from pricing or settings." });
-        if (typeof window !== "undefined" && typeof (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq === "function") {
-          (window as unknown as { fbq: (...args: unknown[]) => void }).fbq("track", "CompleteRegistration");
-        }
         return;
       }
 
@@ -2649,8 +2528,7 @@ export default function Home() {
           <div className="spectre-app-nav-tabs">
             <button type="button" className={`nav-tab${activePage === "quant" ? " nav-tab-active" : ""}`} onClick={() => setActivePage("quant")}>Quant</button>
             <button type="button" className={`nav-tab${activePage === "ai" ? " nav-tab-active" : ""}`} onClick={() => setActivePage("ai")}>AI</button>
-            <a href="/research" className="nav-tab">Research</a>
-            <button type="button" className={`nav-tab${activePage === "import" ? " nav-tab-active" : ""}`} onClick={() => setActivePage("import")}>Import</button>
+            <button type="button" className={`nav-tab${activePage === "research" ? " nav-tab-active" : ""}`} onClick={() => setActivePage("research")}>Research</button>
           </div>
           <div className="nav-right">
             <button
@@ -2696,7 +2574,8 @@ export default function Home() {
           <span className="ti"><span className="ti-sym">WBC</span>32.10<span className="ti-dn">-0.2%</span></span>
         </div>
       </div>
-      <header id="dashboard-top" className="hero" style={{display: activePage === "quant" ? undefined : "none"}}>
+      {activePage === "quant" && (
+      <header id="dashboard-top" className="hero">
         <div className="hero-copy">
           <h1><Image src="/spectre-wordmark-plain.svg" alt="SPECTRE" width={620} height={148} className="hero-wordmark-image" priority /></h1>
           <p className="hero-tagline">System for Portfolio Exposure, Correlation, Threat & Risk Evaluation</p>
@@ -2738,6 +2617,7 @@ export default function Home() {
           </div>
         </div>
       </header>
+      )}
 
       {demoMode ? (
         <div className="banner info">
@@ -2863,7 +2743,7 @@ export default function Home() {
       </section>
       )}
 
-      {activePage === "import" && (
+      {activePage === "research" && (
       <>
       <section id="uploads" className="upload-grid">
         <UploadCard
@@ -3064,7 +2944,8 @@ export default function Home() {
       ) : null}
 
 
-      <div style={{display: activePage === "quant" ? undefined : "none"}}>
+      {activePage === "quant" && (
+      <>
       <section id="metrics" className="kpi-grid">
         <KpiCard label="Total Portfolio" value={formatCurrency(metrics.totalValue)} help="Current market value across all imported holdings." />
         <KpiCard label="Cost Base" value={formatCurrency(metrics.totalCost)} help="Total invested amount from imported cost-base values." />
@@ -3136,21 +3017,8 @@ export default function Home() {
         <p className="pro-analytics-note">
           {proAnalyticsEnabled
             ? "Advanced quant analytics are active for this account."
-            : "Upgrade to Pro to unlock Expected Shortfall, benchmark beta, tracking error, and AI risk adjustment."}
+            : "Starter stays streamlined. Upgrade to Pro to unlock VaR, Expected Shortfall, benchmark beta, tracking error, and stress scenarios."}
         </p>
-        {!proAnalyticsEnabled && sessionUser && (
-          <div className="pro-locked-upgrade">
-            <span>These analytics are available on Pro</span>
-            <button
-              type="button"
-              className="upgrade-cta-btn upgrade-cta-btn-pro"
-              onClick={() => void startProCheckout(sessionUser.email)}
-              disabled={checkoutWorking}
-            >
-              {checkoutWorking ? "Redirecting..." : "Upgrade to Pro — $9.99/mo →"}
-            </button>
-          </div>
-        )}
         <div className="pro-analytics-grid">
           <article className="pro-analytics-card">
             <p>Expected Shortfall (ES 95)</p>
@@ -3184,46 +3052,20 @@ export default function Home() {
               ) : null}
             </div>
             <p className="holdings-ai-note">Ask what may be influencing value, momentum, risk, and concentration in your current portfolio.</p>
-            {aiLimitReached ? (
-              <div className="ai-limit-upgrade">
-                <div className="ai-limit-upgrade-icon">⚡</div>
-                <div className="ai-limit-upgrade-text">
-                  <strong>Monthly AI limit reached</strong>
-                  <span>
-                    {sessionUser && sessionUser.planTier === "none"
-                      ? "You've used your 3 free queries. Upgrade to Plus for 20/month or Pro for unlimited."
-                      : "You've used all 20 Plus queries this month. Upgrade to Pro for unlimited AI."}
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  className="upgrade-cta-btn"
-                  onClick={() => {
-                    if (sessionUser) {
-                      void (sessionUser.planTier === "none" ? startPlusCheckout(sessionUser.email) : startProCheckout(sessionUser.email));
-                    }
-                  }}
-                  disabled={checkoutWorking}
-                >
-                  {checkoutWorking ? "Redirecting..." : sessionUser?.planTier === "none" ? "Upgrade to Plus →" : "Upgrade to Pro →"}
+            <form className="holdings-ai-form" onSubmit={(event) => void runHoldingsAi(event)}>
+              <textarea
+                value={holdingsAiQuestion}
+                onChange={(event) => setHoldingsAiQuestion(event.target.value)}
+                placeholder={HOLDINGS_AI_DEFAULT_PROMPT}
+                maxLength={700}
+                disabled={holdingsAiLoading}
+              />
+              <div className="holdings-ai-actions">
+                <button type="submit" className="refresh-btn" disabled={holdingsAiLoading || state.holdings.length === 0}>
+                  {holdingsAiLoading ? "Analyzing..." : "Ask AI"}
                 </button>
               </div>
-            ) : (
-              <form className="holdings-ai-form" onSubmit={(event) => void runHoldingsAi(event)}>
-                <textarea
-                  value={holdingsAiQuestion}
-                  onChange={(event) => setHoldingsAiQuestion(event.target.value)}
-                  placeholder={HOLDINGS_AI_DEFAULT_PROMPT}
-                  maxLength={700}
-                  disabled={holdingsAiLoading}
-                />
-                <div className="holdings-ai-actions">
-                  <button type="submit" className="refresh-btn" disabled={holdingsAiLoading || state.holdings.length === 0}>
-                    {holdingsAiLoading ? "Analyzing..." : "Ask AI"}
-                  </button>
-                </div>
-              </form>
-            )}
+            </form>
             {holdingsAiError ? <p className="holdings-ai-error">{holdingsAiError}</p> : null}
             {holdingsAiResult ? (
               <div className="holdings-ai-output">
@@ -3312,9 +3154,11 @@ export default function Home() {
           </div>
         ) : null}
       </section>
-      </div>
+      </>
+      )}
 
-      <section className="ai-page-section" style={{display: activePage === "ai" ? undefined : "none"}}>
+      {activePage === "ai" ? (
+        <section className="ai-page-section">
           {askAiEnabled ? (
             <div className="holdings-ai-panel">
               <div className="holdings-ai-head">
@@ -3428,8 +3272,10 @@ export default function Home() {
             </div>
           ) : null}
         </section>
+      ) : null}
 
-      <div style={{display: activePage === "quant" ? undefined : "none"}}>
+      {activePage === "quant" && (
+      <>
       <section id="insights" className="insights-section">
         <h2>{proAnalyticsEnabled ? "Performance & Stress" : "Performance"}</h2>
         <div className="insights-grid">
@@ -3736,7 +3582,8 @@ export default function Home() {
           </div>
         )}
       </section>
-      </div>
+      </>
+      )}
 
       <footer className="footer-note">
         <p className="footer-disclaimer">Disclaimer: SPECTRE provides informational analytics only. It is not financial, investment, tax, or legal advice, and no result is guaranteed to be complete, current, or accurate.</p>
@@ -3957,30 +3804,6 @@ function toRiskFlag(
   }
 
   if (value >= yellowThreshold) {
-    return { label, value: `${value.toFixed(2)}${suffix}`, tone: "yellow", help };
-  }
-
-  return { label, value: `${value.toFixed(2)}${suffix}`, tone: "green", help };
-}
-
-// For metrics where lower = worse (e.g. Sharpe, Sortino)
-function toRiskFlagLow(
-  label: string,
-  value: number | null,
-  yellowThreshold: number,
-  redThreshold: number,
-  suffix: string,
-  help: string,
-): RiskFlag {
-  if (value == null || !Number.isFinite(value)) {
-    return { label, value: "N/A", tone: "green", help };
-  }
-
-  if (value <= redThreshold) {
-    return { label, value: `${value.toFixed(2)}${suffix}`, tone: "red", help };
-  }
-
-  if (value <= yellowThreshold) {
     return { label, value: `${value.toFixed(2)}${suffix}`, tone: "yellow", help };
   }
 
@@ -4629,148 +4452,6 @@ function createDemoSnapshots(finalValue: number): PortfolioSnapshot[] {
   });
 
   return snapshots;
-}
-
-function buildDemoHistoricalRiskEstimate(
-  portfolioState: PortfolioState,
-  riskWindow: RiskWindow,
-): HistoricalRiskEstimatePayload {
-  const fallbackTotalValue = DEMO_PORTFOLIO_STATE.holdings.reduce((sum, holding) => sum + holding.value, 0);
-  const totalValue = Math.max(
-    portfolioState.holdings.reduce((sum, holding) => sum + (Number.isFinite(holding.value) ? holding.value : 0), 0),
-    fallbackTotalValue,
-  );
-  const marketTickers = Array.from(
-    new Set(
-      portfolioState.holdings
-        .filter((holding) => ["asx", "crypto", "index", "fund", "gold"].includes(holding.source))
-        .map((holding) => holding.ticker.trim().toUpperCase())
-        .filter((ticker) => ticker.length > 0),
-    ),
-  );
-  const usedTickers = (marketTickers.length > 0 ? marketTickers : ["CBA", "BHP", "MQG", "BTC", "ETH", "VAS"]).slice(0, 6);
-  const correlationTickers = (usedTickers.length >= 4 ? usedTickers : ["CBA", "BHP", "MQG", "BTC"]).slice(0, 4);
-  const baseMatrix = [
-    [1, 0.74, 0.66, 0.24],
-    [0.74, 1, 0.59, 0.19],
-    [0.66, 0.59, 1, 0.21],
-    [0.24, 0.19, 0.21, 1],
-  ];
-  const profile =
-    riskWindow === "1M"
-      ? {
-          pointsTarget: 22,
-          pointsUsed: 22,
-          benchmarkPointsUsed: 22,
-          volatilityAnnualPct: 16.8,
-          maxDrawdownPct: 7.4,
-          var95Pct: 1.9,
-          cvar95Pct: 2.8,
-          betaToBenchmark: 0.84,
-          trackingErrorAnnualPct: 5.6,
-          correlationToBenchmark: 0.72,
-          cornishFisherVar95Pct: 2.1,
-          rsi14: 57.8,
-          stochastic14: 61.4,
-          obvValue: 1_840_000,
-          obvTrend: "Accumulation bias",
-          regime: { vix: 15.9, label: "Risk-On", cssClass: "purple" },
-          factorExposure: { marketBeta: 0.84, sizeBeta: -0.12 },
-          sharpeRatioAnnual: 0.74,
-          sortinoRatioAnnual: 1.02,
-          returnSkewness: -0.28,
-        }
-      : riskWindow === "1Y"
-        ? {
-            pointsTarget: 252,
-            pointsUsed: 118,
-            benchmarkPointsUsed: 118,
-            volatilityAnnualPct: 21.2,
-            maxDrawdownPct: 14.9,
-            var95Pct: 2.9,
-            cvar95Pct: 4.1,
-            betaToBenchmark: 0.97,
-            trackingErrorAnnualPct: 8.8,
-            correlationToBenchmark: 0.79,
-            cornishFisherVar95Pct: 3.2,
-            rsi14: 56.2,
-            stochastic14: 58.9,
-            obvValue: 2_670_000,
-            obvTrend: "Steady accumulation",
-            regime: { vix: 19.6, label: "Watchful", cssClass: "danger" },
-            factorExposure: { marketBeta: 0.97, sizeBeta: -0.05 },
-            sharpeRatioAnnual: 0.41,
-            sortinoRatioAnnual: 0.58,
-            returnSkewness: -0.67,
-          }
-        : {
-            pointsTarget: 63,
-            pointsUsed: 63,
-            benchmarkPointsUsed: 63,
-            volatilityAnnualPct: 18.6,
-            maxDrawdownPct: 10.8,
-            var95Pct: 2.4,
-            cvar95Pct: 3.5,
-            betaToBenchmark: 0.91,
-            trackingErrorAnnualPct: 7.4,
-            correlationToBenchmark: 0.76,
-            cornishFisherVar95Pct: 2.7,
-            rsi14: 59.6,
-            stochastic14: 64.8,
-            obvValue: 2_310_000,
-            obvTrend: "Positive participation",
-            regime: { vix: 17.8, label: "Balanced", cssClass: "purple" },
-            factorExposure: { marketBeta: 0.91, sizeBeta: -0.08 },
-            sharpeRatioAnnual: 0.58,
-            sortinoRatioAnnual: 0.81,
-            returnSkewness: -0.44,
-          };
-
-  const var95Amount = Number(((profile.var95Pct / 100) * totalValue).toFixed(2));
-  const cvar95Amount = Number(((profile.cvar95Pct / 100) * totalValue).toFixed(2));
-  const cornishFisherVar95Amount = Number(((profile.cornishFisherVar95Pct / 100) * totalValue).toFixed(2));
-
-  return {
-    source: "yahoo_estimate",
-    lessAccurateThanSnapshots: true,
-    note: "Demo showcase values seed the benchmark, factor, and regime analytics so every risk card is populated.",
-    benchmarkSymbol: "^AXJO",
-    benchmarkName: "S&P/ASX 200",
-    riskWindow,
-    pointsTarget: profile.pointsTarget,
-    pointsUsed: profile.pointsUsed,
-    returnsCount: profile.pointsUsed,
-    benchmarkPointsUsed: profile.benchmarkPointsUsed,
-    usedTickers,
-    failedTickers: [],
-    volatilityAnnualPct: profile.volatilityAnnualPct,
-    maxDrawdownPct: profile.maxDrawdownPct,
-    var95Pct: profile.var95Pct,
-    var95Amount,
-    cvar95Pct: profile.cvar95Pct,
-    cvar95Amount,
-    betaToBenchmark: profile.betaToBenchmark,
-    trackingErrorAnnualPct: profile.trackingErrorAnnualPct,
-    correlationToBenchmark: profile.correlationToBenchmark,
-    outlierReturnsRemoved: 0,
-    cornishFisherVar95Pct: profile.cornishFisherVar95Pct,
-    cornishFisherVar95Amount,
-    rsi14: profile.rsi14,
-    stochastic14: profile.stochastic14,
-    obvValue: profile.obvValue,
-    obvTrend: profile.obvTrend,
-    correlationMatrix: {
-      tickers: correlationTickers,
-      matrix: correlationTickers.map((_, rowIndex) =>
-        correlationTickers.map((_, columnIndex) => baseMatrix[rowIndex]?.[columnIndex] ?? (rowIndex === columnIndex ? 1 : 0.35)),
-      ),
-    },
-    regime: profile.regime,
-    factorExposure: profile.factorExposure,
-    sharpeRatioAnnual: profile.sharpeRatioAnnual,
-    sortinoRatioAnnual: profile.sortinoRatioAnnual,
-    returnSkewness: profile.returnSkewness,
-  };
 }
 
 function superTemplateCsv(): string {

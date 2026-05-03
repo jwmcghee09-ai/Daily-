@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import styles from "./landing-page.module.css";
 
 type CheckoutPlan = "free" | "plus" | "pro";
@@ -16,19 +17,19 @@ type WorkflowStep = MarketingCard & {
   number: string;
 };
 
-const TICKER_FALLBACK = [
-  { label: "BHP",     price: "45.82",  delta: "+1.2%", tone: "up" },
-  { label: "CBA",     price: "131.44", delta: "-0.4%", tone: "dn" },
-  { label: "AUD/USD", price: "0.6290", delta: "+0.2%", tone: "up" },
-  { label: "GOLD",    price: "3112",   delta: "+0.8%", tone: "up" },
-  { label: "WTI",     price: "69.86",  delta: "-1.9%", tone: "dn" },
-  { label: "BTC",     price: "84.2k",  delta: "+1.4%", tone: "up" },
-  { label: "ETH",     price: "1,965",  delta: "+2.3%", tone: "up" },
-  { label: "CSL",     price: "288.10", delta: "+0.7%", tone: "up" },
-  { label: "MQG",     price: "218.75", delta: "+1.4%", tone: "up" },
-  { label: "FMG",     price: "18.44",  delta: "-2.1%", tone: "dn" },
-  { label: "VIX",     price: "21.4",   delta: "-6.1%", tone: "dn" },
-] as { label: string; price: string; delta: string; tone: string }[];
+const tickerItems = [
+  ["BHP", "45.82", "+1.2%", "up"],
+  ["CBA", "131.44", "-0.4%", "dn"],
+  ["AUD/USD", "0.629", "+0.2%", "up"],
+  ["GOLD", "3112", "+0.8%", "up"],
+  ["WTI", "69.86", "-1.9%", "dn"],
+  ["BTC", "84.2k", "+1.4%", "up"],
+  ["ETH", "1,965", "+2.3%", "up"],
+  ["CSL", "288.10", "+0.7%", "up"],
+  ["MQG", "218.75", "+1.4%", "up"],
+  ["FMG", "18.44", "-2.1%", "dn"],
+  ["VIX", "21.4", "-6.1%", "dn"],
+] as const;
 
 const workflowSteps: readonly WorkflowStep[] = [
   {
@@ -76,7 +77,7 @@ const features: readonly MarketingCard[] = [
   },
   {
     title: "Monte Carlo & Stress",
-    copy: "10,000-path portfolio projections with bull, base, and bear outcomes tied to your imported holdings.",
+    copy: "500-path portfolio projections with bull, base, and bear outcomes tied to your imported holdings.",
     icon: <ClockIcon />,
     alt: true,
   },
@@ -157,7 +158,7 @@ const faqs = [
   {
     question: "How is AI analysis different on Pro vs Free?",
     answer:
-      "Every plan gets the same holdings-aware AI workflow, but usage limits differ. Free includes 3 AI sessions per month, Plus includes 20 per month, and Pro unlocks unlimited AI plus the deepest quant analytics.",
+      "Every plan gets the same holdings-aware AI workflow, but usage limits differ. Free includes 10 AI sessions per month, Plus includes 20 per month, and Pro unlocks unlimited AI plus the deepest quant analytics.",
   },
   {
     question: "What data does the research terminal include?",
@@ -178,73 +179,12 @@ export default function LandingPage({
   checkoutState: "success" | "cancelled" | null;
   checkoutPlan: CheckoutPlan;
 }) {
-  const [activeFaqIndex, setActiveFaqIndex] = useState(-1);
+  const [activeFaqIndex, setActiveFaqIndex] = useState(0);
   const heroProductRef = useRef<HTMLDivElement>(null);
   const stickySectionRef = useRef<HTMLElement>(null);
   const aiConsoleRef = useRef<HTMLDivElement>(null);
   const aiSectionRef = useRef<HTMLElement>(null);
-  const [leadPopupVisible, setLeadPopupVisible] = useState(false);
-  const [leadEmail, setLeadEmail] = useState("");
-  const [leadConsent, setLeadConsent] = useState(false);
-  const [leadSubmitted, setLeadSubmitted] = useState(false);
-  const [leadError, setLeadError] = useState("");
-  const [leadWorking, setLeadWorking] = useState(false);
   const [activeStickyPanel, setActiveStickyPanel] = useState(0);
-  const [tickerItems, setTickerItems] = useState(TICKER_FALLBACK);
-
-  useEffect(() => {
-    // Lead popup disabled
-  }, []);
-
-  async function submitLead(e: React.FormEvent) {
-    e.preventDefault();
-    setLeadError("");
-    setLeadWorking(true);
-    try {
-      const res = await fetch("/api/marketing/lead", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: leadEmail, consent: leadConsent, deal: "7day-pro-trial" }),
-      });
-      if (!res.ok) {
-        const data = (await res.json()) as { error?: string };
-        setLeadError(data.error || "Something went wrong.");
-        return;
-      }
-      setLeadSubmitted(true);
-      localStorage.setItem("spectre_lead_dismissed", "1");
-    } catch {
-      setLeadError("Something went wrong. Please try again.");
-    } finally {
-      setLeadWorking(false);
-    }
-  }
-
-  function dismissLeadPopup() {
-    setLeadPopupVisible(false);
-    localStorage.setItem("spectre_lead_dismissed", "1");
-  }
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function fetchTape() {
-      try {
-        const res = await fetch("/api/market/tape");
-        if (!res.ok) return;
-        const data = (await res.json()) as { tape: typeof TICKER_FALLBACK };
-        if (!cancelled && Array.isArray(data.tape) && data.tape.length > 0) {
-          setTickerItems(data.tape);
-        }
-      } catch {
-        // keep fallback
-      }
-    }
-
-    void fetchTape();
-    const interval = setInterval(() => { void fetchTape(); }, 60_000);
-    return () => { cancelled = true; clearInterval(interval); };
-  }, []);
 
   useEffect(() => {
     const reveals = document.querySelectorAll<HTMLElement>(
@@ -383,10 +323,10 @@ export default function LandingPage({
           </div>
 
           <div className={styles.navActions}>
-            <a href="/dashboard?demo=1" className={`${styles.button} ${styles.demoButton}`}>
+            <Link href="/dashboard?demo=1" className={`${styles.button} ${styles.demoButton}`}>
               <span className={styles.demoDot} />
               Live Demo
-            </a>
+            </Link>
             <Link href="/signin" className={`${styles.button} ${styles.ghostButton}`}>
               Sign In
             </Link>
@@ -399,11 +339,11 @@ export default function LandingPage({
 
       <div className={styles.ticker}>
         <div className={styles.tickerTrack}>
-          {[...tickerItems, ...tickerItems].map((item, index) => (
-            <span key={`${item.label}-${index}`} className={styles.tickerItem}>
-              <span className={styles.tickerSymbol}>{item.label}</span>
-              <span className={styles.tickerPrice}>{item.price}</span>
-              <span className={item.tone === "up" ? styles.up : styles.down}>{item.delta}</span>
+          {[...tickerItems, ...tickerItems].map(([symbol, price, delta, tone], index) => (
+            <span key={`${symbol}-${index}`} className={styles.tickerItem}>
+              <span className={styles.tickerSymbol}>{symbol}</span>
+              <span className={styles.tickerPrice}>{price}</span>
+              <span className={tone === "up" ? styles.up : styles.down}>{delta}</span>
             </span>
           ))}
         </div>
@@ -420,21 +360,21 @@ export default function LandingPage({
           <div className={styles.heroIntro}>
             <div className={`${styles.heroBadge} ${styles.reveal}`}>SPECTRE — AI Portfolio Intelligence</div>
             <h1 className={`${styles.heroTitle} ${styles.reveal}`}>
-              The AI operating system<br /><span>for your portfolio.</span>
+              See your portfolio risk score<br /><span>in 60 seconds.</span>
             </h1>
             <p className={`${styles.heroSub} ${styles.reveal}`}>
-              SPECTRE turns holdings, research, and market data into one AI-native workspace for quant analysis, live research, and faster portfolio decisions.
+              Import your broker, super, and crypto holdings. SPECTRE calculates your risk score, runs Monte Carlo simulations, and lets you ask AI questions about your own portfolio — free to start.
             </p>
             <div className={`${styles.heroActions} ${styles.reveal}`}>
-              <a href="/dashboard?demo=1" className={`${styles.button} ${styles.primaryButton} ${styles.heroButton}`}>
-                See Live Demo →
-              </a>
-              <Link href="/signin?mode=register&plan=free" className={`${styles.button} ${styles.outlineButton} ${styles.heroButton}`}>
+              <Link href="/signin?mode=register&plan=free" className={`${styles.button} ${styles.primaryButton} ${styles.heroButton}`}>
                 Get Started Free
+              </Link>
+              <Link href="/dashboard?demo=1" className={`${styles.button} ${styles.outlineButton} ${styles.heroButton}`}>
+                See Live Demo →
               </Link>
             </div>
             <p className={`${styles.reveal}`} style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.35)", marginTop: "1rem", letterSpacing: "0.04em" }}>
-              Built for Australian investors · ASIC-compliant general advice guidelines · No card required
+              Built for Australian investors · No card required · Cancel anytime
             </p>
 
           </div>
@@ -449,7 +389,7 @@ export default function LandingPage({
               <StatCard label="Portfolio Value" value="$1.27M" sub="+2.1% MTD" tone="up" />
               <StatCard label="Import Sources" value="8" sub="Broker, super, crypto, bullion" />
               <StatCard label="AI Coverage" value="24" sub="Holdings + research context" />
-              <StatCard label="Monte Carlo" value="10,000" sub="1Y simulation paths" />
+              <StatCard label="Monte Carlo" value="500" sub="1Y simulation paths" />
             </div>
 
             <div className={styles.dashboardCharts}>
@@ -513,8 +453,8 @@ export default function LandingPage({
           <div className={styles.statsGrid}>
             {[
               { val: "8", label: "Import Sources" },
-              { val: "14+", label: "Risk Signals" },
-              { val: "10,000", label: "Monte Carlo Paths" },
+              { val: "12+", label: "Risk Signals" },
+              { val: "500", label: "Monte Carlo Paths" },
               { val: "3", label: "Quant · AI · Research" },
             ].map(({ val, label }) => (
               <div key={label} className={styles.statStat}>
@@ -603,9 +543,9 @@ export default function LandingPage({
           </div>
 
           <div className={styles.researchCtaRow}>
-            <a href="/research?demo=1" className={`${styles.button} ${styles.primaryButton}`}>
+            <Link href="/research?demo=1" className={`${styles.button} ${styles.primaryButton}`}>
               See Research Demo
-            </a>
+            </Link>
             <Link href="/signin?mode=register&plan=plus" className={`${styles.button} ${styles.outlineButton}`}>
               Included in Plus
             </Link>
@@ -934,7 +874,7 @@ export default function LandingPage({
                 <span>$9.99</span>
                 <small>/month</small>
               </div>
-              <p>The full AI analytics workflow with the deepest quant tooling.</p>
+              <p>The full AI analyst workflow with the deepest quant tooling.</p>
               <ul>
                 <li>Everything in Plus</li>
                 <li>Unlimited AI queries</li>
@@ -1018,15 +958,15 @@ export default function LandingPage({
         <div className={`${styles.container} ${styles.revealScale}`}>
           <div className={styles.ctaPanel}>
             <div className={styles.heroBadge}>Start free — no card required</div>
-            <h2>Give your portfolio an AI analytics engine.</h2>
+            <h2>Give your portfolio an AI analyst.</h2>
             <p>Import your first files and open Quant, AI, and Research in one private workspace.</p>
             <div className={styles.heroActions}>
               <Link href="/signin?mode=register&plan=free" className={`${styles.button} ${styles.primaryButton} ${styles.heroButton}`}>
                 Get Started Free
               </Link>
-              <a href="/dashboard?demo=1" className={`${styles.button} ${styles.outlineButton} ${styles.heroButton}`}>
+              <Link href="/dashboard?demo=1" className={`${styles.button} ${styles.outlineButton} ${styles.heroButton}`}>
                 See Live Demo
-              </a>
+              </Link>
             </div>
           </div>
         </div>
@@ -1048,7 +988,7 @@ export default function LandingPage({
                 <li><a href="#features">Features</a></li>
                 <li><a href="#ai">AI Analysis</a></li>
                 <li><a href="#pricing">Pricing</a></li>
-                <li><a href="/dashboard?demo=1">Live Demo</a></li>
+                <li><Link href="/dashboard?demo=1">Live Demo</Link></li>
               </ul>
             </div>
             <div>
@@ -1063,91 +1003,12 @@ export default function LandingPage({
 
           <div className={styles.footerBottom}>
             <p>
-              SPECTRE does not hold an Australian Financial Services (AFS) Licence and does not provide financial product advice. All content is general information only and does not take into account your personal objectives, financial situation, or needs. Consider seeking advice from a licensed financial adviser before making investment decisions. Market data and AI outputs may contain errors or delays — verify independently before acting. © 2026 SPECTRE.
+              Disclaimer: SPECTRE provides informational analytics only. Not financial, investment, tax, or legal advice. No result is guaranteed to be complete, current, or accurate. Use at your own risk. Copyright 2026 SPECTRE.
             </p>
             <a href="mailto:admin@spectre-assets.com">admin@spectre-assets.com</a>
           </div>
         </div>
       </footer>
-
-      {/* Lead capture + cookie consent popup */}
-      {leadPopupVisible && (
-        <div style={{
-          position: "fixed", bottom: "24px", left: "50%", transform: "translateX(-50%)",
-          width: "min(480px, calc(100vw - 32px))", zIndex: 9000,
-          background: "linear-gradient(160deg, #0e0b1a, #080510)",
-          border: "1px solid rgba(255,75,51,0.25)", borderRadius: "16px",
-          padding: "24px", boxShadow: "0 8px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,75,51,0.08)",
-          animation: "slideUp 0.3s ease",
-        }}>
-          <style>{`@keyframes slideUp { from { opacity:0; transform:translateX(-50%) translateY(16px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }`}</style>
-
-          <button onClick={dismissLeadPopup} style={{
-            position: "absolute", top: "12px", right: "14px",
-            background: "none", border: "none", color: "#6b7280", cursor: "pointer", fontSize: "18px", lineHeight: 1,
-          }}>×</button>
-
-          {leadSubmitted ? (
-            <div style={{ textAlign: "center", padding: "8px 0" }}>
-              <div style={{ fontSize: "1.4rem", marginBottom: "8px" }}>✓</div>
-              <p style={{ color: "#f4f0ff", fontWeight: 700, marginBottom: "6px" }}>Deal unlocked — check your inbox</p>
-              <p style={{ color: "#6b7280", fontSize: "0.82rem", lineHeight: 1.5 }}>We&apos;ll send your Pro trial link shortly. <a href="/signin?mode=register&plan=pro" style={{ color: "#ff7a68" }}>Or start now →</a></p>
-            </div>
-          ) : (
-            <form onSubmit={(e) => { void submitLead(e); }}>
-              <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "rgba(255,75,51,0.1)", border: "1px solid rgba(255,75,51,0.25)", borderRadius: "999px", padding: "3px 10px", marginBottom: "10px" }}>
-                <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#ff4b33", display: "inline-block", flexShrink: 0 }} />
-                <span style={{ fontFamily: "'DM Mono', monospace", fontSize: "0.58rem", letterSpacing: "0.14em", textTransform: "uppercase", color: "#ff7a68" }}>Limited offer</span>
-              </div>
-              <h3 style={{ fontFamily: "'Sora', sans-serif", fontSize: "1.15rem", fontWeight: 800, color: "#f8f8fb", marginBottom: "6px", lineHeight: 1.2 }}>Get 7 days of Pro free</h3>
-              <p style={{ fontSize: "0.78rem", color: "#6b7280", marginBottom: "16px", lineHeight: 1.5 }}>Unlimited AI, advanced quant console, live research terminal. No card required to claim.</p>
-
-              <input
-                type="email"
-                placeholder="your@email.com"
-                value={leadEmail}
-                onChange={(e) => setLeadEmail(e.target.value)}
-                required
-                style={{
-                  width: "100%", padding: "10px 14px", marginBottom: "12px",
-                  background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)",
-                  borderRadius: "10px", color: "#f4f0ff", fontSize: "0.88rem", outline: "none",
-                }}
-              />
-
-              <label style={{ display: "flex", alignItems: "flex-start", gap: "10px", marginBottom: "8px", cursor: "pointer" }}>
-                <input
-                  type="checkbox"
-                  checked={leadConsent}
-                  onChange={(e) => setLeadConsent(e.target.checked)}
-                  style={{ marginTop: "2px", flexShrink: 0 }}
-                />
-                <span style={{ fontSize: "0.72rem", color: "#6b7280", lineHeight: 1.5 }}>
-                  I consent to receive promotional emails from SPECTRE. You can unsubscribe any time.
-                </span>
-              </label>
-
-              <label style={{ display: "flex", alignItems: "flex-start", gap: "10px", marginBottom: "16px", cursor: "pointer" }}>
-                <input type="checkbox" defaultChecked disabled style={{ marginTop: "2px", flexShrink: 0 }} />
-                <span style={{ fontSize: "0.72rem", color: "#6b7280", lineHeight: 1.5 }}>
-                  I accept the use of cookies for analytics and personalisation. <a href="/privacy" style={{ color: "#9ca3af" }}>Privacy Policy</a>
-                </span>
-              </label>
-
-              {leadError && <p style={{ fontSize: "0.78rem", color: "#ff7a68", marginBottom: "10px" }}>{leadError}</p>}
-
-              <button type="submit" disabled={leadWorking || !leadConsent} style={{
-                width: "100%", padding: "11px", background: "linear-gradient(135deg, #ff4b33, #ff2f14)",
-                border: "none", borderRadius: "10px", color: "#fff", fontWeight: 700,
-                fontSize: "0.88rem", cursor: leadConsent ? "pointer" : "not-allowed",
-                opacity: leadConsent ? 1 : 0.5, transition: "opacity 0.15s",
-              }}>
-                {leadWorking ? "..." : "Claim 7 Days Free →"}
-              </button>
-            </form>
-          )}
-        </div>
-      )}
     </main>
   );
 }

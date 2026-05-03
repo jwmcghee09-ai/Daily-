@@ -36,31 +36,23 @@ export default function SignInPage({
   initialMode,
   initialPlan,
   verificationState,
-  initialSubMode,
-  initialResetToken,
 }: {
   authenticatedUser: { email: string; displayName: string } | null;
   initialMode: AuthMode;
   initialPlan: CheckoutPlan | null;
   verificationState: string | null;
-  initialSubMode: SubMode;
-  initialResetToken: string;
 }) {
   const router = useRouter();
   const [authMode, setAuthMode] = useState<AuthMode>(initialMode);
-  const [subMode, setSubMode] = useState<SubMode>(initialSubMode);
-  const [selectedPlan, setSelectedPlan] = useState<CheckoutPlan>(initialPlan === "pro" ? "pro" : "plus");
-  const [pendingCheckoutPlan, setPendingCheckoutPlan] = useState<CheckoutPlan | null>(() => {
-    if (typeof window === "undefined") return null;
-    const stored = sessionStorage.getItem("spectre_pending_plan");
-    return stored === "pro" || stored === "plus" ? stored : null;
-  });
+  const [subMode, setSubMode] = useState<SubMode>("default");
+  const [selectedPlan, setSelectedPlan] = useState<CheckoutPlan>(initialPlan ?? "free");
+  const [hasRequestedCheckout, setHasRequestedCheckout] = useState(Boolean(initialPlan));
   const [email, setEmail] = useState(authenticatedUser?.email ?? "");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState(authenticatedUser?.displayName ?? "");
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [resetToken, setResetToken] = useState(initialResetToken);
+  const [resetToken, setResetToken] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [working, setWorking] = useState(false);
   const [checkoutWorking, setCheckoutWorking] = useState(false);
@@ -68,13 +60,11 @@ export default function SignInPage({
   const [banner, setBanner] = useState<{ tone: "success" | "info" | "error"; message: string } | null>(null);
   const [sessionUser, setSessionUser] = useState<SessionUser | null>(null);
   const [showVerificationLinks, setShowVerificationLinks] = useState(false);
-  const [redirecting, setRedirecting] = useState(false);
   const activeSessionHasPaidAccess = sessionUser ? userHasPaidAccess(sessionUser) : false;
 
   useEffect(() => {
     if (verificationState === "success") {
       setAuthMode("login");
-      setSubMode("default");
       setBanner({ tone: "success", message: "Email verified. You can now sign in." });
     } else if (verificationState === "invalid") {
       setBanner({ tone: "error", message: "Verification link is invalid or expired." });
@@ -83,27 +73,6 @@ export default function SignInPage({
       setBanner({ tone: "error", message: "Too many verification attempts. Please wait and try again." });
     }
   }, [verificationState]);
-
-  useEffect(() => {
-    setAuthMode(initialMode);
-  }, [initialMode]);
-
-  useEffect(() => {
-    if (initialPlan === "pro" || initialPlan === "plus" || initialPlan === "free") {
-      setSelectedPlan(initialPlan);
-    }
-  }, [initialMode, initialPlan]);
-
-  useEffect(() => {
-    setSubMode(initialSubMode);
-    if (initialSubMode === "reset") {
-      setAuthMode("login");
-      if (initialResetToken) {
-        setResetToken(initialResetToken);
-        setBanner({ tone: "info", message: "Reset link opened. Choose a new password to complete recovery." });
-      }
-    }
-  }, [initialSubMode, initialResetToken]);
 
   useEffect(() => {
     let cancelled = false;
@@ -133,6 +102,7 @@ export default function SignInPage({
   function switchToLogin() {
     setAuthMode("login");
     setSubMode("default");
+    setHasRequestedCheckout(false);
     setAcceptTerms(false);
     setShowPassword(false);
     setAuthError("");
@@ -142,6 +112,7 @@ export default function SignInPage({
   function switchToRegister() {
     setAuthMode("register");
     setSubMode("default");
+    setHasRequestedCheckout(true);
     setAcceptTerms(false);
     setShowPassword(false);
     setAuthError("");
@@ -185,28 +156,7 @@ export default function SignInPage({
       });
 
       if (!response.ok) {
-        const errorMessage = await parseApiError(response, "Authentication failed.");
-        if (response.status === 409) {
-          setAuthMode("login");
-          setSubMode("default");
-          setPassword("");
-          setBanner({
-            tone: "info",
-            message: "You already have a Spectre account with this email. Sign in below — or reset your password if you've forgotten it.",
-          });
-          return;
-        }
-        if (response.status === 403 && errorMessage.toLowerCase().includes("verify your email")) {
-          setAuthMode("login");
-          setSubMode("default");
-          setPassword("");
-          setShowVerificationLinks(true);
-          setBanner({
-            tone: "info",
-            message: "Your account exists but email verification is still required. Use the resend verification link below if needed.",
-          });
-        }
-        throw new Error(errorMessage);
+        throw new Error(await parseApiError(response, "Authentication failed."));
       }
 
       const payload = (await response.json()) as AuthSessionPayload;
@@ -216,10 +166,6 @@ export default function SignInPage({
         setPassword("");
         setAcceptTerms(false);
         setShowVerificationLinks(true);
-        if (selectedPlan !== "free") {
-          setPendingCheckoutPlan(selectedPlan);
-          sessionStorage.setItem("spectre_pending_plan", selectedPlan);
-        }
         setBanner({
           tone: "info",
           message: payload.message || `Account created! Check your email to verify, then sign in to continue with ${planLabel}.`,
@@ -232,30 +178,22 @@ export default function SignInPage({
       }
 
       const normalizedUser = normalizeSessionUser(payload.user);
+      setSessionUser(normalizedUser);
       setPassword("");
       setAcceptTerms(false);
+      setBanner({ tone: "success", message: `Welcome, ${normalizedUser.displayName}.` });
 
-      if (authMode === "register") {
-        if (selectedPlan !== "free") {
-          setSessionUser(normalizedUser);
-          await startCheckout(selectedPlan, normalizedUser.email);
-          return;
-        }
-
-        setRedirecting(true);
+      if (selectedPlan === "free") {
         router.push("/dashboard?mode=account");
         router.refresh();
         return;
       }
 
-      if (pendingCheckoutPlan && pendingCheckoutPlan !== "free") {
-        sessionStorage.removeItem("spectre_pending_plan");
-        setSessionUser(normalizedUser);
-        await startCheckout(pendingCheckoutPlan, normalizedUser.email);
+      if (authMode === "register" || hasRequestedCheckout || !userHasPaidAccess(normalizedUser)) {
+        await startCheckout(selectedPlan, normalizedUser.email);
         return;
       }
 
-      setRedirecting(true);
       router.push("/dashboard?mode=account");
       router.refresh();
     } catch (error) {
@@ -267,7 +205,6 @@ export default function SignInPage({
 
   async function startCheckout(plan: CheckoutPlan, guestEmail?: string) {
     if (plan === "free") {
-      setRedirecting(true);
       router.push("/dashboard?mode=account");
       router.refresh();
       return;
@@ -301,7 +238,6 @@ export default function SignInPage({
         throw new Error("Stripe checkout URL was missing.");
       }
 
-      setRedirecting(true);
       window.location.assign(payload.url);
     } catch (error) {
       setAuthError(error instanceof Error ? error.message : "Unable to start Stripe checkout.");
@@ -331,7 +267,6 @@ export default function SignInPage({
       }
 
       const payload = (await response.json()) as { message?: string };
-      setShowVerificationLinks(true);
       setBanner({ tone: "info", message: payload.message || "If the account exists, a verification email was sent." });
     } catch (error) {
       setAuthError(error instanceof Error ? error.message : "Could not resend verification email.");
@@ -417,9 +352,9 @@ export default function SignInPage({
             <Link href="/" className={`${styles.button} ${styles.ghostButton}`}>
               Back
             </Link>
-            <a href="/dashboard?demo=1" className={`${styles.button} ${styles.demoButton}`}>
+            <Link href="/dashboard?demo=1" className={`${styles.button} ${styles.demoButton}`}>
               Live Demo
-            </a>
+            </Link>
           </div>
         </div>
 
@@ -443,7 +378,7 @@ export default function SignInPage({
             <div className={styles.sideMeta}>
               <div>
                 <span>Live demo</span>
-                <a href="/dashboard?demo=1">Explore</a>
+                <Link href="/dashboard?demo=1">Explore</Link>
               </div>
               <div>
                 <span>Terms</span>
@@ -616,7 +551,7 @@ export default function SignInPage({
                   ) : null}
                   {authError ? <div className={`${styles.banner} ${styles.bannerError}`}>{authError}</div> : null}
 
-                  {!sessionUser || redirecting ? (
+                  {!sessionUser ? (
                     <form className={styles.formGrid} onSubmit={submitAuth}>
                       <label>
                         <span>Email</span>
@@ -681,22 +616,20 @@ export default function SignInPage({
                                   checked={selectedPlan === plan}
                                   onChange={() => {
                                     setSelectedPlan(plan);
+                                    setHasRequestedCheckout(plan !== "free");
                                   }}
                                 />
                                 <div className={styles.planOptionInner}>
                                   <span className={styles.planOptionName}>
                                     {plan === "free" ? "Free" : plan === "plus" ? "Plus" : "Pro"}
                                   </span>
-                                  {plan === "plus" && (
-                                    <span className={styles.planPopularBadge}>Most Popular</span>
-                                  )}
                                   <span className={styles.planOptionPrice}>
-                                    {plan === "free" ? "Free" : plan === "plus" ? "$2.99/mo" : "$9.99/mo"}
+                                    {plan === "free" ? "No cost" : plan === "plus" ? "$2.99 / mo" : "$9.99 / mo"}
                                   </span>
                                 </div>
                                 <div className={styles.planOptionFeatures}>
                                   {plan === "free" ? (
-                                    <span>3 AI queries/month · Basic dashboard</span>
+                                    <span>10 AI queries/month · Full dashboard</span>
                                   ) : plan === "plus" ? (
                                     <span>20 AI queries/month · Dip alerts · Full risk analytics</span>
                                   ) : (
@@ -736,46 +669,24 @@ export default function SignInPage({
                     </form>
                   ) : (
                     <div className={styles.sessionActions}>
-                      <fieldset className={styles.planPicker}>
-                        <legend>Choose your plan</legend>
-                        {(["plus", "pro"] as CheckoutPlan[]).map((plan) => (
-                          <label
-                            key={plan}
-                            className={`${styles.planOption} ${selectedPlan === plan ? styles.planOptionActive : ""}`}
-                          >
-                            <input
-                              type="radio"
-                              name="session-plan"
-                              checked={selectedPlan === plan}
-                              onChange={() => setSelectedPlan(plan)}
-                            />
-                            <div className={styles.planOptionInner}>
-                              <span className={styles.planOptionName}>{plan === "plus" ? "Plus" : "Pro"}</span>
-                              <span className={styles.planOptionPrice}>{plan === "plus" ? "$2.99/mo" : "$9.99/mo"}</span>
-                            </div>
-                            <div className={styles.planOptionFeatures}>
-                              {plan === "plus" ? (
-                                <span>20 AI queries/month · Dip alerts · Full risk analytics</span>
-                              ) : (
-                                <span>Unlimited AI · Advanced quant console · Priority support</span>
-                              )}
-                            </div>
-                          </label>
-                        ))}
-                      </fieldset>
-                      <button
-                        type="button"
-                        className={`${styles.button} ${styles.primaryButton} ${styles.fullButton}`}
-                        onClick={() => {
-                          void startCheckout(selectedPlan);
-                        }}
-                        disabled={checkoutWorking}
-                      >
-                        {checkoutWorking ? "Redirecting..." : `Continue with ${planLabel}`}
-                      </button>
-                      <Link href="/dashboard?mode=account" className={`${styles.button} ${styles.outlineButton} ${styles.fullButton}`}>
-                        Open Dashboard
-                      </Link>
+                      {!activeSessionHasPaidAccess ? (
+                        <button
+                          type="button"
+                          className={`${styles.button} ${styles.primaryButton} ${styles.fullButton}`}
+                          onClick={() => {
+                            setHasRequestedCheckout(true);
+                            void startCheckout(selectedPlan);
+                          }}
+                          disabled={checkoutWorking}
+                        >
+                          {checkoutWorking ? "Redirecting..." : `Continue with ${planLabel}`}
+                        </button>
+                      ) : null}
+                      {activeSessionHasPaidAccess ? (
+                        <Link href="/dashboard?mode=account" className={`${styles.button} ${styles.outlineButton} ${styles.fullButton}`}>
+                          Open Dashboard
+                        </Link>
+                      ) : null}
                     </div>
                   )}
 

@@ -87,10 +87,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
     }
 
-    if (!user.emailVerifiedAt) {
-      return NextResponse.json({ error: "Verify your email before signing in." }, { status: 403 });
-    }
-
     return buildAuthenticatedResponse(user.id, user.email, user.displayName);
   } catch {
     return NextResponse.json({ error: "Login failed." }, { status: 500 });

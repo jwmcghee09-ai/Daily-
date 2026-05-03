@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<meta name="theme-color" content="#05050a"/>
 <meta name="robots" content="noindex,nofollow,noarchive"/>
 <title>SPECTRE — Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
@@ -11,7 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Mono:wght@300;400;500&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth;background:#05050a}
+html{scroll-behavior:smooth}
 
 :root{
   /* ── Landing page design tokens — exact match ── */
@@ -42,9 +41,6 @@ html{scroll-behavior:smooth;background:#05050a}
 
 body{background:var(--bg);color:var(--text);font-family:var(--sans);font-weight:400;line-height:1.7;overflow-x:hidden}
 body.boot-pending > *:not(#boot-splash):not(script){display:none!important}
-body.boot-ready #boot-splash{opacity:0;pointer-events:none}
-body.page-transitioning #boot-splash{opacity:1;pointer-events:auto}
-body.page-transitioning > *:not(#boot-splash):not(script){visibility:hidden!important}
 
 /* BACKGROUND — exact landing page */
 body::before{
@@ -67,7 +63,7 @@ body::after{
 @media(max-width:600px){.wrap{padding:0 1.1rem}}
 
 /* ── NAV ── */
-nav{position:fixed;top:0;left:0;right:0;z-index:900;background:rgba(5,5,10,.92);backdrop-filter:blur(28px) saturate(1.4);-webkit-backdrop-filter:blur(28px) saturate(1.4);border-bottom:1px solid rgba(255,255,255,.06);padding-top:env(safe-area-inset-top,0)}
+nav{position:fixed;top:0;left:0;right:0;z-index:900;background:rgba(5,5,10,.92);backdrop-filter:blur(28px) saturate(1.4);-webkit-backdrop-filter:blur(28px) saturate(1.4);border-bottom:1px solid rgba(255,255,255,.06)}
 .nav-inner{max-width:var(--max);margin:0 auto;padding:0 2.5rem;height:56px;display:flex;align-items:center;justify-content:space-between;gap:2rem}
 .nav-logo{
   font-family:var(--disp);
@@ -87,7 +83,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;background:rgba(5,5,10,.92);
 @keyframes brandSlide{0%{background-position:0% center}100%{background-position:200% center}}
 /* centre tabs */
 .nav-tabs{display:flex;align-items:center;gap:0;background:none;border:none;border-radius:0;padding:0}
-.nav-tab{font-family:var(--mono);font-size:.62rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:rgba(200,192,230,.6);background:none;border:none;border-bottom:1.5px solid transparent;border-radius:0;padding:.2rem 1.1rem;cursor:pointer;transition:all .2s;line-height:56px;height:56px;text-decoration:none}
+.nav-tab{font-family:var(--mono);font-size:.62rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:rgba(200,192,230,.6);background:none;border:none;border-bottom:1.5px solid transparent;border-radius:0;padding:.2rem 1.1rem;cursor:pointer;transition:all .2s;line-height:56px;height:56px}
 .nav-tab:hover{background:linear-gradient(90deg,#a855f7 0%,#d946ef 35%,#ff7a30 72%,#ffb347 100%);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:brandSlide 4s linear infinite}
 .nav-tab-active{background:linear-gradient(90deg,#a855f7 0%,#d946ef 35%,#ff7a30 72%,#ffb347 100%)!important;background-size:200% auto!important;-webkit-background-clip:text!important;-webkit-text-fill-color:transparent!important;background-clip:text!important;animation:brandSlide 4s linear infinite!important;border-bottom-color:#a855f7!important}
 /* right side */
@@ -104,7 +100,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;background:rgba(5,5,10,.92);
 .nav-ticker-bar::before,.nav-ticker-bar::after{content:'';position:absolute;top:0;bottom:0;width:72px;z-index:2;pointer-events:none}
 .nav-ticker-bar::before{left:0;background:linear-gradient(to right,rgba(5,5,10,.95),transparent)}
 .nav-ticker-bar::after{right:0;background:linear-gradient(to left,rgba(5,5,10,.95),transparent)}
-.nav-ticker-track{display:flex;align-items:center;gap:0;white-space:nowrap;width:max-content;flex-shrink:0;animation:tickerScroll 60s linear infinite}
+.nav-ticker-track{display:flex;align-items:center;gap:0;white-space:nowrap;animation:tickerScroll 60s linear infinite}
 .nav-ticker-track:hover{animation-play-state:paused}
 @keyframes tickerScroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
 .nav-ticker-item{display:inline-flex;align-items:center;gap:.45rem;padding:0 1.6rem;font-family:var(--mono);font-size:.58rem;letter-spacing:.05em}
@@ -691,7 +687,6 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   display:grid;
   place-items:center;
   padding:1rem;
-  transition:opacity .22s ease;
 }
 .boot-shell{
   min-width:220px;
@@ -762,13 +757,6 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 .console-ai-holding-head span{font-family:var(--mono);font-size:.5rem;color:var(--muted)}
 .console-ai-risk{margin-top:.35rem;font-family:var(--mono);font-size:.56rem;color:#ffb38f}
 @media(max-width:760px){.console-ai-grid,.console-ai-holding-grid{grid-template-columns:1fr}}
-/* AI conversation thread */
-.ai-conv-user{padding:.55rem .7rem;margin-bottom:.55rem;background:rgba(255,255,255,.04);border-radius:8px;border-left:2px solid rgba(255,255,255,.12)}
-.ai-conv-user .ai-conv-you{display:block;font-family:var(--mono);font-size:.5rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:.28rem}
-.ai-conv-user p{font-size:.78rem;color:var(--text);line-height:1.6;margin:0}
-.ai-conv-assistant{margin-bottom:.8rem}
-.ai-conv-past{padding:.55rem .7rem;background:rgba(168,85,247,.05);border-radius:8px;border-left:2px solid rgba(168,85,247,.25);opacity:.7}
-.ai-conv-past p{font-size:.76rem;color:var(--muted2);line-height:1.6;margin:0}
 
 /* ── MOBILE CENTERING (in-app dashboard) ── */
 @media(max-width:1024px){
@@ -845,41 +833,10 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   .hero-sub{font-size:.78rem;line-height:1.7;margin-bottom:1.2rem}
   .hero-actions{justify-content:center;gap:.5rem}
   .hero-primary,.hero-secondary{min-width:0;width:100%}
-  .meta-panel{
-    width:100% !important;
-    max-width:100% !important;
-    padding:.95rem !important;
-  }
-  .meta-panel-title{
-    margin-bottom:.8rem !important;
-    text-align:center;
-  }
-  .kpi-grid-mini{
-    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
-    gap:.55rem !important;
-    margin-bottom:.6rem !important;
-  }
-  .kpi-mini{
-    padding:.8rem .85rem !important;
-    min-width:0 !important;
-  }
-  .kpi-mini-lbl{
-    font-size:.46rem !important;
-    letter-spacing:.12em !important;
-    margin-bottom:.3rem !important;
-  }
-  .kpi-mini-val{
-    font-size:1.12rem !important;
-    line-height:1.05 !important;
-    word-break:break-word;
-  }
-  .risk-bar-wrap{
-    padding:.85rem .9rem !important;
-    margin-top:.1rem !important;
-  }
-  .risk-bar-top{margin-bottom:.65rem !important}
-  .risk-bar-lbl{font-size:.5rem !important}
-  .risk-bar-val{font-size:1.7rem !important}
+  .meta-panel{padding:1rem}
+  .kpi-grid-mini{grid-template-columns:1fr}
+  .kpi-mini{padding:1rem}
+  .kpi-mini-val{font-size:1.45rem}
 
   /* Section spacing */
   .sec{padding:2rem 0}
@@ -1125,8 +1082,8 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
 @media(max-width:768px){
   .mobile-tab-bar{display:block}
   .nav-tabs{display:none!important}
-  body{padding-bottom:max(72px,calc(56px + env(safe-area-inset-bottom,0px)))}
-  .hero{grid-template-columns:1fr!important;padding:calc(88px + env(safe-area-inset-top,0px)) 0 2rem!important;gap:1.25rem!important}
+  body{padding-bottom:72px}
+  .hero{grid-template-columns:1fr!important;padding:88px 0 2rem!important;gap:1.25rem!important}
   .hero-left,.meta-panel{width:100%!important;max-width:100%!important}
   .kpi-row{grid-template-columns:repeat(2,1fr)!important}
   .upload-grid{grid-template-columns:repeat(2,1fr)!important}
@@ -1138,29 +1095,9 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
   .ai-input-card{width:100%!important;border-radius:14px}
   .ai-hero-wrap{padding:90px 0 40px!important}
   .ai-hero-title{font-size:clamp(1.9rem,6vw,2.6rem)!important}
-  .ai-kpi-strip{
-    display:grid!important;
-    grid-template-columns:repeat(2,minmax(0,1fr))!important;
-    gap:.55rem!important;
-    padding:.65rem!important;
-    align-items:stretch!important;
-  }
-  .ai-kpi{
-    min-width:0!important;
-    padding:.8rem .95rem!important;
-    border:1px solid var(--border)!important;
-    border-radius:10px!important;
-    background:rgba(10,7,18,.72)!important;
-  }
-  .ai-kpi-divider,
-  .ai-kpi-strip > div[style*="flex:1"]{display:none!important}
-  #clear-data-btn{
-    grid-column:1 / -1!important;
-    width:100%!important;
-    justify-content:center!important;
-    margin-top:.1rem!important;
-    opacity:.8!important;
-  }
+  .ai-kpi-strip{flex-direction:column!important}
+  .ai-kpi{padding:.75rem 1.1rem!important;border-right:none!important;border-bottom:1px solid var(--border)}
+  .ai-kpi-divider{display:none!important}
   .console-grid{grid-template-columns:1fr!important}
 }
 
@@ -1168,27 +1105,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
 @media(max-width:430px){
   .wrap{padding:0 1rem!important}
   .nav-inner{padding:0 1rem!important}
-  .nav-ticker-bar{height:24px!important}
-  .nav-ticker-bar::before,.nav-ticker-bar::after{width:28px!important}
-  .nav-ticker-track{
-    animation-duration:42s!important;
-    width:max-content!important;
-    flex-shrink:0!important;
-    will-change:transform;
-  }
-  .nav-ticker-item{
-    gap:.3rem!important;
-    padding:0 .8rem!important;
-    font-size:.52rem!important;
-  }
-  .nav-ticker-sym{
-    font-size:.5rem!important;
-    letter-spacing:.06em!important;
-  }
-  .nav-ticker-price{display:none!important}
-  .nav-ticker-chg{font-size:.5rem!important}
-  .nav-ticker-sep{height:8px!important;margin:0 .1rem!important}
-  .hero{padding:calc(82px + env(safe-area-inset-top,0px)) 0 1.5rem!important;gap:1rem!important}
+  .hero{padding:82px 0 1.5rem!important;gap:1rem!important}
   .hero-brand{font-size:clamp(2rem,9vw,2.8rem)!important;margin-bottom:.75rem!important}
   .hero-title{font-size:clamp(2.4rem,11vw,3.4rem)!important}
   .hero-sub{font-size:.83rem!important;line-height:1.68!important;margin-bottom:1.1rem!important}
@@ -1198,20 +1115,17 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
   .hero-primary,.hero-secondary{width:100%!important;min-width:0!important;justify-content:center!important}
   .hero-meta{padding-top:1rem!important}
   .meta-row{grid-template-columns:1fr!important;gap:.3rem!important}
-  .meta-panel{padding:.95rem!important}
-  .kpi-grid-mini{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:.5rem!important}
-  .kpi-mini{padding:.78rem .82rem!important}
-  .kpi-mini-lbl{font-size:.45rem!important;letter-spacing:.12em!important}
-  .kpi-mini-val{font-size:1.08rem!important;line-height:1.05!important}
-  .risk-bar-wrap{padding:.8rem .85rem!important}
-  .risk-bar-val{font-size:1.6rem!important}
+  .meta-panel{padding:1rem!important}
+  .kpi-grid-mini{grid-template-columns:1fr 1fr!important;gap:.5rem!important}
+  .kpi-mini{padding:.85rem!important}
+  .kpi-mini-val{font-size:1.3rem!important}
   .kpi-row{grid-template-columns:1fr!important}
   .kpi-val{font-size:1.3rem!important}
   .upload-grid{grid-template-columns:1fr!important}
   .sec{padding:2rem 0!important}
   .sec-head{margin-bottom:1.2rem!important}
   .table-wrap{margin:0 -1rem!important;padding:0!important;border-radius:0!important}
-  table{min-width:460px}
+  table{min-width:540px}
   .card,.panel,.upload-card,.signal-card,.chart-card,.alert-card,.bullion-card,.quality-card,.console-card,.panel-half,.kpi-card{padding:12px!important}
   .bullion-grid,.quality-grid,.risk-grid,.stress-grid{grid-template-columns:1fr!important}
   .chart-grid{grid-template-columns:1fr!important}
@@ -1224,52 +1138,15 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
   .ai-input-textarea{font-size:.95rem!important;min-height:80px!important}
   .ai-hero-title{font-size:clamp(1.7rem,7vw,2.2rem)!important}
   .ai-hero-sub{font-size:.82rem!important}
-  .ai-kpi-strip{
-    grid-template-columns:repeat(2,minmax(0,1fr))!important;
-    gap:.5rem!important;
-    padding:.55rem!important;
-    margin-top:1.1rem!important;
-  }
-  .ai-kpi{
-    padding:.72rem .78rem!important;
-    border-radius:9px!important;
-  }
-  .ai-kpi-lbl{
-    font-size:.44rem!important;
-    letter-spacing:.1em!important;
-  }
-  .ai-kpi-val{
-    font-size:.74rem!important;
-    line-height:1.15!important;
-  }
-  #risk-bar-value{font-size:.84rem!important}
-  #clear-data-btn{
-    font-size:.55rem!important;
-    padding:.45rem .7rem!important;
-  }
   .console-ai-grid,.console-ai-holding-grid{grid-template-columns:1fr!important}
   .foot-inner{flex-direction:column!important;align-items:center!important;text-align:center!important;gap:.5rem!important}
   body{font-size:15px}
   input,select,textarea{font-size:16px!important}
-  .system-toast{bottom:max(72px,calc(56px + env(safe-area-inset-bottom,0px)))!important;right:12px!important}
-  .mc-stat-box{min-width:0!important;flex:1 1 calc(33% - 0.5rem)!important}
+  .system-toast{bottom:72px!important;right:12px!important}
   #export-csv-btn{display:none!important}
   .nav-user{display:none!important}
 }
 </style>
-<!-- Meta Pixel -->
-<script>
-!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
-n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
-t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
-document,'script','https://connect.facebook.net/en_US/fbevents.js');
-fbq('init','942949321933981');
-fbq('track','PageView');
-fbq('track','ViewContent');
-</script>
-<noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=942949321933981&ev=PageView&noscript=1"/></noscript>
-<!-- End Meta Pixel -->
 </head>
 <body class="boot-pending">
 
@@ -1287,10 +1164,10 @@ fbq('track','ViewContent');
     <div class="nav-tabs">
       <button type="button" class="nav-tab nav-tab-active" data-tab="quant">Quant</button>
       <button type="button" class="nav-tab" data-tab="ai">AI</button>
-      <a href="/research" class="nav-tab" data-tab="research" id="nav-research-link">Research</a>
+      <button type="button" class="nav-tab" data-tab="research">Research</button>
     </div>
     <div class="nav-right">
-      <div id="notif-dropdown" style="display:none;position:absolute;top:62px;right:0;width:min(340px,calc(100vw - 1rem));max-height:420px;overflow-y:auto;background:var(--card);border:1px solid var(--border2);border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,.45);z-index:9999;padding:0.5rem 0">
+      <div id="notif-dropdown" style="display:none;position:absolute;top:62px;right:0;width:340px;max-height:420px;overflow-y:auto;background:var(--card);border:1px solid var(--border2);border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,.45);z-index:9999;padding:0.5rem 0">
         <div style="padding:0.4rem 0.8rem;font-family:var(--mono);font-size:0.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border2)">Notifications</div>
         <div id="notif-list" style="padding:0.25rem 0"></div>
         <div id="notif-empty" style="display:none;padding:1.2rem 0.8rem;text-align:center;font-family:var(--mono);font-size:0.54rem;color:var(--muted)">No notifications yet.</div>
@@ -1309,7 +1186,9 @@ fbq('track','ViewContent');
   </div>
   <!-- TICKER BAR -->
   <div class="nav-ticker-bar">
-    <div class="nav-ticker-track" id="nav-ticker-track"><span class="nav-ticker-item"><span class="nav-ticker-sym">ASX200</span><span class="nav-ticker-price">8,150</span><span class="nav-ticker-chg pos">+0.4%</span></span><span class="nav-ticker-item"><span class="nav-ticker-sym">BTC</span><span class="nav-ticker-price">83,240</span><span class="nav-ticker-chg pos">+1.2%</span></span><span class="nav-ticker-item"><span class="nav-ticker-sym">GOLD</span><span class="nav-ticker-price">3,024</span><span class="nav-ticker-chg pos">+0.8%</span></span><span class="nav-ticker-item"><span class="nav-ticker-sym">AUD/USD</span><span class="nav-ticker-price">0.6312</span><span class="nav-ticker-chg neg">-0.3%</span></span><span class="nav-ticker-item"><span class="nav-ticker-sym">CBA</span><span class="nav-ticker-price">131.44</span><span class="nav-ticker-chg pos">+0.4%</span></span><span class="nav-ticker-item"><span class="nav-ticker-sym">BHP</span><span class="nav-ticker-price">45.82</span><span class="nav-ticker-chg pos">+1.2%</span></span><span class="nav-ticker-item"><span class="nav-ticker-sym">ANZ</span><span class="nav-ticker-price">29.55</span><span class="nav-ticker-chg pos">+0.3%</span></span><span class="nav-ticker-item"><span class="nav-ticker-sym">NAB</span><span class="nav-ticker-price">38.20</span><span class="nav-ticker-chg pos">+0.5%</span></span><span class="nav-ticker-item"><span class="nav-ticker-sym">CSL</span><span class="nav-ticker-price">288.10</span><span class="nav-ticker-chg pos">+0.7%</span></span><span class="nav-ticker-item"><span class="nav-ticker-sym">MQG</span><span class="nav-ticker-price">218.75</span><span class="nav-ticker-chg pos">+1.4%</span></span><span class="nav-ticker-item"><span class="nav-ticker-sym">RIO</span><span class="nav-ticker-price">112.60</span><span class="nav-ticker-chg pos">+0.9%</span></span><span class="nav-ticker-item"><span class="nav-ticker-sym">WBC</span><span class="nav-ticker-price">32.10</span><span class="nav-ticker-chg neg">-0.2%</span></span><span class="nav-ticker-item"><span class="nav-ticker-sym">ASX200</span><span class="nav-ticker-price">8,150</span><span class="nav-ticker-chg pos">+0.4%</span></span><span class="nav-ticker-item"><span class="nav-ticker-sym">BTC</span><span class="nav-ticker-price">83,240</span><span class="nav-ticker-chg pos">+1.2%</span></span><span class="nav-ticker-item"><span class="nav-ticker-sym">GOLD</span><span class="nav-ticker-price">3,024</span><span class="nav-ticker-chg pos">+0.8%</span></span><span class="nav-ticker-item"><span class="nav-ticker-sym">AUD/USD</span><span class="nav-ticker-price">0.6312</span><span class="nav-ticker-chg neg">-0.3%</span></span><span class="nav-ticker-item"><span class="nav-ticker-sym">CBA</span><span class="nav-ticker-price">131.44</span><span class="nav-ticker-chg pos">+0.4%</span></span><span class="nav-ticker-item"><span class="nav-ticker-sym">BHP</span><span class="nav-ticker-price">45.82</span><span class="nav-ticker-chg pos">+1.2%</span></span><span class="nav-ticker-item"><span class="nav-ticker-sym">ANZ</span><span class="nav-ticker-price">29.55</span><span class="nav-ticker-chg pos">+0.3%</span></span><span class="nav-ticker-item"><span class="nav-ticker-sym">NAB</span><span class="nav-ticker-price">38.20</span><span class="nav-ticker-chg pos">+0.5%</span></span><span class="nav-ticker-item"><span class="nav-ticker-sym">CSL</span><span class="nav-ticker-price">288.10</span><span class="nav-ticker-chg pos">+0.7%</span></span><span class="nav-ticker-item"><span class="nav-ticker-sym">MQG</span><span class="nav-ticker-price">218.75</span><span class="nav-ticker-chg pos">+1.4%</span></span><span class="nav-ticker-item"><span class="nav-ticker-sym">RIO</span><span class="nav-ticker-price">112.60</span><span class="nav-ticker-chg pos">+0.9%</span></span><span class="nav-ticker-item"><span class="nav-ticker-sym">WBC</span><span class="nav-ticker-price">32.10</span><span class="nav-ticker-chg neg">-0.2%</span></span></div>
+    <div class="nav-ticker-track" id="nav-ticker-track">
+      <!-- populated by JS after portfolio loads -->
+    </div>
   </div>
 </nav>
 
@@ -2286,7 +2165,7 @@ fbq('track','ViewContent');
   <footer>
     <div class="foot-inner">
       <span class="foot-logo">SPECTRE</span>
-      <span class="foot-disc">SPECTRE does not hold an AFS Licence and does not provide financial product advice. All analytics and AI outputs are general information only and do not consider your personal objectives, financial situation, or needs. Seek advice from a licensed financial adviser before making investment decisions. Data may contain errors or delays — verify independently before acting.</span>
+      <span class="foot-disc">For informational purposes only. Not financial advice. Always verify with your financial institution.</span>
       <span class="foot-email"><a href="mailto:admin@spectre-assets.com">admin@spectre-assets.com</a></span>
     </div>
   </footer>
@@ -2425,8 +2304,6 @@ fbq('track','ViewContent');
     holdingsAiError: "",
     holdingsAiLoading: false,
     holdingsAiStreamText: "",
-    aiConversationId: null,
-    aiConversationMessages: [],  // [{role:"user"|"assistant", text, analysis}]
     aiUsedThisMonth: 0,
     aiMonthlyLimit: -1,
     riskWindow: "6M",
@@ -2448,26 +2325,9 @@ fbq('track','ViewContent');
     }, durationMs);
   }
 
-  function showUpgradeModal(context) {
+  function showUpgradeModal() {
     const overlay = document.getElementById("upgrade-overlay");
     if (!overlay) return;
-    const title = overlay.querySelector("#upgrade-modal-title");
-    const body = overlay.querySelector(".upgrade-modal-body");
-    const actions = overlay.querySelector(".upgrade-modal-actions");
-    if (context === "ai") {
-      const tier = state.sessionUser?.planTier || "none";
-      if (title) title.textContent = "AI Limit Reached";
-      if (body) body.innerHTML = tier === "plus"
-        ? `You've used all your Plus AI sessions this month. Upgrade to <strong>Pro</strong> for unlimited Ask AI every month.`
-        : `You've used all your free AI sessions this month. Upgrade to <strong>Plus</strong> for 20/month, or <strong>Pro</strong> for unlimited.`;
-      if (actions) actions.innerHTML = tier === "plus"
-        ? `<a href="/signin?mode=login&plan=pro" class="upgrade-btn-primary">Upgrade to Pro</a><button class="upgrade-btn-secondary" onclick="document.getElementById('upgrade-overlay').classList.remove('open')">Not now</button>`
-        : `<a href="/signin?mode=login&plan=plus" class="upgrade-btn-primary">Upgrade to Plus</a><a href="/signin?mode=login&plan=pro" class="upgrade-btn-secondary" style="color:#fff">Go Pro (Unlimited)</a>`;
-    } else {
-      if (title) title.textContent = "Investment Limit Reached";
-      if (body) body.innerHTML = `Starter plan supports up to <strong>4 investments</strong>. Upgrade to Plus to import unlimited holdings and unlock full portfolio analytics.`;
-      if (actions) actions.innerHTML = `<a href="/signin?mode=login&plan=plus" class="upgrade-btn-primary">Upgrade to Plus</a><button class="upgrade-btn-secondary" onclick="document.getElementById('upgrade-overlay').classList.remove('open')">Not now</button>`;
-    }
     overlay.classList.add("open");
     overlay.onclick = (e) => { if (e.target === overlay) overlay.classList.remove("open"); };
   }
@@ -2499,38 +2359,9 @@ fbq('track','ViewContent');
 
   function markBootReady() {
     if (typeof document === "undefined") return;
-    document.body.classList.add("boot-ready");
     document.body.classList.remove("boot-pending");
-    document.body.classList.remove("page-transitioning");
-  }
-
-  function startPageTransition(url, copy) {
-    if (typeof window === "undefined" || !url) return;
-    if (document.body.classList.contains("page-transitioning")) return;
-    state.redirecting = true;
-    const splashCopy = document.querySelector("#boot-splash .boot-copy");
-    if (splashCopy && copy) splashCopy.textContent = copy;
-    document.body.classList.remove("boot-ready");
-    document.body.classList.add("page-transitioning");
-    window.setTimeout(() => {
-      window.location.href = url;
-    }, 70);
-  }
-
-  function enablePageTransitions() {
-    document.addEventListener("click", (event) => {
-      if (event.defaultPrevented || state.redirecting) return;
-      if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-      const anchor = event.target instanceof Element ? event.target.closest("a[href]") : null;
-      if (!anchor) return;
-      const href = anchor.getAttribute("href") || "";
-      if (!href || href.startsWith("#") || href.startsWith("mailto:") || href.startsWith("tel:") || href.startsWith("javascript:")) return;
-      if (anchor.getAttribute("target") === "_blank" || anchor.hasAttribute("download")) return;
-      const nextUrl = new URL(anchor.href, window.location.href);
-      if (nextUrl.origin !== window.location.origin || nextUrl.href === window.location.href) return;
-      event.preventDefault();
-      startPageTransition(nextUrl.href, "Opening workspace...");
-    }, true);
+    const splash = document.getElementById("boot-splash");
+    if (splash) splash.remove();
   }
 
   function isDemoMode() {
@@ -2538,7 +2369,7 @@ fbq('track','ViewContent');
     const params = new URLSearchParams(window.location.search);
     if (params.get("demo") === "1" || params.get("mode") === "demo") return true;
     if (params.get("mode") === "account") return false;
-    return false;
+    return true;
   }
 
   function getDemoUploadsRemaining() {
@@ -2568,16 +2399,19 @@ fbq('track','ViewContent');
     const sourceCount = document.getElementById("uploads-source-count");
 
     if (state.demoMode) {
+      const remaining = getDemoUploadsRemaining();
       if (sourceCount) {
-        sourceCount.textContent = "8 sources · Preview only";
+        sourceCount.textContent = hasDemoGuestWorkspace()
+          ? `8 sources · ${remaining} guest upload${remaining === 1 ? "" : "s"} left`
+          : "8 sources · Sample portfolio loaded";
       }
       uploads.forEach((card) => {
-        card.style.opacity = "0.62";
-        card.style.cursor = "not-allowed";
-        card.setAttribute("aria-disabled", "true");
+        const disabled = remaining <= 0;
+        card.style.opacity = disabled ? "0.6" : "";
+        card.setAttribute("aria-disabled", disabled ? "true" : "false");
         const action = card.querySelector(".upload-action");
         if (action) {
-          action.textContent = "Create Account to Upload";
+          action.textContent = disabled ? "Demo Limit Reached" : "Upload File";
         }
       });
       return;
@@ -2588,7 +2422,6 @@ fbq('track','ViewContent');
     }
     uploads.forEach((card) => {
       card.style.opacity = "";
-      card.style.cursor = "";
       card.removeAttribute("aria-disabled");
       const action = card.querySelector(".upload-action");
       if (action) action.textContent = "Upload File";
@@ -2695,67 +2528,6 @@ fbq('track','ViewContent');
     };
   }
 
-  function buildDemoHoldingsAiConversation() {
-    const firstQuestion = "What may be influencing the value of my current holdings?";
-    const secondQuestion = "Where is the main risk concentration in this portfolio?";
-    const firstAnalysis = buildDemoHoldingsAiAnalysis(firstQuestion);
-    const secondAnalysis = {
-      generatedAt: "2026-03-06T06:15:00.000Z",
-      model: "SPECTRE Demo AI",
-      question: secondQuestion,
-      answer: "The main concentration risk sits across three layers at once: the super sleeve dominates account weight, listed equities are heavily anchored by large Australian financial and materials names, and the crypto sleeve adds a second source of concentration through volatility rather than dollar weight alone.",
-      portfolioDrivers: [
-        "Super is the largest account, so account-level concentration remains elevated.",
-        "CBA, BHP, and MQG cluster the listed-book into a narrow set of ASX drivers.",
-        "BTC and ETH amplify downside sensitivity even without being the largest dollar positions.",
-        "Gold improves shock balance, but it is not large enough to fully neutralize concentrated equity and crypto risk.",
-      ],
-      holdingBreakdown: [
-        {
-          ticker: "SUPBAL",
-          summary: "The super option is the largest single sleeve and dominates account-level exposure.",
-          influences: ["Largest allocation in the workspace", "Sets the baseline risk mix for the rest of the portfolio"],
-          riskFlags: ["Account concentration"],
-          confidence: 90,
-        },
-        {
-          ticker: "CBA",
-          summary: "CBA concentrates the ASX book into bank sensitivity and domestic rate expectations.",
-          influences: ["Large weight inside listed equities", "Adds overlap with other Australian financial exposures"],
-          riskFlags: ["Sector overlap", "Concentration"],
-          confidence: 82,
-        },
-        {
-          ticker: "BTC",
-          summary: "Bitcoin adds tail-risk concentration because its volatility contribution is larger than its weight contribution.",
-          influences: ["Raises VaR and drawdown sensitivity", "Can dominate short-window risk signals during stress"],
-          riskFlags: ["High volatility", "Tail risk"],
-          confidence: 85,
-        },
-      ],
-      riskChecks: [
-        "Top holdings and the super sleeve still account for most portfolio influence.",
-        "Crypto remains the clearest source of downside shock concentration.",
-        "Financials and materials are the most important ASX factor clusters in the demo set.",
-      ],
-      nextActions: [
-        "Reduce position overlap across the largest ASX names if you want a cleaner concentration profile.",
-        "Treat the crypto sleeve as a deliberate risk budget rather than passive ballast.",
-        "Use fresh snapshots over time to verify whether concentration is falling or just being masked by market strength.",
-      ],
-    };
-
-    return {
-      latest: secondAnalysis,
-      messages: [
-        { role: "user", text: firstQuestion },
-        { role: "assistant", text: firstAnalysis.answer, analysis: firstAnalysis },
-        { role: "user", text: secondQuestion },
-        { role: "assistant", text: secondAnalysis.answer, analysis: secondAnalysis },
-      ],
-    };
-  }
-
   function createDemoPortfolioState() {
     const now = new Date();
     const reportDate = now.toISOString().slice(0, 10);
@@ -2786,8 +2558,7 @@ fbq('track','ViewContent');
     const snapshots = [];
     const startMs = Date.UTC(2025, 11, 5, 6, 0, 0);
     const endMs = Date.now();
-    // Use ceil + 1 so the loop always includes today's date
-    const days = Math.max(1, Math.ceil((endMs - startMs) / (24 * 60 * 60 * 1000))) + 1;
+    const days = Math.max(1, Math.floor((endMs - startMs) / (24 * 60 * 60 * 1000)));
     let value = finalValue * 0.88;
 
     for (let index = 0; index < days; index += 1) {
@@ -2806,141 +2577,13 @@ fbq('track','ViewContent');
         value = finalValue;
       }
 
-      // Last entry: clamp to today so chart always ends on the current date
-      const snapshotDate = index === days - 1 ? new Date() : new Date(startMs + index * 24 * 60 * 60 * 1000);
       snapshots.push({
-        date: snapshotDate.toISOString(),
+        date: new Date(startMs + index * 24 * 60 * 60 * 1000).toISOString(),
         value: Number(value.toFixed(2)),
       });
     }
 
     return snapshots;
-  }
-
-  function buildDemoHistoricalRiskEstimate(portfolio, riskWindow) {
-    const holdings = Array.isArray(portfolio?.holdings) ? portfolio.holdings : [];
-    const totalValue = Math.max(
-      sum(holdings.map((holding) => Number(holding?.value) || 0)),
-      sum((DEMO_PORTFOLIO_STATE.holdings || []).map((holding) => Number(holding?.value) || 0)),
-    );
-    const marketTickers = Array.from(
-      new Set(
-        holdings
-          .filter((holding) => ["asx", "crypto", "index", "fund", "gold"].includes(String(holding?.source || "")))
-          .map((holding) => String(holding?.ticker || "").trim().toUpperCase())
-          .filter((ticker) => ticker.length > 0),
-      ),
-    );
-    const usedTickers = (marketTickers.length > 0 ? marketTickers : ["CBA", "BHP", "MQG", "BTC", "ETH", "VAS"]).slice(0, 6);
-    const corrTickers = (usedTickers.length >= 4 ? usedTickers : ["CBA", "BHP", "MQG", "BTC"]).slice(0, 4);
-    const baseMatrix = [
-      [1, 0.74, 0.66, 0.24],
-      [0.74, 1, 0.59, 0.19],
-      [0.66, 0.59, 1, 0.21],
-      [0.24, 0.19, 0.21, 1],
-    ];
-    const profiles = {
-      "1M": {
-        pointsTarget: 22,
-        pointsUsed: 22,
-        benchmarkPointsUsed: 22,
-        volatilityAnnualPct: 16.8,
-        maxDrawdownPct: 7.4,
-        var95Pct: 1.9,
-        cvar95Pct: 2.8,
-        betaToBenchmark: 0.84,
-        trackingErrorAnnualPct: 5.6,
-        correlationToBenchmark: 0.72,
-        cornishFisherVar95Pct: 2.1,
-        rsi14: 57.8,
-        stochastic14: 61.4,
-        obvValue: 1840000,
-        obvTrend: "Accumulation bias",
-        regime: { vix: 15.9, label: "Risk-On", cssClass: "purple" },
-        factorExposure: { marketBeta: 0.84, sizeBeta: -0.12 },
-      },
-      "3M": {
-        pointsTarget: 63,
-        pointsUsed: 63,
-        benchmarkPointsUsed: 63,
-        volatilityAnnualPct: 18.6,
-        maxDrawdownPct: 10.8,
-        var95Pct: 2.4,
-        cvar95Pct: 3.5,
-        betaToBenchmark: 0.91,
-        trackingErrorAnnualPct: 7.4,
-        correlationToBenchmark: 0.76,
-        cornishFisherVar95Pct: 2.7,
-        rsi14: 59.6,
-        stochastic14: 64.8,
-        obvValue: 2310000,
-        obvTrend: "Positive participation",
-        regime: { vix: 17.8, label: "Balanced", cssClass: "purple" },
-        factorExposure: { marketBeta: 0.91, sizeBeta: -0.08 },
-      },
-      "1Y": {
-        pointsTarget: 252,
-        pointsUsed: 118,
-        benchmarkPointsUsed: 118,
-        volatilityAnnualPct: 21.2,
-        maxDrawdownPct: 14.9,
-        var95Pct: 2.9,
-        cvar95Pct: 4.1,
-        betaToBenchmark: 0.97,
-        trackingErrorAnnualPct: 8.8,
-        correlationToBenchmark: 0.79,
-        cornishFisherVar95Pct: 3.2,
-        rsi14: 56.2,
-        stochastic14: 58.9,
-        obvValue: 2670000,
-        obvTrend: "Steady accumulation",
-        regime: { vix: 19.6, label: "Watchful", cssClass: "danger" },
-        factorExposure: { marketBeta: 0.97, sizeBeta: -0.05 },
-      },
-    };
-    const profile = profiles[riskWindow] || profiles["3M"];
-    const var95Amount = Number(((profile.var95Pct / 100) * totalValue).toFixed(2));
-    const cvar95Amount = Number(((profile.cvar95Pct / 100) * totalValue).toFixed(2));
-    const cornishFisherVar95Amount = Number(((profile.cornishFisherVar95Pct / 100) * totalValue).toFixed(2));
-
-    return {
-      source: "yahoo_estimate",
-      lessAccurateThanSnapshots: true,
-      note: "Demo showcase values seed the benchmark, factor, and regime analytics so every risk card is populated.",
-      benchmarkSymbol: "^AXJO",
-      benchmarkName: "S&P/ASX 200",
-      riskWindow,
-      pointsTarget: profile.pointsTarget,
-      pointsUsed: profile.pointsUsed,
-      returnsCount: profile.pointsUsed,
-      benchmarkPointsUsed: profile.benchmarkPointsUsed,
-      usedTickers,
-      failedTickers: [],
-      volatilityAnnualPct: profile.volatilityAnnualPct,
-      maxDrawdownPct: profile.maxDrawdownPct,
-      var95Pct: profile.var95Pct,
-      var95Amount,
-      cvar95Pct: profile.cvar95Pct,
-      cvar95Amount,
-      betaToBenchmark: profile.betaToBenchmark,
-      trackingErrorAnnualPct: profile.trackingErrorAnnualPct,
-      correlationToBenchmark: profile.correlationToBenchmark,
-      outlierReturnsRemoved: 0,
-      cornishFisherVar95Pct: profile.cornishFisherVar95Pct,
-      cornishFisherVar95Amount,
-      rsi14: profile.rsi14,
-      stochastic14: profile.stochastic14,
-      obvValue: profile.obvValue,
-      obvTrend: profile.obvTrend,
-      correlationMatrix: {
-        tickers: corrTickers,
-        matrix: corrTickers.map((_, rowIndex) =>
-          corrTickers.map((_, colIndex) => baseMatrix[rowIndex]?.[colIndex] ?? (rowIndex === colIndex ? 1 : 0.35)),
-        ),
-      },
-      regime: profile.regime,
-      factorExposure: profile.factorExposure,
-    };
   }
 
   function applyModeChrome() {
@@ -2954,8 +2597,6 @@ fbq('track','ViewContent');
     const mobileResearchLink = document.getElementById("mtab-research");
     const researchHubLink = document.querySelector('#research-hub a[href^="/research"]');
     const settingsLink = document.getElementById("nav-settings-link");
-    const historyEmptyState = document.getElementById("history-empty-state");
-    const mcEmptyState = document.getElementById("mc-empty-state");
 
     if (state.demoMode) {
       setText("nav-user-email", "Demo workspace");
@@ -2998,16 +2639,6 @@ fbq('track','ViewContent');
       if (dashboardLogo) {
         dashboardLogo.setAttribute("href", "/dashboard?demo=1");
       }
-      if (historyEmptyState) {
-        historyEmptyState.hidden = true;
-        historyEmptyState.style.display = "none";
-        historyEmptyState.textContent = "";
-      }
-      if (mcEmptyState) {
-        mcEmptyState.hidden = true;
-        mcEmptyState.style.display = "none";
-        mcEmptyState.textContent = "";
-      }
       applyUploadChrome();
       return;
     }
@@ -3043,14 +2674,6 @@ fbq('track','ViewContent');
     if (dashboardLogo) {
       dashboardLogo.setAttribute("href", "/dashboard?mode=account");
     }
-    if (historyEmptyState) {
-      historyEmptyState.style.display = "";
-      historyEmptyState.textContent = "Import reports and refresh prices over time to build your portfolio history.";
-    }
-    if (mcEmptyState) {
-      mcEmptyState.style.display = "";
-      mcEmptyState.textContent = "Monte Carlo needs at least 2 portfolio snapshots to simulate a projection.";
-    }
     applyUploadChrome();
   }
 
@@ -3070,7 +2693,7 @@ fbq('track','ViewContent');
     if (alertsSection) alertsSection.style.display = hasProAccess ? "" : "none";
     if (stressPanel) stressPanel.style.display = hasProAccess ? "" : "none";
     const monteCarloWrap = document.getElementById("monte-carlo-wrap");
-    setQuantSectionVisibility(monteCarloWrap, hasProAccess);
+    if (monteCarloWrap) monteCarloWrap.style.display = hasProAccess ? "" : "none";
     if (metricsPanelSplit) metricsPanelSplit.classList.toggle("starter-layout", !hasProAccess);
     if (riskWindowTabs) riskWindowTabs.style.display = hasProAccess ? "" : "none";
     if (riskGrid) riskGrid.classList.toggle("starter-layout", !hasProAccess);
@@ -3083,12 +2706,12 @@ fbq('track','ViewContent');
     // Correlation and factor sections are data-gated in renderPortfolio — hide by default here, shown only when data arrives
     const corrWrap = document.getElementById("correlation-matrix-wrap");
     const corrDivider = document.getElementById("correlation-wrap-divider");
-    setQuantSectionVisibility(corrWrap, hasPlusAccess);
-    setQuantSectionVisibility(corrDivider, hasPlusAccess);
+    if (corrWrap && !hasPlusAccess) corrWrap.style.display = "none";
+    if (corrDivider && !hasPlusAccess) corrDivider.style.display = "none";
     const factorWrap = document.getElementById("factor-exposure-wrap");
     const factorDivider = document.getElementById("factor-exposure-divider");
-    setQuantSectionVisibility(factorWrap, hasProAccess);
-    setQuantSectionVisibility(factorDivider, hasProAccess);
+    if (factorWrap && !hasProAccess) factorWrap.style.display = "none";
+    if (factorDivider && !hasProAccess) factorDivider.style.display = "none";
   }
 
   function detectBullionMetal(holding) {
@@ -3295,23 +2918,6 @@ fbq('track','ViewContent');
     return 0;
   }
 
-  function getActiveDashboardTab() {
-    return document.querySelector(".nav-tab.nav-tab-active")?.getAttribute("data-tab")
-      || new URLSearchParams(window.location.search).get("tab")
-      || "quant";
-  }
-
-  function setQuantSectionVisibility(target, available) {
-    const el = typeof target === "string" ? document.getElementById(target) : target;
-    if (!el) return;
-    el.dataset.quantAvailable = available ? "1" : "0";
-    if (!available) {
-      el.style.display = "none";
-      return;
-    }
-    el.style.display = getActiveDashboardTab() === "quant" ? "" : "none";
-  }
-
   function computeMetrics(holdings, snapshots, riskWindow) {
     const totalValue = sum(holdings.map((item) => Number(item.value) || 0));
     const totalCost = sum(holdings.map((item) => Number(item.costBase) || 0));
@@ -3369,17 +2975,6 @@ fbq('track','ViewContent');
     }
 
     const history = Array.from(latestSnapshotByDay.values()).sort((a, b) => String(a.date).localeCompare(String(b.date)));
-
-    // If there are fewer than 2 historical snapshots but we have live holdings,
-    // append today's current portfolio value so the chart always renders.
-    if (history.length < 2 && totalValue > 0) {
-      const nowIso = new Date().toISOString();
-      const lastDate = history.length > 0 ? history[history.length - 1].date : "";
-      if (nowIso > lastDate) {
-        history.push({ date: nowIso, value: totalValue });
-      }
-    }
-
     const riskHistory = applyRiskWindow(history, riskWindow);
     const rawDailyReturns = calculateReturns(riskHistory.map((item) => item.value));
     const dailyReturns = cleanReturnsForRisk(rawDailyReturns);
@@ -3480,16 +3075,19 @@ fbq('track','ViewContent');
 
     if (hasSameDayImports || todaySnapshots.length === 0) {
       if (fallbackPreviousTotal > 0) {
+        // If no holding has a live prevClose, data isn't refreshed yet — return null so UI shows "—"
+        if (liveDataCount === 0) return { amount: null, pct: null };
         const amount = fallbackCurrentTotal - fallbackPreviousTotal;
-        return { amount, pct: (amount / fallbackPreviousTotal) * 100, stale: liveDataCount === 0 };
+        return { amount, pct: (amount / fallbackPreviousTotal) * 100 };
       }
       return { amount: null, pct: null };
     }
 
     const dayStartValue = Number(todaySnapshots[0].value) || 0;
     if (dayStartValue <= 0 && fallbackPreviousTotal > 0) {
+      if (liveDataCount === 0) return { amount: null, pct: null };
       const amount = fallbackCurrentTotal - fallbackPreviousTotal;
-      return { amount, pct: (amount / fallbackPreviousTotal) * 100, stale: liveDataCount === 0 };
+      return { amount, pct: (amount / fallbackPreviousTotal) * 100 };
     }
 
     const change = currentTotal - dayStartValue;
@@ -3740,21 +3338,6 @@ fbq('track','ViewContent');
     });
   }
 
-  function buildSeededDemoHistory() {
-    const totalValue = sum((state.portfolio?.holdings || []).map((holding) => Number(holding?.value) || 0));
-    const base = Number.isFinite(totalValue) && totalValue > 0 ? totalValue : 100000;
-    const points = [0.93, 0.95, 0.94, 0.97, 0.99, 1.01, 1.0, 1.03];
-    const today = new Date();
-    return points.map((multiplier, index) => {
-      const d = new Date(today);
-      d.setDate(today.getDate() - ((points.length - 1 - index) * 4));
-      return {
-        date: d.toISOString().slice(0, 10),
-        value: base * multiplier,
-      };
-    });
-  }
-
   function drawHistoryLine(historyItems, costBaseValue) { window.drawHistoryLine = drawHistoryLine; window._fullHistory = historyItems; window._historyCostBase = costBaseValue;
     const canvas = document.getElementById("c-history");
     if (!canvas) return;
@@ -3764,15 +3347,12 @@ fbq('track','ViewContent');
     ctx.clearRect(0, 0, w, h);
     const tooltip = document.getElementById("history-tooltip");
     const hasEnoughHistory = Array.isArray(historyItems) && historyItems.length >= 2;
-    const seededDemoHistory = !hasEnoughHistory && state.demoMode
-      ? buildSeededDemoHistory()
-      : null;
-    const items = hasEnoughHistory ? historyItems : seededDemoHistory;
-    setHidden("history-empty-state", state.demoMode || Boolean(items && items.length >= 2));
-    if (!items || items.length < 2) {
+    setHidden("history-empty-state", hasEnoughHistory);
+    if (!hasEnoughHistory) {
       if (tooltip) tooltip.style.display = "none";
       return;
     }
+    const items = historyItems;
     const rawVals = items.map((item) => item.value);
     const dates = items.map((item) => item.date || "");
     const costBase = rawVals.map(() => (Number.isFinite(costBaseValue) && costBaseValue > 0 ? costBaseValue : rawVals[0]));
@@ -4045,7 +3625,8 @@ fbq('track','ViewContent');
     }
 
     if (response.status === 401) {
-      startPageTransition("/signin", "Opening sign in...");
+      state.redirecting = true;
+      window.location.href = "/signin";
       throw new Error("Please sign in first.");
     }
 
@@ -4100,6 +3681,9 @@ fbq('track','ViewContent');
     setText("meta-plan-chip", chipLabel);
     setText("hero-kicker-plan", chipLabel);
     setText("hero-meta-plan", chipLabel);
+    if (!payload.user.emailVerified) {
+      showToast("Check your email to verify your account — click the link we sent you.", "info", 8000);
+    }
     setText("pro-console-badge", chipLabel);
     const proConsole = document.getElementById("pro-console");
     if (proConsole) {
@@ -4109,8 +3693,6 @@ fbq('track','ViewContent');
       state.holdingsAi = null;
       state.holdingsAiError = "";
       state.holdingsAiLoading = false;
-      state.aiConversationId = null;
-      state.aiConversationMessages = [];
     }
     applyModeChrome();
     applyPlanVisibility();
@@ -4167,7 +3749,16 @@ fbq('track','ViewContent');
 
   async function loadHistoricalRisk() {
     if (state.demoMode) {
-      state.historicalRiskEstimate = buildDemoHistoricalRiskEstimate(state.portfolio, state.riskWindow);
+      if (!hasDemoGuestWorkspace()) {
+        state.historicalRiskEstimate = null;
+        return;
+      }
+      const apiWindow = RISK_API_WINDOW_MAP[state.riskWindow] || "3M";
+      try {
+        state.historicalRiskEstimate = await apiJson(`/api/risk/estimate?demo=1&window=${apiWindow}`, { method: "POST" });
+      } catch {
+        state.historicalRiskEstimate = null;
+      }
       return;
     }
     const apiWindow = RISK_API_WINDOW_MAP[state.riskWindow] || "3M";
@@ -4234,20 +3825,12 @@ fbq('track','ViewContent');
     const outputEl = document.getElementById("pro-ai-output");
     const outputInner = document.getElementById("pro-ai-output-inner");
     const inputMode = document.getElementById("ai-input-mode");
-    const chipsEl = document.getElementById("pro-ai-chips");
-    const newQuestionBtn = document.getElementById("ai-new-question-btn");
     if (!(askButton instanceof HTMLButtonElement) || !(questionInput instanceof HTMLTextAreaElement) || !errorEl || !outputEl || !outputInner || !inputMode) {
       return;
     }
 
-    if (state.demoMode && !state.holdingsAi && !state.holdingsAiLoading) {
-      const preview = buildDemoHoldingsAiConversation();
-      state.holdingsAi = preview.latest;
-      state.aiConversationMessages = preview.messages.slice();
-    }
-
     // Toggle between input and output mode within the same card
-    const showOutput = state.demoMode || state.holdingsAiLoading || !!state.holdingsAi || !!state.holdingsAiError;
+    const showOutput = state.holdingsAiLoading || !!state.holdingsAi || !!state.holdingsAiError;
     inputMode.style.display = showOutput ? "none" : "";
     outputEl.style.display = showOutput ? "" : "none";
 
@@ -4256,19 +3839,12 @@ fbq('track','ViewContent');
     const used = state.aiUsedThisMonth;
     const atLimit = limit !== -1 && used >= limit;
 
-    askButton.disabled = state.demoMode || state.holdingsAiLoading || !hasHoldings || atLimit;
-    questionInput.readOnly = state.demoMode;
-    questionInput.disabled = state.demoMode;
-    if (chipsEl) chipsEl.style.display = state.demoMode ? "none" : "";
-    if (newQuestionBtn) newQuestionBtn.style.display = state.demoMode ? "none" : "";
+    askButton.disabled = state.holdingsAiLoading || !hasHoldings || atLimit;
 
     const labelEl = document.getElementById("pro-ai-ask-label");
     if (state.holdingsAiLoading) {
       if (labelEl) labelEl.textContent = "Analyzing...";
       else askButton.textContent = "Analyzing...";
-    } else if (state.demoMode) {
-      if (labelEl) labelEl.textContent = "Preview Only";
-      else askButton.textContent = "Preview Only";
     } else {
       if (labelEl) labelEl.textContent = "Ask AI";
       else askButton.textContent = "Ask AI";
@@ -4283,21 +3859,11 @@ fbq('track','ViewContent');
       const card = document.getElementById("ai-hero-card");
       if (card?.parentNode) card.parentNode.insertBefore(usageEl, card.nextSibling);
     }
-    if (state.demoMode) {
-      usageEl.textContent = "Demo preview only. Create an account to ask portfolio questions.";
-      usageEl.className = "ai-usage-counter";
-    } else if (limit === -1) {
-      usageEl.innerHTML = "";
+    if (limit === -1) {
+      usageEl.textContent = "";
     } else if (atLimit) {
-      const tier = state.sessionUser?.planTier || "none";
-      const upgradeUrl = tier === "plus" ? "/signin?mode=login&plan=pro" : "/signin?mode=login&plan=plus";
-      const upgradeLabel = tier === "plus" ? "Upgrade to Pro — Unlimited AI" : "Upgrade to Plus — 20/month";
-      const upgradeMsg = tier === "plus"
-        ? `You've used all ${limit} AI sessions this month. Upgrade to Pro for unlimited.`
-        : `You've used all ${limit} free AI sessions this month. Upgrade for more.`;
-      usageEl.className = "ai-usage-counter";
-      usageEl.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.25);border-radius:10px;padding:.65rem 1rem;margin-top:.5rem;flex-wrap:wrap"><span style="font-size:.8rem;color:#c4b5fd;text-align:left">${escapeHtml(upgradeMsg)}</span><a href="${upgradeUrl}" style="display:inline-flex;align-items:center;padding:.4rem 1rem;background:rgba(168,85,247,.85);color:#fff;border-radius:7px;font-size:.75rem;font-weight:600;text-decoration:none;white-space:nowrap;flex-shrink:0">${escapeHtml(upgradeLabel)} →</a></div>`;
-      questionInput.disabled = true;
+      usageEl.textContent = `You've used all ${limit} Ask AI sessions for this month.`;
+      usageEl.className = "ai-usage-counter ai-usage-limit";
     } else {
       usageEl.textContent = `${used} / ${limit} Ask AI sessions used this month`;
       usageEl.className = "ai-usage-counter";
@@ -4315,29 +3881,29 @@ fbq('track','ViewContent');
       errorEl.textContent = "";
     }
 
-    // Show streaming text while response is arriving (no conversation thread yet)
-    if (state.holdingsAiLoading && state.holdingsAiStreamText && state.aiConversationMessages.length <= 1) {
+    // Show streaming text while response is arriving
+    if (state.holdingsAiLoading && state.holdingsAiStreamText) {
       if (metaEl) metaEl.textContent = "Analyzing…";
+      // Append incrementally — find existing stream el or create it
       let streamEl = document.getElementById("pro-ai-stream-text");
       if (!streamEl) {
         outputInner.innerHTML = `<p id="pro-ai-stream-text" class="stream-text stream-cursor" style="font-size:.92rem;line-height:1.75;color:var(--text);white-space:pre-wrap"></p>`;
         streamEl = document.getElementById("pro-ai-stream-text");
       }
       if (streamEl) streamEl.textContent = state.holdingsAiStreamText;
+      // Auto-scroll to bottom as text streams in
       outputInner.scrollTop = outputInner.scrollHeight;
       return;
     }
 
     const analysis = state.holdingsAi;
-    const hasConversation = state.aiConversationMessages.length > 0;
-
     if (!analysis) {
       if (state.holdingsAiLoading) {
         if (metaEl) metaEl.textContent = "Analyzing…";
         outputInner.innerHTML = `<p style="opacity:.5;font-size:.88rem">Generating analysis…</p>`;
       } else if (atLimit) {
         if (metaEl) metaEl.textContent = "";
-        outputInner.innerHTML = `<div style="text-align:center;padding:1.5rem 1rem"><p style="color:var(--muted);margin-bottom:.9rem;font-size:.88rem">${escapeHtml(buildAiLimitMessage(limit))}</p><button type="button" class="btn-primary" style="font-size:.72rem;padding:.45rem 1.2rem" onclick="showUpgradeModal('ai')">See plans →</button></div>`;
+        outputInner.innerHTML = `<div style="text-align:center;padding:1.5rem 1rem"><p style="color:var(--muted);margin-bottom:.9rem;font-size:.88rem">${escapeHtml(buildAiLimitMessage(limit))}</p><button type="button" class="btn-primary" style="font-size:.72rem;padding:.45rem 1.2rem" onclick="showUpgradeModal()">See plans →</button></div>`;
       } else if (!hasHoldings) {
         if (metaEl) metaEl.textContent = "";
         outputInner.innerHTML = `<div style="text-align:center;padding:1.5rem 1rem"><p style="color:var(--muted);margin-bottom:.9rem;font-size:.88rem">Upload your portfolio on the <strong style="color:var(--text)">Quant</strong> tab to unlock AI analysis.</p><button type="button" class="btn-primary" style="font-size:.72rem;padding:.45rem 1.2rem" onclick="document.querySelectorAll('.nav-tab')[0]?.click()">Go to Quant →</button></div>`;
@@ -4347,102 +3913,72 @@ fbq('track','ViewContent');
       return;
     }
 
-    function renderAnalysisBlock(a) {
-      const breakdown = Array.isArray(a.holdingBreakdown) ? a.holdingBreakdown.slice(0, 10) : [];
-      const breakdownHtml = breakdown.length === 0
-        ? `<p>No holding-level breakdown returned.</p>`
-        : `<div class="console-ai-holding-grid">${breakdown.map((row) => {
+    const generatedAt = analysis.generatedAt ? formatDateTime(analysis.generatedAt) : "Now";
+
+    const breakdown = Array.isArray(analysis.holdingBreakdown) ? analysis.holdingBreakdown.slice(0, 10) : [];
+    const breakdownHtml = breakdown.length === 0
+      ? `<p>No holding-level breakdown returned.</p>`
+      : `
+        <div class="console-ai-holding-grid">
+          ${breakdown.map((row) => {
             const influences = Array.isArray(row.influences) && row.influences.length > 0
               ? `<ul>${row.influences.slice(0, 6).map((item) => `<li>${escapeHtml(String(item || ""))}</li>`).join("")}</ul>`
               : "";
             const riskFlags = Array.isArray(row.riskFlags) && row.riskFlags.length > 0
               ? `<div class="console-ai-risk">Risk: ${escapeHtml(row.riskFlags.join(" | "))}</div>`
               : "";
-            return `<div class="console-ai-holding"><div class="console-ai-holding-head"><strong>${escapeHtml(String(row.ticker || "—"))}</strong><span>Confidence ${Number.isFinite(Number(row.confidence)) ? Math.round(Number(row.confidence)) : 0}%</span></div><p>${escapeHtml(String(row.summary || ""))}</p>${influences}${riskFlags}</div>`;
-          }).join("")}</div>`;
-      return `
-        <div class="console-ai-block"><h4>Answer</h4><p>${escapeHtml(String(a.answer || ""))}</p></div>
-        <div class="console-ai-block"><h4>Portfolio Drivers</h4>${renderAiList(a.portfolioDrivers, "No portfolio drivers returned.")}</div>
-        <div class="console-ai-block"><h4>Holding-Level Influences</h4>${breakdownHtml}</div>
-        <div class="console-ai-grid">
-          <div class="console-ai-block"><h4>Risk Checks</h4>${renderAiList(a.riskChecks, "No risk checks returned.")}</div>
-          <div class="console-ai-block"><h4>Next Actions</h4>${renderAiList(a.nextActions, "No next actions returned.")}</div>
-        </div>`;
-    }
 
-    // Build full conversation thread
-    const msgs = state.aiConversationMessages;
-    let threadHtml = "";
-    for (let i = 0; i < msgs.length; i++) {
-      const msg = msgs[i];
-      if (msg.role === "user") {
-        threadHtml += `<div class="ai-conv-user"><span class="ai-conv-you">You</span><p>${escapeHtml(msg.text || "")}</p></div>`;
-      } else {
-        const isLatest = (i === msgs.length - 1);
-        if (isLatest && !state.holdingsAiLoading) {
-          threadHtml += `<div class="ai-conv-assistant">${renderAnalysisBlock(msg.analysis || analysis)}</div>`;
-        } else if (!isLatest) {
-          // Collapsed previous AI replies — just show answer text
-          threadHtml += `<div class="ai-conv-assistant ai-conv-past"><p>${escapeHtml(String(msg.text || ""))}</p></div>`;
-        }
-      }
-    }
+            return `
+              <div class="console-ai-holding">
+                <div class="console-ai-holding-head">
+                  <strong>${escapeHtml(String(row.ticker || "—"))}</strong>
+                  <span>Confidence ${Number.isFinite(Number(row.confidence)) ? Math.round(Number(row.confidence)) : 0}%</span>
+                </div>
+                <p>${escapeHtml(String(row.summary || ""))}</p>
+                ${influences}
+                ${riskFlags}
+              </div>
+            `;
+          }).join("")}
+        </div>
+      `;
 
-    // Streaming response for in-progress assistant turn
-    if (state.holdingsAiLoading && state.holdingsAiStreamText) {
-      threadHtml += `<div class="ai-conv-assistant"><p id="pro-ai-stream-text" class="stream-text stream-cursor" style="white-space:pre-wrap">${escapeHtml(state.holdingsAiStreamText)}</p></div>`;
-    }
-
-    // Follow-up input (shown when conversation has at least one complete exchange and not currently loading)
-    const showFollowUp = hasConversation && !state.holdingsAiLoading && !state.demoMode && !atLimit && hasHoldings;
-    const followUpHtml = showFollowUp ? `
-      <div class="ai-followup-row" style="margin-top:1.25rem;padding-top:1rem;border-top:1px solid rgba(255,255,255,.07);display:flex;gap:.6rem;align-items:flex-end">
-        <textarea id="ai-followup-input" class="ai-input-textarea" maxlength="700" rows="2" placeholder="Ask a follow-up…" style="flex:1;min-height:48px;resize:vertical"></textarea>
-        <button type="button" id="ai-followup-send" class="ai-send-btn" style="flex-shrink:0;align-self:flex-end">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-        </button>
-      </div>` : "";
-
-    const generatedAt = analysis.generatedAt ? formatDateTime(analysis.generatedAt) : "Now";
     if (metaEl) metaEl.textContent = `${generatedAt} via ${analysis.model || "AI model"}`;
-
-    outputInner.innerHTML = threadHtml + followUpHtml;
-    outputInner.scrollTop = outputInner.scrollHeight;
-
-    // Wire follow-up send button
-    const followUpSend = document.getElementById("ai-followup-send");
-    const followUpInput = document.getElementById("ai-followup-input");
-    if (followUpSend && followUpInput instanceof HTMLTextAreaElement) {
-      followUpSend.addEventListener("click", () => {
-        const q = followUpInput.value.trim();
-        if (!q) return;
-        const mainInput = document.getElementById("pro-ai-question");
-        if (mainInput instanceof HTMLTextAreaElement) mainInput.value = q;
-        void runHoldingsAi();
-      });
-      followUpInput.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" && !e.shiftKey) {
-          e.preventDefault();
-          followUpSend.click();
-        }
-      });
-    }
+    outputInner.innerHTML = `
+      <div class="console-ai-block">
+        <h4>Answer</h4>
+        <p>${escapeHtml(String(analysis.answer || ""))}</p>
+      </div>
+      <div class="console-ai-block">
+        <h4>Portfolio Drivers</h4>
+        ${renderAiList(analysis.portfolioDrivers, "No portfolio drivers returned.")}
+      </div>
+      <div class="console-ai-block">
+        <h4>Holding-Level Influences</h4>
+        ${breakdownHtml}
+      </div>
+      <div class="console-ai-grid">
+        <div class="console-ai-block">
+          <h4>Risk Checks</h4>
+          ${renderAiList(analysis.riskChecks, "No risk checks returned.")}
+        </div>
+        <div class="console-ai-block">
+          <h4>Next Actions</h4>
+          ${renderAiList(analysis.nextActions, "No next actions returned.")}
+        </div>
+      </div>
+    `;
   }
 
   function renderHoldingsAiStream() {
     const streamEl = document.getElementById("pro-ai-stream-text");
     if (streamEl) {
       streamEl.textContent = state.holdingsAiStreamText || "";
-      const outputInner = document.getElementById("pro-ai-output-inner");
-      if (outputInner) outputInner.scrollTop = outputInner.scrollHeight;
     }
   }
 
   // "New question" button resets back to input mode
   document.getElementById("ai-new-question-btn")?.addEventListener("click", () => {
-    state.aiConversationId = null;
-    state.aiConversationMessages = [];
-    if (state.demoMode) return;
     state.holdingsAi = null;
     state.holdingsAiStreamText = "";
     state.holdingsAiError = "";
@@ -4451,13 +3987,22 @@ fbq('track','ViewContent');
 
   async function runHoldingsAi() {
     if (state.demoMode) {
-      const preview = buildDemoHoldingsAiConversation();
-      state.holdingsAi = preview.latest;
-      state.aiConversationMessages = preview.messages.slice();
-      state.holdingsAiLoading = false;
+      const questionInput = document.getElementById("pro-ai-question");
+      const question = questionInput instanceof HTMLTextAreaElement && questionInput.value.trim().length > 0
+        ? questionInput.value.trim().slice(0, 700)
+        : HOLDINGS_AI_DEFAULT_QUESTION;
+
+      state.holdingsAiLoading = true;
       state.holdingsAiError = "";
       renderHoldingsAi();
-      showToast("Ask AI is preview-only in demo. Create an account to run your own questions.");
+
+      await new Promise((resolve) => { window.setTimeout(resolve, 350); });
+
+      state.holdingsAi = buildDemoHoldingsAiAnalysis(question);
+      state.holdingsAiLoading = false;
+      renderHoldingsAi();
+      renderPortfolio();
+      showToast("Demo Ask AI analysis updated.");
       return;
     }
 
@@ -4471,8 +4016,6 @@ fbq('track','ViewContent');
       ? questionInput.value.trim().slice(0, 700)
       : HOLDINGS_AI_DEFAULT_QUESTION;
 
-    // Push user message into conversation thread immediately
-    state.aiConversationMessages = state.aiConversationMessages.concat([{ role: "user", text: question }]);
     state.holdingsAiLoading = true;
     state.holdingsAiStreamText = "";
     state.holdingsAiError = "";
@@ -4482,7 +4025,7 @@ fbq('track','ViewContent');
       const response = await fetch("/api/pro/holdings-ai", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question, conversationId: state.aiConversationId || undefined }),
+        body: JSON.stringify({ question }),
       });
 
       if (!response.ok || !response.body) {
@@ -4546,11 +4089,6 @@ fbq('track','ViewContent');
               state.holdingsAi = evt.analysis;
               state.holdingsAiStreamText = "";
               state.holdingsAiError = "";
-              if (typeof evt.conversationId === "string") state.aiConversationId = evt.conversationId;
-              // Append assistant reply to conversation thread
-              state.aiConversationMessages = state.aiConversationMessages.concat([
-                { role: "assistant", text: evt.analysis.answer || "", analysis: evt.analysis }
-              ]);
               if (typeof evt.aiUsed === "number") state.aiUsedThisMonth = evt.aiUsed;
               if (typeof evt.aiLimit === "number") state.aiMonthlyLimit = evt.aiLimit;
               showToast("Ask AI analysis updated.");
@@ -4562,8 +4100,6 @@ fbq('track','ViewContent');
 
       throw new Error("AI stream ended without a complete response.");
     } catch (error) {
-      // Remove the optimistic user message if the request failed
-      state.aiConversationMessages = state.aiConversationMessages.slice(0, -1);
       state.holdingsAiError = error instanceof Error ? error.message : "Failed to run Ask AI analysis.";
       showToast(state.holdingsAiError, "error");
     } finally {
@@ -4665,11 +4201,11 @@ fbq('track','ViewContent');
 
     setText("mini-total-value", formatCurrency(metrics.totalValue));
     setText("mini-unrealised-pnl", formatSignedCurrency(metrics.pnl));
-    setText("mini-day-change", today.amount == null ? "—" : (today.stale ? "refresh" : formatSignedCurrency(today.amount)));
+    setText("mini-day-change", today.amount == null ? "—" : formatSignedCurrency(today.amount));
     setText("mini-var95", effectiveVar95Pct != null ? formatPercent(effectiveVar95Pct, { negative: true, decimals: 1 }) : "—");
     setText("hero-total-value", formatCurrency(metrics.totalValue));
     setText("hero-unrealised-pnl", formatSignedCurrency(metrics.pnl));
-    setText("hero-day-change", today.amount == null ? "—" : (today.stale ? "refresh prices" : formatSignedCurrency(today.amount)));
+    setText("hero-day-change", today.amount == null ? "—" : formatSignedCurrency(today.amount));
     setText("hero-var95", effectiveVar95Pct != null ? formatPercent(effectiveVar95Pct, { negative: true, decimals: 1 }) : "—");
     setClass("mini-unrealised-pnl", `ai-kpi-val ${metrics.pnl >= 0 ? "accent" : ""}`.trim());
     setClass("mini-day-change", `ai-kpi-val ${today.amount != null && today.amount < 0 ? "accent" : ""}`.trim());
@@ -4717,8 +4253,8 @@ fbq('track','ViewContent');
     setText("kpi-total-cost", formatCurrency(metrics.totalCost));
     setText("kpi-total-pnl", formatSignedCurrency(metrics.pnl));
     setText("kpi-total-pnl-sub", `${formatPercent(metrics.pnlPct, { signed: true, decimals: 1 })} since entry`);
-    setText("kpi-day-change", today.amount == null ? "—" : (today.stale ? "—" : formatSignedCurrency(today.amount)));
-    setText("kpi-day-change-sub", (today.amount == null || today.stale) ? "Refresh prices to see today's change" : `${formatPercent(today.pct, { signed: true, decimals: 2 })} on day`);
+    setText("kpi-day-change", today.amount == null ? "—" : formatSignedCurrency(today.amount));
+    setText("kpi-day-change-sub", today.pct == null ? "Refresh prices to update" : `${formatPercent(today.pct, { signed: true, decimals: 2 })} on day`);
     setText("kpi-risk-score", riskScore ? `${riskScore.score} / 100` : "—");
     setText("kpi-risk-score-sub", riskScore ? `${riskScore.label} exposure` : "Waiting for risk data");
     setText("kpi-var95", effectiveVar95Pct != null ? formatPercent(effectiveVar95Pct, { negative: true, decimals: 1 }) : "—");
@@ -4799,13 +4335,13 @@ fbq('track','ViewContent');
     setText("risk-cvar95-sub", usingYahooCvar95 ? "Yahoo estimate fallback" : "CVaR beyond VaR");
     setText("risk-max-drawdown-sub", usingYahooDrawdown ? "Yahoo estimate fallback" : "Worst peak to trough");
     setText("risk-volatility-sub", usingYahooVolatility ? "Yahoo estimate fallback" : "Annualised std dev");
-    setText("risk-beta-sub", state.demoMode ? "Demo benchmark sensitivity" : usingYahooBeta ? "Yahoo estimate vs ASX 200" : "Market sensitivity");
-    setText("risk-tracking-error-sub", state.demoMode ? "Demo benchmark dispersion" : usingYahooTrackingError ? "Yahoo estimate vs ASX 200" : "vs benchmark");
+    setText("risk-beta-sub", usingYahooBeta ? "Yahoo estimate vs ASX 200" : "Market sensitivity");
+    setText("risk-tracking-error-sub", usingYahooTrackingError ? "Yahoo estimate vs ASX 200" : "vs benchmark");
 
     // Cornish-Fisher VaR (plus+)
     const cfVar95Pct = state.historicalRiskEstimate?.cornishFisherVar95Pct ?? null;
     setText("risk-cf-var95", cfVar95Pct != null ? formatPercent(cfVar95Pct, { negative: true, decimals: 1 }) : "—");
-    setText("risk-cf-var95-sub", cfVar95Pct != null ? (state.demoMode ? "Demo tail-risk adjustment" : "Yahoo proxy, less reliable · skew/kurtosis adjusted") : "Needs 20+ data points");
+    setText("risk-cf-var95-sub", cfVar95Pct != null ? "Yahoo proxy, less reliable · skew/kurtosis adjusted" : "Needs 20+ data points");
 
     // Market Regime (pro)
     const regime = state.historicalRiskEstimate?.regime ?? null;
@@ -4824,8 +4360,8 @@ fbq('track','ViewContent');
     const _hasPlusAccess = Boolean(state.demoMode || state.sessionUser?.proEnabled || state.sessionUser?.planTier === "plus");
     const _hasProAccess = Boolean(state.demoMode || state.sessionUser?.proEnabled);
     const hasCorrData = corrMatrix && corrMatrix.tickers.length >= 2;
-    setQuantSectionVisibility(corrWrapEl, _hasPlusAccess && hasCorrData);
-    setQuantSectionVisibility(corrDividerEl, _hasPlusAccess && hasCorrData);
+    if (corrWrapEl) corrWrapEl.style.display = _hasPlusAccess && hasCorrData ? "" : "none";
+    if (corrDividerEl) corrDividerEl.style.display = _hasPlusAccess && hasCorrData ? "" : "none";
     if (corrContainer && hasCorrData) {
       const n = corrMatrix.tickers.length;
       let html = `<div class="corr-matrix" style="grid-template-columns:4.5rem repeat(${n},2.4rem)">`;
@@ -4859,8 +4395,8 @@ fbq('track','ViewContent');
     const hasFactorData = Number.isFinite(marketBeta);
     const factorWrapEl = document.getElementById("factor-exposure-wrap");
     const factorDividerEl = document.getElementById("factor-exposure-divider");
-    setQuantSectionVisibility(factorWrapEl, _hasProAccess && hasFactorData);
-    setQuantSectionVisibility(factorDividerEl, _hasProAccess && hasFactorData);
+    if (factorWrapEl) factorWrapEl.style.display = _hasProAccess && hasFactorData ? "" : "none";
+    if (factorDividerEl) factorDividerEl.style.display = _hasProAccess && hasFactorData ? "" : "none";
     if (Number.isFinite(marketBeta)) {
       const clampedMkt = Math.max(-2, Math.min(2, marketBeta));
       const pct = Math.abs(clampedMkt) / 2 * 50;
@@ -4925,10 +4461,7 @@ fbq('track','ViewContent');
           usingYahooBeta ||
           usingYahooTrackingError
         );
-      if (state.demoMode && estimate) {
-        estimateNote.hidden = false;
-        estimateNote.textContent = "Demo mode uses seeded benchmark, factor, and regime values so the full analytics stack stays populated.";
-      } else if (shouldShowEstimate) {
+      if (shouldShowEstimate) {
         const labels = [];
         if (usingYahooVar95) labels.push("VaR");
         if (usingYahooCvar95) labels.push("ES");
@@ -5039,7 +4572,7 @@ fbq('track','ViewContent');
   function runMonteCarlo() { window.runMonteCarlo = runMonteCarlo;
     const isPro = Boolean(state.demoMode || state.sessionUser?.proEnabled);
     const wrap = document.getElementById("monte-carlo-wrap");
-    setQuantSectionVisibility(wrap, isPro);
+    if (wrap) wrap.style.display = isPro ? "" : "none";
     if (!isPro) return;
 
     const canvas = document.getElementById("c-monte-carlo");
@@ -5078,11 +4611,7 @@ fbq('track','ViewContent');
     const histItems = Array.from(byDay.values()).sort((a, b) => String(a.date).localeCompare(String(b.date)));
 
     const histValues = histItems.map((s) => Number(s.value)).filter((v) => Number.isFinite(v) && v > 0);
-    const currentPortfolioValue = sum((state.portfolio?.holdings || []).map((holding) => Number(holding?.value) || 0));
-    const demoSeedValue = Number.isFinite(currentPortfolioValue) && currentPortfolioValue > 0 ? currentPortfolioValue : 100000;
-    const hasEnoughHistory = histValues.length >= 2;
-
-    if (!hasEnoughHistory && !state.demoMode) {
+    if (histValues.length < 2) {
       if (loadingEl) loadingEl.style.display = "none";
       if (fallbackEl) fallbackEl.style.display = "none";
       setHidden("mc-empty-state", false);
@@ -5101,13 +4630,8 @@ fbq('track','ViewContent');
       if (Number.isFinite(r) && Math.abs(r) < 0.5) rawReturns.push(r); // exclude extreme outliers
     }
 
-    const useFallback = state.demoMode || rawReturns.length < 20;
-    if (fallbackEl) {
-      fallbackEl.style.display = useFallback ? "" : "none";
-      fallbackEl.textContent = state.demoMode
-        ? "Demo projection uses a seeded preview model from the frozen workspace."
-        : "Insufficient history (<20 days). Using parametric fallback: 8% annual return, 15% volatility.";
-    }
+    const useFallback = rawReturns.length < 20;
+    if (fallbackEl) fallbackEl.style.display = useFallback ? "" : "none";
 
     // Parameters
     let dailyMean, dailySigma;
@@ -5122,12 +4646,10 @@ fbq('track','ViewContent');
       dailySigma = Math.sqrt(variance);
     }
 
-    const startValue = histValues.length > 0 ? histValues[histValues.length - 1] : demoSeedValue;
-    const N_PATHS = 10000;
+    const startValue = histValues.length > 0 ? histValues[histValues.length - 1] : 100000;
+    const N_PATHS = 500;
     const N_DAYS = _mcHorizon;
 
-    // Defer heavy simulation off the main thread so tab switching stays responsive
-    setTimeout(function() {
     // Box-Muller normal variate
     function randn() {
       let u, v;
@@ -5177,7 +4699,6 @@ fbq('track','ViewContent');
 
     // Draw fan chart on canvas
     drawMonteCarloFan(canvas, { p10, p25, p50, p75, p90, startValue });
-    }, 0);
   }
 
   function drawMonteCarloFan(canvas, { p10, p25, p50, p75, p90, startValue }) {
@@ -5187,7 +4708,7 @@ fbq('track','ViewContent');
     ctx.clearRect(0, 0, w, h);
 
     const n = p50.length; // N_DAYS + 1 points
-    const pad = { t: 18, r: 14, b: 36, l: 58 };
+    const pad = { t: 18, r: 14, b: 36, l: 14 };
     const cw = w - pad.l - pad.r;
     const ch = h - pad.t - pad.b;
 
@@ -5330,7 +4851,7 @@ fbq('track','ViewContent');
       } catch {
         // best effort for demo cleanup
       }
-      startPageTransition("/", "Leaving workspace...");
+      window.location.assign("/");
       return;
     }
 
@@ -5386,7 +4907,7 @@ fbq('track','ViewContent');
       state.portfolio = cloneData(DEMO_PORTFOLIO_STATE);
       state.alerts = cloneData(DEMO_DIP_ALERTS);
       state.availableAlertTickers = [...DEMO_AVAILABLE_TICKERS];
-      state.historicalRiskEstimate = buildDemoHistoricalRiskEstimate(state.portfolio, state.riskWindow);
+      state.historicalRiskEstimate = null;
       state.holdingsAi = null;
       state.holdingsAiError = "";
       state.holdingsAiLoading = false;
@@ -5654,10 +5175,6 @@ fbq('track','ViewContent');
     document.getElementById("add-alert-btn")?.addEventListener("click", addAlert);
     document.getElementById("pro-ai-ask-btn")?.addEventListener("click", runHoldingsAi);
     document.getElementById("pro-ai-chips")?.addEventListener("click", (e) => {
-      if (state.demoMode) {
-        showToast("Ask AI is preview-only in demo. Create an account to ask your own questions.");
-        return;
-      }
       const chip = e.target instanceof HTMLElement ? e.target.closest(".ai-chip") : null;
       if (!(chip instanceof HTMLElement)) return;
       const q = chip.dataset.q;
@@ -5682,8 +5199,8 @@ fbq('track','ViewContent');
 
     uploads.forEach((card) => {
       card.addEventListener("click", () => {
-        if (state.demoMode) {
-          showToast("Uploads are locked in demo. Create an account to import your own reports.", "error", INVALID_UPLOAD_MESSAGE_TTL_MS);
+        if (state.demoMode && getDemoUploadsRemaining() <= 0) {
+          showToast("Demo upload limit reached. Create an account for unlimited imports.", "error", INVALID_UPLOAD_MESSAGE_TTL_MS);
           return;
         }
         if (!state.demoMode && state.sessionUser?.planTier === "none" && (state.portfolio?.holdings?.length ?? 0) >= 4) {
@@ -5698,11 +5215,6 @@ fbq('track','ViewContent');
     });
 
     uploadInput?.addEventListener("change", async (event) => {
-      if (state.demoMode) {
-        uploadInput.value = "";
-        showToast("Uploads are locked in demo. Create an account to import your own reports.", "error", INVALID_UPLOAD_MESSAGE_TTL_MS);
-        return;
-      }
       const target = event.target;
       if (!(target instanceof HTMLInputElement)) return;
       const file = target.files && target.files[0];
@@ -5713,11 +5225,6 @@ fbq('track','ViewContent');
 
     document.getElementById("pro-ai-question")?.addEventListener("keydown", (event) => {
       if (!(event instanceof KeyboardEvent)) return;
-      if (state.demoMode) {
-        event.preventDefault();
-        showToast("Ask AI is preview-only in demo. Create an account to ask your own questions.");
-        return;
-      }
       if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
         event.preventDefault();
         void runHoldingsAi();
@@ -5742,7 +5249,6 @@ fbq('track','ViewContent');
         markBootReady();
       }
     }, 8000);
-    enablePageTransitions();
     bindEvents();
     applyModeChrome();
     try {
@@ -5775,7 +5281,11 @@ fbq('track','ViewContent');
           renderPortfolio();
         }
       });
-      } catch (error) {
+      // Auto-run AI only in demo mode — real users ask manually
+      if (state.demoMode && !state.holdingsAi && !state.holdingsAiLoading) {
+        window.setTimeout(() => { runHoldingsAi(); }, 800);
+      }
+    } catch (error) {
       showToast(error instanceof Error ? error.message : "Failed to load dashboard.", "error");
     } finally {
       window.clearTimeout(bootSafetyTimer);
@@ -5903,42 +5413,6 @@ fbq('track','ViewContent');
 
 // ── TAB NAVIGATION ──
 (function() {
-  var _quantRestoreTimer = null;
-
-  function demoNavUrl(tab) {
-    if (tab === 'research') return '/research?demo=1&refresh=' + Date.now();
-    return '/dashboard?demo=1&tab=' + encodeURIComponent(tab) + '&refresh=' + Date.now();
-  }
-
-  function scheduleQuantRerender() {
-    if (_quantRestoreTimer) {
-      clearTimeout(_quantRestoreTimer);
-      _quantRestoreTimer = null;
-    }
-    // Dispatch resize so canvas elements re-measure their dimensions
-    // after being made visible. Run immediately and at staggered delays
-    // to handle slow reflows and back/forward cache restores.
-    window.dispatchEvent(new Event('resize'));
-    rerenderQuantTab();
-    _quantRestoreTimer = window.setTimeout(function() {
-      window.dispatchEvent(new Event('resize'));
-      rerenderQuantTab();
-    }, 100);
-    window.setTimeout(function() {
-      window.dispatchEvent(new Event('resize'));
-      rerenderQuantTab();
-    }, 400);
-  }
-
-  function rerenderQuantTab() {
-    if (!state.portfolio) return;
-    requestAnimationFrame(function() {
-      requestAnimationFrame(function() {
-        renderPortfolio();
-      });
-    });
-  }
-
   function switchTab(tab) {
     document.querySelectorAll('[data-page]').forEach(function(el) {
       var t = el.getAttribute('data-page');
@@ -5953,21 +5427,24 @@ fbq('track','ViewContent');
       btn.classList.toggle('active', btn.getAttribute('data-tab') === tab);
     });
     window.scrollTo({ top: 0, behavior: 'instant' });
-    // Re-render the full Quant view after it becomes visible.
-    // This avoids partial canvas restores where only some charts redraw after
-    // returning from Research or browser back/forward cache.
+    // Re-draw canvases after tab becomes visible (they were 0-width when hidden)
     if (tab === 'quant') {
-      scheduleQuantRerender();
+      requestAnimationFrame(function() {
+        if (typeof drawHistoryLine === 'function' && window._fullHistory) {
+          drawHistoryLine(window._fullHistory, window._historyCostBase || 0);
+        }
+        if (typeof runMonteCarlo === 'function') runMonteCarlo();
+        if (typeof drawHoldingsBars === 'function' && window._lastHoldingsBars) {
+          drawHoldingsBars(window._lastHoldingsBars);
+        }
+      });
     }
   }
 
   document.querySelectorAll('.nav-tab').forEach(function(btn) {
     btn.addEventListener('click', function() {
       var tab = btn.getAttribute('data-tab');
-      if (tab === 'research') {
-        startPageTransition(state.demoMode ? '/research?demo=1' : '/research', 'Opening terminal...');
-        return;
-      }
+      if (tab === 'research') { window.location.href = (state.demoMode ? '/research?demo=1' : '/research'); return; }
       switchTab(tab);
     });
   });
@@ -5977,10 +5454,7 @@ fbq('track','ViewContent');
     btn.addEventListener('click', function() {
       var tab = btn.getAttribute('data-tab');
       if (!tab) return;
-      if (tab === 'research') {
-        startPageTransition(state.demoMode ? '/research?demo=1' : '/research', 'Opening terminal...');
-        return;
-      }
+      if (tab === 'research') { window.location.href = (state.demoMode ? '/research?demo=1' : '/research'); return; }
       switchTab(tab);
     });
   });
@@ -5988,32 +5462,26 @@ fbq('track','ViewContent');
   var _initTab = new URLSearchParams(window.location.search).get('tab') || 'quant';
   if (_initTab === 'research') _initTab = 'quant';
   switchTab(_initTab);
-
-  window.addEventListener('load', function() {
-    var activeTab = document.querySelector('.nav-tab.nav-tab-active')?.getAttribute('data-tab') || 'quant';
-    if (activeTab === 'quant') {
-      scheduleQuantRerender();
-    }
-  });
-
-  window.addEventListener('pageshow', function(event) {
-    var activeTab = document.querySelector('.nav-tab.nav-tab-active')?.getAttribute('data-tab') || 'quant';
-    if (activeTab === 'quant') {
-      scheduleQuantRerender();
-    }
-  });
-
-  document.addEventListener('visibilitychange', function() {
-    if (document.visibilityState !== 'visible') return;
-    var activeTab = document.querySelector('.nav-tab.nav-tab-active')?.getAttribute('data-tab') || 'quant';
-    if (activeTab === 'quant') {
-      scheduleQuantRerender();
-    }
-  });
 })();
 
-/* ── TICKER BAR — live price update ── */
+/* ── TICKER BAR ── */
 (function() {
+  // Default fallback tickers (ASX blue chips) — overridden once portfolio loads
+  var FALLBACK = [
+    {sym:'CBA',price:'131.44',chg:'+0.4%',pos:true},
+    {sym:'BHP',price:'45.82',chg:'+1.2%',pos:true},
+    {sym:'ANZ',price:'29.55',chg:'+0.3%',pos:true},
+    {sym:'NAB',price:'38.20',chg:'+0.5%',pos:true},
+    {sym:'WBC',price:'32.10',chg:'-0.2%',pos:false},
+    {sym:'MQG',price:'218.75',chg:'+1.4%',pos:true},
+    {sym:'RIO',price:'112.60',chg:'+0.9%',pos:true},
+    {sym:'FMG',price:'18.44',chg:'-2.1%',pos:false},
+    {sym:'CSL',price:'288.10',chg:'+0.7%',pos:true},
+    {sym:'WDS',price:'26.80',chg:'-0.6%',pos:false},
+    {sym:'TLS',price:'3.92',chg:'+0.3%',pos:true},
+    {sym:'GMG',price:'37.15',chg:'+1.8%',pos:true},
+  ];
+
   function buildItem(sym, price, chg, pos) {
     return '<span class="nav-ticker-item">'
       + '<span class="nav-ticker-sym">' + sym + '</span>'
@@ -6023,71 +5491,42 @@ fbq('track','ViewContent');
   }
 
   function renderTicker(items) {
-    if (!items || !items.length) return;
-    var track = document.getElementById('nav-ticker-track');
-    if (!track) return;
     var html = items.map(function(i) { return buildItem(i.sym, i.price, i.chg, i.pos); }).join('');
-    track.innerHTML = html + html;
+    // duplicate for seamless loop
+    var track = document.getElementById('nav-ticker-track');
+    if (track) track.innerHTML = html + html;
   }
 
-  // Fetch live data from quotes API and update ticker
-  function fetchLiveTicker() {
-    fetch('/api/research/quotes')
-      .then(function(r) { return r.ok ? r.json() : null; })
-      .then(function(data) {
-        if (!data) return;
-        var items = [];
-        var idx = data.indices || {};
-        var cry = data.crypto || {};
-
-        function fmtPct(price, prev) {
-          if (!price || !prev || prev <= 0) return null;
-          var pct = (price - prev) / prev * 100;
-          return { chg: (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%', pos: pct >= 0 };
-        }
-
-        if (idx.asx200 && idx.asx200.price) {
-          var p = fmtPct(idx.asx200.price, idx.asx200.prevClose);
-          items.push({ sym: 'ASX200', price: idx.asx200.price.toLocaleString('en-AU', {maximumFractionDigits:1}), chg: p ? p.chg : '—', pos: p ? p.pos : true });
-        }
-        if (cry.btc && cry.btc.price) {
-          var p = fmtPct(cry.btc.price, cry.btc.prevClose);
-          items.push({ sym: 'BTC', price: cry.btc.price.toLocaleString('en-AU', {maximumFractionDigits:0}), chg: p ? p.chg : '—', pos: p ? p.pos : true });
-        }
-        if (cry.gold && cry.gold.price) {
-          var p = fmtPct(cry.gold.price, cry.gold.prevClose);
-          items.push({ sym: 'GOLD', price: cry.gold.price.toLocaleString('en-AU', {maximumFractionDigits:0}), chg: p ? p.chg : '—', pos: p ? p.pos : true });
-        }
-        if (idx.audUsd && idx.audUsd.price) {
-          var p = fmtPct(idx.audUsd.price, idx.audUsd.prevClose);
-          items.push({ sym: 'AUD/USD', price: idx.audUsd.price.toFixed(4), chg: p ? p.chg : '—', pos: p ? p.pos : true });
-        }
-        if (cry.eth && cry.eth.price) {
-          var p = fmtPct(cry.eth.price, cry.eth.prevClose);
-          items.push({ sym: 'ETH', price: cry.eth.price.toLocaleString('en-AU', {maximumFractionDigits:0}), chg: p ? p.chg : '—', pos: p ? p.pos : true });
-        }
-        if (cry.oil && cry.oil.price) {
-          var p = fmtPct(cry.oil.price, cry.oil.prevClose);
-          items.push({ sym: 'OIL', price: cry.oil.price.toFixed(2), chg: p ? p.chg : '—', pos: p ? p.pos : true });
-        }
-        // Top ASX stocks from asx object
-        var asxTickers = ['CBA','BHP','CSL','ANZ','NAB','WBC','MQG','RIO','FMG','WDS','TLS','GMG'];
-        var asx = data.asx || {};
-        asxTickers.forEach(function(tk) {
-          var q = asx[tk];
-          if (!q || !q.price) return;
-          var prev = q.prevClose && q.prevClose > 0 ? q.prevClose : q.price;
-          var pct = (q.price - prev) / prev * 100;
-          items.push({ sym: tk, price: q.price.toFixed(2), chg: (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%', pos: pct >= 0 });
+  // Try to pull from live portfolio state once it's available
+  function tryPortfolioTicker() {
+    if (window.state && window.state.portfolio && window.state.portfolio.holdings && window.state.portfolio.holdings.length) {
+      var holdings = window.state.portfolio.holdings;
+      var items = holdings
+        .filter(function(h) { return h.source === 'asx' && h.price && h.prevClose; })
+        .slice(0, 16)
+        .map(function(h) {
+          var chgPct = ((h.price - h.prevClose) / h.prevClose * 100);
+          var pos = chgPct >= 0;
+          return {
+            sym: h.ticker,
+            price: h.price.toFixed(2),
+            chg: (pos ? '+' : '') + chgPct.toFixed(1) + '%',
+            pos: pos
+          };
         });
-
-        if (items.length >= 4) renderTicker(items);
-      })
-      .catch(function() { /* keep fallback */ });
+      if (items.length >= 4) { renderTicker(items); return; }
+    }
+    renderTicker(FALLBACK);
   }
 
-  // Fetch live data after a brief delay so it doesn't compete with page load
-  setTimeout(fetchLiveTicker, 1200);
+  // Render fallback immediately, then refresh when portfolio is ready
+  renderTicker(FALLBACK);
+  var attempts = 0;
+  var poll = setInterval(function() {
+    attempts++;
+    tryPortfolioTicker();
+    if (attempts >= 20) clearInterval(poll);
+  }, 1500);
 })();
 </script>
 </body>

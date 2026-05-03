@@ -20,14 +20,13 @@
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#05050a"/>
 <meta name="robots" content="noindex,nofollow,noarchive">
 <title>SPECTRE — ASX Market Terminal</title>
 <meta name="description" content="SPECTRE ASX Market Terminal V4 — Premium real-time market intelligence dashboard for the Australian Securities Exchange">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Mono:wght@300;400;500&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Sora:wght@400;600;700;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
 
 <style>
 /* ===== RESET & BASE ===== */
@@ -38,109 +37,58 @@
   --accent-strong: #ff2f14;
   --accent-mid: #ff7a68;
   --accent-soft: #ff4b3324;
-  /* Aligned with dashboard design tokens */
-  --sl-bg: #05050a;
-  --sl-card: #0b0a14;
-  --sl-card2: #100f1e;
-  --sl-border: rgba(255,255,255,.07);
-  --sl-border2: rgba(255,255,255,.13);
-  --sl-text: #f0eeff;
-  --sl-muted: #8a8098;
-  --sl-muted2: #b8b4cc;
-  --sl-purple: #a855f7;
+  --sl-bg: #0c0817;
+  --sl-card: #120c20eb;
+  --sl-border: #ffffff10;
+  --sl-text: #f2eeff;
+  --sl-muted: #8a86a8;
+  --sl-purple: #9b5de5;
   --sl-purple-hi: #c084fc;
-  --sl-orange: #ff7a30;
+  --sl-orange: #ff4d1a;
   --sl-amber: #ffb547;
   --green: #c084fc;
   --green-dim: rgba(192,132,252,.18);
   --red: #f87171;
   --red-dim: rgba(248,113,113,.18);
-  --font-display: 'Space Grotesk', sans-serif;
-  --font-body: 'DM Sans', sans-serif;
+  --font-display: 'Sora', sans-serif;
+  --font-body: 'Space Grotesk', sans-serif;
   --font-mono: 'DM Mono', monospace;
   --radius: 14px;
   --radius-sm: 9px;
   --radius-pill: 100px;
 }
 
-html { scroll-behavior: smooth; background: #05050a; }
+html { scroll-behavior: smooth; }
 
 body {
   font-family: var(--font-body);
   color: var(--sl-text);
-  background: var(--sl-bg);
+  background-color: var(--sl-bg);
+  background-image:
+    radial-gradient(circle at 16% 14%, #8354ff3d 0%, #0000 40%),
+    radial-gradient(circle at 86% 78%, #ff4b3342 0%, #0000 42%),
+    linear-gradient(158deg, #090810f2 0%, #1e0e2ae0 52%, #140a12f0 100%);
+  background-attachment: fixed;
   min-height: 100vh;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
-  /* offset for fixed nav (56px) + ticker bar (28px) */
-  padding-top: 84px;
-}
-body.boot-pending > *:not(#boot-splash):not(script) { display: none !important; }
-body.boot-ready #boot-splash { opacity: 0; pointer-events: none; }
-body.page-transitioning #boot-splash { opacity: 1; pointer-events: auto; }
-body.page-transitioning > *:not(#boot-splash):not(script) { visibility: hidden !important; }
-
-#boot-splash {
-  position: fixed;
-  inset: 0;
-  z-index: 1600;
-  display: grid;
-  place-items: center;
-  padding: 1rem;
-  transition: opacity .22s ease;
 }
 
-.boot-shell {
-  min-width: 220px;
-  text-align: center;
-  border: 1px solid var(--sl-border2);
-  border-radius: 12px;
-  background: linear-gradient(160deg, rgba(15,10,28,.97) 0%, rgba(10,7,18,.96) 100%);
-  box-shadow: 0 24px 60px rgba(0,0,0,.42);
-  padding: 1rem 1.2rem;
-}
-
-.boot-label {
-  display: block;
-  font-family: var(--font-mono);
-  font-size: .56rem;
-  letter-spacing: .18em;
-  text-transform: uppercase;
-  color: var(--sl-orange);
-  margin-bottom: .35rem;
-}
-
-.boot-copy {
-  font-size: .82rem;
-  color: var(--sl-muted2);
-}
-
-/* Dashboard-matching background — subtle purple bloom at top */
+/* Subtle grid overlay */
 body::before {
   content: '';
   position: fixed;
   inset: 0;
+  background-image:
+    linear-gradient(#ffffff06 1px, transparent 1px),
+    linear-gradient(90deg, #ffffff06 1px, transparent 1px);
+  background-size: 42px 42px;
+  opacity: 0.35;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, #000 20%, transparent 80%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, #000 20%, transparent 80%);
   pointer-events: none;
   z-index: 0;
-  background:
-    radial-gradient(ellipse 80% 40% at 50% -5%, rgba(168,85,247,.10) 0%, transparent 100%),
-    #05050a;
-}
-
-/* Dashboard-matching grid overlay */
-body::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 1;
-  background-image:
-    linear-gradient(rgba(168,85,247,.028) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(168,85,247,.028) 1px, transparent 1px);
-  background-size: 58px 58px;
-  mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, black 0%, transparent 80%);
-  -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, black 0%, transparent 80%);
 }
 
 /* ===== TYPOGRAPHY ===== */
@@ -154,7 +102,7 @@ h3 { font-size: 1.15rem; }
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.2em;
-  color: rgba(168, 85, 247, 0.7);
+  color: rgba(255, 201, 192, 0.7);
   margin-bottom: 13px;
 }
 
@@ -169,18 +117,15 @@ h3 { font-size: 1.15rem; }
   z-index: 1;
 }
 
-/* ===== FIXED NAV ===== */
+/* ===== STICKY NAV ===== */
 .nav {
-  position: fixed;
+  position: sticky;
   top: 0;
-  left: 0;
-  right: 0;
-  z-index: 900;
+  z-index: 100;
   background: rgba(5,5,10,.92);
   backdrop-filter: blur(28px) saturate(1.4);
   -webkit-backdrop-filter: blur(28px) saturate(1.4);
   border-bottom: 1px solid rgba(255,255,255,.06);
-  padding-top: env(safe-area-inset-top, 0);
 }
 
 .nav-inner {
@@ -195,25 +140,16 @@ h3 { font-size: 1.15rem; }
 
 .logo {
   font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 1.1rem;
-  letter-spacing: 0.14em;
-  text-decoration: none;
-  white-space: nowrap;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  background: linear-gradient(90deg, #a855f7 0%, #d946ef 35%, #ff7a30 72%, #ffb347 100%);
-  background-size: 200% auto;
+  font-weight: 800;
+  font-size: 1.15rem;
+  letter-spacing: 0.08em;
+  background: linear-gradient(135deg, #fff 30%, var(--accent) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  animation: brandSlide 4s linear infinite;
-}
-@keyframes brandSlide {
-  0%   { background-position: 0% center }
-  100% { background-position: 200% center }
+  display: flex;
+  align-items: center;
+  gap: 9px;
 }
 
 .status-dot {
@@ -233,48 +169,45 @@ h3 { font-size: 1.15rem; }
 
 .nav-links {
   display: flex;
-  gap: 0;
+  gap: 3px;
   list-style: none;
-  background: none;
-  border: none;
-  padding: 0;
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.055);
+  border-radius: var(--radius-pill);
+  padding: 3px 4px;
 }
 
 .nav-links a {
-  font-family: var(--font-mono);
-  font-size: 0.62rem;
-  font-weight: 600;
+  font-family: var(--font-body);
+  font-size: 0.67rem;
+  font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 0.14em;
-  color: rgba(200,192,230,.6);
+  letter-spacing: 0.11em;
+  color: var(--sl-muted);
   text-decoration: none;
-  padding: 0.2rem 1.1rem;
-  border: none;
-  border-bottom: 1.5px solid transparent;
-  line-height: 56px;
-  height: 56px;
-  display: inline-flex;
-  align-items: center;
+  padding: 5px 13px;
+  border-radius: var(--radius-pill);
   transition: all 0.2s;
 }
 
-.nav-links a:hover {
-  background: linear-gradient(90deg,#a855f7 0%,#d946ef 35%,#ff7a30 72%,#ffb347 100%);
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: brandSlide 4s linear infinite;
+.nav-links a:hover, .nav-links a.active {
+  color: var(--sl-text);
+  background: rgba(155, 93, 229, 0.16);
 }
 
-.nav-links a[href="/research"], .nav-links a.active {
-  background: linear-gradient(90deg,#a855f7 0%,#d946ef 35%,#ff7a30 72%,#ffb347 100%);
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: brandSlide 4s linear infinite;
-  border-bottom-color: #a855f7;
+.nav-links a[href="/research"] {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: #f6eeff;
+  background: linear-gradient(135deg, rgba(155, 93, 229, 0.24), rgba(255, 77, 26, 0.14));
+  border: 1px solid rgba(155, 93, 229, 0.28);
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset, 0 4px 14px rgba(155, 93, 229, 0.12);
+}
+
+.nav-links a[href="/research"]:hover, .nav-links a[href="/research"].active {
+  background: linear-gradient(135deg, rgba(155, 93, 229, 0.34), rgba(255, 77, 26, 0.2));
+  border-color: rgba(255, 77, 26, 0.32);
 }
 
 .nav-right {
@@ -294,21 +227,21 @@ h3 { font-size: 1.15rem; }
 }
 
 .nav-btn {
-  font-family: var(--font-body);
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
   color: var(--sl-text);
   text-decoration: none;
-  padding: 0.34rem 1rem;
-  border-radius: 999px;
-  border: 1px solid var(--sl-border2);
+  padding: 5px 13px;
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(255,255,255,0.1);
   transition: all 0.2s;
-  white-space: nowrap;
 }
 
 .nav-btn:hover {
   border-color: var(--sl-purple);
-  background: rgba(168,85,247,.1);
+  background: rgba(155, 93, 229, 0.12);
+  transform: translateY(-1px);
 }
 
 .nav-status {
@@ -369,37 +302,51 @@ h3 { font-size: 1.15rem; }
 .ticker-item .chg.pos { color: #c084fc; }
 .ticker-item .chg.neg { color: #f87171; }
 
-/* ===== CARDS — dashboard-aligned dark surfaces ===== */
+/* ===== CARDS — data terminal style ===== */
 .card {
   position: relative;
   overflow: hidden;
-  background: var(--sl-card);
-  border: 1px solid var(--sl-border);
+  background: linear-gradient(160deg, rgba(19, 13, 33, 0.82) 0%, rgba(14, 9, 24, 0.78) 100%);
+  backdrop-filter: blur(22px) saturate(1.5);
+  -webkit-backdrop-filter: blur(22px) saturate(1.5);
+  border: 1px solid rgba(155, 93, 229, 0.09);
   border-radius: var(--radius);
-  box-shadow: 0 4px 24px rgba(0,0,0,.32);
+  box-shadow: 0 6px 28px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.04);
   padding: 20px;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
-/* Subtle top accent line — purple→orange, kept from original */
+/* Top gradient accent — 1px purple→orange */
 .card::before {
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0;
   height: 1px;
-  background: linear-gradient(90deg, rgba(168,85,247,.5) 0%, rgba(192,132,252,.35) 50%, rgba(255,122,48,.28) 100%);
+  background: linear-gradient(90deg, rgba(155, 93, 229, 0.7) 0%, rgba(192, 132, 252, 0.5) 50%, rgba(255, 77, 26, 0.38) 100%);
   pointer-events: none;
   z-index: 1;
 }
 
+/* Glass shimmer sweep */
+.card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -55%;
+  width: 45%;
+  height: 100%;
+  background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.022) 50%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
 .card:hover {
   transform: translateY(-2px);
-  border-color: var(--sl-border2);
-  box-shadow: 0 8px 32px rgba(168,85,247,.08);
+  border-color: rgba(155, 93, 229, 0.18);
+  box-shadow: 0 10px 36px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 .card-glow:hover {
-  box-shadow: 0 8px 32px rgba(168,85,247,.1);
+  box-shadow: 0 10px 36px rgba(0, 0, 0, 0.38), 0 0 28px rgba(155, 93, 229, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 .card-accent {
@@ -432,9 +379,9 @@ h3 { font-size: 1.15rem; }
   margin: 22px 0 16px;
   padding: 22px 28px;
   border-radius: 18px;
-  background: var(--sl-card2);
-  border: 1px solid var(--sl-border);
-  box-shadow: 0 8px 32px rgba(168,85,247,.06), inset 0 0 0 1px rgba(208,179,255,.04);
+  background: linear-gradient(160deg, rgba(20, 13, 34, 0.9) 0%, rgba(13, 9, 22, 0.85) 100%);
+  border: 1px solid rgba(155, 93, 229, 0.1);
+  box-shadow: 0 10px 36px rgba(0, 0, 0, 0.26), 0 0 28px rgba(155, 93, 229, 0.07);
 }
 
 .hero-kicker {
@@ -443,8 +390,8 @@ h3 { font-size: 1.15rem; }
   gap: 8px;
   padding: 6px 14px;
   border-radius: var(--radius-pill);
-  border: 1px solid rgba(168, 85, 247, 0.32);
-  background: rgba(168, 85, 247, 0.12);
+  border: 1px solid rgba(155, 93, 229, 0.32);
+  background: rgba(155, 93, 229, 0.12);
   font-family: var(--font-mono);
   font-size: 0.66rem;
   letter-spacing: 0.14em;
@@ -736,24 +683,24 @@ h3 { font-size: 1.15rem; }
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.14em;
-  color: var(--sl-muted);
+  color: rgba(138, 134, 168, 0.7);
   padding: 8px 10px;
   text-align: left;
-  border-bottom: 1px solid var(--sl-border);
+  border-bottom: 1px solid rgba(155, 93, 229, 0.1);
   position: sticky;
   top: 0;
-  background: var(--sl-card);
+  background: rgba(16, 10, 28, 0.97);
 }
 
 .data-table thead th:last-child,
 .data-table tbody td:last-child { text-align: right; }
 
 .data-table tbody tr { transition: background 0.12s; }
-.data-table tbody tr:hover { background: rgba(168, 85, 247, 0.07); }
+.data-table tbody tr:hover { background: rgba(155, 93, 229, 0.07); }
 
 .data-table tbody td {
   padding: 8px 10px;
-  border-bottom: 1px solid var(--sl-border);
+  border-bottom: 1px solid rgba(155, 93, 229, 0.05);
   font-family: var(--font-mono);
   font-size: 0.72rem;
   vertical-align: middle;
@@ -777,7 +724,7 @@ h3 { font-size: 1.15rem; }
   letter-spacing: 0.08em;
 }
 
-.badge-materials { background: rgba(168, 85, 247, 0.15); color: var(--sl-purple-hi); }
+.badge-materials { background: rgba(155, 93, 229, 0.15); color: var(--sl-purple-hi); }
 .badge-financials { background: rgba(34, 197, 94, 0.12); color: #4ade80; }
 .badge-healthcare { background: rgba(56, 189, 248, 0.12); color: #38bdf8; }
 .badge-consumer { background: rgba(251, 191, 36, 0.12); color: #fbbf24; }
@@ -811,7 +758,7 @@ h3 { font-size: 1.15rem; }
   gap: 3px;
   margin-bottom: 16px;
   background: rgba(255,255,255,.025);
-  border: 1px solid var(--sl-border);
+  border: 1px solid rgba(155,93,229,.08);
   border-radius: var(--radius-pill);
   padding: 3px;
   width: fit-content;
@@ -832,12 +779,12 @@ h3 { font-size: 1.15rem; }
   transition: all 0.18s;
 }
 
-.tab-btn:hover { color: var(--sl-text); background: rgba(168,85,247,.1); }
+.tab-btn:hover { color: var(--sl-text); background: rgba(155,93,229,.1); }
 .tab-btn.active {
-  background: rgba(168, 85, 247, 0.2);
-  border-color: rgba(168, 85, 247, 0.3);
+  background: rgba(155, 93, 229, 0.2);
+  border-color: rgba(155, 93, 229, 0.3);
   color: var(--sl-text);
-  box-shadow: 0 1px 5px rgba(168, 85, 247, 0.15);
+  box-shadow: 0 1px 5px rgba(155, 93, 229, 0.15);
 }
 
 .tab-content { display: none; }
@@ -880,14 +827,14 @@ h3 { font-size: 1.15rem; }
 .metric-item {
   padding: 10px 12px;
   border-radius: var(--radius-sm);
-  background: rgba(255,255,255,.025);
-  border: 1px solid var(--sl-border);
+  background: rgba(155, 93, 229, 0.04);
+  border: 1px solid rgba(155, 93, 229, 0.08);
   transition: border-color 0.18s, background 0.18s;
 }
 
 .metric-item:hover {
-  background: rgba(168,85,247,.06);
-  border-color: var(--sl-border2);
+  background: rgba(155, 93, 229, 0.08);
+  border-color: rgba(155, 93, 229, 0.16);
 }
 
 .metric-item .metric-label {
@@ -979,15 +926,15 @@ h3 { font-size: 1.15rem; }
   flex: 1;
   padding: 11px 10px;
   border-radius: var(--radius-sm);
-  background: rgba(255,255,255,.025);
-  border: 1px solid var(--sl-border);
+  background: rgba(155, 93, 229, 0.04);
+  border: 1px solid rgba(155, 93, 229, 0.1);
   text-align: center;
   transition: border-color .2s, background .2s;
 }
 
 .kpi-box:hover {
-  background: rgba(168,85,247,.06);
-  border-color: var(--sl-border2);
+  background: rgba(155, 93, 229, 0.08);
+  border-color: rgba(155, 93, 229, 0.18);
 }
 
 .kpi-box .kpi-val {
@@ -1112,7 +1059,7 @@ h3 { font-size: 1.15rem; }
   font-size: 1rem;
   color: #fff;
   flex-shrink: 0;
-  box-shadow: 0 4px 14px rgba(168,85,247,.28);
+  box-shadow: 0 4px 14px rgba(155,93,229,.28);
 }
 
 .company-header h3 { font-size: 0.98rem; letter-spacing: -0.01em; }
@@ -1140,7 +1087,7 @@ h3 { font-size: 1.15rem; }
   gap: 10px;
   margin-top: 13px;
   padding-top: 12px;
-  border-top: 1px solid rgba(168, 85, 247, 0.1);
+  border-top: 1px solid rgba(155, 93, 229, 0.1);
 }
 
 .consensus-badge {
@@ -1193,7 +1140,7 @@ h3 { font-size: 1.15rem; }
 }
 
 .peer-pill:hover {
-  background: rgba(168, 85, 247, 0.12);
+  background: rgba(155, 93, 229, 0.12);
   border-color: var(--sl-purple);
   color: var(--sl-text);
 }
@@ -1208,7 +1155,7 @@ h3 { font-size: 1.15rem; }
   column-gap: 7px;
   row-gap: 2px;
   padding: 8px 0;
-  border-bottom: 1px solid rgba(168, 85, 247, 0.06);
+  border-bottom: 1px solid rgba(155, 93, 229, 0.06);
   transition: background 0.12s;
 }
 .news-item:last-child { border-bottom: none; padding-bottom: 2px; }
@@ -1339,7 +1286,7 @@ h3 { font-size: 1.15rem; }
   align-items: center;
   gap: 11px;
   padding: 11px 0;
-  border-bottom: 1px solid rgba(168, 85, 247, 0.06);
+  border-bottom: 1px solid rgba(155, 93, 229, 0.06);
 }
 
 .crypto-row:last-child { border-bottom: none; }
@@ -1397,7 +1344,7 @@ h3 { font-size: 1.15rem; }
   align-items: center;
   gap: 10px;
   padding: 8px 0;
-  border-bottom: 1px solid rgba(168, 85, 247, 0.05);
+  border-bottom: 1px solid rgba(155, 93, 229, 0.05);
 }
 
 .mover-item:last-child { border-bottom: none; }
@@ -1440,7 +1387,7 @@ h3 { font-size: 1.15rem; }
 .footer {
   text-align: center;
   padding: 24px 20px;
-  border-top: 1px solid rgba(168, 85, 247, 0.09);
+  border-top: 1px solid rgba(155, 93, 229, 0.09);
   margin-top: 10px;
 }
 
@@ -1666,7 +1613,7 @@ h3 { font-size: 1.15rem; }
 .fmp-news-list { display: grid; gap: 8px; }
 .fmp-news-item { padding: 10px 14px; background: rgba(255,255,255,0.03); border: 1px solid var(--sl-border); border-radius: 8px; }
 .fmp-news-meta { display: flex; gap: 8px; align-items: center; margin-bottom: 5px; }
-.fmp-news-sym { font-family: var(--font-mono); font-size: 0.58rem; color: var(--sl-purple-hi); background: rgba(168,85,247,0.12); padding: 2px 6px; border-radius: 3px; }
+.fmp-news-sym { font-family: var(--font-mono); font-size: 0.58rem; color: var(--sl-purple-hi); background: rgba(155,93,229,0.12); padding: 2px 6px; border-radius: 3px; }
 .fmp-news-site { font-family: var(--font-mono); font-size: 0.58rem; color: var(--sl-muted); }
 .fmp-news-date { font-family: var(--font-mono); font-size: 0.58rem; color: var(--sl-muted); margin-left: auto; }
 .fmp-news-title { font-size: 0.78rem; line-height: 1.5; color: var(--sl-text); }
@@ -1741,7 +1688,7 @@ h3 { font-size: 1.15rem; }
   line-height:1.6;
   color:rgba(242,238,255,.84);
 }
-.demo-preview-locked .research-tab-nav .rtab:not(.demo-preview-enabled),
+.demo-preview-locked .research-tab-nav .rtab,
 .demo-preview-locked .time-pill,
 .demo-preview-locked .tab-btn{
   pointer-events:none;
@@ -1749,7 +1696,6 @@ h3 { font-size: 1.15rem; }
   opacity:.42;
   filter:saturate(.7);
 }
-.demo-preview-locked .research-tab-nav .rtab.demo-preview-enabled,
 .demo-preview-locked .research-tab-nav .rtab.active,
 .demo-preview-locked .time-pill.active,
 .demo-preview-locked .tab-btn.active{
@@ -1765,17 +1711,22 @@ h3 { font-size: 1.15rem; }
   margin: 16px 0 0;
   padding: 28px 30px;
   border-radius: 18px;
-  border: 1px solid var(--sl-border2);
-  background: var(--sl-card2);
-  box-shadow: 0 0 32px rgba(168,85,247,.07), inset 0 0 0 1px rgba(208,179,255,.05);
+  border: 1px solid rgba(255,255,255,.07);
+  background:
+    radial-gradient(circle at 12% 22%, rgba(155,93,229,.18) 0%, transparent 34%),
+    radial-gradient(circle at 86% 78%, rgba(255,77,26,.14) 0%, transparent 32%),
+    linear-gradient(160deg, rgba(18,12,30,.96) 0%, rgba(12,8,23,.96) 100%);
+  box-shadow: 0 18px 46px rgba(0,0,0,.34);
 }
 
 .workspace-hero::before {
   content: '';
   position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, rgba(168,85,247,.6), rgba(217,70,239,.4), rgba(255,122,48,.3));
+  inset: 0;
+  background-image:
+    radial-gradient(circle, rgba(255,255,255,.12) 1px, transparent 1.5px);
+  background-size: 28px 28px;
+  opacity: .18;
   pointer-events: none;
 }
 
@@ -1812,8 +1763,8 @@ h3 { font-size: 1.15rem; }
   min-height: 30px;
   padding: 0 12px;
   border-radius: 8px;
-  border: 1px solid rgba(168,85,247,.4);
-  background: rgba(168,85,247,.14);
+  border: 1px solid rgba(155,93,229,.4);
+  background: rgba(155,93,229,.14);
   color: #efcfff;
   box-shadow: 0 0 0 1px rgba(255,255,255,.03) inset;
 }
@@ -1851,9 +1802,18 @@ h3 { font-size: 1.15rem; }
   overflow: hidden;
   padding: 18px;
   border-radius: 16px;
-  border: 1px solid var(--sl-border2);
-  background: var(--sl-card);
-  box-shadow: 0 8px 24px rgba(0,0,0,.28);
+  border: 1px solid rgba(155,93,229,.16);
+  background: linear-gradient(160deg, rgba(30,21,46,.82) 0%, rgba(15,10,24,.9) 100%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 12px 28px rgba(0,0,0,.28);
+}
+
+.workspace-meta-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(135deg, rgba(155,93,229,.18) 0%, transparent 42%, rgba(255,77,26,.08) 100%);
 }
 
 .workspace-meta-head {
@@ -1982,7 +1942,7 @@ h3 { font-size: 1.15rem; }
 .hero-card:last-child { border-right: none !important; }
 .hero-card:hover {
   transform: none !important;
-  background: rgba(168,85,247,.06) !important;
+  background: rgba(155,93,229,.06) !important;
   box-shadow: none !important;
 }
 .hero-card .label {
@@ -2033,8 +1993,8 @@ h3 { font-size: 1.15rem; }
   box-shadow: 0 4px 24px rgba(0,0,0,.32) !important;
 }
 .card-glow:hover {
-  border-color: rgba(168,85,247,.2) !important;
-  box-shadow: 0 4px 24px rgba(0,0,0,.32), 0 0 18px rgba(168,85,247,.08) !important;
+  border-color: rgba(155,93,229,.2) !important;
+  box-shadow: 0 4px 24px rgba(0,0,0,.32), 0 0 18px rgba(155,93,229,.08) !important;
 }
 
 /* ── Section labels ──────────────────────────────────────────── */
@@ -2085,7 +2045,7 @@ h3 { font-size: 1.15rem; }
   border-bottom: 1px solid rgba(255,255,255,.07) !important;
 }
 .data-table td { font-size: 0.7rem !important; padding: 7px 10px !important; }
-.data-table tbody tr:hover td { background: rgba(168,85,247,.05) !important; }
+.data-table tbody tr:hover td { background: rgba(155,93,229,.05) !important; }
 .data-table tbody tr { border-bottom: 1px solid rgba(255,255,255,.03) !important; }
 
 /* ── News ────────────────────────────────────────────────────── */
@@ -2102,14 +2062,9 @@ h3 { font-size: 1.15rem; }
   display: flex;
   gap: 2px;
   padding: 12px 0 0;
-  border-bottom: 1px solid var(--sl-border);
+  border-bottom: 1px solid rgba(255,255,255,.07);
   margin-bottom: 18px;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
 }
-.research-tab-nav::-webkit-scrollbar { display: none; }
 .rtab {
   background: none;
   border: none;
@@ -2117,8 +2072,6 @@ h3 { font-size: 1.15rem; }
   color: var(--sl-muted);
   font-family: var(--font-mono);
   font-size: 0.65rem;
-  flex-shrink: 0;
-  white-space: nowrap;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   padding: 8px 16px 10px;
@@ -2221,7 +2174,7 @@ h3 { font-size: 1.15rem; }
   color: var(--sl-muted);
 }
 .eq-stock-row { cursor: pointer; }
-.eq-stock-row.active { background: rgba(168,85,247,0.08); }
+.eq-stock-row.active { background: rgba(155,93,229,0.08); }
 .eq-stock-header {
   display: flex;
   justify-content: space-between;
@@ -2264,7 +2217,7 @@ h3 { font-size: 1.15rem; }
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(circle at top right, rgba(168,85,247,0.08) 0%, transparent 36%),
+    radial-gradient(circle at top right, rgba(155,93,229,0.08) 0%, transparent 36%),
     linear-gradient(180deg, rgba(255,255,255,0.02) 0%, transparent 35%);
   pointer-events: none;
 }
@@ -2302,7 +2255,7 @@ h3 { font-size: 1.15rem; }
   position: relative;
   overflow: hidden;
   border-radius: 14px;
-  border: 1px solid rgba(168,85,247,.12);
+  border: 1px solid rgba(155,93,229,.12);
   background:
     linear-gradient(180deg, rgba(255,255,255,.03) 0%, rgba(255,255,255,.01) 100%),
     linear-gradient(135deg, rgba(17,12,28,.96) 0%, rgba(10,8,18,.98) 100%);
@@ -2316,7 +2269,7 @@ h3 { font-size: 1.15rem; }
   inset: 0;
   background:
     linear-gradient(180deg, rgba(255,255,255,.05) 0%, transparent 18%),
-    radial-gradient(circle at top right, rgba(168,85,247,.09) 0%, transparent 40%);
+    radial-gradient(circle at top right, rgba(155,93,229,.09) 0%, transparent 40%);
   pointer-events: none;
 }
 .chart-surface canvas {
@@ -2551,10 +2504,11 @@ h3 { font-size: 1.15rem; }
   align-items: center;
   justify-content: space-between;
   padding: 11px 20px;
-  background: var(--sl-card2);
-  border: 1px solid var(--sl-border);
+  background: linear-gradient(135deg, rgba(22,14,38,.9) 0%, rgba(14,10,24,.95) 100%);
+  border: 1px solid rgba(155,93,229,.15);
   border-radius: 12px;
   margin-bottom: 16px;
+  backdrop-filter: blur(16px);
   gap: 16px;
 }
 .page-title {
@@ -2612,8 +2566,8 @@ h3 { font-size: 1.15rem; }
 }
 .rtab.active {
   color: #e8deff;
-  background: linear-gradient(135deg, rgba(168,85,247,.3) 0%, rgba(168,85,247,.15) 100%);
-  box-shadow: 0 1px 10px rgba(168,85,247,.2), inset 0 1px 0 rgba(255,255,255,.08);
+  background: linear-gradient(135deg, rgba(155,93,229,.3) 0%, rgba(155,93,229,.15) 100%);
+  box-shadow: 0 1px 10px rgba(155,93,229,.2), inset 0 1px 0 rgba(255,255,255,.08);
   border: none;
 }
 
@@ -2634,17 +2588,17 @@ h3 { font-size: 1.15rem; }
   justify-content: space-between;
 }
 
-/* ── Cards — flat dark, dashboard-aligned ──────── */
+/* ── Cards — richer glass ───────────────────────── */
 .card {
-  background: var(--sl-card) !important;
-  border: 1px solid var(--sl-border) !important;
+  background: linear-gradient(150deg, rgba(22,14,38,.88) 0%, rgba(13,8,24,.94) 100%) !important;
+  border: 1px solid rgba(155,93,229,.13) !important;
   border-radius: 14px !important;
-  box-shadow: 0 4px 24px rgba(0,0,0,.32) !important;
+  box-shadow: 0 2px 20px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.04) !important;
 }
 .card:hover {
-  border-color: var(--sl-border2) !important;
-  box-shadow: 0 8px 32px rgba(168,85,247,.08) !important;
-  transform: translateY(-1px) !important;
+  border-color: rgba(155,93,229,.22) !important;
+  box-shadow: 0 4px 28px rgba(0,0,0,.45), 0 0 0 1px rgba(155,93,229,.08) !important;
+  transform: none !important;
 }
 
 /* ── Hero metric cards ─────────────────────────── */
@@ -2681,7 +2635,7 @@ h3 { font-size: 1.15rem; }
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 80% 20%, rgba(168,85,247,.06) 0%, transparent 60%);
+  background: radial-gradient(circle at 80% 20%, rgba(155,93,229,.06) 0%, transparent 60%);
   pointer-events: none;
 }
 .crypto-big-price {
@@ -2715,8 +2669,8 @@ h3 { font-size: 1.15rem; }
 
 /* ── Metric stat cards (dominance/fear/vol) ─────── */
 .metric-card {
-  background: rgba(255,255,255,.025) !important;
-  border: 1px solid var(--sl-border) !important;
+  background: rgba(22,14,38,.55) !important;
+  border: 1px solid rgba(155,93,229,.1) !important;
   border-radius: 12px !important;
   padding: 16px 18px !important;
 }
@@ -2734,10 +2688,10 @@ h3 { font-size: 1.15rem; }
 
 /* ── Rates strip (macro) ────────────────────────── */
 .macro-rates-strip {
-  background: var(--sl-card2) !important;
-  border: 1px solid var(--sl-border) !important;
+  background: linear-gradient(135deg, rgba(22,14,38,.92) 0%, rgba(14,10,24,.96) 100%) !important;
+  border: 1px solid rgba(155,93,229,.13) !important;
   border-radius: 12px !important;
-  box-shadow: 0 4px 20px rgba(0,0,0,.28) !important;
+  box-shadow: 0 2px 16px rgba(0,0,0,.3) !important;
 }
 .macro-rate-cell { padding: 14px 18px !important; }
 .macro-rate-name {
@@ -2767,10 +2721,10 @@ h3 { font-size: 1.15rem; }
 
 /* ── Equities summary strip ─────────────────────── */
 .eq-summary-strip {
-  background: var(--sl-card2) !important;
-  border: 1px solid var(--sl-border) !important;
+  background: linear-gradient(135deg, rgba(22,14,38,.92) 0%, rgba(14,10,24,.96) 100%) !important;
+  border: 1px solid rgba(155,93,229,.13) !important;
   border-radius: 12px !important;
-  box-shadow: 0 4px 20px rgba(0,0,0,.28) !important;
+  box-shadow: 0 2px 16px rgba(0,0,0,.3) !important;
 }
 .eq-summary-cell { padding: 14px 18px !important; }
 .eq-summary-label {
@@ -2795,7 +2749,7 @@ h3 { font-size: 1.15rem; }
   padding: 8px 6px !important;
   margin: 0 -6px;
 }
-.mover-row:hover { background: rgba(168,85,247,.05); }
+.mover-row:hover { background: rgba(155,93,229,.05); }
 .mover-row:last-child { border-bottom: none !important; }
 
 /* ── Chart wrappers — taller ────────────────────── */
@@ -2811,12 +2765,12 @@ h3 { font-size: 1.15rem; }
 
 /* ── Asset market depth rows ────────────────────── */
 .asset-metric-row {
-  background: rgba(255,255,255,.025) !important;
-  border: 1px solid var(--sl-border) !important;
+  background: rgba(22,14,38,.5) !important;
+  border: 1px solid rgba(155,93,229,.08) !important;
   border-radius: 9px !important;
   transition: border-color .15s;
 }
-.asset-metric-row:hover { border-color: var(--sl-border2) !important; }
+.asset-metric-row:hover { border-color: rgba(155,93,229,.2) !important; }
 
 /* ── FX / commodity rows ────────────────────────── */
 .fx-row {
@@ -2833,11 +2787,11 @@ h3 { font-size: 1.15rem; }
 
 /* ── Data table upgrades ────────────────────────── */
 .data-table th {
-  background: var(--sl-card) !important;
-  border-bottom: 1px solid var(--sl-border) !important;
-  color: var(--sl-muted) !important;
+  background: rgba(155,93,229,.06) !important;
+  border-bottom: 1px solid rgba(155,93,229,.12) !important;
+  color: rgba(255,255,255,.45) !important;
 }
-.data-table tbody tr:hover td { background: rgba(168,85,247,.05) !important; }
+.data-table tbody tr:hover td { background: rgba(155,93,229,.07) !important; }
 
 /* ── Earn / surprise items ─────────────────────── */
 .earn-item {
@@ -2848,7 +2802,7 @@ h3 { font-size: 1.15rem; }
   border-radius: 7px;
   transition: background .12s;
 }
-.earn-item:hover { background: rgba(168,85,247,.06); }
+.earn-item:hover { background: rgba(155,93,229,.06); }
 .earn-date { font-family: var(--font-mono); font-size: 0.6rem; color: var(--sl-muted); min-width: 52px; }
 .earn-sym  { font-family: var(--font-mono); font-size: 0.7rem; font-weight: 600; color: var(--sl-purple-hi); min-width: 44px; }
 .earn-name { font-size: 0.65rem; color: var(--sl-muted); flex: 1; }
@@ -2856,8 +2810,8 @@ h3 { font-size: 1.15rem; }
 
 /* ── Analyst / consensus cards ──────────────────── */
 .analyst-card {
-  background: rgba(255,255,255,.025) !important;
-  border: 1px solid var(--sl-border) !important;
+  background: rgba(22,14,38,.5) !important;
+  border: 1px solid rgba(155,93,229,.1) !important;
   border-radius: 10px !important;
   padding: 12px 14px !important;
 }
@@ -2872,10 +2826,10 @@ h3 { font-size: 1.15rem; }
   color: var(--sl-muted) !important;
   transition: all .15s !important;
 }
-.time-pill:hover { background: rgba(168,85,247,.15) !important; color: var(--sl-text) !important; }
+.time-pill:hover { background: rgba(155,93,229,.15) !important; color: var(--sl-text) !important; }
 .time-pill.active {
-  background: rgba(168,85,247,.22) !important;
-  border-color: rgba(168,85,247,.35) !important;
+  background: rgba(155,93,229,.22) !important;
+  border-color: rgba(155,93,229,.35) !important;
   color: var(--sl-purple-hi) !important;
 }
 
@@ -3118,23 +3072,6 @@ h3 { font-size: 1.15rem; }
   /* Container */
   .container{padding:0 12px!important}
   .nav-inner{padding:0 14px!important}
-  .ticker-wrap{height:24px!important}
-  .ticker-wrap::before,.ticker-wrap::after{width:28px!important}
-  .ticker-track{
-    animation-duration:42s!important;
-    will-change:transform;
-  }
-  .ticker-item{
-    gap:.3rem!important;
-    padding:0 12px!important;
-    font-size:.52rem!important;
-  }
-  .ticker-item .sym{
-    font-size:.5rem!important;
-    letter-spacing:.06em!important;
-  }
-  .ticker-item .price{display:none!important}
-  .ticker-item .chg{font-size:.5rem!important}
 
   /* Hero workspace */
   .workspace-hero{padding:16px!important;border-radius:14px!important;margin:12px 0 10px!important}
@@ -3218,215 +3155,10 @@ h3 { font-size: 1.15rem; }
   #nav-market-status{font-size:.54rem!important;padding:2px 8px!important}
 }
 
-/* Narrow iPhone fit fixes */
-@media (max-width: 480px) {
-  .container { padding: 0 10px !important; }
-  .main-grid > *,
-  .left-col,
-  .right-col,
-  .chart-panel,
-  .table-wrap {
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-    box-sizing: border-box !important;
-  }
-  .workspace-hero,
-  .page-header,
-  .card { border-radius: 12px !important; }
-  .workspace-hero,
-  .page-header,
-  .card,
-  .research-tab-nav,
-  .hero-grid,
-  .market-pulse-strip,
-  .eq-summary-strip,
-  .macro-rates-strip,
-  .treasury-strip {
-    width: 100% !important;
-    max-width: 100% !important;
-    box-sizing: border-box !important;
-  }
-
-  .main-grid,
-  .left-col,
-  .right-col,
-  .macro-grid,
-  .macro-2col,
-  .macro-3col,
-  .eq-movers-grid,
-  .earnings-grid,
-  .earnings-grid-2,
-  .crypto-tab-grid,
-  .crypto-tab-charts,
-  .metric-card-grid,
-  .fmp-section.in-tab.cols-2,
-  .fmp-section.in-tab.cols-3 {
-    gap: 10px !important;
-  }
-
-  .chart-panel .section-label,
-  .card .section-label[style*="justify-content:space-between"] {
-    flex-wrap: wrap !important;
-    align-items: flex-start !important;
-    gap: 8px !important;
-  }
-  .chart-panel .time-pills,
-  .card .section-label[style*="justify-content:space-between"] .time-pills {
-    width: 100% !important;
-    justify-content: flex-start !important;
-    flex-wrap: wrap !important;
-    gap: 4px !important;
-    margin-top: 0 !important;
-  }
-
-  .chart-summary,
-  .chart-summary.compact,
-  #eq-stock-summary {
-    grid-template-columns: 1fr !important;
-    gap: 8px !important;
-  }
-  .chart-stat {
-    padding: 9px 10px !important;
-    border-radius: 9px !important;
-  }
-  .chart-stat-value { font-size: 0.82rem !important; }
-  .macro-chart-wrap,
-  .crypto-tab-chart-wrap,
-  .sector-chart-wrap { height: 176px !important; }
-  .crypto-tab-chart-wrap.crypto-tab-chart-wrap-lg,
-  #eq-stock-chart-wrap { height: 198px !important; }
-
-  .hero-grid {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
-    gap: 8px !important;
-    background: transparent !important;
-    border: none !important;
-    overflow: visible !important;
-  }
-  .hero-card {
-    border: 1px solid rgba(255,255,255,.06) !important;
-    border-radius: 10px !important;
-    background: rgba(14,10,24,.88) !important;
-  }
-
-  .eq-summary-strip,
-  .macro-rates-strip,
-  .treasury-strip {
-    display: grid !important;
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 8px !important;
-    background: transparent !important;
-    border: none !important;
-    overflow: visible !important;
-    padding: 0 !important;
-  }
-  .eq-summary-cell,
-  .macro-rate-cell,
-  .treasury-cell {
-    min-width: 0 !important;
-    padding: 12px 12px 11px !important;
-    border: 1px solid rgba(255,255,255,.06) !important;
-    border-right: none !important;
-    border-radius: 10px !important;
-    background: rgba(14,10,24,.88) !important;
-  }
-  .eq-summary-cell:last-child,
-  .macro-rate-cell:last-child,
-  .treasury-cell:last-child { border-right: none !important; }
-  .eq-summary-cell:last-child,
-  .treasury-cell[style*="flex:2"] {
-    grid-column: 1 / -1 !important;
-  }
-  .macro-rate-name,
-  .eq-summary-label,
-  .treasury-label {
-    font-size: 0.52rem !important;
-    letter-spacing: 0.09em !important;
-  }
-  .macro-rate-val,
-  .eq-summary-val,
-  .treasury-val {
-    font-size: 1rem !important;
-    line-height: 1.08 !important;
-  }
-  .macro-rate-dir,
-  .eq-summary-sub { font-size: 0.56rem !important; }
-
-  .index-grid { grid-template-columns: 1fr !important; }
-  .metric-card-grid,
-  #fred-signals-grid { grid-template-columns: 1fr !important; }
-  #fred-signals-grid > [style*="grid-column:span 2"] { grid-column: auto !important; }
-  .analyst-item {
-    grid-template-columns: 52px 58px 1fr !important;
-    gap: 8px !important;
-    padding: 10px 12px !important;
-  }
-  .sector-perf-row {
-    padding: 8px 10px !important;
-    gap: 8px !important;
-  }
-  .sector-perf-bar-wrap { flex: 1.25 !important; }
-  .sector-perf-val {
-    min-width: 44px !important;
-    font-size: 0.64rem !important;
-  }
-
-  .econ-item {
-    grid-template-columns: 54px 20px minmax(0, 1fr) auto !important;
-    gap: 4px !important;
-    padding: 8px 9px !important;
-  }
-  .earn-item {
-    grid-template-columns: 64px 52px minmax(0, 1fr) !important;
-    gap: 6px !important;
-    padding: 8px 9px !important;
-  }
-  .earn-date,
-  .earn-sym,
-  .earn-name { min-width: 0 !important; }
-  .earn-name {
-    white-space: normal !important;
-    line-height: 1.35 !important;
-  }
-
-  .fx-grid { gap: 6px !important; }
-  .fx-row {
-    padding: 9px 10px !important;
-    border: 1px solid rgba(255,255,255,.05) !important;
-    border-radius: 8px !important;
-    background: rgba(255,255,255,.025) !important;
-  }
-  .fx-pair { font-size: 0.6rem !important; }
-  .fx-rate { font-size: 0.72rem !important; }
-  .fx-chg { font-size: 0.6rem !important; }
-
-  .table-wrap {
-    margin: 0 !important;
-    padding: 0 !important;
-    border-radius: 12px !important;
-    overflow-x: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-  }
-  .data-table { min-width: 680px !important; }
-  .data-table thead th,
-  .data-table tbody td {
-    white-space: nowrap !important;
-  }
-}
-
 </style>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 </head>
-<body class="boot-pending">
-
-<div id="boot-splash" role="status" aria-live="polite">
-  <div class="boot-shell">
-    <span class="boot-label">SPECTRE</span>
-    <p class="boot-copy">Loading terminal...</p>
-  </div>
-</div>
+<body>
 
 <!-- ===== STICKY NAV ===== -->
 <nav class="nav">
@@ -3477,8 +3209,8 @@ h3 { font-size: 1.15rem; }
         <div class="workspace-wordmark-wrap">
           <span style="font-family:'Space Grotesk',sans-serif;font-size:clamp(1.6rem,3.2vw,2.4rem);font-weight:800;letter-spacing:.18em;text-transform:uppercase;background:linear-gradient(90deg,#a855f7 0%,#d946ef 35%,#ff7a30 72%,#ffb347 100%);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:brandSlide 4s linear infinite;">SPECTRE</span>
         </div>
-        <h1 class="workspace-title">See the market backdrop behind your portfolio decisions.</h1>
-        <p class="workspace-sub">Grounded in live holdings context, real-time market data, and risk metrics.</p>
+        <h1 class="workspace-title">Ask your portfolio <span class="gradient">anything.</span></h1>
+        <p class="workspace-sub">Grounded in your live holdings, real-time market data, and risk metrics.</p>
       </div>
 
       <aside class="workspace-meta-card">
@@ -4748,7 +4480,6 @@ const state = {
   demoMode: false,
   sessionUser: null,
   portfolioState: null,
-  redirecting: false,
 };
 
 const DEMO_SESSION_USER = {
@@ -5015,11 +4746,11 @@ const TAG_COLORS = {
   'inflation':  ['rgba(255,181,71,0.18)',   '#ffb547'],
   'rate':       ['rgba(34,197,94,0.18)',    '#4ade80'],
   'rates':      ['rgba(34,197,94,0.18)',    '#4ade80'],
-  'asx':        ['rgba(168,85,247,0.18)',   '#c084fc'],
+  'asx':        ['rgba(155,93,229,0.18)',   '#c084fc'],
   'china':      ['rgba(255,77,26,0.18)',    '#ff7a68'],
   'energy':     ['rgba(255,181,71,0.18)',   '#ffb547'],
   'earnings':   ['rgba(56,189,248,0.18)',   '#38bdf8'],
-  'markets':    ['rgba(168,85,247,0.18)',   '#c084fc'],
+  'markets':    ['rgba(155,93,229,0.18)',   '#c084fc'],
   'banks':      ['rgba(34,197,94,0.18)',    '#4ade80'],
   'tech':       ['rgba(56,189,248,0.18)',   '#38bdf8'],
   'crypto':     ['rgba(251,191,36,0.18)',   '#fbbf24'],
@@ -5400,46 +5131,6 @@ function isDemoMode() {
   return new URLSearchParams(window.location.search).get('demo') === '1';
 }
 
-function markBootReady() {
-  if (typeof document === 'undefined') return;
-  document.body.classList.add('boot-ready');
-  document.body.classList.remove('boot-pending');
-  document.body.classList.remove('page-transitioning');
-}
-
-function startPageTransition(url, copy) {
-  if (typeof window === 'undefined' || !url) return;
-  if (document.body.classList.contains('page-transitioning')) return;
-  state.redirecting = true;
-  const splashCopy = document.querySelector('#boot-splash .boot-copy');
-  if (splashCopy && copy) splashCopy.textContent = copy;
-  document.body.classList.remove('boot-ready');
-  document.body.classList.add('page-transitioning');
-  window.setTimeout(() => {
-    window.location.href = url;
-  }, 70);
-}
-
-function navigateTo(url, copy) {
-  startPageTransition(url, copy || 'Opening terminal...');
-}
-
-function enablePageTransitions() {
-  document.addEventListener('click', (event) => {
-    if (event.defaultPrevented || state.redirecting) return;
-    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-    const anchor = event.target instanceof Element ? event.target.closest('a[href]') : null;
-    if (!anchor) return;
-    const href = anchor.getAttribute('href') || '';
-    if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:') || href.startsWith('javascript:')) return;
-    if (anchor.getAttribute('target') === '_blank' || anchor.hasAttribute('download')) return;
-    const nextUrl = new URL(anchor.href, window.location.href);
-    if (nextUrl.origin !== window.location.origin || nextUrl.href === window.location.href) return;
-    event.preventDefault();
-    startPageTransition(nextUrl.href, 'Opening terminal...');
-  }, true);
-}
-
 async function apiJson(url, options = {}) {
   // In demo mode, intercept known research API routes and serve static snapshots
   if (state.demoMode && !options.method) {
@@ -5454,7 +5145,7 @@ async function apiJson(url, options = {}) {
     payload = null;
   }
   if (response.status === 401) {
-    navigateTo('/signin', 'Opening sign in...');
+    window.location.href = '/signin';
     throw new Error('Please sign in first.');
   }
   if (!response.ok) {
@@ -5495,14 +5186,10 @@ function applyModeChrome() {
 
 function activateDemoResearchPreview() {
   document.body.classList.add('demo-preview-locked');
-  document.querySelectorAll('.research-tab-nav .rtab').forEach((tab) => {
-    const enabled = ['overview', 'equities', 'macro', 'earnings', 'crypto'].includes(tab.dataset.tab);
-    tab.classList.toggle('demo-preview-enabled', enabled);
-  });
   switchResearchTab('overview', document.querySelector('.research-tab-nav .rtab[data-tab="overview"]'));
   const noteEl = document.getElementById('workspace-meta-note');
   if (noteEl) {
-    noteEl.textContent = 'Demo research is a frozen market snapshot for preview only. Overview, Equities, Macro, Earnings, and Crypto stay open for preview; live updates and terminal controls unlock inside a real SPECTRE workspace.';
+    noteEl.textContent = 'Demo research is a frozen market snapshot for preview only. Live data and deeper terminal navigation unlock inside a real SPECTRE workspace.';
   }
 }
 
@@ -5516,7 +5203,7 @@ async function loadSession() {
 
   const payload = await apiJson('/api/auth/session', { cache: 'no-store' });
   if (!payload.authenticated || !payload.user) {
-    navigateTo('/signin', 'Opening sign in...');
+    window.location.href = '/signin';
     return;
   }
 
@@ -5534,7 +5221,7 @@ async function signOut(event) {
     } catch {
       // best effort cleanup
     }
-    navigateTo('/', 'Leaving terminal...');
+    window.location.href = '/';
     return;
   }
   try {
@@ -5542,7 +5229,7 @@ async function signOut(event) {
   } catch {
     // best effort
   }
-  navigateTo('/', 'Leaving terminal...');
+  window.location.href = '/';
 }
 
 // ===== LIVE QUOTES =====
@@ -5790,13 +5477,8 @@ async function fetchLiveQuotes() {
 }
 
 // ===== INIT =====
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener('DOMContentLoaded', () => {
   state.demoMode = isDemoMode();
-  state.redirecting = false;
-  enablePageTransitions();
-  const bootSafetyTimer = window.setTimeout(() => {
-    if (!state.redirecting) markBootReady();
-  }, 8000);
   if (state.demoMode) activateDemoResearchPreview();
   buildTicker();
   buildStockTable();
@@ -5817,7 +5499,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const href = link.getAttribute('href');
     if (href && href.startsWith('/dashboard?tab=')) {
       const tab = href.split('tab=')[1];
-      link.setAttribute('href', '/dashboard?' + modeParam + '&tab=' + tab + (state.demoMode ? ('&refresh=' + Date.now()) : ''));
+      link.setAttribute('href', '/dashboard?' + modeParam + '&tab=' + tab);
     }
   });
 
@@ -5826,20 +5508,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   updateWorkspacePortfolioSummary(null);
 
   document.getElementById('sign-out-btn')?.addEventListener('click', signOut);
-  try {
-    await loadSession();
-    await Promise.allSettled([
-      fetchPortfolioSummary(),
-      fetchLiveQuotes(),
-      fetchLiveMovers(),
-      loadChart('6m', null),
-      fetchLiveNews(),
-      fetchFmpData(),
-    ]);
-  } finally {
-    window.clearTimeout(bootSafetyTimer);
-    if (!state.redirecting) markBootReady();
-  }
+  void loadSession();
+  void fetchPortfolioSummary();
+  void fetchLiveQuotes();
+  void fetchLiveMovers();
+  void loadChart('6m', null);
+  void fetchLiveNews();
+  void fetchFmpData();
   setInterval(updateWorkspaceClock, 60 * 1000);
   setInterval(() => { void fetchLiveQuotes(); }, 5 * 60 * 1000);
   setInterval(() => { void fetchLiveMovers(); }, 10 * 60 * 1000);
@@ -6320,7 +5995,7 @@ function drawFallbackBarChart(canvasId, labels, values, colors) {
     const barWidth = (Math.abs(value) / maxAbs) * ((width - pad.left - pad.right) / 2 - 8);
     const x = value >= 0 ? zeroX : zeroX - barWidth;
 
-    ctx.fillStyle = colors[index] || 'rgba(168,85,247,0.75)';
+    ctx.fillStyle = colors[index] || 'rgba(155,93,229,0.75)';
     ctx.fillRect(x, y, barWidth, barHeight);
 
     ctx.fillStyle = '#f2eeff';
@@ -6489,7 +6164,7 @@ function makeCjsLineChart(canvasId, labels, values, color, label, options) {
         legend: { display: false },
         tooltip: {
           backgroundColor: 'rgba(10,7,20,0.96)',
-          borderColor: 'rgba(168,85,247,0.25)',
+          borderColor: 'rgba(155,93,229,0.25)',
           borderWidth: 1,
           titleColor: '#8a86a8',
           bodyColor: '#f2eeff',
@@ -7373,208 +7048,36 @@ async function loadCryptoChart(symbol, range, btn) {
 
 
 // ── DEMO MODE SNAPSHOTS ─────────────────────────────────────────────────────
-// Frozen market data lives in a separate cacheable JSON asset so the demo page
-// shell stays lighter under load.
-let _demoDataPromise = null;
+// Frozen market data: 28 March 2025. Served when ?demo=1 is in the URL.
+const _DEMO_DATA = {"quotes": {"indices": {"asx200": {"symbol": "^AXJO", "price": 7823.5, "prevClose": 7801.2, "yearHigh": 8615.2, "yearLow": 7203.4, "pe": null, "divYield": null, "name": "S&P/ASX 200"}, "allOrds": {"symbol": "^AORD", "price": 8063.1, "prevClose": 8040.5, "yearHigh": 8850.0, "yearLow": 7430.0, "pe": null, "divYield": null, "name": "All Ordinaries"}, "audUsd": {"symbol": "AUDUSD=X", "price": 0.6289, "prevClose": 0.6275, "yearHigh": 0.6942, "yearLow": 0.5985, "pe": null, "divYield": null, "name": "AUD/USD"}, "vix": {"symbol": "^VIX", "price": 21.4, "prevClose": 22.8, "yearHigh": 65.7, "yearLow": 10.6, "pe": null, "divYield": null, "name": "CBOE Volatility Index"}}, "asx": {"CBA": {"symbol": "CBA.AX", "price": 155.2, "prevClose": 153.8, "yearHigh": 179.9, "yearLow": 126.4, "pe": 22.1, "divYield": 3.1, "name": "Commonwealth Bank"}, "BHP": {"symbol": "BHP.AX", "price": 38.45, "prevClose": 37.9, "yearHigh": 48.5, "yearLow": 35.2, "pe": 12.4, "divYield": 5.8, "name": "BHP Group"}, "CSL": {"symbol": "CSL.AX", "price": 285.1, "prevClose": 282.5, "yearHigh": 322.4, "yearLow": 246.3, "pe": 35.2, "divYield": 1.2, "name": "CSL Limited"}, "NAB": {"symbol": "NAB.AX", "price": 38.92, "prevClose": 38.5, "yearHigh": 44.2, "yearLow": 31.8, "pe": 14.8, "divYield": 4.5, "name": "National Australia Bank"}, "WBC": {"symbol": "WBC.AX", "price": 32.85, "prevClose": 32.2, "yearHigh": 38.1, "yearLow": 25.9, "pe": 13.9, "divYield": 5.2, "name": "Westpac Banking"}, "ANZ": {"symbol": "ANZ.AX", "price": 30.12, "prevClose": 29.85, "yearHigh": 33.9, "yearLow": 25.1, "pe": 12.6, "divYield": 5.6, "name": "ANZ Group"}, "WES": {"symbol": "WES.AX", "price": 78.6, "prevClose": 77.8, "yearHigh": 84.2, "yearLow": 62.5, "pe": 28.4, "divYield": 3.0, "name": "Wesfarmers"}, "MQG": {"symbol": "MQG.AX", "price": 218.5, "prevClose": 215.2, "yearHigh": 248.6, "yearLow": 170.3, "pe": 18.7, "divYield": 2.8, "name": "Macquarie Group"}, "RIO": {"symbol": "RIO.AX", "price": 118.4, "prevClose": 116.8, "yearHigh": 135.2, "yearLow": 105.4, "pe": 10.2, "divYield": 7.4, "name": "Rio Tinto"}, "WOW": {"symbol": "WOW.AX", "price": 29.85, "prevClose": 30.2, "yearHigh": 38.5, "yearLow": 28.1, "pe": 24.6, "divYield": 3.8, "name": "Woolworths Group"}, "TLS": {"symbol": "TLS.AX", "price": 3.85, "prevClose": 3.82, "yearHigh": 4.32, "yearLow": 3.55, "pe": 18.2, "divYield": 4.2, "name": "Telstra"}, "GMG": {"symbol": "GMG.AX", "price": 38.2, "prevClose": 37.5, "yearHigh": 42.8, "yearLow": 29.6, "pe": 32.1, "divYield": 1.5, "name": "Goodman Group"}, "TCL": {"symbol": "TCL.AX", "price": 12.45, "prevClose": 12.3, "yearHigh": 14.2, "yearLow": 11.1, "pe": null, "divYield": 5.1, "name": "Transurban"}, "FMG": {"symbol": "FMG.AX", "price": 16.2, "prevClose": 16.85, "yearHigh": 23.4, "yearLow": 14.6, "pe": 9.8, "divYield": 8.2, "name": "Fortescue"}, "STO": {"symbol": "STO.AX", "price": 6.35, "prevClose": 6.48, "yearHigh": 8.2, "yearLow": 5.9, "pe": 11.4, "divYield": 4.0, "name": "Santos"}, "ORG": {"symbol": "ORG.AX", "price": 8.85, "prevClose": 8.72, "yearHigh": 10.4, "yearLow": 7.6, "pe": 15.2, "divYield": 3.5, "name": "Origin Energy"}, "WDS": {"symbol": "WDS.AX", "price": 21.1, "prevClose": 21.5, "yearHigh": 28.4, "yearLow": 20.1, "pe": 13.8, "divYield": 6.2, "name": "Woodside Energy"}, "REA": {"symbol": "REA.AX", "price": 225.4, "prevClose": 221.8, "yearHigh": 258.6, "yearLow": 185.4, "pe": 48.2, "divYield": 1.2, "name": "REA Group"}, "SEK": {"symbol": "SEK.AX", "price": 25.2, "prevClose": 24.8, "yearHigh": 32.4, "yearLow": 22.1, "pe": null, "divYield": 2.1, "name": "Seek Limited"}, "XRO": {"symbol": "XRO.AX", "price": 158.3, "prevClose": 155.6, "yearHigh": 185.2, "yearLow": 130.4, "pe": null, "divYield": null, "name": "Xero"}, "AMC": {"symbol": "AMC.AX", "price": 14.25, "prevClose": 14.1, "yearHigh": 16.8, "yearLow": 12.4, "pe": 20.4, "divYield": 3.2, "name": "Amcor"}, "APA": {"symbol": "APA.AX", "price": 7.9, "prevClose": 7.85, "yearHigh": 9.8, "yearLow": 7.2, "pe": null, "divYield": 7.6, "name": "APA Group"}, "CAR": {"symbol": "CAR.AX", "price": 38.2, "prevClose": 37.6, "yearHigh": 44.8, "yearLow": 31.2, "pe": 38.6, "divYield": 1.8, "name": "CAR Group"}, "COH": {"symbol": "COH.AX", "price": 325.4, "prevClose": 319.8, "yearHigh": 368.2, "yearLow": 275.6, "pe": 42.1, "divYield": 1.4, "name": "Cochlear"}, "CPU": {"symbol": "CPU.AX", "price": 28.8, "prevClose": 28.4, "yearHigh": 33.6, "yearLow": 24.2, "pe": 26.8, "divYield": 2.4, "name": "Computershare"}, "IAG": {"symbol": "IAG.AX", "price": 7.52, "prevClose": 7.4, "yearHigh": 8.6, "yearLow": 5.9, "pe": 16.4, "divYield": 4.0, "name": "Insurance Australia"}, "MIN": {"symbol": "MIN.AX", "price": 18.45, "prevClose": 19.2, "yearHigh": 42.6, "yearLow": 16.8, "pe": null, "divYield": null, "name": "Mineral Resources"}, "MPL": {"symbol": "MPL.AX", "price": 3.92, "prevClose": 3.88, "yearHigh": 4.45, "yearLow": 3.2, "pe": 22.8, "divYield": 4.5, "name": "Medibank Private"}, "QAN": {"symbol": "QAN.AX", "price": 7.85, "prevClose": 7.72, "yearHigh": 8.8, "yearLow": 5.9, "pe": 8.2, "divYield": null, "name": "Qantas Airways"}, "QBE": {"symbol": "QBE.AX", "price": 18.6, "prevClose": 18.2, "yearHigh": 21.4, "yearLow": 14.8, "pe": 14.2, "divYield": 3.8, "name": "QBE Insurance"}, "RMD": {"symbol": "RMD.AX", "price": 37.8, "prevClose": 37.2, "yearHigh": 42.6, "yearLow": 29.4, "pe": 34.2, "divYield": 0.8, "name": "ResMed"}, "SGP": {"symbol": "SGP.AX", "price": 4.6, "prevClose": 4.55, "yearHigh": 5.4, "yearLow": 3.9, "pe": null, "divYield": 4.2, "name": "Stockland"}, "SHL": {"symbol": "SHL.AX", "price": 31.2, "prevClose": 30.8, "yearHigh": 36.4, "yearLow": 26.8, "pe": 28.4, "divYield": 2.6, "name": "Sonic Healthcare"}, "SUN": {"symbol": "SUN.AX", "price": 17.4, "prevClose": 17.1, "yearHigh": 20.8, "yearLow": 14.6, "pe": 18.6, "divYield": 4.8, "name": "Suncorp"}, "TWE": {"symbol": "TWE.AX", "price": 11.8, "prevClose": 11.6, "yearHigh": 14.4, "yearLow": 9.8, "pe": 22.4, "divYield": 2.2, "name": "Treasury Wine Estates"}}, "crypto": {"btc": {"symbol": "BTC-USD", "price": 84250, "prevClose": 82100, "yearHigh": 109200, "yearLow": 52400, "pe": null, "divYield": null, "name": "Bitcoin"}, "eth": {"symbol": "ETH-USD", "price": 1965, "prevClose": 1920, "yearHigh": 4108, "yearLow": 1520, "pe": null, "divYield": null, "name": "Ethereum"}, "sol": {"symbol": "SOL-USD", "price": 138.5, "prevClose": 134.2, "yearHigh": 294.3, "yearLow": 95.2, "pe": null, "divYield": null, "name": "Solana"}, "gold": {"symbol": "GC=F", "price": 3112.4, "prevClose": 3089.0, "yearHigh": 3167.8, "yearLow": 2304.5, "pe": null, "divYield": null, "name": "Gold Futures"}, "oil": {"symbol": "CL=F", "price": 69.86, "prevClose": 71.2, "yearHigh": 93.4, "yearLow": 65.2, "pe": null, "divYield": null, "name": "WTI Crude Oil"}}, "asxConstituents": []}, "fmp": {"indices": [{"name": "S&P 500", "price": 5611.85, "changePct": 0.55}, {"name": "Nasdaq 100", "price": 19412.3, "changePct": 0.82}, {"name": "Dow Jones", "price": 41856.2, "changePct": 0.38}, {"name": "FTSE 100", "price": 8648.9, "changePct": 0.21}, {"name": "Nikkei 225", "price": 35142.6, "changePct": -0.44}, {"name": "DAX", "price": 22428.0, "changePct": 0.67}, {"name": "Hang Seng", "price": 23218.4, "changePct": -0.92}, {"name": "Shanghai Comp", "price": 3372.5, "changePct": 0.14}], "fx": [{"label": "AUD/USD", "rate": 0.6289, "changePct": 0.22}, {"label": "EUR/USD", "rate": 1.0842, "changePct": 0.18}, {"label": "GBP/USD", "rate": 1.2948, "changePct": 0.08}, {"label": "USD/JPY", "rate": 149.85, "changePct": -0.32}, {"label": "USD/CNH", "rate": 7.258, "changePct": 0.05}, {"label": "NZD/USD", "rate": 0.5724, "changePct": 0.14}], "commodities": [{"name": "WTI Crude Oil", "unit": "USD/bbl", "price": 69.86, "changePct": -1.87}, {"name": "Brent Crude", "unit": "USD/bbl", "price": 73.12, "changePct": -1.64}, {"name": "Natural Gas", "unit": "USD/MMBtu", "price": 3.82, "changePct": 2.41}, {"name": "Gold", "unit": "USD/oz", "price": 3112.4, "changePct": 0.76}, {"name": "Silver", "unit": "USD/oz", "price": 34.82, "changePct": 1.24}, {"name": "Copper", "unit": "USD/lb", "price": 4.68, "changePct": -0.43}, {"name": "Iron Ore", "unit": "USD/t", "price": 98.5, "changePct": -1.1}, {"name": "Lithium", "unit": "USD/t", "price": 11200, "changePct": -2.4}], "sectorPerformance": [{"sector": "Financials", "changePct": 0.88}, {"sector": "Materials", "changePct": -0.62}, {"sector": "Energy", "changePct": -1.42}, {"sector": "Healthcare", "changePct": 1.24}, {"sector": "Consumer Disc.", "changePct": 0.54}, {"sector": "Industrials", "changePct": 0.31}, {"sector": "Real Estate", "changePct": 1.08}, {"sector": "Info Technology", "changePct": 1.76}, {"sector": "Utilities", "changePct": 0.45}, {"sector": "Consumer Staples", "changePct": -0.18}, {"sector": "Communication", "changePct": 0.62}], "economicCalendar": [{"date": "2025-03-31", "country": "AU", "event": "RBA Cash Rate Decision", "estimate": "4.10%", "prior": "4.10%", "impact": "High"}, {"date": "2025-04-02", "country": "US", "event": "US Non-Farm Payrolls", "estimate": "165K", "prior": "151K", "impact": "High"}, {"date": "2025-04-02", "country": "US", "event": "US Unemployment Rate", "estimate": "4.1%", "prior": "4.0%", "impact": "High"}, {"date": "2025-04-01", "country": "CN", "event": "China Caixin PMI Mfg", "estimate": "50.6", "prior": "50.8", "impact": "Medium"}, {"date": "2025-04-03", "country": "EU", "event": "ECB Meeting Minutes", "estimate": null, "prior": null, "impact": "Medium"}], "earningsCalendar": [{"date": "2025-04-07", "symbol": "CBA.AX", "name": "Commonwealth Bank", "epsEstimate": 2.45, "revenueEstimate": 13200000000}, {"date": "2025-04-09", "symbol": "BHP.AX", "name": "BHP Group", "epsEstimate": 1.82, "revenueEstimate": 22400000000}, {"date": "2025-04-14", "symbol": "CSL.AX", "name": "CSL Limited", "epsEstimate": 3.88, "revenueEstimate": 8900000000}, {"date": "2025-04-15", "symbol": "NAB.AX", "name": "National Australia Bank", "epsEstimate": 1.04, "revenueEstimate": 9600000000}, {"date": "2025-04-22", "symbol": "WES.AX", "name": "Wesfarmers", "epsEstimate": 1.56, "revenueEstimate": 23800000000}], "analystRatings": [{"symbol": "CBA", "targetConsensus": 162.0, "targetLow": 142.0, "targetHigh": 178.0, "analystCount": 14}, {"symbol": "BHP", "targetConsensus": 43.5, "targetLow": 36.0, "targetHigh": 52.0, "analystCount": 18}, {"symbol": "CSL", "targetConsensus": 302.0, "targetLow": 265.0, "targetHigh": 340.0, "analystCount": 12}, {"symbol": "NAB", "targetConsensus": 41.0, "targetLow": 35.0, "targetHigh": 47.0, "analystCount": 16}, {"symbol": "WBC", "targetConsensus": 34.5, "targetLow": 28.0, "targetHigh": 40.0, "analystCount": 15}], "news": [{"title": "RBA holds rates steady at 4.10% amid global trade tensions", "publishedDate": "2025-03-28T10:30:00Z", "url": "#", "source": "AFR"}, {"title": "ASX 200 gains 0.3% as banks lead rally on rate hold decision", "publishedDate": "2025-03-28T09:45:00Z", "url": "#", "source": "SMH"}, {"title": "BHP flags iron ore headwinds as China stimulus disappoints", "publishedDate": "2025-03-28T08:20:00Z", "url": "#", "source": "Bloomberg"}, {"title": "Gold surges past $3,100 on safe-haven demand, USD weakens", "publishedDate": "2025-03-27T22:10:00Z", "url": "#", "source": "Reuters"}, {"title": "Macquarie upgrades CSL to Outperform, raises target to $320", "publishedDate": "2025-03-27T15:40:00Z", "url": "#", "source": "Macquarie"}, {"title": "US tariff escalation rattles global equities; ASX braces for impact", "publishedDate": "2025-03-27T12:00:00Z", "url": "#", "source": "AFR"}, {"title": "Fortescue shares fall 4% on China demand concerns and iron ore slide", "publishedDate": "2025-03-27T09:30:00Z", "url": "#", "source": "SMH"}, {"title": "Wesfarmers raises FY25 guidance on strong Bunnings and Kmart performance", "publishedDate": "2025-03-26T14:20:00Z", "url": "#", "source": "ASX"}, {"title": "Oil drops below $70 as OPEC+ signals output increase plan", "publishedDate": "2025-03-26T11:00:00Z", "url": "#", "source": "Reuters"}, {"title": "Xero delivers record revenue growth; shares jump 5% on guidance upgrade", "publishedDate": "2025-03-26T08:50:00Z", "url": "#", "source": "AFR"}], "macroIndicators": null, "cryptoMarket": null, "treasuryRates": null, "earningsSurprises": []}, "fred": {"series": [{"id": "BAMLH0A0HYM2", "label": "HY Spread", "description": "US High Yield OAS spread \u2014 credit stress indicator", "value": 3.82, "date": "2025-03-27", "change": 0.08, "unit": "%"}, {"id": "T10YIE", "label": "10yr Breakeven", "description": "10-year inflation breakeven rate", "value": 2.31, "date": "2025-03-27", "change": -0.04, "unit": "%"}, {"id": "M2SL", "label": "M2 Money Supply", "description": "M2 broad money supply (USD billions)", "value": 21406, "date": "2025-02-01", "change": 112, "unit": "B"}, {"id": "WALCL", "label": "Fed Balance Sheet", "description": "Federal Reserve total assets (USD billions)", "value": 6842, "date": "2025-03-26", "change": -18, "unit": "B"}, {"id": "DTWEXBGS", "label": "USD Index (Broad)", "description": "US Dollar broad trade-weighted index", "value": 108.42, "date": "2025-03-27", "change": -0.38, "unit": ""}, {"id": "SOFR", "label": "SOFR", "description": "Secured Overnight Financing Rate", "value": 5.31, "date": "2025-03-27", "change": 0.0, "unit": "%"}], "cot": {"oil": {"longPct": 58.4, "netLong": 182450, "weekChange": 12340, "sentiment": "bullish", "reportDate": "2025-03-25"}, "gold": {"longPct": 71.2, "netLong": 241860, "weekChange": -8920, "sentiment": "bullish", "reportDate": "2025-03-25"}}}, "charts": {"asx200": {"1m": {"timestamps": [1740700800, 1740787200, 1740873600, 1740960000, 1741046400, 1741132800, 1741219200, 1741305600, 1741392000, 1741478400, 1741564800, 1741651200, 1741737600, 1741824000, 1741910400, 1741996800, 1742083200, 1742169600, 1742256000, 1742342400, 1742428800, 1742515200], "closes": [7750, 7653.81, 7757.29, 7648.43, 7618.3, 7646.93, 7730.23, 7830.17, 7827.17, 7900.76, 7857.14, 7795.82, 7834.89, 7799.28, 7851.29, 7921.24, 7815.37, 7734.94, 7737.51, 7634.0, 7464.08, 7458.24], "high": 7921.24, "low": 7458.24, "range": "1m", "symbol": "asx200"}, "3m": {"timestamps": [1740700800, 1740787200, 1740873600, 1740960000, 1741046400, 1741132800, 1741219200, 1741305600, 1741392000, 1741478400, 1741564800, 1741651200, 1741737600, 1741824000, 1741910400, 1741996800, 1742083200, 1742169600, 1742256000, 1742342400, 1742428800, 1742515200, 1742601600, 1742688000, 1742774400, 1742860800, 1742947200, 1743033600, 1743120000, 1743206400, 1743292800, 1743379200, 1743465600, 1743552000, 1743638400, 1743724800, 1743811200, 1743897600, 1743984000, 1744070400, 1744156800, 1744243200, 1744329600, 1744416000, 1744502400, 1744588800, 1744675200, 1744761600, 1744848000, 1744934400, 1745020800, 1745107200, 1745193600, 1745280000, 1745366400, 1745452800, 1745539200, 1745625600, 1745712000, 1745798400, 1745884800, 1745971200, 1746057600, 1746144000, 1746230400, 1746316800], "closes": [7750, 7653.81, 7757.29, 7648.43, 7618.3, 7646.93, 7730.23, 7830.17, 7827.17, 7900.76, 7857.14, 7795.82, 7834.89, 7799.28, 7851.29, 7921.24, 7815.37, 7734.94, 7737.51, 7634.0, 7464.08, 7458.24, 7472.08, 7474.12, 7376.16, 7352.12, 7337.82, 7421.62, 7415.08, 7429.33, 7375.81, 7458.26, 7411.96, 7393.45, 7428.07, 7467.81, 7478.43, 7524.9, 7534.48, 7451.93, 7525.67, 7438.82, 7400.53, 7296.0, 7263.81, 7284.67, 7224.33, 7214.7, 7174.51, 7252.23, 7225.01, 7269.6, 7312.34, 7285.21, 7387.91, 7375.16, 7415.38, 7498.38, 7626.12, 7735.68, 7778.94, 7708.66, 7683.65, 7695.52, 7774.37, 7765.52], "high": 7921.24, "low": 7174.51, "range": "3m", "symbol": "asx200"}, "6m": {"timestamps": [1740700800, 1740787200, 1740873600, 1740960000, 1741046400, 1741132800, 1741219200, 1741305600, 1741392000, 1741478400, 1741564800, 1741651200, 1741737600, 1741824000, 1741910400, 1741996800, 1742083200, 1742169600, 1742256000, 1742342400, 1742428800, 1742515200, 1742601600, 1742688000, 1742774400, 1742860800, 1742947200, 1743033600, 1743120000, 1743206400, 1743292800, 1743379200, 1743465600, 1743552000, 1743638400, 1743724800, 1743811200, 1743897600, 1743984000, 1744070400, 1744156800, 1744243200, 1744329600, 1744416000, 1744502400, 1744588800, 1744675200, 1744761600, 1744848000, 1744934400, 1745020800, 1745107200, 1745193600, 1745280000, 1745366400, 1745452800, 1745539200, 1745625600, 1745712000, 1745798400, 1745884800, 1745971200, 1746057600, 1746144000, 1746230400, 1746316800, 1746403200, 1746489600, 1746576000, 1746662400, 1746748800, 1746835200, 1746921600, 1747008000, 1747094400, 1747180800, 1747267200, 1747353600, 1747440000, 1747526400, 1747612800, 1747699200, 1747785600, 1747872000, 1747958400, 1748044800, 1748131200, 1748217600, 1748304000, 1748390400, 1748476800, 1748563200, 1748649600, 1748736000, 1748822400, 1748908800, 1748995200, 1749081600, 1749168000, 1749254400, 1749340800, 1749427200, 1749513600, 1749600000, 1749686400, 1749772800, 1749859200, 1749945600, 1750032000, 1750118400, 1750204800, 1750291200, 1750377600, 1750464000, 1750550400, 1750636800, 1750723200, 1750809600, 1750896000, 1750982400, 1751068800, 1751155200, 1751241600, 1751328000, 1751414400, 1751500800, 1751587200, 1751673600, 1751760000, 1751846400], "closes": [7750, 7653.81, 7757.29, 7648.43, 7618.3, 7646.93, 7730.23, 7830.17, 7827.17, 7900.76, 7857.14, 7795.82, 7834.89, 7799.28, 7851.29, 7921.24, 7815.37, 7734.94, 7737.51, 7634.0, 7464.08, 7458.24, 7472.08, 7474.12, 7376.16, 7352.12, 7337.82, 7421.62, 7415.08, 7429.33, 7375.81, 7458.26, 7411.96, 7393.45, 7428.07, 7467.81, 7478.43, 7524.9, 7534.48, 7451.93, 7525.67, 7438.82, 7400.53, 7296.0, 7263.81, 7284.67, 7224.33, 7214.7, 7174.51, 7252.23, 7225.01, 7269.6, 7312.34, 7285.21, 7387.91, 7375.16, 7415.38, 7498.38, 7626.12, 7735.68, 7778.94, 7708.66, 7683.65, 7695.52, 7774.37, 7765.52, 7865.31, 7894.9, 7888.48, 7913.0, 7978.77, 7984.38, 7971.27, 7962.11, 7924.97, 7801.94, 7814.68, 7711.64, 7701.85, 7788.01, 7891.31, 7847.81, 7856.65, 7859.81, 7895.49, 7925.09, 7997.82, 8011.75, 7975.45, 7915.49, 7911.87, 7917.29, 7917.99, 7924.14, 7919.67, 7989.06, 8000.18, 7882.25, 7809.72, 7932.24, 8085.99, 8028.67, 7945.99, 8009.71, 7984.25, 8033.64, 8036.88, 8054.41, 8060.16, 8085.09, 8086.86, 8108.42, 8138.04, 8129.66, 8095.3, 8085.01, 8115.3, 8174.1, 8166.17, 8159.32, 8276.86, 8358.53, 8306.67, 8211.16, 8332.75, 8214.24, 8225.81, 8255.62, 8399.72, 8433.09], "high": 8433.09, "low": 7174.51, "range": "6m", "symbol": "asx200"}, "1y": {"timestamps": [1740700800, 1740787200, 1740873600, 1740960000, 1741046400, 1741132800, 1741219200, 1741305600, 1741392000, 1741478400, 1741564800, 1741651200, 1741737600, 1741824000, 1741910400, 1741996800, 1742083200, 1742169600, 1742256000, 1742342400, 1742428800, 1742515200, 1742601600, 1742688000, 1742774400, 1742860800, 1742947200, 1743033600, 1743120000, 1743206400, 1743292800, 1743379200, 1743465600, 1743552000, 1743638400, 1743724800, 1743811200, 1743897600, 1743984000, 1744070400, 1744156800, 1744243200, 1744329600, 1744416000, 1744502400, 1744588800, 1744675200, 1744761600, 1744848000, 1744934400, 1745020800, 1745107200], "closes": [7750, 7653.81, 7757.29, 7648.43, 7618.3, 7646.93, 7730.23, 7830.17, 7827.17, 7900.76, 7857.14, 7795.82, 7834.89, 7799.28, 7851.29, 7921.24, 7815.37, 7734.94, 7737.51, 7634.0, 7464.08, 7458.24, 7472.08, 7474.12, 7376.16, 7352.12, 7337.82, 7421.62, 7415.08, 7429.33, 7375.81, 7458.26, 7411.96, 7393.45, 7428.07, 7467.81, 7478.43, 7524.9, 7534.48, 7451.93, 7525.67, 7438.82, 7400.53, 7296.0, 7263.81, 7284.67, 7224.33, 7214.7, 7174.51, 7252.23, 7225.01, 7269.6], "high": 7921.24, "low": 7174.51, "range": "1y", "symbol": "asx200"}}, "aud": {"1m": {"timestamps": [1740700800, 1740787200, 1740873600, 1740960000, 1741046400, 1741132800, 1741219200, 1741305600, 1741392000, 1741478400, 1741564800, 1741651200, 1741737600, 1741824000, 1741910400, 1741996800, 1742083200, 1742169600, 1742256000, 1742342400, 1742428800, 1742515200], "closes": [0.624, 0.626, 0.626, 0.6284, 0.6287, 0.6241, 0.6259, 0.6247, 0.6277, 0.6317, 0.6378, 0.64, 0.6405, 0.6432, 0.6459, 0.6421, 0.6422, 0.641, 0.6445, 0.6461, 0.6483, 0.6518], "high": 0.6518, "low": 0.624, "range": "1m", "symbol": "aud"}, "3m": {"timestamps": [1740700800, 1740787200, 1740873600, 1740960000, 1741046400, 1741132800, 1741219200, 1741305600, 1741392000, 1741478400, 1741564800, 1741651200, 1741737600, 1741824000, 1741910400, 1741996800, 1742083200, 1742169600, 1742256000, 1742342400, 1742428800, 1742515200, 1742601600, 1742688000, 1742774400, 1742860800, 1742947200, 1743033600, 1743120000, 1743206400, 1743292800, 1743379200, 1743465600, 1743552000, 1743638400, 1743724800, 1743811200, 1743897600, 1743984000, 1744070400, 1744156800, 1744243200, 1744329600, 1744416000, 1744502400, 1744588800, 1744675200, 1744761600, 1744848000, 1744934400, 1745020800, 1745107200, 1745193600, 1745280000, 1745366400, 1745452800, 1745539200, 1745625600, 1745712000, 1745798400, 1745884800, 1745971200, 1746057600, 1746144000, 1746230400, 1746316800], "closes": [0.624, 0.626, 0.626, 0.6284, 0.6287, 0.6241, 0.6259, 0.6247, 0.6277, 0.6317, 0.6378, 0.64, 0.6405, 0.6432, 0.6459, 0.6421, 0.6422, 0.641, 0.6445, 0.6461, 0.6483, 0.6518, 0.654, 0.6513, 0.6506, 0.6533, 0.6531, 0.6522, 0.6553, 0.6581, 0.658, 0.658, 0.6613, 0.6612, 0.6599, 0.6626, 0.6671, 0.6646, 0.6637, 0.6664, 0.6672, 0.6699, 0.6721, 0.6795, 0.6756, 0.6778, 0.6763, 0.6717, 0.6701, 0.6693, 0.6722, 0.6723, 0.6706, 0.6688, 0.6699, 0.672, 0.6698, 0.6709, 0.6718, 0.6716, 0.6712, 0.6709, 0.6699, 0.6682, 0.6684, 0.6683], "high": 0.6795, "low": 0.624, "range": "3m", "symbol": "aud"}, "6m": {"timestamps": [1740700800, 1740787200, 1740873600, 1740960000, 1741046400, 1741132800, 1741219200, 1741305600, 1741392000, 1741478400, 1741564800, 1741651200, 1741737600, 1741824000, 1741910400, 1741996800, 1742083200, 1742169600, 1742256000, 1742342400, 1742428800, 1742515200, 1742601600, 1742688000, 1742774400, 1742860800, 1742947200, 1743033600, 1743120000, 1743206400, 1743292800, 1743379200, 1743465600, 1743552000, 1743638400, 1743724800, 1743811200, 1743897600, 1743984000, 1744070400, 1744156800, 1744243200, 1744329600, 1744416000, 1744502400, 1744588800, 1744675200, 1744761600, 1744848000, 1744934400, 1745020800, 1745107200, 1745193600, 1745280000, 1745366400, 1745452800, 1745539200, 1745625600, 1745712000, 1745798400, 1745884800, 1745971200, 1746057600, 1746144000, 1746230400, 1746316800, 1746403200, 1746489600, 1746576000, 1746662400, 1746748800, 1746835200, 1746921600, 1747008000, 1747094400, 1747180800, 1747267200, 1747353600, 1747440000, 1747526400, 1747612800, 1747699200, 1747785600, 1747872000, 1747958400, 1748044800, 1748131200, 1748217600, 1748304000, 1748390400, 1748476800, 1748563200, 1748649600, 1748736000, 1748822400, 1748908800, 1748995200, 1749081600, 1749168000, 1749254400, 1749340800, 1749427200, 1749513600, 1749600000, 1749686400, 1749772800, 1749859200, 1749945600, 1750032000, 1750118400, 1750204800, 1750291200, 1750377600, 1750464000, 1750550400, 1750636800, 1750723200, 1750809600, 1750896000, 1750982400, 1751068800, 1751155200, 1751241600, 1751328000, 1751414400, 1751500800, 1751587200, 1751673600, 1751760000, 1751846400], "closes": [0.624, 0.626, 0.626, 0.6284, 0.6287, 0.6241, 0.6259, 0.6247, 0.6277, 0.6317, 0.6378, 0.64, 0.6405, 0.6432, 0.6459, 0.6421, 0.6422, 0.641, 0.6445, 0.6461, 0.6483, 0.6518, 0.654, 0.6513, 0.6506, 0.6533, 0.6531, 0.6522, 0.6553, 0.6581, 0.658, 0.658, 0.6613, 0.6612, 0.6599, 0.6626, 0.6671, 0.6646, 0.6637, 0.6664, 0.6672, 0.6699, 0.6721, 0.6795, 0.6756, 0.6778, 0.6763, 0.6717, 0.6701, 0.6693, 0.6722, 0.6723, 0.6706, 0.6688, 0.6699, 0.672, 0.6698, 0.6709, 0.6718, 0.6716, 0.6712, 0.6709, 0.6699, 0.6682, 0.6684, 0.6683, 0.6678, 0.6652, 0.668, 0.6682, 0.6771, 0.6849, 0.6852, 0.6918, 0.6897, 0.6856, 0.684, 0.6838, 0.685, 0.6912, 0.6891, 0.6897, 0.6931, 0.6942, 0.6993, 0.7025, 0.7077, 0.7112, 0.7126, 0.714, 0.7115, 0.7127, 0.7139, 0.7141, 0.7138, 0.7137, 0.7182, 0.7186, 0.7201, 0.7221, 0.7184, 0.7181, 0.718, 0.7113, 0.7127, 0.7112, 0.7118, 0.7149, 0.7146, 0.7136, 0.7141, 0.7176, 0.715, 0.7124, 0.7125, 0.7115, 0.7149, 0.715, 0.7157, 0.7153, 0.7114, 0.7136, 0.7146, 0.7147, 0.7129, 0.7164, 0.7206, 0.724, 0.7244, 0.7221], "high": 0.7244, "low": 0.624, "range": "6m", "symbol": "aud"}, "1y": {"timestamps": [1740700800, 1740787200, 1740873600, 1740960000, 1741046400, 1741132800, 1741219200, 1741305600, 1741392000, 1741478400, 1741564800, 1741651200, 1741737600, 1741824000, 1741910400, 1741996800, 1742083200, 1742169600, 1742256000, 1742342400, 1742428800, 1742515200, 1742601600, 1742688000, 1742774400, 1742860800, 1742947200, 1743033600, 1743120000, 1743206400, 1743292800, 1743379200, 1743465600, 1743552000, 1743638400, 1743724800, 1743811200, 1743897600, 1743984000, 1744070400, 1744156800, 1744243200, 1744329600, 1744416000, 1744502400, 1744588800, 1744675200, 1744761600, 1744848000, 1744934400, 1745020800, 1745107200], "closes": [0.624, 0.626, 0.626, 0.6284, 0.6287, 0.6241, 0.6259, 0.6247, 0.6277, 0.6317, 0.6378, 0.64, 0.6405, 0.6432, 0.6459, 0.6421, 0.6422, 0.641, 0.6445, 0.6461, 0.6483, 0.6518, 0.654, 0.6513, 0.6506, 0.6533, 0.6531, 0.6522, 0.6553, 0.6581, 0.658, 0.658, 0.6613, 0.6612, 0.6599, 0.6626, 0.6671, 0.6646, 0.6637, 0.6664, 0.6672, 0.6699, 0.6721, 0.6795, 0.6756, 0.6778, 0.6763, 0.6717, 0.6701, 0.6693, 0.6722, 0.6723], "high": 0.6795, "low": 0.624, "range": "1y", "symbol": "aud"}}, "gold": {"1m": {"timestamps": [1740700800, 1740787200, 1740873600, 1740960000, 1741046400, 1741132800, 1741219200, 1741305600, 1741392000, 1741478400, 1741564800, 1741651200, 1741737600, 1741824000, 1741910400, 1741996800, 1742083200, 1742169600, 1742256000, 1742342400, 1742428800, 1742515200], "closes": [2980, 2896.09, 2923.9, 2952.62, 2928.11, 2910.24, 2914.59, 2926.32, 2935.51, 2985.11, 2982.93, 2984.33, 2941.39, 2933.62, 2922.72, 2975.99, 2935.2, 2947.93, 2997.73, 2981.25, 3039.79, 3042.03], "high": 3042.03, "low": 2896.09, "range": "1m", "symbol": "gold"}, "3m": {"timestamps": [1740700800, 1740787200, 1740873600, 1740960000, 1741046400, 1741132800, 1741219200, 1741305600, 1741392000, 1741478400, 1741564800, 1741651200, 1741737600, 1741824000, 1741910400, 1741996800, 1742083200, 1742169600, 1742256000, 1742342400, 1742428800, 1742515200, 1742601600, 1742688000, 1742774400, 1742860800, 1742947200, 1743033600, 1743120000, 1743206400, 1743292800, 1743379200, 1743465600, 1743552000, 1743638400, 1743724800, 1743811200, 1743897600, 1743984000, 1744070400, 1744156800, 1744243200, 1744329600, 1744416000, 1744502400, 1744588800, 1744675200, 1744761600, 1744848000, 1744934400, 1745020800, 1745107200, 1745193600, 1745280000, 1745366400, 1745452800, 1745539200, 1745625600, 1745712000, 1745798400, 1745884800, 1745971200, 1746057600, 1746144000, 1746230400, 1746316800], "closes": [2980, 2896.09, 2923.9, 2952.62, 2928.11, 2910.24, 2914.59, 2926.32, 2935.51, 2985.11, 2982.93, 2984.33, 2941.39, 2933.62, 2922.72, 2975.99, 2935.2, 2947.93, 2997.73, 2981.25, 3039.79, 3042.03, 3058.86, 3081.91, 3111.67, 3069.15, 3062.34, 3078.15, 3086.08, 3102.57, 3142.27, 3126.64, 3128.33, 3174.08, 3183.42, 3177.22, 3142.49, 3171.38, 3113.93, 3104.26, 3172.21, 3177.26, 3174.41, 3221.01, 3265.22, 3272.57, 3229.13, 3182.75, 3163.4, 3186.35, 3210.73, 3192.71, 3174.97, 3214.42, 3245.99, 3265.32, 3246.96, 3286.34, 3317.98, 3336.56, 3302.1, 3299.0, 3289.37, 3268.32, 3237.58, 3241.27], "high": 3336.56, "low": 2896.09, "range": "3m", "symbol": "gold"}, "6m": {"timestamps": [1740700800, 1740787200, 1740873600, 1740960000, 1741046400, 1741132800, 1741219200, 1741305600, 1741392000, 1741478400, 1741564800, 1741651200, 1741737600, 1741824000, 1741910400, 1741996800, 1742083200, 1742169600, 1742256000, 1742342400, 1742428800, 1742515200, 1742601600, 1742688000, 1742774400, 1742860800, 1742947200, 1743033600, 1743120000, 1743206400, 1743292800, 1743379200, 1743465600, 1743552000, 1743638400, 1743724800, 1743811200, 1743897600, 1743984000, 1744070400, 1744156800, 1744243200, 1744329600, 1744416000, 1744502400, 1744588800, 1744675200, 1744761600, 1744848000, 1744934400, 1745020800, 1745107200, 1745193600, 1745280000, 1745366400, 1745452800, 1745539200, 1745625600, 1745712000, 1745798400, 1745884800, 1745971200, 1746057600, 1746144000, 1746230400, 1746316800, 1746403200, 1746489600, 1746576000, 1746662400, 1746748800, 1746835200, 1746921600, 1747008000, 1747094400, 1747180800, 1747267200, 1747353600, 1747440000, 1747526400, 1747612800, 1747699200, 1747785600, 1747872000, 1747958400, 1748044800, 1748131200, 1748217600, 1748304000, 1748390400, 1748476800, 1748563200, 1748649600, 1748736000, 1748822400, 1748908800, 1748995200, 1749081600, 1749168000, 1749254400, 1749340800, 1749427200, 1749513600, 1749600000, 1749686400, 1749772800, 1749859200, 1749945600, 1750032000, 1750118400, 1750204800, 1750291200, 1750377600, 1750464000, 1750550400, 1750636800, 1750723200, 1750809600, 1750896000, 1750982400, 1751068800, 1751155200, 1751241600, 1751328000, 1751414400, 1751500800, 1751587200, 1751673600, 1751760000, 1751846400], "closes": [2980, 2896.09, 2923.9, 2952.62, 2928.11, 2910.24, 2914.59, 2926.32, 2935.51, 2985.11, 2982.93, 2984.33, 2941.39, 2933.62, 2922.72, 2975.99, 2935.2, 2947.93, 2997.73, 2981.25, 3039.79, 3042.03, 3058.86, 3081.91, 3111.67, 3069.15, 3062.34, 3078.15, 3086.08, 3102.57, 3142.27, 3126.64, 3128.33, 3174.08, 3183.42, 3177.22, 3142.49, 3171.38, 3113.93, 3104.26, 3172.21, 3177.26, 3174.41, 3221.01, 3265.22, 3272.57, 3229.13, 3182.75, 3163.4, 3186.35, 3210.73, 3192.71, 3174.97, 3214.42, 3245.99, 3265.32, 3246.96, 3286.34, 3317.98, 3336.56, 3302.1, 3299.0, 3289.37, 3268.32, 3237.58, 3241.27, 3212.24, 3261.38, 3251.74, 3267.63, 3283.28, 3299.59, 3300.76, 3337.67, 3372.21, 3403.12, 3433.55, 3433.27, 3387.21, 3366.38, 3374.28, 3340.35, 3348.07, 3357.13, 3336.0, 3321.46, 3257.12, 3250.15, 3240.32, 3243.31, 3226.82, 3265.69, 3256.54, 3251.22, 3259.23, 3235.5, 3169.68, 3193.25, 3232.56, 3233.78, 3166.38, 3187.53, 3135.66, 3119.8, 3144.19, 3173.16, 3185.85, 3190.99, 3169.14, 3161.32, 3126.42, 3114.42, 3126.99, 3168.26, 3224.55, 3223.39, 3169.69, 3165.07, 3176.53, 3180.39, 3204.26, 3132.22, 3157.88, 3138.08, 3161.48, 3246.52, 3248.74, 3218.26, 3187.81, 3173.12], "high": 3433.55, "low": 2896.09, "range": "6m", "symbol": "gold"}, "1y": {"timestamps": [1740700800, 1740787200, 1740873600, 1740960000, 1741046400, 1741132800, 1741219200, 1741305600, 1741392000, 1741478400, 1741564800, 1741651200, 1741737600, 1741824000, 1741910400, 1741996800, 1742083200, 1742169600, 1742256000, 1742342400, 1742428800, 1742515200, 1742601600, 1742688000, 1742774400, 1742860800, 1742947200, 1743033600, 1743120000, 1743206400, 1743292800, 1743379200, 1743465600, 1743552000, 1743638400, 1743724800, 1743811200, 1743897600, 1743984000, 1744070400, 1744156800, 1744243200, 1744329600, 1744416000, 1744502400, 1744588800, 1744675200, 1744761600, 1744848000, 1744934400, 1745020800, 1745107200], "closes": [2980, 2896.09, 2923.9, 2952.62, 2928.11, 2910.24, 2914.59, 2926.32, 2935.51, 2985.11, 2982.93, 2984.33, 2941.39, 2933.62, 2922.72, 2975.99, 2935.2, 2947.93, 2997.73, 2981.25, 3039.79, 3042.03, 3058.86, 3081.91, 3111.67, 3069.15, 3062.34, 3078.15, 3086.08, 3102.57, 3142.27, 3126.64, 3128.33, 3174.08, 3183.42, 3177.22, 3142.49, 3171.38, 3113.93, 3104.26, 3172.21, 3177.26, 3174.41, 3221.01, 3265.22, 3272.57, 3229.13, 3182.75, 3163.4, 3186.35, 3210.73, 3192.71], "high": 3272.57, "low": 2896.09, "range": "1y", "symbol": "gold"}}, "oil": {"1m": {"timestamps": [1740700800, 1740787200, 1740873600, 1740960000, 1741046400, 1741132800, 1741219200, 1741305600, 1741392000, 1741478400, 1741564800, 1741651200, 1741737600, 1741824000, 1741910400, 1741996800, 1742083200, 1742169600, 1742256000, 1742342400, 1742428800, 1742515200], "closes": [73.5, 73.3, 74.62, 76.35, 76.74, 77.38, 77.08, 76.59, 75.64, 76.77, 75.13, 75.87, 76.5, 75.62, 74.83, 73.51, 75.17, 74.74, 75.78, 76.33, 75.9, 74.27], "high": 77.38, "low": 73.3, "range": "1m", "symbol": "oil"}, "3m": {"timestamps": [1740700800, 1740787200, 1740873600, 1740960000, 1741046400, 1741132800, 1741219200, 1741305600, 1741392000, 1741478400, 1741564800, 1741651200, 1741737600, 1741824000, 1741910400, 1741996800, 1742083200, 1742169600, 1742256000, 1742342400, 1742428800, 1742515200, 1742601600, 1742688000, 1742774400, 1742860800, 1742947200, 1743033600, 1743120000, 1743206400, 1743292800, 1743379200, 1743465600, 1743552000, 1743638400, 1743724800, 1743811200, 1743897600, 1743984000, 1744070400, 1744156800, 1744243200, 1744329600, 1744416000, 1744502400, 1744588800, 1744675200, 1744761600, 1744848000, 1744934400, 1745020800, 1745107200, 1745193600, 1745280000, 1745366400, 1745452800, 1745539200, 1745625600, 1745712000, 1745798400, 1745884800, 1745971200, 1746057600, 1746144000, 1746230400, 1746316800], "closes": [73.5, 73.3, 74.62, 76.35, 76.74, 77.38, 77.08, 76.59, 75.64, 76.77, 75.13, 75.87, 76.5, 75.62, 74.83, 73.51, 75.17, 74.74, 75.78, 76.33, 75.9, 74.27, 76.35, 75.45, 77.38, 76.98, 78.36, 78.98, 79.11, 77.47, 75.76, 75.4, 74.75, 73.02, 74.2, 72.64, 70.69, 73.16, 74.33, 78.08, 78.68, 78.72, 79.27, 79.16, 77.73, 78.62, 79.56, 77.8, 77.84, 77.02, 74.27, 74.08, 73.04, 73.06, 72.82, 72.06, 71.43, 70.88, 70.95, 71.12, 71.51, 72.23, 74.25, 74.48, 73.7, 72.24], "high": 79.56, "low": 70.69, "range": "3m", "symbol": "oil"}, "6m": {"timestamps": [1740700800, 1740787200, 1740873600, 1740960000, 1741046400, 1741132800, 1741219200, 1741305600, 1741392000, 1741478400, 1741564800, 1741651200, 1741737600, 1741824000, 1741910400, 1741996800, 1742083200, 1742169600, 1742256000, 1742342400, 1742428800, 1742515200, 1742601600, 1742688000, 1742774400, 1742860800, 1742947200, 1743033600, 1743120000, 1743206400, 1743292800, 1743379200, 1743465600, 1743552000, 1743638400, 1743724800, 1743811200, 1743897600, 1743984000, 1744070400, 1744156800, 1744243200, 1744329600, 1744416000, 1744502400, 1744588800, 1744675200, 1744761600, 1744848000, 1744934400, 1745020800, 1745107200, 1745193600, 1745280000, 1745366400, 1745452800, 1745539200, 1745625600, 1745712000, 1745798400, 1745884800, 1745971200, 1746057600, 1746144000, 1746230400, 1746316800, 1746403200, 1746489600, 1746576000, 1746662400, 1746748800, 1746835200, 1746921600, 1747008000, 1747094400, 1747180800, 1747267200, 1747353600, 1747440000, 1747526400, 1747612800, 1747699200, 1747785600, 1747872000, 1747958400, 1748044800, 1748131200, 1748217600, 1748304000, 1748390400, 1748476800, 1748563200, 1748649600, 1748736000, 1748822400, 1748908800, 1748995200, 1749081600, 1749168000, 1749254400, 1749340800, 1749427200, 1749513600, 1749600000, 1749686400, 1749772800, 1749859200, 1749945600, 1750032000, 1750118400, 1750204800, 1750291200, 1750377600, 1750464000, 1750550400, 1750636800, 1750723200, 1750809600, 1750896000, 1750982400, 1751068800, 1751155200, 1751241600, 1751328000, 1751414400, 1751500800, 1751587200, 1751673600, 1751760000, 1751846400], "closes": [73.5, 73.3, 74.62, 76.35, 76.74, 77.38, 77.08, 76.59, 75.64, 76.77, 75.13, 75.87, 76.5, 75.62, 74.83, 73.51, 75.17, 74.74, 75.78, 76.33, 75.9, 74.27, 76.35, 75.45, 77.38, 76.98, 78.36, 78.98, 79.11, 77.47, 75.76, 75.4, 74.75, 73.02, 74.2, 72.64, 70.69, 73.16, 74.33, 78.08, 78.68, 78.72, 79.27, 79.16, 77.73, 78.62, 79.56, 77.8, 77.84, 77.02, 74.27, 74.08, 73.04, 73.06, 72.82, 72.06, 71.43, 70.88, 70.95, 71.12, 71.51, 72.23, 74.25, 74.48, 73.7, 72.24, 72.54, 72.69, 72.13, 71.79, 69.73, 68.72, 68.12, 67.48, 66.67, 67.29, 67.04, 67.7, 67.66, 67.05, 67.07, 66.27, 65.03, 64.1, 62.94, 61.47, 61.91, 62.39, 61.18, 60.69, 62.61, 63.24, 61.88, 61.24, 60.96, 60.25, 58.33, 58.06, 56.57, 56.35, 54.32, 52.69, 53.11, 52.62, 52.73, 52.06, 52.52, 52.14, 51.67, 51.98, 51.38, 49.65, 49.17, 48.68, 49.38, 49.75, 49.38, 50.82, 50.05, 50.22, 50.76, 50.08, 50.24, 50.33, 50.26, 50.92, 51.76, 52.09, 51.15, 51.49], "high": 79.56, "low": 48.68, "range": "6m", "symbol": "oil"}, "1y": {"timestamps": [1740700800, 1740787200, 1740873600, 1740960000, 1741046400, 1741132800, 1741219200, 1741305600, 1741392000, 1741478400, 1741564800, 1741651200, 1741737600, 1741824000, 1741910400, 1741996800, 1742083200, 1742169600, 1742256000, 1742342400, 1742428800, 1742515200, 1742601600, 1742688000, 1742774400, 1742860800, 1742947200, 1743033600, 1743120000, 1743206400, 1743292800, 1743379200, 1743465600, 1743552000, 1743638400, 1743724800, 1743811200, 1743897600, 1743984000, 1744070400, 1744156800, 1744243200, 1744329600, 1744416000, 1744502400, 1744588800, 1744675200, 1744761600, 1744848000, 1744934400, 1745020800, 1745107200], "closes": [73.5, 73.3, 74.62, 76.35, 76.74, 77.38, 77.08, 76.59, 75.64, 76.77, 75.13, 75.87, 76.5, 75.62, 74.83, 73.51, 75.17, 74.74, 75.78, 76.33, 75.9, 74.27, 76.35, 75.45, 77.38, 76.98, 78.36, 78.98, 79.11, 77.47, 75.76, 75.4, 74.75, 73.02, 74.2, 72.64, 70.69, 73.16, 74.33, 78.08, 78.68, 78.72, 79.27, 79.16, 77.73, 78.62, 79.56, 77.8, 77.84, 77.02, 74.27, 74.08], "high": 79.56, "low": 70.69, "range": "1y", "symbol": "oil"}}, "btc": {"1m": {"timestamps": [1740700800, 1740787200, 1740873600, 1740960000, 1741046400, 1741132800, 1741219200, 1741305600, 1741392000, 1741478400, 1741564800, 1741651200, 1741737600, 1741824000, 1741910400, 1741996800, 1742083200, 1742169600, 1742256000, 1742342400, 1742428800, 1742515200], "closes": [79000, 79029.39, 76625.19, 73939.71, 74445.99, 71991.86, 74431.08, 73082.86, 71676.74, 71457.82, 73743.24, 72049.7, 72713.67, 71156.66, 68616.93, 70008.97, 70312.37, 70298.59, 70116.41, 67462.95, 69403.38, 69286.95], "high": 79029.39, "low": 67462.95, "range": "1m", "symbol": "btc"}, "3m": {"timestamps": [1740700800, 1740787200, 1740873600, 1740960000, 1741046400, 1741132800, 1741219200, 1741305600, 1741392000, 1741478400, 1741564800, 1741651200, 1741737600, 1741824000, 1741910400, 1741996800, 1742083200, 1742169600, 1742256000, 1742342400, 1742428800, 1742515200, 1742601600, 1742688000, 1742774400, 1742860800, 1742947200, 1743033600, 1743120000, 1743206400, 1743292800, 1743379200, 1743465600, 1743552000, 1743638400, 1743724800, 1743811200, 1743897600, 1743984000, 1744070400, 1744156800, 1744243200, 1744329600, 1744416000, 1744502400, 1744588800, 1744675200, 1744761600, 1744848000, 1744934400, 1745020800, 1745107200, 1745193600, 1745280000, 1745366400, 1745452800, 1745539200, 1745625600, 1745712000, 1745798400, 1745884800, 1745971200, 1746057600, 1746144000, 1746230400, 1746316800], "closes": [79000, 79029.39, 76625.19, 73939.71, 74445.99, 71991.86, 74431.08, 73082.86, 71676.74, 71457.82, 73743.24, 72049.7, 72713.67, 71156.66, 68616.93, 70008.97, 70312.37, 70298.59, 70116.41, 67462.95, 69403.38, 69286.95, 68336.3, 67202.82, 68929.89, 66864.43, 68356.43, 69564.04, 70113.44, 73734.52, 75042.85, 73695.63, 73958.36, 74283.44, 75907.26, 75350.58, 78785.58, 77416.89, 83354.2, 82093.08, 80083.22, 83806.99, 80005.5, 75827.01, 73510.37, 75073.4, 74282.87, 72915.64, 72034.64, 73631.93, 71867.23, 75093.47, 77370.73, 76968.73, 81553.35, 79822.8, 78758.43, 81187.41, 82430.96, 86344.11, 84885.52, 85843.51, 86814.25, 88858.69, 87825.61, 88185.44], "high": 88858.69, "low": 66864.43, "range": "3m", "symbol": "btc"}, "6m": {"timestamps": [1740700800, 1740787200, 1740873600, 1740960000, 1741046400, 1741132800, 1741219200, 1741305600, 1741392000, 1741478400, 1741564800, 1741651200, 1741737600, 1741824000, 1741910400, 1741996800, 1742083200, 1742169600, 1742256000, 1742342400, 1742428800, 1742515200, 1742601600, 1742688000, 1742774400, 1742860800, 1742947200, 1743033600, 1743120000, 1743206400, 1743292800, 1743379200, 1743465600, 1743552000, 1743638400, 1743724800, 1743811200, 1743897600, 1743984000, 1744070400, 1744156800, 1744243200, 1744329600, 1744416000, 1744502400, 1744588800, 1744675200, 1744761600, 1744848000, 1744934400, 1745020800, 1745107200, 1745193600, 1745280000, 1745366400, 1745452800, 1745539200, 1745625600, 1745712000, 1745798400, 1745884800, 1745971200, 1746057600, 1746144000, 1746230400, 1746316800, 1746403200, 1746489600, 1746576000, 1746662400, 1746748800, 1746835200, 1746921600, 1747008000, 1747094400, 1747180800, 1747267200, 1747353600, 1747440000, 1747526400, 1747612800, 1747699200, 1747785600, 1747872000, 1747958400, 1748044800, 1748131200, 1748217600, 1748304000, 1748390400, 1748476800, 1748563200, 1748649600, 1748736000, 1748822400, 1748908800, 1748995200, 1749081600, 1749168000, 1749254400, 1749340800, 1749427200, 1749513600, 1749600000, 1749686400, 1749772800, 1749859200, 1749945600, 1750032000, 1750118400, 1750204800, 1750291200, 1750377600, 1750464000, 1750550400, 1750636800, 1750723200, 1750809600, 1750896000, 1750982400, 1751068800, 1751155200, 1751241600, 1751328000, 1751414400, 1751500800, 1751587200, 1751673600, 1751760000, 1751846400], "closes": [79000, 79029.39, 76625.19, 73939.71, 74445.99, 71991.86, 74431.08, 73082.86, 71676.74, 71457.82, 73743.24, 72049.7, 72713.67, 71156.66, 68616.93, 70008.97, 70312.37, 70298.59, 70116.41, 67462.95, 69403.38, 69286.95, 68336.3, 67202.82, 68929.89, 66864.43, 68356.43, 69564.04, 70113.44, 73734.52, 75042.85, 73695.63, 73958.36, 74283.44, 75907.26, 75350.58, 78785.58, 77416.89, 83354.2, 82093.08, 80083.22, 83806.99, 80005.5, 75827.01, 73510.37, 75073.4, 74282.87, 72915.64, 72034.64, 73631.93, 71867.23, 75093.47, 77370.73, 76968.73, 81553.35, 79822.8, 78758.43, 81187.41, 82430.96, 86344.11, 84885.52, 85843.51, 86814.25, 88858.69, 87825.61, 88185.44, 89031.48, 90398.97, 88605.54, 85561.94, 91220.91, 92915.56, 93875.83, 93242.78, 92800.68, 94797.7, 95170.64, 94123.59, 91041.53, 86299.12, 83577.19, 86819.14, 86002.19, 86691.02, 81832.58, 81959.69, 80379.45, 76824.69, 77725.06, 77161.21, 79822.78, 79709.08, 78221.63, 79993.53, 76346.89, 74163.65, 75085.33, 74751.95, 71031.28, 68633.96, 69387.24, 70339.75, 72254.55, 74057.65, 71481.81, 71364.27, 70923.24, 66896.59, 67483.96, 65444.93, 65601.13, 65463.57, 66812.3, 68481.38, 69161.91, 71724.22, 72114.37, 74848.71, 71126.23, 70490.05, 69902.49, 71052.17, 72483.51, 72315.01, 71177.34, 68283.19, 70623.15, 72513.26, 72861.85, 74188.09], "high": 95170.64, "low": 65444.93, "range": "6m", "symbol": "btc"}, "1y": {"timestamps": [1740700800, 1740787200, 1740873600, 1740960000, 1741046400, 1741132800, 1741219200, 1741305600, 1741392000, 1741478400, 1741564800, 1741651200, 1741737600, 1741824000, 1741910400, 1741996800, 1742083200, 1742169600, 1742256000, 1742342400, 1742428800, 1742515200, 1742601600, 1742688000, 1742774400, 1742860800, 1742947200, 1743033600, 1743120000, 1743206400, 1743292800, 1743379200, 1743465600, 1743552000, 1743638400, 1743724800, 1743811200, 1743897600, 1743984000, 1744070400, 1744156800, 1744243200, 1744329600, 1744416000, 1744502400, 1744588800, 1744675200, 1744761600, 1744848000, 1744934400, 1745020800, 1745107200], "closes": [79000, 79029.39, 76625.19, 73939.71, 74445.99, 71991.86, 74431.08, 73082.86, 71676.74, 71457.82, 73743.24, 72049.7, 72713.67, 71156.66, 68616.93, 70008.97, 70312.37, 70298.59, 70116.41, 67462.95, 69403.38, 69286.95, 68336.3, 67202.82, 68929.89, 66864.43, 68356.43, 69564.04, 70113.44, 73734.52, 75042.85, 73695.63, 73958.36, 74283.44, 75907.26, 75350.58, 78785.58, 77416.89, 83354.2, 82093.08, 80083.22, 83806.99, 80005.5, 75827.01, 73510.37, 75073.4, 74282.87, 72915.64, 72034.64, 73631.93, 71867.23, 75093.47], "high": 83806.99, "low": 66864.43, "range": "1y", "symbol": "btc"}}, "eth": {"1m": {"timestamps": [1740700800, 1740787200, 1740873600, 1740960000, 1741046400, 1741132800, 1741219200, 1741305600, 1741392000, 1741478400, 1741564800, 1741651200, 1741737600, 1741824000, 1741910400, 1741996800, 1742083200, 1742169600, 1742256000, 1742342400, 1742428800, 1742515200], "closes": [1820, 1803.01, 1725.32, 1781.49, 1740.27, 1771.35, 1990.77, 1986.94, 2128.23, 2104.84, 2181.81, 2126.88, 2172.38, 2061.85, 2001.41, 2022.22, 2045.2, 2184.01, 2173.93, 2211.94, 2218.64, 2272.43], "high": 2272.43, "low": 1725.32, "range": "1m", "symbol": "eth"}, "3m": {"timestamps": [1740700800, 1740787200, 1740873600, 1740960000, 1741046400, 1741132800, 1741219200, 1741305600, 1741392000, 1741478400, 1741564800, 1741651200, 1741737600, 1741824000, 1741910400, 1741996800, 1742083200, 1742169600, 1742256000, 1742342400, 1742428800, 1742515200, 1742601600, 1742688000, 1742774400, 1742860800, 1742947200, 1743033600, 1743120000, 1743206400, 1743292800, 1743379200, 1743465600, 1743552000, 1743638400, 1743724800, 1743811200, 1743897600, 1743984000, 1744070400, 1744156800, 1744243200, 1744329600, 1744416000, 1744502400, 1744588800, 1744675200, 1744761600, 1744848000, 1744934400, 1745020800, 1745107200, 1745193600, 1745280000, 1745366400, 1745452800, 1745539200, 1745625600, 1745712000, 1745798400, 1745884800, 1745971200, 1746057600, 1746144000, 1746230400, 1746316800], "closes": [1820, 1803.01, 1725.32, 1781.49, 1740.27, 1771.35, 1990.77, 1986.94, 2128.23, 2104.84, 2181.81, 2126.88, 2172.38, 2061.85, 2001.41, 2022.22, 2045.2, 2184.01, 2173.93, 2211.94, 2218.64, 2272.43, 2370.53, 2303.88, 2322.55, 2358.77, 2437.6, 2513.45, 2372.35, 2464.07, 2477.94, 2486.27, 2569.78, 2505.01, 2562.2, 2723.25, 2776.66, 2694.06, 2600.89, 2792.22, 2833.85, 2670.56, 2456.51, 2367.1, 2402.52, 2453.73, 2412.27, 2468.1, 2513.73, 2595.83, 2693.6, 2785.03, 2888.73, 2727.97, 2708.8, 2648.0, 2869.71, 2773.31, 2666.07, 2620.04, 2573.23, 2514.51, 2467.63, 2522.25, 2622.1, 2515.97], "high": 2888.73, "low": 1725.32, "range": "3m", "symbol": "eth"}, "6m": {"timestamps": [1740700800, 1740787200, 1740873600, 1740960000, 1741046400, 1741132800, 1741219200, 1741305600, 1741392000, 1741478400, 1741564800, 1741651200, 1741737600, 1741824000, 1741910400, 1741996800, 1742083200, 1742169600, 1742256000, 1742342400, 1742428800, 1742515200, 1742601600, 1742688000, 1742774400, 1742860800, 1742947200, 1743033600, 1743120000, 1743206400, 1743292800, 1743379200, 1743465600, 1743552000, 1743638400, 1743724800, 1743811200, 1743897600, 1743984000, 1744070400, 1744156800, 1744243200, 1744329600, 1744416000, 1744502400, 1744588800, 1744675200, 1744761600, 1744848000, 1744934400, 1745020800, 1745107200, 1745193600, 1745280000, 1745366400, 1745452800, 1745539200, 1745625600, 1745712000, 1745798400, 1745884800, 1745971200, 1746057600, 1746144000, 1746230400, 1746316800, 1746403200, 1746489600, 1746576000, 1746662400, 1746748800, 1746835200, 1746921600, 1747008000, 1747094400, 1747180800, 1747267200, 1747353600, 1747440000, 1747526400, 1747612800, 1747699200, 1747785600, 1747872000, 1747958400, 1748044800, 1748131200, 1748217600, 1748304000, 1748390400, 1748476800, 1748563200, 1748649600, 1748736000, 1748822400, 1748908800, 1748995200, 1749081600, 1749168000, 1749254400, 1749340800, 1749427200, 1749513600, 1749600000, 1749686400, 1749772800, 1749859200, 1749945600, 1750032000, 1750118400, 1750204800, 1750291200, 1750377600, 1750464000, 1750550400, 1750636800, 1750723200, 1750809600, 1750896000, 1750982400, 1751068800, 1751155200, 1751241600, 1751328000, 1751414400, 1751500800, 1751587200, 1751673600, 1751760000, 1751846400], "closes": [1820, 1803.01, 1725.32, 1781.49, 1740.27, 1771.35, 1990.77, 1986.94, 2128.23, 2104.84, 2181.81, 2126.88, 2172.38, 2061.85, 2001.41, 2022.22, 2045.2, 2184.01, 2173.93, 2211.94, 2218.64, 2272.43, 2370.53, 2303.88, 2322.55, 2358.77, 2437.6, 2513.45, 2372.35, 2464.07, 2477.94, 2486.27, 2569.78, 2505.01, 2562.2, 2723.25, 2776.66, 2694.06, 2600.89, 2792.22, 2833.85, 2670.56, 2456.51, 2367.1, 2402.52, 2453.73, 2412.27, 2468.1, 2513.73, 2595.83, 2693.6, 2785.03, 2888.73, 2727.97, 2708.8, 2648.0, 2869.71, 2773.31, 2666.07, 2620.04, 2573.23, 2514.51, 2467.63, 2522.25, 2622.1, 2515.97, 2406.16, 2415.43, 2372.41, 2376.05, 2438.62, 2312.14, 2421.18, 2407.72, 2525.18, 2574.26, 2619.31, 2556.78, 2553.7, 2547.96, 2666.08, 2678.03, 2679.34, 2730.85, 2760.18, 2768.09, 2750.54, 2845.98, 2909.49, 2975.86, 3016.96, 2786.48, 2857.92, 2779.89, 2794.84, 2813.27, 2732.46, 2672.98, 2645.16, 2538.56, 2565.57, 2544.76, 2500.09, 2495.28, 2507.92, 2381.61, 2480.23, 2540.46, 2457.14, 2382.01, 2419.78, 2637.07, 2585.0, 2683.26, 2777.81, 2725.33, 2803.78, 2783.32, 2874.01, 2766.73, 2852.79, 2968.81, 3209.41, 3256.35, 3327.68, 3459.34, 3510.18, 3531.8, 3410.82, 3181.57], "high": 3531.8, "low": 1725.32, "range": "6m", "symbol": "eth"}, "1y": {"timestamps": [1740700800, 1740787200, 1740873600, 1740960000, 1741046400, 1741132800, 1741219200, 1741305600, 1741392000, 1741478400, 1741564800, 1741651200, 1741737600, 1741824000, 1741910400, 1741996800, 1742083200, 1742169600, 1742256000, 1742342400, 1742428800, 1742515200, 1742601600, 1742688000, 1742774400, 1742860800, 1742947200, 1743033600, 1743120000, 1743206400, 1743292800, 1743379200, 1743465600, 1743552000, 1743638400, 1743724800, 1743811200, 1743897600, 1743984000, 1744070400, 1744156800, 1744243200, 1744329600, 1744416000, 1744502400, 1744588800, 1744675200, 1744761600, 1744848000, 1744934400, 1745020800, 1745107200], "closes": [1820, 1803.01, 1725.32, 1781.49, 1740.27, 1771.35, 1990.77, 1986.94, 2128.23, 2104.84, 2181.81, 2126.88, 2172.38, 2061.85, 2001.41, 2022.22, 2045.2, 2184.01, 2173.93, 2211.94, 2218.64, 2272.43, 2370.53, 2303.88, 2322.55, 2358.77, 2437.6, 2513.45, 2372.35, 2464.07, 2477.94, 2486.27, 2569.78, 2505.01, 2562.2, 2723.25, 2776.66, 2694.06, 2600.89, 2792.22, 2833.85, 2670.56, 2456.51, 2367.1, 2402.52, 2453.73, 2412.27, 2468.1, 2513.73, 2595.83, 2693.6, 2785.03], "high": 2833.85, "low": 1725.32, "range": "1y", "symbol": "eth"}}, "sol": {"1m": {"timestamps": [1740700800, 1740787200, 1740873600, 1740960000, 1741046400, 1741132800, 1741219200, 1741305600, 1741392000, 1741478400, 1741564800, 1741651200, 1741737600, 1741824000, 1741910400, 1741996800, 1742083200, 1742169600, 1742256000, 1742342400, 1742428800, 1742515200], "closes": [128, 137.27, 139.66, 143.31, 149.32, 147.1, 140.56, 142.11, 140.85, 135.91, 132.82, 145.19, 131.53, 136.1, 151.41, 146.05, 147.12, 141.88, 140.4, 150.48, 146.4, 142.46], "high": 151.41, "low": 128, "range": "1m", "symbol": "sol"}, "3m": {"timestamps": [1740700800, 1740787200, 1740873600, 1740960000, 1741046400, 1741132800, 1741219200, 1741305600, 1741392000, 1741478400, 1741564800, 1741651200, 1741737600, 1741824000, 1741910400, 1741996800, 1742083200, 1742169600, 1742256000, 1742342400, 1742428800, 1742515200, 1742601600, 1742688000, 1742774400, 1742860800, 1742947200, 1743033600, 1743120000, 1743206400, 1743292800, 1743379200, 1743465600, 1743552000, 1743638400, 1743724800, 1743811200, 1743897600, 1743984000, 1744070400, 1744156800, 1744243200, 1744329600, 1744416000, 1744502400, 1744588800, 1744675200, 1744761600, 1744848000, 1744934400, 1745020800, 1745107200, 1745193600, 1745280000, 1745366400, 1745452800, 1745539200, 1745625600, 1745712000, 1745798400, 1745884800, 1745971200, 1746057600, 1746144000, 1746230400, 1746316800], "closes": [128, 137.27, 139.66, 143.31, 149.32, 147.1, 140.56, 142.11, 140.85, 135.91, 132.82, 145.19, 131.53, 136.1, 151.41, 146.05, 147.12, 141.88, 140.4, 150.48, 146.4, 142.46, 133.31, 138.25, 142.98, 141.88, 143.54, 141.15, 149.91, 149.41, 147.46, 143.12, 139.54, 143.29, 150.81, 147.2, 150.86, 138.21, 131.88, 134.53, 130.02, 135.05, 133.47, 127.93, 131.53, 124.75, 123.86, 124.01, 125.63, 127.97, 129.82, 130.73, 133.52, 121.08, 124.87, 127.23, 120.42, 120.47, 116.43, 115.28, 111.34, 112.94, 118.91, 113.42, 105.99, 107.11], "high": 151.41, "low": 105.99, "range": "3m", "symbol": "sol"}, "6m": {"timestamps": [1740700800, 1740787200, 1740873600, 1740960000, 1741046400, 1741132800, 1741219200, 1741305600, 1741392000, 1741478400, 1741564800, 1741651200, 1741737600, 1741824000, 1741910400, 1741996800, 1742083200, 1742169600, 1742256000, 1742342400, 1742428800, 1742515200, 1742601600, 1742688000, 1742774400, 1742860800, 1742947200, 1743033600, 1743120000, 1743206400, 1743292800, 1743379200, 1743465600, 1743552000, 1743638400, 1743724800, 1743811200, 1743897600, 1743984000, 1744070400, 1744156800, 1744243200, 1744329600, 1744416000, 1744502400, 1744588800, 1744675200, 1744761600, 1744848000, 1744934400, 1745020800, 1745107200, 1745193600, 1745280000, 1745366400, 1745452800, 1745539200, 1745625600, 1745712000, 1745798400, 1745884800, 1745971200, 1746057600, 1746144000, 1746230400, 1746316800, 1746403200, 1746489600, 1746576000, 1746662400, 1746748800, 1746835200, 1746921600, 1747008000, 1747094400, 1747180800, 1747267200, 1747353600, 1747440000, 1747526400, 1747612800, 1747699200, 1747785600, 1747872000, 1747958400, 1748044800, 1748131200, 1748217600, 1748304000, 1748390400, 1748476800, 1748563200, 1748649600, 1748736000, 1748822400, 1748908800, 1748995200, 1749081600, 1749168000, 1749254400, 1749340800, 1749427200, 1749513600, 1749600000, 1749686400, 1749772800, 1749859200, 1749945600, 1750032000, 1750118400, 1750204800, 1750291200, 1750377600, 1750464000, 1750550400, 1750636800, 1750723200, 1750809600, 1750896000, 1750982400, 1751068800, 1751155200, 1751241600, 1751328000, 1751414400, 1751500800, 1751587200, 1751673600, 1751760000, 1751846400], "closes": [128, 137.27, 139.66, 143.31, 149.32, 147.1, 140.56, 142.11, 140.85, 135.91, 132.82, 145.19, 131.53, 136.1, 151.41, 146.05, 147.12, 141.88, 140.4, 150.48, 146.4, 142.46, 133.31, 138.25, 142.98, 141.88, 143.54, 141.15, 149.91, 149.41, 147.46, 143.12, 139.54, 143.29, 150.81, 147.2, 150.86, 138.21, 131.88, 134.53, 130.02, 135.05, 133.47, 127.93, 131.53, 124.75, 123.86, 124.01, 125.63, 127.97, 129.82, 130.73, 133.52, 121.08, 124.87, 127.23, 120.42, 120.47, 116.43, 115.28, 111.34, 112.94, 118.91, 113.42, 105.99, 107.11, 107.98, 108.78, 111.83, 113.4, 117.98, 124.37, 126.31, 122.12, 124.55, 128.97, 126.22, 132.56, 136.26, 142.15, 146.61, 148.5, 150.15, 143.14, 144.66, 135.11, 137.49, 135.04, 130.16, 132.93, 136.79, 141.12, 130.91, 121.56, 130.69, 130.68, 119.14, 122.0, 122.66, 130.11, 127.85, 130.58, 127.68, 127.7, 133.22, 128.89, 129.56, 119.8, 122.71, 120.61, 116.26, 115.31, 119.4, 122.13, 123.47, 118.19, 115.94, 116.61, 116.38, 123.19, 137.76, 138.36, 139.74, 128.39, 135.49, 137.48, 143.43, 148.6, 149.55, 154.89], "high": 154.89, "low": 105.99, "range": "6m", "symbol": "sol"}, "1y": {"timestamps": [1740700800, 1740787200, 1740873600, 1740960000, 1741046400, 1741132800, 1741219200, 1741305600, 1741392000, 1741478400, 1741564800, 1741651200, 1741737600, 1741824000, 1741910400, 1741996800, 1742083200, 1742169600, 1742256000, 1742342400, 1742428800, 1742515200, 1742601600, 1742688000, 1742774400, 1742860800, 1742947200, 1743033600, 1743120000, 1743206400, 1743292800, 1743379200, 1743465600, 1743552000, 1743638400, 1743724800, 1743811200, 1743897600, 1743984000, 1744070400, 1744156800, 1744243200, 1744329600, 1744416000, 1744502400, 1744588800, 1744675200, 1744761600, 1744848000, 1744934400, 1745020800, 1745107200], "closes": [128, 137.27, 139.66, 143.31, 149.32, 147.1, 140.56, 142.11, 140.85, 135.91, 132.82, 145.19, 131.53, 136.1, 151.41, 146.05, 147.12, 141.88, 140.4, 150.48, 146.4, 142.46, 133.31, 138.25, 142.98, 141.88, 143.54, 141.15, 149.91, 149.41, 147.46, 143.12, 139.54, 143.29, 150.81, 147.2, 150.86, 138.21, 131.88, 134.53, 130.02, 135.05, 133.47, 127.93, 131.53, 124.75, 123.86, 124.01, 125.63, 127.97, 129.82, 130.73], "high": 151.41, "low": 123.86, "range": "1y", "symbol": "sol"}}, "vix": {"1m": {"timestamps": [1740700800, 1740787200, 1740873600, 1740960000, 1741046400, 1741132800, 1741219200, 1741305600, 1741392000, 1741478400, 1741564800, 1741651200, 1741737600, 1741824000, 1741910400, 1741996800, 1742083200, 1742169600, 1742256000, 1742342400, 1742428800, 1742515200], "closes": [18.0, 17.94, 18.2, 17.82, 18.77, 19.59, 19.28, 19.92, 20.64, 20.5, 19.65, 19.94, 19.47, 20.67, 21.08, 23.64, 23.75, 26.35, 26.78, 26.39, 27.61, 27.55], "high": 27.61, "low": 17.82, "range": "1m", "symbol": "vix"}, "3m": {"timestamps": [1740700800, 1740787200, 1740873600, 1740960000, 1741046400, 1741132800, 1741219200, 1741305600, 1741392000, 1741478400, 1741564800, 1741651200, 1741737600, 1741824000, 1741910400, 1741996800, 1742083200, 1742169600, 1742256000, 1742342400, 1742428800, 1742515200, 1742601600, 1742688000, 1742774400, 1742860800, 1742947200, 1743033600, 1743120000, 1743206400, 1743292800, 1743379200, 1743465600, 1743552000, 1743638400, 1743724800, 1743811200, 1743897600, 1743984000, 1744070400, 1744156800, 1744243200, 1744329600, 1744416000, 1744502400, 1744588800, 1744675200, 1744761600, 1744848000, 1744934400, 1745020800, 1745107200, 1745193600, 1745280000, 1745366400, 1745452800, 1745539200, 1745625600, 1745712000, 1745798400, 1745884800, 1745971200, 1746057600, 1746144000, 1746230400, 1746316800], "closes": [18.0, 17.94, 18.2, 17.82, 18.77, 19.59, 19.28, 19.92, 20.64, 20.5, 19.65, 19.94, 19.47, 20.67, 21.08, 23.64, 23.75, 26.35, 26.78, 26.39, 27.61, 27.55, 27.49, 29.2, 29.39, 28.99, 28.63, 30.35, 31.27, 32.34, 31.42, 29.9, 29.12, 29.01, 29.15, 28.51, 29.01, 29.89, 31.16, 30.19, 30.43, 30.09, 31.55, 30.46, 30.02, 31.19, 29.52, 27.77, 28.58, 29.69, 29.6, 28.48, 28.12, 28.03, 26.72, 27.0, 29.07, 27.88, 26.9, 28.7, 28.93, 28.42, 28.23, 26.84, 25.53, 26.25], "high": 32.34, "low": 17.82, "range": "3m", "symbol": "vix"}, "6m": {"timestamps": [1740700800, 1740787200, 1740873600, 1740960000, 1741046400, 1741132800, 1741219200, 1741305600, 1741392000, 1741478400, 1741564800, 1741651200, 1741737600, 1741824000, 1741910400, 1741996800, 1742083200, 1742169600, 1742256000, 1742342400, 1742428800, 1742515200, 1742601600, 1742688000, 1742774400, 1742860800, 1742947200, 1743033600, 1743120000, 1743206400, 1743292800, 1743379200, 1743465600, 1743552000, 1743638400, 1743724800, 1743811200, 1743897600, 1743984000, 1744070400, 1744156800, 1744243200, 1744329600, 1744416000, 1744502400, 1744588800, 1744675200, 1744761600, 1744848000, 1744934400, 1745020800, 1745107200, 1745193600, 1745280000, 1745366400, 1745452800, 1745539200, 1745625600, 1745712000, 1745798400, 1745884800, 1745971200, 1746057600, 1746144000, 1746230400, 1746316800, 1746403200, 1746489600, 1746576000, 1746662400, 1746748800, 1746835200, 1746921600, 1747008000, 1747094400, 1747180800, 1747267200, 1747353600, 1747440000, 1747526400, 1747612800, 1747699200, 1747785600, 1747872000, 1747958400, 1748044800, 1748131200, 1748217600, 1748304000, 1748390400, 1748476800, 1748563200, 1748649600, 1748736000, 1748822400, 1748908800, 1748995200, 1749081600, 1749168000, 1749254400, 1749340800, 1749427200, 1749513600, 1749600000, 1749686400, 1749772800, 1749859200, 1749945600, 1750032000, 1750118400, 1750204800, 1750291200, 1750377600, 1750464000, 1750550400, 1750636800, 1750723200, 1750809600, 1750896000, 1750982400, 1751068800, 1751155200, 1751241600, 1751328000, 1751414400, 1751500800, 1751587200, 1751673600, 1751760000, 1751846400], "closes": [18.0, 17.94, 18.2, 17.82, 18.77, 19.59, 19.28, 19.92, 20.64, 20.5, 19.65, 19.94, 19.47, 20.67, 21.08, 23.64, 23.75, 26.35, 26.78, 26.39, 27.61, 27.55, 27.49, 29.2, 29.39, 28.99, 28.63, 30.35, 31.27, 32.34, 31.42, 29.9, 29.12, 29.01, 29.15, 28.51, 29.01, 29.89, 31.16, 30.19, 30.43, 30.09, 31.55, 30.46, 30.02, 31.19, 29.52, 27.77, 28.58, 29.69, 29.6, 28.48, 28.12, 28.03, 26.72, 27.0, 29.07, 27.88, 26.9, 28.7, 28.93, 28.42, 28.23, 26.84, 25.53, 26.25, 27.27, 26.43, 27.1, 28.28, 28.06, 29.39, 30.39, 30.01, 28.26, 27.18, 28.82, 28.97, 28.02, 28.83, 30.83, 28.97, 30.05, 30.82, 28.81, 29.37, 28.62, 30.29, 29.94, 29.43, 31.33, 31.14, 31.8, 32.89, 30.18, 28.7, 29.52, 31.08, 30.51, 33.77, 31.24, 33.49, 31.94, 30.31, 28.76, 28.76, 28.17, 27.48, 28.02, 28.31, 28.86, 28.92, 28.87, 27.89, 28.42, 29.96, 29.75, 28.67, 28.2, 27.28, 27.13, 27.06, 28.53, 27.64, 27.95, 28.55, 29.16, 28.15, 27.81, 27.51], "high": 33.77, "low": 17.82, "range": "6m", "symbol": "vix"}, "1y": {"timestamps": [1740700800, 1740787200, 1740873600, 1740960000, 1741046400, 1741132800, 1741219200, 1741305600, 1741392000, 1741478400, 1741564800, 1741651200, 1741737600, 1741824000, 1741910400, 1741996800, 1742083200, 1742169600, 1742256000, 1742342400, 1742428800, 1742515200, 1742601600, 1742688000, 1742774400, 1742860800, 1742947200, 1743033600, 1743120000, 1743206400, 1743292800, 1743379200, 1743465600, 1743552000, 1743638400, 1743724800, 1743811200, 1743897600, 1743984000, 1744070400, 1744156800, 1744243200, 1744329600, 1744416000, 1744502400, 1744588800, 1744675200, 1744761600, 1744848000, 1744934400, 1745020800, 1745107200], "closes": [18.0, 17.94, 18.2, 17.82, 18.77, 19.59, 19.28, 19.92, 20.64, 20.5, 19.65, 19.94, 19.47, 20.67, 21.08, 23.64, 23.75, 26.35, 26.78, 26.39, 27.61, 27.55, 27.49, 29.2, 29.39, 28.99, 28.63, 30.35, 31.27, 32.34, 31.42, 29.9, 29.12, 29.01, 29.15, 28.51, 29.01, 29.89, 31.16, 30.19, 30.43, 30.09, 31.55, 30.46, 30.02, 31.19, 29.52, 27.77, 28.58, 29.69, 29.6, 28.48], "high": 32.34, "low": 17.82, "range": "1y", "symbol": "vix"}}}};
 
-function buildDemoTreasuryRates() {
-  return {
-    date: '2025-03-28',
-    m3: 5.34,
-    y1: 4.78,
-    y2: 4.21,
-    y5: 4.05,
-    y10: 4.12,
-    y30: 4.28,
-  };
-}
-
-function buildDemoMacroIndicators() {
-  return [
-    { key: 'inflation-rate', label: 'Inflation Rate', value: 2.8, unit: '%', date: '2025-03-01' },
-    { key: 'unemployment-rate', label: 'Unemployment Rate', value: 4.1, unit: '%', date: '2025-03-01' },
-    { key: 'gdp-growth', label: 'GDP Growth', value: 1.6, unit: '%', date: '2024-12-31' },
-    { key: 'retail-sales', label: 'Retail Sales', value: 0.3, unit: '%', date: '2025-02-01' },
-  ];
-}
-
-function buildDemoEarningsSurprises(snapshot) {
-  const lookup = Object.fromEntries((snapshot?.fmp?.analystRatings || []).map((item) => [String(item.symbol || '').replace('.AX','').toUpperCase(), item]));
-  const rows = [
-    ['CBA', '2025-02-12', 2.61, 2.45],
-    ['BHP', '2025-02-18', 1.95, 1.82],
-    ['CSL', '2025-02-11', 4.02, 3.88],
-    ['NAB', '2025-02-14', 1.10, 1.04],
-    ['WBC', '2025-02-17', 1.18, 1.11],
-    ['WES', '2025-02-20', 1.63, 1.56],
-  ];
-  return rows.map(([symbol, date, actualEps, estimatedEps]) => {
-    const surprise = Number(actualEps) - Number(estimatedEps);
-    return {
-      symbol: `${symbol}.AX`,
-      name: lookup[symbol]?.name || symbol,
-      date,
-      actualEps,
-      estimatedEps,
-      surprise,
-      surprisePct: estimatedEps ? (surprise / estimatedEps) * 100 : null,
-    };
-  });
-}
-
-function buildDemoCryptoMarket(snapshot) {
-  const quotes = snapshot?.quotes?.crypto || {};
-  const btc = quotes.btc || {};
-  const eth = quotes.eth || {};
-  const sol = quotes.sol || {};
-  return {
-    btcDominance: 53.8,
-    ethDominance: 17.2,
-    totalMarketCapUsd: 2860000000000,
-    totalVolume24hUsd: 124000000000,
-    fearGreedValue: 67,
-    fearGreedLabel: 'Greed',
-    assets: [
-      {
-        symbol: 'BTC',
-        name: 'Bitcoin',
-        price: btc.price ?? 84250,
-        marketCap: 1660000000000,
-        volume24h: 52000000000,
-        changePct24h: btc.price && btc.prevClose ? ((btc.price - btc.prevClose) / btc.prevClose) * 100 : 2.62,
-        high24h: 85400,
-        low24h: 82120,
-      },
-      {
-        symbol: 'ETH',
-        name: 'Ethereum',
-        price: eth.price ?? 1965,
-        marketCap: 237000000000,
-        volume24h: 24800000000,
-        changePct24h: eth.price && eth.prevClose ? ((eth.price - eth.prevClose) / eth.prevClose) * 100 : 2.34,
-        high24h: 1998,
-        low24h: 1896,
-      },
-      {
-        symbol: 'SOL',
-        name: 'Solana',
-        price: sol.price ?? 138.5,
-        marketCap: 68000000000,
-        volume24h: 5100000000,
-        changePct24h: sol.price && sol.prevClose ? ((sol.price - sol.prevClose) / sol.prevClose) * 100 : 3.20,
-        high24h: 141.4,
-        low24h: 132.8,
-      },
-    ],
-  };
-}
-
-function augmentDemoSnapshot(snapshot) {
-  const data = snapshot || {};
-  data.quotes = data.quotes || {};
-  data.fmp = data.fmp || {};
-  data.fred = data.fred || {};
-
-  if (!Array.isArray(data.fmp.macroIndicators) || !data.fmp.macroIndicators.length) {
-    data.fmp.macroIndicators = buildDemoMacroIndicators();
-  }
-  if (!data.fmp.treasuryRates) {
-    data.fmp.treasuryRates = buildDemoTreasuryRates();
-  }
-  if (!Array.isArray(data.fmp.earningsSurprises) || !data.fmp.earningsSurprises.length) {
-    data.fmp.earningsSurprises = buildDemoEarningsSurprises(data);
-  }
-  if (!data.fmp.cryptoMarket) {
-    data.fmp.cryptoMarket = buildDemoCryptoMarket(data);
-  }
-  if (Array.isArray(data.fmp.news)) {
-    data.fmp.news = data.fmp.news.map((item) => ({
-      ...item,
-      site: item.site || item.source || '',
-    }));
-  }
-  if (!Array.isArray(data.quotes.asxConstituents) || !data.quotes.asxConstituents.length) {
-    const asx = data.quotes.asx || {};
-    data.quotes.asxConstituents = Object.keys(asx).map((sym) => {
-      const quote = asx[sym] || {};
-      return {
-        ...quote,
-        symbol: quote.symbol || `${sym}.AX`,
-        name: quote.name || sym,
-        marketCap: null,
-        sector: null,
-        volume: null,
-        exchange: 'ASX',
-      };
-    });
-  }
-  return data;
-}
-
-async function loadDemoData() {
-  if (!_demoDataPromise) {
-    _demoDataPromise = fetch('/demo/research-snapshot.json', { cache: 'force-cache' })
-      .then((response) => {
-        if (!response.ok) throw new Error('Failed to load demo snapshot');
-        return response.json();
-      })
-      .then((data) => augmentDemoSnapshot(data))
-      .catch((error) => {
-        _demoDataPromise = null;
-        throw error;
-      });
-  }
-  return _demoDataPromise;
-}
-
-async function _demoSnapshot(url) {
-  const data = await loadDemoData();
+function _demoSnapshot(url) {
   const u = url.split('?')[0];
   const params = new URLSearchParams(url.includes('?') ? url.split('?')[1] : '');
-  if (u.endsWith('/api/research/quotes')) return data.quotes;
-  if (u.endsWith('/api/research/fmp'))    return data.fmp;
-  if (u.endsWith('/api/research/fred'))   return data.fred;
-  if (u.endsWith('/api/research/news'))   return { news: data.fmp.news };
-  if (u.endsWith('/api/research/movers')) return {
-    gainers: [
-      { symbol: "NVDA", name: "NVIDIA Corp",            price: 875.40, changePct: 4.82 },
-      { symbol: "META", name: "Meta Platforms",         price: 521.30, changePct: 3.47 },
-      { symbol: "AVGO", name: "Broadcom Inc",           price: 168.90, changePct: 2.91 },
-      { symbol: "MSFT", name: "Microsoft Corp",         price: 415.60, changePct: 2.15 },
-      { symbol: "AMZN", name: "Amazon.com Inc",         price: 186.45, changePct: 1.73 },
-    ],
-    losers: [
-      { symbol: "PFE",  name: "Pfizer Inc",             price:  28.12, changePct: -3.94 },
-      { symbol: "CVS",  name: "CVS Health Corp",        price:  53.40, changePct: -2.81 },
-      { symbol: "BA",   name: "Boeing Co",              price: 168.55, changePct: -2.34 },
-      { symbol: "DIS",  name: "Walt Disney Co",         price:  95.20, changePct: -1.62 },
-      { symbol: "XOM",  name: "Exxon Mobil Corp",       price: 110.75, changePct: -1.18 },
-    ],
-    mostActive: [
-      { symbol: "TSLA", name: "Tesla Inc",              price: 175.20, changePct:  1.44 },
-      { symbol: "AAPL", name: "Apple Inc",              price: 221.80, changePct:  0.83 },
-      { symbol: "SPY",  name: "SPDR S&P 500 ETF",       price: 505.60, changePct:  0.62 },
-      { symbol: "AMD",  name: "Advanced Micro Devices", price: 162.30, changePct: -0.91 },
-      { symbol: "INTC", name: "Intel Corp",             price:  30.55, changePct: -1.05 },
-    ],
-  };
+  if (u.endsWith('/api/research/quotes')) return _DEMO_DATA.quotes;
+  if (u.endsWith('/api/research/fmp'))    return _DEMO_DATA.fmp;
+  if (u.endsWith('/api/research/fred'))   return _DEMO_DATA.fred;
+  if (u.endsWith('/api/research/news'))   return { articles: _DEMO_DATA.fmp.news };
+  if (u.endsWith('/api/research/movers')) return { gainers: [], losers: [] };
   if (u.endsWith('/api/research/chart')) {
     const sym = (params.get('symbol') || 'asx200').toLowerCase();
     const range = params.get('range') || '1m';
-    const charts = data.charts;
+    const charts = _DEMO_DATA.charts;
     if (charts[sym] && charts[sym][range]) return charts[sym][range];
+    // Stock chart (ticker param)
     const ticker = params.get('ticker');
     if (ticker) {
+      // Synthetic stock chart
       const base = 50 + (ticker.charCodeAt(0) * 17 % 200);
-      const n = {'1m':22,'3m':66,'6m':130,'1y':52}[range] || 22;
+      const n = {"1m":22,"3m":66,"6m":130,"1y":52}[range] || 22;
       const prices = [];
       let p = base;
       for (let i = 0; i < n; i++) {
         p = Math.round(p * (1 + (Math.random() - 0.49) * 0.015) * 100) / 100;
         prices.push(p);
       }
-      const baseTs = 1740700800;
-      const ts = Array.from({ length: n }, (_, i) => baseTs + i * 86400);
+      const base_ts = 1740700800;
+      const ts = Array.from({length: n}, (_, i) => base_ts + i * 86400);
       return { timestamps: ts, closes: prices, high: Math.max(...prices), low: Math.min(...prices), range, symbol: ticker };
     }
     return undefined;
