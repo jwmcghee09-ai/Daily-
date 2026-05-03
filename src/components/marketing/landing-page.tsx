@@ -374,7 +374,7 @@ export default function LandingPage({
               </Link>
             </div>
             <p className={`${styles.reveal}`} style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.35)", marginTop: "1rem", letterSpacing: "0.04em" }}>
-              Join 500+ Australian investors tracking their portfolio · No card required
+              Built for Australian investors · No card required · Cancel anytime
             </p>
 
           </div>
