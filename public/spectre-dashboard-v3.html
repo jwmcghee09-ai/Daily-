@@ -886,6 +886,26 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 .upgrade-btn-primary{background:var(--accent,#ff4b33);color:#fff;border:none}
 .upgrade-btn-secondary{background:transparent;color:var(--muted2,#888);border:1px solid rgba(255,255,255,.15)}
 
+/* ── AI LIMIT UPGRADE CARD ─────────────────────────────────────────────── */
+.ai-limit-upgrade{padding:1.25rem 1rem 1.5rem;display:flex;flex-direction:column;align-items:center;gap:1.25rem}
+.ai-limit-upgrade-icon{font-size:2rem;line-height:1}
+.ai-limit-upgrade-title{font-family:var(--display,sans-serif);font-size:1.05rem;font-weight:700;text-align:center;margin:0}
+.ai-limit-upgrade-sub{font-size:.82rem;color:var(--muted2,#888);text-align:center;margin:0;line-height:1.55;max-width:340px}
+.ai-limit-plan-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;width:100%;max-width:380px}
+.ai-limit-plan-card{background:var(--card2,#12101a);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:1rem .9rem;display:flex;flex-direction:column;gap:.4rem;cursor:pointer;transition:border-color .15s,transform .15s;text-decoration:none}
+.ai-limit-plan-card:hover{border-color:rgba(168,85,247,.5);transform:translateY(-2px)}
+.ai-limit-plan-card.featured{border-color:rgba(168,85,247,.45);background:rgba(168,85,247,.07)}
+.ai-limit-plan-name{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted2)}
+.ai-limit-plan-card.featured .ai-limit-plan-name{color:#c084fc}
+.ai-limit-plan-price{font-family:var(--display,sans-serif);font-size:1.4rem;font-weight:700;color:var(--text)}
+.ai-limit-plan-freq{font-size:.68rem;color:var(--muted);margin-left:.1rem}
+.ai-limit-plan-feature{font-size:.75rem;color:var(--muted2);line-height:1.4}
+.ai-limit-plan-card.featured .ai-limit-plan-feature{color:#d8b4fe}
+.ai-limit-plan-cta{margin-top:.5rem;padding:.4rem .75rem;border-radius:7px;font-size:.73rem;font-weight:600;text-align:center;text-decoration:none;transition:opacity .15s;display:block}
+.ai-limit-plan-cta:hover{opacity:.85}
+.ai-limit-plan-cta-plus{background:rgba(168,85,247,.18);color:#c084fc;border:1px solid rgba(168,85,247,.35)}
+.ai-limit-plan-cta-pro{background:var(--accent,#ff4b33);color:#fff;border:none}
+
 /* ── AI HERO ─────────────────────────────────────────────────────────────── */
 .ai-hero-wrap{position:relative;overflow:hidden;padding:130px 0 60px;background:var(--bg)}
 .ai-hero-dots{position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.03) 0.6px,transparent 0.6px);background-size:3px 3px;opacity:.42;pointer-events:none}
@@ -2341,6 +2361,51 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       return `You've reached your Ask AI limit for this month. Please try again shortly.`;
     }
     return `You've reached your ${limit} Ask AI sessions for this month. Upgrade to Plus for 20/month or Pro for unlimited Ask AI.`;
+  }
+
+  function buildAiLimitUpgradeHtml() {
+    const tier = state.sessionUser?.proEnabled ? "pro" : String(state.sessionUser?.planTier || "none");
+    const limit = state.aiMonthlyLimit;
+    let titleText, subText;
+    if (tier === "plus") {
+      titleText = "Monthly AI Limit Reached";
+      subText = `You've used all ${limit > 0 ? limit : ""} Ask AI sessions for this month. Upgrade to Pro for unlimited AI analysis.`;
+    } else if (tier === "pro") {
+      titleText = "AI Limit Reached";
+      subText = "You've reached your Ask AI limit for this month. Your usage resets at the start of next month.";
+    } else {
+      titleText = "AI Limit Reached";
+      subText = `You've used all ${limit > 0 ? limit : ""} Ask AI sessions this month. Upgrade to unlock more.`;
+    }
+
+    if (tier === "pro") {
+      return `<div class="ai-limit-upgrade">
+        <div class="ai-limit-upgrade-icon">⏳</div>
+        <p class="ai-limit-upgrade-title">${escapeHtml(titleText)}</p>
+        <p class="ai-limit-upgrade-sub">${escapeHtml(subText)}</p>
+      </div>`;
+    }
+
+    const showPlusCard = tier !== "plus";
+    return `<div class="ai-limit-upgrade">
+      <div class="ai-limit-upgrade-icon">✨</div>
+      <p class="ai-limit-upgrade-title">${escapeHtml(titleText)}</p>
+      <p class="ai-limit-upgrade-sub">${escapeHtml(subText)}</p>
+      <div class="ai-limit-plan-grid" style="${showPlusCard ? "" : "grid-template-columns:1fr"}">
+        ${showPlusCard ? `<a href="/signin?plan=plus" class="ai-limit-plan-card">
+          <span class="ai-limit-plan-name">Starter</span>
+          <span class="ai-limit-plan-price">$3<span class="ai-limit-plan-freq">/mo</span></span>
+          <span class="ai-limit-plan-feature">20 Ask AI sessions/month</span>
+          <span class="ai-limit-plan-cta ai-limit-plan-cta-plus">Get Starter</span>
+        </a>` : ""}
+        <a href="/signin?plan=pro" class="ai-limit-plan-card featured">
+          <span class="ai-limit-plan-name">Pro</span>
+          <span class="ai-limit-plan-price">$15<span class="ai-limit-plan-freq">/mo</span></span>
+          <span class="ai-limit-plan-feature">Unlimited Ask AI + full analytics</span>
+          <span class="ai-limit-plan-cta ai-limit-plan-cta-pro">Upgrade to Pro</span>
+        </a>
+      </div>
+    </div>`;
   }
 
   function setText(id, value) {
@@ -3903,7 +3968,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
         outputInner.innerHTML = `<p style="opacity:.5;font-size:.88rem">Generating analysis…</p>`;
       } else if (atLimit) {
         if (metaEl) metaEl.textContent = "";
-        outputInner.innerHTML = `<div style="text-align:center;padding:1.5rem 1rem"><p style="color:var(--muted);margin-bottom:.9rem;font-size:.88rem">${escapeHtml(buildAiLimitMessage(limit))}</p><button type="button" class="btn-primary" style="font-size:.72rem;padding:.45rem 1.2rem" onclick="showUpgradeModal()">See plans →</button></div>`;
+        outputInner.innerHTML = buildAiLimitUpgradeHtml();
       } else if (!hasHoldings) {
         if (metaEl) metaEl.textContent = "";
         outputInner.innerHTML = `<div style="text-align:center;padding:1.5rem 1rem"><p style="color:var(--muted);margin-bottom:.9rem;font-size:.88rem">Upload your portfolio on the <strong style="color:var(--text)">Quant</strong> tab to unlock AI analysis.</p><button type="button" class="btn-primary" style="font-size:.72rem;padding:.45rem 1.2rem" onclick="document.querySelectorAll('.nav-tab')[0]?.click()">Go to Quant →</button></div>`;
@@ -4037,6 +4102,12 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
           if (response.status === 429) {
             const limit = Number.isFinite(Number(errPayload?.aiLimit)) ? Number(errPayload.aiLimit) : state.aiMonthlyLimit;
             message = buildAiLimitMessage(limit > 0 ? limit : 3);
+            // Force atLimit state so the upgrade card renders
+            if (typeof errPayload?.aiLimit === "number") state.aiMonthlyLimit = errPayload.aiLimit;
+            if (typeof errPayload?.aiUsed === "number") state.aiUsedThisMonth = errPayload.aiUsed;
+            else state.aiUsedThisMonth = state.aiMonthlyLimit; // hit the ceiling
+            state.holdingsAi = null;
+            state.aiConversationMessages = [];
           } else if (errPayload?.error) {
             message = errPayload.error;
           }
@@ -4100,8 +4171,17 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
 
       throw new Error("AI stream ended without a complete response.");
     } catch (error) {
-      state.holdingsAiError = error instanceof Error ? error.message : "Failed to run Ask AI analysis.";
-      showToast(state.holdingsAiError, "error");
+      // Remove the optimistic user message if the request failed
+      state.aiConversationMessages = state.aiConversationMessages.slice(0, -1);
+      const errMsg = error instanceof Error ? error.message : "Failed to run Ask AI analysis.";
+      const atLimitNow = state.aiMonthlyLimit !== -1 && state.aiUsedThisMonth >= state.aiMonthlyLimit;
+      if (atLimitNow) {
+        // Upgrade card renders in place — no separate error needed
+        state.holdingsAiError = "";
+      } else {
+        state.holdingsAiError = errMsg;
+        showToast(errMsg, "error");
+      }
     } finally {
       state.holdingsAiLoading = false;
       state.holdingsAiStreamText = "";

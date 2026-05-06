@@ -186,17 +186,13 @@ a { text-decoration: none; color: inherit; }
   .nav-links a { font-size: 0.75rem; padding: 0.7rem 0; min-height: 44px; display: flex; align-items: center; }
   .nav-links .demo { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0.6rem 1.2rem; margin-top: 0.5rem; }
   .nav-cta { min-height: 44px; display: inline-flex; align-items: center; padding: 0.6rem 1.2rem; font-size: 0.7rem; }
-  .hero-layout, .dbf-grid { grid-template-columns: 1fr; }
-  .hero-right { display: flex; margin-top: 1rem; }
-  .live-panel { max-width: 100%; }
-  .pro-card ul, .pro-facts { grid-template-columns: 1fr; }
+  .hero-layout { grid-template-columns: 1fr; }
+  .hero-right { display: none; }
+  .pro-card ul, .pro-facts { grid-template-columns: 1fr 1fr; }
   .sec { padding: 2.5rem 0; }
   .kicker { font-size: 0.7rem; }
   .hero-eye { font-size: 0.58rem; }
   .hero-sys { font-size: 0.58rem; }
-  .lp-label { font-size: 0.65rem; }
-  .lp-kpi p { font-size: 0.65rem; }
-  .lp-risk-top span { font-size: 0.65rem; }
   .btn { min-height: 44px; }
   .utility-pill { min-height: 44px; display: inline-flex; align-items: center; }
   .checkout-link { min-height: 44px; }
@@ -205,63 +201,136 @@ a { text-decoration: none; color: inherit; }
 @media (max-width: 768px) {
   .access-shell { grid-template-columns: 1fr; gap: 2rem; }
   .access-copy { padding-top: 0; }
-  .pricing { grid-template-columns: 1fr; }
+  .pricing { grid-template-columns: 1fr 1fr; gap: 0.75rem; }
 }
 @media (max-width: 640px) {
-  .ops, .callouts, .feat, .steps, .safety, .hero-panels { grid-template-columns: 1fr; }
+  /* ── Horizontal-scroll card rows ────────────────────────── */
+  /* Ops (Import / Analyse / Act) */
+  .ops {
+    display: flex; overflow-x: auto; scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 0.5rem; margin-bottom: 2rem;
+    border-radius: var(--r);
+  }
+  .ops::-webkit-scrollbar { display: none; }
+  .ops article { flex-shrink: 0; width: 72vw; max-width: 260px; border-left: 1px solid var(--border); }
+  .ops article:first-child { border-left: none; }
+
+  /* Feature grid */
+  .feat {
+    display: flex; overflow-x: auto; scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    border-radius: var(--r); gap: 0;
+    padding-bottom: 0.5rem;
+  }
+  .feat::-webkit-scrollbar { display: none; }
+  .feat article { flex-shrink: 0; width: 78vw; max-width: 280px; border-left: 2px solid transparent; border-top: 1px solid var(--border); }
+  .feat article:first-child { border-top: none; }
+
+  /* Steps */
+  .steps {
+    display: flex; overflow-x: auto; scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    border-radius: var(--r); gap: 0;
+    padding-bottom: 0.5rem;
+  }
+  .steps::-webkit-scrollbar { display: none; }
+  .steps article { flex-shrink: 0; width: 78vw; max-width: 280px; border-left: 1px solid var(--border); }
+  .steps article:first-child { border-left: none; }
+
+  /* Hero panels */
+  .hero-panels { display: flex; overflow-x: auto; scrollbar-width: none; gap: 0.6rem; padding-bottom: 0.25rem; }
+  .hero-panels::-webkit-scrollbar { display: none; }
+  .hero-panels article { flex-shrink: 0; width: 70vw; max-width: 240px; }
+
+  /* Callouts: keep 1 col but tighten */
+  .callouts { grid-template-columns: 1fr; gap: 0.7rem; }
+
+  /* Safety: keep 2 col */
+  .safety { grid-template-columns: 1fr 1fr; }
+
+  /* Pro-card adjustments */
+  .pro-card ul { grid-template-columns: 1fr; gap: 0.55rem; }
+  .pro-facts { grid-template-columns: 1fr 1fr; gap: 0.55rem; }
+
+  /* Dashboard preview: hide on mobile, too complex */
+  #preview { display: none; }
+
+  /* Pricing stays 1 col on mobile */
+  .pricing { grid-template-columns: 1fr; }
+
+  /* Auth / forms */
   .password-row { grid-template-columns: 1fr; }
   .show-password { width: 100%; }
   .utility-row { gap: 0.45rem; }
   .auth-card { padding: 1.35rem; }
   .fc { font-size: 0.68rem; }
   .callout .ck { font-size: 0.7rem; }
+
+  /* Padding for sticky CTA bar */
+  body { padding-bottom: 70px; }
 }
 @media (max-width: 480px) {
-  /* Container */
-  .wrap { padding-inline: 0.85rem; }
-  .sec { padding: 1.5rem 0; }
+  .wrap { padding-inline: 1rem; }
+  .sec { padding: 1.75rem 0; }
 
   /* Hero */
   .hero { padding-top: 80px; }
-  .hero-left { gap: 0.65rem; }
+  .hero-left { gap: 0.7rem; }
   .hero-eye { font-size: 0.56rem; letter-spacing: 0.18em; gap: 0.45rem; }
   .hero-eye::before { width: 18px; }
-  .hero-title { font-size: clamp(1.6rem, 7.5vw, 2.2rem); line-height: 1.06; }
+  .hero-title { font-size: clamp(2rem, 8.5vw, 2.8rem); line-height: 1.02; }
   .hero-sys { font-size: 0.56rem; letter-spacing: 0.12em; }
-  .hero-desc { font-size: 0.82rem; line-height: 1.72; max-width: 100%; }
-  .hero-sub { font-size: 0.8rem; line-height: 1.7; margin-bottom: 1.4rem; }
-  .hero-panels { gap: 0.45rem; }
-  .hero-actions { gap: 0.5rem; }
+  .hero-desc { font-size: 0.84rem; line-height: 1.7; max-width: 100%; }
+  .hero-btns { flex-direction: column; gap: 0.5rem; }
+  .hero-btns .btn { width: 100%; }
 
   /* Section headings */
-  .h2 { font-size: clamp(1.5rem, 7vw, 2.2rem); }
+  .h2 { font-size: clamp(1.55rem, 7vw, 2.2rem); }
   .kicker { font-size: 0.6rem; }
-
-  /* Live panel (hero right side, shows on mobile) */
-  .live-panel { padding: 1rem; }
-  .lp-kpis { gap: 0.45rem; }
-  .lp-kpi p { font-size: 0.65rem; }
-  .lp-kpi h4 { font-size: 1.05rem; }
+  .sub { font-size: 0.85rem; margin-bottom: 1.5rem; }
 
   /* Auth card */
   .auth-card { padding: 1.1rem 1.1rem 1.3rem; }
-  /* Prevent iOS from zooming on input focus */
-  .auth-field input,
-  .auth-field select,
-  .auth-field textarea { font-size: 16px; }
-
-  /* Utility pills row */
+  .auth-field input, .auth-field select, .auth-field textarea { font-size: 16px; }
   .utility-row { gap: 0.35rem; }
   .utility-pill { font-size: 0.6rem; padding: 0.5rem 0.75rem; }
-
-  /* Access section */
   .access-copy .h2 { font-size: clamp(1.5rem, 7vw, 2rem); }
 
-  /* Pro card feature list */
-  .pro-card ul, .pro-facts { grid-template-columns: 1fr; }
+  /* Pro card */
+  .pro-card { padding: 1.25rem; }
+  .pro-card h3 { font-size: 2rem; }
+  .pro-copy { font-size: 0.82rem; }
+  .pro-facts { grid-template-columns: 1fr 1fr; }
 
   /* Footer */
   .footer { padding: 1.5rem 0; font-size: 0.65rem; }
+  .footer-in { flex-direction: column; gap: 0.75rem; text-align: center; }
+}
+/* ── Sticky mobile CTA bar ──────────────────────────────────── */
+.mobile-cta-bar {
+  display: none;
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 850;
+  padding: 0.65rem 1rem;
+  background: rgba(10,6,20,0.96); backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(255,255,255,0.08);
+  gap: 0.55rem;
+}
+@media (max-width: 640px) {
+  .mobile-cta-bar { display: flex; }
+}
+.mobile-cta-bar .mcb-main {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, var(--orange), var(--orange-dk));
+  color: #fff; border: none; border-radius: 7px;
+  font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 0.72rem; cursor: pointer; text-decoration: none;
+}
+.mobile-cta-bar .mcb-demo {
+  flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  background: transparent; color: var(--muted2); border: 1px solid var(--border2);
+  border-radius: 7px; font-family: var(--mono); font-size: 0.63rem; letter-spacing: 0.1em;
+  text-transform: uppercase; padding: 0.72rem 0.9rem; cursor: pointer; text-decoration: none;
 }
 .access-shell { display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 4rem; align-items: start; }
 .access-copy { padding-top: 1rem; }
@@ -637,6 +706,10 @@ a { text-decoration: none; color: inherit; }
     </div>
   </div>
 </section>
+<div class="mobile-cta-bar" aria-hidden="true">
+  <a href="#access" class="mcb-main js-access-link" data-plan="starter">Start — $2.99/mo</a>
+  <a href="/dashboard?demo=1" class="mcb-demo">Demo</a>
+</div>
 <footer class="footer">
   <div class="wrap footer-in">
     <p class="fl">SPECTRE</p>
