@@ -30,7 +30,7 @@ html{scroll-behavior:smooth}
   --accent-dim:rgba(168,85,247,.12);
   --accent2-dim:rgba(255,122,48,.10);
   --danger:#f87171;
-  --green:#c084fc;
+  --green:#4ade80;
   --mono:'DM Mono',monospace;
   --disp:'Space Grotesk',sans-serif;
   --sans:'DM Sans',sans-serif;
@@ -108,8 +108,8 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;background:rgba(5,5,10,.92);
 .nav-ticker-sym{color:#8a8098;font-weight:500;letter-spacing:.08em}
 .nav-ticker-price{color:#ccc8e0;font-weight:600}
 .nav-ticker-chg{font-weight:500}
-.nav-ticker-chg.pos{color:#c084fc}
-.nav-ticker-chg.neg{color:#f87171}
+.nav-ticker-chg.pos{color:var(--green)}
+.nav-ticker-chg.neg{color:var(--danger)}
 
 /* ── HERO HEADER ── */
 .hero{padding:100px 0 3.5rem;display:grid;grid-template-columns:minmax(0,1fr) 480px;gap:4rem;align-items:center;position:relative;z-index:2}
@@ -270,8 +270,8 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;background:rgba(5,5,10,.92);
   font-family:var(--mono);
   font-size:.58rem;
 }
-.landing-preview-sub.pos{color:var(--purple-hi)}
-.landing-preview-sub.neg{color:#ff8a65}
+.landing-preview-sub.pos{color:var(--green)}
+.landing-preview-sub.neg{color:var(--danger)}
 .landing-preview-grid{
   display:grid;
   grid-template-columns:2fr 1fr;
@@ -412,12 +412,12 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;background:rgba(5,5,10,.92);
 /* stress cards */
 .stress-grid{display:grid;grid-template-columns:1fr 1fr;gap:.65rem}
 .stress-card{background:rgba(10,7,18,.7);border:1px solid var(--border);border-radius:10px;padding:.9rem 1rem;border-left:2px solid var(--border)}
-.stress-card.neg{border-left-color:rgba(255,77,26,.55)}
-.stress-card.pos{border-left-color:rgba(255,255,255,.2)}
+.stress-card.neg{border-left-color:rgba(239,68,68,.55)}
+.stress-card.pos{border-left-color:rgba(74,222,128,.35)}
 .stress-lbl{font-family:var(--mono);font-size:.52rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:.25rem}
 .stress-val{font-family:var(--disp);font-size:1.5rem;letter-spacing:.04em}
-.stress-val.neg{color:var(--orange)}
-.stress-val.pos{color:var(--text)}
+.stress-val.neg{color:var(--danger)}
+.stress-val.pos{color:var(--green)}
 .stress-proj{font-family:var(--mono);font-size:.55rem;color:var(--muted);margin-top:.15rem}
 
 /* performers */
@@ -426,8 +426,8 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;background:rgba(5,5,10,.92);
 .perf-ticker{font-family:var(--mono);font-size:.68rem;color:var(--text);font-weight:500}
 .perf-name{font-family:var(--mono);font-size:.55rem;color:var(--muted)}
 .perf-val{font-family:var(--disp);font-size:1.1rem;letter-spacing:.04em}
-.perf-val.pos{color:var(--text)}
-.perf-val.neg{color:var(--orange)}
+.perf-val.pos{color:var(--green)}
+.perf-val.neg{color:var(--danger)}
 
 /* ── RISK SIGNALS ── */
 .risk-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem}
@@ -482,7 +482,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;background:rgba(5,5,10,.92);
 }
 .risk-help:hover .risk-help-tip,.risk-help:focus .risk-help-tip,.risk-help:focus-visible .risk-help-tip{opacity:1;transform:translateY(0)}
 .risk-val{font-family:var(--disp);font-size:1.9rem;letter-spacing:.04em;color:var(--text);line-height:1}
-.risk-val.danger{color:var(--orange);text-shadow:0 0 16px rgba(255,77,26,.25)}
+.risk-val.danger{color:var(--danger);text-shadow:0 0 16px rgba(239,68,68,.2)}
 .risk-val.purple{color:var(--purple-hi)}
 .risk-sub{font-family:var(--mono);font-size:.54rem;color:var(--muted);margin-top:.3rem}
 .corr-matrix{display:grid;gap:2px;margin-top:1rem;width:fit-content;max-width:100%;overflow-x:auto}
@@ -494,8 +494,8 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;background:rgba(5,5,10,.92);
 .factor-row-label{font-family:var(--mono);font-size:.52rem;color:var(--muted);width:9rem;text-align:right;flex-shrink:0}
 .factor-bar-wrap{flex:1;background:rgba(255,255,255,.06);border-radius:3px;height:.7rem;position:relative;overflow:visible}
 .factor-bar-fill{height:100%;border-radius:3px;transition:width .5s ease}
-.factor-bar-fill.pos{background:var(--purple-hi)}
-.factor-bar-fill.neg{background:var(--orange)}
+.factor-bar-fill.pos{background:var(--green)}
+.factor-bar-fill.neg{background:var(--danger)}
 .factor-bar-zero{position:absolute;top:-3px;bottom:-3px;width:1px;background:rgba(255,255,255,.2);left:50%}
 .factor-val{font-family:var(--mono);font-size:.56rem;color:var(--text);width:3.5rem;flex-shrink:0}
 .risk-window{font-family:var(--mono);font-size:.55rem;color:var(--muted);margin-bottom:1rem}
@@ -563,8 +563,8 @@ canvas{width:100%!important;height:220px;display:block}
 .signal-sector-label,.signal-sector-value,.signal-mover-symbol,.signal-mover-change{font-family:var(--mono);font-size:.68rem}
 .signal-sector-label,.signal-mover-symbol{color:var(--muted2)}
 .signal-sector-value,.signal-mover-change{text-align:right}
-.signal-mover-change.pos{color:var(--purple-hi)}
-.signal-mover-change.neg{color:#ff8a65}
+.signal-mover-change.pos{color:var(--green)}
+.signal-mover-change.neg{color:var(--danger)}
 .signal-mover-row{display:grid;grid-template-columns:44px 1fr 54px;gap:.7rem;align-items:center}
 @media(max-width:700px){.signal-grid{grid-template-columns:1fr}}
 
@@ -597,6 +597,8 @@ td{font-family:var(--mono);font-size:.7rem;color:var(--muted2);padding:.8rem 1.2
 td.ticker{color:var(--text);font-weight:500;font-size:.75rem}
 td.val{color:var(--text)}
 td.accent{color:var(--orange)}
+td.val-pos{color:var(--green);font-family:var(--mono)}
+td.val-neg{color:var(--danger);font-family:var(--mono)}
 .badge{font-family:var(--mono);font-size:.49rem;font-weight:700;letter-spacing:.12em;padding:.14rem .45rem;border-radius:3px;text-transform:uppercase}
 .badge.asx{background:rgba(255,77,26,.12);color:#ff8a75;border:1px solid rgba(255,77,26,.25)}
 .badge.super{background:rgba(155,93,229,.12);color:var(--purple-hi);border:1px solid rgba(155,93,229,.25)}
@@ -604,8 +606,8 @@ td.accent{color:var(--orange)}
 .badge.fund{background:rgba(255,255,255,.05);color:var(--muted2);border:1px solid var(--border2)}
 .badge.gold{background:rgba(255,77,26,.08);color:var(--orange);border:1px solid rgba(255,77,26,.2)}
 .chip{font-family:var(--mono);font-size:.5rem;letter-spacing:.1em;text-transform:uppercase;padding:.14rem .4rem;border-radius:3px}
-.chip.pos{background:rgba(255,255,255,.06);color:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.1)}
-.chip.neg{background:rgba(255,77,26,.08);color:var(--orange);border:1px solid rgba(255,77,26,.18)}
+.chip.pos{background:rgba(74,222,128,.09);color:var(--green);border:1px solid rgba(74,222,128,.25)}
+.chip.neg{background:rgba(239,68,68,.08);color:var(--danger);border:1px solid rgba(239,68,68,.22)}
 .pricing-tag{display:inline-flex;align-items:center;font-family:var(--mono);font-size:.49rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.14rem .45rem;border-radius:999px;border:1px solid var(--border2)}
 .pricing-tag.live{background:rgba(168,85,247,.12);color:var(--purple-hi);border-color:rgba(168,85,247,.28)}
 .pricing-tag.daily{background:rgba(255,122,48,.1);color:#ffb38e;border-color:rgba(255,122,48,.22)}
@@ -720,7 +722,7 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 .console-stat{background:rgba(10,7,18,.7);border:1px solid rgba(155,93,229,.1);border-radius:10px;padding:.9rem 1rem}
 .console-lbl{font-family:var(--mono);font-size:.52rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:.25rem}
 .console-val{font-family:var(--disp);font-size:1.6rem;letter-spacing:.04em;color:var(--purple-hi)}
-.console-val.danger{color:var(--orange)}
+.console-val.danger{color:var(--danger)}
 @media(max-width:900px){.console-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:600px){.console-grid{grid-template-columns:1fr}}
 
@@ -1006,7 +1008,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
 /* Signal badge updates */
 .signal-badge{ background:rgba(168,85,247,.14) !important; color:var(--purple) !important }
 .signal-badge.orange{ background:rgba(255,122,48,.12) !important; color:var(--orange) !important }
-.signal-mover-change.pos{ color:#c084fc !important }
+.signal-mover-change.pos{ color:var(--green) !important }
 .signal-mover-change.neg{ color:var(--danger) !important }
 
 /* KPI mini */
@@ -2093,7 +2095,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
             <td class="val">$152.40</td>
             <td class="val">$18,288</td>
             <td>$15,600</td>
-            <td class="accent">+$2,688</td>
+            <td class="val-pos">+$2,688</td>
           </tr>
           <tr>
             <td class="ticker">BHP</td>
@@ -2104,7 +2106,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
             <td class="val">$43.18</td>
             <td class="val">$12,090</td>
             <td>$11,200</td>
-            <td class="accent">+$890</td>
+            <td class="val-pos">+$890</td>
           </tr>
           <tr>
             <td class="ticker">VAS</td>
@@ -2115,7 +2117,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
             <td class="val">$96.50</td>
             <td class="val">$38,600</td>
             <td>$35,480</td>
-            <td class="accent">+$3,120</td>
+            <td class="val-pos">+$3,120</td>
           </tr>
           <tr>
             <td class="ticker">BTC</td>
@@ -2126,7 +2128,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
             <td class="val">$84,200</td>
             <td class="val">$35,364</td>
             <td>$21,164</td>
-            <td class="accent">+$14,200</td>
+            <td class="val-pos">+$14,200</td>
           </tr>
           <tr>
             <td class="ticker">AUC</td>
@@ -2137,7 +2139,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
             <td class="val">$4,200/oz</td>
             <td class="val">$24,840</td>
             <td>$20,720</td>
-            <td class="accent">+$4,120</td>
+            <td class="val-pos">+$4,120</td>
           </tr>
           <tr>
             <td class="ticker">HOST</td>
@@ -2148,7 +2150,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
             <td class="val">—</td>
             <td class="val">$84,200</td>
             <td>$71,400</td>
-            <td class="accent">+$12,800</td>
+            <td class="val-pos">+$12,800</td>
           </tr>
           <tr>
             <td class="ticker">QAN</td>
@@ -2159,7 +2161,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
             <td class="val">$7.12</td>
             <td class="val">$4,272</td>
             <td>$6,752</td>
-            <td class="accent">−$2,480</td>
+            <td class="val-neg">−$2,480</td>
           </tr>
           <tr>
             <td class="ticker">ETH</td>
@@ -2170,7 +2172,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
             <td class="val">$3,840</td>
             <td class="val">$16,128</td>
             <td>$18,088</td>
-            <td class="accent">−$1,960</td>
+            <td class="val-neg">−$1,960</td>
           </tr>
         </tbody>
       </table>
@@ -4916,7 +4918,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
             <td class="val">${Number.isFinite(holding.price) && holding.price > 0 ? formatCurrency(holding.price, { decimals: 2 }) : "—"}</td>
             <td class="val">${formatCurrency(holding.value || 0)}</td>
             <td>${Number.isFinite(holding.costBase) ? formatCurrency(holding.costBase) : "—"}</td>
-            <td class="accent">${formatSignedCurrency(pnl)}</td>
+            <td class="${pnl >= 0 ? 'val-pos' : 'val-neg'}">${formatSignedCurrency(pnl)}</td>
           </tr>
         `;
       })
