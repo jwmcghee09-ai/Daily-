@@ -1541,15 +1541,15 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
         </div>
         <div class="console-grid">
           <div class="console-stat">
-            <div class="console-lbl">Expected Shortfall</div>
+            <div class="console-lbl">Avg. Loss (Bad Days)</div>
             <div class="console-val" id="pro-expected-shortfall">−9.9%</div>
           </div>
           <div class="console-stat">
-            <div class="console-lbl">Beta vs ASX 200</div>
+            <div class="console-lbl">ASX 200 Sensitivity</div>
             <div class="console-val" id="pro-beta">1.18</div>
           </div>
           <div class="console-stat">
-            <div class="console-lbl">Tracking Error</div>
+            <div class="console-lbl">Diff. from ASX 200</div>
             <div class="console-val" id="pro-tracking-error">14.2%</div>
           </div>
           <div class="console-stat">
@@ -1744,7 +1744,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
         <div class="risk-sub" id="risk-top3-sub">High concentration</div>
       </div>
       <div class="risk-card">
-        <div class="risk-lbl">Portfolio Concentration (HHI) <button type="button" class="risk-help" aria-label="HHI concentration help">?<span class="risk-help-tip">Herfindahl-Hirschman Index: sum of squared holding weights multiplied by 10,000. Higher values mean concentration in fewer positions.</span></button></div>
+        <div class="risk-lbl">Portfolio Concentration <button type="button" class="risk-help" aria-label="Portfolio concentration help">?<span class="risk-help-tip">How spread out your money is. A high score means a few holdings make up most of your portfolio — a lower score means more even spread. Calculated using HHI (sum of squared weights × 10,000).</span></button></div>
         <div class="risk-val" id="risk-hhi">1,820</div>
         <div class="risk-sub" id="risk-hhi-sub">Moderate concentration</div>
       </div>
@@ -1754,47 +1754,47 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
         <div class="risk-sub" id="risk-rsi-sub">Needs more history</div>
       </div>
       <div class="risk-card">
-        <div class="risk-lbl">Stochastic Oscillator <button type="button" class="risk-help" aria-label="Stochastic oscillator help">?<span class="risk-help-tip">Compares the latest portfolio level with its recent 14-period range. Above 80 can suggest overbought conditions; below 20 can suggest oversold conditions. Yahoo proxy fallback is used when snapshot history is limited.</span></button></div>
+        <div class="risk-lbl">Momentum Signal <button type="button" class="risk-help" aria-label="Momentum signal help">?<span class="risk-help-tip">Compares your portfolio's current level to its recent range over 14 periods. Above 80 may indicate the portfolio has risen quickly and could pull back; below 20 may indicate it has fallen and could recover.</span></button></div>
         <div class="risk-val" id="risk-stochastic">—</div>
         <div class="risk-sub" id="risk-stochastic-sub">Needs more history</div>
       </div>
       <div class="risk-card">
-        <div class="risk-lbl">On-Balance Volume (OBV) <button type="button" class="risk-help" aria-label="OBV help">?<span class="risk-help-tip">Portfolio flow proxy derived from directional changes over time. This is an internal pressure signal, not exchange-reported trading volume. Yahoo fallback is less reliable than your own snapshot history.</span></button></div>
+        <div class="risk-lbl">Buy / Sell Pressure <button type="button" class="risk-help" aria-label="Buy sell pressure help">?<span class="risk-help-tip">A proxy for whether money is flowing into or out of your portfolio based on directional changes over time. Rising means more up-days than down-days recently; falling means the opposite. Best read alongside your own snapshot history.</span></button></div>
         <div class="risk-val" id="risk-obv">—</div>
         <div class="risk-sub" id="risk-obv-sub">Needs more history</div>
       </div>
       <div class="risk-card pro-risk">
-        <div class="risk-lbl">1-Day VaR 95% <button type="button" class="risk-help" aria-label="VaR help">?<span class="risk-help-tip">95% historical Value at Risk using the 5th percentile of daily returns in the selected risk window.</span></button></div>
+        <div class="risk-lbl">Worst-Day Loss Estimate <button type="button" class="risk-help" aria-label="Worst day loss help">?<span class="risk-help-tip">On 95% of days, your portfolio should lose no more than this amount. Based on your actual daily return history. Also called VaR 95%.</span></button></div>
         <div class="risk-val danger" id="risk-var95">−8.4%</div>
         <div class="risk-sub" id="risk-var95-sub">Max expected loss</div>
       </div>
       <div class="risk-card">
-        <div class="risk-lbl">Expected Shortfall <button type="button" class="risk-help" aria-label="Expected shortfall help">?<span class="risk-help-tip">Average loss inside the worst 5% of daily returns in the selected risk window.</span></button></div>
+        <div class="risk-lbl">Average Loss on Bad Days <button type="button" class="risk-help" aria-label="Average loss help">?<span class="risk-help-tip">When things go wrong, this is how much your portfolio typically loses on the worst days — the average of your worst 5% of daily returns. Also called Expected Shortfall or CVaR.</span></button></div>
         <div class="risk-val danger" id="risk-cvar95">−9.9%</div>
-        <div class="risk-sub" id="risk-cvar95-sub">CVaR beyond VaR</div>
+        <div class="risk-sub" id="risk-cvar95-sub">Beyond worst-day estimate</div>
       </div>
       <div class="risk-card pro-risk">
-        <div class="risk-lbl">Max Drawdown <button type="button" class="risk-help" aria-label="Max drawdown help">?<span class="risk-help-tip">Largest peak-to-trough decline observed inside the selected risk window.</span></button></div>
+        <div class="risk-lbl">Biggest Historical Drop <button type="button" class="risk-help" aria-label="Biggest drop help">?<span class="risk-help-tip">The largest fall from a peak to a low point in the selected time window. Shows how much the portfolio has dropped from its high at its worst point.</span></button></div>
         <div class="risk-val danger" id="risk-max-drawdown">−12.1%</div>
-        <div class="risk-sub" id="risk-max-drawdown-sub">Worst peak to trough</div>
+        <div class="risk-sub" id="risk-max-drawdown-sub">Largest peak-to-trough fall</div>
       </div>
       <div class="risk-card pro-risk">
         <div class="risk-lbl">Volatility (Ann.) <button type="button" class="risk-help" aria-label="Volatility help">?<span class="risk-help-tip">Standard deviation of daily returns, annualised using sqrt(252).</span></button></div>
         <div class="risk-val" id="risk-volatility">18.4%</div>
-        <div class="risk-sub" id="risk-volatility-sub">Annualised std dev</div>
+        <div class="risk-sub" id="risk-volatility-sub">Annual price swings</div>
       </div>
       <div class="risk-card pro-risk">
-        <div class="risk-lbl">Beta vs ASX 200 <button type="button" class="risk-help" aria-label="Beta help">?<span class="risk-help-tip">Sensitivity of portfolio returns to ASX 200 returns from date-aligned daily history.</span></button></div>
+        <div class="risk-lbl">ASX 200 Sensitivity <button type="button" class="risk-help" aria-label="ASX sensitivity help">?<span class="risk-help-tip">How closely your portfolio moves with the ASX 200. A reading of 1.0 means it moves in line. Above 1.0 means it moves more than the market; below 1.0 means it moves less. Also called Beta.</span></button></div>
         <div class="risk-val purple" id="risk-beta">1.18</div>
         <div class="risk-sub" id="risk-beta-sub">Market sensitivity</div>
       </div>
       <div class="risk-card pro-risk">
-        <div class="risk-lbl">Tracking Error <button type="button" class="risk-help" aria-label="Tracking error help">?<span class="risk-help-tip">Standard deviation of active return (portfolio return minus ASX 200 return), annualised from daily data.</span></button></div>
+        <div class="risk-lbl">Difference from ASX 200 <button type="button" class="risk-help" aria-label="Difference from ASX help">?<span class="risk-help-tip">How much your portfolio's daily returns differ from the ASX 200. A higher number means your portfolio behaves very differently from the market — for better or worse. Also called Tracking Error.</span></button></div>
         <div class="risk-val" id="risk-tracking-error">14.2%</div>
         <div class="risk-sub" id="risk-tracking-error-sub">vs benchmark</div>
       </div>
       <div class="risk-card pro-risk">
-        <div class="risk-lbl">Cornish-Fisher VaR <button type="button" class="risk-help" aria-label="Cornish-Fisher VaR help">?<span class="risk-help-tip">VaR adjusted for skew and kurtosis rather than assuming a normal return distribution. This is currently estimated from Yahoo-derived return history and should be treated as a proxy.</span></button></div>
+        <div class="risk-lbl">Adjusted Loss Estimate <button type="button" class="risk-help" aria-label="Adjusted loss estimate help">?<span class="risk-help-tip">A more refined worst-day loss estimate that accounts for the fact that markets have more extreme moves than a normal distribution would predict. Estimated from market history — treat as a proxy. Also called Cornish-Fisher VaR.</span></button></div>
         <div class="risk-val danger" id="risk-cf-var95">—</div>
         <div class="risk-sub" id="risk-cf-var95-sub">Needs 20+ data points</div>
       </div>
@@ -1870,7 +1870,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
           <div class="signal-badge">Live Metrics</div>
         </div>
         <div class="signal-list" id="signal-risk-bars"></div>
-        <div class="signal-footer">Higher bars indicate elevated risk or weaker data confidence in that dimension. Concentration, VaR95, HHI, and account mix are the primary portfolio signals to monitor.</div>
+        <div class="signal-footer">Higher bars indicate elevated risk or weaker data confidence. Concentration, worst-day loss, and account mix are the primary signals to watch.</div>
       </div>
       <div class="signal-card">
         <div class="signal-card-head">
@@ -1893,7 +1893,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
           <path class="signal-drawdown-line" id="signal-drawdown-line" d="M38,52 L98,78 L158,150 L218,106 L278,88 L338,70 L388,58"></path>
           <g id="signal-drawdown-labels"></g>
         </svg>
-        <div class="signal-footer" id="signal-drawdown-footer">Drawdown measures peak-to-trough decline across the latest portfolio history window.</div>
+        <div class="signal-footer" id="signal-drawdown-footer">Shows the largest fall from a peak to a low point across your portfolio history. A bigger drop here means the portfolio has had a rougher ride.</div>
       </div>
       <div class="signal-card">
         <div class="signal-card-head">
