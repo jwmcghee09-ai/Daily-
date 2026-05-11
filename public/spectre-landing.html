@@ -9,16 +9,16 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #0c0817;
-  --card: rgba(17,11,30,0.92);
-  --card2: rgba(21,14,38,0.96);
-  --border: rgba(255,255,255,0.07);
-  --border2: rgba(255,255,255,0.12);
-  --text: #f2eeff;
-  --muted: #8a86a8;
-  --muted2: #b4b0cc;
+  --bg: #f9f8ff;
+  --card: #ffffff;
+  --card2: #f2f0fd;
+  --border: rgba(100,80,200,0.10);
+  --border2: rgba(100,80,200,0.16);
+  --text: #0a0818;
+  --muted: #6d6987;
+  --muted2: #4e4a6a;
   --purple: #7c4dff;
-  --purple-hi: #d0b3ff;
+  --purple-hi: #6e3ff3;
   --orange: #ff6a3d;
   --orange-dk: #d94a1f;
   --amber: #ffb547;
@@ -31,11 +31,11 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
 body { font-family: var(--sans); background: var(--bg); color: var(--text); min-height: 100vh; -webkit-font-smoothing: antialiased; }
-body::before { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: -2; background: radial-gradient(ellipse 72% 110% at -8% 44%, #34145f 0%, #1c0c35 30%, transparent 62%), radial-gradient(ellipse 34% 74% at 102% 16%, rgba(255,106,61,0.18) 0%, rgba(255,106,61,0.04) 34%, transparent 62%), linear-gradient(140deg, #170a2b 0%, #11071d 42%, #120816 70%, #170b13 100%); }
-body::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: -1; background-image: radial-gradient(rgba(255,255,255,0.03) 0.6px, transparent 0.6px); background-size: 3px 3px; opacity: 0.42; }
+body::before { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: -2; background: radial-gradient(ellipse 72% 110% at -8% 44%, rgba(124,77,255,0.06) 0%, rgba(124,77,255,0.02) 40%, transparent 62%), radial-gradient(ellipse 34% 74% at 102% 16%, rgba(255,106,61,0.07) 0%, transparent 50%), linear-gradient(140deg, #f9f8ff 0%, #f9f8ff 100%); }
+body::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: -1; background-image: radial-gradient(rgba(100,80,200,0.07) 0.6px, transparent 0.6px); background-size: 3px 3px; opacity: 0.5; }
 .wrap { width: 100%; max-width: var(--max); margin: 0 auto; padding-inline: 2.5rem; }
 a { text-decoration: none; color: inherit; }
-.nav { position: fixed; top: 0; left: 0; right: 0; z-index: 900; height: 60px; background: rgba(10,6,20,0.88); backdrop-filter: blur(24px); border-bottom: 1px solid var(--border); }
+.nav { position: fixed; top: 0; left: 0; right: 0; z-index: 900; height: 60px; background: rgba(255,255,255,0.92); backdrop-filter: blur(24px); border-bottom: 1px solid var(--border); }
 .nav-in { height: 100%; display: grid; grid-template-columns: max-content 1fr max-content; align-items: center; gap: 1rem; }
 .logo { font-family: var(--disp); font-size: 1.45rem; letter-spacing: 0.14em; background: linear-gradient(120deg, var(--purple-hi), var(--orange)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
 .nav-links { display: flex; align-items: center; justify-self: center; gap: 1.4rem; }
@@ -44,24 +44,24 @@ a { text-decoration: none; color: inherit; }
 .nav-links .demo { color: #fff; background: linear-gradient(135deg, var(--purple), #6d3df5); border-radius: 3px; padding: 0.34rem 0.9rem; box-shadow: 0 8px 24px rgba(124,77,255,0.34); }
 .nav-cta { color: #fff; background: linear-gradient(135deg, var(--orange), var(--orange-dk)); border-radius: 3px; padding: 0.38rem 1rem; font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.14em; text-transform: uppercase; box-shadow: 0 10px 28px rgba(255,106,61,0.24); transition: filter 0.18s; }
 .nav-cta:hover { filter: brightness(1.08); }
-.ticker { position: sticky; top: 60px; z-index: 800; overflow: hidden; background: rgba(10,6,20,0.72); border-bottom: 1px solid var(--border); padding: 0.52rem 0; }
+.ticker { position: sticky; top: 60px; z-index: 800; overflow: hidden; background: rgba(255,255,255,0.90); border-bottom: 1px solid var(--border); padding: 0.52rem 0; }
 .ticker-track { display: flex; gap: 2.5rem; white-space: nowrap; animation: tick 32s linear infinite; }
 .ti { font-family: var(--mono); font-size: 0.63rem; letter-spacing: 0.09em; color: var(--muted); display: inline-flex; gap: 0.4rem; }
 .ts { color: var(--text); font-weight: 500; }
-.tu { color: var(--purple-hi); }
-.td { color: var(--orange); }
+.tu { color: #4ade80; }
+.td { color: #f87171; }
 @keyframes tick { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 .btn { display: inline-flex; align-items: center; justify-content: center; border-radius: 4px; padding: 0.8rem 1.9rem; font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; border: 0; transition: filter 0.18s, transform 0.18s; }
 .btn:hover { filter: brightness(1.08); transform: translateY(-1px); }
 .btn-pri { color: #fff; background: linear-gradient(135deg, var(--orange), var(--orange-dk)); box-shadow: 0 12px 30px rgba(255,106,61,0.24); }
 .btn-demo, .btn-pro { color: #fff; background: linear-gradient(135deg, var(--purple), #6d3df5); box-shadow: 0 12px 30px rgba(124,77,255,0.28); }
 .sec { padding: 5.5rem 0; position: relative; }
-.sec-alt { background: rgba(10,6,20,0.52); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.sec-alt { background: rgba(124,77,255,0.03); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
 .kicker { font-family: var(--mono); font-size: 0.59rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--purple-hi); margin-bottom: 0.85rem; display: flex; align-items: center; gap: 0.6rem; }
 .kicker::before { content: ""; width: 20px; height: 1px; background: linear-gradient(90deg, var(--orange), var(--purple-hi)); border-radius: 1px; }
 .kicker.or { color: var(--purple-hi); }
 .h2 { font-family: var(--disp); font-size: clamp(2.1rem, 4vw, 3.6rem); line-height: 1.02; max-width: 740px; margin-bottom: 0.85rem; }
-.h2 span { background: linear-gradient(120deg, #f4eeff 0%, var(--purple-hi) 68%, var(--orange) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.h2 span { background: linear-gradient(120deg, #2a1870 0%, var(--purple) 60%, var(--orange) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
 .sub { max-width: 520px; font-size: 0.94rem; color: var(--muted2); line-height: 1.8; margin-bottom: 2.75rem; }
 .hero { min-height: 100vh; padding-top: 108px; padding-bottom: 3rem; position: relative; overflow: hidden; }
 .hero-gl { position: absolute; inset: 0; pointer-events: none; background-image: linear-gradient(rgba(155,93,229,0.028) 1px, transparent 1px), linear-gradient(90deg, rgba(155,93,229,0.028) 1px, transparent 1px); background-size: 58px 58px; mask-image: radial-gradient(ellipse 90% 80% at 40% 45%, black 0%, transparent 100%); }
@@ -70,8 +70,8 @@ a { text-decoration: none; color: inherit; }
 .hero-left { display: grid; gap: 1rem; }
 .hero-eye { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--purple-hi); display: flex; align-items: center; gap: 0.65rem; }
 .hero-eye::before { content: ""; width: 26px; height: 2px; border-radius: 2px; background: linear-gradient(90deg, var(--purple), var(--purple-hi)); }
-.hero-title { font-family: var(--disp); font-size: clamp(2.2rem, 4vw, 4.5rem); line-height: 0.96; letter-spacing: 0.01em; color: #fff; }
-.hero-title span { background: linear-gradient(125deg, #fbf7ff 0%, var(--purple-hi) 58%, var(--orange) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.hero-title { font-family: var(--disp); font-size: clamp(2.2rem, 4vw, 4.5rem); line-height: 0.96; letter-spacing: 0.01em; color: var(--text); }
+.hero-title span { background: linear-gradient(125deg, #1a0d50 0%, var(--purple) 55%, var(--orange) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
 .hero-sys { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.16em; color: var(--muted); text-transform: uppercase; }
 .hero-desc { font-size: 0.98rem; line-height: 1.78; color: var(--muted2); max-width: 460px; }
 .hero-btns { display: flex; flex-wrap: wrap; gap: 0.8rem; }
@@ -81,18 +81,19 @@ a { text-decoration: none; color: inherit; }
 .hero-panels h3 { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--purple-hi); margin-bottom: 0.4rem; }
 .hero-panels p { font-size: 0.8rem; color: var(--muted2); line-height: 1.55; }
 .hero-right { display: flex; align-items: center; justify-content: center; }
-.live-panel { width: 100%; max-width: 480px; background: var(--card2); border: 1px solid var(--border2); border-radius: 12px; padding: 1.3rem; box-shadow: 0 40px 100px rgba(0,0,0,0.65); animation: flt 5s ease-in-out infinite; }
+.live-panel { width: 100%; max-width: 480px; background: var(--card2); border: 1px solid var(--border2); border-radius: 12px; padding: 1.3rem; box-shadow: 0 24px 60px rgba(100,80,200,0.14), 0 4px 12px rgba(0,0,0,0.06); animation: flt 5s ease-in-out infinite; }
 @keyframes flt { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 .lp-label { font-family: var(--mono); font-size: 0.55rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.85rem; }
 .lp-kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin-bottom: 0.65rem; }
-.lp-kpi { background: rgba(10,6,20,0.65); border: 1px solid var(--border); border-radius: 8px; padding: 0.8rem 0.9rem; }
+.lp-kpi { background: rgba(124,77,255,0.05); border: 1px solid var(--border); border-radius: 8px; padding: 0.8rem 0.9rem; }
 .lp-kpi p { font-family: var(--mono); font-size: 0.5rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.3rem; }
 .lp-kpi strong { font-family: var(--disp); font-size: 1.95rem; line-height: 1; color: var(--text); }
-.lp-kpi strong.ac, .lp-risk-top strong { color: var(--orange); }
-.lp-risk { background: rgba(10,6,20,0.65); border: 1px solid var(--border); border-radius: 8px; padding: 0.8rem 0.9rem; }
+.lp-kpi strong.ac { color: #f87171; }
+.lp-risk-top strong { color: var(--orange); }
+.lp-risk { background: rgba(124,77,255,0.05); border: 1px solid var(--border); border-radius: 8px; padding: 0.8rem 0.9rem; }
 .lp-risk-top { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 0.6rem; }
 .lp-risk-top span { font-family: var(--mono); font-size: 0.5rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
-.lp-track { height: 4px; background: rgba(255,255,255,0.08); border-radius: 999px; overflow: hidden; }
+.lp-track { height: 4px; background: rgba(0,0,0,0.08); border-radius: 999px; overflow: hidden; }
 .lp-fill { display: block; height: 100%; width: 72%; border-radius: 999px; background: linear-gradient(90deg, var(--purple-hi), var(--orange)); }
 .lp-spark { width: 100%; height: 48px; margin-top: 0.75rem; opacity: 0.82; }
 .ops, .steps { display: grid; grid-template-columns: repeat(3,1fr); background: var(--card); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; }
@@ -105,23 +106,23 @@ a { text-decoration: none; color: inherit; }
 .ops p, .callout p, .feat p, .steps p, .safety p, .pro-facts p { font-size: 0.82rem; color: var(--muted2); line-height: 1.65; }
 .callouts { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; margin-bottom: 2.5rem; }
 .callout { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 1.5rem 1.8rem; }
-.callout.af { border-color: rgba(208,179,255,0.26); box-shadow: 0 0 28px rgba(124,77,255,0.14); }
+.callout.af { border-color: rgba(110,63,243,0.22); box-shadow: 0 0 28px rgba(124,77,255,0.10); }
 .callout .ck { font-family: var(--mono); font-size: 0.59rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.4rem; }
 .callout.af .ck { color: var(--purple-hi); }
 .callout h3 { font-size: 1.8rem; margin-bottom: 0.4rem; }
 .feat { display: grid; grid-template-columns: repeat(2,1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; }
 .feat article { background: var(--card); padding: 1.9rem; border-left: 2px solid transparent; transition: border-left-color 0.2s, background 0.2s; }
-.feat article:hover { border-left-color: var(--purple-hi); background: #17102c; }
+.feat article:hover { border-left-color: var(--purple-hi); background: #ede8ff; }
 .feat h3 { font-size: 1.35rem; margin-bottom: 0.5rem; }
-.dbf { border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; background: var(--card2); box-shadow: 0 32px 80px rgba(0,0,0,0.6); }
-.dbf-bar { display: flex; align-items: center; gap: 0.42rem; padding: 0.7rem 1.15rem; background: rgba(10,6,20,0.92); border-bottom: 1px solid var(--border); }
+.dbf { border: 1px solid var(--border2); border-radius: 10px; overflow: hidden; background: var(--card2); box-shadow: 0 12px 40px rgba(100,80,200,0.10), 0 2px 8px rgba(0,0,0,0.05); }
+.dbf-bar { display: flex; align-items: center; gap: 0.42rem; padding: 0.7rem 1.15rem; background: rgba(240,238,252,0.98); border-bottom: 1px solid var(--border); }
 .dot { width: 9px; height: 9px; border-radius: 999px; }
 .dot:nth-child(1) { background: #ff5f57; }
 .dot:nth-child(2) { background: #febc2e; }
 .dot:nth-child(3) { background: #28c840; }
 .dbf-url { margin-left: 0.55rem; font-family: var(--mono); font-size: 0.59rem; color: var(--muted); }
 .dbf-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 0.85rem; padding: 1rem; }
-.dbc { background: rgba(8,4,18,0.75); border: 1px solid var(--border); border-radius: 6px; padding: 1rem 1.1rem; }
+.dbc { background: #ffffff; border: 1px solid var(--border); border-radius: 6px; padding: 1rem 1.1rem; }
 .dbc-k, .plan .tier, .pro-card .tier, .plan .psub, .pro-card .psub, .pro-facts h4, .safety h3, .plan-note, .footer-in, .fco { font-family: var(--mono); }
 .dbc-k { font-size: 0.56rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.55rem; }
 .dbc-sc { font-family: var(--disp); font-size: 3.1rem; line-height: 1; color: var(--amber); }
@@ -131,7 +132,7 @@ a { text-decoration: none; color: inherit; }
 .steps article { background: var(--card); padding: 2.1rem 1.65rem; }
 .sn { font-family: var(--disp); font-size: 3.5rem; line-height: 1; color: rgba(255,77,26,0.2); margin-bottom: 0.3rem; }
 .steps h3 { font-size: 1.45rem; margin-bottom: 0.4rem; }
-.pro-card { position: relative; background: var(--card); border: 1px solid rgba(208,179,255,0.24); border-radius: var(--r); padding: 2rem; box-shadow: 0 0 32px rgba(124,77,255,0.12), inset 0 0 0 1px rgba(208,179,255,0.08); }
+.pro-card { position: relative; background: var(--card); border: 1px solid rgba(110,63,243,0.20); border-radius: var(--r); padding: 2rem; box-shadow: 0 0 32px rgba(124,77,255,0.10), inset 0 0 0 1px rgba(110,63,243,0.06); }
 .pro-badge { position: absolute; top: -1px; right: 1.5rem; font-family: var(--mono); font-size: 0.54rem; letter-spacing: 0.18em; text-transform: uppercase; background: var(--orange); color: #fff; padding: 0.2rem 0.65rem; border-radius: 0 0 4px 4px; }
 .pro-card .tier, .plan .tier { font-size: 0.59rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.75rem; }
 .pro-card h3 { font-size: 2.7rem; line-height: 1; margin-bottom: 0.2rem; }
@@ -141,7 +142,7 @@ a { text-decoration: none; color: inherit; }
 .pro-card li, .plan li { font-size: 0.85rem; color: var(--muted2); line-height: 1.55; padding-left: 0.9rem; position: relative; }
 .pro-card li::before { content: "â€”"; position: absolute; left: 0; color: var(--orange); font-size: 0.7rem; }
 .pro-facts { display: grid; grid-template-columns: repeat(3,1fr); gap: 0.8rem; margin-bottom: 1.3rem; }
-.pro-facts article { background: rgba(8,4,18,0.65); border: 1px solid var(--border); border-radius: 6px; padding: 0.8rem 0.9rem; }
+.pro-facts article { background: rgba(124,77,255,0.04); border: 1px solid var(--border); border-radius: 6px; padding: 0.8rem 0.9rem; }
 .pro-facts h4 { font-size: 0.56rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--purple-hi); margin-bottom: 0.4rem; }
 .safety { display: grid; grid-template-columns: repeat(2,1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; margin-bottom: 1rem; }
 .safety article { background: var(--card); padding: 1.65rem 1.9rem; border-top: 2px solid transparent; transition: border-top-color 0.2s; }
@@ -150,7 +151,7 @@ a { text-decoration: none; color: inherit; }
 .safety-note { font-family: var(--mono); font-size: 0.69rem; color: var(--muted2); background: var(--card); border: 1px solid var(--border); border-radius: 5px; padding: 0.82rem 1.15rem; line-height: 1.65; }
 .pricing { display: grid; grid-template-columns: repeat(2,1fr); gap: 1.1rem; max-width: 760px; margin-inline: auto; }
 .plan { position: relative; background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 2rem; }
-.plan.feat-p { border-color: rgba(208,179,255,0.26); box-shadow: 0 0 32px rgba(124,77,255,0.12), inset 0 0 0 1px rgba(208,179,255,0.08); }
+.plan.feat-p { border-color: rgba(110,63,243,0.22); box-shadow: 0 0 32px rgba(124,77,255,0.10), inset 0 0 0 1px rgba(110,63,243,0.06); }
 .plan .badge { position: absolute; top: -1px; right: 1.5rem; font-family: var(--mono); font-size: 0.54rem; letter-spacing: 0.18em; text-transform: uppercase; background: var(--orange); color: #fff; padding: 0.2rem 0.65rem; border-radius: 0 0 4px 4px; }
 .plan h3 { font-family: var(--disp); font-size: 3.5rem; line-height: 1; }
 .plan h3 span { font-family: var(--mono); font-size: 0.68rem; color: var(--muted); }
@@ -181,7 +182,7 @@ a { text-decoration: none; color: inherit; }
 @media (max-width: 900px) {
   .wrap { padding-inline: 1.1rem; }
   .nav-toggle { display: flex; align-items: center; justify-content: center; }
-  .nav-links { display: none; position: fixed; top: 60px; left: 0; right: 0; background: rgba(10,6,20,0.96); backdrop-filter: blur(24px); flex-direction: column; padding: 1.5rem 2rem; gap: 0.2rem; border-bottom: 1px solid var(--border); z-index: 899; }
+  .nav-links { display: none; position: fixed; top: 60px; left: 0; right: 0; background: rgba(255,255,255,0.98); backdrop-filter: blur(24px); flex-direction: column; padding: 1.5rem 2rem; gap: 0.2rem; border-bottom: 1px solid var(--border); z-index: 899; }
   .nav-links.nav-open { display: flex; }
   .nav-links a { font-size: 0.75rem; padding: 0.7rem 0; min-height: 44px; display: flex; align-items: center; }
   .nav-links .demo { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0.6rem 1.2rem; margin-top: 0.5rem; }
@@ -312,8 +313,8 @@ a { text-decoration: none; color: inherit; }
   display: none;
   position: fixed; bottom: 0; left: 0; right: 0; z-index: 850;
   padding: 0.65rem 1rem;
-  background: rgba(10,6,20,0.96); backdrop-filter: blur(20px);
-  border-top: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.97); backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(100,80,200,0.10);
   gap: 0.55rem;
 }
 @media (max-width: 640px) {
@@ -339,36 +340,36 @@ a { text-decoration: none; color: inherit; }
 .access-points { display: grid; gap: 0.9rem; margin-top: 2.25rem; }
 .access-points p { display: flex; gap: 0.7rem; color: var(--muted2); font-size: 0.88rem; line-height: 1.65; }
 .access-points p::before { content: "-"; color: var(--purple-hi); flex-shrink: 0; }
-.auth-card { background: rgba(8,5,18,0.98); border: 1px solid rgba(208,179,255,0.18); border-radius: 14px; padding: 2rem; box-shadow: 0 30px 80px rgba(0,0,0,0.45); }
+.auth-card { background: #ffffff; border: 1px solid rgba(110,63,243,0.16); border-radius: 14px; padding: 2rem; box-shadow: 0 12px 40px rgba(100,80,200,0.12), 0 2px 8px rgba(0,0,0,0.04); }
 .auth-head { margin-bottom: 1.25rem; }
 .auth-head h3 { font-family: var(--sans); font-size: clamp(2rem, 3vw, 2.35rem); font-weight: 700; letter-spacing: -0.04em; line-height: 1; margin-bottom: 0.4rem; }
 .auth-subtitle { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
 .auth-message { display: none; margin-bottom: 1rem; border-radius: 8px; padding: 0.8rem 0.9rem; font-size: 0.82rem; line-height: 1.6; }
 .auth-message.show { display: block; }
-.auth-message.info { background: rgba(192,132,252,0.1); border: 1px solid rgba(192,132,252,0.24); color: #e9dbff; }
-.auth-message.success { background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.24); color: #d7ffef; }
-.auth-message.error { background: rgba(255,77,26,0.1); border: 1px solid rgba(255,77,26,0.24); color: #ffd8cf; }
+.auth-message.info { background: rgba(124,77,255,0.07); border: 1px solid rgba(124,77,255,0.22); color: #4a1fa0; }
+.auth-message.success { background: rgba(22,163,74,0.07); border: 1px solid rgba(22,163,74,0.22); color: #14532d; }
+.auth-message.error { background: rgba(220,38,38,0.07); border: 1px solid rgba(220,38,38,0.22); color: #7f1d1d; }
 .auth-form { display: grid; gap: 0.9rem; }
 .auth-field { display: grid; gap: 0.32rem; }
 .auth-field label { font-family: var(--mono); font-size: 0.57rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
-.auth-field input { background: #dfe3eb; border: 1px solid rgba(255,255,255,0.06); border-radius: 5px; color: #11131a; font-family: var(--mono); font-size: 0.82rem; padding: 0.78rem 0.88rem; outline: none; width: 100%; }
-.auth-field input::placeholder { color: #596070; }
-.auth-field input:focus { border-color: rgba(255,255,255,0.2); }
+.auth-field input { background: #f4f3fb; border: 1px solid rgba(100,80,200,0.14); border-radius: 5px; color: #0a0818; font-family: var(--mono); font-size: 0.82rem; padding: 0.78rem 0.88rem; outline: none; width: 100%; }
+.auth-field input::placeholder { color: #8a86a8; }
+.auth-field input:focus { border-color: var(--purple); }
 .password-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.5rem; align-items: end; }
-.show-password { min-width: 62px; height: 40px; align-self: end; border: 1px solid rgba(208,179,255,0.18); background: rgba(255,255,255,0.03); border-radius: 5px; color: var(--muted2); font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase; transition: border-color 0.18s, color 0.18s; }
-.show-password:hover { border-color: rgba(255,255,255,0.24); color: #fff; }
+.show-password { min-width: 62px; height: 40px; align-self: end; border: 1px solid rgba(110,63,243,0.16); background: #f4f3fb; border-radius: 5px; color: var(--muted2); font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase; transition: border-color 0.18s, color 0.18s; }
+.show-password:hover { border-color: var(--purple); color: var(--purple); }
 .auth-inline { display: flex; align-items: flex-start; gap: 0.55rem; color: var(--muted2); font-size: 0.8rem; line-height: 1.5; }
 .auth-inline input { width: auto; margin-top: 0.1rem; accent-color: var(--orange); }
 .auth-submit { width: 100%; margin-top: 0.15rem; }
 .auth-divider { height: 1px; background: var(--border); margin: 1.2rem 0 1rem; }
 .utility-row { display: flex; flex-wrap: wrap; gap: 0.55rem; margin-bottom: 1.2rem; }
-.utility-pill { border: 1px solid rgba(255,106,61,0.6); background: rgba(255,255,255,0.02); border-radius: 999px; color: #fff; font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.04em; padding: 0.48rem 0.82rem; transition: background 0.18s, border-color 0.18s; }
+.utility-pill { border: 1px solid rgba(255,106,61,0.6); background: rgba(255,106,61,0.04); border-radius: 999px; color: var(--orange); font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.04em; padding: 0.48rem 0.82rem; transition: background 0.18s, border-color 0.18s; }
 .utility-pill:hover, .utility-pill.active { background: rgba(255,106,61,0.12); border-color: rgba(255,106,61,0.9); }
 .checkout-actions { display: grid; gap: 0.6rem; }
-.checkout-link { display: flex; align-items: center; justify-content: space-between; gap: 1rem; width: 100%; border: 1px solid rgba(208,179,255,0.12); border-radius: 6px; background: rgba(255,255,255,0.015); color: var(--muted2); font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.09em; text-transform: uppercase; padding: 0.95rem 1rem; transition: border-color 0.18s, transform 0.18s; }
+.checkout-link { display: flex; align-items: center; justify-content: space-between; gap: 1rem; width: 100%; border: 1px solid rgba(110,63,243,0.14); border-radius: 6px; background: #f4f3fb; color: var(--muted2); font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.09em; text-transform: uppercase; padding: 0.95rem 1rem; transition: border-color 0.18s, transform 0.18s; }
 .checkout-link strong { color: var(--orange); font-weight: 500; }
 .checkout-link.active { border-color: rgba(255,106,61,0.6); box-shadow: 0 0 0 1px rgba(255,106,61,0.08); }
-.checkout-link:hover { border-color: rgba(255,255,255,0.22); transform: translateY(-1px); }
+.checkout-link:hover { border-color: var(--purple); transform: translateY(-1px); }
 .muted-note { font-family: var(--mono); font-size: 0.58rem; line-height: 1.7; color: var(--muted); margin-top: 0.15rem; }
 /* access-shell and auth-card responsive rules are in the main breakpoints above */
 </style>
@@ -420,19 +421,19 @@ a { text-decoration: none; color: inherit; }
   <div class="hero-glow" aria-hidden="true"></div>
   <div class="wrap hero-layout">
     <div class="hero-left">
-      <p class="hero-eye">SPECTRE · AI RISK INTELLIGENCE</p>
-      <h1 class="hero-title">Your portfolio. Analysed by AI. <span>In real time.</span></h1>
-      <p class="hero-sys">System for Portfolio Exposure, Correlation, Threat &amp; Risk Evaluation</p>
-      <p class="hero-desc">SPECTRE feeds your holdings into a multi-model AI engine backed by live market data, quant simulations, and institutional risk metrics — so you know exactly what is moving your money and why.</p>
+      <p class="hero-eye">SPECTRE · AI PORTFOLIO INTELLIGENCE</p>
+      <h1 class="hero-title">Know what's moving your money. <span>Before it matters.</span></h1>
+      <p class="hero-sys">Upload your holdings. Ask questions. Get answers.</p>
+      <p class="hero-desc">SPECTRE reads your actual portfolio — shares, super, crypto, gold, and savings — then uses AI and live market data to tell you exactly what's driving your risk and why.</p>
       <div class="hero-btns">
         <a href="#access" class="btn btn-pri js-access-link" data-plan="starter">Start For $2.99 / Month</a>
         <a href="/dashboard?demo=1" class="btn btn-demo">See Demo</a>
       </div>
       <div class="hero-div"></div>
       <div class="hero-panels">
-        <article><h3>AI Holdings Analysis</h3><p>Ask anything about your positions. AI reads live prices, market regime, and quant signals to answer with context.</p></article>
-        <article><h3>Monte Carlo + VaR</h3><p>10,000-path simulations, Cornish-Fisher adjusted VaR, Expected Shortfall, and factor exposure — updated on demand.</p></article>
-        <article><h3>Live Market Data</h3><p>Prices, VIX regime, ASX 200 benchmark, and sector signals refreshed in real time from market feeds.</p></article>
+        <article><h3>Ask AI About Your Holdings</h3><p>Ask anything about your positions in plain English. AI reads your actual numbers and live prices before answering.</p></article>
+        <article><h3>Scenario Forecasting</h3><p>Run 10,000 market scenarios against your real portfolio. See your likely range of outcomes and your worst-case daily loss.</p></article>
+        <article><h3>Live Market Prices</h3><p>ASX, crypto, gold, and currency prices update in real time and feed directly into every AI answer and risk calculation.</p></article>
       </div>
     </div>
     <div class="hero-right">
@@ -441,8 +442,8 @@ a { text-decoration: none; color: inherit; }
         <div class="lp-kpis">
           <div class="lp-kpi"><p>Portfolio Value</p><strong>$1.27M</strong></div>
           <div class="lp-kpi"><p>Holdings</p><strong>24</strong></div>
-          <div class="lp-kpi"><p>VaR 95</p><strong class="ac">2.1%</strong></div>
-          <div class="lp-kpi"><p>Max Drawdown</p><strong class="ac">11%</strong></div>
+          <div class="lp-kpi"><p>Worst-Day Loss</p><strong class="ac">2.1%</strong></div>
+          <div class="lp-kpi"><p>Biggest Drop</p><strong class="ac">11%</strong></div>
         </div>
         <div class="lp-risk">
           <div class="lp-risk-top">
@@ -452,8 +453,8 @@ a { text-decoration: none; color: inherit; }
           <div class="lp-track"><span class="lp-fill"></span></div>
         </div>
         <svg class="lp-spark" viewBox="0 0 440 48" fill="none" aria-hidden="true">
-          <polyline points="0,38 73,32 146,24 219,28 292,18 365,10 440,6" stroke="#d0b3ff" stroke-width="1.6" fill="none"/>
-          <polyline points="0,44 440,44" stroke="rgba(255,255,255,0.06)" stroke-width="1" fill="none"/>
+          <polyline points="0,38 73,32 146,24 219,28 292,18 365,10 440,6" stroke="#7c4dff" stroke-width="1.6" fill="none"/>
+          <polyline points="0,44 440,44" stroke="rgba(0,0,0,0.08)" stroke-width="1" fill="none"/>
         </svg>
       </div>
     </div>
@@ -462,30 +463,30 @@ a { text-decoration: none; color: inherit; }
 <section class="sec sec-alt" id="capabilities">
   <div class="wrap">
     <p class="kicker or">CAPABILITIES</p>
-    <h2 class="h2">AI that reads your portfolio <span>the way a quant does.</span></h2>
-    <p class="sub">SPECTRE is built around an AI engine that ingests your actual holdings, live market data, and institutional risk metrics — then explains what's happening in plain English.</p>
+    <h2 class="h2">AI that understands your portfolio <span>not just the market.</span></h2>
+    <p class="sub">SPECTRE connects your actual holdings to live prices and risk analysis — then explains what's happening in plain English, not financial jargon.</p>
     <div class="ops">
-      <article><p class="n">01</p><h3>Import</h3><p>Upload super, ASX, crypto, index, fund, savings, and bullion CSVs. SPECTRE normalises everything into one unified view.</p></article>
-      <article><p class="n">02</p><h3>Analyse</h3><p>AI cross-references your positions against live prices, VIX regime, sector signals, and quant simulations — instantly.</p></article>
-      <article><p class="n">03</p><h3>Act</h3><p>Get plain-English breakdowns of risk drivers, concentration exposure, and AI-generated next actions tailored to your holdings.</p></article>
+      <article><p class="n">01</p><h3>Import</h3><p>Upload statements from your broker, super fund, crypto exchange, or savings account. SPECTRE combines them into one clear picture.</p></article>
+      <article><p class="n">02</p><h3>Analyse</h3><p>AI reads your holdings against live prices, current market conditions, and 10,000 simulated scenarios — all at once.</p></article>
+      <article><p class="n">03</p><h3>Act</h3><p>Get plain-English answers: what's driving your risk, where you're too concentrated, and what to keep an eye on.</p></article>
     </div>
     <div class="callouts">
-      <div class="callout"><p class="ck">Without SPECTRE</p><h3>Scattered data</h3><p>Multiple broker statements, super reports, and exchange exports — no unified risk view, no AI context, no quant signals.</p></div>
-      <div class="callout af"><p class="ck">With SPECTRE AI</p><h3>One intelligent view</h3><p>AI reads every position, maps it against live market conditions, and tells you exactly where your real risk is concentrated.</p></div>
+      <div class="callout"><p class="ck">Without SPECTRE</p><h3>Scattered data</h3><p>Multiple broker statements and super reports with no way to see your total picture, your real risk, or what's actually moving your money.</p></div>
+      <div class="callout af"><p class="ck">With SPECTRE AI</p><h3>One clear view</h3><p>AI reads every position, checks live prices and market conditions, then tells you exactly where your risk sits and what to watch.</p></div>
     </div>
     <div class="feat">
-      <article><h3>Multi-Model AI Engine</h3><p>Tiered GPT-4 models analyse your holdings with full portfolio context — weights, cost base, live prices, sector, and quant metrics all fed in.</p></article>
-      <article><h3>Quant Risk Suite</h3><p>Monte Carlo simulation, Cornish-Fisher VaR, Expected Shortfall, correlation matrix, factor exposure, and regime detection — institutional tools for retail investors.</p></article>
-      <article><h3>Live Market Intelligence</h3><p>Real-time ASX prices, VIX regime classification, ASX 200 benchmark, BTC/ETH feeds, and gold prices — all wired into AI context.</p></article>
-      <article><h3>Stress Testing + Dip Alerts</h3><p>Scenario analysis across GFC, rate shock, AUD collapse, and commodity crash. Dip alert emails when holdings fall your threshold.</p></article>
+      <article><h3>AI That Reads Your Numbers</h3><p>GPT-4 models analyse your holdings with full context — what you own, what you paid, what it's worth today, and how it fits into the market right now.</p></article>
+      <article><h3>Full Risk Breakdown</h3><p>Worst-case loss estimates, biggest historical drop, how concentrated your bets are, and how your holdings move together — all updated on demand.</p></article>
+      <article><h3>Live Market Data</h3><p>Real-time ASX prices, gold, BTC/ETH, AUD/USD, and market volatility — all wired directly into every AI answer and risk calculation.</p></article>
+      <article><h3>Scenario Testing + Dip Alerts</h3><p>See how your portfolio would hold up in a financial crisis, rate spike, or currency collapse. Get email alerts when any holding drops past your threshold.</p></article>
     </div>
   </div>
 </section>
 <section class="sec" id="preview">
   <div class="wrap">
     <p class="kicker">Feature Preview</p>
-    <h2 class="h2">Real quant analytics. <span>Not a pretty chart tool.</span></h2>
-    <p class="sub">Everything you see runs on your actual imported holdings — AI reads the same data the risk engine does, so every answer is grounded in your real numbers.</p>
+    <h2 class="h2">Real numbers. <span>Not just charts.</span></h2>
+    <p class="sub">Everything you see runs on your actual imported holdings — AI reads the same data the risk engine does, so every answer is grounded in your real portfolio.</p>
     <div class="dbf">
       <div class="dbf-bar">
         <span class="dot"></span><span class="dot"></span><span class="dot"></span>
@@ -495,7 +496,7 @@ a { text-decoration: none; color: inherit; }
         <div class="dbc">
           <p class="dbc-k">Example Portfolio Risk Score</p>
           <div class="dbc-sc">72<span>/100</span></div>
-          <span class="dbc-note">Moderate risk profile based on concentration, VaR, drawdown, volatility, and data quality confidence.</span>
+          <span class="dbc-note">Moderate risk profile. Driven by how concentrated the portfolio is, the worst daily loss on record, price swings, and data quality.</span>
         </div>
         <div class="dbc">
           <p class="dbc-k">Example Portfolio Snapshot Trend</p>
@@ -516,17 +517,17 @@ a { text-decoration: none; color: inherit; }
           </svg>
         </div>
         <div class="dbc">
-          <p class="dbc-k">Example Risk Signal Levels</p>
+          <p class="dbc-k">Example Risk Factor Breakdown</p>
           <svg viewBox="0 0 380 140" fill="none" style="width:100%;height:140px;">
             <line x1="0" y1="120" x2="380" y2="120" stroke="rgba(43,36,56,1)" stroke-width="1"/>
             <rect x="10" y="60" width="68" height="60" rx="4" fill="rgba(255,106,61,0.68)"/>
             <rect x="108" y="96" width="68" height="24" rx="4" fill="rgba(255,106,61,0.46)"/>
             <rect x="206" y="114" width="68" height="6" rx="4" fill="rgba(255,106,61,0.36)"/>
             <rect x="304" y="78" width="68" height="42" rx="4" fill="rgba(255,106,61,0.5)"/>
-            <text x="28" y="136" fill="#8a86a8" font-size="8" font-family="monospace">Conc.</text>
-            <text x="120" y="136" fill="#8a86a8" font-size="8" font-family="monospace">Drawdn</text>
-            <text x="219" y="136" fill="#8a86a8" font-size="8" font-family="monospace">VaR95</text>
-            <text x="320" y="136" fill="#8a86a8" font-size="8" font-family="monospace">Vol.</text>
+            <text x="20" y="136" fill="#8a86a8" font-size="8" font-family="monospace">Concentration</text>
+            <text x="112" y="136" fill="#8a86a8" font-size="8" font-family="monospace">Biggest Drop</text>
+            <text x="210" y="136" fill="#8a86a8" font-size="8" font-family="monospace">Loss Risk</text>
+            <text x="308" y="136" fill="#8a86a8" font-size="8" font-family="monospace">Swings</text>
           </svg>
         </div>
         <div class="dbc">
@@ -553,36 +554,36 @@ a { text-decoration: none; color: inherit; }
 <section class="sec sec-alt" id="workflow">
   <div class="wrap">
     <p class="kicker">How It Works</p>
-    <h2 class="h2">From broker exports to <span>AI risk intelligence</span> in three steps.</h2>
-    <p class="sub">No manual data entry. Import your existing statements, let SPECTRE build the unified view, then let AI tell you what it means.</p>
+    <h2 class="h2">From broker export to <span>full AI analysis</span> in three steps.</h2>
+    <p class="sub">No manual data entry. Upload your existing statements, let SPECTRE build the unified view, then ask AI what it means for you.</p>
     <div class="steps">
-      <article><p class="sn">01</p><h3>Import</h3><p>Upload CSV or XLSX exports from your broker, super fund, crypto exchange, savings account, or bullion record. SPECTRE handles the normalisation.</p></article>
-      <article><p class="sn">02</p><h3>AI Analyses</h3><p>The AI engine reads your holdings, live market prices, VIX regime, quant signals, and Monte Carlo outputs — all at once — to build a complete risk picture.</p></article>
-      <article><p class="sn">03</p><h3>Ask Anything</h3><p>Ask what's driving a holding, where your real concentration risk sits, or what the AI thinks you should review. Plain-English answers, grounded in your actual data.</p></article>
+      <article><p class="sn">01</p><h3>Import</h3><p>Upload CSV or XLSX exports from your broker, super fund, crypto exchange, savings account, or bullion record. Works with all major Australian platforms.</p></article>
+      <article><p class="sn">02</p><h3>AI Reads Everything</h3><p>The AI reads your holdings against live prices, current market conditions, and 10,000 simulated market scenarios — all at once — to build a complete picture.</p></article>
+      <article><p class="sn">03</p><h3>Ask Anything</h3><p>Ask what's driving a holding, where you're too concentrated, or what the AI thinks you should watch. Plain-English answers grounded in your real numbers.</p></article>
     </div>
   </div>
 </section>
 <section class="sec" id="pro-ai">
   <div class="wrap">
     <p class="kicker or">AI INTELLIGENCE ENGINE</p>
-    <h2 class="h2">The most data-fed AI analysis <span>available to retail investors.</span></h2>
-    <p class="sub">Every AI response in SPECTRE is built from your real holdings, live market data, and a full quant risk stack — not generic financial commentary.</p>
+    <h2 class="h2">AI that answers from your data, <span>not from the internet.</span></h2>
+    <p class="sub">Every AI response is built from your real holdings and live market data — not generic financial commentary or a web search.</p>
     <div class="pro-card">
       <p class="pro-badge">Core Feature</p>
       <p class="tier">Ask AI · Holdings Intelligence</p>
       <h3>What the AI Actually Reads</h3>
-      <span class="psub">Live data + quant simulations fed directly into every response</span>
-      <p class="pro-copy">Before answering, the AI ingests your full portfolio state — every holding's weight, cost base, unrealised P&amp;L, sector, and live price — alongside a real-time market snapshot and the output of institutional-grade quant models. It's not searching the web. It's reading your actual numbers.</p>
+      <span class="psub">Your real portfolio data + live market conditions fed into every answer</span>
+      <p class="pro-copy">Before answering, the AI reads your full portfolio — what you own, what you paid, what it's worth today, and how it fits into the current market. It's not searching the web or giving generic advice. It's reading your actual numbers and explaining what they mean.</p>
       <ul>
-        <li>Live ASX, crypto, and ETF prices at query time</li>
-        <li>VIX level and current market regime classification</li>
-        <li>Monte Carlo simulation paths (10,000+) for portfolio projection</li>
-        <li>Cornish-Fisher adjusted VaR and Expected Shortfall (CVaR)</li>
-        <li>Factor exposures — market beta, size tilt via ASX Small Ords</li>
-        <li>Holding correlation matrix across top positions</li>
-        <li>Concentration risk, HHI score, and sector allocation</li>
-        <li>Max drawdown, volatility, and trailing risk window metrics</li>
-        <li>Top movers and session P&amp;L across your positions</li>
+        <li>Live ASX, crypto, and ETF prices at the moment you ask</li>
+        <li>Current market conditions and volatility level</li>
+        <li>10,000 scenario forecasts for your portfolio's outlook</li>
+        <li>Your worst-case daily loss and average loss in bad markets</li>
+        <li>What's driving your returns beyond just market moves</li>
+        <li>How your holdings move together — and when they don't</li>
+        <li>How concentrated your bets are and what you're weighted towards</li>
+        <li>Your biggest historical drop, daily price swings, and recent trends</li>
+        <li>Today's biggest movers and what changed in your portfolio's value</li>
       </ul>
       <div class="pro-facts">
         <article><h4>Tiered Models</h4><p>Free/Starter uses GPT-4o mini. Plus uses GPT-4.1 mini. Pro uses GPT-4.1 — the most capable model — with no query cap.</p></article>
@@ -620,10 +621,10 @@ a { text-decoration: none; color: inherit; }
         <span class="psub">AI-powered · GPT-4o mini</span>
         <ul>
           <li>One private investor workspace</li>
-          <li>CSV/XLSX import — super, ASX, crypto, index, funds, savings, bullion</li>
-          <li>Risk score, VaR, drawdown, and concentration dashboard</li>
-          <li>AI holdings analysis with GPT-4o mini — daily queries</li>
-          <li>Expected Shortfall (CVaR) tail risk metric</li>
+          <li>Import from broker, super, crypto exchange, savings, bullion</li>
+          <li>Risk score, worst-case loss, biggest drop, and concentration breakdown</li>
+          <li>AI holdings analysis with GPT-4o mini — 3 questions per month</li>
+          <li>Average loss in worst-case scenarios</li>
           <li>Live price refresh and dip alert emails</li>
         </ul>
         <a href="#access" class="btn btn-pri js-access-link" data-plan="starter" style="width:100%;display:flex;">Get Starter</a>
@@ -631,15 +632,15 @@ a { text-decoration: none; color: inherit; }
       <div class="plan">
         <p class="tier">Pro</p>
         <h3>$15<span>/month</span></h3>
-        <span class="psub">Full quant suite · GPT-4.1 · Unlimited AI</span>
+        <span class="psub">Full risk suite · GPT-4.1 · Unlimited AI questions</span>
         <ul>
           <li>Everything in Starter, plus unlimited AI with GPT-4.1</li>
-          <li>Monte Carlo simulation (10,000 paths, 4 horizons)</li>
-          <li>Cornish-Fisher VaR — skew &amp; kurtosis adjusted</li>
-          <li>Holding correlation matrix + factor exposure (market β, size β)</li>
-          <li>Market regime detection via VIX classification</li>
-          <li>Beta, tracking error, and benchmark analytics vs ASX 200</li>
-          <li>GFC, rate shock, AUD, and commodity stress scenarios</li>
+          <li>10,000-scenario portfolio forecast across 4 time horizons</li>
+          <li>Skew-adjusted worst-case loss estimate</li>
+          <li>How your holdings move together + what's driving your returns</li>
+          <li>Current market conditions and volatility classification</li>
+          <li>How closely your portfolio tracks the ASX 200</li>
+          <li>Crisis, rate shock, AUD collapse, and commodity crash scenarios</li>
         </ul>
         <a href="#access" class="btn btn-pro js-access-link" data-plan="pro" style="width:100%;display:flex;">Get Pro</a>
         <span class="plan-note">Pro analytics unlock automatically when your subscription uses the Pro Stripe price.</span>
