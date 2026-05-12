@@ -7057,8 +7057,8 @@ function _demoSnapshot(url) {
   if (u.endsWith('/api/research/quotes')) return _DEMO_DATA.quotes;
   if (u.endsWith('/api/research/fmp'))    return _DEMO_DATA.fmp;
   if (u.endsWith('/api/research/fred'))   return _DEMO_DATA.fred;
-  if (u.endsWith('/api/research/news'))   return { articles: _DEMO_DATA.fmp.news };
-  if (u.endsWith('/api/research/movers')) return { gainers: [], losers: [] };
+  if (u.endsWith('/api/research/news'))   return { news: (_DEMO_DATA.fmp.news || []).map(n => ({ headline: n.title || n.headline || '', date: (n.publishedDate || n.date || '').slice(0, 10), tag: n.tag || 'NEWS', source: n.source || '', url: n.url || null })) };
+  if (u.endsWith('/api/research/movers')) return { gainers: [{symbol:'NVDA',name:'NVIDIA',price:875.40,changePct:4.82},{symbol:'META',name:'Meta Platforms',price:512.30,changePct:3.14},{symbol:'AMD',name:'Advanced Micro Devices',price:168.90,changePct:2.67}], losers: [{symbol:'INTC',name:'Intel',price:31.20,changePct:-3.45},{symbol:'BA',name:'Boeing',price:175.60,changePct:-2.18},{symbol:'DIS',name:'Walt Disney',price:88.40,changePct:-1.92}], mostActive: [{symbol:'AAPL',name:'Apple',price:214.50,changePct:0.72},{symbol:'TSLA',name:'Tesla',price:248.10,changePct:-1.34},{symbol:'SPY',name:'SPDR S&P 500 ETF',price:521.80,changePct:0.38}] };
   if (u.endsWith('/api/research/chart')) {
     const sym = (params.get('symbol') || 'asx200').toLowerCase();
     const range = params.get('range') || '1m';
