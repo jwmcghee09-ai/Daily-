@@ -655,7 +655,7 @@ td.val-neg{color:var(--danger);font-family:var(--mono)}
   color:var(--text);
 }
 /* light cards inside dark panels reset to dark text */
-.console-ai-block,.ai-kpi-strip{
+.ai-kpi-strip{
   --text:#0f0d1e;
   --muted:#5e5a78;
   --muted2:#4a4665;
@@ -1003,11 +1003,11 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
 
 /* AI output block */
 .console-ai-block{
-  background:var(--card) !important;
-  border:1px solid var(--border) !important;
+  background:rgba(255,255,255,.05) !important;
+  border:1px solid rgba(255,255,255,.09) !important;
   border-radius:10px !important;
 }
-.console-ai-block h4{ color:var(--purple) !important; font-weight:700 !important }
+.console-ai-block h4{ color:var(--purple-hi) !important; font-weight:700 !important }
 
 /* Stress card */
 .stress-card{
@@ -5548,7 +5548,12 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
   document.querySelectorAll('.nav-tab').forEach(function(btn) {
     btn.addEventListener('click', function() {
       var tab = btn.getAttribute('data-tab');
-      if (tab === 'research') { window.location.href = (state.demoMode ? '/research?demo=1' : '/research'); return; }
+      if (tab === 'research') {
+        var _p = new URLSearchParams(window.location.search);
+        var _demo = _p.get('demo') === '1' || _p.get('mode') === 'demo';
+        window.location.href = _demo ? '/research?demo=1' : '/research';
+        return;
+      }
       switchTab(tab);
     });
   });
@@ -5558,7 +5563,12 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     btn.addEventListener('click', function() {
       var tab = btn.getAttribute('data-tab');
       if (!tab) return;
-      if (tab === 'research') { window.location.href = (state.demoMode ? '/research?demo=1' : '/research'); return; }
+      if (tab === 'research') {
+        var _p = new URLSearchParams(window.location.search);
+        var _demo = _p.get('demo') === '1' || _p.get('mode') === 'demo';
+        window.location.href = _demo ? '/research?demo=1' : '/research';
+        return;
+      }
       switchTab(tab);
     });
   });
