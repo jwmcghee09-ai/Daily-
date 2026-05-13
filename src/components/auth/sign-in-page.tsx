@@ -344,8 +344,8 @@ export default function SignInPage({
 
   return (
     <main className={styles.page}>
-      <section className={styles.shell}>
-        <div className={styles.topbar}>
+      <header className={styles.topbar}>
+        <div className={styles.topbarInner}>
           <Link href="/" className={styles.brand}>
             SPECTRE
           </Link>
@@ -358,7 +358,9 @@ export default function SignInPage({
             </Link>
           </div>
         </div>
+      </header>
 
+      <div className={styles.shell}>
         <div className={styles.grid}>
           <aside className={styles.sideCard}>
             <div className={styles.pill}>Portfolio Intelligence</div>
@@ -699,7 +701,7 @@ export default function SignInPage({
             </div>
           </section>
         </div>
-      </section>
+      </div>
     </main>
   );
 }
