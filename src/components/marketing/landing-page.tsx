@@ -373,7 +373,7 @@ export default function LandingPage({
                 See Live Demo →
               </Link>
             </div>
-            <p className={`${styles.reveal}`} style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.35)", marginTop: "1rem", letterSpacing: "0.04em" }}>
+            <p className={`${styles.reveal}`} style={{ fontSize: "0.75rem", color: "rgba(80,60,130,0.65)", marginTop: "1rem", letterSpacing: "0.04em" }}>
               Built for Australian investors · No card required · Cancel anytime
             </p>
 
