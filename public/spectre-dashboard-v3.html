@@ -3317,7 +3317,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     });
     ctx.beginPath();
     ctx.arc(cx, cy, r, 0, Math.PI * 2);
-    ctx.fillStyle = "rgba(249,248,255,.97)";
+    ctx.fillStyle = "#e8e5f8";
     ctx.fill();
     angle = -Math.PI / 2;
     data.forEach((d) => {
@@ -3326,7 +3326,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       ctx.moveTo(cx, cy);
       ctx.arc(cx, cy, R + 2, angle - 0.012, angle + 0.012);
       ctx.closePath();
-      ctx.fillStyle = "rgba(249,248,255,1)";
+      ctx.fillStyle = "#e8e5f8";
       ctx.fill();
       angle += sweep;
     });
@@ -4647,6 +4647,8 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     }));
     const normalizedAccount = normalizeSlices(accountSlices);
     const normalizedSector = normalizeSlices(sectorSlices);
+    window._lastAccountSlices = normalizedAccount;
+    window._lastSectorSlices = normalizedSector;
     drawDonut("c-account", normalizedAccount);
     drawDonut("c-sector", normalizedSector);
     renderPreviewAllocation(normalizedAccount);
@@ -4676,7 +4678,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
   function runMonteCarlo() { window.runMonteCarlo = runMonteCarlo;
     const isPro = Boolean(state.demoMode || state.sessionUser?.proEnabled);
     const wrap = document.getElementById("monte-carlo-wrap");
-    if (wrap) wrap.style.display = isPro ? "" : "none";
+    if (wrap && !isPro) wrap.style.display = "none";
     if (!isPro) return;
 
     const canvas = document.getElementById("c-monte-carlo");
@@ -5534,6 +5536,10 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     // Re-draw canvases after tab becomes visible (they were 0-width when hidden)
     if (tab === 'quant') {
       requestAnimationFrame(function() {
+        if (typeof drawDonut === 'function') {
+          if (window._lastAccountSlices) drawDonut("c-account", window._lastAccountSlices);
+          if (window._lastSectorSlices) drawDonut("c-sector", window._lastSectorSlices);
+        }
         if (typeof drawHistoryLine === 'function' && window._fullHistory) {
           drawHistoryLine(window._fullHistory, window._historyCostBase || 0);
         }
@@ -5580,8 +5586,15 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
   // Redraw canvases when page is restored from back/forward cache (bfcache)
   // Also runs on normal page load to ensure canvas dimensions are computed
   window.addEventListener('pageshow', function(e) {
-    if (e.persisted && typeof window.renderPortfolio === 'function') {
-      window.setTimeout(function() { window.renderPortfolio(); }, 100);
+    if (e.persisted) {
+      // bfcache restore: canvas content cleared, redraw after layout is stable
+      window.setTimeout(function() {
+        if (typeof drawDonut === 'function') {
+          if (window._lastAccountSlices) drawDonut("c-account", window._lastAccountSlices);
+          if (window._lastSectorSlices) drawDonut("c-sector", window._lastSectorSlices);
+        }
+        if (typeof window.renderPortfolio === 'function') window.renderPortfolio();
+      }, 200);
     }
   });
 })();
