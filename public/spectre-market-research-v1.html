@@ -37,11 +37,13 @@
   --accent-strong: #ff2f14;
   --accent-mid: #ff7a68;
   --accent-soft: #ff4b3324;
-  --sl-bg: #100d20;
+  --sl-bg: #f3f1fb;
   --sl-card: #17112eeb;
   --sl-border: rgba(124,77,255,.14);
   --sl-border2: rgba(124,77,255,.22);
   --sl-text: #f2eeff;
+  --sl-page-text: #0f0d1e;
+  --sl-page-muted: #5e5a78;
   --sl-muted: #9890b8;
   --sl-purple: #a855f7;
   --sl-purple-hi: #c084fc;
@@ -63,13 +65,12 @@ html { scroll-behavior: smooth; }
 
 body {
   font-family: var(--font-body);
-  color: var(--sl-text);
+  color: var(--sl-page-text);
   background-color: var(--sl-bg);
   background-image:
-    radial-gradient(ellipse 60% 40% at 50% -5%, rgba(124,77,255,.22) 0%, transparent 65%),
-    radial-gradient(circle at 16% 14%, rgba(131,84,255,.30) 0%, transparent 40%),
-    radial-gradient(circle at 86% 78%, rgba(255,75,51,.22) 0%, transparent 42%),
-    linear-gradient(158deg, #100d20 0%, #1a1035 52%, #120c1e 100%);
+    radial-gradient(ellipse 70% 50% at 50% -10%, rgba(124,77,255,.08) 0%, transparent 65%),
+    radial-gradient(ellipse 40% 60% at 100% 80%, rgba(255,122,48,.05) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 60% at 0% 60%, rgba(124,77,255,.05) 0%, transparent 60%);
   background-attachment: fixed;
   min-height: 100vh;
   line-height: 1.6;
@@ -82,13 +83,9 @@ body::before {
   content: '';
   position: fixed;
   inset: 0;
-  background-image:
-    linear-gradient(rgba(124,77,255,.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(124,77,255,.05) 1px, transparent 1px);
-  background-size: 42px 42px;
-  opacity: 0.5;
-  mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, #000 20%, transparent 80%);
-  -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, #000 20%, transparent 80%);
+  background-image: radial-gradient(rgba(100,80,200,.10) 1px, transparent 1px);
+  background-size: 28px 28px;
+  opacity: 0.7;
   pointer-events: none;
   z-index: 0;
 }
@@ -276,8 +273,8 @@ h3 { font-size: 1.15rem; }
   align-items: center;
 }
 .ticker-wrap::before,.ticker-wrap::after{content:'';position:absolute;top:0;bottom:0;width:72px;z-index:2;pointer-events:none}
-.ticker-wrap::before{left:0;background:linear-gradient(to right,rgba(16,13,32,.98),transparent)}
-.ticker-wrap::after{right:0;background:linear-gradient(to left,rgba(16,13,32,.98),transparent)}
+.ticker-wrap::before{left:0;background:linear-gradient(to right,rgba(12,9,24,.98),transparent)}
+.ticker-wrap::after{right:0;background:linear-gradient(to left,rgba(12,9,24,.98),transparent)}
 
 .ticker-track {
   display: flex;
@@ -1395,24 +1392,24 @@ h3 { font-size: 1.15rem; }
 .footer {
   text-align: center;
   padding: 24px 20px;
-  border-top: 1px solid rgba(155, 93, 229, 0.09);
+  border-top: 1px solid rgba(100, 80, 200, 0.16);
   margin-top: 10px;
 }
 
 .footer-text {
   font-size: 0.65rem;
-  color: var(--sl-muted);
+  color: var(--sl-page-muted);
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
 .footer a {
-  color: var(--sl-muted);
+  color: var(--sl-page-muted);
   text-decoration: none;
   transition: color 0.2s;
 }
 
-.footer a:hover { color: var(--sl-text); }
+.footer a:hover { color: var(--sl-page-text); }
 
 /* ===== COUNTUP ANIMATION ===== */
 .countup { display: inline-block; }
@@ -2069,9 +2066,11 @@ h3 { font-size: 1.15rem; }
 .research-tab-nav {
   display: flex;
   gap: 2px;
-  padding: 12px 0 0;
-  border-bottom: 1px solid rgba(255,255,255,.07);
-  margin-bottom: 18px;
+  padding: 12px 24px 0;
+  margin: 0 -24px 18px;
+  border-bottom: 1px solid rgba(124,77,255,.18);
+  background: rgba(10,7,20,.96);
+  backdrop-filter: blur(20px);
 }
 .rtab {
   background: none;
@@ -2540,16 +2539,17 @@ h3 { font-size: 1.15rem; }
   border-left: 1px solid rgba(255,255,255,.1);
 }
 
-/* ── Research tab nav — pill-style ─────────────── */
+/* ── Research tab nav — dark pill on lavender bg ── */
 .research-tab-nav {
   display: flex;
   gap: 4px;
   padding: 4px;
   border-bottom: none;
-  margin-bottom: 20px;
-  background: rgba(255,255,255,.03);
-  border: 1px solid rgba(255,255,255,.07);
+  margin: 0 0 20px;
+  background: rgba(10,7,20,.82);
+  border: 1px solid rgba(255,255,255,.09);
   border-radius: 11px;
+  backdrop-filter: blur(20px);
 }
 .rtab {
   flex: 1;
@@ -2569,13 +2569,13 @@ h3 { font-size: 1.15rem; }
   margin-bottom: 0;
 }
 .rtab:hover {
-  color: var(--sl-text);
-  background: rgba(255,255,255,.04);
+  color: #f0eeff;
+  background: rgba(255,255,255,.06);
 }
 .rtab.active {
   color: #e8deff;
-  background: linear-gradient(135deg, rgba(155,93,229,.3) 0%, rgba(155,93,229,.15) 100%);
-  box-shadow: 0 1px 10px rgba(155,93,229,.2), inset 0 1px 0 rgba(255,255,255,.08);
+  background: linear-gradient(135deg, rgba(155,93,229,.35) 0%, rgba(155,93,229,.18) 100%);
+  box-shadow: 0 1px 10px rgba(155,93,229,.22), inset 0 1px 0 rgba(255,255,255,.09);
   border: none;
 }
 
