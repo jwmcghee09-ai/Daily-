@@ -62,7 +62,7 @@ body::after{
 @media(max-width:600px){.wrap{padding:0 1.1rem}}
 
 /* ── NAV ── */
-nav{position:fixed;top:0;left:0;right:0;z-index:900;background:rgba(10,8,22,.97);backdrop-filter:blur(28px) saturate(1.4);-webkit-backdrop-filter:blur(28px) saturate(1.4);border-bottom:1px solid rgba(255,255,255,.07)}
+nav{position:fixed;top:0;left:0;right:0;z-index:900;background:rgba(243,241,251,0.94);backdrop-filter:blur(28px) saturate(1.4);-webkit-backdrop-filter:blur(28px) saturate(1.4);border-bottom:1px solid rgba(100,80,200,.13)}
 .nav-inner{max-width:var(--max);margin:0 auto;padding:0 2.5rem;height:56px;display:flex;align-items:center;justify-content:space-between;gap:2rem}
 .nav-logo{
   font-family:var(--disp);
@@ -82,30 +82,30 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;background:rgba(10,8,22,.97)
 @keyframes brandSlide{0%{background-position:0% center}100%{background-position:200% center}}
 /* centre tabs */
 .nav-tabs{display:flex;align-items:center;gap:0;background:none;border:none;border-radius:0;padding:0}
-.nav-tab{font-family:var(--mono);font-size:.62rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:rgba(200,190,230,.55);background:none;border:none;border-bottom:1.5px solid transparent;border-radius:0;padding:.2rem 1.1rem;cursor:pointer;transition:all .2s;line-height:56px;height:56px}
+.nav-tab{font-family:var(--mono);font-size:.62rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:rgba(94,90,120,.65);background:none;border:none;border-bottom:1.5px solid transparent;border-radius:0;padding:.2rem 1.1rem;cursor:pointer;transition:all .2s;line-height:56px;height:56px}
 .nav-tab:hover{background:linear-gradient(90deg,#a855f7 0%,#d946ef 35%,#ff7a30 72%,#ffb347 100%);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:brandSlide 4s linear infinite}
 .nav-tab-active{background:linear-gradient(90deg,#a855f7 0%,#d946ef 35%,#ff7a30 72%,#ffb347 100%)!important;background-size:200% auto!important;-webkit-background-clip:text!important;-webkit-text-fill-color:transparent!important;background-clip:text!important;animation:brandSlide 4s linear infinite!important;border-bottom-color:#a855f7!important}
 /* right side */
 .nav-right{display:flex;align-items:center;gap:.65rem;position:relative;flex-shrink:0}
-.nav-user{font-family:var(--mono);font-size:.54rem;letter-spacing:.1em;color:rgba(200,190,230,.5);text-transform:uppercase}
-.nav-btn{font-family:var(--sans);font-size:.75rem;font-weight:600;color:rgba(220,215,240,.9);background:transparent;border:1px solid rgba(255,255,255,.15);border-radius:999px;padding:.34rem 1rem;cursor:pointer;transition:all .2s;text-decoration:none;white-space:nowrap}
-.nav-btn:hover{border-color:rgba(255,255,255,.32);transform:translateY(-1px)}
+.nav-user{font-family:var(--mono);font-size:.54rem;letter-spacing:.1em;color:rgba(94,90,120,.6);text-transform:uppercase}
+.nav-btn{font-family:var(--sans);font-size:.75rem;font-weight:600;color:#0f0d1e;background:transparent;border:1px solid rgba(100,80,200,.22);border-radius:999px;padding:.34rem 1rem;cursor:pointer;transition:all .2s;text-decoration:none;white-space:nowrap}
+.nav-btn:hover{border-color:rgba(100,80,200,.42);background:rgba(100,80,200,.05);transform:translateY(-1px)}
 .nav-btn-primary{color:#fff;background:linear-gradient(135deg,#9333ea 0%,#c026d3 46%,#f97316 100%);border-color:transparent;box-shadow:0 4px 18px rgba(168,85,247,.28),0 1px 0 rgba(255,255,255,.1) inset}
 .nav-btn-primary:hover{filter:brightness(1.08);border-color:transparent}
-.nav-settings-btn{display:flex;align-items:center;justify-content:center;width:32px;height:32px;background:transparent;border:1px solid rgba(255,255,255,.15);border-radius:999px;color:rgba(200,190,230,.6);text-decoration:none;transition:color .2s,border-color .2s;flex-shrink:0}
-.nav-settings-btn:hover{color:#fff;border-color:rgba(255,255,255,.32)}
+.nav-settings-btn{display:flex;align-items:center;justify-content:center;width:32px;height:32px;background:transparent;border:1px solid rgba(100,80,200,.22);border-radius:999px;color:rgba(94,90,120,.7);text-decoration:none;transition:color .2s,border-color .2s,background .2s;flex-shrink:0}
+.nav-settings-btn:hover{color:#0f0d1e;border-color:rgba(100,80,200,.42);background:rgba(100,80,200,.05)}
 /* ── TICKER BAR ── */
-.nav-ticker-bar{position:relative;height:28px;background:rgba(6,4,14,.95);border-top:1px solid rgba(255,255,255,.06);overflow:hidden;display:flex;align-items:center}
+.nav-ticker-bar{position:relative;height:28px;background:rgba(232,229,248,0.88);border-top:1px solid rgba(100,80,200,.1);overflow:hidden;display:flex;align-items:center}
 .nav-ticker-bar::before,.nav-ticker-bar::after{content:'';position:absolute;top:0;bottom:0;width:72px;z-index:2;pointer-events:none}
-.nav-ticker-bar::before{left:0;background:linear-gradient(to right,rgba(6,4,14,.98),transparent)}
-.nav-ticker-bar::after{right:0;background:linear-gradient(to left,rgba(6,4,14,.98),transparent)}
+.nav-ticker-bar::before{left:0;background:linear-gradient(to right,rgba(232,229,248,1),transparent)}
+.nav-ticker-bar::after{right:0;background:linear-gradient(to left,rgba(232,229,248,1),transparent)}
 .nav-ticker-track{display:flex;align-items:center;gap:0;white-space:nowrap;animation:tickerScroll 60s linear infinite}
 .nav-ticker-track:hover{animation-play-state:paused}
 @keyframes tickerScroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
 .nav-ticker-item{display:inline-flex;align-items:center;gap:.45rem;padding:0 1.6rem;font-family:var(--mono);font-size:.58rem;letter-spacing:.05em}
-.nav-ticker-sep{width:1px;height:10px;background:rgba(255,255,255,.1);margin:0 .2rem}
-.nav-ticker-sym{color:#8a8098;font-weight:500;letter-spacing:.08em}
-.nav-ticker-price{color:#d0cce8;font-weight:600}
+.nav-ticker-sep{width:1px;height:10px;background:rgba(100,80,200,.15);margin:0 .2rem}
+.nav-ticker-sym{color:rgba(94,90,120,.65);font-weight:500;letter-spacing:.08em}
+.nav-ticker-price{color:#0f0d1e;font-weight:600}
 .nav-ticker-chg{font-weight:500}
 .nav-ticker-chg.pos{color:var(--green)}
 .nav-ticker-chg.neg{color:var(--danger)}
