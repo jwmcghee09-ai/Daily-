@@ -620,7 +620,7 @@ export default function SignInPage({
                                 </div>
                                 <div className={styles.planOptionFeatures}>
                                   {plan === "free" ? (
-                                    <span>10 AI queries/month · Full dashboard</span>
+                                    <span>3 AI queries/month · Full dashboard</span>
                                   ) : plan === "plus" ? (
                                     <span>20 AI queries/month · Dip alerts · Full risk analytics</span>
                                   ) : (

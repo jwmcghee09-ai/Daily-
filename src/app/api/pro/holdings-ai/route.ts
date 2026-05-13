@@ -26,7 +26,7 @@ const CONVERSATION_HISTORY_TURNS: Record<PlanTier, number> = {
 };
 
 const AI_MONTHLY_LIMITS: Record<PlanTier, number> = {
-  none: 10,
+  none: 3,
   free: 10,
   plus: 20,
   pro: -1, // unlimited

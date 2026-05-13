@@ -158,7 +158,7 @@ const faqs = [
   {
     question: "How is AI analysis different on Pro vs Free?",
     answer:
-      "Every plan gets the same holdings-aware AI workflow, but usage limits differ. Free includes 10 AI sessions per month, Plus includes 20 per month, and Pro unlocks unlimited AI plus the deepest quant analytics.",
+      "Every plan gets the same holdings-aware AI workflow, but usage limits differ. Starter includes 3 AI sessions per month, Plus includes 20 per month, and Pro unlocks unlimited AI plus the deepest quant analytics.",
   },
   {
     question: "What data does the research terminal include?",
