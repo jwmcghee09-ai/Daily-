@@ -543,9 +543,9 @@ export default function LandingPage({
           </div>
 
           <div className={styles.researchCtaRow}>
-            <Link href="/research?demo=1" className={`${styles.button} ${styles.primaryButton}`}>
+            <a href="/research?demo=1" className={`${styles.button} ${styles.primaryButton}`}>
               See Research Demo
-            </Link>
+            </a>
             <Link href="/signin?mode=register&plan=plus" className={`${styles.button} ${styles.outlineButton}`}>
               Included in Plus
             </Link>
