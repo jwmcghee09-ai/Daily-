@@ -2249,6 +2249,34 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
   </div>
 </div>
 
+<div id="ai-limit-overlay" role="dialog" aria-modal="true" aria-labelledby="ai-limit-modal-title" style="position:fixed;inset:0;background:rgba(15,13,30,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:9999;opacity:0;pointer-events:none;transition:opacity .2s;padding:1rem">
+  <div style="background:#fff;border:1px solid rgba(100,80,200,.18);border-radius:20px;padding:0;max-width:420px;width:100%;box-shadow:0 24px 64px rgba(100,80,200,.18),0 4px 16px rgba(0,0,0,.1);overflow:hidden;transform:translateY(14px) scale(.97);transition:transform .22s">
+    <div style="height:3px;background:linear-gradient(90deg,#a855f7,#d946ef 50%,#ff7a30)"></div>
+    <div style="padding:2rem 1.75rem 1.75rem;text-align:center">
+      <div style="display:inline-flex;align-items:center;justify-content:center;width:52px;height:52px;border-radius:14px;background:rgba(124,77,255,.08);border:1px solid rgba(124,77,255,.18);margin-bottom:1rem">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7c4dff" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      </div>
+      <h2 id="ai-limit-modal-title" style="font-family:'Space Grotesk',sans-serif;font-size:1.2rem;font-weight:700;color:#0f0d1e;margin-bottom:.5rem;letter-spacing:-.02em">AI query limit reached</h2>
+      <p id="ai-limit-modal-body" style="font-size:.85rem;color:#5e5a78;line-height:1.65;margin-bottom:1.5rem">You've used all your Ask AI sessions for this month. Upgrade to get more.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1.25rem;text-align:left">
+        <a href="/signin?plan=plus" style="display:flex;flex-direction:column;gap:.35rem;padding:1rem;border:1px solid rgba(100,80,200,.16);border-radius:14px;background:#faf9ff;text-decoration:none;transition:border-color .15s,transform .15s" onmouseover="this.style.borderColor='rgba(124,77,255,.4)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(100,80,200,.16)';this.style.transform=''">
+          <span style="font-size:.6rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#7c4dff;font-family:'DM Mono',monospace">Plus</span>
+          <span style="font-size:1.4rem;font-weight:700;color:#0f0d1e;line-height:1">$2.99<span style="font-size:.65rem;color:#9b8fbb;font-weight:500">/mo</span></span>
+          <span style="font-size:.76rem;color:#5e5a78;line-height:1.4">20 AI queries/month · Dip alerts</span>
+          <span style="margin-top:.4rem;display:block;text-align:center;padding:.35rem;border-radius:8px;font-size:.72rem;font-weight:600;background:rgba(124,77,255,.1);color:#7c4dff;border:1px solid rgba(124,77,255,.25)">Get Plus</span>
+        </a>
+        <a href="/signin?plan=pro" style="display:flex;flex-direction:column;gap:.35rem;padding:1rem;border:1px solid rgba(124,77,255,.35);border-radius:14px;background:rgba(124,77,255,.05);text-decoration:none;transition:border-color .15s,transform .15s" onmouseover="this.style.borderColor='rgba(124,77,255,.6)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(124,77,255,.35)';this.style.transform=''">
+          <span style="font-size:.6rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#a855f7;font-family:'DM Mono',monospace">Pro</span>
+          <span style="font-size:1.4rem;font-weight:700;color:#0f0d1e;line-height:1">$9.99<span style="font-size:.65rem;color:#9b8fbb;font-weight:500">/mo</span></span>
+          <span style="font-size:.76rem;color:#5e5a78;line-height:1.4">Unlimited AI · Full quant console</span>
+          <span style="margin-top:.4rem;display:block;text-align:center;padding:.35rem;border-radius:8px;font-size:.72rem;font-weight:700;background:linear-gradient(135deg,#a855f7,#d946ef 50%,#ff7a30);color:#fff;border:none">Get Pro</span>
+        </a>
+      </div>
+      <button onclick="document.getElementById('ai-limit-overlay').style.opacity='0';document.getElementById('ai-limit-overlay').style.pointerEvents='none'" style="background:transparent;border:none;color:#9b8fbb;font-size:.8rem;cursor:pointer;padding:.25rem .5rem;transition:color .15s;font-family:inherit" onmouseover="this.style.color='#0f0d1e'" onmouseout="this.style.color='#9b8fbb'">Maybe later</button>
+    </div>
+  </div>
+</div>
+
 <script>
 
 
@@ -3928,7 +3956,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     const used = state.aiUsedThisMonth;
     const atLimit = limit !== -1 && used >= limit;
 
-    askButton.disabled = state.holdingsAiLoading || !hasHoldings || atLimit;
+    askButton.disabled = state.holdingsAiLoading || !hasHoldings;
 
     const labelEl = document.getElementById("pro-ai-ask-label");
     if (state.holdingsAiLoading) {
@@ -4097,6 +4125,32 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
 
     if (!Array.isArray(state.portfolio?.holdings) || state.portfolio.holdings.length === 0) {
       showToast("Import holdings first, then run Ask AI.", "error");
+      return;
+    }
+
+    const _aiLimit = state.aiMonthlyLimit;
+    const _aiUsed = state.aiUsedThisMonth;
+    if (_aiLimit !== -1 && _aiUsed >= _aiLimit) {
+      const overlay = document.getElementById("ai-limit-overlay");
+      const body = document.getElementById("ai-limit-modal-body");
+      if (body) {
+        body.textContent = _aiLimit > 0
+          ? `You've used all ${_aiLimit} Ask AI sessions for this month. Upgrade to get more.`
+          : "You've reached your Ask AI limit for this month. Upgrade to get more.";
+      }
+      if (overlay) {
+        overlay.style.opacity = "1";
+        overlay.style.pointerEvents = "all";
+        const inner = overlay.querySelector("div");
+        if (inner) { inner.style.transform = "none"; }
+        overlay.addEventListener("click", function closeOnBackdrop(e) {
+          if (e.target === overlay) {
+            overlay.style.opacity = "0";
+            overlay.style.pointerEvents = "none";
+            overlay.removeEventListener("click", closeOnBackdrop);
+          }
+        }, { once: false });
+      }
       return;
     }
 
