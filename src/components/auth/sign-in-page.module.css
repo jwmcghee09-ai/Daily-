@@ -78,6 +78,14 @@
   overflow: hidden;
 }
 
+.formCard::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #a855f7, #d946ef, #ff7a30, transparent);
+}
+
 .sideCard {
   padding: 32px;
   background: linear-gradient(180deg, rgba(30, 21, 56, 0.96), rgba(20, 14, 38, 0.96));
@@ -120,9 +128,9 @@
 .sideCard h1 {
   margin: 18px 0 12px;
   font-family: var(--font-space-grotesk), sans-serif;
-  font-size: clamp(34px, 5vw, 54px);
+  font-size: clamp(28px, 4vw, 42px);
   font-weight: 700;
-  line-height: 1.08;
+  line-height: 1.1;
   letter-spacing: -0.03em;
 }
 
@@ -197,14 +205,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 14px 20px;
-  border-bottom: 1px solid rgba(160, 100, 255, 0.12);
+  padding: 12px 20px;
+  border-bottom: 1px solid rgba(160, 100, 255, 0.1);
+  background: rgba(255, 255, 255, 0.02);
 }
 
 .cardUrl {
   text-align: center;
-  color: #9b8fbb;
-  font-size: 12px;
+  color: rgba(155, 143, 187, 0.6);
+  font-size: 11px;
+  letter-spacing: 0.04em;
   font-family: var(--font-geist-mono), monospace;
 }
 
@@ -213,9 +223,11 @@
 }
 
 .cardBody h2 {
-  margin: 14px 0 12px;
+  margin: 12px 0 10px;
   font-family: var(--font-space-grotesk), sans-serif;
-  font-size: 30px;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 .modeCard {
@@ -323,8 +335,8 @@
 
 .formGrid input:focus {
   outline: 0;
-  border-color: rgba(255, 122, 48, 0.55);
-  box-shadow: 0 0 0 3px rgba(255, 122, 48, 0.12);
+  border-color: rgba(168, 85, 247, 0.6);
+  box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.12);
 }
 
 .passwordRow {
@@ -612,24 +624,25 @@
   gap: 18px;
   flex-wrap: wrap;
   justify-content: center;
-  margin-top: 20px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(160, 100, 255, 0.08);
 }
 
 .textButton {
   border: 0;
   background: transparent;
-  color: #e3d7ff;
-  font-size: 17px;
-  font-weight: 600;
+  color: #c4b0f0;
+  font-size: 14px;
+  font-weight: 500;
   line-height: 1.35;
   padding: 2px 0;
-  transition: color 0.2s ease, text-shadow 0.2s ease, transform 0.2s ease;
+  transition: color 0.2s ease, transform 0.15s ease;
 }
 
 .textButton:hover,
 .textButton:focus-visible {
-  color: #ffb27e;
-  text-shadow: 0 0 18px rgba(255, 122, 48, 0.24);
+  color: #f4f0ff;
   transform: translateY(-1px);
   outline: 0;
 }
