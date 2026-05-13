@@ -17,15 +17,21 @@ export async function DELETE() {
     // Capture details before deletion
     const { email, displayName } = user;
 
-    // Cancel Stripe subscription if one exists (best-effort, never blocks deletion)
-    try {
-      const subscription = readBillingSubscription(user.id);
-      if (subscription?.stripeSubscriptionId) {
+    // Cancel Stripe subscription if one exists
+    const subscription = readBillingSubscription(user.id);
+    if (subscription?.stripeSubscriptionId) {
+      try {
         const stripe = getStripeClient();
         await stripe.subscriptions.cancel(subscription.stripeSubscriptionId);
+      } catch (err) {
+        // Only ignore "subscription not found" — re-throw anything else so
+        // the user isn't deleted while Stripe still has an active subscription
+        const code = (err as { code?: string; statusCode?: number }).code;
+        const status = (err as { statusCode?: number }).statusCode;
+        if (code !== "resource_missing" && status !== 404) {
+          throw err;
+        }
       }
-    } catch {
-      // Stripe not configured or subscription already gone — continue
     }
 
     // Delete all user data from the database
