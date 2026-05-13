@@ -5576,6 +5576,21 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
   var _initTab = new URLSearchParams(window.location.search).get('tab') || 'quant';
   if (_initTab === 'research') _initTab = 'quant';
   switchTab(_initTab);
+
+  // Redraw canvases when page is restored from back/forward cache
+  window.addEventListener('pageshow', function(e) {
+    if (e.persisted) {
+      requestAnimationFrame(function() {
+        if (typeof drawHistoryLine === 'function' && window._fullHistory) {
+          drawHistoryLine(window._fullHistory, window._historyCostBase || 0);
+        }
+        if (typeof runMonteCarlo === 'function') runMonteCarlo();
+        if (typeof drawHoldingsBars === 'function' && window._lastHoldingsBars) {
+          drawHoldingsBars(window._lastHoldingsBars);
+        }
+      });
+    }
+  });
 })();
 
 /* ── TICKER BAR ── */
