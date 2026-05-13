@@ -2,9 +2,9 @@
   min-height: 100vh;
   padding: 48px 0;
   background:
-    radial-gradient(circle at top, rgba(168, 85, 247, 0.12), transparent 28%),
-    radial-gradient(circle at 80% 10%, rgba(255, 122, 48, 0.1), transparent 24%),
-    #0d0a14;
+    radial-gradient(ellipse 70% 50% at 50% -10%, rgba(124, 77, 255, 0.08) 0%, transparent 100%),
+    radial-gradient(ellipse 40% 60% at 100% 80%, rgba(255, 122, 48, 0.05) 0%, transparent 60%),
+    #f3f1fb;
   color: #f4f0ff;
   font-family: var(--font-geist-sans), "Avenir Next", sans-serif;
 }
@@ -18,6 +18,7 @@
   border-radius: 24px;
   background: rgba(22, 16, 42, 0.96);
   overflow: hidden;
+  box-shadow: 0 40px 100px rgba(100, 80, 200, 0.14), 0 8px 32px rgba(0, 0, 0, 0.28);
 }
 
 .shell::before {
