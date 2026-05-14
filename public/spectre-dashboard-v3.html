@@ -3153,68 +3153,46 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
   function computeTodayChange(holdings, snapshots, lastPriceRefreshAt) {
     const todayKeySydney = toSydneyDateKey(new Date());
     const refreshedToday = lastPriceRefreshAt && toSydneyDateKey(lastPriceRefreshAt) === todayKeySydney;
+    // Only show a today-change when prices have actually been fetched today.
+    if (!refreshedToday) return { amount: null, pct: null };
+
     const preExistingHoldings = (holdings || []).filter((holding) => {
       const importedAt = new Date(holding?.importedAt || "");
-      if (Number.isNaN(importedAt.getTime())) {
-        return true;
-      }
+      if (Number.isNaN(importedAt.getTime())) return true;
       return toSydneyDateKey(importedAt) < todayKeySydney;
     });
-    const hasSameDayImports = preExistingHoldings.length < (holdings || []).length;
+
     const currentTotal = sum(preExistingHoldings.map((holding) => Number(holding.value) || 0));
-    let fallbackPreviousTotal = 0;
-    let fallbackCurrentTotal = 0;
-    let liveDataCount = 0; // holdings with a real prevClose (different from price)
+    let openTotal = 0; // portfolio value at market open (using sessionOpen price per holding)
+    let liveDataCount = 0; // holdings whose open price differs from current price
 
     for (const holding of preExistingHoldings) {
       const quantity = resolveHoldingUnits(Number(holding?.units), Number(holding?.value), Number(holding?.price));
       const price = Number(holding?.price);
+      const sessionOpen = Number(holding?.sessionOpen);
       const prevClose = Number(holding?.prevClose);
 
-      if (!Number.isFinite(quantity) || quantity <= 0 || !Number.isFinite(price) || !Number.isFinite(prevClose) || price <= 0 || prevClose <= 0) {
+      if (!Number.isFinite(quantity) || quantity <= 0 || !Number.isFinite(price) || price <= 0) {
+        // No tradeable units — treat as unchanged (contributes equally to both sides).
         const value = Number(holding?.value);
-        if (Number.isFinite(value) && value > 0) {
-          fallbackPreviousTotal += value;
-          fallbackCurrentTotal += value;
-        }
+        if (Number.isFinite(value) && value > 0) openTotal += value;
         continue;
       }
 
-      // Count holdings that have a live prevClose distinct from price
-      if (Math.abs(price - prevClose) / prevClose > 0.0001) liveDataCount++;
+      // Prefer sessionOpen (= Yahoo regularMarketOpen, set on first refresh each day) over prevClose.
+      const baseline = Number.isFinite(sessionOpen) && sessionOpen > 0
+        ? sessionOpen
+        : Number.isFinite(prevClose) && prevClose > 0
+          ? prevClose
+          : price;
 
-      fallbackPreviousTotal += quantity * prevClose;
-      fallbackCurrentTotal += quantity * price;
+      if (Math.abs(price - baseline) / baseline > 0.0001) liveDataCount++;
+      openTotal += quantity * baseline;
     }
 
-    const todaySnapshots = (snapshots || [])
-      .filter((snapshot) => Number.isFinite(snapshot?.value) && toSydneyDateKey(snapshot?.date) === todayKeySydney)
-      .sort((a, b) => String(a.date || "").localeCompare(String(b.date || "")));
-
-    if (hasSameDayImports || todaySnapshots.length === 0) {
-      // Only use the prevClose fallback if prices were actually refreshed today —
-      // otherwise price/prevClose reflect yesterday's session, not today's change.
-      if (!refreshedToday) return { amount: null, pct: null };
-      if (fallbackPreviousTotal > 0) {
-        if (liveDataCount === 0) return { amount: null, pct: null };
-        const amount = fallbackCurrentTotal - fallbackPreviousTotal;
-        return { amount, pct: (amount / fallbackPreviousTotal) * 100 };
-      }
-      return { amount: null, pct: null };
-    }
-
-    const dayStartValue = Number(todaySnapshots[0].value) || 0;
-    if (dayStartValue <= 0 && fallbackPreviousTotal > 0) {
-      if (!refreshedToday || liveDataCount === 0) return { amount: null, pct: null };
-      const amount = fallbackCurrentTotal - fallbackPreviousTotal;
-      return { amount, pct: (amount / fallbackPreviousTotal) * 100 };
-    }
-
-    const change = currentTotal - dayStartValue;
-    return {
-      amount: change,
-      pct: dayStartValue > 0 ? (change / dayStartValue) * 100 : 0,
-    };
+    if (openTotal <= 0 || liveDataCount === 0) return { amount: null, pct: null };
+    const amount = currentTotal - openTotal;
+    return { amount, pct: (amount / openTotal) * 100 };
   }
 
   function countKeywordHits(corpus, keywords) {
