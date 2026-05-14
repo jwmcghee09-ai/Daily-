@@ -3150,8 +3150,9 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       .sort((a, b) => b.value - a.value);
   }
 
-  function computeTodayChange(holdings, snapshots) {
+  function computeTodayChange(holdings, snapshots, lastPriceRefreshAt) {
     const todayKeySydney = toSydneyDateKey(new Date());
+    const refreshedToday = lastPriceRefreshAt && toSydneyDateKey(lastPriceRefreshAt) === todayKeySydney;
     const preExistingHoldings = (holdings || []).filter((holding) => {
       const importedAt = new Date(holding?.importedAt || "");
       if (Number.isNaN(importedAt.getTime())) {
@@ -3191,8 +3192,10 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       .sort((a, b) => String(a.date || "").localeCompare(String(b.date || "")));
 
     if (hasSameDayImports || todaySnapshots.length === 0) {
+      // Only use the prevClose fallback if prices were actually refreshed today —
+      // otherwise price/prevClose reflect yesterday's session, not today's change.
+      if (!refreshedToday) return { amount: null, pct: null };
       if (fallbackPreviousTotal > 0) {
-        // If no holding has a live prevClose, data isn't refreshed yet — return null so UI shows "—"
         if (liveDataCount === 0) return { amount: null, pct: null };
         const amount = fallbackCurrentTotal - fallbackPreviousTotal;
         return { amount, pct: (amount / fallbackPreviousTotal) * 100 };
@@ -3202,7 +3205,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
 
     const dayStartValue = Number(todaySnapshots[0].value) || 0;
     if (dayStartValue <= 0 && fallbackPreviousTotal > 0) {
-      if (liveDataCount === 0) return { amount: null, pct: null };
+      if (!refreshedToday || liveDataCount === 0) return { amount: null, pct: null };
       const amount = fallbackCurrentTotal - fallbackPreviousTotal;
       return { amount, pct: (amount / fallbackPreviousTotal) * 100 };
     }
@@ -4277,7 +4280,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     const holdings = state.portfolio.holdings || [];
     const snapshots = state.portfolio.snapshots || [];
     const metrics = computeMetrics(holdings, snapshots, state.riskWindow);
-    const today = computeTodayChange(holdings, snapshots);
+    const today = computeTodayChange(holdings, snapshots, state.portfolio.lastPriceRefreshAt || "");
     const effectiveVar95Pct = metrics.var95Pct ?? state.historicalRiskEstimate?.var95Pct ?? null;
     const effectiveCvar95Pct = metrics.cvar95Pct ?? state.historicalRiskEstimate?.cvar95Pct ?? null;
     const effectiveMaxDrawdownPct = metrics.maxDrawdownPct ?? state.historicalRiskEstimate?.maxDrawdownPct ?? null;
