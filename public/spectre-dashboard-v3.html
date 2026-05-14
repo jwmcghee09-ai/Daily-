@@ -4169,7 +4169,11 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       const response = await fetch("/api/pro/holdings-ai", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question }),
+        body: JSON.stringify({
+          question,
+          monteCarlo: window._lastMonteCarlo || null,
+          stressScenarios: window._lastStressScenarios || null,
+        }),
       });
 
       if (!response.ok || !response.body) {
@@ -4677,7 +4681,19 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
 
     const stressCards = Array.from(document.querySelectorAll(".stress-card"));
     if (stressCards.length >= 4) {
-      const scenarios = [-0.4, -0.08, -0.05, 0.145];
+      const stressDefs = [
+        { name: "GFC-style crash", shockPct: -40 },
+        { name: "Market correction", shockPct: -8 },
+        { name: "Flash crash", shockPct: -5 },
+        { name: "Bull rally", shockPct: 14.5 },
+      ];
+      const scenarios = stressDefs.map((s) => s.shockPct / 100);
+      window._lastStressScenarios = stressDefs.map((s, i) => ({
+        name: s.name,
+        shockPct: s.shockPct,
+        impact: Math.round(metrics.totalValue * scenarios[i]),
+        projected: Math.round(metrics.totalValue + metrics.totalValue * scenarios[i]),
+      }));
       stressCards.forEach((card, index) => {
         const impact = metrics.totalValue * scenarios[index];
         const projected = metrics.totalValue + impact;
@@ -4855,6 +4871,18 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     setText("mc-stat-p50", fmtAUD(p50[N_DAYS]));
     setText("mc-stat-p90", fmtAUD(p90[N_DAYS]));
     setText("mc-stat-p10", fmtAUD(p10[N_DAYS]));
+
+    // Store for AI context
+    window._lastMonteCarlo = {
+      horizonDays: N_DAYS,
+      startValue: Math.round(startValue),
+      p10: Math.round(p10[N_DAYS]),
+      p25: Math.round(p25[N_DAYS]),
+      p50: Math.round(p50[N_DAYS]),
+      p75: Math.round(p75[N_DAYS]),
+      p90: Math.round(p90[N_DAYS]),
+      usedFallback: useFallback,
+    };
 
     if (loadingEl) loadingEl.style.display = "none";
 

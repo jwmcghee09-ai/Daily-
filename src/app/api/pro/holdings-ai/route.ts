@@ -47,6 +47,8 @@ const DEFAULT_QUESTION = "What is most likely influencing the value of my curren
 interface AskHoldingsBody {
   question?: unknown;
   conversationId?: unknown;
+  monteCarlo?: unknown;
+  stressScenarios?: unknown;
 }
 
 interface HoldingPromptSummary {
@@ -457,6 +459,8 @@ function buildSystemPrompt(): string {
     "- Reference BTC/ETH prices and 24h change for crypto holdings\n" +
     "- Reference gold AUD price for bullion holdings\n" +
     "- Use quant signals like VaR, CVaR, drawdown, beta, tracking error, correlation, factor exposure, Sharpe/Sortino, and regime when available\n" +
+    "- Use monteCarlo (if present) to discuss probability-weighted outcomes: reference p10/p50/p90 values and horizon when discussing forward-looking scenarios\n" +
+    "- Use stressScenarios (if present) to quantify portfolio impact under named shock scenarios (e.g. GFC-style crash, flash crash, bull rally)\n" +
     "- Use research context like macro indicators, yield curve, sector performance, analyst ratings, earnings, and relevant news when available\n" +
     "\nAdditional rules:\n" +
     "- Do NOT invent company announcements, earnings dates, or specific events not present in the provided data\n" +
@@ -687,6 +691,7 @@ async function buildPromptContext(
   origin: string,
   cookieHeader: string,
   conversationHistory: AiConversationMessage[] = [],
+  clientQuantContext: { monteCarlo: unknown; stressScenarios: unknown } = { monteCarlo: null, stressScenarios: null },
 ) {
   const { state, metrics, allHoldings, topGainers, topLosers } = buildHoldingsSummary(userId);
   const heldTickerSet = new Set(allHoldings.map((holding) => normalizeSymbol(holding.ticker)));
@@ -808,7 +813,23 @@ async function buildPromptContext(
       value: toRounded(point.value),
     })),
     research: researchContext,
+    // Monte Carlo simulation results and stress scenario impacts computed client-side
+    // and forwarded so the AI can reference them directly in its analysis.
+    monteCarlo: sanitizeClientQuantField(clientQuantContext.monteCarlo),
+    stressScenarios: sanitizeClientQuantField(clientQuantContext.stressScenarios),
   };
+}
+
+function sanitizeClientQuantField(value: unknown): unknown {
+  if (value === null || value === undefined) return null;
+  if (typeof value !== "object" || Array.isArray(value)) return null;
+  try {
+    const str = JSON.stringify(value);
+    if (str.length > 2000) return null;
+    return JSON.parse(str);
+  } catch {
+    return null;
+  }
 }
 
 // ── Route handler ──────────────────────────────────────────────────────────────
@@ -900,7 +921,11 @@ export async function POST(request: Request) {
   const marketSnapshot = await fetchMarketSnapshot();
   const origin = new URL(request.url).origin;
   const cookieHeader = request.headers.get("cookie") ?? "";
-  const context = await buildPromptContext(sessionUser.email, question, sessionUser.id, marketSnapshot, origin, cookieHeader, conversationHistory);
+  const context = await buildPromptContext(
+    sessionUser.email, question, sessionUser.id, marketSnapshot, origin, cookieHeader,
+    conversationHistory,
+    { monteCarlo: body.monteCarlo ?? null, stressScenarios: body.stressScenarios ?? null },
+  );
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), HOLDINGS_AI_TIMEOUT_MS);
