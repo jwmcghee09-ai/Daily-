@@ -168,40 +168,42 @@ async function recoverCustomerIdFromEmail(input: {
     return null;
   }
 
+  const customerLists: Stripe.Customer[][] = [];
+
   try {
     const searchResult = await input.stripe.customers.search({
       query: `email:'${escapeStripeSearchString(normalizedEmail)}'`,
-      limit: 5,
+      limit: 10,
     });
-    const searchedCustomer = searchResult.data.find((customer) => !customer.deleted) || null;
-    if (searchedCustomer) {
-      upsertBillingSubscriptionForUser({
-        userId: input.userId,
-        stripeCustomerId: searchedCustomer.id,
-      });
-
-      return searchedCustomer.id;
-    }
+    customerLists.push(searchResult.data.filter((c) => !c.deleted) as Stripe.Customer[]);
   } catch {
-    // Fallback to the broader list API below.
+    // Fallback to the list API below.
   }
 
-  const customers = await input.stripe.customers.list({
-    email: normalizedEmail,
-    limit: 10,
-  });
-
-  const activeCustomer = customers.data.find((customer) => !customer.deleted) || null;
-  if (!activeCustomer) {
-    return null;
+  if (customerLists.length === 0) {
+    const listed = await input.stripe.customers.list({ email: normalizedEmail, limit: 10 });
+    customerLists.push(listed.data.filter((c) => !c.deleted) as Stripe.Customer[]);
   }
 
-  upsertBillingSubscriptionForUser({
-    userId: input.userId,
-    stripeCustomerId: activeCustomer.id,
-  });
+  const candidates = customerLists.flat();
 
-  return activeCustomer.id;
+  // Verify ownership: only link a Stripe customer if one of their subscriptions
+  // has metadata.userId matching our authenticated user — prevents linking a
+  // Stripe customer belonging to a different user who happens to share an email.
+  for (const customer of candidates) {
+    try {
+      const subs = await input.stripe.subscriptions.list({ customer: customer.id, limit: 10 });
+      const owned = subs.data.some((sub) => sub.metadata?.userId === input.userId);
+      if (owned) {
+        upsertBillingSubscriptionForUser({ userId: input.userId, stripeCustomerId: customer.id });
+        return customer.id;
+      }
+    } catch {
+      // Skip customers we can't inspect.
+    }
+  }
+
+  return null;
 }
 
 async function recoverCustomerIdFromSubscriptionSearch(input: {

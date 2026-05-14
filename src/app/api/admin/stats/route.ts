@@ -1,16 +1,25 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
+import { consumeRateLimit } from "@/lib/rate-limit";
+import { getClientAddress } from "@/lib/auth";
 
 export const runtime = "nodejs";
 
 export async function GET(request: Request) {
+  const ip = getClientAddress(request);
+  const rate = consumeRateLimit(`admin:stats:${ip}`, 10, 60 * 60 * 1000);
+  if (!rate.allowed) {
+    return NextResponse.json({ error: "Forbidden." }, { status: 403 });
+  }
+
   const secret = (process.env.ADMIN_SECRET || "").trim();
   if (!secret) {
     return NextResponse.json({ error: "Not configured." }, { status: 403 });
   }
 
-  const provided = new URL(request.url).searchParams.get("secret") ?? "";
-  if (provided !== secret) {
+  const authHeader = (request.headers.get("authorization") || "").trim();
+  const provided = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
+  if (!provided || provided !== secret) {
     return NextResponse.json({ error: "Forbidden." }, { status: 403 });
   }
 

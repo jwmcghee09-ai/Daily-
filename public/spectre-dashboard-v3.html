@@ -2244,7 +2244,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     </div>
     <div class="upgrade-modal-actions">
       <a href="/signin?mode=login&plan=plus" class="upgrade-btn-primary">Upgrade to Plus</a>
-      <button class="upgrade-btn-secondary" onclick="document.getElementById('upgrade-overlay').classList.remove('open')">Not now</button>
+      <button class="upgrade-btn-secondary" onclick="document.getElementById('upgrade-overlay')?.classList.remove('open')">Not now</button>
     </div>
   </div>
 </div>
@@ -2273,7 +2273,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
         </button>
       </div>
       <p id="ai-modal-checkout-error" style="display:none;color:#dc2626;font-size:.75rem;margin:0 0 .75rem"></p>
-      <button onclick="document.getElementById('ai-limit-overlay').style.opacity='0';document.getElementById('ai-limit-overlay').style.pointerEvents='none'" style="background:transparent;border:none;color:#9b8fbb;font-size:.8rem;cursor:pointer;padding:.25rem .5rem;transition:color .15s;font-family:inherit" onmouseover="this.style.color='#0f0d1e'" onmouseout="this.style.color='#9b8fbb'">Maybe later</button>
+      <button onclick="var _o=document.getElementById('ai-limit-overlay');if(_o){_o.style.opacity='0';_o.style.pointerEvents='none';}" style="background:transparent;border:none;color:#9b8fbb;font-size:.8rem;cursor:pointer;padding:.25rem .5rem;transition:color .15s;font-family:inherit" onmouseover="this.style.color='#0f0d1e'" onmouseout="this.style.color='#9b8fbb'">Maybe later</button>
     </div>
   </div>
 </div>
