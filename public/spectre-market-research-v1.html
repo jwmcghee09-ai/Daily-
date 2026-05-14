@@ -1697,7 +1697,14 @@ h3 { font-size: 1.15rem; }
   line-height:1.6;
   color:rgba(242,238,255,.84);
 }
-.demo-preview-locked .research-tab-nav .rtab,
+.demo-preview-locked .research-tab-nav .rtab{
+  opacity:.65;
+  filter:saturate(.8);
+}
+.demo-preview-locked .research-tab-nav .rtab.active{
+  opacity:1;
+  filter:none;
+}
 .demo-preview-locked .time-pill,
 .demo-preview-locked .tab-btn{
   pointer-events:none;
@@ -1705,7 +1712,6 @@ h3 { font-size: 1.15rem; }
   opacity:.42;
   filter:saturate(.7);
 }
-.demo-preview-locked .research-tab-nav .rtab.active,
 .demo-preview-locked .time-pill.active,
 .demo-preview-locked .tab-btn.active{
   opacity:1;
