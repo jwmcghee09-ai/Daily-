@@ -127,15 +127,15 @@ nav{
 
 /* ── Heading ── */
 .gate-title{
-  font-size:clamp(2.2rem,6vw,3.4rem);font-weight:700;line-height:1.06;
-  letter-spacing:-.035em;margin-bottom:.8rem;color:#0f0d1e;
+  font-size:clamp(3rem,7vw,5rem);font-weight:700;line-height:1.05;
+  letter-spacing:-.04em;margin-bottom:.9rem;color:#0f0d1e;
 }
 .gate-title span{
   background:linear-gradient(90deg,#a855f7 0%,#d946ef 40%,#ff7a30 80%,#ffb347 100%);
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
 }
 .gate-sub{
-  color:#5e5a78;font-size:1rem;line-height:1.7;
+  color:#5e5a78;font-size:1.1rem;line-height:1.7;
   margin-bottom:3rem;max-width:520px;
 }
 
