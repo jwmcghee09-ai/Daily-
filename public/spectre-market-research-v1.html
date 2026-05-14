@@ -269,16 +269,16 @@ h3 { font-size: 1.15rem; }
 /* ===== TICKER TAPE ===== */
 .ticker-wrap {
   overflow: hidden;
-  background: transparent;
-  border-top: 1px solid rgba(255,255,255,.06);
+  background: rgba(232,229,248,0.88);
+  border-top: 1px solid rgba(100,80,200,.1);
   position: relative;
   height: 28px;
   display: flex;
   align-items: center;
 }
 .ticker-wrap::before,.ticker-wrap::after{content:'';position:absolute;top:0;bottom:0;width:72px;z-index:2;pointer-events:none}
-.ticker-wrap::before{left:0;background:linear-gradient(to right,rgba(12,9,24,.98),transparent)}
-.ticker-wrap::after{right:0;background:linear-gradient(to left,rgba(12,9,24,.98),transparent)}
+.ticker-wrap::before{left:0;background:linear-gradient(to right,rgba(232,229,248,1),transparent)}
+.ticker-wrap::after{right:0;background:linear-gradient(to left,rgba(232,229,248,1),transparent)}
 
 .ticker-track {
   display: flex;
@@ -305,8 +305,8 @@ h3 { font-size: 1.15rem; }
   white-space: nowrap;
 }
 
-.ticker-item .sym { color: #8a8098; font-weight: 500; letter-spacing: .08em; }
-.ticker-item .price { color: #ccc8e0; font-weight: 600; }
+.ticker-item .sym { color: rgba(94,90,120,.7); font-weight: 500; letter-spacing: .08em; }
+.ticker-item .price { color: #0f0d1e; font-weight: 600; }
 .ticker-item .chg { font-weight: 500; }
 .ticker-item .chg.pos { color: #c084fc; }
 .ticker-item .chg.neg { color: #f87171; }
@@ -1650,7 +1650,7 @@ h3 { font-size: 1.15rem; }
   align-items: center;
   justify-content: space-between;
   padding: 20px 0 12px;
-  border-bottom: 1px solid rgba(255,255,255,.06);
+  border-bottom: 1px solid rgba(100,80,200,.13);
   margin-bottom: 0;
 }
 .page-header-left {
@@ -1664,19 +1664,19 @@ h3 { font-size: 1.15rem; }
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--sl-text);
+  color: var(--sl-page-text);
 }
 .page-subtitle {
   font-family: var(--font-mono);
   font-size: 0.62rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--sl-muted);
+  color: var(--sl-page-muted);
 }
 .page-header-right {
   font-family: var(--font-mono);
   font-size: 0.62rem;
-  color: var(--sl-muted);
+  color: var(--sl-page-muted);
   letter-spacing: 0.06em;
 }
 .demo-preview-banner{
@@ -2960,7 +2960,7 @@ h3 { font-size: 1.15rem; }
   font-weight: 600;
   letter-spacing: .14em;
   text-transform: uppercase;
-  color: rgba(200,192,230,.7);
+  color: rgba(94,90,120,.65);
   background: none;
   border: none;
   border-bottom: 2px solid transparent;

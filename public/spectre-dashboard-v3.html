@@ -5639,17 +5639,25 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
   switchTab(_initTab);
 
   // Redraw canvases when page is restored from back/forward cache (bfcache)
-  // Also runs on normal page load to ensure canvas dimensions are computed
   window.addEventListener('pageshow', function(e) {
     if (e.persisted) {
-      // bfcache restore: canvas content cleared, redraw after layout is stable
+      // Wait for layout to fully stabilise before measuring canvas dimensions
       window.setTimeout(function() {
-        if (typeof drawDonut === 'function') {
-          if (window._lastAccountSlices) drawDonut("c-account", window._lastAccountSlices);
-          if (window._lastSectorSlices) drawDonut("c-sector", window._lastSectorSlices);
-        }
-        if (typeof window.renderPortfolio === 'function') window.renderPortfolio();
-      }, 200);
+        requestAnimationFrame(function() {
+          if (typeof drawDonut === 'function') {
+            if (window._lastAccountSlices) drawDonut("c-account", window._lastAccountSlices);
+            if (window._lastSectorSlices) drawDonut("c-sector", window._lastSectorSlices);
+          }
+          if (typeof drawHistoryLine === 'function' && window._fullHistory && window._fullHistory.length) {
+            drawHistoryLine(window._fullHistory, window._historyCostBase || 0);
+          }
+          if (typeof drawHoldingsBars === 'function' && window._lastHoldingsBars) {
+            drawHoldingsBars(window._lastHoldingsBars);
+          }
+          if (typeof runMonteCarlo === 'function') runMonteCarlo();
+          if (typeof window.renderPortfolio === 'function') window.renderPortfolio();
+        });
+      }, 350);
     }
   });
 })();
