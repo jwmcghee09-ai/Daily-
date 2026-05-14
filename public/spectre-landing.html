@@ -913,7 +913,20 @@ a { text-decoration: none; color: inherit; }
   setPlan('starter');
 
   const params = new URLSearchParams(window.location.search);
-  if (params.get('checkout') === 'success') {
+
+  // Pre-fill email from URL (used by post-payment welcome email CTA)
+  const emailParam = params.get('email');
+  if (emailParam) {
+    emailInput.value = emailParam;
+  }
+
+  if (params.get('checkout') === 'paid') {
+    // Arriving from the welcome email — switch to register mode so they can complete setup
+    const planLabel = params.get('plan') === 'pro' ? 'Pro' : 'Starter';
+    setMode('register');
+    if (params.get('plan')) setPlan(params.get('plan'));
+    setMessage(`Payment confirmed for ${planLabel}. Create your account below using this email address.`, 'success');
+  } else if (params.get('checkout') === 'success') {
     setMessage((params.get('plan') === 'pro' ? 'Pro' : 'Starter') + ' checkout complete. Sign in or open your dashboard after Stripe finishes activating access.', 'success');
   } else if (params.get('checkout') === 'cancelled') {
     setMessage('Stripe checkout was cancelled.', 'info');
