@@ -3627,7 +3627,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     }).join("");
   }
 
-  function renderPreviewAllocation(items) {
+  function renderPreviewAllocation(items) { window.renderPreviewAllocation = renderPreviewAllocation;
     const legend = document.getElementById("preview-allocation-legend");
     if (!legend) return;
 
@@ -5641,23 +5641,31 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
   // Redraw canvases when page is restored from back/forward cache (bfcache)
   window.addEventListener('pageshow', function(e) {
     if (e.persisted) {
-      // Wait for layout to fully stabilise before measuring canvas dimensions
-      window.setTimeout(function() {
-        requestAnimationFrame(function() {
-          if (typeof drawDonut === 'function') {
-            if (window._lastAccountSlices) drawDonut("c-account", window._lastAccountSlices);
-            if (window._lastSectorSlices) drawDonut("c-sector", window._lastSectorSlices);
-          }
-          if (typeof drawHistoryLine === 'function' && window._fullHistory && window._fullHistory.length) {
-            drawHistoryLine(window._fullHistory, window._historyCostBase || 0);
-          }
-          if (typeof drawHoldingsBars === 'function' && window._lastHoldingsBars) {
-            drawHoldingsBars(window._lastHoldingsBars);
-          }
-          if (typeof runMonteCarlo === 'function') runMonteCarlo();
-          if (typeof window.renderPortfolio === 'function') window.renderPortfolio();
-        });
-      }, 350);
+      var attempts = 0;
+      function tryRedraw() {
+        // offsetWidth forces a synchronous layout — if 0, canvas isn't ready yet
+        var acct = document.getElementById('c-account');
+        if (acct && acct.offsetWidth === 0 && attempts < 30) {
+          attempts++;
+          window.setTimeout(tryRedraw, 50);
+          return;
+        }
+        if (typeof drawDonut === 'function') {
+          if (window._lastAccountSlices) drawDonut('c-account', window._lastAccountSlices);
+          if (window._lastSectorSlices) drawDonut('c-sector', window._lastSectorSlices);
+        }
+        if (typeof window.renderPreviewAllocation === 'function' && window._lastAccountSlices) {
+          window.renderPreviewAllocation(window._lastAccountSlices);
+        }
+        if (typeof drawHistoryLine === 'function' && window._fullHistory && window._fullHistory.length) {
+          drawHistoryLine(window._fullHistory, window._historyCostBase || 0);
+        }
+        if (typeof drawHoldingsBars === 'function' && window._lastHoldingsBars) {
+          drawHoldingsBars(window._lastHoldingsBars);
+        }
+        if (typeof runMonteCarlo === 'function') runMonteCarlo();
+      }
+      tryRedraw();
     }
   });
 })();
