@@ -2259,19 +2259,20 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       <h2 id="ai-limit-modal-title" style="font-family:'Space Grotesk',sans-serif;font-size:1.2rem;font-weight:700;color:#0f0d1e;margin-bottom:.5rem;letter-spacing:-.02em">AI query limit reached</h2>
       <p id="ai-limit-modal-body" style="font-size:.85rem;color:#5e5a78;line-height:1.65;margin-bottom:1.5rem">You've used all your Ask AI sessions for this month. Upgrade to get more.</p>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1.25rem;text-align:left">
-        <a href="/signin?plan=plus" style="display:flex;flex-direction:column;gap:.35rem;padding:1rem;border:1px solid rgba(100,80,200,.16);border-radius:14px;background:#faf9ff;text-decoration:none;transition:border-color .15s,transform .15s" onmouseover="this.style.borderColor='rgba(124,77,255,.4)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(100,80,200,.16)';this.style.transform=''">
+        <button onclick="startStripeCheckout('plus',this)" style="display:flex;flex-direction:column;gap:.35rem;padding:1rem;border:1px solid rgba(100,80,200,.16);border-radius:14px;background:#faf9ff;cursor:pointer;text-align:left;font-family:inherit;transition:border-color .15s,transform .15s" onmouseover="this.style.borderColor='rgba(124,77,255,.4)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(100,80,200,.16)';this.style.transform=''">
           <span style="font-size:.6rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#7c4dff;font-family:'DM Mono',monospace">Plus</span>
           <span style="font-size:1.4rem;font-weight:700;color:#0f0d1e;line-height:1">$2.99<span style="font-size:.65rem;color:#9b8fbb;font-weight:500">/mo</span></span>
           <span style="font-size:.76rem;color:#5e5a78;line-height:1.4">20 AI queries/month · Dip alerts</span>
-          <span style="margin-top:.4rem;display:block;text-align:center;padding:.35rem;border-radius:8px;font-size:.72rem;font-weight:600;background:rgba(124,77,255,.1);color:#7c4dff;border:1px solid rgba(124,77,255,.25)">Get Plus</span>
-        </a>
-        <a href="/signin?plan=pro" style="display:flex;flex-direction:column;gap:.35rem;padding:1rem;border:1px solid rgba(124,77,255,.35);border-radius:14px;background:rgba(124,77,255,.05);text-decoration:none;transition:border-color .15s,transform .15s" onmouseover="this.style.borderColor='rgba(124,77,255,.6)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(124,77,255,.35)';this.style.transform=''">
+          <span class="ai-modal-cta-plus" style="margin-top:.4rem;display:block;text-align:center;padding:.35rem;border-radius:8px;font-size:.72rem;font-weight:600;background:rgba(124,77,255,.1);color:#7c4dff;border:1px solid rgba(124,77,255,.25)">Get Plus</span>
+        </button>
+        <button onclick="startStripeCheckout('pro',this)" style="display:flex;flex-direction:column;gap:.35rem;padding:1rem;border:1px solid rgba(124,77,255,.35);border-radius:14px;background:rgba(124,77,255,.05);cursor:pointer;text-align:left;font-family:inherit;transition:border-color .15s,transform .15s" onmouseover="this.style.borderColor='rgba(124,77,255,.6)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(124,77,255,.35)';this.style.transform=''">
           <span style="font-size:.6rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#a855f7;font-family:'DM Mono',monospace">Pro</span>
           <span style="font-size:1.4rem;font-weight:700;color:#0f0d1e;line-height:1">$9.99<span style="font-size:.65rem;color:#9b8fbb;font-weight:500">/mo</span></span>
           <span style="font-size:.76rem;color:#5e5a78;line-height:1.4">Unlimited AI · Full quant console</span>
-          <span style="margin-top:.4rem;display:block;text-align:center;padding:.35rem;border-radius:8px;font-size:.72rem;font-weight:700;background:linear-gradient(135deg,#a855f7,#d946ef 50%,#ff7a30);color:#fff;border:none">Get Pro</span>
-        </a>
+          <span class="ai-modal-cta-pro" style="margin-top:.4rem;display:block;text-align:center;padding:.35rem;border-radius:8px;font-size:.72rem;font-weight:700;background:linear-gradient(135deg,#a855f7,#d946ef 50%,#ff7a30);color:#fff;border:none">Get Pro</span>
+        </button>
       </div>
+      <p id="ai-modal-checkout-error" style="display:none;color:#dc2626;font-size:.75rem;margin:0 0 .75rem"></p>
       <button onclick="document.getElementById('ai-limit-overlay').style.opacity='0';document.getElementById('ai-limit-overlay').style.pointerEvents='none'" style="background:transparent;border:none;color:#9b8fbb;font-size:.8rem;cursor:pointer;padding:.25rem .5rem;transition:color .15s;font-family:inherit" onmouseover="this.style.color='#0f0d1e'" onmouseout="this.style.color='#9b8fbb'">Maybe later</button>
     </div>
   </div>
@@ -5717,6 +5718,34 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     if (attempts >= 20) clearInterval(poll);
   }, 1500);
 })();
+
+// ── Direct Stripe checkout (used by AI limit modal and other upgrade prompts) ──
+async function startStripeCheckout(plan, triggerEl) {
+  const ctaEl = triggerEl?.querySelector('.ai-modal-cta-plus, .ai-modal-cta-pro');
+  const origText = ctaEl ? ctaEl.textContent : null;
+  const errEl = document.getElementById('ai-modal-checkout-error');
+  if (errEl) errEl.style.display = 'none';
+  if (ctaEl) ctaEl.textContent = 'Redirecting…';
+  if (triggerEl) triggerEl.disabled = true;
+
+  try {
+    const res = await fetch('/api/billing/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ plan }),
+    });
+    const data = await res.json();
+    if (data.url) {
+      window.location.assign(data.url);
+    } else {
+      throw new Error(data.error || 'Unable to start checkout.');
+    }
+  } catch (err) {
+    if (ctaEl && origText) ctaEl.textContent = origText;
+    if (triggerEl) triggerEl.disabled = false;
+    if (errEl) { errEl.textContent = err.message || 'Unable to start checkout. Please try again.'; errEl.style.display = 'block'; }
+  }
+}
 </script>
 </body>
 </html>

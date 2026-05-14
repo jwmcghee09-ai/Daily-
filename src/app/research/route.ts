@@ -215,6 +215,31 @@ nav{
   .page{padding:40px 1.25rem 64px}
 }
 </style>
+<script>
+async function startCheckout(plan, btn) {
+  const origText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Redirecting to Stripe…';
+  try {
+    const res = await fetch('/api/billing/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ plan }),
+    });
+    const data = await res.json();
+    if (data.url) {
+      window.location.assign(data.url);
+    } else {
+      throw new Error(data.error || 'Unable to start checkout.');
+    }
+  } catch (err) {
+    btn.disabled = false;
+    btn.textContent = origText;
+    const errEl = document.getElementById('checkout-error');
+    if (errEl) { errEl.textContent = err.message || 'Unable to start checkout. Please try again.'; errEl.style.display = 'block'; }
+  }
+}
+</script>
 </head>
 <body>
 <nav>
@@ -257,8 +282,9 @@ nav{
   <div class="divider"></div>
 
   <div class="actions">
-    <a href="/signin?mode=login&plan=plus" class="btn-primary">Get Plus — $2.99/mo</a>
-    <a href="/signin?mode=login&plan=pro" class="btn-secondary">Get Pro — $9.99/mo</a>
+    <button class="btn-primary" onclick="startCheckout('plus', this)">Get Plus — $2.99/mo</button>
+    <button class="btn-secondary" onclick="startCheckout('pro', this)">Get Pro — $9.99/mo</button>
+    <p id="checkout-error" style="display:none;color:#dc2626;font-size:.78rem;margin:.25rem 0 0"></p>
     <button class="btn-ghost" onclick="history.length > 1 ? history.back() : (window.location.href='/dashboard')">← Back to Dashboard</button>
   </div>
 </div>
