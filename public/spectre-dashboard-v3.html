@@ -3289,6 +3289,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       200;
     const w = Math.max(1, Math.round(rect.width || fallbackWidth));
     const h = Math.max(1, Math.round(rect.height || fallbackHeight));
+    canvas.style.width = `${w}px`;
     canvas.style.height = `${h}px`;
     canvas.width = Math.round(w * r);
     canvas.height = Math.round(h * r);
@@ -5749,6 +5750,7 @@ async function startStripeCheckout(plan, triggerEl) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ plan }),
     });
+    if (!res.ok) throw new Error(`Checkout failed (${res.status})`);
     const data = await res.json();
     if (data.url) {
       window.location.assign(data.url);

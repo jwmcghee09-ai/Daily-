@@ -5505,9 +5505,9 @@ document.addEventListener('DOMContentLoaded', () => {
     renderChartSummary(summaryId, null, _chartSummaryConfig[summaryId]);
   });
 
-  // Fix nav tab links to preserve account/demo mode when returning to dashboard
+  // Fix nav + mobile tab links to preserve account/demo mode when returning to dashboard
   const modeParam = state.demoMode ? 'demo=1' : 'mode=account';
-  document.querySelectorAll('.nav-tab-link').forEach(function(link) {
+  document.querySelectorAll('.nav-tab-link, .mobile-tab-btn[href]').forEach(function(link) {
     const href = link.getAttribute('href');
     if (href && href.startsWith('/dashboard?tab=')) {
       const tab = href.split('tab=')[1];
