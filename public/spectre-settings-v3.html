@@ -245,6 +245,45 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
 </div>
 
 <!-- Cancel Account Confirmation Modal -->
+<!-- Upgrade Plan Modal -->
+<div id="upgrade-plan-modal" class="modal-overlay" role="dialog" aria-modal="true" style="display:none">
+  <div class="modal-box" style="max-width:500px">
+    <div class="modal-title">Choose a Plan</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin:.9rem 0 1rem">
+      <div style="position:relative;overflow:hidden;background:rgba(255,255,255,.04);border:1px solid rgba(178,154,233,.16);border-radius:14px;padding:1.1rem 1.2rem">
+        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#a855f7,#d946ef 60%,#ff7a30)"></div>
+        <div style="font-family:var(--mono);font-size:.54rem;letter-spacing:.18em;text-transform:uppercase;color:#a855f7;margin-bottom:.4rem">Plus</div>
+        <div style="font-size:1.7rem;font-weight:700;color:#f4f0ff;line-height:1">$2.99</div>
+        <div style="font-family:var(--mono);font-size:.6rem;color:#9d97b7;margin-bottom:.9rem">per month</div>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:.35rem;margin-bottom:1rem">
+          <li style="font-size:.76rem;color:#ddd6ef">Research terminal</li>
+          <li style="font-size:.76rem;color:#ddd6ef">20 AI queries / month</li>
+          <li style="font-size:.76rem;color:#ddd6ef">Price dip alerts</li>
+          <li style="font-size:.76rem;color:#ddd6ef">Full risk analytics</li>
+        </ul>
+        <button id="upgrade-plus-btn" class="btn-primary" style="width:100%;font-size:.6rem;padding:.65rem .9rem">Get Plus — $2.99/mo</button>
+      </div>
+      <div style="position:relative;overflow:hidden;background:rgba(255,255,255,.04);border:1px solid rgba(178,154,233,.16);border-radius:14px;padding:1.1rem 1.2rem">
+        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#a855f7,#d946ef 60%,#ff7a30)"></div>
+        <div style="font-family:var(--mono);font-size:.54rem;letter-spacing:.18em;text-transform:uppercase;color:#a855f7;margin-bottom:.4rem">Pro</div>
+        <div style="font-size:1.7rem;font-weight:700;color:#f4f0ff;line-height:1">$9.99</div>
+        <div style="font-family:var(--mono);font-size:.6rem;color:#9d97b7;margin-bottom:.9rem">per month</div>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:.35rem;margin-bottom:1rem">
+          <li style="font-size:.76rem;color:#ddd6ef">Research terminal</li>
+          <li style="font-size:.76rem;color:#ddd6ef">Unlimited AI queries</li>
+          <li style="font-size:.76rem;color:#ddd6ef">Advanced quant console</li>
+          <li style="font-size:.76rem;color:#ddd6ef">Priority support</li>
+        </ul>
+        <button id="upgrade-pro-btn" class="btn-primary" style="width:100%;font-size:.6rem;padding:.65rem .9rem">Get Pro — $9.99/mo</button>
+      </div>
+    </div>
+    <p id="upgrade-checkout-error" style="display:none;color:#ffa09a;font-family:var(--mono);font-size:.58rem;margin-bottom:.75rem"></p>
+    <div class="modal-actions">
+      <button type="button" class="btn-ghost" id="upgrade-dismiss-btn">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <div id="cancel-account-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title" style="display:none">
   <div class="modal-box">
     <div class="modal-title" id="modal-title">Cancel Account</div>
@@ -473,9 +512,9 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
       return;
     }
     const billingButton = document.getElementById("settings-billing-btn");
-    // No subscription — go straight to upgrade flow
+    // No subscription — show plan picker instead of hardcoding plus
     if (billingButton && billingButton.dataset.upgradeMode === "1") {
-      navigateTo("/signin?plan=plus", "Opening checkout...");
+      openUpgradeModal();
       return;
     }
     const original = billingButton ? billingButton.textContent : "Manage / Change Plan";
@@ -490,8 +529,8 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
     } catch (error) {
       const msg = error instanceof Error ? error.message : "Unable to open billing settings.";
       if (msg.includes("billing profile") || msg.includes("No active")) {
-        showToast("No billing profile found — redirecting to upgrade.", "error");
-        setTimeout(() => navigateTo("/signin?plan=plus", "Opening checkout..."), 1500);
+        showToast("No billing profile found — choose a plan to upgrade.", "error");
+        setTimeout(() => openUpgradeModal(), 1200);
       } else {
         showToast(msg, "error");
       }
@@ -522,6 +561,40 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
       // best effort
     }
     navigateTo("/", "Leaving settings...");
+  }
+
+  function openUpgradeModal() {
+    const modal = document.getElementById("upgrade-plan-modal");
+    if (modal) modal.style.display = "flex";
+  }
+
+  function closeUpgradeModal() {
+    const modal = document.getElementById("upgrade-plan-modal");
+    if (modal) modal.style.display = "none";
+  }
+
+  async function startCheckout(plan, btn) {
+    const origText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = "Redirecting…";
+    const errEl = document.getElementById("upgrade-checkout-error");
+    if (errEl) errEl.style.display = "none";
+    try {
+      const data = await apiJson("/api/billing/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan }),
+      });
+      if (data.url) {
+        window.location.assign(data.url);
+      } else {
+        throw new Error(data.error || "Unable to start checkout.");
+      }
+    } catch (err) {
+      btn.disabled = false;
+      btn.textContent = origText;
+      if (errEl) { errEl.textContent = err.message || "Unable to start checkout. Please try again."; errEl.style.display = "block"; }
+    }
   }
 
   function openCancelModal() {
@@ -576,6 +649,12 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
     document.getElementById("cancel-confirm-input")?.addEventListener("keyup", syncConfirmBtn);
     document.getElementById("cancel-account-modal")?.addEventListener("click", function(e) {
       if (e.target === this) closeCancelModal();
+    });
+    document.getElementById("upgrade-dismiss-btn")?.addEventListener("click", closeUpgradeModal);
+    document.getElementById("upgrade-plus-btn")?.addEventListener("click", function() { startCheckout("plus", this); });
+    document.getElementById("upgrade-pro-btn")?.addEventListener("click", function() { startCheckout("pro", this); });
+    document.getElementById("upgrade-plan-modal")?.addEventListener("click", function(e) {
+      if (e.target === this) closeUpgradeModal();
     });
   }
 
