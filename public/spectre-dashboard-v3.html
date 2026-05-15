@@ -3261,6 +3261,11 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
 
   function dpr(canvas) {
     const r = window.devicePixelRatio || 1;
+    // Clear any stale inline dimensions written by a prior render while the canvas was hidden.
+    // Inline styles override CSS `!important`, so a poisoned '1px' from a hidden-tab render
+    // stays broken until cleared here before re-measuring.
+    canvas.style.width = '';
+    canvas.style.height = '';
     const rect = canvas.getBoundingClientRect();
     const fallbackWidth = canvas.parentElement?.clientWidth || canvas.clientWidth || 0;
     const fallbackHeight =
@@ -3270,10 +3275,13 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       200;
     const w = Math.max(1, Math.round(rect.width || fallbackWidth));
     const h = Math.max(1, Math.round(rect.height || fallbackHeight));
-    canvas.style.width = `${w}px`;
-    canvas.style.height = `${h}px`;
     canvas.width = Math.round(w * r);
     canvas.height = Math.round(h * r);
+    // Only pin the display size for HiDPI when the canvas has real dimensions.
+    // If the canvas is hidden (w ≤ 4), skip setting inline styles so CSS retains
+    // control and the layout isn't poisoned for the next visible render.
+    if (w > 4) canvas.style.width = `${w}px`;
+    if (h > 4) canvas.style.height = `${h}px`;
     const ctx = canvas.getContext("2d");
     if (!ctx) return null;
     ctx.setTransform(r, 0, 0, r, 0, 0);
@@ -5603,6 +5611,9 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
         if (typeof drawDonut === 'function') {
           if (window._lastAccountSlices) drawDonut("c-account", window._lastAccountSlices);
           if (window._lastSectorSlices) drawDonut("c-sector", window._lastSectorSlices);
+        }
+        if (typeof renderPreviewAllocation === 'function' && window._lastAccountSlices) {
+          renderPreviewAllocation(window._lastAccountSlices);
         }
         if (typeof drawHistoryLine === 'function' && window._fullHistory) {
           drawHistoryLine(window._fullHistory, window._historyCostBase || 0);
