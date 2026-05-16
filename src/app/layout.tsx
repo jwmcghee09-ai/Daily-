@@ -1,42 +1,69 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import { Suspense } from "react";
-import { DM_Mono, DM_Sans, Geist, Geist_Mono, Sora, Space_Grotesk } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import NavigationProgress from "@/components/navigation-progress";
 
-const geistSans = Geist({
+const geistSans = localFont({
   variable: "--font-geist-sans",
-  subsets: ["latin"],
+  display: "swap",
+  src: [
+    { path: "../../public/fonts/Geist-400-latin.woff2", weight: "400", style: "normal" },
+    { path: "../../public/fonts/Geist-500-latin.woff2", weight: "500", style: "normal" },
+    { path: "../../public/fonts/Geist-600-latin.woff2", weight: "600", style: "normal" },
+    { path: "../../public/fonts/Geist-700-latin.woff2", weight: "700", style: "normal" },
+  ],
 });
 
-const geistMono = Geist_Mono({
+const geistMono = localFont({
   variable: "--font-geist-mono",
-  subsets: ["latin"],
+  display: "swap",
+  src: [
+    { path: "../../public/fonts/GeistMono-400-latin.woff2", weight: "400", style: "normal" },
+    { path: "../../public/fonts/GeistMono-500-latin.woff2", weight: "500", style: "normal" },
+    { path: "../../public/fonts/GeistMono-600-latin.woff2", weight: "600", style: "normal" },
+    { path: "../../public/fonts/GeistMono-700-latin.woff2", weight: "700", style: "normal" },
+  ],
 });
 
-const dmSans = DM_Sans({
+const dmSans = localFont({
   variable: "--font-dm-sans",
-  subsets: ["latin"],
-  weight: ["400", "500", "700", "800"],
+  display: "swap",
+  src: [
+    { path: "../../public/fonts/DMSans-latin.woff2", weight: "100 900", style: "normal" },
+    { path: "../../public/fonts/DMSans-latin-ext.woff2", weight: "100 900", style: "normal" },
+  ],
 });
 
-const dmMono = DM_Mono({
+const dmMono = localFont({
   variable: "--font-dm-mono",
-  subsets: ["latin"],
-  weight: ["400", "500"],
+  display: "swap",
+  src: [
+    { path: "../../public/fonts/DMMono-Regular-latin.woff2", weight: "400", style: "normal" },
+    { path: "../../public/fonts/DMMono-Regular-latin-ext.woff2", weight: "400", style: "normal" },
+    { path: "../../public/fonts/DMMono-Medium-latin.woff2", weight: "500", style: "normal" },
+    { path: "../../public/fonts/DMMono-Medium-latin-ext.woff2", weight: "500", style: "normal" },
+  ],
 });
 
-const sora = Sora({
+const sora = localFont({
   variable: "--font-sora",
-  subsets: ["latin"],
-  weight: ["400", "600", "700", "800"],
+  display: "swap",
+  src: [
+    { path: "../../public/fonts/Sora-latin.woff2", weight: "100 800", style: "normal" },
+    { path: "../../public/fonts/Sora-latin-ext.woff2", weight: "100 800", style: "normal" },
+  ],
 });
 
-const spaceGrotesk = Space_Grotesk({
+const spaceGrotesk = localFont({
   variable: "--font-space-grotesk",
-  subsets: ["latin"],
-  weight: ["400", "500", "700"],
+  display: "swap",
+  src: [
+    { path: "../../public/fonts/SpaceGrotesk-latin-400.woff2", weight: "400", style: "normal" },
+    { path: "../../public/fonts/SpaceGrotesk-latin-500.woff2", weight: "500", style: "normal" },
+    { path: "../../public/fonts/SpaceGrotesk-latin-700.woff2", weight: "700", style: "normal" },
+  ],
 });
 
 export const metadata: Metadata = {
