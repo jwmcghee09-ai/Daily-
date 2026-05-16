@@ -5608,20 +5608,22 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     // Re-draw canvases after tab becomes visible (they were 0-width when hidden)
     if (tab === 'quant') {
       requestAnimationFrame(function() {
-        if (typeof drawDonut === 'function') {
-          if (window._lastAccountSlices) drawDonut("c-account", window._lastAccountSlices);
-          if (window._lastSectorSlices) drawDonut("c-sector", window._lastSectorSlices);
-        }
-        if (typeof renderPreviewAllocation === 'function' && window._lastAccountSlices) {
-          renderPreviewAllocation(window._lastAccountSlices);
-        }
-        if (typeof drawHistoryLine === 'function' && window._fullHistory) {
-          drawHistoryLine(window._fullHistory, window._historyCostBase || 0);
-        }
-        if (typeof runMonteCarlo === 'function') runMonteCarlo();
-        if (typeof drawHoldingsBars === 'function' && window._lastHoldingsBars) {
-          drawHoldingsBars(window._lastHoldingsBars);
-        }
+        requestAnimationFrame(function() {
+          if (typeof drawDonut === 'function') {
+            if (window._lastAccountSlices) drawDonut("c-account", window._lastAccountSlices);
+            if (window._lastSectorSlices) drawDonut("c-sector", window._lastSectorSlices);
+          }
+          if (typeof renderPreviewAllocation === 'function' && window._lastAccountSlices) {
+            renderPreviewAllocation(window._lastAccountSlices);
+          }
+          if (typeof drawHistoryLine === 'function' && window._fullHistory) {
+            drawHistoryLine(window._fullHistory, window._historyCostBase || 0);
+          }
+          if (typeof runMonteCarlo === 'function') runMonteCarlo();
+          if (typeof drawHoldingsBars === 'function' && window._lastHoldingsBars) {
+            drawHoldingsBars(window._lastHoldingsBars);
+          }
+        });
       });
     }
   }
