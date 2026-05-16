@@ -2363,6 +2363,20 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
   ];
   const DEMO_PORTFOLIO_STATE = createDemoPortfolioState();
   const EMPTY_DEMO_PORTFOLIO_STATE = { holdings: [], snapshots: [], updatedAt: "", lastPriceRefreshAt: "" };
+  const DEMO_HISTORICAL_RISK_ESTIMATE = {
+    source: "yahoo_estimate",
+    betaToBenchmark: 0.72,
+    trackingErrorAnnualPct: 8.3,
+    correlationToBenchmark: 0.61,
+    cornishFisherVar95Pct: 0.9,
+    cornishFisherVar95Amount: null,
+    regime: { vix: 19.4, label: "Neutral", cssClass: "purple" },
+    factorExposure: { marketBeta: 0.72, sizeBeta: 0.18 },
+    sharpeRatioAnnual: 1.04,
+    sortinoRatioAnnual: 1.31,
+    returnSkewness: -0.12,
+    benchmarkPointsUsed: 63,
+  };
 
   const state = {
     demoMode: false,
@@ -3857,7 +3871,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
   async function loadHistoricalRisk() {
     if (state.demoMode) {
       if (!hasDemoGuestWorkspace()) {
-        state.historicalRiskEstimate = null;
+        state.historicalRiskEstimate = cloneData(DEMO_HISTORICAL_RISK_ESTIMATE);
         return;
       }
       const apiWindow = RISK_API_WINDOW_MAP[state.riskWindow] || "3M";
