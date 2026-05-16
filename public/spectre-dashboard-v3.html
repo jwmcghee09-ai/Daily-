@@ -2681,7 +2681,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       holdings,
       snapshots: createDemoSnapshots(totalValue),
       updatedAt: now.toISOString(),
-      lastPriceRefreshAt: new Date(now.getTime() - 30 * 60 * 1000).toISOString(),
+      lastPriceRefreshAt: now.toISOString(),
     };
   }
 
@@ -4106,7 +4106,15 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     renderHoldingsAi();
   });
 
+  let _aiAbortController = null;
+
   async function runHoldingsAi() {
+    // Cancel any in-flight request before starting a new one
+    if (_aiAbortController) {
+      _aiAbortController.abort();
+      _aiAbortController = null;
+    }
+
     if (state.demoMode) {
       const questionInput = document.getElementById("pro-ai-question");
       const question = questionInput instanceof HTMLTextAreaElement && questionInput.value.trim().length > 0
@@ -4163,6 +4171,9 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       ? questionInput.value.trim().slice(0, 700)
       : HOLDINGS_AI_DEFAULT_QUESTION;
 
+    _aiAbortController = new AbortController();
+    const _thisSignal = _aiAbortController.signal;
+
     state.holdingsAiLoading = true;
     state.holdingsAiStreamText = "";
     state.holdingsAiError = "";
@@ -4171,6 +4182,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     try {
       const response = await fetch("/api/pro/holdings-ai", {
         method: "POST",
+        signal: _thisSignal,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           question,
@@ -4257,6 +4269,8 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
 
       throw new Error("AI stream ended without a complete response.");
     } catch (error) {
+      // Silently discard if this request was intentionally cancelled by a newer one
+      if (error instanceof Error && error.name === "AbortError") return;
       // Remove the optimistic user message if the request failed
       state.aiConversationMessages = state.aiConversationMessages.slice(0, -1);
       const errMsg = error instanceof Error ? error.message : "Failed to run Ask AI analysis.";
@@ -4269,6 +4283,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
         showToast(errMsg, "error");
       }
     } finally {
+      if (_aiAbortController && _aiAbortController.signal === _thisSignal) _aiAbortController = null;
       state.holdingsAiLoading = false;
       state.holdingsAiStreamText = "";
       renderHoldingsAi();
@@ -5678,10 +5693,14 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
   window.addEventListener('pageshow', function(e) {
     if (e.persisted) {
       var attempts = 0;
+      var CANVAS_IDS = ['c-account', 'c-sector', 'c-history', 'c-monte-carlo', 'c-holdings'];
       function tryRedraw() {
-        // offsetWidth forces a synchronous layout — if 0, canvas isn't ready yet
-        var acct = document.getElementById('c-account');
-        if (acct && acct.offsetWidth === 0 && attempts < 30) {
+        // Wait until every visible canvas has a non-zero width
+        var notReady = CANVAS_IDS.some(function(id) {
+          var el = document.getElementById(id);
+          return el && el.offsetWidth === 0;
+        });
+        if (notReady && attempts < 30) {
           attempts++;
           window.setTimeout(tryRedraw, 50);
           return;

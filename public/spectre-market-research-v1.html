@@ -6389,15 +6389,25 @@ function switchResearchTab(name, btn) {
   else if (name === 'earnings') populateEarningsTab();
   else if (name === 'crypto') populateCryptoTab();
 
-  // Charts only load on first visit (async/network-heavy)
-  // Double-RAF ensures the browser has completed layout before Chart.js reads canvas dimensions
-  if (firstVisit) {
+  // Charts load on first visit, and also reload if a previous attempt left an error state
+  function _tabCanvasHasError(...ids) {
+    return ids.some(id => {
+      const c = document.getElementById(id);
+      return c && c.parentElement && c.parentElement.classList.contains('chart-empty');
+    });
+  }
+  const needsMacroReload = firstVisit || (name === 'macro' && _tabCanvasHasError('macro-aud-chart', 'macro-gold-chart', 'macro-oil-chart'));
+  const needsCryptoReload = firstVisit || (name === 'crypto' && _tabCanvasHasError('ct-btc-chart', 'ct-eth-chart', 'ct-sol-chart'));
+
+  // Double-RAF ensures the browser has completed layout before canvas reads dimensions
+  if (needsMacroReload || needsCryptoReload) {
     requestAnimationFrame(() => requestAnimationFrame(() => {
-      if (name === 'macro') {
+      if (needsMacroReload) {
         loadMacroChart('aud', '1m', null);
         loadMacroChart('gold', '1m', null);
         loadMacroChart('oil', '1m', null);
-      } else if (name === 'crypto') {
+      }
+      if (needsCryptoReload) {
         loadCryptoChart('btc', '1m', null);
         loadCryptoChart('eth', '1m', null);
         loadCryptoChart('sol', '1m', null);
