@@ -522,9 +522,11 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
       billingButton.textContent = "Opening...";
       billingButton.disabled = true;
     }
+    let navigating = false;
     try {
       const payload = await apiJson("/api/billing/portal", { method: "POST" });
       if (!payload || !payload.url) throw new Error("Billing portal URL was not generated.");
+      navigating = true;
       window.location.assign(payload.url);
     } catch (error) {
       const msg = error instanceof Error ? error.message : "Unable to open billing settings.";
@@ -534,7 +536,8 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
       } else {
         showToast(msg, "error");
       }
-      if (billingButton) {
+    } finally {
+      if (!navigating && billingButton) {
         billingButton.textContent = original;
         billingButton.disabled = false;
       }
@@ -563,14 +566,24 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
     navigateTo("/", "Leaving settings...");
   }
 
+  let _modalReturnFocus = null;
+
   function openUpgradeModal() {
     const modal = document.getElementById("upgrade-plan-modal");
-    if (modal) modal.style.display = "flex";
+    if (!modal) return;
+    _modalReturnFocus = document.activeElement;
+    modal.style.display = "flex";
+    document.body.style.overflow = "hidden";
+    const first = modal.querySelector("button, [href], input, [tabindex]:not([tabindex='-1'])");
+    if (first) first.focus();
   }
 
   function closeUpgradeModal() {
     const modal = document.getElementById("upgrade-plan-modal");
     if (modal) modal.style.display = "none";
+    document.body.style.overflow = "";
+    if (_modalReturnFocus instanceof HTMLElement) _modalReturnFocus.focus();
+    _modalReturnFocus = null;
   }
 
   async function startCheckout(plan, btn) {
@@ -579,6 +592,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
     btn.textContent = "Redirecting…";
     const errEl = document.getElementById("upgrade-checkout-error");
     if (errEl) errEl.style.display = "none";
+    let navigating = false;
     try {
       const data = await apiJson("/api/billing/checkout", {
         method: "POST",
@@ -586,14 +600,18 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
         body: JSON.stringify({ plan }),
       });
       if (data.url) {
+        navigating = true;
         window.location.assign(data.url);
       } else {
         throw new Error(data.error || "Unable to start checkout.");
       }
     } catch (err) {
-      btn.disabled = false;
-      btn.textContent = origText;
       if (errEl) { errEl.textContent = err.message || "Unable to start checkout. Please try again."; errEl.style.display = "block"; }
+    } finally {
+      if (!navigating) {
+        btn.disabled = false;
+        btn.textContent = origText;
+      }
     }
   }
 
@@ -603,15 +621,20 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
     const input = document.getElementById("cancel-confirm-input");
     const confirmBtn = document.getElementById("modal-confirm-btn");
     if (!modal || !input || !confirmBtn) return;
+    _modalReturnFocus = document.activeElement;
     input.value = "";
     confirmBtn.disabled = true;
     modal.style.display = "flex";
+    document.body.style.overflow = "hidden";
     setTimeout(() => input.focus(), 80);
   }
 
   function closeCancelModal() {
     const modal = document.getElementById("cancel-account-modal");
     if (modal) modal.style.display = "none";
+    document.body.style.overflow = "";
+    if (_modalReturnFocus instanceof HTMLElement) _modalReturnFocus.focus();
+    _modalReturnFocus = null;
   }
 
   async function confirmCancelAccount() {

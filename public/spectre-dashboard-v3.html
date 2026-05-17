@@ -3977,7 +3977,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       usageEl = document.createElement("div");
       usageEl.id = "ai-usage-counter";
       usageEl.className = "ai-usage-counter";
-      const card = document.getElementById("ai-hero-card");
+      const card = document.getElementById("pro-ai-ask-btn")?.closest(".ai-input-card");
       if (card?.parentNode) card.parentNode.insertBefore(usageEl, card.nextSibling);
     }
     if (limit === -1) {
@@ -4884,7 +4884,6 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     }
 
     // Summary stats
-    const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
     const fmtAUD = (v) => formatCurrency(v, {});
     setText("mc-stat-p50", fmtAUD(p50[N_DAYS]));
     setText("mc-stat-p90", fmtAUD(p90[N_DAYS]));
@@ -5232,6 +5231,8 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       return;
     }
 
+    const addBtn = document.getElementById("add-alert-btn");
+    if (addBtn) { addBtn.disabled = true; }
     try {
       await apiJson("/api/alerts/price-dip", {
         method: "PUT",
@@ -5244,6 +5245,8 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       showToast(`Alert saved for ${ticker}.`);
     } catch (error) {
       showToast(error instanceof Error ? error.message : "Failed to save alert.", "error");
+    } finally {
+      if (addBtn) { addBtn.disabled = false; }
     }
   }
 
@@ -5259,11 +5262,14 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       return;
     }
 
+    const delBtn = document.querySelector(`[data-delete-ticker="${CSS.escape(ticker)}"]`);
+    if (delBtn) delBtn.disabled = true;
     try {
       await apiJson(`/api/alerts/price-dip?ticker=${encodeURIComponent(ticker)}`, { method: "DELETE" });
       await loadAlerts();
       showToast(`Alert removed for ${ticker}.`);
     } catch (error) {
+      if (delBtn) delBtn.disabled = false;
       showToast(error instanceof Error ? error.message : "Failed to remove alert.", "error");
     }
   }

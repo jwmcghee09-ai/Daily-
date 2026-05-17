@@ -5067,12 +5067,12 @@ function renderChart(data) {
 
 let chartLoading = false;
 async function loadChart(range, btn) {
+  if (chartLoading) return;
+  chartLoading = true;
   if (btn) {
     btn.closest('.time-pills').querySelectorAll('.time-pill').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
   }
-  if (chartLoading) return;
-  chartLoading = true;
   const loading = document.getElementById('chart-loading');
   if (loading) { loading.textContent = 'Loading…'; loading.removeAttribute('display'); }
   const url = `/api/research/chart?range=${range}` + (state.demoMode ? '&demo=1' : '');
@@ -5081,6 +5081,8 @@ async function loadChart(range, btn) {
     if (data?.closes?.length) renderChart(data);
   } catch (e) {
     if (loading) loading.textContent = 'Chart unavailable';
+    const mainCanvas = document.getElementById('main-chart');
+    if (mainCanvas?.parentElement) mainCanvas.parentElement.classList.add('chart-empty');
     console.warn('Chart fetch failed:', e);
   } finally {
     chartLoading = false;
@@ -5491,6 +5493,13 @@ async function fetchLiveQuotes() {
       const el = document.getElementById(id);
       if (el && el.textContent === 'Loading…') el.textContent = '—';
     }
+    // If stocks table never loaded, replace the infinite spinner with a recoverable error state
+    if (!DATA.stocks.length) {
+      const tbody = document.querySelector('#stocks-table tbody');
+      if (tbody) tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--sl-muted);font-size:0.75rem;padding:16px;">Live data unavailable — will retry</td></tr>';
+    }
+    const lastUpdatedEl = document.getElementById('page-last-updated');
+    if (lastUpdatedEl && lastUpdatedEl.textContent === '—') lastUpdatedEl.textContent = 'Unavailable';
   }
 }
 
