@@ -69,6 +69,19 @@ const spaceGrotesk = localFont({
 export const metadata: Metadata = {
   title: "SPECTRE — AI Portfolio Intelligence for Australian Investors",
   description: "SPECTRE — AI portfolio intelligence for Australian investors. Risk scoring, Monte Carlo simulation, and AI analysis in one dashboard.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "SPECTRE",
+  },
+  icons: {
+    icon: [
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/icons/icon-apple-touch.png", sizes: "180x180", type: "image/png" }],
+  },
 };
 
 export const viewport: Viewport = {
@@ -152,6 +165,13 @@ export default function RootLayout({
           strategy="afterInteractive"
         />
       ) : null}
+      <Script id="sw-register" strategy="afterInteractive">{`
+        if ('serviceWorker' in navigator) {
+          window.addEventListener('load', function() {
+            navigator.serviceWorker.register('/sw.js');
+          });
+        }
+      `}</Script>
     </html>
   );
 }
