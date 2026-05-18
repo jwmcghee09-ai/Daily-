@@ -19,7 +19,7 @@
   --brand-accent-faint:rgba(255,75,51,.07);
 
   /* ── Settings surface colours ── */
-  --bg:#f3f1fb;
+  --bg:#e9e4f6;
   --card:rgba(8,7,16,.92);
   --card2:rgba(12,10,22,.95);
   --border:rgba(100,80,200,.13);
@@ -45,16 +45,17 @@ body.page-transitioning > *:not(#boot-splash):not(script){visibility:hidden!impo
 body::before{
   content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   background:
-    radial-gradient(ellipse 70% 50% at 50% -10%,rgba(124,77,255,.07) 0%,transparent 100%),
-    radial-gradient(ellipse 40% 60% at 100% 80%,rgba(255,122,48,.05) 0%,transparent 60%),
-    #f3f1fb;
+    radial-gradient(ellipse 75% 55% at 50% -8%,rgba(124,77,255,.16) 0%,transparent 100%),
+    radial-gradient(ellipse 55% 70% at -5% 55%,rgba(124,77,255,.10) 0%,transparent 60%),
+    radial-gradient(ellipse 45% 55% at 105% 80%,rgba(255,122,48,.05) 0%,transparent 55%),
+    #e9e4f6;
 }
 body::after{
   content:'';position:fixed;inset:0;pointer-events:none;z-index:1;
-  background-image:radial-gradient(rgba(100,80,200,.055) .6px,transparent .6px);
+  background-image:radial-gradient(rgba(100,80,200,.075) .6px,transparent .6px);
   background-size:58px 58px;opacity:1;
 }
-nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(243,241,251,.94);backdrop-filter:blur(28px) saturate(1.4);-webkit-backdrop-filter:blur(28px) saturate(1.4);border-bottom:1px solid rgba(100,80,200,.13)}
+nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(233,228,246,.94);backdrop-filter:blur(28px) saturate(1.4);-webkit-backdrop-filter:blur(28px) saturate(1.4);border-bottom:1px solid rgba(100,80,200,.13)}
 .nav-inner{max-width:var(--max);margin:0 auto;padding:0 1.4rem;height:100%;display:flex;align-items:center;justify-content:space-between;gap:1rem}
 .nav-logo{font-family:var(--sans);font-size:1.1rem;font-weight:800;letter-spacing:.14em;text-decoration:none;background:linear-gradient(90deg,var(--purple) 0%,var(--purple-hi) 35%,var(--orange) 72%,#ffb347 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .nav-links{display:flex;gap:1.2rem;list-style:none}

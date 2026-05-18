@@ -13,8 +13,8 @@
 html{scroll-behavior:smooth}
 
 :root{
-  --bg:#f3f1fb;
-  --card:#e8e5f8;
+  --bg:#e9e4f6;
+  --card:#e0d9f3;
   --card2:#100f1e;
   --surface3:rgba(100,80,200,.06);
   --border:rgba(100,80,200,.13);
@@ -44,15 +44,16 @@ body.boot-pending > *:not(#boot-splash):not(script){display:none!important}
 body::before{
   content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   background:
-    radial-gradient(ellipse 70% 50% at 50% -10%,rgba(124,77,255,.07) 0%,transparent 100%),
-    radial-gradient(ellipse 40% 60% at 100% 80%,rgba(255,122,48,.05) 0%,transparent 60%),
-    #f3f1fb;
+    radial-gradient(ellipse 75% 55% at 50% -8%,rgba(124,77,255,.16) 0%,transparent 100%),
+    radial-gradient(ellipse 55% 70% at -5% 55%,rgba(124,77,255,.10) 0%,transparent 60%),
+    radial-gradient(ellipse 45% 55% at 105% 80%,rgba(255,122,48,.05) 0%,transparent 55%),
+    #e9e4f6;
 }
 body::after{
   content:'';position:fixed;inset:0;pointer-events:none;z-index:1;
   background-image:
-    linear-gradient(rgba(100,80,200,.04) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(100,80,200,.04) 1px,transparent 1px);
+    linear-gradient(rgba(100,80,200,.06) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(100,80,200,.06) 1px,transparent 1px);
   background-size:58px 58px;
   mask-image:radial-gradient(ellipse 80% 60% at 50% 30%,black 0%,transparent 80%);
   -webkit-mask-image:radial-gradient(ellipse 80% 60% at 50% 30%,black 0%,transparent 80%);
@@ -62,7 +63,7 @@ body::after{
 @media(max-width:600px){.wrap{padding:0 1.1rem}}
 
 /* ── NAV ── */
-nav{position:fixed;top:0;left:0;right:0;z-index:900;background:rgba(243,241,251,0.94);backdrop-filter:blur(28px) saturate(1.4);-webkit-backdrop-filter:blur(28px) saturate(1.4);border-bottom:1px solid rgba(100,80,200,.13)}
+nav{position:fixed;top:0;left:0;right:0;z-index:900;background:rgba(233,228,246,0.94);backdrop-filter:blur(28px) saturate(1.4);-webkit-backdrop-filter:blur(28px) saturate(1.4);border-bottom:1px solid rgba(100,80,200,.13)}
 .nav-inner{max-width:var(--max);margin:0 auto;padding:0 2.5rem;height:56px;display:flex;align-items:center;justify-content:space-between;gap:2rem}
 .nav-logo{
   font-family:var(--disp);
