@@ -1,14 +1,24 @@
 'use strict';
 
-const { app, BrowserWindow, Menu, shell, ipcMain, nativeTheme } = require('electron');
+const { app, BrowserWindow, Menu, shell, ipcMain } = require('electron');
 const path = require('path');
+const https = require('https');
 
 // ─── Config ──────────────────────────────────────────────────────────────────
 const PROD_URL = 'https://spectre-assets.com';
 const APP_URL  = process.env.SPECTRE_DEV_URL || PROD_URL;
 
 const IS_MAC = process.platform === 'darwin';
-const IS_WIN = process.platform === 'win32';
+
+// ─── Wake up Render before the window even opens ─────────────────────────────
+// Render instances spin down after inactivity. Pinging immediately on launch
+// gives the server a head start while the user sees the splash screen.
+function pingServer() {
+  try {
+    const url = new URL(APP_URL);
+    https.get({ hostname: url.hostname, path: '/api/health', timeout: 30000 }, () => {}).on('error', () => {});
+  } catch { /* non-fatal */ }
+}
 
 // ─── Window ──────────────────────────────────────────────────────────────────
 function createWindow() {
@@ -18,23 +28,28 @@ function createWindow() {
     minWidth:  960,
     minHeight: 620,
     title: 'SPECTRE',
-    // Inset titlebar on Mac so the traffic lights float over the page header
     titleBarStyle: IS_MAC ? 'hiddenInset' : 'default',
+    trafficLightPosition: IS_MAC ? { x: 16, y: 18 } : undefined,
+    autoHideMenuBar: !IS_MAC,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
-      // Allow the session cookie from the web app to be sent
       partition: 'persist:spectre',
     },
-    // Don't flash a white frame while the page loads
-    show: false,
     backgroundColor: '#e9e4f6',
+    show: true,
   });
 
-  win.once('ready-to-show', () => win.show());
+  // 1. Show branded splash instantly (local file, no network)
+  win.loadFile(path.join(__dirname, 'loading.html'));
 
-  // Open target="_blank" and external links in the OS browser, not a new Electron window
+  // 2. Once splash is painted, navigate to the real app
+  win.webContents.once('did-finish-load', () => {
+    setTimeout(() => win.loadURL(APP_URL), 200);
+  });
+
+  // Open external links in the OS browser
   win.webContents.setWindowOpenHandler(({ url }) => {
     if (url.startsWith(APP_URL) || url.startsWith('about:')) {
       return { action: 'allow' };
@@ -43,22 +58,21 @@ function createWindow() {
     return { action: 'deny' };
   });
 
-  // Intercept navigations away from the app domain (e.g. Stripe redirect then back)
+  // Keep Stripe redirects inside the window; open everything else externally
   win.webContents.on('will-navigate', (event, url) => {
-    const isAppUrl = url.startsWith(APP_URL) || url.startsWith('http://localhost');
+    const isApp    = url.startsWith(APP_URL) || url.startsWith('http://localhost');
     const isStripe = url.startsWith('https://billing.stripe.com') || url.startsWith('https://checkout.stripe.com');
-    if (!isAppUrl && !isStripe) {
+    if (!isApp && !isStripe) {
       event.preventDefault();
       shell.openExternal(url);
     }
   });
 
-  win.loadURL(APP_URL);
   return win;
 }
 
 // ─── Menu ─────────────────────────────────────────────────────────────────────
-function buildMenu(win) {
+function buildMenu() {
   const template = [
     ...(IS_MAC ? [{ role: 'appMenu' }] : []),
     {
@@ -85,19 +99,14 @@ function buildMenu(win) {
         { role: 'zoomOut' },
         { type: 'separator' },
         { role: 'togglefullscreen' },
-        { type: 'separator' },
-        // Only show DevTools in dev builds
-        ...(!app.isPackaged ? [{ role: 'toggleDevTools' }] : []),
+        ...(!app.isPackaged ? [{ type: 'separator' }, { role: 'toggleDevTools' }] : []),
       ],
     },
     { role: 'windowMenu' },
     {
       role: 'help',
       submenu: [
-        {
-          label: 'SPECTRE Web App',
-          click: () => shell.openExternal(PROD_URL),
-        },
+        { label: 'Open spectre-assets.com', click: () => shell.openExternal(PROD_URL) },
       ],
     },
   ];
@@ -106,22 +115,19 @@ function buildMenu(win) {
 
 // ─── App lifecycle ────────────────────────────────────────────────────────────
 app.whenReady().then(() => {
-  const win = createWindow();
-  buildMenu(win);
+  pingServer();
+  createWindow();
+  buildMenu();
 
-  // Re-create window on Mac when clicking the dock icon with no windows open
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
-      const w = createWindow();
-      buildMenu(w);
+      createWindow();
     }
   });
 });
 
 app.on('window-all-closed', () => {
-  // On Mac, keep the app running in the dock until the user quits explicitly
   if (!IS_MAC) app.quit();
 });
 
-// IPC: renderer can ask for app version
 ipcMain.handle('get-version', () => app.getVersion());
