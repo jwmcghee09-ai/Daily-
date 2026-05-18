@@ -28,6 +28,21 @@
   --sans:    'Space Grotesk',-apple-system,sans-serif;
   --hdr:     48px;
   --side:    264px;
+  --hdr-bg:  rgba(5,3,12,.97);
+  --drop-bg: #0d0a1a;
+}
+
+html.light {
+  --bg:      #ddd6f3;
+  --bg2:     #d0c7ee;
+  --bg3:     rgba(0,0,0,.06);
+  --border:  rgba(124,77,255,.2);
+  --border2: rgba(124,77,255,.4);
+  --text:    #0f0d1e;
+  --muted:   #5e5a78;
+  --dim:     #9490b4;
+  --hdr-bg:  rgba(233,228,246,.97);
+  --drop-bg: #d0c7ee;
 }
 
 html, body { height:100%; background:var(--bg); color:var(--text); font-family:var(--sans); overflow:hidden; -webkit-font-smoothing:antialiased; }
@@ -38,7 +53,7 @@ html, body { height:100%; background:var(--bg); color:var(--text); font-family:v
 /* ── header ── */
 #hdr {
   position:fixed; top:0; left:0; right:0; height:var(--hdr);
-  background:rgba(5,3,12,.97); border-bottom:1px solid var(--border);
+  background:var(--hdr-bg); border-bottom:1px solid var(--border);
   display:flex; align-items:center; gap:8px; padding:0 14px;
   z-index:500; -webkit-app-region:drag; user-select:none;
   backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px);
@@ -65,7 +80,7 @@ html, body { height:100%; background:var(--bg); color:var(--text); font-family:v
 /* autocomplete dropdown */
 #search-drop {
   display:none; position:absolute; top:calc(100% + 4px); left:0; right:0;
-  background:#0d0a1a; border:1px solid var(--border2); border-radius:8px;
+  background:var(--drop-bg); border:1px solid var(--border2); border-radius:8px;
   overflow:hidden; z-index:9999; box-shadow:0 8px 32px rgba(0,0,0,.6);
   max-height:320px; overflow-y:auto;
 }
@@ -235,6 +250,22 @@ html, body { height:100%; background:var(--bg); color:var(--text); font-family:v
 (async () => {
   if (/mac/i.test(navigator.platform)) document.documentElement.classList.add('mac');
 
+  /* ── theme ── */
+  const theme = await (window.electronAPI?.getTheme?.() || Promise.resolve('dark')).catch(() => 'dark');
+  if (theme === 'light') document.documentElement.classList.add('light');
+
+  const CT = theme === 'light' ? {
+    bg: '#ddd6f3', text: '#9890b8',
+    grid: 'rgba(124,77,255,.10)', gridVol: 'rgba(124,77,255,.07)',
+    crosshairLine: 'rgba(124,77,255,.55)', crosshairLabel: '#c4badf',
+    border: 'rgba(124,77,255,.22)',
+  } : {
+    bg: '#07050f', text: '#6b6490',
+    grid: 'rgba(124,77,255,.06)', gridVol: 'rgba(124,77,255,.04)',
+    crosshairLine: 'rgba(168,85,247,.6)', crosshairLabel: '#1a0e38',
+    border: 'rgba(124,77,255,.14)',
+  };
+
   const PROD = 'https://spectre-assets.com';
   const WL_KEY = 'spectre-watchlist-v1';
 
@@ -265,23 +296,23 @@ html, body { height:100%; background:var(--bg); color:var(--text); font-family:v
   function initCharts() {
     const base = {
       autoSize: true,
-      layout: { background:{ color:'#07050f' }, textColor:'#6b6490', fontFamily:"'DM Mono',monospace", fontSize:11 },
-      grid: { vertLines:{ color:'rgba(124,77,255,.06)' }, horzLines:{ color:'rgba(124,77,255,.06)' } },
+      layout: { background:{ color: CT.bg }, textColor: CT.text, fontFamily:"'DM Mono',monospace", fontSize:11 },
+      grid: { vertLines:{ color: CT.grid }, horzLines:{ color: CT.grid } },
       crosshair: {
         mode: LightweightCharts.CrosshairMode.Normal,
-        vertLine:{ color:'rgba(168,85,247,.6)', labelBackgroundColor:'#1a0e38' },
-        horzLine:{ color:'rgba(168,85,247,.6)', labelBackgroundColor:'#1a0e38' },
+        vertLine:{ color: CT.crosshairLine, labelBackgroundColor: CT.crosshairLabel },
+        horzLine:{ color: CT.crosshairLine, labelBackgroundColor: CT.crosshairLabel },
       },
-      rightPriceScale:{ borderColor:'rgba(124,77,255,.14)' },
-      timeScale:{ borderColor:'rgba(124,77,255,.14)', timeVisible:true, secondsVisible:false },
+      rightPriceScale:{ borderColor: CT.border },
+      timeScale:{ borderColor: CT.border, timeVisible:true, secondsVisible:false },
       handleScroll:true, handleScale:true,
     };
     mainChart = LightweightCharts.createChart(document.getElementById('main-chart'), base);
     volChart  = LightweightCharts.createChart(document.getElementById('vol-chart'), {
       ...base,
-      grid:{ vertLines:{ color:'transparent' }, horzLines:{ color:'rgba(124,77,255,.04)' } },
+      grid:{ vertLines:{ color:'transparent' }, horzLines:{ color: CT.gridVol } },
       crosshair:{ horzLine:{ visible:false }, vertLine:{ visible:false } },
-      rightPriceScale:{ borderColor:'rgba(124,77,255,.14)', scaleMargins:{ top:0.05, bottom:0 }, drawTicks:false },
+      rightPriceScale:{ borderColor: CT.border, scaleMargins:{ top:0.05, bottom:0 }, drawTicks:false },
       timeScale:{ visible:false }, handleScroll:false, handleScale:false,
     });
     volSeries = volChart.addHistogramSeries({ priceFormat:{ type:'volume' }, lastValueVisible:false, priceLineVisible:false });

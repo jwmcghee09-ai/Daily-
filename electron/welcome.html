@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Welcome to SPECTRE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%; width: 100%;
+  background: #07050f;
+  color: #e4dcff;
+  font-family: 'Space Grotesk', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -webkit-app-region: drag;
+  user-select: none;
+  overflow: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 70% 50% at 50% -5%, rgba(124,77,255,.22) 0%, transparent 100%),
+    radial-gradient(ellipse 40% 60% at -5% 60%, rgba(124,77,255,.12) 0%, transparent 60%),
+    radial-gradient(ellipse 35% 50% at 105% 80%, rgba(217,70,239,.08) 0%, transparent 55%);
+}
+
+.wrap {
+  height: 100%;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 0; padding: 40px 24px;
+  position: relative;
+}
+.mac .wrap { padding-top: 56px; }
+
+.logo {
+  font-size: .85rem; font-weight: 800; letter-spacing: .3em;
+  background: linear-gradient(90deg, #7c4dff 0%, #d946ef 50%, #ff7a30 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  margin-bottom: 24px;
+}
+
+h1 {
+  font-size: 1.55rem; font-weight: 700; letter-spacing: -.02em;
+  color: #f0eaff; margin-bottom: 8px; text-align: center;
+}
+
+.sub {
+  font-size: .78rem; color: #6b6490; text-align: center;
+  margin-bottom: 40px; max-width: 340px; line-height: 1.6;
+}
+
+/* ── theme cards ── */
+.cards {
+  display: flex; gap: 18px; margin-bottom: 36px;
+  -webkit-app-region: no-drag;
+}
+
+.card {
+  width: 196px; border-radius: 14px; overflow: hidden;
+  border: 2px solid rgba(124,77,255,.14);
+  cursor: pointer; transition: all .18s; position: relative;
+}
+.card:hover { transform: translateY(-3px); border-color: rgba(124,77,255,.3); }
+.card.sel {
+  border-color: #7c4dff;
+  box-shadow: 0 0 0 4px rgba(124,77,255,.18), 0 12px 32px rgba(124,77,255,.2);
+}
+
+/* ── light preview mockup ── */
+.card.light .preview {
+  height: 108px; background: #ddd6f3; overflow: hidden; position: relative;
+}
+.card.light .p-nav {
+  background: rgba(233,228,246,.96); height: 20px;
+  display: flex; align-items: center; padding: 0 8px; gap: 4px;
+  border-bottom: 1px solid rgba(124,77,255,.14);
+}
+.p-dot { width: 5px; height: 5px; border-radius: 50%; }
+.p-dot:nth-child(1) { background: #ff5f57; }
+.p-dot:nth-child(2) { background: #febc2e; }
+.p-dot:nth-child(3) { background: #28c840; }
+.p-logo-mini {
+  font-size: 5px; font-weight: 800; letter-spacing: .18em; margin-left: auto;
+  background: linear-gradient(90deg,#7c4dff,#d946ef);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.card.light .p-tabs {
+  display: flex; gap: 6px; padding: 6px 8px 4px;
+}
+.card.light .p-tab {
+  height: 6px; border-radius: 3px; background: rgba(124,77,255,.2);
+}
+.card.light .p-tab:first-child { width: 28px; background: rgba(124,77,255,.5); }
+.card.light .p-tab:nth-child(2) { width: 18px; }
+.card.light .p-tab:nth-child(3) { width: 22px; }
+.card.light .p-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 5px; padding: 4px 8px;
+}
+.card.light .p-kpi {
+  height: 26px; border-radius: 7px; background: rgba(200,190,235,.7);
+  border: 1px solid rgba(124,77,255,.12);
+}
+
+/* ── dark preview mockup ── */
+.card.dark .preview {
+  height: 108px; background: #07050f; overflow: hidden; position: relative;
+}
+.card.dark .p-nav {
+  background: rgba(5,3,12,.96); height: 20px;
+  display: flex; align-items: center; padding: 0 8px; gap: 4px;
+  border-bottom: 1px solid rgba(124,77,255,.1);
+}
+.card.dark .p-chart-area {
+  padding: 8px; display: flex; align-items: flex-end;
+  gap: 3px; height: 82px;
+}
+.p-candle {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 1px;
+}
+.p-wick { width: 1px; border-radius: 1px; }
+.p-body { width: 5px; border-radius: 1px; }
+
+/* ── card label ── */
+.card-label {
+  padding: 11px 13px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.card.light .card-label { background: #d0c7ee; }
+.card.dark  .card-label { background: #0d0a1a; }
+.card-info {}
+.card-name { font-size: .78rem; font-weight: 700; letter-spacing: -.01em; }
+.card.light .card-name { color: #0f0d1e; }
+.card.dark  .card-name { color: #e4dcff; }
+.card-desc { font-size: .62rem; margin-top: 1px; }
+.card.light .card-desc { color: #7a7299; }
+.card.dark  .card-desc { color: #6b6490; }
+
+.check {
+  width: 20px; height: 20px; border-radius: 50%;
+  border: 2px solid rgba(124,77,255,.25);
+  display: flex; align-items: center; justify-content: center;
+  font-size: .6rem; font-weight: 700; color: transparent;
+  transition: all .15s; flex-shrink: 0;
+}
+.card.sel .check { background: #7c4dff; border-color: #7c4dff; color: #fff; }
+
+/* ── continue button ── */
+.continue {
+  -webkit-app-region: no-drag;
+  background: linear-gradient(135deg, #7c4dff 0%, #d946ef 54%, #ff7a30 100%);
+  border: none; border-radius: 999px; color: #fff;
+  font-family: 'Space Grotesk', sans-serif; font-size: .8rem; font-weight: 700;
+  letter-spacing: .06em; padding: .72rem 2.6rem;
+  cursor: pointer; box-shadow: 0 4px 20px rgba(124,77,255,.35);
+  transition: transform .15s, box-shadow .15s, opacity .2s;
+  opacity: .35; pointer-events: none;
+}
+.continue.ready { opacity: 1; pointer-events: auto; }
+.continue.ready:hover { transform: translateY(-1px); box-shadow: 0 6px 28px rgba(124,77,255,.5); }
+.continue.ready:active { transform: translateY(0); }
+
+.hint {
+  margin-top: 16px;
+  font-family: 'DM Mono', monospace;
+  font-size: .56rem; letter-spacing: .1em; text-transform: uppercase;
+  color: #2d2a48;
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="logo">SPECTRE</div>
+  <h1>Welcome to SPECTRE Desktop</h1>
+  <p class="sub">Choose how you'd like the analytics and desktop views to look. You can change this any time.</p>
+
+  <div class="cards">
+
+    <!-- Light -->
+    <div class="card light" id="c-light" onclick="pick('light')">
+      <div class="preview">
+        <div class="p-nav">
+          <div class="p-dot"></div><div class="p-dot"></div><div class="p-dot"></div>
+          <span class="p-logo-mini">SPECTRE</span>
+        </div>
+        <div class="p-tabs">
+          <div class="p-tab"></div><div class="p-tab"></div><div class="p-tab"></div>
+        </div>
+        <div class="p-grid">
+          <div class="p-kpi"></div><div class="p-kpi"></div>
+          <div class="p-kpi"></div><div class="p-kpi"></div>
+        </div>
+      </div>
+      <div class="card-label">
+        <div class="card-info">
+          <div class="card-name">Light</div>
+          <div class="card-desc">Lavender — matches the web app</div>
+        </div>
+        <div class="check">✓</div>
+      </div>
+    </div>
+
+    <!-- Dark -->
+    <div class="card dark" id="c-dark" onclick="pick('dark')">
+      <div class="preview">
+        <div class="p-nav">
+          <div class="p-dot"></div><div class="p-dot"></div><div class="p-dot"></div>
+          <span class="p-logo-mini">SPECTRE</span>
+        </div>
+        <div class="p-chart-area">
+          <!-- mini candlestick chart -->
+          <div class="p-candle"><div class="p-wick" style="height:8px;background:#ef4444"></div><div class="p-body" style="height:12px;background:#ef4444"></div><div class="p-wick" style="height:5px;background:#ef4444"></div></div>
+          <div class="p-candle"><div class="p-wick" style="height:6px;background:#22c55e"></div><div class="p-body" style="height:18px;background:#22c55e"></div><div class="p-wick" style="height:4px;background:#22c55e"></div></div>
+          <div class="p-candle"><div class="p-wick" style="height:4px;background:#22c55e"></div><div class="p-body" style="height:14px;background:#22c55e"></div><div class="p-wick" style="height:6px;background:#22c55e"></div></div>
+          <div class="p-candle"><div class="p-wick" style="height:5px;background:#ef4444"></div><div class="p-body" style="height:10px;background:#ef4444"></div><div class="p-wick" style="height:8px;background:#ef4444"></div></div>
+          <div class="p-candle"><div class="p-wick" style="height:7px;background:#22c55e"></div><div class="p-body" style="height:22px;background:#22c55e"></div><div class="p-wick" style="height:3px;background:#22c55e"></div></div>
+          <div class="p-candle"><div class="p-wick" style="height:4px;background:#22c55e"></div><div class="p-body" style="height:16px;background:#22c55e"></div><div class="p-wick" style="height:5px;background:#22c55e"></div></div>
+          <div class="p-candle"><div class="p-wick" style="height:9px;background:#ef4444"></div><div class="p-body" style="height:12px;background:#ef4444"></div><div class="p-wick" style="height:4px;background:#ef4444"></div></div>
+          <div class="p-candle"><div class="p-wick" style="height:3px;background:#22c55e"></div><div class="p-body" style="height:26px;background:#22c55e"></div><div class="p-wick" style="height:5px;background:#22c55e"></div></div>
+        </div>
+      </div>
+      <div class="card-label">
+        <div class="card-info">
+          <div class="card-name">Dark</div>
+          <div class="card-desc">Terminal — easy on the eyes</div>
+        </div>
+        <div class="check">✓</div>
+      </div>
+    </div>
+
+  </div>
+
+  <button class="continue" id="cont" onclick="proceed()">Get Started →</button>
+  <div class="hint">spectre-assets.com</div>
+</div>
+
+<script>
+if (/mac/i.test(navigator.platform)) document.body.classList.add('mac');
+
+let chosen = null;
+
+function pick(t) {
+  chosen = t;
+  document.getElementById('c-light').classList.toggle('sel', t === 'light');
+  document.getElementById('c-dark').classList.toggle('sel',  t === 'dark');
+  document.getElementById('cont').classList.add('ready');
+}
+
+async function proceed() {
+  if (!chosen) return;
+  try { await window.electronAPI?.setTheme(chosen); } catch {}
+  location.href = 'https://spectre-assets.com/dashboard';
+}
+</script>
+</body>
+</html>
