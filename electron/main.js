@@ -4,10 +4,8 @@ const { app, BrowserWindow, Menu, shell, ipcMain, nativeTheme } = require('elect
 const path = require('path');
 
 // ─── Config ──────────────────────────────────────────────────────────────────
-// TODO: replace with your Render custom domain or onrender.com URL
-const PROD_URL = process.env.SPECTRE_URL || 'https://spectre-portfolio.onrender.com';
-const DEV_URL  = 'http://localhost:3000';
-const APP_URL  = app.isPackaged ? PROD_URL : DEV_URL;
+const PROD_URL = 'https://spectre-assets.com';
+const APP_URL  = process.env.SPECTRE_DEV_URL || PROD_URL;
 
 const IS_MAC = process.platform === 'darwin';
 const IS_WIN = process.platform === 'win32';
