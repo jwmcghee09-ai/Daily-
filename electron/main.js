@@ -1,14 +1,16 @@
 'use strict';
 
-const { app, BrowserWindow, Menu, shell, ipcMain } = require('electron');
+const { app, BrowserWindow, Menu, shell, ipcMain, session, net } = require('electron');
 const path = require('path');
 const https = require('https');
 const fs   = require('fs');
 
 // ─── Config ──────────────────────────────────────────────────────────────────
-const PROD_URL = 'https://spectre-assets.com';
-const APP_URL  = process.env.SPECTRE_DEV_URL || (PROD_URL + '/dashboard');
-const IS_MAC   = process.platform === 'darwin';
+const PROD_URL       = 'https://spectre-assets.com';
+const APP_URL        = process.env.SPECTRE_DEV_URL || (PROD_URL + '/dashboard');
+const ANALYTICS_URL  = PROD_URL + '/spectre-desktop-analytics.html';
+const ANALYTICS_FILE = path.join(__dirname, 'analytics.html');
+const IS_MAC         = process.platform === 'darwin';
 
 // ─── Window state persistence ─────────────────────────────────────────────────
 const STATE_FILE = path.join(app.getPath('userData'), 'window-state.json');
@@ -50,7 +52,6 @@ function pingServer() {
 }
 
 // ─── Desktop CSS ──────────────────────────────────────────────────────────────
-// Non-destructive polish only — never hides or replaces existing page structure.
 const DESKTOP_CSS = `
   ::-webkit-scrollbar        { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track  { background: transparent; }
@@ -58,9 +59,27 @@ const DESKTOP_CSS = `
   ::-webkit-scrollbar-thumb:hover { background: rgba(124,77,255,.52); }
   footer { display: none !important; }
 ` + (IS_MAC ? `
-  /* Nudge nav content right so macOS traffic lights don't overlap the logo */
+  /* Clear macOS traffic lights from nav content */
   .nav-inner { padding-left: 82px !important; }
 ` : '');
+
+// ─── Analytics tab injection ──────────────────────────────────────────────────
+// Appends an ANALYTICS tab to the existing nav on every non-analytics page.
+const ANALYTICS_TAB_JS = `
+(function () {
+  if (document.getElementById('__sp-at')) return;
+  if (location.href.includes('spectre-desktop-analytics')) return;
+  var tabs = document.querySelector('.nav-tabs');
+  if (!tabs) return;
+  var a = document.createElement('a');
+  a.id        = '__sp-at';
+  a.href      = '${ANALYTICS_URL}';
+  a.className = 'nav-tab';
+  a.textContent = 'ANALYTICS';
+  a.style.cssText = 'text-decoration:none;cursor:pointer;';
+  tabs.appendChild(a);
+})();
+`;
 
 // ─── Window ──────────────────────────────────────────────────────────────────
 function createWindow() {
@@ -93,14 +112,17 @@ function createWindow() {
   win.webContents.on('did-start-loading', () => win.setProgressBar(2));
   win.webContents.on('did-stop-loading',  () => win.setProgressBar(-1));
 
-  // ── Zoom + CSS ────────────────────────────────────────────────────────────────
+  // ── Inject desktop chrome ─────────────────────────────────────────────────────
   const savedZoom = loadZoom();
   win.webContents.on('did-finish-load', () => {
     if (savedZoom !== 1) win.webContents.setZoomFactor(savedZoom);
-    if (win.webContents.getURL().startsWith(PROD_URL)) {
+    const url = win.webContents.getURL();
+    if (url.startsWith(PROD_URL)) {
       win.webContents.insertCSS(DESKTOP_CSS).catch(() => {});
+      win.webContents.executeJavaScript(ANALYTICS_TAB_JS).catch(() => {});
     }
   });
+
   win.webContents.on('zoom-changed', (_, dir) => {
     const next = Math.min(Math.max(
       win.webContents.getZoomFactor() + (dir === 'in' ? 0.1 : -0.1), 0.5), 3.0);
@@ -110,7 +132,7 @@ function createWindow() {
 
   // ── Error page ────────────────────────────────────────────────────────────────
   win.webContents.on('did-fail-load', (_, code) => {
-    if (code === -3) return; // ERR_ABORTED — user navigated away
+    if (code === -3) return;
     win.loadFile(path.join(__dirname, 'error.html'));
   });
 
@@ -122,7 +144,7 @@ function createWindow() {
   });
 
   win.webContents.on('will-navigate', (event, url) => {
-    // Redirect marketing root to the dashboard
+    // Block marketing root — send to dashboard instead
     if (url === PROD_URL || url === PROD_URL + '/') {
       event.preventDefault();
       win.loadURL(APP_URL);
@@ -152,7 +174,8 @@ ipcMain.on('retry', () => {
 ipcMain.handle('get-version', () => app.getVersion());
 
 // ─── Menu ─────────────────────────────────────────────────────────────────────
-function buildMenu() {
+function buildMenu(win) {
+  const go = (url) => () => win.loadURL(url);
   const template = [
     ...(IS_MAC ? [{ role: 'appMenu' }] : []),
     {
@@ -182,6 +205,15 @@ function buildMenu() {
         ...(!app.isPackaged ? [{ type: 'separator' }, { role: 'toggleDevTools' }] : []),
       ],
     },
+    {
+      label: 'Go',
+      submenu: [
+        { label: 'Dashboard',  accelerator: IS_MAC ? 'Cmd+1' : 'Ctrl+1', click: go(APP_URL) },
+        { label: 'Analytics',  accelerator: IS_MAC ? 'Cmd+2' : 'Ctrl+2', click: go(ANALYTICS_URL) },
+        { label: 'Research',   accelerator: IS_MAC ? 'Cmd+3' : 'Ctrl+3', click: go(PROD_URL + '/research') },
+        { label: 'Settings',   accelerator: IS_MAC ? 'Cmd+4' : 'Ctrl+4', click: go(PROD_URL + '/settings') },
+      ],
+    },
     { role: 'windowMenu' },
     {
       role: 'help',
@@ -196,10 +228,27 @@ function buildMenu() {
 // ─── App lifecycle ────────────────────────────────────────────────────────────
 app.whenReady().then(() => {
   pingServer();
-  createWindow();
-  buildMenu();
+
+  // Serve the bundled analytics page under the production origin so that
+  // session cookies work and relative API paths resolve correctly.
+  const ses = session.fromPartition('persist:spectre');
+  ses.protocol.handle('https', async (request) => {
+    try {
+      const u = new URL(request.url);
+      if (u.host === 'spectre-assets.com' && u.pathname === '/spectre-desktop-analytics.html') {
+        return net.fetch('file://' + ANALYTICS_FILE);
+      }
+    } catch { /* malformed URL — fall through */ }
+    return net.fetch(request, { bypassCustomProtocolHandlers: true });
+  });
+
+  const win = createWindow();
+  buildMenu(win);
+
   app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    if (BrowserWindow.getAllWindows().length === 0) {
+      buildMenu(createWindow());
+    }
   });
 });
 
