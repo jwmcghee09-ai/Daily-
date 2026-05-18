@@ -85,10 +85,12 @@ function createWindow() {
   win.webContents.on('did-start-loading', () => win.setProgressBar(2));
   win.webContents.on('did-stop-loading',  () => win.setProgressBar(-1));
 
-  // ── Zoom persistence ──────────────────────────────────────────────────────────
+  // ── Zoom persistence + desktop CSS ───────────────────────────────────────────
   const savedZoom = loadZoom();
   win.webContents.on('did-finish-load', () => {
     if (savedZoom !== 1) win.webContents.setZoomFactor(savedZoom);
+    const url = win.webContents.getURL();
+    if (url.startsWith(PROD_URL)) win.webContents.insertCSS(DESKTOP_CSS);
   });
   win.webContents.on('zoom-changed', (_, direction) => {
     const next = Math.min(Math.max(
@@ -127,6 +129,49 @@ function createWindow() {
   return win;
 }
 
+// ─── Desktop CSS (injected into all SPECTRE pages) ────────────────────────────
+const DESKTOP_CSS = `
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(124,77,255,.35); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(124,77,255,.55); }
+  footer { display: none !important; }
+  nav { user-select: none; }
+`;
+
+// ─── Analytics window ─────────────────────────────────────────────────────────
+let analyticsWin = null;
+function openAnalyticsWindow() {
+  if (analyticsWin && !analyticsWin.isDestroyed()) {
+    analyticsWin.focus();
+    return;
+  }
+  analyticsWin = new BrowserWindow({
+    width: 1280,
+    height: 860,
+    minWidth: 900,
+    minHeight: 600,
+    title: 'SPECTRE — Portfolio Analytics',
+    titleBarStyle: IS_MAC ? 'hiddenInset' : 'default',
+    trafficLightPosition: IS_MAC ? { x: 16, y: 18 } : undefined,
+    autoHideMenuBar: !IS_MAC,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+      partition: 'persist:spectre',
+    },
+    backgroundColor: '#e9e4f6',
+    show: false,
+  });
+  analyticsWin.loadURL(PROD_URL + '/spectre-desktop-analytics.html');
+  analyticsWin.once('ready-to-show', () => analyticsWin.show());
+  analyticsWin.webContents.on('did-finish-load', () => {
+    analyticsWin.webContents.insertCSS(DESKTOP_CSS);
+  });
+  analyticsWin.on('closed', () => { analyticsWin = null; });
+}
+
 // ─── IPC ─────────────────────────────────────────────────────────────────────
 ipcMain.on('retry', () => {
   const win = BrowserWindow.getFocusedWindow();
@@ -163,6 +208,16 @@ function buildMenu() {
         { type: 'separator' },
         { role: 'togglefullscreen' },
         ...(!app.isPackaged ? [{ type: 'separator' }, { role: 'toggleDevTools' }] : []),
+      ],
+    },
+    {
+      label: 'Analytics',
+      submenu: [
+        {
+          label: 'Portfolio Analytics',
+          accelerator: IS_MAC ? 'Cmd+Shift+A' : 'Ctrl+Shift+A',
+          click: () => openAnalyticsWindow(),
+        },
       ],
     },
     { role: 'windowMenu' },
