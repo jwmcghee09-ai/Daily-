@@ -984,6 +984,7 @@ export async function POST(request: Request) {
   //   data: {"done":true,"analysis":{...},"aiUsed":N,"aiLimit":N}\n\n  — final parsed analysis
   let accumulated = "";
   let sseBuffer = "";
+  let streamCompleted = false;
   const enc = new TextEncoder();
   const decoder = new TextDecoder();
 
@@ -1015,6 +1016,7 @@ export async function POST(request: Request) {
       }
     },
     flush(controller) {
+      streamCompleted = true;
       clearTimeout(timeoutId);
       sseBuffer += decoder.decode();
       const analysis = parseAiAnalysis(accumulated);
@@ -1050,6 +1052,15 @@ export async function POST(request: Request) {
       }
     },
   });
+
+  // Release the reserved credit if the client disconnects before the stream completes
+  if (reservation.allowed && monthlyLimit !== -1) {
+    request.signal.addEventListener("abort", () => {
+      if (!streamCompleted) {
+        releaseReservedAiUsage(sessionUser.id);
+      }
+    }, { once: true });
+  }
 
   return new Response(openAiRes.body!.pipeThrough(transform), {
     headers: {

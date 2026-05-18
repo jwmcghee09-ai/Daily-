@@ -46,7 +46,14 @@ export async function GET() {
 
 const ACTIVE_STATUSES = new Set(["active", "trialing"]);
 
+// Per-process cache: skip Stripe recovery for 5 min after a failed attempt
+const _recoveryFailureCache = new Map<string, number>();
+const RECOVERY_COOLDOWN_MS = 5 * 60 * 1000;
+
 async function recoverMembershipFromStripe(userId: string, email: string): Promise<boolean> {
+  const lastFailure = _recoveryFailureCache.get(userId) ?? 0;
+  if (Date.now() - lastFailure < RECOVERY_COOLDOWN_MS) return false;
+
   let stripe: Stripe;
   try {
     stripe = getStripeClient();
@@ -66,7 +73,11 @@ async function recoverMembershipFromStripe(userId: string, email: string): Promi
     return true;
   }
 
-  return recoverFromCustomerEmail(stripe, userId, email);
+  const recovered = await recoverFromCustomerEmail(stripe, userId, email);
+  if (!recovered) {
+    _recoveryFailureCache.set(userId, Date.now());
+  }
+  return recovered;
 }
 
 async function recoverFromSavedSubscription(

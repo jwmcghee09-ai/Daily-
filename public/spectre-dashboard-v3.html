@@ -1952,7 +1952,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       <div class="chart-card">
         <div class="chart-card-title">Account Allocation</div>
         <div class="chart-card-sub">By account type</div>
-        <canvas id="c-account" height="200"></canvas>
+        <canvas id="c-account" height="220"></canvas>
         <div class="legend">
           <div class="leg"><span class="leg-dot" style="background:#ff4d1a"></span>ASX Equities 50%</div>
           <div class="leg"><span class="leg-dot" style="background:#9b5de5"></span>Super 28%</div>
@@ -1963,7 +1963,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       <div class="chart-card">
         <div class="chart-card-title">Sector Allocation</div>
         <div class="chart-card-sub">By GICS sector</div>
-        <canvas id="c-sector" height="200"></canvas>
+        <canvas id="c-sector" height="220"></canvas>
         <div class="legend">
           <div class="leg"><span class="leg-dot" style="background:#ff4d1a"></span>Materials 32%</div>
           <div class="leg"><span class="leg-dot" style="background:#9b5de5"></span>Financials 26%</div>
@@ -1974,13 +1974,13 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       <div class="chart-card">
         <div class="chart-card-title">Top Holdings</div>
         <div class="chart-card-sub">By market value</div>
-        <canvas id="c-holdings" height="200"></canvas>
+        <canvas id="c-holdings" height="220"></canvas>
       </div>
       <div class="chart-card">
         <div class="chart-card-title">Portfolio History</div>
         <div class="chart-card-sub">Total value over time</div>
         <div style="position:relative">
-          <canvas id="c-history" height="200"></canvas>
+          <canvas id="c-history" height="220"></canvas>
           <div id="history-empty-state" hidden style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:1rem;font-family:var(--mono);font-size:0.62rem;letter-spacing:0.04em;color:var(--muted2);background:rgba(124,77,255,0.04);border-radius:8px">Import reports and refresh prices over time to build your portfolio history.</div>
           <div id="history-tooltip" style="display:none;position:absolute;pointer-events:none;background:#ffffff;border:1px solid rgba(100,80,200,0.18);border-radius:6px;padding:0.45rem 0.65rem;font-family:var(--mono);font-size:0.62rem;color:#0a0818;white-space:nowrap;z-index:10;box-shadow:0 4px 16px rgba(100,80,200,0.14)"></div>
         </div>
@@ -5495,7 +5495,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
         }
       }, 120);
       // Auto-run AI only in demo mode — real users ask manually
-      if (state.demoMode && !state.holdingsAi && !state.holdingsAiLoading) {
+      if (state.demoMode && !state.holdingsAi && !state.holdingsAiLoading && state.holdings.length > 0) {
         window.setTimeout(() => { runHoldingsAi(); }, 800);
       }
     } catch (error) {

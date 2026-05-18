@@ -5066,9 +5066,11 @@ function renderChart(data) {
 }
 
 let chartLoading = false;
+let _overviewChartFailed = false;
 async function loadChart(range, btn) {
   if (chartLoading) return;
   chartLoading = true;
+  _overviewChartFailed = false;
   if (btn) {
     btn.closest('.time-pills').querySelectorAll('.time-pill').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
@@ -5081,8 +5083,7 @@ async function loadChart(range, btn) {
     if (data?.closes?.length) renderChart(data);
   } catch (e) {
     if (loading) loading.textContent = 'Chart unavailable';
-    const mainCanvas = document.getElementById('main-chart');
-    if (mainCanvas?.parentElement) mainCanvas.parentElement.classList.add('chart-empty');
+    _overviewChartFailed = true;
     console.warn('Chart fetch failed:', e);
   } finally {
     chartLoading = false;
@@ -5499,7 +5500,7 @@ async function fetchLiveQuotes() {
       if (tbody) tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--sl-muted);font-size:0.75rem;padding:16px;">Live data unavailable — will retry</td></tr>';
     }
     const lastUpdatedEl = document.getElementById('page-last-updated');
-    if (lastUpdatedEl && lastUpdatedEl.textContent === '—') lastUpdatedEl.textContent = 'Unavailable';
+    if (lastUpdatedEl && !state.demoMode) lastUpdatedEl.textContent = 'Update failed';
   }
 }
 
@@ -5798,8 +5799,10 @@ function clearChartEmpty(canvasId) {
 
 function setupCanvas(canvas) {
   const dpr = window.devicePixelRatio || 1;
-  const width = Math.max(canvas.clientWidth || canvas.parentElement?.clientWidth || 320, 320);
-  const height = Math.max(canvas.clientHeight || canvas.parentElement?.clientHeight || 180, 180);
+  const rawW = canvas.clientWidth || canvas.parentElement?.clientWidth || canvas.parentElement?.parentElement?.clientWidth || 0;
+  const rawH = canvas.clientHeight || canvas.parentElement?.clientHeight || canvas.parentElement?.parentElement?.clientHeight || 0;
+  const width = Math.max(rawW || 320, 320);
+  const height = Math.max(rawH || 180, 180);
   canvas.width = Math.round(width * dpr);
   canvas.height = Math.round(height * dpr);
   const ctx = canvas.getContext('2d');
@@ -6405,8 +6408,13 @@ function switchResearchTab(name, btn) {
       return c && c.parentElement && c.parentElement.classList.contains('chart-empty');
     });
   }
+  const needsOverviewReload = name === 'overview' && !firstVisit && _overviewChartFailed;
   const needsMacroReload = firstVisit || (name === 'macro' && _tabCanvasHasError('macro-aud-chart', 'macro-gold-chart', 'macro-oil-chart'));
   const needsCryptoReload = firstVisit || (name === 'crypto' && _tabCanvasHasError('ct-btc-chart', 'ct-eth-chart', 'ct-sol-chart'));
+
+  if (needsOverviewReload) {
+    loadChart('6m', document.querySelector('.time-pill.active') || null);
+  }
 
   // Double-RAF ensures the browser has completed layout before canvas reads dimensions
   if (needsMacroReload || needsCryptoReload) {
@@ -7119,6 +7127,9 @@ function _demoSnapshot(url) {
     }
     return undefined;
   }
+  // Catch-all: any unrecognized /api/ path returns an empty object so demo mode
+  // never falls through to a real fetch that would redirect to /signin on 401
+  if (u.includes('/api/')) return {};
   return undefined;
 }
 
