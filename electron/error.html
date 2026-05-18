@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SPECTRE — Connection Error</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #e9e4f6;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    -webkit-app-region: drag;
+    user-select: none;
+    font-family: -apple-system, 'Space Grotesk', 'Segoe UI', sans-serif;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 75% 55% at 50% -8%, rgba(124,77,255,.18) 0%, transparent 100%),
+      radial-gradient(ellipse 55% 70% at -5% 55%, rgba(124,77,255,.10) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.4rem;
+    position: relative;
+    text-align: center;
+    max-width: 340px;
+  }
+
+  .logo {
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: 0.22em;
+    background: linear-gradient(90deg, #7c4dff 0%, #d946ef 50%, #ff7a30 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.4rem;
+  }
+
+  .icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: rgba(124,77,255,.1);
+    border: 1px solid rgba(124,77,255,.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+  }
+
+  .heading {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #0f0d1e;
+    letter-spacing: -0.01em;
+  }
+
+  .body {
+    font-size: 0.8rem;
+    color: #5e5a78;
+    line-height: 1.6;
+  }
+
+  .btn {
+    -webkit-app-region: no-drag;
+    margin-top: 0.4rem;
+    padding: 0.7rem 1.8rem;
+    border-radius: 999px;
+    border: none;
+    background: linear-gradient(135deg, #7c4dff 0%, #d946ef 54%, #ff7a30 100%);
+    color: #fff;
+    font-family: inherit;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    box-shadow: 0 4px 18px rgba(124,77,255,.28);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+
+  .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 22px rgba(124,77,255,.36);
+  }
+
+  .btn:active { transform: translateY(0); }
+
+  .hint {
+    font-family: 'DM Mono', 'Courier New', monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #9890b8;
+  }
+</style>
+</head>
+<body>
+  <div class="content">
+    <div class="logo">SPECTRE</div>
+    <div class="icon">⚡</div>
+    <div class="heading">Can't reach the server</div>
+    <div class="body">
+      Check your internet connection, or the server may be starting up after a period of inactivity.
+    </div>
+    <button class="btn" onclick="retry()">Try again</button>
+    <div class="hint">spectre-assets.com</div>
+  </div>
+
+  <script>
+    function retry() {
+      if (window.electronAPI?.retry) {
+        window.electronAPI.retry();
+      } else {
+        location.reload();
+      }
+    }
+    // Auto-retry after 15 seconds
+    setTimeout(retry, 15000);
+  </script>
+</body>
+</html>
