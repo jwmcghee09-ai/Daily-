@@ -6,7 +6,7 @@ const https = require('https');
 
 // ─── Config ──────────────────────────────────────────────────────────────────
 const PROD_URL = 'https://spectre-assets.com';
-const APP_URL  = process.env.SPECTRE_DEV_URL || PROD_URL;
+const APP_URL  = process.env.SPECTRE_DEV_URL || (PROD_URL + '/dashboard');
 
 const IS_MAC = process.platform === 'darwin';
 
