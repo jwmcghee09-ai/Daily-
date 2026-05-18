@@ -150,6 +150,56 @@ h1 {
 }
 .card.sel .check { background: #7c4dff; border-color: #7c4dff; color: #fff; }
 
+/* ── tour toggle ── */
+.tour-toggle {
+  margin-bottom: 24px;
+  -webkit-app-region: no-drag;
+}
+.tour-toggle label {
+  display: flex; align-items: center; gap: 10px; cursor: pointer;
+  font-size: .78rem; color: #6b6490;
+}
+.tour-toggle input { display: none; }
+.tour-knob {
+  width: 24px; height: 13px; border-radius: 999px;
+  background: rgba(124,77,255,.25); position: relative;
+  flex-shrink: 0; transition: background .18s;
+}
+.tour-knob::after {
+  content: ''; position: absolute; top: 2px; left: 2px;
+  width: 9px; height: 9px; border-radius: 50%;
+  background: #fff; transition: transform .18s;
+}
+.tour-toggle input:checked + .tour-knob { background: #7c4dff; }
+.tour-toggle input:checked + .tour-knob::after { transform: translateX(11px); }
+
+/* ── tour slides overlay ── */
+.tour-slides {
+  position: fixed; inset: 0; background: #07050f; z-index: 100;
+  display: none; flex-direction: column; align-items: center; justify-content: center;
+}
+.tour-slide { max-width: 420px; text-align: center; padding: 0 24px; }
+.tour-icon { font-size: 2.8rem; margin-bottom: 20px; }
+.tour-title { font-size: 1.2rem; font-weight: 700; color: #f0eaff; margin-bottom: 10px; }
+.tour-body { font-size: .78rem; color: #6b6490; line-height: 1.7; margin-bottom: 32px; max-width: 340px; margin-left: auto; margin-right: auto; }
+.tour-dots { display: flex; gap: 8px; justify-content: center; margin-bottom: 28px; }
+.tour-dot { width: 8px; height: 8px; background: rgba(124,77,255,.25); border-radius: 50%; }
+.tour-dot.on { background: #7c4dff; }
+.tour-nav { display: flex; gap: 12px; justify-content: center; }
+.tour-btn {
+  -webkit-app-region: no-drag;
+  background: transparent; border: 1px solid rgba(124,77,255,.4); border-radius: 999px;
+  color: #a08cc0; font-family: 'Space Grotesk', sans-serif; font-size: .8rem; font-weight: 700;
+  letter-spacing: .06em; padding: .72rem 2rem; cursor: pointer; transition: all .15s;
+}
+.tour-btn:hover { border-color: #7c4dff; color: #d4c0f0; }
+.tour-btn.primary {
+  background: linear-gradient(135deg, #7c4dff 0%, #d946ef 54%, #ff7a30 100%);
+  border-color: transparent; color: #fff;
+  box-shadow: 0 4px 20px rgba(124,77,255,.35);
+}
+.tour-btn.primary:hover { transform: translateY(-1px); box-shadow: 0 6px 28px rgba(124,77,255,.5); }
+
 /* ── continue button ── */
 .continue {
   -webkit-app-region: no-drag;
@@ -235,6 +285,29 @@ h1 {
 
   </div>
 
+  <!-- Tour toggle -->
+  <div class="tour-toggle">
+    <label>
+      <input type="checkbox" id="tour-chk"/>
+      <span class="tour-knob"></span>
+      <span class="tour-label">Take a quick tour</span>
+    </label>
+  </div>
+
+  <!-- Tour overlay -->
+  <div class="tour-slides" id="tour-slides">
+    <div class="tour-slide">
+      <div class="tour-icon" id="tour-icon"></div>
+      <div class="tour-title" id="tour-title"></div>
+      <div class="tour-body" id="tour-body"></div>
+      <div class="tour-dots" id="tour-dots"></div>
+      <div class="tour-nav">
+        <button class="tour-btn" id="tour-skip" onclick="endTour()">Skip</button>
+        <button class="tour-btn primary" id="tour-next" onclick="nextSlide()">Next →</button>
+      </div>
+    </div>
+  </div>
+
   <button class="continue" id="cont" onclick="proceed()">Get Started →</button>
   <div class="hint">spectre-assets.com</div>
 </div>
@@ -251,10 +324,45 @@ function pick(t) {
   document.getElementById('cont').classList.add('ready');
 }
 
+const TOUR = [
+  { icon: '📈', title: 'Bloomberg-style charts', body: 'Zoom, pan, and switch between Candle, OHLC, Line and Area views for any ASX stock, crypto, or ETF. Full portfolio and watchlist.' },
+  { icon: '🌏', title: 'Live market research', body: 'Real-time ASX 200, macro signals, sector heatmap, earnings calendar, and US market movers — all in one terminal view.' },
+  { icon: '🤖', title: 'AI grounded in your data', body: 'Ask your portfolio anything. The AI is connected to your live holdings, P&L, and risk metrics — not generic market chat.' },
+];
+let tourStep = 0;
+
+function showTour() {
+  tourStep = 0;
+  const slides = document.getElementById('tour-slides');
+  slides.style.display = 'flex';
+  renderSlide();
+}
+
+function renderSlide() {
+  const s = TOUR[tourStep];
+  document.getElementById('tour-icon').textContent = s.icon;
+  document.getElementById('tour-title').textContent = s.title;
+  document.getElementById('tour-body').textContent = s.body;
+  const dots = document.getElementById('tour-dots');
+  dots.innerHTML = TOUR.map((_,i) => `<div class="tour-dot${i===tourStep?' on':''}"></div>`).join('');
+  const nextBtn = document.getElementById('tour-next');
+  nextBtn.textContent = tourStep === TOUR.length - 1 ? 'Get started →' : 'Next →';
+}
+
+function nextSlide() {
+  if (tourStep < TOUR.length - 1) { tourStep++; renderSlide(); }
+  else endTour();
+}
+
+function endTour() {
+  location.href = 'https://spectre-assets.com/dashboard';
+}
+
 async function proceed() {
   if (!chosen) return;
   try { await window.electronAPI?.setTheme(chosen); } catch {}
-  location.href = 'https://spectre-assets.com/dashboard';
+  if (document.getElementById('tour-chk').checked) { showTour(); }
+  else { location.href = 'https://spectre-assets.com/dashboard'; }
 }
 </script>
 </body>

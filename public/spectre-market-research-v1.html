@@ -2803,6 +2803,56 @@ h3 { font-size: 1.15rem; }
 .fx-rate { font-family: var(--font-mono); font-size: 0.78rem; font-weight: 600; color: #fff; flex-shrink: 1; min-width: 0; }
 .fx-chg  { font-family: var(--font-mono); font-size: 0.65rem; text-align: right; flex-shrink: 0; white-space: nowrap; }
 
+/* ── Starter plan gating ── */
+.starter-banner {
+  display: none;
+  align-items: center; justify-content: space-between; gap: 12px;
+  background: rgba(124,77,255,.1); border: 1px solid rgba(124,77,255,.28);
+  border-radius: 10px; padding: 10px 16px; margin-bottom: 16px;
+  font-size: .74rem;
+}
+.starter-banner.show { display: flex; }
+.starter-banner-text { color: var(--sl-text); }
+.starter-banner-text strong { color: #a855f7; }
+.starter-banner-cta {
+  flex-shrink: 0; background: linear-gradient(135deg,#7c4dff,#d946ef);
+  border: none; border-radius: 6px; color: #fff; font-size: .7rem; font-weight: 700;
+  padding: 5px 14px; cursor: pointer; white-space: nowrap;
+  font-family: 'Space Grotesk', sans-serif;
+}
+.starter-banner-cta:hover { opacity: .88; }
+
+.rtab-locked { position: relative; opacity: .5; cursor: not-allowed !important; }
+.rtab-locked::after {
+  content: '🔒'; font-size: .65rem; margin-left: 4px; vertical-align: middle;
+}
+
+.hero-lock-wrap { position: relative; }
+.hero-lock-overlay {
+  display: none; position: absolute; inset: 0; border-radius: inherit;
+  background: rgba(7,5,15,.72); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  z-index: 10; align-items: center; justify-content: center; flex-direction: column; gap: 6px;
+  border-radius: 12px;
+}
+.hero-lock-overlay.show { display: flex; }
+.hero-lock-overlay .lock-icon { font-size: 1.2rem; }
+.hero-lock-overlay .lock-label { font-size: .62rem; color: #a855f7; font-weight: 600; letter-spacing: .06em; }
+
+.table-blur-wrap { position: relative; }
+.table-blur-mask {
+  display: none; position: absolute; bottom: 0; left: 0; right: 0; height: 160px;
+  background: linear-gradient(transparent, var(--sl-bg) 80%);
+  z-index: 5; flex-direction: column; align-items: center; justify-content: flex-end; padding-bottom: 12px; gap: 8px;
+}
+.table-blur-mask.show { display: flex; }
+.table-blur-mask .upgrade-msg { font-size: .72rem; color: var(--sl-muted); }
+.table-blur-mask .upgrade-btn {
+  background: rgba(124,77,255,.15); border: 1px solid rgba(124,77,255,.35); border-radius: 6px;
+  color: #a855f7; font-size: .72rem; font-weight: 600; padding: 5px 16px; cursor: pointer;
+  font-family: 'Space Grotesk', sans-serif;
+}
+.table-blur-mask .upgrade-btn:hover { background: rgba(124,77,255,.28); }
+
 /* ── Data table upgrades ────────────────────────── */
 .data-table th {
   background: rgba(155,93,229,.06) !important;
@@ -3267,6 +3317,12 @@ h3 { font-size: 1.15rem; }
     </div>
   </section>
 
+  <!-- Starter plan upgrade banner -->
+  <div class="starter-banner" id="starter-banner">
+    <span class="starter-banner-text">You're on the <strong>Starter plan</strong>. Unlock live macro data, equities deep-dive, earnings, and crypto tabs.</span>
+    <button class="starter-banner-cta" onclick="window.location.href='/settings?tab=billing'">Upgrade to Pro →</button>
+  </div>
+
   <!-- ===== RESEARCH TAB NAV ===== -->
   <nav class="research-tab-nav" role="tablist">
     <button class="rtab active" data-tab="overview" onclick="switchResearchTab('overview',this)">Overview</button>
@@ -3309,31 +3365,55 @@ h3 { font-size: 1.15rem; }
     </div>
 
     <!-- Gold -->
-    <div class="card hero-card card-glow">
-      <div class="label">Gold (XAU/USD)</div>
-      <div class="value"><span id="hero-gold-price" class="mono" style="font-size:1.8rem;font-weight:600;">Loading…</span></div>
-      <div id="hero-gold-chg" class="change" style="margin-top:6px;">—</div>
+    <div class="hero-lock-wrap">
+      <div class="card hero-card card-glow">
+        <div class="label">Gold (XAU/USD)</div>
+        <div class="value"><span id="hero-gold-price" class="mono" style="font-size:1.8rem;font-weight:600;">Loading…</span></div>
+        <div id="hero-gold-chg" class="change" style="margin-top:6px;">—</div>
+      </div>
+      <div class="hero-lock-overlay">
+        <span class="lock-icon">🔒</span>
+        <span class="lock-label">Pro feature</span>
+      </div>
     </div>
 
     <!-- Bitcoin -->
-    <div class="card hero-card card-glow">
-      <div class="label">Bitcoin (BTC/USD)</div>
-      <div class="value"><span id="hero-btc-price" class="mono" style="font-size:1.8rem;font-weight:600;">Loading…</span></div>
-      <div id="hero-btc-chg" class="change" style="margin-top:6px;">—</div>
+    <div class="hero-lock-wrap">
+      <div class="card hero-card card-glow">
+        <div class="label">Bitcoin (BTC/USD)</div>
+        <div class="value"><span id="hero-btc-price" class="mono" style="font-size:1.8rem;font-weight:600;">Loading…</span></div>
+        <div id="hero-btc-chg" class="change" style="margin-top:6px;">—</div>
+      </div>
+      <div class="hero-lock-overlay">
+        <span class="lock-icon">🔒</span>
+        <span class="lock-label">Pro feature</span>
+      </div>
     </div>
 
     <!-- Ethereum -->
-    <div class="card hero-card card-glow">
-      <div class="label">Ethereum (ETH/USD)</div>
-      <div class="value"><span id="hero-eth-price" class="mono" style="font-size:1.8rem;font-weight:600;">Loading…</span></div>
-      <div id="hero-eth-chg" class="change" style="margin-top:6px;">—</div>
+    <div class="hero-lock-wrap">
+      <div class="card hero-card card-glow">
+        <div class="label">Ethereum (ETH/USD)</div>
+        <div class="value"><span id="hero-eth-price" class="mono" style="font-size:1.8rem;font-weight:600;">Loading…</span></div>
+        <div id="hero-eth-chg" class="change" style="margin-top:6px;">—</div>
+      </div>
+      <div class="hero-lock-overlay">
+        <span class="lock-icon">🔒</span>
+        <span class="lock-label">Pro feature</span>
+      </div>
     </div>
 
     <!-- WTI Crude Oil -->
-    <div class="card hero-card card-glow">
-      <div class="label">WTI Crude (USD/bbl)</div>
-      <div class="value"><span id="hero-oil-price" class="mono" style="font-size:1.8rem;font-weight:600;">Loading…</span></div>
-      <div id="hero-oil-chg" class="change" style="margin-top:6px;">—</div>
+    <div class="hero-lock-wrap">
+      <div class="card hero-card card-glow">
+        <div class="label">WTI Crude (USD/bbl)</div>
+        <div class="value"><span id="hero-oil-price" class="mono" style="font-size:1.8rem;font-weight:600;">Loading…</span></div>
+        <div id="hero-oil-chg" class="change" style="margin-top:6px;">—</div>
+      </div>
+      <div class="hero-lock-overlay">
+        <span class="lock-icon">🔒</span>
+        <span class="lock-label">Pro feature</span>
+      </div>
     </div>
   </section>
 
@@ -3410,23 +3490,29 @@ h3 { font-size: 1.15rem; }
       <!-- B. ASX TOP HOLDINGS TABLE -->
       <div class="card reveal">
         <div class="section-label">ASX Top Holdings</div>
-        <div class="table-wrap">
-          <table class="data-table" id="stockTable">
-            <thead>
-              <tr>
-                <th>Symbol</th>
-                <th>Sector</th>
-                <th>Price</th>
-                <th>Chg%</th>
-                <th>Mkt Cap</th>
-                <th>P/E</th>
-                <th>Div Yield</th>
-                <th>52W Range</th>
-                <th>Trend</th>
-              </tr>
-            </thead>
-            <tbody id="stockTableBody"></tbody>
-          </table>
+        <div class="table-blur-wrap">
+          <div class="table-wrap">
+            <table class="data-table" id="stockTable">
+              <thead>
+                <tr>
+                  <th>Symbol</th>
+                  <th>Sector</th>
+                  <th>Price</th>
+                  <th>Chg%</th>
+                  <th>Mkt Cap</th>
+                  <th>P/E</th>
+                  <th>Div Yield</th>
+                  <th>52W Range</th>
+                  <th>Trend</th>
+                </tr>
+              </thead>
+              <tbody id="stockTableBody"></tbody>
+            </table>
+          </div>
+          <div class="table-blur-mask" id="table-blur-mask">
+            <span class="upgrade-msg">Full ASX 200 table available on Pro</span>
+            <button class="upgrade-btn" onclick="window.location.href='/settings?tab=billing'">Upgrade to Pro →</button>
+          </div>
         </div>
       </div>
 
@@ -4552,8 +4638,39 @@ function planLabel(user) {
   if (state.demoMode) return 'PRO DEMO';
   if (!user) return 'Workspace';
   if (user.proEnabled) return 'PRO ACTIVE';
+  if ((user.planTier || '').toLowerCase() === 'starter') return 'STARTER';
   if ((user.planTier || '').toLowerCase() === 'none') return 'FREE';
   return String(user.planTier || 'Workspace').toUpperCase();
+}
+
+function isStarterPlan() {
+  const tier = (state.sessionUser?.planTier || '').toLowerCase();
+  return tier === 'starter' || tier === 'free' || tier === 'none';
+}
+
+function applyStarterGating() {
+  if (!isStarterPlan()) return;
+
+  // Banner
+  const banner = document.getElementById('starter-banner');
+  if (banner) banner.classList.add('show');
+
+  // Lock tabs (not overview)
+  document.querySelectorAll('.rtab:not([data-tab="overview"])').forEach(tab => {
+    tab.classList.add('rtab-locked');
+    tab.onclick = e => { e.preventDefault(); e.stopImmediatePropagation(); showUpgradeModal(); };
+  });
+
+  // Blur hero cards 4-7 (Gold, BTC, ETH, Oil)
+  document.querySelectorAll('.hero-lock-overlay').forEach(ov => ov.classList.add('show'));
+
+  // Blur stock table after row 5
+  const mask = document.getElementById('table-blur-mask');
+  if (mask) mask.classList.add('show');
+}
+
+function showUpgradeModal() {
+  window.location.href = '/settings?tab=billing';
 }
 
 function formatDateTime(value) {
@@ -5232,6 +5349,7 @@ async function loadSession() {
   setText('nav-user-email', payload.user.email || '—');
   applyModeChrome();
   updateWorkspaceHeroIdentity();
+  applyStarterGating();
 }
 
 async function signOut(event) {
