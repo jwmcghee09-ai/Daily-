@@ -5,7 +5,6 @@ const path = require('path');
 const https = require('https');
 const fs   = require('fs');
 
-// ─── Config ──────────────────────────────────────────────────────────────────
 const PROD_URL = 'https://spectre-assets.com';
 const APP_URL  = process.env.SPECTRE_DEV_URL || (PROD_URL + '/dashboard');
 const IS_MAC   = process.platform === 'darwin';
@@ -85,12 +84,15 @@ function createWindow() {
   win.webContents.on('did-start-loading', () => win.setProgressBar(2));
   win.webContents.on('did-stop-loading',  () => win.setProgressBar(-1));
 
-  // ── Zoom persistence + desktop CSS ───────────────────────────────────────────
+  // ── Zoom persistence + CSS injection ─────────────────────────────────────────
   const savedZoom = loadZoom();
   win.webContents.on('did-finish-load', () => {
     if (savedZoom !== 1) win.webContents.setZoomFactor(savedZoom);
+    // Inject CSS only on SPECTRE pages (not the local error page)
     const url = win.webContents.getURL();
-    if (url.startsWith(PROD_URL)) win.webContents.insertCSS(DESKTOP_CSS);
+    if (url.startsWith(PROD_URL)) {
+      win.webContents.insertCSS(INJECTED_CSS).catch(() => {});
+    }
   });
   win.webContents.on('zoom-changed', (_, direction) => {
     const next = Math.min(Math.max(
@@ -129,47 +131,39 @@ function createWindow() {
   return win;
 }
 
-// ─── Desktop CSS (injected into all SPECTRE pages) ────────────────────────────
-const DESKTOP_CSS = `
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: rgba(124,77,255,.35); border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: rgba(124,77,255,.55); }
-  footer { display: none !important; }
-  nav { user-select: none; }
+// ─── CSS to inject into every SPECTRE page ────────────────────────────────────
+const INJECTED_CSS = `
+/* Thin purple scrollbars */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(124,77,255,.3); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(124,77,255,.5); }
+/* Hide footer — not needed in desktop */
+footer, .site-footer { display: none !important; }
+/* Remove selection highlight from nav */
+nav { user-select: none; -webkit-user-select: none; }
 `;
 
 // ─── Analytics window ─────────────────────────────────────────────────────────
-let analyticsWin = null;
 function openAnalyticsWindow() {
-  if (analyticsWin && !analyticsWin.isDestroyed()) {
-    analyticsWin.focus();
-    return;
-  }
-  analyticsWin = new BrowserWindow({
-    width: 1280,
-    height: 860,
-    minWidth: 900,
-    minHeight: 600,
+  const a = new BrowserWindow({
+    width: 1300, height: 860, minWidth: 900, minHeight: 600,
     title: 'SPECTRE — Portfolio Analytics',
     titleBarStyle: IS_MAC ? 'hiddenInset' : 'default',
-    trafficLightPosition: IS_MAC ? { x: 16, y: 18 } : undefined,
+    trafficLightPosition: IS_MAC ? { x: 16, y: 16 } : undefined,
     autoHideMenuBar: !IS_MAC,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
-      partition: 'persist:spectre',
+      partition: 'persist:spectre',  // SAME session as main window
     },
     backgroundColor: '#e9e4f6',
     show: false,
   });
-  analyticsWin.loadURL(PROD_URL + '/spectre-desktop-analytics.html');
-  analyticsWin.once('ready-to-show', () => analyticsWin.show());
-  analyticsWin.webContents.on('did-finish-load', () => {
-    analyticsWin.webContents.insertCSS(DESKTOP_CSS);
-  });
-  analyticsWin.on('closed', () => { analyticsWin = null; });
+  a.once('ready-to-show', () => a.show());
+  a.loadURL(PROD_URL + '/spectre-desktop-analytics.html');
+  return a;
 }
 
 // ─── IPC ─────────────────────────────────────────────────────────────────────
