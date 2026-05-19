@@ -192,6 +192,11 @@
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
   background: rgba(243, 241, 251, 0.96);
+  transition: top 0.3s ease;
+}
+
+.navScrolled + .ticker {
+  top: calc(48px + var(--safeTop));
 }
 
 .ticker::before,
@@ -1458,7 +1463,7 @@
 
 @keyframes ticker {
   from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
+  to { transform: translateX(-25%); }
 }
 
 @keyframes labelSlide {

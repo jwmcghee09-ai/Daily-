@@ -339,7 +339,7 @@ export default function LandingPage({
 
       <div className={styles.ticker}>
         <div className={styles.tickerTrack}>
-          {[...tickerItems, ...tickerItems].map(([symbol, price, delta, tone], index) => (
+          {[...tickerItems, ...tickerItems, ...tickerItems, ...tickerItems].map(([symbol, price, delta, tone], index) => (
             <span key={`${symbol}-${index}`} className={styles.tickerItem}>
               <span className={styles.tickerSymbol}>{symbol}</span>
               <span className={styles.tickerPrice}>{price}</span>
