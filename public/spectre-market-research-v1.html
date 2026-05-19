@@ -2859,14 +2859,13 @@ h3 { font-size: 1.15rem; }
   padding: 3rem 1.5rem 4rem; gap: 0;
 }
 html.starter-mode .starter-gate-panel { display: flex; }
-html.starter-mode .workspace-hero      { display: none !important; }
-html.starter-mode .page-header         { display: none !important; }
-html.starter-mode .research-tab-nav    { display: none !important; }
-html.starter-mode .rtab-panel          { display: none !important; }
-html.starter-mode .market-pulse-strip  { display: none !important; }
-html.starter-mode .hero-lock-wrap      { display: none !important; }
-html.starter-mode #starter-banner      { display: none !important; }
-html.starter-mode .demo-preview-banner { display: none !important; }
+html.starter-mode .workspace-hero       { display: none !important; }
+html.starter-mode .market-pulse-strip   { display: none !important; }
+html.starter-mode #starter-banner       { display: none !important; }
+html.starter-mode .demo-preview-banner  { display: none !important; }
+html.starter-mode .rtab-panel:not(#rtab-overview) { display: none !important; }
+html.starter-mode .rtab:not([data-tab="overview"]) { opacity: .35 !important; pointer-events: none !important; }
+html.starter-mode .rtab:not([data-tab="overview"])::after { content: ' 🔒'; font-size: .6rem; vertical-align: middle; }
 .sgp-badge {
   display: inline-flex; align-items: center; gap: 7px;
   padding: .3rem 1rem; border-radius: 999px; margin-bottom: 1.4rem;
@@ -3406,52 +3405,6 @@ html.starter-mode .demo-preview-banner { display: none !important; }
   <div class="starter-banner" id="starter-banner">
     <span class="starter-banner-text">You're on the <strong>Starter plan</strong>. Unlock live macro data, equities deep-dive, earnings, and crypto tabs.</span>
     <button class="starter-banner-cta" onclick="window.location.href='/settings?tab=billing'">Upgrade to Pro →</button>
-  </div>
-
-  <!-- ===== STARTER GATE PANEL ===== -->
-  <div class="starter-gate-panel" id="starter-gate-panel">
-    <div class="sgp-mini-stats">
-      <div class="sgp-stat">
-        <div class="sgp-stat-lbl">S&amp;P/ASX 200</div>
-        <div class="sgp-stat-val" id="sgp-asx200">—</div>
-        <div class="sgp-stat-chg" id="sgp-asx200-chg">—</div>
-      </div>
-      <div class="sgp-stat">
-        <div class="sgp-stat-lbl">AUD / USD</div>
-        <div class="sgp-stat-val" id="sgp-audusd">—</div>
-        <div class="sgp-stat-chg" id="sgp-audusd-chg">—</div>
-      </div>
-      <div class="sgp-stat">
-        <div class="sgp-stat-lbl">CBOE VIX</div>
-        <div class="sgp-stat-val" id="sgp-vix">—</div>
-        <div class="sgp-stat-chg" id="sgp-vix-chg">—</div>
-      </div>
-    </div>
-    <div class="sgp-badge">Plus &amp; Pro Feature</div>
-    <h2 class="sgp-title">Unlock the Research Terminal</h2>
-    <p class="sgp-sub">Live equities, macro signals, earnings calendar, and crypto markets — all in one place.</p>
-    <div class="sgp-plans">
-      <div class="sgp-plan">
-        <div class="sgp-tier">Plus</div>
-        <div class="sgp-price">$2.99<span> /mo</span></div>
-        <ul class="sgp-features">
-          <li>Full research terminal</li>
-          <li>20 AI queries / month</li>
-          <li>Price dip alerts</li>
-        </ul>
-        <a href="/settings?tab=billing" class="sgp-btn">Upgrade to Plus</a>
-      </div>
-      <div class="sgp-plan">
-        <div class="sgp-tier">Pro</div>
-        <div class="sgp-price">$9.99<span> /mo</span></div>
-        <ul class="sgp-features">
-          <li>Full research terminal</li>
-          <li>Unlimited AI queries</li>
-          <li>Advanced quant console</li>
-        </ul>
-        <a href="/settings?tab=billing" class="sgp-btn sgp-btn-pro">Upgrade to Pro</a>
-      </div>
-    </div>
   </div>
 
   <!-- ===== RESEARCH TAB NAV ===== -->
@@ -4208,6 +4161,35 @@ html.starter-mode .demo-preview-banner { display: none !important; }
   <!-- fmp-news-list rendered here (hidden, used by Earnings tab) -->
   <div id="fmp-news-list" style="display:none;"></div>
 
+  <!-- ===== STARTER GATE PANEL (inside overview, shown for free users) ===== -->
+  <div class="starter-gate-panel" id="starter-gate-panel">
+    <div class="sgp-badge">Equities · Macro · Earnings · Crypto</div>
+    <h2 class="sgp-title">Unlock the full terminal</h2>
+    <p class="sgp-sub">You're seeing the free preview. Upgrade to access live equities deep-dive, macro signals, earnings calendar, and crypto markets.</p>
+    <div class="sgp-plans">
+      <div class="sgp-plan">
+        <div class="sgp-tier">Plus</div>
+        <div class="sgp-price">$2.99<span> /mo</span></div>
+        <ul class="sgp-features">
+          <li>Full research terminal</li>
+          <li>20 AI queries / month</li>
+          <li>Price dip alerts</li>
+        </ul>
+        <a href="/settings?tab=billing" class="sgp-btn">Upgrade to Plus</a>
+      </div>
+      <div class="sgp-plan">
+        <div class="sgp-tier">Pro</div>
+        <div class="sgp-price">$9.99<span> /mo</span></div>
+        <ul class="sgp-features">
+          <li>Full research terminal</li>
+          <li>Unlimited AI queries</li>
+          <li>Advanced quant console</li>
+        </ul>
+        <a href="/settings?tab=billing" class="sgp-btn sgp-btn-pro">Upgrade to Pro</a>
+      </div>
+    </div>
+  </div>
+
   </div><!-- /rtab-overview -->
 
   <!-- ===== TAB: EQUITIES ===== -->
@@ -4784,23 +4766,11 @@ function isStarterPlan() {
 function applyStarterGating() {
   if (!isStarterPlan()) return;
   document.documentElement.classList.add('starter-mode');
-  // Mirror live hero card values into the mini stats panel as data loads
-  const pairs = [
-    ['hero-asx200-price', 'sgp-asx200'],
-    ['hero-asx200-chg',   'sgp-asx200-chg'],
-    ['hero-audusd-price', 'sgp-audusd'],
-    ['hero-audusd-chg',   'sgp-audusd-chg'],
-    ['hero-vix-price',    'sgp-vix'],
-    ['hero-vix-label',    'sgp-vix-chg'],
-  ];
-  function sync() {
-    pairs.forEach(function([src, dst]) {
-      var s = document.getElementById(src), d = document.getElementById(dst);
-      if (s && d && s.textContent && s.textContent !== 'Loading…') d.textContent = s.textContent;
-    });
-  }
-  sync();
-  var n = 0, t = setInterval(function() { sync(); if (++n > 30) clearInterval(t); }, 500);
+  // Show lock overlays on Gold, BTC, ETH, Oil hero cards
+  document.querySelectorAll('.hero-lock-overlay').forEach(function(ov) { ov.classList.add('show'); });
+  // Blur stock table after row 5
+  var mask = document.getElementById('table-blur-mask');
+  if (mask) mask.classList.add('show');
 }
 
 function showUpgradeModal() {

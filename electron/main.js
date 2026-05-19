@@ -164,8 +164,9 @@ const ANALYTICS_TAB_JS = `
     a.id = '__sp-at';
     a.href = '${ANALYTICS_URL}';
     a.className = research.className;
+    a.classList.remove('nav-tab-active', 'active', 'selected', 'current');
     a.textContent = 'Analytics';
-    a.style.cssText = 'text-decoration:none;cursor:pointer;';
+    a.style.cssText = 'text-decoration:none;cursor:pointer;border-bottom-color:transparent!important;';
     research.parentNode.insertBefore(a, research.nextSibling);
     return true;
   }
