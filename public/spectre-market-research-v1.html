@@ -1942,6 +1942,14 @@ h3 { font-size: 1.15rem; }
   overflow: hidden;
   margin: 14px 0 !important;
 }
+.asx-chart-section { background:rgba(14,10,24,.85);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:14px 16px 12px;margin:0 0 14px; }
+.asx-chart-header { display:flex;align-items:baseline;gap:10px;margin-bottom:10px;flex-wrap:wrap; }
+.asx-chart-label { font-family:var(--font-mono);font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:var(--sl-muted); }
+.asx-chart-price { font-family:var(--font-mono);font-size:1.35rem;font-weight:700;color:var(--sl-text); }
+.asx-chart-chg { font-family:var(--font-mono);font-size:.72rem;font-weight:600; }
+.asx-chart-range { font-family:var(--font-mono);font-size:.58rem;color:var(--sl-muted);margin-left:auto; }
+.asx-chart-canvas-wrap { width:100%;height:88px;position:relative;border-radius:6px;overflow:hidden; }
+#asx200-chart-canvas { width:100%;height:100%;display:block; }
 .hero-card {
   flex: 1;
   padding: 11px 16px !important;
@@ -3373,7 +3381,7 @@ html.starter-mode .rtab:not([data-tab="overview"])::after { content: ' 🔒'; fo
         <div class="workspace-meta-grid">
           <div class="workspace-meta-item wide">
             <span class="workspace-meta-item-label">Account</span>
-            <span class="workspace-meta-item-value" id="workspace-meta-account">Loading…</span>
+            <span class="workspace-meta-item-value" id="workspace-meta-account">—</span>
           </div>
           <div class="workspace-meta-item">
             <span class="workspace-meta-item-label">Plan</span>
@@ -3430,29 +3438,29 @@ html.starter-mode .rtab:not([data-tab="overview"])::after { content: ' 🔒'; fo
     <!-- ASX 200 -->
     <div class="card hero-card card-glow">
       <div class="label">S&P/ASX 200</div>
-      <div class="value"><span id="hero-asx200-price" class="mono" style="font-size:1.8rem;font-weight:600;">Loading…</span></div>
+      <div class="value"><span id="hero-asx200-price" class="mono" style="font-size:1.8rem;font-weight:600;">—</span></div>
       <div id="hero-asx200-chg" class="change" style="margin-top:6px;">—</div>
     </div>
 
     <!-- AUD/USD -->
     <div class="card hero-card card-glow">
       <div class="label">AUD / USD</div>
-      <div class="value"><span id="hero-audusd-price" class="mono" style="font-size:1.8rem;font-weight:600;">Loading…</span></div>
+      <div class="value"><span id="hero-audusd-price" class="mono" style="font-size:1.8rem;font-weight:600;">—</span></div>
       <div id="hero-audusd-chg" class="change" style="margin-top:6px;">—</div>
     </div>
 
     <!-- VIX -->
     <div class="card hero-card card-glow">
       <div class="label">CBOE VIX</div>
-      <div class="value"><span id="hero-vix-price" class="mono" style="font-size:1.8rem;font-weight:600;">Loading…</span></div>
-      <div id="hero-vix-label" style="font-size:0.72rem;margin-top:6px;color:var(--sl-muted);">Loading…</div>
+      <div class="value"><span id="hero-vix-price" class="mono" style="font-size:1.8rem;font-weight:600;">—</span></div>
+      <div id="hero-vix-label" style="font-size:0.72rem;margin-top:6px;color:var(--sl-muted);">—</div>
     </div>
 
     <!-- Gold -->
     <div class="hero-lock-wrap">
       <div class="card hero-card card-glow">
         <div class="label">Gold (XAU/USD)</div>
-        <div class="value"><span id="hero-gold-price" class="mono" style="font-size:1.8rem;font-weight:600;">Loading…</span></div>
+        <div class="value"><span id="hero-gold-price" class="mono" style="font-size:1.8rem;font-weight:600;">—</span></div>
         <div id="hero-gold-chg" class="change" style="margin-top:6px;">—</div>
       </div>
       <div class="hero-lock-overlay">
@@ -3465,7 +3473,7 @@ html.starter-mode .rtab:not([data-tab="overview"])::after { content: ' 🔒'; fo
     <div class="hero-lock-wrap">
       <div class="card hero-card card-glow">
         <div class="label">Bitcoin (BTC/USD)</div>
-        <div class="value"><span id="hero-btc-price" class="mono" style="font-size:1.8rem;font-weight:600;">Loading…</span></div>
+        <div class="value"><span id="hero-btc-price" class="mono" style="font-size:1.8rem;font-weight:600;">—</span></div>
         <div id="hero-btc-chg" class="change" style="margin-top:6px;">—</div>
       </div>
       <div class="hero-lock-overlay">
@@ -3478,7 +3486,7 @@ html.starter-mode .rtab:not([data-tab="overview"])::after { content: ' 🔒'; fo
     <div class="hero-lock-wrap">
       <div class="card hero-card card-glow">
         <div class="label">Ethereum (ETH/USD)</div>
-        <div class="value"><span id="hero-eth-price" class="mono" style="font-size:1.8rem;font-weight:600;">Loading…</span></div>
+        <div class="value"><span id="hero-eth-price" class="mono" style="font-size:1.8rem;font-weight:600;">—</span></div>
         <div id="hero-eth-chg" class="change" style="margin-top:6px;">—</div>
       </div>
       <div class="hero-lock-overlay">
@@ -3491,7 +3499,7 @@ html.starter-mode .rtab:not([data-tab="overview"])::after { content: ' 🔒'; fo
     <div class="hero-lock-wrap">
       <div class="card hero-card card-glow">
         <div class="label">WTI Crude (USD/bbl)</div>
-        <div class="value"><span id="hero-oil-price" class="mono" style="font-size:1.8rem;font-weight:600;">Loading…</span></div>
+        <div class="value"><span id="hero-oil-price" class="mono" style="font-size:1.8rem;font-weight:600;">—</span></div>
         <div id="hero-oil-chg" class="change" style="margin-top:6px;">—</div>
       </div>
       <div class="hero-lock-overlay">
@@ -3501,12 +3509,25 @@ html.starter-mode .rtab:not([data-tab="overview"])::after { content: ' 🔒'; fo
     </div>
   </section>
 
+  <!-- ===== ASX 200 CHART ===== -->
+  <div class="asx-chart-section reveal">
+    <div class="asx-chart-header">
+      <span class="asx-chart-label">S&amp;P / ASX 200</span>
+      <span class="asx-chart-price" id="asx200-chart-price">—</span>
+      <span class="asx-chart-chg" id="asx200-chart-chg"></span>
+      <span class="asx-chart-range">1 month</span>
+    </div>
+    <div class="asx-chart-canvas-wrap">
+      <canvas id="asx200-chart-canvas"></canvas>
+    </div>
+  </div>
+
   <!-- ===== MARKET PULSE STRIP ===== -->
   <div class="market-pulse-strip card reveal" id="market-pulse">
     <div class="pulse-verdict-wrap">
       <div class="pulse-dot" id="pulse-dot"></div>
       <div>
-        <div class="pulse-verdict" id="pulse-verdict">Loading…</div>
+        <div class="pulse-verdict" id="pulse-verdict">—</div>
         <div class="pulse-sub" id="pulse-sub">Fetching live signals</div>
       </div>
     </div>
@@ -4042,7 +4063,7 @@ html.starter-mode .rtab:not([data-tab="overview"])::after { content: ' 🔒'; fo
           <div class="crypto-sub">BTC/USD</div>
         </div>
         <div class="crypto-price">
-          <div id="live-btc-price" class="cprice mono">Loading…</div>
+          <div id="live-btc-price" class="cprice mono">—</div>
           <div id="live-btc-chg" class="cchange mono">—</div>
         </div>
       </div>
@@ -4053,7 +4074,7 @@ html.starter-mode .rtab:not([data-tab="overview"])::after { content: ' 🔒'; fo
           <div class="crypto-sub">ETH/USD</div>
         </div>
         <div class="crypto-price">
-          <div id="live-eth-price" class="cprice mono">Loading…</div>
+          <div id="live-eth-price" class="cprice mono">—</div>
           <div id="live-eth-chg" class="cchange mono">—</div>
         </div>
       </div>
@@ -4064,7 +4085,7 @@ html.starter-mode .rtab:not([data-tab="overview"])::after { content: ' 🔒'; fo
           <div class="crypto-sub">XAU/USD</div>
         </div>
         <div class="crypto-price">
-          <div id="live-gold-price" class="cprice mono">Loading…</div>
+          <div id="live-gold-price" class="cprice mono">—</div>
           <div id="live-gold-chg" class="cchange mono">—</div>
         </div>
       </div>
@@ -4075,7 +4096,7 @@ html.starter-mode .rtab:not([data-tab="overview"])::after { content: ' 🔒'; fo
           <div class="crypto-sub">CL/USD</div>
         </div>
         <div class="crypto-price">
-          <div id="live-oil-price" class="cprice mono">Loading…</div>
+          <div id="live-oil-price" class="cprice mono">—</div>
           <div id="live-oil-chg" class="cchange mono">—</div>
         </div>
       </div>
@@ -4101,21 +4122,21 @@ html.starter-mode .rtab:not([data-tab="overview"])::after { content: ' 🔒'; fo
     <div class="card reveal">
       <div class="section-label">Global Indices</div>
       <div class="index-grid" id="fmp-indices-grid">
-        <div style="color:var(--sl-muted);font-size:0.72rem;grid-column:span 3;">Loading…</div>
+        <div style="color:var(--sl-muted);font-size:0.72rem;grid-column:span 3;">—</div>
       </div>
     </div>
 
     <div class="card reveal">
       <div class="section-label">AUD Currency Pairs</div>
       <div class="fx-grid" id="fmp-fx-grid">
-        <div style="color:var(--sl-muted);font-size:0.72rem;">Loading…</div>
+        <div style="color:var(--sl-muted);font-size:0.72rem;">—</div>
       </div>
     </div>
 
     <div class="card reveal">
       <div class="section-label">Commodities</div>
       <div class="comm-grid" id="fmp-comm-grid">
-        <div style="color:var(--sl-muted);font-size:0.72rem;">Loading…</div>
+        <div style="color:var(--sl-muted);font-size:0.72rem;">—</div>
       </div>
     </div>
 
@@ -4127,14 +4148,14 @@ html.starter-mode .rtab:not([data-tab="overview"])::after { content: ' 🔒'; fo
     <div class="card reveal">
       <div class="section-label">Economic Calendar — Next 60 Days</div>
       <div class="econ-list" id="fmp-econ-list">
-        <div style="color:var(--sl-muted);font-size:0.72rem;">Loading…</div>
+        <div style="color:var(--sl-muted);font-size:0.72rem;">—</div>
       </div>
     </div>
 
     <div class="card reveal">
       <div class="section-label">Earnings Calendar — Watchlist</div>
       <div class="earn-list" id="fmp-earn-list">
-        <div style="color:var(--sl-muted);font-size:0.72rem;">Loading…</div>
+        <div style="color:var(--sl-muted);font-size:0.72rem;">—</div>
       </div>
     </div>
 
@@ -4146,14 +4167,14 @@ html.starter-mode .rtab:not([data-tab="overview"])::after { content: ' 🔒'; fo
     <div class="card reveal">
       <div class="section-label">Sector Performance (US Proxy)</div>
       <div class="sector-perf-list" id="fmp-sector-list">
-        <div style="color:var(--sl-muted);font-size:0.72rem;">Loading…</div>
+        <div style="color:var(--sl-muted);font-size:0.72rem;">—</div>
       </div>
     </div>
 
     <div class="card reveal">
       <div class="section-label">Analyst Consensus — ASX</div>
       <div class="analyst-grid" id="fmp-analyst-grid">
-        <div style="color:var(--sl-muted);font-size:0.72rem;">Loading…</div>
+        <div style="color:var(--sl-muted);font-size:0.72rem;">—</div>
       </div>
     </div>
 
@@ -4236,11 +4257,11 @@ html.starter-mode .rtab:not([data-tab="overview"])::after { content: ' 🔒'; fo
     <div class="eq-movers-grid">
       <div class="card reveal">
         <div class="section-label">Top Gainers</div>
-        <div id="eq-gainers-list"><div style="color:var(--sl-muted);font-size:0.72rem;">Loading…</div></div>
+        <div id="eq-gainers-list"><div style="color:var(--sl-muted);font-size:0.72rem;">—</div></div>
       </div>
       <div class="card reveal">
         <div class="section-label">Top Losers</div>
-        <div id="eq-losers-list"><div style="color:var(--sl-muted);font-size:0.72rem;">Loading…</div></div>
+        <div id="eq-losers-list"><div style="color:var(--sl-muted);font-size:0.72rem;">—</div></div>
       </div>
     </div>
 
@@ -4278,7 +4299,7 @@ html.starter-mode .rtab:not([data-tab="overview"])::after { content: ' 🔒'; fo
               <th>52W Low</th>
             </tr>
           </thead>
-          <tbody id="eq-stocks-tbody"><tr><td colspan="10" style="color:var(--sl-muted);font-size:0.72rem;text-align:center;padding:20px;">Loading…</td></tr></tbody>
+          <tbody id="eq-stocks-tbody"><tr><td colspan="10" style="color:var(--sl-muted);font-size:0.72rem;text-align:center;padding:20px;">—</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -4288,7 +4309,7 @@ html.starter-mode .rtab:not([data-tab="overview"])::after { content: ' 🔒'; fo
         <div class="section-label">Analyst Consensus — ASX Watchlist</div>
         <div class="section-kicker" id="eq-analyst-kicker">ASX analyst coverage</div>
         <div class="analyst-grid" id="eq-analyst-grid">
-          <div style="color:var(--sl-muted);font-size:0.72rem;">Loading…</div>
+          <div style="color:var(--sl-muted);font-size:0.72rem;">—</div>
         </div>
     </div>
 
@@ -4367,20 +4388,20 @@ html.starter-mode .rtab:not([data-tab="overview"])::after { content: ' 🔒'; fo
       <div class="card reveal">
         <div class="section-label">AUD Currency Pairs</div>
         <div class="fx-grid" id="macro-fx-grid">
-          <div style="color:var(--sl-muted);font-size:0.72rem;">Loading…</div>
+          <div style="color:var(--sl-muted);font-size:0.72rem;">—</div>
         </div>
       </div>
       <div class="card reveal">
         <div class="section-label">Commodities</div>
         <div class="comm-grid" id="macro-comm-grid">
-          <div style="color:var(--sl-muted);font-size:0.72rem;">Loading…</div>
+          <div style="color:var(--sl-muted);font-size:0.72rem;">—</div>
         </div>
       </div>
     </div>
 
     <!-- ── Macro indicators strip ── -->
     <div class="metric-card-grid reveal" id="macro-indicator-grid">
-      <div class="metric-card"><div class="metric-card-label">Indicator</div><div class="metric-card-value">Loading…</div></div>
+      <div class="metric-card"><div class="metric-card-label">Indicator</div><div class="metric-card-value">—</div></div>
     </div>
 
     <!-- ── 2-col: Gold chart | Oil chart ── -->
@@ -4418,13 +4439,13 @@ html.starter-mode .rtab:not([data-tab="overview"])::after { content: ' 🔒'; fo
       <div class="card reveal">
         <div class="section-label">FRED Macro Signals <span id="fred-as-of" style="font-weight:400;font-size:.58rem;color:var(--sl-muted);letter-spacing:0"></span></div>
         <div id="fred-signals-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:.65rem .8rem;margin-top:.5rem">
-          <div style="color:var(--sl-muted);font-size:.72rem;grid-column:span 2">Loading…</div>
+          <div style="color:var(--sl-muted);font-size:.72rem;grid-column:span 2">—</div>
         </div>
       </div>
       <div class="card reveal">
         <div class="section-label">CFTC Commitment of Traders <span style="font-weight:400;font-size:.58rem;color:var(--sl-muted);letter-spacing:0">Managed Money Net Positioning</span></div>
         <div id="cot-grid" style="display:flex;flex-direction:column;gap:.8rem;margin-top:.6rem">
-          <div style="color:var(--sl-muted);font-size:.72rem">Loading…</div>
+          <div style="color:var(--sl-muted);font-size:.72rem">—</div>
         </div>
       </div>
     </div>
@@ -4433,7 +4454,7 @@ html.starter-mode .rtab:not([data-tab="overview"])::after { content: ' 🔒'; fo
     <div class="card reveal">
       <div class="section-label">Global Indices</div>
       <div class="index-grid" id="macro-indices-grid">
-        <div style="color:var(--sl-muted);font-size:0.72rem;grid-column:span 3;">Loading…</div>
+        <div style="color:var(--sl-muted);font-size:0.72rem;grid-column:span 3;">—</div>
       </div>
     </div>
 
@@ -4441,7 +4462,7 @@ html.starter-mode .rtab:not([data-tab="overview"])::after { content: ' 🔒'; fo
     <div class="card reveal">
       <div class="section-label">Economic Calendar — Next 60 Days</div>
       <div class="econ-list" id="macro-econ-list">
-        <div style="color:var(--sl-muted);font-size:0.72rem;">Loading…</div>
+        <div style="color:var(--sl-muted);font-size:0.72rem;">—</div>
       </div>
     </div>
 
@@ -4454,7 +4475,7 @@ html.starter-mode .rtab:not([data-tab="overview"])::after { content: ' 🔒'; fo
       <div class="card reveal">
         <div class="section-label">Recent EPS Surprises</div>
         <div id="earn-surprises-list">
-          <div style="color:var(--sl-muted);font-size:0.72rem;">Loading…</div>
+          <div style="color:var(--sl-muted);font-size:0.72rem;">—</div>
         </div>
       </div>
       <div class="card reveal chart-panel">
@@ -4468,13 +4489,13 @@ html.starter-mode .rtab:not([data-tab="overview"])::after { content: ' 🔒'; fo
       <div class="card reveal">
         <div class="section-label">Earnings Calendar — Watchlist</div>
         <div class="earn-list" id="earn-tab-list">
-          <div style="color:var(--sl-muted);font-size:0.72rem;">Loading…</div>
+          <div style="color:var(--sl-muted);font-size:0.72rem;">—</div>
         </div>
       </div>
       <div class="card reveal">
         <div class="section-label">Analyst Consensus — ASX</div>
         <div class="analyst-grid" id="earn-analyst-grid">
-          <div style="color:var(--sl-muted);font-size:0.72rem;">Loading…</div>
+          <div style="color:var(--sl-muted);font-size:0.72rem;">—</div>
         </div>
       </div>
     </div>
@@ -4532,7 +4553,7 @@ html.starter-mode .rtab:not([data-tab="overview"])::after { content: ' 🔒'; fo
     <div class="card reveal" style="margin-top:14px;">
       <div class="section-label">Live Market News</div>
       <div class="fmp-news-list" id="earn-news-list">
-        <div style="color:var(--sl-muted);font-size:0.72rem;">Loading…</div>
+        <div style="color:var(--sl-muted);font-size:0.72rem;">—</div>
       </div>
     </div>
 
@@ -4546,7 +4567,7 @@ html.starter-mode .rtab:not([data-tab="overview"])::after { content: ' 🔒'; fo
       <div class="card crypto-tab-card card-glow reveal">
         <div class="crypto-tab-tag btc">Bitcoin</div>
         <div class="crypto-tab-symbol">BTC / USD</div>
-        <div class="crypto-big-price" id="ct-btc-price">Loading…</div>
+        <div class="crypto-big-price" id="ct-btc-price">—</div>
         <div class="crypto-big-chg" id="ct-btc-chg">—</div>
         <div class="ct-price-detail">
           <div>24H H: <span id="ct-btc-high">—</span></div>
@@ -4557,7 +4578,7 @@ html.starter-mode .rtab:not([data-tab="overview"])::after { content: ' 🔒'; fo
       <div class="card crypto-tab-card card-glow reveal">
         <div class="crypto-tab-tag eth">Ethereum</div>
         <div class="crypto-tab-symbol">ETH / USD</div>
-        <div class="crypto-big-price" id="ct-eth-price">Loading…</div>
+        <div class="crypto-big-price" id="ct-eth-price">—</div>
         <div class="crypto-big-chg" id="ct-eth-chg">—</div>
         <div class="ct-price-detail">
           <div>24H H: <span id="ct-eth-high">—</span></div>
@@ -4568,7 +4589,7 @@ html.starter-mode .rtab:not([data-tab="overview"])::after { content: ' 🔒'; fo
       <div class="card crypto-tab-card card-glow reveal">
         <div class="crypto-tab-tag sol">Solana</div>
         <div class="crypto-tab-symbol">SOL / USD</div>
-        <div class="crypto-big-price" id="ct-sol-price">Loading…</div>
+        <div class="crypto-big-price" id="ct-sol-price">—</div>
         <div class="crypto-big-chg" id="ct-sol-chg">—</div>
         <div class="ct-price-detail">
           <div>24H H: <span id="ct-sol-high">—</span></div>
@@ -4614,7 +4635,7 @@ html.starter-mode .rtab:not([data-tab="overview"])::after { content: ' 🔒'; fo
     <div class="card reveal" style="margin-bottom:14px;">
       <div class="section-label">Market Depth</div>
       <div class="asset-metric-list" id="ct-asset-metrics">
-        <div style="color:var(--sl-muted);font-size:0.72rem;">Loading…</div>
+        <div style="color:var(--sl-muted);font-size:0.72rem;">—</div>
       </div>
     </div>
 
@@ -5044,7 +5065,7 @@ function buildMovers() {
     if (!container) return;
     const items = DATA.usMovers[key] ?? [];
     if (!items.length) {
-      container.innerHTML = '<div class="mover-list"><div style="font-size:0.72rem;color:var(--sl-muted);padding:8px 0;">Loading…</div></div>';
+      container.innerHTML = '<div class="mover-list"><div style="font-size:0.72rem;color:var(--sl-muted);padding:8px 0;">—</div></div>';
       return;
     }
     container.innerHTML = '<div class="mover-list">' + items.map(m => {
@@ -5727,6 +5748,70 @@ async function fetchLiveQuotes() {
 }
 
 // ===== INIT =====
+async function loadASX200Chart() {
+  const canvas = document.getElementById('asx200-chart-canvas');
+  const priceEl = document.getElementById('asx200-chart-price');
+  const chgEl = document.getElementById('asx200-chart-chg');
+  if (!canvas) return;
+
+  // Size canvas to its CSS size
+  const wrap = canvas.parentElement;
+  canvas.width = wrap.clientWidth || 600;
+  canvas.height = wrap.clientHeight || 88;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+
+  try {
+    const res = await fetch('https://query1.finance.yahoo.com/v8/finance/chart/%5EAXJO?interval=1d&range=1mo');
+    const json = await res.json();
+    const result = json.chart.result[0];
+    const closes = result.indicators.quote[0].close;
+    const points = closes.filter(c => c != null);
+    if (!points.length) throw new Error('no data');
+
+    const min = Math.min(...points);
+    const max = Math.max(...points);
+    const range = max - min || 1;
+    const pad = 6;
+
+    const toY = v => H - pad - ((v - min) / range) * (H - pad * 2);
+    const toX = i => (i / (points.length - 1)) * W;
+
+    // Gradient fill
+    const grad = ctx.createLinearGradient(0, 0, 0, H);
+    grad.addColorStop(0, 'rgba(124,77,255,0.28)');
+    grad.addColorStop(1, 'rgba(124,77,255,0)');
+    ctx.beginPath();
+    points.forEach((v, i) => { i === 0 ? ctx.moveTo(toX(i), toY(v)) : ctx.lineTo(toX(i), toY(v)); });
+    ctx.lineTo(toX(points.length - 1), H);
+    ctx.lineTo(0, H);
+    ctx.closePath();
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // Line
+    ctx.beginPath();
+    points.forEach((v, i) => { i === 0 ? ctx.moveTo(toX(i), toY(v)) : ctx.lineTo(toX(i), toY(v)); });
+    ctx.strokeStyle = 'rgba(168,85,247,0.9)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Stats
+    const latest = points[points.length - 1];
+    const first = points[0];
+    const pct = ((latest - first) / first) * 100;
+    if (priceEl) priceEl.textContent = latest.toLocaleString('en-AU', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    if (chgEl) {
+      chgEl.textContent = (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%  (1M)';
+      chgEl.style.color = pct >= 0 ? '#22c55e' : '#ef4444';
+    }
+  } catch {
+    // hide section silently if data unavailable
+    const sec = canvas.closest('.asx-chart-section');
+    if (sec) sec.style.display = 'none';
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   state.demoMode = isDemoMode();
   if (state.demoMode) activateDemoResearchPreview();
@@ -5759,6 +5844,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('sign-out-btn')?.addEventListener('click', signOut);
   void loadSession();
+  void loadASX200Chart();
   void fetchPortfolioSummary();
   void fetchLiveQuotes();
   void fetchLiveMovers();
