@@ -92,7 +92,7 @@ html.electron-dark td, html.electron-dark th, html.electron-dark li,
 html.electron-dark div:not([class*="gradient"]) { color: inherit; }
 html.electron-dark nav,
 html.electron-dark .nav-wrap { background: rgba(7,5,15,.96) !important; border-bottom-color: rgba(124,77,255,.15) !important; }
-html.electron-dark .nav-tab,
+html.electron-dark .nav-tab { color: #9890b8 !important; }
 html.electron-dark .nav-tab-active { color: #d4c0f0 !important; }
 html.electron-dark .nav-ticker { background: rgba(5,3,12,.97) !important; border-bottom-color: rgba(124,77,255,.1) !important; }
 html.electron-dark .nav-ticker-price,
