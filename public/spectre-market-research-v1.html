@@ -2853,6 +2853,76 @@ h3 { font-size: 1.15rem; }
 }
 .table-blur-mask .upgrade-btn:hover { background: rgba(124,77,255,.28); }
 
+/* ── Starter gate panel ─────────────────────────── */
+.starter-gate-panel {
+  display: none; flex-direction: column; align-items: center; text-align: center;
+  padding: 3rem 1.5rem 4rem; gap: 0;
+}
+html.starter-mode .starter-gate-panel { display: flex; }
+html.starter-mode .research-tab-nav   { display: none !important; }
+html.starter-mode .rtab-panel         { display: none !important; }
+html.starter-mode .market-pulse-strip { display: none !important; }
+html.starter-mode .hero-lock-wrap     { display: none !important; }
+html.starter-mode #starter-banner     { display: none !important; }
+html.starter-mode .demo-preview-banner { display: none !important; }
+.sgp-badge {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: .3rem 1rem; border-radius: 999px; margin-bottom: 1.4rem;
+  border: 1px solid transparent;
+  background: linear-gradient(var(--sl-bg),var(--sl-bg)) padding-box,
+              linear-gradient(90deg,#a855f7,#ff7a30) border-box;
+  font-family: 'DM Mono', monospace; font-size: .58rem; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--sl-muted);
+}
+.sgp-badge::before { content:''; width:5px;height:5px;border-radius:50%;background:linear-gradient(135deg,#a855f7,#ff7a30);flex-shrink:0; }
+.sgp-title {
+  font-size: clamp(1.6rem,4vw,2.4rem); font-weight: 700; line-height: 1.1;
+  letter-spacing: -.02em; color: var(--sl-text); margin-bottom: .7rem;
+}
+.sgp-sub {
+  color: var(--sl-muted); font-size: .9rem; line-height: 1.7;
+  max-width: 480px; margin: 0 auto 2.4rem;
+}
+.sgp-plans {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+  width: 100%; max-width: 520px; text-align: left;
+}
+.sgp-plan {
+  position: relative; overflow: hidden;
+  background: rgba(255,255,255,.04); border: 1px solid rgba(124,77,255,.18);
+  border-radius: 16px; padding: 1.4rem;
+  transition: border-color .2s, box-shadow .2s;
+}
+.sgp-plan::before {
+  content:''; position:absolute; inset:0 0 auto; height:2px;
+  background:linear-gradient(90deg,#a855f7,#d946ef 50%,#ff7a30,transparent 85%);
+}
+.sgp-plan:hover { border-color: rgba(124,77,255,.38); box-shadow: 0 8px 28px rgba(124,77,255,.14); }
+.sgp-tier { font-family:'DM Mono',monospace; font-size:.56rem; letter-spacing:.18em; text-transform:uppercase; color:#a855f7; margin-bottom:.5rem; font-weight:500; }
+.sgp-price { font-size:1.8rem; font-weight:700; color:var(--sl-text); line-height:1; margin-bottom:.1rem; }
+.sgp-price span { font-size:.72rem; color:var(--sl-muted); font-weight:400; }
+.sgp-features { list-style:none; margin:.9rem 0 1.2rem; display:flex; flex-direction:column; gap:.4rem; }
+.sgp-features li { font-size:.78rem; color:var(--sl-muted); display:flex; align-items:flex-start; gap:.5rem; line-height:1.4; }
+.sgp-features li::before {
+  content:''; width:13px;height:13px;margin-top:1px;flex-shrink:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 14 14' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='7' cy='7' r='6.5' fill='%237c4dff' fill-opacity='.12' stroke='%237c4dff' stroke-opacity='.4'/%3E%3Cpath d='M4 7l2 2 4-4' stroke='%237c4dff' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-size:contain;background-repeat:no-repeat;
+}
+.sgp-btn {
+  display:block; text-align:center; text-decoration:none;
+  background:rgba(124,77,255,.15); border:1px solid rgba(124,77,255,.35); border-radius:10px;
+  color:#a855f7; font-size:.82rem; font-weight:700; padding:.65rem 1rem; cursor:pointer;
+  font-family:'Space Grotesk',sans-serif; transition:background .15s,border-color .15s;
+}
+.sgp-btn:hover { background:rgba(124,77,255,.25); border-color:rgba(124,77,255,.55); }
+.sgp-btn-pro {
+  background:linear-gradient(135deg,#7c4dff 0%,#d946ef 50%,#ff7a30 100%);
+  border-color:transparent; color:#fff;
+  box-shadow:0 4px 20px rgba(124,77,255,.3);
+}
+.sgp-btn-pro:hover { filter:brightness(1.08); background:linear-gradient(135deg,#7c4dff 0%,#d946ef 50%,#ff7a30 100%); border-color:transparent; }
+@media(max-width:520px){ .sgp-plans{grid-template-columns:1fr} }
+
 /* ── Data table upgrades ────────────────────────── */
 .data-table th {
   background: rgba(155,93,229,.06) !important;
@@ -3321,6 +3391,35 @@ h3 { font-size: 1.15rem; }
   <div class="starter-banner" id="starter-banner">
     <span class="starter-banner-text">You're on the <strong>Starter plan</strong>. Unlock live macro data, equities deep-dive, earnings, and crypto tabs.</span>
     <button class="starter-banner-cta" onclick="window.location.href='/settings?tab=billing'">Upgrade to Pro →</button>
+  </div>
+
+  <!-- ===== STARTER GATE PANEL ===== -->
+  <div class="starter-gate-panel" id="starter-gate-panel">
+    <div class="sgp-badge">Plus &amp; Pro Feature</div>
+    <h2 class="sgp-title">Unlock the Research Terminal</h2>
+    <p class="sgp-sub">Live equities, macro signals, earnings calendar, and crypto markets — all in one place.</p>
+    <div class="sgp-plans">
+      <div class="sgp-plan">
+        <div class="sgp-tier">Plus</div>
+        <div class="sgp-price">$2.99<span> /mo</span></div>
+        <ul class="sgp-features">
+          <li>Full research terminal</li>
+          <li>20 AI queries / month</li>
+          <li>Price dip alerts</li>
+        </ul>
+        <a href="/settings?tab=billing" class="sgp-btn">Upgrade to Plus</a>
+      </div>
+      <div class="sgp-plan">
+        <div class="sgp-tier">Pro</div>
+        <div class="sgp-price">$9.99<span> /mo</span></div>
+        <ul class="sgp-features">
+          <li>Full research terminal</li>
+          <li>Unlimited AI queries</li>
+          <li>Advanced quant console</li>
+        </ul>
+        <a href="/settings?tab=billing" class="sgp-btn sgp-btn-pro">Upgrade to Pro</a>
+      </div>
+    </div>
   </div>
 
   <!-- ===== RESEARCH TAB NAV ===== -->
@@ -4652,23 +4751,9 @@ function isStarterPlan() {
 
 function applyStarterGating() {
   if (!isStarterPlan()) return;
-
-  // Banner
-  const banner = document.getElementById('starter-banner');
-  if (banner) banner.classList.add('show');
-
-  // Lock tabs (not overview)
-  document.querySelectorAll('.rtab:not([data-tab="overview"])').forEach(tab => {
-    tab.classList.add('rtab-locked');
-    tab.onclick = e => { e.preventDefault(); e.stopImmediatePropagation(); showUpgradeModal(); };
-  });
-
-  // Blur hero cards 4-7 (Gold, BTC, ETH, Oil)
-  document.querySelectorAll('.hero-lock-overlay').forEach(ov => ov.classList.add('show'));
-
-  // Blur stock table after row 5
-  const mask = document.getElementById('table-blur-mask');
-  if (mask) mask.classList.add('show');
+  // Add starter-mode class — CSS hides tabs, panels, pulse strip, locked hero cards
+  // and shows the upgrade gate panel instead
+  document.documentElement.classList.add('starter-mode');
 }
 
 function showUpgradeModal() {
