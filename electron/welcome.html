@@ -184,47 +184,93 @@ h1 {
 .tour-icon { margin-bottom: 20px; }
 
 /* ── product mockups ── */
-.tp { border-radius: 12px; overflow: hidden; width: 100%; height: 200px; position: relative; margin-bottom: 4px; }
+.mock { border-radius: 10px; overflow: hidden; width: 100%; height: 220px; font-family: 'DM Mono', monospace; font-size: 7px; display: flex; flex-direction: column; border: 1px solid rgba(124,77,255,.22); margin-bottom: 6px; }
+.mock-nav { height: 22px; display: flex; align-items: center; padding: 0 8px; gap: 5px; flex-shrink: 0; border-bottom: 1px solid rgba(124,77,255,.14); }
+.mock-logo { font-weight: 800; letter-spacing: .18em; font-size: 6.5px; background: linear-gradient(90deg,#7c4dff,#d946ef,#ff7a30); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.mock-navlink { font-size: 6px; font-family: 'Space Grotesk',sans-serif; font-weight: 600; letter-spacing: .04em; opacity: .45; }
+.mock-navlink.on { opacity: 1; color: #7c4dff; -webkit-text-fill-color: #7c4dff; }
+.mock-sep { flex: 1; }
+.mock-btn { font-size: 5.5px; font-family: 'Space Grotesk',sans-serif; font-weight: 700; border-radius: 999px; padding: 2px 7px; border: 1px solid rgba(124,77,255,.3); }
 
-.tp-analytics { background: #07050f; border: 1px solid rgba(124,77,255,.2); display: flex; flex-direction: column; }
-.tp-analytics .tp-hdr { height: 28px; background: rgba(5,3,12,.97); border-bottom: 1px solid rgba(124,77,255,.14); display: flex; align-items: center; padding: 0 10px; gap: 6px; flex-shrink: 0; }
-.tp-analytics .tp-logo { font-size: 6px; font-weight: 800; letter-spacing: .2em; background: linear-gradient(90deg,#7c4dff,#d946ef); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-.tp-analytics .tp-pill { height: 10px; border-radius: 3px; background: rgba(124,77,255,.2); }
-.tp-analytics .tp-pill.on { background: rgba(168,85,247,.4); width: 22px; }
-.tp-analytics .tp-body { flex: 1; display: flex; }
-.tp-analytics .tp-chart { flex: 1; display: flex; align-items: flex-end; padding: 8px; gap: 3px; }
-.tp-analytics .tp-sidebar { width: 56px; border-left: 1px solid rgba(124,77,255,.1); padding: 6px 5px; display: flex; flex-direction: column; gap: 4px; }
-.tp-analytics .tp-srow { height: 14px; border-radius: 3px; background: rgba(124,77,255,.12); }
-.tp-analytics .tp-srow.sel { background: rgba(124,77,255,.3); }
+/* analytics */
+.mock-analytics { background: #07050f; color: #c8b8f0; }
+.mock-analytics .mock-nav { background: rgba(5,3,12,.97); }
+.mock-analytics .mock-btn { color: #a855f7; }
+.mock-search { background: rgba(124,77,255,.1); border: 1px solid rgba(124,77,255,.22); border-radius: 4px; padding: 2px 6px; font-size: 6px; color: #e4dcff; width: 52px; letter-spacing: .04em; }
+.mock-charttype { display: flex; gap: 2px; }
+.mock-ct { font-size: 5.5px; font-family: 'Space Grotesk',sans-serif; font-weight: 600; padding: 1.5px 4px; border-radius: 3px; color: #9890b8; background: rgba(124,77,255,.08); }
+.mock-ct.on { background: rgba(124,77,255,.28); color: #c084fc; }
+.mock-body { flex: 1; display: flex; overflow: hidden; }
+.mock-chart { flex: 1; position: relative; display: flex; flex-direction: column; }
+.mock-ohlc { display: flex; gap: 6px; padding: 5px 8px 3px; border-bottom: 1px solid rgba(124,77,255,.08); }
+.mock-ohlcitem { font-size: 5.5px; color: #9890b8; }
+.mock-ohlcitem span { color: #e4dcff; }
+.mock-candles { flex: 1; display: flex; align-items: flex-end; padding: 4px 8px 6px; gap: 4px; }
+.mc { display: flex; flex-direction: column; align-items: center; gap: 0; }
+.mw { width: 1px; border-radius: 1px; }
+.mb { width: 6px; border-radius: 1px; }
+.mock-vol { height: 16px; display: flex; align-items: flex-end; padding: 0 8px 2px; gap: 4px; border-top: 1px solid rgba(124,77,255,.06); }
+.mv { width: 6px; border-radius: 1px 1px 0 0; opacity: .4; }
+.mock-sidebar { width: 68px; border-left: 1px solid rgba(124,77,255,.1); padding: 4px 0; display: flex; flex-direction: column; overflow: hidden; }
+.mock-ticker-row { padding: 3px 5px; display: flex; flex-direction: column; gap: 1px; border-bottom: 1px solid rgba(124,77,255,.06); }
+.mock-ticker-row.on { background: rgba(124,77,255,.1); }
+.mock-tsym { font-size: 6px; font-weight: 700; color: #e4dcff; letter-spacing: .04em; }
+.mock-tprice { font-size: 6px; color: #c084fc; }
+.mock-tchg { font-size: 5.5px; }
+.mock-tchg.up { color: #22c55e; }
+.mock-tchg.dn { color: #ef4444; }
 
-.tp-research { background: #ddd6f3; border: 1px solid rgba(124,77,255,.2); display: flex; flex-direction: column; }
-.tp-research .tp-hdr { height: 28px; background: rgba(233,228,246,.97); border-bottom: 1px solid rgba(124,77,255,.14); display: flex; align-items: center; padding: 0 10px; gap: 6px; flex-shrink: 0; }
-.tp-research .tp-logo { font-size: 6px; font-weight: 800; letter-spacing: .2em; background: linear-gradient(90deg,#7c4dff,#d946ef); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-.tp-research .tp-ticker { height: 14px; background: rgba(124,77,255,.1); border-bottom: 1px solid rgba(124,77,255,.1); display: flex; align-items: center; padding: 0 6px; gap: 8px; flex-shrink: 0; }
-.tp-research .tp-tkitem { display: flex; gap: 3px; align-items: center; }
-.tp-research .tp-tksym { width: 14px; height: 5px; border-radius: 2px; background: rgba(124,77,255,.3); }
-.tp-research .tp-tkval { width: 18px; height: 5px; border-radius: 2px; background: rgba(34,197,94,.4); }
-.tp-research .tp-cards { display: grid; grid-template-columns: repeat(4,1fr); gap: 5px; padding: 8px; flex: 1; }
-.tp-research .tp-card { background: rgba(255,255,255,.6); border-radius: 8px; border: 1px solid rgba(124,77,255,.12); padding: 6px; display: flex; flex-direction: column; gap: 3px; }
-.tp-research .tp-clbl { height: 5px; border-radius: 2px; background: rgba(124,77,255,.25); width: 70%; }
-.tp-research .tp-cval { height: 8px; border-radius: 2px; background: rgba(15,13,30,.3); width: 90%; margin-top: 2px; }
-.tp-research .tp-cchg { height: 5px; border-radius: 2px; width: 55%; }
-.tp-research .tp-cchg.up { background: rgba(34,197,94,.5); }
-.tp-research .tp-cchg.dn { background: rgba(239,68,68,.4); }
+/* research */
+.mock-research { background: #ddd6f3; color: #0f0d1e; }
+.mock-research .mock-nav { background: rgba(233,228,246,.97); }
+.mock-research .mock-navlink { color: #0f0d1e; }
+.mock-research .mock-navlink.on { color: #7c4dff; -webkit-text-fill-color: #7c4dff; }
+.mock-ticker-strip { height: 13px; background: rgba(124,77,255,.08); border-bottom: 1px solid rgba(124,77,255,.1); display: flex; align-items: center; padding: 0 6px; gap: 10px; flex-shrink: 0; overflow: hidden; }
+.mock-ts-item { display: flex; gap: 3px; align-items: center; font-size: 5.5px; color: #5e5a78; white-space: nowrap; }
+.mock-ts-item b { color: #0f0d1e; font-weight: 700; }
+.mock-ts-item .up { color: #16a34a; }
+.mock-ts-item .dn { color: #dc2626; }
+.mock-tabs { height: 18px; display: flex; align-items: flex-end; padding: 0 8px; gap: 1px; border-bottom: 1px solid rgba(124,77,255,.15); flex-shrink: 0; background: rgba(233,228,246,.6); }
+.mock-tab { font-size: 6px; font-family: 'Space Grotesk',sans-serif; font-weight: 600; padding: 2px 7px 3px; border-radius: 4px 4px 0 0; color: #5e5a78; }
+.mock-tab.on { background: #ddd6f3; color: #7c4dff; border: 1px solid rgba(124,77,255,.18); border-bottom: none; }
+.mock-hero { display: flex; gap: 5px; padding: 6px 8px; flex-shrink: 0; }
+.mock-hcard { flex: 1; background: rgba(255,255,255,.7); border: 1px solid rgba(124,77,255,.14); border-radius: 7px; padding: 5px 6px; }
+.mock-hlbl { font-size: 5.5px; color: #5e5a78; font-family: 'Space Grotesk',sans-serif; margin-bottom: 2px; }
+.mock-hval { font-size: 9px; font-weight: 700; color: #0f0d1e; letter-spacing: -.01em; }
+.mock-hchg { font-size: 5.5px; margin-top: 1px; }
+.mock-hchg.up { color: #16a34a; }
+.mock-hchg.dn { color: #dc2626; }
+.mock-table { flex: 1; overflow: hidden; }
+.mock-thead { display: flex; padding: 3px 8px; gap: 0; background: rgba(124,77,255,.06); border-bottom: 1px solid rgba(124,77,255,.1); }
+.mock-th { font-size: 5px; color: #9b8fbb; font-family: 'Space Grotesk',sans-serif; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; flex: 1; }
+.mock-th:last-child { text-align: right; }
+.mock-trow { display: flex; padding: 3.5px 8px; border-bottom: 1px solid rgba(124,77,255,.07); align-items: center; }
+.mock-td { flex: 1; font-size: 6px; color: #0f0d1e; }
+.mock-td.sym { font-weight: 700; color: #7c4dff; font-size: 6.5px; }
+.mock-td.right { text-align: right; }
+.mock-td.up { color: #16a34a; text-align: right; }
+.mock-td.dn { color: #dc2626; text-align: right; }
 
-.tp-ai { background: #05030c; border: 1px solid rgba(124,77,255,.2); display: flex; flex-direction: column; }
-.tp-ai .tp-hdr { height: 28px; background: rgba(5,3,12,.97); border-bottom: 1px solid rgba(124,77,255,.14); display: flex; align-items: center; padding: 0 10px; gap: 6px; flex-shrink: 0; }
-.tp-ai .tp-logo { font-size: 6px; font-weight: 800; letter-spacing: .2em; background: linear-gradient(90deg,#7c4dff,#d946ef); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-.tp-ai .tp-body { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 8px; }
-.tp-ai .tp-kpi { background: rgba(255,255,255,.04); border: 1px solid rgba(124,77,255,.12); border-radius: 8px; padding: 6px; display: flex; flex-direction: column; gap: 4px; }
-.tp-ai .tp-klbl { height: 5px; border-radius: 2px; background: rgba(124,77,255,.2); width: 60%; }
-.tp-ai .tp-kval { height: 10px; border-radius: 2px; background: rgba(168,85,247,.35); width: 80%; }
-.tp-ai .tp-kval.up { background: rgba(34,197,94,.4); }
-.tp-ai .tp-chat { background: rgba(124,77,255,.08); border: 1px solid rgba(124,77,255,.15); border-radius: 8px; padding: 7px; display: flex; flex-direction: column; gap: 4px; grid-column: 1/-1; }
-.tp-ai .tp-cmsg { height: 6px; border-radius: 3px; background: rgba(168,85,247,.25); }
-.tp-ai .tp-cmsg.short { width: 65%; }
-.tp-ai .tp-creply { height: 6px; border-radius: 3px; background: rgba(255,255,255,.08); margin-top: 2px; }
-.tp-ai .tp-creply.short { width: 80%; }
+/* dashboard / ai */
+.mock-dash { background: #ddd6f3; color: #0f0d1e; }
+.mock-dash .mock-nav { background: rgba(233,228,246,.97); }
+.mock-dash .mock-navlink { color: #0f0d1e; }
+.mock-dash .mock-navlink.on { color: #7c4dff; -webkit-text-fill-color: #7c4dff; }
+.mock-kpis { display: grid; grid-template-columns: repeat(3,1fr); gap: 5px; padding: 6px 8px; flex-shrink: 0; }
+.mock-kcard { background: rgba(255,255,255,.7); border: 1px solid rgba(124,77,255,.14); border-radius: 7px; padding: 5px 6px; }
+.mock-klbl { font-size: 5px; color: #5e5a78; font-family: 'Space Grotesk',sans-serif; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 2px; }
+.mock-kval { font-size: 9px; font-weight: 700; color: #0f0d1e; letter-spacing: -.01em; }
+.mock-kchg { font-size: 5.5px; margin-top: 1px; }
+.mock-kchg.up { color: #16a34a; }
+.mock-kchg.dn { color: #dc2626; }
+.mock-panels { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 5px; padding: 0 8px 6px; overflow: hidden; }
+.mock-panel { background: rgba(255,255,255,.6); border: 1px solid rgba(124,77,255,.14); border-radius: 7px; padding: 5px 6px; display: flex; flex-direction: column; gap: 3px; overflow: hidden; }
+.mock-ptitle { font-size: 5.5px; font-family: 'Space Grotesk',sans-serif; font-weight: 700; color: #0f0d1e; margin-bottom: 2px; }
+.mock-bubble { border-radius: 5px; padding: 3px 5px; font-size: 5.5px; line-height: 1.4; font-family: 'Space Grotesk',sans-serif; }
+.mock-bubble.user { background: rgba(124,77,255,.12); color: #4c3a7a; align-self: flex-end; max-width: 85%; }
+.mock-bubble.ai { background: rgba(255,255,255,.8); border: 1px solid rgba(124,77,255,.15); color: #1a1530; max-width: 100%; }
+.mock-sparkrow { display: flex; align-items: flex-end; gap: 2px; height: 28px; padding-top: 4px; }
+.mock-bar { flex: 1; border-radius: 2px 2px 0 0; background: linear-gradient(180deg,rgba(124,77,255,.5),rgba(124,77,255,.2)); }
 .tour-title { font-size: 1.2rem; font-weight: 700; color: #f0eaff; margin-bottom: 10px; }
 .tour-body { font-size: .78rem; color: #6b6490; line-height: 1.7; margin-bottom: 32px; max-width: 340px; margin-left: auto; margin-right: auto; }
 .tour-dots { display: flex; gap: 8px; justify-content: center; margin-bottom: 28px; }
@@ -371,61 +417,147 @@ function pick(t) {
 
 const TOUR = [
   {
-    preview: `<div class="tp tp-analytics">
-      <div class="tp-hdr"><span class="tp-logo">SPECTRE</span><div class="tp-pill on" style="width:28px"></div><div class="tp-pill" style="width:18px"></div><div class="tp-pill" style="width:22px"></div></div>
-      <div class="tp-body">
-        <div class="tp-chart">
-          <div class="p-candle"><div class="p-wick" style="height:8px;background:#ef4444"></div><div class="p-body" style="height:14px;background:#ef4444"></div><div class="p-wick" style="height:5px;background:#ef4444"></div></div>
-          <div class="p-candle"><div class="p-wick" style="height:6px;background:#22c55e"></div><div class="p-body" style="height:20px;background:#22c55e"></div><div class="p-wick" style="height:4px;background:#22c55e"></div></div>
-          <div class="p-candle"><div class="p-wick" style="height:5px;background:#22c55e"></div><div class="p-body" style="height:16px;background:#22c55e"></div><div class="p-wick" style="height:6px;background:#22c55e"></div></div>
-          <div class="p-candle"><div class="p-wick" style="height:4px;background:#ef4444"></div><div class="p-body" style="height:10px;background:#ef4444"></div><div class="p-wick" style="height:8px;background:#ef4444"></div></div>
-          <div class="p-candle"><div class="p-wick" style="height:7px;background:#22c55e"></div><div class="p-body" style="height:28px;background:#22c55e"></div><div class="p-wick" style="height:3px;background:#22c55e"></div></div>
-          <div class="p-candle"><div class="p-wick" style="height:4px;background:#22c55e"></div><div class="p-body" style="height:18px;background:#22c55e"></div><div class="p-wick" style="height:5px;background:#22c55e"></div></div>
-          <div class="p-candle"><div class="p-wick" style="height:9px;background:#ef4444"></div><div class="p-body" style="height:12px;background:#ef4444"></div><div class="p-wick" style="height:4px;background:#ef4444"></div></div>
-          <div class="p-candle"><div class="p-wick" style="height:3px;background:#22c55e"></div><div class="p-body" style="height:32px;background:#22c55e"></div><div class="p-wick" style="height:5px;background:#22c55e"></div></div>
+    preview: `<div class="mock mock-analytics">
+      <div class="mock-nav">
+        <span class="mock-logo">SPECTRE</span>
+        <div class="mock-search">BHP.AX</div>
+        <div class="mock-charttype">
+          <span class="mock-ct on">Candle</span><span class="mock-ct">OHLC</span><span class="mock-ct">Line</span>
         </div>
-        <div class="tp-sidebar"><div class="tp-srow sel"></div><div class="tp-srow"></div><div class="tp-srow"></div><div class="tp-srow"></div><div class="tp-srow"></div></div>
+        <div class="mock-sep"></div>
+        <div class="mock-charttype">
+          <span class="mock-ct on">1D</span><span class="mock-ct">1W</span><span class="mock-ct">1M</span><span class="mock-ct">3M</span>
+        </div>
+      </div>
+      <div class="mock-body">
+        <div class="mock-chart">
+          <div class="mock-ohlc">
+            <div class="mock-ohlcitem">O <span>45.12</span></div>
+            <div class="mock-ohlcitem">H <span>46.38</span></div>
+            <div class="mock-ohlcitem">L <span>44.90</span></div>
+            <div class="mock-ohlcitem">C <span style="color:#22c55e">45.82</span></div>
+            <div class="mock-ohlcitem" style="margin-left:4px">Vol <span>4.2M</span></div>
+          </div>
+          <div class="mock-candles">
+            <div class="mc"><div class="mw" style="height:9px;background:#ef4444"></div><div class="mb" style="height:13px;background:#ef4444"></div><div class="mw" style="height:5px;background:#ef4444"></div></div>
+            <div class="mc"><div class="mw" style="height:5px;background:#22c55e"></div><div class="mb" style="height:18px;background:#22c55e"></div><div class="mw" style="height:4px;background:#22c55e"></div></div>
+            <div class="mc"><div class="mw" style="height:4px;background:#22c55e"></div><div class="mb" style="height:22px;background:#22c55e"></div><div class="mw" style="height:6px;background:#22c55e"></div></div>
+            <div class="mc"><div class="mw" style="height:7px;background:#ef4444"></div><div class="mb" style="height:11px;background:#ef4444"></div><div class="mw" style="height:8px;background:#ef4444"></div></div>
+            <div class="mc"><div class="mw" style="height:4px;background:#22c55e"></div><div class="mb" style="height:28px;background:#22c55e"></div><div class="mw" style="height:3px;background:#22c55e"></div></div>
+            <div class="mc"><div class="mw" style="height:6px;background:#ef4444"></div><div class="mb" style="height:14px;background:#ef4444"></div><div class="mw" style="height:5px;background:#ef4444"></div></div>
+            <div class="mc"><div class="mw" style="height:3px;background:#22c55e"></div><div class="mb" style="height:32px;background:#22c55e"></div><div class="mw" style="height:4px;background:#22c55e"></div></div>
+            <div class="mc"><div class="mw" style="height:5px;background:#22c55e"></div><div class="mb" style="height:20px;background:#22c55e"></div><div class="mw" style="height:3px;background:#22c55e"></div></div>
+            <div class="mc"><div class="mw" style="height:8px;background:#ef4444"></div><div class="mb" style="height:15px;background:#ef4444"></div><div class="mw" style="height:6px;background:#ef4444"></div></div>
+            <div class="mc"><div class="mw" style="height:4px;background:#22c55e"></div><div class="mb" style="height:26px;background:#22c55e"></div><div class="mw" style="height:5px;background:#22c55e"></div></div>
+          </div>
+          <div class="mock-vol">
+            <div class="mv" style="height:8px;background:#ef4444"></div>
+            <div class="mv" style="height:11px;background:#22c55e"></div>
+            <div class="mv" style="height:13px;background:#22c55e"></div>
+            <div class="mv" style="height:7px;background:#ef4444"></div>
+            <div class="mv" style="height:14px;background:#22c55e"></div>
+            <div class="mv" style="height:9px;background:#ef4444"></div>
+            <div class="mv" style="height:16px;background:#22c55e"></div>
+            <div class="mv" style="height:12px;background:#22c55e"></div>
+            <div class="mv" style="height:8px;background:#ef4444"></div>
+            <div class="mv" style="height:10px;background:#22c55e"></div>
+          </div>
+        </div>
+        <div class="mock-sidebar">
+          <div class="mock-ticker-row on"><div class="mock-tsym">BHP.AX</div><div class="mock-tprice">45.82</div><div class="mock-tchg up">+1.24%</div></div>
+          <div class="mock-ticker-row"><div class="mock-tsym">CBA.AX</div><div class="mock-tprice">118.40</div><div class="mock-tchg dn">-0.31%</div></div>
+          <div class="mock-ticker-row"><div class="mock-tsym">CSL.AX</div><div class="mock-tprice">287.10</div><div class="mock-tchg up">+0.87%</div></div>
+          <div class="mock-ticker-row"><div class="mock-tsym">NAB.AX</div><div class="mock-tprice">34.15</div><div class="mock-tchg dn">-0.55%</div></div>
+          <div class="mock-ticker-row"><div class="mock-tsym">WBC.AX</div><div class="mock-tprice">28.62</div><div class="mock-tchg up">+0.42%</div></div>
+          <div class="mock-ticker-row"><div class="mock-tsym">RIO.AX</div><div class="mock-tprice">122.30</div><div class="mock-tchg up">+1.10%</div></div>
+        </div>
       </div>
     </div>`,
     title: 'Bloomberg-style charts',
-    body: 'Zoom, pan, and switch between Candle, OHLC, Line and Area views for any ASX stock, crypto, or ETF. Full portfolio and watchlist.',
+    body: 'Candlestick, OHLC, Line & Area views for any ASX stock, crypto, or ETF — with volume bars, OHLC stats, and a live watchlist sidebar.',
   },
   {
-    preview: `<div class="tp tp-research">
-      <div class="tp-hdr"><span class="tp-logo">SPECTRE</span><div class="tp-pill on" style="width:28px;background:rgba(124,77,255,.4)"></div><div class="tp-pill" style="width:20px;background:rgba(15,13,30,.15)"></div><div class="tp-pill" style="width:24px;background:rgba(15,13,30,.15)"></div></div>
-      <div class="tp-ticker">
-        <div class="tp-tkitem"><div class="tp-tksym"></div><div class="tp-tkval"></div></div>
-        <div class="tp-tkitem"><div class="tp-tksym"></div><div class="tp-tkval" style="background:rgba(239,68,68,.4)"></div></div>
-        <div class="tp-tkitem"><div class="tp-tksym"></div><div class="tp-tkval"></div></div>
-        <div class="tp-tkitem"><div class="tp-tksym"></div><div class="tp-tkval" style="background:rgba(239,68,68,.4)"></div></div>
+    preview: `<div class="mock mock-research">
+      <div class="mock-nav">
+        <span class="mock-logo">SPECTRE</span>
+        <div class="mock-sep"></div>
+        <span class="mock-navlink">Dashboard</span>
+        <span class="mock-navlink">Analytics</span>
+        <span class="mock-navlink on">Research</span>
+        <span class="mock-navlink">Settings</span>
       </div>
-      <div class="tp-cards">
-        <div class="tp-card"><div class="tp-clbl"></div><div class="tp-cval"></div><div class="tp-cchg up"></div></div>
-        <div class="tp-card"><div class="tp-clbl"></div><div class="tp-cval"></div><div class="tp-cchg dn"></div></div>
-        <div class="tp-card"><div class="tp-clbl"></div><div class="tp-cval"></div><div class="tp-cchg up"></div></div>
-        <div class="tp-card"><div class="tp-clbl"></div><div class="tp-cval"></div><div class="tp-cchg up"></div></div>
+      <div class="mock-ticker-strip">
+        <div class="mock-ts-item">ASX 200 <b>8,247</b> <span class="up">+0.84%</span></div>
+        <div class="mock-ts-item">AUD/USD <b>0.6532</b> <span class="up">+0.21%</span></div>
+        <div class="mock-ts-item">VIX <b>14.2</b> <span class="dn">-3.4%</span></div>
+        <div class="mock-ts-item">BTC <b>67,420</b> <span class="up">+2.1%</span></div>
+        <div class="mock-ts-item">Gold <b>2,318</b> <span class="up">+0.6%</span></div>
+      </div>
+      <div class="mock-tabs">
+        <span class="mock-tab on">Overview</span>
+        <span class="mock-tab">Equities</span>
+        <span class="mock-tab">Macro</span>
+        <span class="mock-tab">Earnings</span>
+        <span class="mock-tab">Crypto</span>
+      </div>
+      <div class="mock-hero">
+        <div class="mock-hcard"><div class="mock-hlbl">S&amp;P/ASX 200</div><div class="mock-hval">8,247</div><div class="mock-hchg up">▲ +0.84%</div></div>
+        <div class="mock-hcard"><div class="mock-hlbl">AUD / USD</div><div class="mock-hval">0.6532</div><div class="mock-hchg up">▲ +0.21%</div></div>
+        <div class="mock-hcard"><div class="mock-hlbl">CBOE VIX</div><div class="mock-hval">14.2</div><div class="mock-hchg" style="color:#5e5a78">● Low risk</div></div>
+      </div>
+      <div class="mock-table">
+        <div class="mock-thead"><span class="mock-th">SYM</span><span class="mock-th">NAME</span><span class="mock-th">PRICE</span><span class="mock-th">CHG</span></div>
+        <div class="mock-trow"><span class="mock-td sym">BHP</span><span class="mock-td">BHP Group</span><span class="mock-td right">45.82</span><span class="mock-td up">+1.24%</span></div>
+        <div class="mock-trow"><span class="mock-td sym">CBA</span><span class="mock-td">CommBank</span><span class="mock-td right">118.40</span><span class="mock-td dn">-0.31%</span></div>
+        <div class="mock-trow"><span class="mock-td sym">CSL</span><span class="mock-td">CSL Limited</span><span class="mock-td right">287.10</span><span class="mock-td up">+0.87%</span></div>
       </div>
     </div>`,
-    title: 'Live market research',
-    body: 'Real-time ASX 200, macro signals, sector heatmap, earnings calendar, and US market movers — all in one terminal view.',
+    title: 'Live research terminal',
+    body: 'ASX 200, AUD/USD, VIX, macro signals, earnings calendar, and crypto — all live in one terminal with five data tabs.',
   },
   {
-    preview: `<div class="tp tp-ai">
-      <div class="tp-hdr"><span class="tp-logo">SPECTRE</span><div class="tp-pill on" style="width:28px;background:rgba(124,77,255,.4)"></div><div class="tp-pill" style="width:20px"></div></div>
-      <div class="tp-body">
-        <div class="tp-kpi"><div class="tp-klbl"></div><div class="tp-kval up"></div></div>
-        <div class="tp-kpi"><div class="tp-klbl"></div><div class="tp-kval"></div></div>
-        <div class="tp-kpi"><div class="tp-klbl"></div><div class="tp-kval up"></div></div>
-        <div class="tp-kpi"><div class="tp-klbl"></div><div class="tp-kval"></div></div>
-        <div class="tp-chat">
-          <div class="tp-cmsg"></div><div class="tp-cmsg short"></div>
-          <div class="tp-creply"></div><div class="tp-creply short"></div>
-          <div class="tp-cmsg" style="width:55%;margin-top:4px"></div>
+    preview: `<div class="mock mock-dash">
+      <div class="mock-nav">
+        <span class="mock-logo">SPECTRE</span>
+        <div class="mock-sep"></div>
+        <span class="mock-navlink on">Dashboard</span>
+        <span class="mock-navlink">Analytics</span>
+        <span class="mock-navlink">Research</span>
+        <span class="mock-navlink">Settings</span>
+        <span class="mock-btn">Sign out</span>
+      </div>
+      <div class="mock-kpis">
+        <div class="mock-kcard"><div class="mock-klbl">Portfolio Value</div><div class="mock-kval">$24,850</div><div class="mock-kchg up">▲ +$342 today</div></div>
+        <div class="mock-kcard"><div class="mock-klbl">Total Return</div><div class="mock-kval">+18.4%</div><div class="mock-kchg up">▲ Since inception</div></div>
+        <div class="mock-kcard"><div class="mock-klbl">Risk Score</div><div class="mock-kval">6.2<span style="font-size:6px;font-weight:400;color:#5e5a78"> /10</span></div><div class="mock-kchg" style="color:#d97706">● Moderate</div></div>
+      </div>
+      <div class="mock-panels">
+        <div class="mock-panel" style="gap:4px">
+          <div class="mock-ptitle">Ask AI about your portfolio</div>
+          <div class="mock-bubble user">What's my biggest risk right now?</div>
+          <div class="mock-bubble ai">Your portfolio has 38% in financials — above the benchmark. BHP is your top single-stock risk at 14% weight.</div>
+        </div>
+        <div class="mock-panel">
+          <div class="mock-ptitle">Holdings by sector</div>
+          <div class="mock-sparkrow">
+            <div class="mock-bar" style="height:80%;background:linear-gradient(180deg,rgba(124,77,255,.6),rgba(124,77,255,.2))"></div>
+            <div class="mock-bar" style="height:55%"></div>
+            <div class="mock-bar" style="height:40%"></div>
+            <div class="mock-bar" style="height:65%"></div>
+            <div class="mock-bar" style="height:30%"></div>
+            <div class="mock-bar" style="height:50%"></div>
+            <div class="mock-bar" style="height:45%"></div>
+          </div>
+          <div style="display:flex;gap:4px;margin-top:3px;flex-wrap:wrap">
+            <span style="font-size:5px;color:#5e5a78">Financials 38%</span>
+            <span style="font-size:5px;color:#5e5a78">Materials 22%</span>
+            <span style="font-size:5px;color:#5e5a78">Healthcare 15%</span>
+          </div>
         </div>
       </div>
     </div>`,
     title: 'AI grounded in your data',
-    body: 'Ask your portfolio anything. The AI is connected to your live holdings, P&L, and risk metrics — not generic market chat.',
+    body: 'Ask your portfolio anything — risk concentration, P&L breakdown, rebalancing ideas. The AI reads your live holdings, not generic market data.',
   },
 ];
 let tourStep = 0;
