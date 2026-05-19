@@ -65,14 +65,19 @@ const DESKTOP_CSS = `
 // ─── Analytics tab injection ──────────────────────────────────────────────────
 const ANALYTICS_TAB_JS = `
 (function () {
-  if (document.getElementById('__sp-at')) return;
   if (location.href.includes('spectre-desktop-analytics') || location.href.includes('/welcome')) return;
-  var tabs = document.querySelector('.nav-tabs');
-  if (!tabs) return;
-  var a = document.createElement('a');
-  a.id = '__sp-at'; a.href = '${ANALYTICS_URL}'; a.className = 'nav-tab';
-  a.textContent = 'ANALYTICS'; a.style.cssText = 'text-decoration:none;cursor:pointer;';
-  tabs.appendChild(a);
+  function inject() {
+    if (document.getElementById('__sp-at')) return true;
+    var tabs = document.querySelector('.nav-tab-group');
+    if (!tabs) return false;
+    var a = document.createElement('a');
+    a.id = '__sp-at'; a.href = '${ANALYTICS_URL}'; a.className = 'nav-tab-link';
+    a.textContent = 'Analytics'; a.style.cssText = 'text-decoration:none;cursor:pointer;';
+    tabs.appendChild(a);
+    return true;
+  }
+  if (inject()) return;
+  var n = 0, t = setInterval(function() { if (inject() || ++n > 15) clearInterval(t); }, 200);
 })();`;
 
 // ─── Window ──────────────────────────────────────────────────────────────────
@@ -106,7 +111,10 @@ function createWindow() {
   win.webContents.on('did-finish-load', () => {
     if (savedZoom !== 1) win.webContents.setZoomFactor(savedZoom);
     const url = win.webContents.getURL();
-    if (url.startsWith(PROD_URL) && !url.includes('/welcome')) {
+    const isWebApp = url.startsWith(PROD_URL)
+      && !url.includes('/welcome')
+      && !url.includes('spectre-desktop-analytics');
+    if (isWebApp) {
       win.webContents.insertCSS(DESKTOP_CSS).catch(() => {});
       win.webContents.executeJavaScript(ANALYTICS_TAB_JS).catch(() => {});
     }
@@ -117,8 +125,8 @@ function createWindow() {
     win.webContents.setZoomFactor(next); saveZoom(next);
   });
 
-  win.webContents.on('did-fail-load', (_, code) => {
-    if (code === -3) return;
+  win.webContents.on('did-fail-load', (_, code, _desc, _url, isMainFrame) => {
+    if (!isMainFrame || code === -3) return;
     win.loadFile(path.join(__dirname, 'error.html'));
   });
 

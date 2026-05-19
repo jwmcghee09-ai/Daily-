@@ -4644,8 +4644,10 @@ function planLabel(user) {
 }
 
 function isStarterPlan() {
-  const tier = (state.sessionUser?.planTier || '').toLowerCase();
-  return tier === 'starter' || tier === 'free' || tier === 'none';
+  if (!state.sessionUser) return false;
+  if (state.sessionUser.proEnabled) return false;
+  const tier = (state.sessionUser.planTier || '').toLowerCase();
+  return !tier || tier === 'starter' || tier === 'free' || tier === 'none';
 }
 
 function applyStarterGating() {

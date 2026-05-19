@@ -352,7 +352,7 @@ html, body { height:100%; background:var(--bg); color:var(--text); font-family:v
 
       const candles=[], vols=[];
       for (let i=0; i<ts.length; i++) {
-        if (q.open[i]==null||q.close[i]==null) continue;
+        if (q.open[i]==null||q.close[i]==null||q.high[i]==null||q.low[i]==null) continue;
         const c={ time:ts[i], open:+q.open[i].toFixed(4), high:+q.high[i].toFixed(4), low:+q.low[i].toFixed(4), close:+q.close[i].toFixed(4) };
         candles.push(c);
         vols.push({ time:ts[i], value:q.volume[i]||0, color:c.close>=c.open?'rgba(34,197,94,.35)':'rgba(239,68,68,.3)' });
