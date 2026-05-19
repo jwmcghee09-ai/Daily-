@@ -21,6 +21,7 @@ import { captureMonitoringException } from "@/lib/monitoring";
 import {
   isEmailDeliveryConfigured,
   sendAccountVerificationEmail,
+  sendCheckoutWelcomeEmail,
   sendPaymentFailedEmail,
 } from "@/lib/mailer";
 import { getStripeClient, getStripeWebhookSecret } from "@/lib/stripe";
@@ -153,7 +154,8 @@ async function handleStripeEvent(event: Stripe.Event): Promise<void> {
         markWebhookEventProcessed(event.id, event.type);
       });
 
-      await sendVerificationAfterCheckout(checkoutEmail);
+      const checkoutPlan = sanitizeMaybeString(session.metadata?.plan) ?? "starter";
+      await sendVerificationAfterCheckout(checkoutEmail, checkoutPlan);
       return;
     }
 
@@ -223,13 +225,20 @@ async function handleStripeEvent(event: Stripe.Event): Promise<void> {
   }
 }
 
-async function sendVerificationAfterCheckout(email: string | null): Promise<void> {
+async function sendVerificationAfterCheckout(email: string | null, plan: string): Promise<void> {
   if (!email || !isEmailDeliveryConfigured()) {
     return;
   }
 
   const user = findAuthUserByEmail(email);
-  if (!user || user.emailVerifiedAt) {
+
+  if (!user) {
+    // Guest checkout — no account exists yet. Send a welcome email prompting them to register.
+    await sendCheckoutWelcomeEmail({ toEmail: email, plan });
+    return;
+  }
+
+  if (user.emailVerifiedAt) {
     return;
   }
 

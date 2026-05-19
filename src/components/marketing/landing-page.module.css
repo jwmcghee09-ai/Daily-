@@ -1,18 +1,18 @@
 .page {
-  --bg: #05050a;
-  --surface: #0b0a14;
-  --surface2: #100f1e;
-  --surface3: rgba(255, 255, 255, 0.025);
-  --border: rgba(255, 255, 255, 0.07);
-  --borderStrong: rgba(255, 255, 255, 0.13);
-  --text: #f0eeff;
-  --muted: #8a8098;
-  --accent: #a855f7;
+  --bg: #f3f1fb;
+  --surface: #e8e5f8;
+  --surface2: #ddd9f5;
+  --surface3: rgba(100, 80, 200, 0.05);
+  --border: rgba(100, 80, 200, 0.13);
+  --borderStrong: rgba(100, 80, 200, 0.22);
+  --text: #0f0d1e;
+  --muted: #5e5a78;
+  --accent: #7c4dff;
   --accent2: #ff7a30;
-  --accentDim: rgba(168, 85, 247, 0.12);
+  --accentDim: rgba(124, 77, 255, 0.10);
   --accent2Dim: rgba(255, 122, 48, 0.10);
-  --danger: #f87171;
-  --dangerDim: rgba(248, 113, 113, 0.10);
+  --danger: #dc2626;
+  --dangerDim: rgba(220, 38, 38, 0.09);
   --radius: 14px;
   --radiusLg: 22px;
   --navHeight: 56px;
@@ -21,8 +21,9 @@
   min-height: 100vh;
   color: var(--text);
   background:
-    radial-gradient(ellipse 80% 40% at 50% -5%, rgba(168, 85, 247, 0.11) 0%, transparent 100%),
-    #05050a;
+    radial-gradient(ellipse 70% 50% at 50% -10%, rgba(124, 77, 255, 0.07) 0%, transparent 100%),
+    radial-gradient(ellipse 40% 60% at 100% 80%, rgba(255, 122, 48, 0.05) 0%, transparent 60%),
+    #f3f1fb;
   font-family: var(--font-geist-sans), "Avenir Next", sans-serif;
 }
 
@@ -37,8 +38,8 @@
   z-index: 50;
   height: calc(var(--navHeight) + var(--safeTop));
   padding-top: var(--safeTop);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  background: rgba(5, 5, 10, 0.85);
+  border-bottom: 1px solid var(--border);
+  background: rgba(243, 241, 251, 0.94);
   backdrop-filter: blur(28px) saturate(1.4);
   -webkit-backdrop-filter: blur(28px) saturate(1.4);
   transition: height 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
@@ -46,8 +47,8 @@
 
 .navScrolled {
   height: 48px;
-  background: rgba(5, 5, 10, 0.96);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05), 0 8px 32px rgba(0, 0, 0, 0.4);
+  background: rgba(235, 232, 248, 0.97);
+  box-shadow: 0 1px 0 var(--border), 0 8px 32px rgba(100, 80, 200, 0.08);
 }
 
 .navInner {
@@ -189,8 +190,8 @@
   z-index: 45;
   overflow: hidden;
   height: var(--tickerHeight);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  background: rgba(8, 7, 14, 0.95);
+  border-bottom: 1px solid var(--border);
+  background: rgba(240, 238, 251, 0.92);
 }
 
 .ticker::before,
@@ -273,7 +274,7 @@
   content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 50% 30%, rgba(5, 5, 10, 0) 0%, rgba(5, 5, 10, 0.25) 55%, rgba(5, 5, 10, 0.88) 100%);
+  background: radial-gradient(circle at 50% 30%, rgba(243, 241, 251, 0) 0%, rgba(243, 241, 251, 0.08) 55%, rgba(243, 241, 251, 0.22) 100%);
   pointer-events: none;
 }
 
@@ -868,7 +869,7 @@
   height: 8px;
   overflow: hidden;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.08);
 }
 
 .metricFill,
@@ -908,7 +909,7 @@
 }
 
 .chartAxis {
-  stroke: rgba(255, 255, 255, 0.12);
+  stroke: rgba(0, 0, 0, 0.12);
   stroke-width: 1;
 }
 
@@ -1163,7 +1164,7 @@
   padding: 14px 16px;
   border: 1px solid var(--borderStrong);
   border-radius: 14px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(168, 85, 247, 0.05));
+  background: linear-gradient(180deg, rgba(100, 80, 200, 0.04), rgba(168, 85, 247, 0.07));
 }
 
 .planResearchCallout strong {
@@ -1268,7 +1269,7 @@
 }
 
 .faqButton:hover {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(100, 80, 200, 0.04);
 }
 
 .faqChevron {
@@ -1309,8 +1310,8 @@
 
 .ctaSection {
   padding: 100px 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
   background:
     radial-gradient(ellipse at 40% 50%, rgba(168, 85, 247, 0.05) 0%, transparent 55%),
     radial-gradient(ellipse at 60% 50%, rgba(255, 122, 48, 0.04) 0%, transparent 55%);
@@ -1425,6 +1426,34 @@
 .sectionTitle.visible,
 .sectionSub.visible {
   transition-duration: 0.8s;
+}
+
+/* ─── Dark panel cascade — keep these panels dark on the light page ─── */
+.dashboardCard,
+.proPanel,
+.ctaPanel,
+.aiTeaser,
+.aiConsoleRevealInner {
+  --text: #f0eeff;
+  --muted: #9890b8;
+  --muted2: #c0bcd8;
+  --border: rgba(255, 255, 255, 0.08);
+  --borderStrong: rgba(255, 255, 255, 0.14);
+  --surface: rgba(255, 255, 255, 0.04);
+  --bg: rgba(8, 7, 16, 0.98);
+  color: var(--text);
+}
+
+/* Metric/progress tracks inside dark panels need white-tinted bg */
+.dashboardCard .metricTrack,
+.dashboardCard .concentrationTrack,
+.dashboardCard .moverTrack {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+/* SVG chart axis lines inside dark dashboard card */
+.dashboardCard .chartAxis {
+  stroke: rgba(255, 255, 255, 0.12);
 }
 
 @keyframes ticker {
@@ -1878,8 +1907,8 @@
   background: var(--bg);
   overflow: hidden;
   box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.04) inset,
-    0 24px 60px rgba(0, 0, 0, 0.5);
+    0 0 0 1px var(--borderStrong) inset,
+    0 24px 60px rgba(100, 80, 200, 0.1);
 }
 
 .previewHeader {
@@ -1888,7 +1917,7 @@
   justify-content: space-between;
   padding: 13px 18px;
   border-bottom: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(100, 80, 200, 0.03);
 }
 
 .previewTitle {
@@ -1971,7 +2000,7 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(100, 80, 200, 0.03);
 }
 
 .previewTableRow {
@@ -2062,9 +2091,7 @@
     grid-template-rows: minmax(0, 1.05fr) minmax(0, 0.95fr);
     border-top: 1px solid var(--border);
     border-bottom: 1px solid var(--border);
-    background:
-      linear-gradient(180deg, rgba(13, 10, 20, 0.96), rgba(7, 6, 12, 0.98)),
-      var(--bg);
+    background: var(--bg);
   }
 
   .stickyLeft {

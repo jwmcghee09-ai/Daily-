@@ -90,6 +90,7 @@ interface HoldingRiskRow {
 
 interface YahooChartMeta {
   regularMarketPrice?: number;
+  regularMarketOpen?: number;
   previousClose?: number;
   chartPreviousClose?: number;
 }
@@ -120,6 +121,7 @@ interface YahooChartResponse {
 interface AsxQuoteData {
   price: number | null;
   prevClose: number | null;
+  openPrice: number | null;
 }
 
 interface DatedPricePoint {
@@ -424,6 +426,17 @@ function initSchema(db: DatabaseSync): void {
   if (!hasEmailVerifiedAtColumn) {
     db.exec("ALTER TABLE users ADD COLUMN email_verified_at TEXT;");
     db.exec("UPDATE users SET email_verified_at = created_at WHERE email_verified_at IS NULL;");
+  }
+
+  // One-time migration: reset session_open to 0 so that the next price refresh writes the
+  // actual market open price from Yahoo Finance (regularMarketOpen) instead of prevClose.
+  const hasSessionOpenReset = db
+    .prepare("SELECT value FROM meta WHERE key = 'migration_session_open_reset_v1'")
+    .get() as { value: string } | undefined;
+
+  if (!hasSessionOpenReset) {
+    db.exec("UPDATE holdings SET session_open = 0;");
+    db.exec("INSERT OR IGNORE INTO meta (key, value) VALUES ('migration_session_open_reset_v1', '1');");
   }
 
   db.exec(`
@@ -844,10 +857,12 @@ function toSydneyDateKey(date: Date): string {
 }
 
 function resetSessionMoversForUserDate(db: DatabaseSync, userId: string, sessionDate: string): number {
+  // Set session_open = 0 (sentinel) on date rollover so the first price update of the new day
+  // can write the actual market open price from Yahoo Finance.
   const result = db.prepare(`
     UPDATE holdings
     SET
-      session_open = price,
+      session_open = 0,
       session_date = ?
     WHERE id LIKE ? AND price > 0 AND COALESCE(session_date, '') <> ?
   `).run(sessionDate, userLikePattern(userId), sessionDate) as { changes?: number };
@@ -925,6 +940,7 @@ function detectBullionMetal(holding: { name: string; ticker: string; sector: str
 
 function extractAsxQuote(result: YahooChartResult | undefined): AsxQuoteData {
   const regular = sanitizeNumber(result?.meta?.regularMarketPrice, Number.NaN);
+  const marketOpen = sanitizeNumber(result?.meta?.regularMarketOpen, Number.NaN);
 
   const closes = result?.indicators?.quote?.[0]?.close ?? [];
   const validCloses = closes
@@ -945,6 +961,7 @@ function extractAsxQuote(result: YahooChartResult | undefined): AsxQuoteData {
         : Number.isFinite(chartPrevClose) && chartPrevClose > 0
           ? chartPrevClose
           : seriesPrevClose,
+    openPrice: Number.isFinite(marketOpen) && marketOpen > 0 ? marketOpen : null,
   };
 }
 
@@ -991,8 +1008,10 @@ async function fetchBullionSpotFromYahoo(metal: "gold" | "silver"): Promise<AsxQ
 
   const commodityPrice = sanitizeNumber(commodityQuote?.price, Number.NaN);
   const commodityPrevClose = sanitizeNumber(commodityQuote?.prevClose, commodityPrice);
+  const commodityOpenPrice = sanitizeNumber(commodityQuote?.openPrice, Number.NaN);
   const audUsd = sanitizeNumber(audUsdQuote?.price, Number.NaN);
   const audUsdPrevClose = sanitizeNumber(audUsdQuote?.prevClose, audUsd);
+  const audUsdOpenPrice = sanitizeNumber(audUsdQuote?.openPrice, Number.NaN);
 
   if (!Number.isFinite(commodityPrice) || commodityPrice <= 0 || !Number.isFinite(audUsd) || audUsd <= 0) {
     return null;
@@ -1006,10 +1025,18 @@ async function fetchBullionSpotFromYahoo(metal: "gold" | "silver"): Promise<AsxQ
     audUsdPrevClose > 0
       ? commodityPrevClose / audUsdPrevClose
       : priceAud;
+  const openPriceAud =
+    Number.isFinite(commodityOpenPrice) &&
+    commodityOpenPrice > 0 &&
+    Number.isFinite(audUsdOpenPrice) &&
+    audUsdOpenPrice > 0
+      ? commodityOpenPrice / audUsdOpenPrice
+      : null;
 
   return {
     price: priceAud,
     prevClose: prevCloseAud,
+    openPrice: openPriceAud,
   };
 }
 
@@ -1668,8 +1695,8 @@ export async function refreshAsxPrices(userId: string): Promise<PriceRefreshResu
     };
   }
 
-  const quoteUpdates: Array<{ source: string; ticker: string; price: number; prevClose: number }> = [];
-  const bullionUpdates: Array<{ id: string; price: number; prevClose: number; metal: "gold" | "silver" }> = [];
+  const quoteUpdates: Array<{ source: string; ticker: string; price: number; prevClose: number; openPrice: number }> = [];
+  const bullionUpdates: Array<{ id: string; price: number; prevClose: number; openPrice: number; metal: "gold" | "silver" }> = [];
   const updatedLabels = new Set<string>();
   const failedTickers: string[] = [];
 
@@ -1683,8 +1710,10 @@ export async function refreshAsxPrices(userId: string): Promise<PriceRefreshResu
     }
     const price = sanitizeNumber(quote?.price, Number.NaN);
     const prevClose = sanitizeNumber(quote?.prevClose, price);
+    const openPrice = sanitizeNumber(quote?.openPrice, Number.NaN);
 
     if (Number.isFinite(price) && price > 0) {
+      const safePrevClose = Number.isFinite(prevClose) && prevClose > 0 ? prevClose : price;
       // Push an update for each source that holds this ticker
       const rowsForTicker = asxLikeTickerRows.get(ticker) ?? [{ source: "asx" as DataSource, rawTicker: ticker }];
       for (const row of rowsForTicker) {
@@ -1692,7 +1721,8 @@ export async function refreshAsxPrices(userId: string): Promise<PriceRefreshResu
           source: row.source,
           ticker: row.rawTicker,
           price,
-          prevClose: Number.isFinite(prevClose) && prevClose > 0 ? prevClose : price,
+          prevClose: safePrevClose,
+          openPrice: Number.isFinite(openPrice) && openPrice > 0 ? openPrice : safePrevClose,
         });
       }
       const distinctSources = Array.from(new Set(rowsForTicker.map((row) => row.source)));
@@ -1710,13 +1740,16 @@ export async function refreshAsxPrices(userId: string): Promise<PriceRefreshResu
     }
     const price = sanitizeNumber(quote?.price, Number.NaN);
     const prevClose = sanitizeNumber(quote?.prevClose, price);
+    const openPrice = sanitizeNumber(quote?.openPrice, Number.NaN);
 
     if (Number.isFinite(price) && price > 0) {
+      const safePrevClose = Number.isFinite(prevClose) && prevClose > 0 ? prevClose : price;
       quoteUpdates.push({
         source: "crypto",
         ticker,
         price,
-        prevClose: Number.isFinite(prevClose) && prevClose > 0 ? prevClose : price,
+        prevClose: safePrevClose,
+        openPrice: Number.isFinite(openPrice) && openPrice > 0 ? openPrice : safePrevClose,
       });
       updatedLabels.add(`${ticker} (crypto)`);
     } else {
@@ -1733,12 +1766,15 @@ export async function refreshAsxPrices(userId: string): Promise<PriceRefreshResu
       const quote = metal === "gold" ? goldQuote : silverQuote;
       const price = sanitizeNumber(quote?.price, Number.NaN);
       const prevClose = sanitizeNumber(quote?.prevClose, price);
+      const openPrice = sanitizeNumber(quote?.openPrice, Number.NaN);
 
       if (Number.isFinite(price) && price > 0) {
+        const safePrevClose = Number.isFinite(prevClose) && prevClose > 0 ? prevClose : price;
         bullionUpdates.push({
           id: row.id,
           price,
-          prevClose: Number.isFinite(prevClose) && prevClose > 0 ? prevClose : price,
+          prevClose: safePrevClose,
+          openPrice: Number.isFinite(openPrice) && openPrice > 0 ? openPrice : safePrevClose,
           metal,
         });
         updatedLabels.add(metal === "gold" ? "XAU (gold)" : "XAG (silver)");
@@ -1753,6 +1789,7 @@ export async function refreshAsxPrices(userId: string): Promise<PriceRefreshResu
     const audUsdQuote = await fetchYahooQuoteBySymbol("AUDUSD=X");
     const audUsdRate = sanitizeNumber(audUsdQuote?.price, Number.NaN);
     const audUsdPrevRate = sanitizeNumber(audUsdQuote?.prevClose, audUsdRate);
+    const audUsdOpenRate = sanitizeNumber(audUsdQuote?.openPrice, audUsdPrevRate);
 
     if (!Number.isFinite(audUsdRate) || audUsdRate <= 0) {
       for (const ticker of uniqueUsTickers) {
@@ -1766,11 +1803,14 @@ export async function refreshAsxPrices(userId: string): Promise<PriceRefreshResu
         }
         const usdPrice = sanitizeNumber(quote?.price, Number.NaN);
         const usdPrevClose = sanitizeNumber(quote?.prevClose, usdPrice);
+        const usdOpenPrice = sanitizeNumber(quote?.openPrice, Number.NaN);
 
         if (Number.isFinite(usdPrice) && usdPrice > 0) {
           const audPrice = usdPrice / audUsdRate;
           const prevRate = Number.isFinite(audUsdPrevRate) && audUsdPrevRate > 0 ? audUsdPrevRate : audUsdRate;
           const audPrevClose = Number.isFinite(usdPrevClose) && usdPrevClose > 0 ? usdPrevClose / prevRate : audPrice;
+          const openRate = Number.isFinite(audUsdOpenRate) && audUsdOpenRate > 0 ? audUsdOpenRate : prevRate;
+          const audOpenPrice = Number.isFinite(usdOpenPrice) && usdOpenPrice > 0 ? usdOpenPrice / openRate : audPrevClose;
 
           const rowsForTicker = usTickerRows.get(ticker) ?? [{ rawTicker: ticker }];
           for (const row of rowsForTicker) {
@@ -1779,6 +1819,7 @@ export async function refreshAsxPrices(userId: string): Promise<PriceRefreshResu
               ticker: row.rawTicker,
               price: audPrice,
               prevClose: audPrevClose,
+              openPrice: audOpenPrice,
             });
           }
           updatedLabels.add(`${ticker} (us)`);
@@ -1819,7 +1860,8 @@ export async function refreshAsxPrices(userId: string): Promise<PriceRefreshResu
       SET
         prev_close = ?,
         price = ?,
-        value = CASE WHEN units > 0 THEN units * ? ELSE value END
+        value = CASE WHEN units > 0 THEN units * ? ELSE value END,
+        session_open = CASE WHEN session_open = 0 THEN ? ELSE session_open END
       WHERE source = ? AND ticker = ? AND id LIKE ?
     `);
 
@@ -1828,16 +1870,17 @@ export async function refreshAsxPrices(userId: string): Promise<PriceRefreshResu
       SET
         prev_close = ?,
         price = ?,
-        value = CASE WHEN units > 0 THEN units * ? ELSE value END
+        value = CASE WHEN units > 0 THEN units * ? ELSE value END,
+        session_open = CASE WHEN session_open = 0 THEN ? ELSE session_open END
       WHERE id = ? AND source = 'gold'
     `);
 
     for (const quote of quoteUpdates) {
-      updateStmt.run(quote.prevClose, quote.price, quote.price, quote.source, quote.ticker, scopedPattern);
+      updateStmt.run(quote.prevClose, quote.price, quote.price, quote.openPrice, quote.source, quote.ticker, scopedPattern);
     }
 
     for (const quote of bullionUpdates) {
-      bullionUpdateStmt.run(quote.prevClose, quote.price, quote.price, quote.id);
+      bullionUpdateStmt.run(quote.prevClose, quote.price, quote.price, quote.openPrice, quote.id);
     }
 
     const totalRow = db

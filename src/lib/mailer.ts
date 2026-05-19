@@ -499,6 +499,44 @@ export async function sendAiLimitReachedEmail(input: { toEmail: string; displayN
   await sendEmail({ to: input.toEmail, subject, text, html });
 }
 
+export async function sendCheckoutWelcomeEmail(input: { toEmail: string; plan: string }): Promise<void> {
+  const appUrl = getAppBaseUrl();
+  const planLabel = input.plan === "pro" ? "Pro" : "Starter";
+  const registerUrl = `${appUrl}/?checkout=paid&plan=${encodeURIComponent(input.plan)}&email=${encodeURIComponent(input.toEmail)}`;
+
+  const subject = `Your SPECTRE ${planLabel} subscription is active — finish setting up your account`;
+  const text = [
+    `Your ${planLabel} subscription payment was successful.`,
+    "",
+    "To access SPECTRE, create your account using the link below.",
+    "Use the same email address you paid with.",
+    "",
+    registerUrl,
+    "",
+    "If you did not make this purchase, contact support.",
+  ].join("\n");
+
+  const html = `
+    <div style="font-family:Arial,sans-serif;line-height:1.5;color:#111;max-width:560px;">
+      <h2 style="margin:0 0 12px 0;">Your SPECTRE ${escapeHtml(planLabel)} subscription is active</h2>
+      <p>Your payment was successful. To start using SPECTRE, create your account below.</p>
+      <p style="font-size:13px;color:#555;">Use the same email address you paid with: <strong>${escapeHtml(input.toEmail)}</strong></p>
+      <p>
+        <a
+          href="${escapeAttribute(registerUrl)}"
+          style="display:inline-block;background:#7c4dff;color:#fff;text-decoration:none;padding:10px 18px;border-radius:8px;font-weight:600;"
+        >
+          Create Your Account
+        </a>
+      </p>
+      <p style="font-size:13px;color:#555;word-break:break-all;">If the button does not work, open this link:<br />${escapeHtml(registerUrl)}</p>
+      <p style="color:#555;font-size:13px;">If you did not make this purchase, contact support.</p>
+    </div>
+  `;
+
+  await sendEmail({ to: input.toEmail, subject, text, html });
+}
+
 function escapeHtml(value: string): string {
   return value
     .replace(/&/g, "&amp;")

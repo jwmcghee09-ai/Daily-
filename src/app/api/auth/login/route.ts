@@ -83,7 +83,9 @@ export async function POST(request: Request) {
     }
 
     const user = findAuthUserByEmail(email);
-    if (!user || !verifyPassword(password, user.passwordHash)) {
+    // Always run scrypt even when user doesn't exist — prevents timing-based email enumeration
+    const hashToVerify = user?.passwordHash ?? "spectre_sentinel:0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+    if (!user || !verifyPassword(password, hashToVerify)) {
       return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
     }
 

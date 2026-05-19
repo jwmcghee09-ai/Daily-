@@ -37,12 +37,15 @@
   --accent-strong: #ff2f14;
   --accent-mid: #ff7a68;
   --accent-soft: #ff4b3324;
-  --sl-bg: #0c0817;
-  --sl-card: #120c20eb;
-  --sl-border: #ffffff10;
+  --sl-bg: #ddd6f3;
+  --sl-card: #17112eeb;
+  --sl-border: rgba(124,77,255,.14);
+  --sl-border2: rgba(124,77,255,.22);
   --sl-text: #f2eeff;
-  --sl-muted: #8a86a8;
-  --sl-purple: #9b5de5;
+  --sl-page-text: #0f0d1e;
+  --sl-page-muted: #5e5a78;
+  --sl-muted: #9890b8;
+  --sl-purple: #a855f7;
   --sl-purple-hi: #c084fc;
   --sl-orange: #ff4d1a;
   --sl-amber: #ffb547;
@@ -62,12 +65,12 @@ html { scroll-behavior: smooth; }
 
 body {
   font-family: var(--font-body);
-  color: var(--sl-text);
+  color: var(--sl-page-text);
   background-color: var(--sl-bg);
   background-image:
-    radial-gradient(circle at 16% 14%, #8354ff3d 0%, #0000 40%),
-    radial-gradient(circle at 86% 78%, #ff4b3342 0%, #0000 42%),
-    linear-gradient(158deg, #090810f2 0%, #1e0e2ae0 52%, #140a12f0 100%);
+    radial-gradient(ellipse 75% 55% at 50% -8%, rgba(124,77,255,.32) 0%, transparent 100%),
+    radial-gradient(ellipse 55% 70% at -5% 55%, rgba(124,77,255,.22) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 55% at 105% 80%, rgba(217,70,239,.12) 0%, transparent 55%);
   background-attachment: fixed;
   min-height: 100vh;
   line-height: 1.6;
@@ -80,13 +83,9 @@ body::before {
   content: '';
   position: fixed;
   inset: 0;
-  background-image:
-    linear-gradient(#ffffff06 1px, transparent 1px),
-    linear-gradient(90deg, #ffffff06 1px, transparent 1px);
-  background-size: 42px 42px;
-  opacity: 0.35;
-  mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, #000 20%, transparent 80%);
-  -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, #000 20%, transparent 80%);
+  background-image: radial-gradient(rgba(100,80,200,.13) 1px, transparent 1px);
+  background-size: 28px 28px;
+  opacity: 0.7;
   pointer-events: none;
   z-index: 0;
 }
@@ -99,12 +98,18 @@ h3 { font-size: 1.15rem; }
 .section-label {
   font-family: var(--font-mono);
   font-size: 0.62rem;
-  font-weight: 500;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.2em;
-  color: rgba(255, 201, 192, 0.7);
+  background: linear-gradient(90deg, var(--sl-purple), var(--sl-purple-hi), var(--accent), var(--sl-purple));
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: labelSlide 4s linear infinite;
   margin-bottom: 13px;
 }
+@keyframes labelSlide { 0%{background-position:0% center} 100%{background-position:200% center} }
 
 .mono { font-family: var(--font-mono); }
 
@@ -122,10 +127,10 @@ h3 { font-size: 1.15rem; }
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(5,5,10,.92);
+  background: rgba(233,228,246,.94);
   backdrop-filter: blur(28px) saturate(1.4);
   -webkit-backdrop-filter: blur(28px) saturate(1.4);
-  border-bottom: 1px solid rgba(255,255,255,.06);
+  border-bottom: 1px solid rgba(100,80,200,.13);
 }
 
 .nav-inner {
@@ -143,14 +148,17 @@ h3 { font-size: 1.15rem; }
   font-weight: 800;
   font-size: 1.15rem;
   letter-spacing: 0.08em;
-  background: linear-gradient(135deg, #fff 30%, var(--accent) 100%);
+  background: linear-gradient(90deg, #a855f7 0%, #d946ef 35%, #ff7a30 72%, #ffb347 100%);
+  background-size: 200% auto;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  animation: brandSlide 4s linear infinite;
   display: flex;
   align-items: center;
   gap: 9px;
 }
+@keyframes brandSlide { 0%{background-position:0% center} 100%{background-position:200% center} }
 
 .status-dot {
   width: 8px;
@@ -171,8 +179,8 @@ h3 { font-size: 1.15rem; }
   display: flex;
   gap: 3px;
   list-style: none;
-  background: rgba(255,255,255,.03);
-  border: 1px solid rgba(255,255,255,.055);
+  background: rgba(124,77,255,.06);
+  border: 1px solid var(--sl-border);
   border-radius: var(--radius-pill);
   padding: 3px 4px;
 }
@@ -183,7 +191,7 @@ h3 { font-size: 1.15rem; }
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.11em;
-  color: var(--sl-muted);
+  color: rgba(94,90,120,.65);
   text-decoration: none;
   padding: 5px 13px;
   border-radius: var(--radius-pill);
@@ -191,23 +199,24 @@ h3 { font-size: 1.15rem; }
 }
 
 .nav-links a:hover, .nav-links a.active {
-  color: var(--sl-text);
-  background: rgba(155, 93, 229, 0.16);
+  color: #0f0d1e;
+  background: rgba(168,85,247,.12);
 }
 
 .nav-links a[href="/research"] {
   font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.14em;
-  color: #f6eeff;
-  background: linear-gradient(135deg, rgba(155, 93, 229, 0.24), rgba(255, 77, 26, 0.14));
-  border: 1px solid rgba(155, 93, 229, 0.28);
-  box-shadow: 0 0 0 1px rgba(255,255,255,0.02) inset, 0 4px 14px rgba(155, 93, 229, 0.12);
+  color: #7c4dff;
+  background: linear-gradient(135deg, rgba(168,85,247,.12), rgba(255,77,26,.08));
+  border: 1px solid rgba(168,85,247,.3);
+  box-shadow: 0 4px 14px rgba(168,85,247,.12);
 }
 
 .nav-links a[href="/research"]:hover, .nav-links a[href="/research"].active {
-  background: linear-gradient(135deg, rgba(155, 93, 229, 0.34), rgba(255, 77, 26, 0.2));
-  border-color: rgba(255, 77, 26, 0.32);
+  color: #0f0d1e;
+  background: linear-gradient(135deg, rgba(168,85,247,.2), rgba(255,77,26,.14));
+  border-color: rgba(255,77,26,.38);
 }
 
 .nav-right {
@@ -222,7 +231,7 @@ h3 { font-size: 1.15rem; }
   font-family: var(--font-mono);
   font-size: 0.62rem;
   letter-spacing: 0.08em;
-  color: var(--sl-muted);
+  color: #5e5a78;
   text-transform: uppercase;
 }
 
@@ -230,17 +239,17 @@ h3 { font-size: 1.15rem; }
   font-family: var(--font-mono);
   font-size: 0.62rem;
   letter-spacing: 0.08em;
-  color: var(--sl-text);
+  color: #0f0d1e;
   text-decoration: none;
   padding: 5px 13px;
   border-radius: var(--radius-pill);
-  border: 1px solid rgba(255,255,255,0.1);
+  border: 1px solid rgba(100,80,200,.22);
   transition: all 0.2s;
 }
 
 .nav-btn:hover {
-  border-color: var(--sl-purple);
-  background: rgba(155, 93, 229, 0.12);
+  border-color: rgba(124,77,255,.42);
+  background: rgba(124,77,255,.06);
   transform: translateY(-1px);
 }
 
@@ -260,16 +269,16 @@ h3 { font-size: 1.15rem; }
 /* ===== TICKER TAPE ===== */
 .ticker-wrap {
   overflow: hidden;
-  background: transparent;
-  border-top: 1px solid rgba(255,255,255,.06);
+  background: rgba(232,229,248,0.88);
+  border-top: 1px solid rgba(100,80,200,.1);
   position: relative;
   height: 28px;
   display: flex;
   align-items: center;
 }
 .ticker-wrap::before,.ticker-wrap::after{content:'';position:absolute;top:0;bottom:0;width:72px;z-index:2;pointer-events:none}
-.ticker-wrap::before{left:0;background:linear-gradient(to right,rgba(5,5,10,.95),transparent)}
-.ticker-wrap::after{right:0;background:linear-gradient(to left,rgba(5,5,10,.95),transparent)}
+.ticker-wrap::before{left:0;background:linear-gradient(to right,rgba(232,229,248,1),transparent)}
+.ticker-wrap::after{right:0;background:linear-gradient(to left,rgba(232,229,248,1),transparent)}
 
 .ticker-track {
   display: flex;
@@ -296,8 +305,8 @@ h3 { font-size: 1.15rem; }
   white-space: nowrap;
 }
 
-.ticker-item .sym { color: #8a8098; font-weight: 500; letter-spacing: .08em; }
-.ticker-item .price { color: #ccc8e0; font-weight: 600; }
+.ticker-item .sym { color: rgba(94,90,120,.7); font-weight: 500; letter-spacing: .08em; }
+.ticker-item .price { color: #0f0d1e; font-weight: 600; }
 .ticker-item .chg { font-weight: 500; }
 .ticker-item .chg.pos { color: #c084fc; }
 .ticker-item .chg.neg { color: #f87171; }
@@ -306,12 +315,12 @@ h3 { font-size: 1.15rem; }
 .card {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(160deg, rgba(19, 13, 33, 0.82) 0%, rgba(14, 9, 24, 0.78) 100%);
+  background: linear-gradient(160deg, rgba(22, 15, 40, 0.90) 0%, rgba(16, 10, 30, 0.86) 100%);
   backdrop-filter: blur(22px) saturate(1.5);
   -webkit-backdrop-filter: blur(22px) saturate(1.5);
-  border: 1px solid rgba(155, 93, 229, 0.09);
+  border: 1px solid var(--sl-border);
   border-radius: var(--radius);
-  box-shadow: 0 6px 28px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  box-shadow: 0 6px 28px rgba(0, 0, 0, 0.32), 0 0 0 1px rgba(124,77,255,.04) inset;
   padding: 20px;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
@@ -322,7 +331,7 @@ h3 { font-size: 1.15rem; }
   position: absolute;
   top: 0; left: 0; right: 0;
   height: 1px;
-  background: linear-gradient(90deg, rgba(155, 93, 229, 0.7) 0%, rgba(192, 132, 252, 0.5) 50%, rgba(255, 77, 26, 0.38) 100%);
+  background: linear-gradient(90deg, rgba(168,85,247,.75) 0%, rgba(192,132,252,.55) 50%, rgba(255,77,26,.42) 80%, transparent 100%);
   pointer-events: none;
   z-index: 1;
 }
@@ -341,12 +350,12 @@ h3 { font-size: 1.15rem; }
 
 .card:hover {
   transform: translateY(-2px);
-  border-color: rgba(155, 93, 229, 0.18);
-  box-shadow: 0 10px 36px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  border-color: var(--sl-border2);
+  box-shadow: 0 10px 36px rgba(0, 0, 0, 0.42), 0 0 20px rgba(124,77,255,.08) inset;
 }
 
 .card-glow:hover {
-  box-shadow: 0 10px 36px rgba(0, 0, 0, 0.38), 0 0 28px rgba(155, 93, 229, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  box-shadow: 0 10px 36px rgba(0, 0, 0, 0.42), 0 0 32px rgba(124,77,255,.14);
 }
 
 .card-accent {
@@ -379,9 +388,9 @@ h3 { font-size: 1.15rem; }
   margin: 22px 0 16px;
   padding: 22px 28px;
   border-radius: 18px;
-  background: linear-gradient(160deg, rgba(20, 13, 34, 0.9) 0%, rgba(13, 9, 22, 0.85) 100%);
-  border: 1px solid rgba(155, 93, 229, 0.1);
-  box-shadow: 0 10px 36px rgba(0, 0, 0, 0.26), 0 0 28px rgba(155, 93, 229, 0.07);
+  background: linear-gradient(160deg, rgba(24, 15, 44, 0.92) 0%, rgba(16, 10, 32, 0.88) 100%);
+  border: 1px solid var(--sl-border2);
+  box-shadow: 0 10px 36px rgba(0, 0, 0, 0.32), 0 0 40px rgba(124,77,255,.10);
 }
 
 .hero-kicker {
@@ -390,8 +399,8 @@ h3 { font-size: 1.15rem; }
   gap: 8px;
   padding: 6px 14px;
   border-radius: var(--radius-pill);
-  border: 1px solid rgba(155, 93, 229, 0.32);
-  background: rgba(155, 93, 229, 0.12);
+  border: 1px solid rgba(168,85,247,.38);
+  background: rgba(168,85,247,.14);
   font-family: var(--font-mono);
   font-size: 0.66rem;
   letter-spacing: 0.14em;
@@ -1387,24 +1396,24 @@ h3 { font-size: 1.15rem; }
 .footer {
   text-align: center;
   padding: 24px 20px;
-  border-top: 1px solid rgba(155, 93, 229, 0.09);
+  border-top: 1px solid rgba(100, 80, 200, 0.16);
   margin-top: 10px;
 }
 
 .footer-text {
   font-size: 0.65rem;
-  color: var(--sl-muted);
+  color: var(--sl-page-muted);
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
 .footer a {
-  color: var(--sl-muted);
+  color: var(--sl-page-muted);
   text-decoration: none;
   transition: color 0.2s;
 }
 
-.footer a:hover { color: var(--sl-text); }
+.footer a:hover { color: var(--sl-page-text); }
 
 /* ===== COUNTUP ANIMATION ===== */
 .countup { display: inline-block; }
@@ -1641,7 +1650,7 @@ h3 { font-size: 1.15rem; }
   align-items: center;
   justify-content: space-between;
   padding: 20px 0 12px;
-  border-bottom: 1px solid rgba(255,255,255,.06);
+  border-bottom: 1px solid rgba(100,80,200,.13);
   margin-bottom: 0;
 }
 .page-header-left {
@@ -1655,19 +1664,19 @@ h3 { font-size: 1.15rem; }
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--sl-text);
+  color: var(--sl-page-text);
 }
 .page-subtitle {
   font-family: var(--font-mono);
   font-size: 0.62rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--sl-muted);
+  color: var(--sl-page-muted);
 }
 .page-header-right {
   font-family: var(--font-mono);
   font-size: 0.62rem;
-  color: var(--sl-muted);
+  color: var(--sl-page-muted);
   letter-spacing: 0.06em;
 }
 .demo-preview-banner{
@@ -1688,7 +1697,14 @@ h3 { font-size: 1.15rem; }
   line-height:1.6;
   color:rgba(242,238,255,.84);
 }
-.demo-preview-locked .research-tab-nav .rtab,
+.demo-preview-locked .research-tab-nav .rtab{
+  opacity:.65;
+  filter:saturate(.8);
+}
+.demo-preview-locked .research-tab-nav .rtab.active{
+  opacity:1;
+  filter:none;
+}
 .demo-preview-locked .time-pill,
 .demo-preview-locked .tab-btn{
   pointer-events:none;
@@ -1696,7 +1712,6 @@ h3 { font-size: 1.15rem; }
   opacity:.42;
   filter:saturate(.7);
 }
-.demo-preview-locked .research-tab-nav .rtab.active,
 .demo-preview-locked .time-pill.active,
 .demo-preview-locked .tab-btn.active{
   opacity:1;
@@ -2061,9 +2076,11 @@ h3 { font-size: 1.15rem; }
 .research-tab-nav {
   display: flex;
   gap: 2px;
-  padding: 12px 0 0;
-  border-bottom: 1px solid rgba(255,255,255,.07);
-  margin-bottom: 18px;
+  padding: 12px 24px 0;
+  margin: 0 -24px 18px;
+  border-bottom: 1px solid rgba(124,77,255,.18);
+  background: rgba(10,7,20,.96);
+  backdrop-filter: blur(20px);
 }
 .rtab {
   background: none;
@@ -2532,16 +2549,17 @@ h3 { font-size: 1.15rem; }
   border-left: 1px solid rgba(255,255,255,.1);
 }
 
-/* ── Research tab nav — pill-style ─────────────── */
+/* ── Research tab nav — dark pill on lavender bg ── */
 .research-tab-nav {
   display: flex;
   gap: 4px;
   padding: 4px;
   border-bottom: none;
-  margin-bottom: 20px;
-  background: rgba(255,255,255,.03);
-  border: 1px solid rgba(255,255,255,.07);
+  margin: 0 0 20px;
+  background: rgba(10,7,20,.82);
+  border: 1px solid rgba(255,255,255,.09);
   border-radius: 11px;
+  backdrop-filter: blur(20px);
 }
 .rtab {
   flex: 1;
@@ -2561,13 +2579,13 @@ h3 { font-size: 1.15rem; }
   margin-bottom: 0;
 }
 .rtab:hover {
-  color: var(--sl-text);
-  background: rgba(255,255,255,.04);
+  color: #f0eeff;
+  background: rgba(255,255,255,.06);
 }
 .rtab.active {
   color: #e8deff;
-  background: linear-gradient(135deg, rgba(155,93,229,.3) 0%, rgba(155,93,229,.15) 100%);
-  box-shadow: 0 1px 10px rgba(155,93,229,.2), inset 0 1px 0 rgba(255,255,255,.08);
+  background: linear-gradient(135deg, rgba(155,93,229,.35) 0%, rgba(155,93,229,.18) 100%);
+  box-shadow: 0 1px 10px rgba(155,93,229,.22), inset 0 1px 0 rgba(255,255,255,.09);
   border: none;
 }
 
@@ -2785,6 +2803,56 @@ h3 { font-size: 1.15rem; }
 .fx-rate { font-family: var(--font-mono); font-size: 0.78rem; font-weight: 600; color: #fff; flex-shrink: 1; min-width: 0; }
 .fx-chg  { font-family: var(--font-mono); font-size: 0.65rem; text-align: right; flex-shrink: 0; white-space: nowrap; }
 
+/* ── Starter plan gating ── */
+.starter-banner {
+  display: none;
+  align-items: center; justify-content: space-between; gap: 12px;
+  background: rgba(124,77,255,.1); border: 1px solid rgba(124,77,255,.28);
+  border-radius: 10px; padding: 10px 16px; margin-bottom: 16px;
+  font-size: .74rem;
+}
+.starter-banner.show { display: flex; }
+.starter-banner-text { color: var(--sl-text); }
+.starter-banner-text strong { color: #a855f7; }
+.starter-banner-cta {
+  flex-shrink: 0; background: linear-gradient(135deg,#7c4dff,#d946ef);
+  border: none; border-radius: 6px; color: #fff; font-size: .7rem; font-weight: 700;
+  padding: 5px 14px; cursor: pointer; white-space: nowrap;
+  font-family: 'Space Grotesk', sans-serif;
+}
+.starter-banner-cta:hover { opacity: .88; }
+
+.rtab-locked { position: relative; opacity: .5; cursor: not-allowed !important; }
+.rtab-locked::after {
+  content: '🔒'; font-size: .65rem; margin-left: 4px; vertical-align: middle;
+}
+
+.hero-lock-wrap { position: relative; }
+.hero-lock-overlay {
+  display: none; position: absolute; inset: 0; border-radius: inherit;
+  background: rgba(7,5,15,.72); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  z-index: 10; align-items: center; justify-content: center; flex-direction: column; gap: 6px;
+  border-radius: 12px;
+}
+.hero-lock-overlay.show { display: flex; }
+.hero-lock-overlay .lock-icon { font-size: 1.2rem; }
+.hero-lock-overlay .lock-label { font-size: .62rem; color: #a855f7; font-weight: 600; letter-spacing: .06em; }
+
+.table-blur-wrap { position: relative; }
+.table-blur-mask {
+  display: none; position: absolute; bottom: 0; left: 0; right: 0; height: 160px;
+  background: linear-gradient(transparent, var(--sl-bg) 80%);
+  z-index: 5; flex-direction: column; align-items: center; justify-content: flex-end; padding-bottom: 12px; gap: 8px;
+}
+.table-blur-mask.show { display: flex; }
+.table-blur-mask .upgrade-msg { font-size: .72rem; color: var(--sl-muted); }
+.table-blur-mask .upgrade-btn {
+  background: rgba(124,77,255,.15); border: 1px solid rgba(124,77,255,.35); border-radius: 6px;
+  color: #a855f7; font-size: .72rem; font-weight: 600; padding: 5px 16px; cursor: pointer;
+  font-family: 'Space Grotesk', sans-serif;
+}
+.table-blur-mask .upgrade-btn:hover { background: rgba(124,77,255,.28); }
+
 /* ── Data table upgrades ────────────────────────── */
 .data-table th {
   background: rgba(155,93,229,.06) !important;
@@ -2948,7 +3016,7 @@ h3 { font-size: 1.15rem; }
   font-weight: 600;
   letter-spacing: .14em;
   text-transform: uppercase;
-  color: rgba(200,192,230,.7);
+  color: rgba(94,90,120,.65);
   background: none;
   border: none;
   border-bottom: 2px solid transparent;
@@ -3249,6 +3317,12 @@ h3 { font-size: 1.15rem; }
     </div>
   </section>
 
+  <!-- Starter plan upgrade banner -->
+  <div class="starter-banner" id="starter-banner">
+    <span class="starter-banner-text">You're on the <strong>Starter plan</strong>. Unlock live macro data, equities deep-dive, earnings, and crypto tabs.</span>
+    <button class="starter-banner-cta" onclick="window.location.href='/settings?tab=billing'">Upgrade to Pro →</button>
+  </div>
+
   <!-- ===== RESEARCH TAB NAV ===== -->
   <nav class="research-tab-nav" role="tablist">
     <button class="rtab active" data-tab="overview" onclick="switchResearchTab('overview',this)">Overview</button>
@@ -3291,31 +3365,55 @@ h3 { font-size: 1.15rem; }
     </div>
 
     <!-- Gold -->
-    <div class="card hero-card card-glow">
-      <div class="label">Gold (XAU/USD)</div>
-      <div class="value"><span id="hero-gold-price" class="mono" style="font-size:1.8rem;font-weight:600;">Loading…</span></div>
-      <div id="hero-gold-chg" class="change" style="margin-top:6px;">—</div>
+    <div class="hero-lock-wrap">
+      <div class="card hero-card card-glow">
+        <div class="label">Gold (XAU/USD)</div>
+        <div class="value"><span id="hero-gold-price" class="mono" style="font-size:1.8rem;font-weight:600;">Loading…</span></div>
+        <div id="hero-gold-chg" class="change" style="margin-top:6px;">—</div>
+      </div>
+      <div class="hero-lock-overlay">
+        <span class="lock-icon">🔒</span>
+        <span class="lock-label">Pro feature</span>
+      </div>
     </div>
 
     <!-- Bitcoin -->
-    <div class="card hero-card card-glow">
-      <div class="label">Bitcoin (BTC/USD)</div>
-      <div class="value"><span id="hero-btc-price" class="mono" style="font-size:1.8rem;font-weight:600;">Loading…</span></div>
-      <div id="hero-btc-chg" class="change" style="margin-top:6px;">—</div>
+    <div class="hero-lock-wrap">
+      <div class="card hero-card card-glow">
+        <div class="label">Bitcoin (BTC/USD)</div>
+        <div class="value"><span id="hero-btc-price" class="mono" style="font-size:1.8rem;font-weight:600;">Loading…</span></div>
+        <div id="hero-btc-chg" class="change" style="margin-top:6px;">—</div>
+      </div>
+      <div class="hero-lock-overlay">
+        <span class="lock-icon">🔒</span>
+        <span class="lock-label">Pro feature</span>
+      </div>
     </div>
 
     <!-- Ethereum -->
-    <div class="card hero-card card-glow">
-      <div class="label">Ethereum (ETH/USD)</div>
-      <div class="value"><span id="hero-eth-price" class="mono" style="font-size:1.8rem;font-weight:600;">Loading…</span></div>
-      <div id="hero-eth-chg" class="change" style="margin-top:6px;">—</div>
+    <div class="hero-lock-wrap">
+      <div class="card hero-card card-glow">
+        <div class="label">Ethereum (ETH/USD)</div>
+        <div class="value"><span id="hero-eth-price" class="mono" style="font-size:1.8rem;font-weight:600;">Loading…</span></div>
+        <div id="hero-eth-chg" class="change" style="margin-top:6px;">—</div>
+      </div>
+      <div class="hero-lock-overlay">
+        <span class="lock-icon">🔒</span>
+        <span class="lock-label">Pro feature</span>
+      </div>
     </div>
 
     <!-- WTI Crude Oil -->
-    <div class="card hero-card card-glow">
-      <div class="label">WTI Crude (USD/bbl)</div>
-      <div class="value"><span id="hero-oil-price" class="mono" style="font-size:1.8rem;font-weight:600;">Loading…</span></div>
-      <div id="hero-oil-chg" class="change" style="margin-top:6px;">—</div>
+    <div class="hero-lock-wrap">
+      <div class="card hero-card card-glow">
+        <div class="label">WTI Crude (USD/bbl)</div>
+        <div class="value"><span id="hero-oil-price" class="mono" style="font-size:1.8rem;font-weight:600;">Loading…</span></div>
+        <div id="hero-oil-chg" class="change" style="margin-top:6px;">—</div>
+      </div>
+      <div class="hero-lock-overlay">
+        <span class="lock-icon">🔒</span>
+        <span class="lock-label">Pro feature</span>
+      </div>
     </div>
   </section>
 
@@ -3392,23 +3490,29 @@ h3 { font-size: 1.15rem; }
       <!-- B. ASX TOP HOLDINGS TABLE -->
       <div class="card reveal">
         <div class="section-label">ASX Top Holdings</div>
-        <div class="table-wrap">
-          <table class="data-table" id="stockTable">
-            <thead>
-              <tr>
-                <th>Symbol</th>
-                <th>Sector</th>
-                <th>Price</th>
-                <th>Chg%</th>
-                <th>Mkt Cap</th>
-                <th>P/E</th>
-                <th>Div Yield</th>
-                <th>52W Range</th>
-                <th>Trend</th>
-              </tr>
-            </thead>
-            <tbody id="stockTableBody"></tbody>
-          </table>
+        <div class="table-blur-wrap">
+          <div class="table-wrap">
+            <table class="data-table" id="stockTable">
+              <thead>
+                <tr>
+                  <th>Symbol</th>
+                  <th>Sector</th>
+                  <th>Price</th>
+                  <th>Chg%</th>
+                  <th>Mkt Cap</th>
+                  <th>P/E</th>
+                  <th>Div Yield</th>
+                  <th>52W Range</th>
+                  <th>Trend</th>
+                </tr>
+              </thead>
+              <tbody id="stockTableBody"></tbody>
+            </table>
+          </div>
+          <div class="table-blur-mask" id="table-blur-mask">
+            <span class="upgrade-msg">Full ASX 200 table available on Pro</span>
+            <button class="upgrade-btn" onclick="window.location.href='/settings?tab=billing'">Upgrade to Pro →</button>
+          </div>
         </div>
       </div>
 
@@ -4534,8 +4638,41 @@ function planLabel(user) {
   if (state.demoMode) return 'PRO DEMO';
   if (!user) return 'Workspace';
   if (user.proEnabled) return 'PRO ACTIVE';
+  if ((user.planTier || '').toLowerCase() === 'starter') return 'STARTER';
   if ((user.planTier || '').toLowerCase() === 'none') return 'FREE';
   return String(user.planTier || 'Workspace').toUpperCase();
+}
+
+function isStarterPlan() {
+  if (!state.sessionUser) return false;
+  if (state.sessionUser.proEnabled) return false;
+  const tier = (state.sessionUser.planTier || '').toLowerCase();
+  return !tier || tier === 'starter' || tier === 'free' || tier === 'none';
+}
+
+function applyStarterGating() {
+  if (!isStarterPlan()) return;
+
+  // Banner
+  const banner = document.getElementById('starter-banner');
+  if (banner) banner.classList.add('show');
+
+  // Lock tabs (not overview)
+  document.querySelectorAll('.rtab:not([data-tab="overview"])').forEach(tab => {
+    tab.classList.add('rtab-locked');
+    tab.onclick = e => { e.preventDefault(); e.stopImmediatePropagation(); showUpgradeModal(); };
+  });
+
+  // Blur hero cards 4-7 (Gold, BTC, ETH, Oil)
+  document.querySelectorAll('.hero-lock-overlay').forEach(ov => ov.classList.add('show'));
+
+  // Blur stock table after row 5
+  const mask = document.getElementById('table-blur-mask');
+  if (mask) mask.classList.add('show');
+}
+
+function showUpgradeModal() {
+  window.location.href = '/settings?tab=billing';
 }
 
 function formatDateTime(value) {
@@ -5048,13 +5185,15 @@ function renderChart(data) {
 }
 
 let chartLoading = false;
+let _overviewChartFailed = false;
 async function loadChart(range, btn) {
+  if (chartLoading) return;
+  chartLoading = true;
+  _overviewChartFailed = false;
   if (btn) {
     btn.closest('.time-pills').querySelectorAll('.time-pill').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
   }
-  if (chartLoading) return;
-  chartLoading = true;
   const loading = document.getElementById('chart-loading');
   if (loading) { loading.textContent = 'Loading…'; loading.removeAttribute('display'); }
   const url = `/api/research/chart?range=${range}` + (state.demoMode ? '&demo=1' : '');
@@ -5063,6 +5202,7 @@ async function loadChart(range, btn) {
     if (data?.closes?.length) renderChart(data);
   } catch (e) {
     if (loading) loading.textContent = 'Chart unavailable';
+    _overviewChartFailed = true;
     console.warn('Chart fetch failed:', e);
   } finally {
     chartLoading = false;
@@ -5211,6 +5351,7 @@ async function loadSession() {
   setText('nav-user-email', payload.user.email || '—');
   applyModeChrome();
   updateWorkspaceHeroIdentity();
+  applyStarterGating();
 }
 
 async function signOut(event) {
@@ -5473,6 +5614,13 @@ async function fetchLiveQuotes() {
       const el = document.getElementById(id);
       if (el && el.textContent === 'Loading…') el.textContent = '—';
     }
+    // If stocks table never loaded, replace the infinite spinner with a recoverable error state
+    if (!DATA.stocks.length) {
+      const tbody = document.querySelector('#stocks-table tbody');
+      if (tbody) tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--sl-muted);font-size:0.75rem;padding:16px;">Live data unavailable — will retry</td></tr>';
+    }
+    const lastUpdatedEl = document.getElementById('page-last-updated');
+    if (lastUpdatedEl && !state.demoMode) lastUpdatedEl.textContent = 'Update failed';
   }
 }
 
@@ -5493,9 +5641,9 @@ document.addEventListener('DOMContentLoaded', () => {
     renderChartSummary(summaryId, null, _chartSummaryConfig[summaryId]);
   });
 
-  // Fix nav tab links to preserve account/demo mode when returning to dashboard
+  // Fix nav + mobile tab links to preserve account/demo mode when returning to dashboard
   const modeParam = state.demoMode ? 'demo=1' : 'mode=account';
-  document.querySelectorAll('.nav-tab-link').forEach(function(link) {
+  document.querySelectorAll('.nav-tab-link, .mobile-tab-btn[href]').forEach(function(link) {
     const href = link.getAttribute('href');
     if (href && href.startsWith('/dashboard?tab=')) {
       const tab = href.split('tab=')[1];
@@ -5771,8 +5919,10 @@ function clearChartEmpty(canvasId) {
 
 function setupCanvas(canvas) {
   const dpr = window.devicePixelRatio || 1;
-  const width = Math.max(canvas.clientWidth || canvas.parentElement?.clientWidth || 320, 320);
-  const height = Math.max(canvas.clientHeight || canvas.parentElement?.clientHeight || 180, 180);
+  const rawW = canvas.clientWidth || canvas.parentElement?.clientWidth || canvas.parentElement?.parentElement?.clientWidth || 0;
+  const rawH = canvas.clientHeight || canvas.parentElement?.clientHeight || canvas.parentElement?.parentElement?.clientHeight || 0;
+  const width = Math.max(rawW || 320, 320);
+  const height = Math.max(rawH || 180, 180);
   canvas.width = Math.round(width * dpr);
   canvas.height = Math.round(height * dpr);
   const ctx = canvas.getContext('2d');
@@ -6371,15 +6521,30 @@ function switchResearchTab(name, btn) {
   else if (name === 'earnings') populateEarningsTab();
   else if (name === 'crypto') populateCryptoTab();
 
-  // Charts only load on first visit (async/network-heavy)
-  // Double-RAF ensures the browser has completed layout before Chart.js reads canvas dimensions
-  if (firstVisit) {
+  // Charts load on first visit, and also reload if a previous attempt left an error state
+  function _tabCanvasHasError(...ids) {
+    return ids.some(id => {
+      const c = document.getElementById(id);
+      return c && c.parentElement && c.parentElement.classList.contains('chart-empty');
+    });
+  }
+  const needsOverviewReload = name === 'overview' && !firstVisit && _overviewChartFailed;
+  const needsMacroReload = firstVisit || (name === 'macro' && _tabCanvasHasError('macro-aud-chart', 'macro-gold-chart', 'macro-oil-chart'));
+  const needsCryptoReload = firstVisit || (name === 'crypto' && _tabCanvasHasError('ct-btc-chart', 'ct-eth-chart', 'ct-sol-chart'));
+
+  if (needsOverviewReload) {
+    loadChart('6m', document.querySelector('.time-pill.active') || null);
+  }
+
+  // Double-RAF ensures the browser has completed layout before canvas reads dimensions
+  if (needsMacroReload || needsCryptoReload) {
     requestAnimationFrame(() => requestAnimationFrame(() => {
-      if (name === 'macro') {
+      if (needsMacroReload) {
         loadMacroChart('aud', '1m', null);
         loadMacroChart('gold', '1m', null);
         loadMacroChart('oil', '1m', null);
-      } else if (name === 'crypto') {
+      }
+      if (needsCryptoReload) {
         loadCryptoChart('btc', '1m', null);
         loadCryptoChart('eth', '1m', null);
         loadCryptoChart('sol', '1m', null);
@@ -7082,6 +7247,9 @@ function _demoSnapshot(url) {
     }
     return undefined;
   }
+  // Catch-all: any unrecognized /api/ path returns an empty object so demo mode
+  // never falls through to a real fetch that would redirect to /signin on 401
+  if (u.includes('/api/')) return {};
   return undefined;
 }
 

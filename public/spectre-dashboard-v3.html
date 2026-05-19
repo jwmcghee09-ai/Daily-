@@ -13,8 +13,8 @@
 html{scroll-behavior:smooth}
 
 :root{
-  --bg:#f3f1fb;
-  --card:#e8e5f8;
+  --bg:#ddd6f3;
+  --card:#d0c7ee;
   --card2:#100f1e;
   --surface3:rgba(100,80,200,.06);
   --border:rgba(100,80,200,.13);
@@ -28,8 +28,8 @@ html{scroll-behavior:smooth}
   --orange-dk:#f97316;
   --accent-dim:rgba(124,77,255,.10);
   --accent2-dim:rgba(255,122,48,.10);
-  --danger:#dc2626;
-  --green:#16a34a;
+  --danger:#ff7a30;
+  --green:#a855f7;
   --mono:'DM Mono',monospace;
   --disp:'Space Grotesk',sans-serif;
   --sans:'DM Sans',sans-serif;
@@ -44,15 +44,16 @@ body.boot-pending > *:not(#boot-splash):not(script){display:none!important}
 body::before{
   content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   background:
-    radial-gradient(ellipse 70% 50% at 50% -10%,rgba(124,77,255,.07) 0%,transparent 100%),
-    radial-gradient(ellipse 40% 60% at 100% 80%,rgba(255,122,48,.05) 0%,transparent 60%),
-    #f3f1fb;
+    radial-gradient(ellipse 75% 55% at 50% -8%,rgba(124,77,255,.32) 0%,transparent 100%),
+    radial-gradient(ellipse 55% 70% at -5% 55%,rgba(124,77,255,.22) 0%,transparent 60%),
+    radial-gradient(ellipse 45% 55% at 105% 80%,rgba(217,70,239,.12) 0%,transparent 55%),
+    #e9e4f6;
 }
 body::after{
   content:'';position:fixed;inset:0;pointer-events:none;z-index:1;
   background-image:
-    linear-gradient(rgba(100,80,200,.04) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(100,80,200,.04) 1px,transparent 1px);
+    linear-gradient(rgba(100,80,200,.06) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(100,80,200,.06) 1px,transparent 1px);
   background-size:58px 58px;
   mask-image:radial-gradient(ellipse 80% 60% at 50% 30%,black 0%,transparent 80%);
   -webkit-mask-image:radial-gradient(ellipse 80% 60% at 50% 30%,black 0%,transparent 80%);
@@ -62,7 +63,7 @@ body::after{
 @media(max-width:600px){.wrap{padding:0 1.1rem}}
 
 /* ── NAV ── */
-nav{position:fixed;top:0;left:0;right:0;z-index:900;background:rgba(10,8,22,.97);backdrop-filter:blur(28px) saturate(1.4);-webkit-backdrop-filter:blur(28px) saturate(1.4);border-bottom:1px solid rgba(255,255,255,.07)}
+nav{position:fixed;top:0;left:0;right:0;z-index:900;background:rgba(233,228,246,0.94);backdrop-filter:blur(28px) saturate(1.4);-webkit-backdrop-filter:blur(28px) saturate(1.4);border-bottom:1px solid rgba(100,80,200,.13)}
 .nav-inner{max-width:var(--max);margin:0 auto;padding:0 2.5rem;height:56px;display:flex;align-items:center;justify-content:space-between;gap:2rem}
 .nav-logo{
   font-family:var(--disp);
@@ -82,30 +83,30 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;background:rgba(10,8,22,.97)
 @keyframes brandSlide{0%{background-position:0% center}100%{background-position:200% center}}
 /* centre tabs */
 .nav-tabs{display:flex;align-items:center;gap:0;background:none;border:none;border-radius:0;padding:0}
-.nav-tab{font-family:var(--mono);font-size:.62rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:rgba(200,190,230,.55);background:none;border:none;border-bottom:1.5px solid transparent;border-radius:0;padding:.2rem 1.1rem;cursor:pointer;transition:all .2s;line-height:56px;height:56px}
+.nav-tab{font-family:var(--mono);font-size:.62rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:rgba(94,90,120,.65);background:none;border:none;border-bottom:1.5px solid transparent;border-radius:0;padding:.2rem 1.1rem;cursor:pointer;transition:all .2s;line-height:56px;height:56px}
 .nav-tab:hover{background:linear-gradient(90deg,#a855f7 0%,#d946ef 35%,#ff7a30 72%,#ffb347 100%);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:brandSlide 4s linear infinite}
 .nav-tab-active{background:linear-gradient(90deg,#a855f7 0%,#d946ef 35%,#ff7a30 72%,#ffb347 100%)!important;background-size:200% auto!important;-webkit-background-clip:text!important;-webkit-text-fill-color:transparent!important;background-clip:text!important;animation:brandSlide 4s linear infinite!important;border-bottom-color:#a855f7!important}
 /* right side */
 .nav-right{display:flex;align-items:center;gap:.65rem;position:relative;flex-shrink:0}
-.nav-user{font-family:var(--mono);font-size:.54rem;letter-spacing:.1em;color:rgba(200,190,230,.5);text-transform:uppercase}
-.nav-btn{font-family:var(--sans);font-size:.75rem;font-weight:600;color:rgba(220,215,240,.9);background:transparent;border:1px solid rgba(255,255,255,.15);border-radius:999px;padding:.34rem 1rem;cursor:pointer;transition:all .2s;text-decoration:none;white-space:nowrap}
-.nav-btn:hover{border-color:rgba(255,255,255,.32);transform:translateY(-1px)}
+.nav-user{font-family:var(--mono);font-size:.54rem;letter-spacing:.1em;color:rgba(94,90,120,.6);text-transform:uppercase}
+.nav-btn{font-family:var(--sans);font-size:.75rem;font-weight:600;color:#0f0d1e;background:transparent;border:1px solid rgba(100,80,200,.22);border-radius:999px;padding:.34rem 1rem;cursor:pointer;transition:all .2s;text-decoration:none;white-space:nowrap}
+.nav-btn:hover{border-color:rgba(100,80,200,.42);background:rgba(100,80,200,.05);transform:translateY(-1px)}
 .nav-btn-primary{color:#fff;background:linear-gradient(135deg,#9333ea 0%,#c026d3 46%,#f97316 100%);border-color:transparent;box-shadow:0 4px 18px rgba(168,85,247,.28),0 1px 0 rgba(255,255,255,.1) inset}
 .nav-btn-primary:hover{filter:brightness(1.08);border-color:transparent}
-.nav-settings-btn{display:flex;align-items:center;justify-content:center;width:32px;height:32px;background:transparent;border:1px solid rgba(255,255,255,.15);border-radius:999px;color:rgba(200,190,230,.6);text-decoration:none;transition:color .2s,border-color .2s;flex-shrink:0}
-.nav-settings-btn:hover{color:#fff;border-color:rgba(255,255,255,.32)}
+.nav-settings-btn{display:flex;align-items:center;justify-content:center;width:32px;height:32px;background:transparent;border:1px solid rgba(100,80,200,.22);border-radius:999px;color:rgba(94,90,120,.7);text-decoration:none;transition:color .2s,border-color .2s,background .2s;flex-shrink:0}
+.nav-settings-btn:hover{color:#0f0d1e;border-color:rgba(100,80,200,.42);background:rgba(100,80,200,.05)}
 /* ── TICKER BAR ── */
-.nav-ticker-bar{position:relative;height:28px;background:rgba(6,4,14,.95);border-top:1px solid rgba(255,255,255,.06);overflow:hidden;display:flex;align-items:center}
+.nav-ticker-bar{position:relative;height:28px;background:rgba(232,229,248,0.88);border-top:1px solid rgba(100,80,200,.1);overflow:hidden;display:flex;align-items:center}
 .nav-ticker-bar::before,.nav-ticker-bar::after{content:'';position:absolute;top:0;bottom:0;width:72px;z-index:2;pointer-events:none}
-.nav-ticker-bar::before{left:0;background:linear-gradient(to right,rgba(6,4,14,.98),transparent)}
-.nav-ticker-bar::after{right:0;background:linear-gradient(to left,rgba(6,4,14,.98),transparent)}
+.nav-ticker-bar::before{left:0;background:linear-gradient(to right,rgba(232,229,248,1),transparent)}
+.nav-ticker-bar::after{right:0;background:linear-gradient(to left,rgba(232,229,248,1),transparent)}
 .nav-ticker-track{display:flex;align-items:center;gap:0;white-space:nowrap;animation:tickerScroll 60s linear infinite}
 .nav-ticker-track:hover{animation-play-state:paused}
 @keyframes tickerScroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
 .nav-ticker-item{display:inline-flex;align-items:center;gap:.45rem;padding:0 1.6rem;font-family:var(--mono);font-size:.58rem;letter-spacing:.05em}
-.nav-ticker-sep{width:1px;height:10px;background:rgba(255,255,255,.1);margin:0 .2rem}
-.nav-ticker-sym{color:#8a8098;font-weight:500;letter-spacing:.08em}
-.nav-ticker-price{color:#d0cce8;font-weight:600}
+.nav-ticker-sep{width:1px;height:10px;background:rgba(100,80,200,.15);margin:0 .2rem}
+.nav-ticker-sym{color:rgba(94,90,120,.65);font-weight:500;letter-spacing:.08em}
+.nav-ticker-price{color:#0f0d1e;font-weight:600}
 .nav-ticker-chg{font-weight:500}
 .nav-ticker-chg.pos{color:var(--green)}
 .nav-ticker-chg.neg{color:var(--danger)}
@@ -411,8 +412,8 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;background:rgba(10,8,22,.97)
 /* stress cards */
 .stress-grid{display:grid;grid-template-columns:1fr 1fr;gap:.65rem}
 .stress-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:.9rem 1rem;border-left:2px solid var(--border)}
-.stress-card.neg{border-left-color:rgba(239,68,68,.55)}
-.stress-card.pos{border-left-color:rgba(74,222,128,.35)}
+.stress-card.neg{border-left-color:rgba(255,122,48,.55)}
+.stress-card.pos{border-left-color:rgba(168,85,247,.35)}
 .stress-lbl{font-family:var(--mono);font-size:.52rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:.25rem}
 .stress-val{font-family:var(--disp);font-size:1.5rem;letter-spacing:.04em}
 .stress-val.neg{color:var(--danger)}
@@ -481,7 +482,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;background:rgba(10,8,22,.97)
 }
 .risk-help:hover .risk-help-tip,.risk-help:focus .risk-help-tip,.risk-help:focus-visible .risk-help-tip{opacity:1;transform:translateY(0)}
 .risk-val{font-family:var(--disp);font-size:1.9rem;letter-spacing:.04em;color:#f0eeff;line-height:1}
-.risk-val.danger{color:var(--danger);text-shadow:0 0 16px rgba(239,68,68,.2)}
+.risk-val.danger{color:var(--danger);text-shadow:0 0 16px rgba(255,122,48,.2)}
 .risk-val.purple{color:var(--purple-hi)}
 .risk-sub{font-family:var(--mono);font-size:.54rem;color:#9890b8;margin-top:.3rem}
 .corr-matrix{display:grid;gap:2px;margin-top:1rem;width:fit-content;max-width:100%;overflow-x:auto}
@@ -555,7 +556,7 @@ canvas{width:100%!important;height:220px;display:block}
 .signal-drawdown-svg{width:100%;height:auto;display:block}
 .signal-axis{stroke:rgba(0,0,0,.12);stroke-width:1}
 .signal-grid-line{stroke:rgba(160,100,255,.1);stroke-width:1}
-.signal-drawdown-line{fill:none;stroke:#ff7f79;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.signal-drawdown-line{fill:none;stroke:#ff9a5c;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
 .signal-drawdown-fill{fill:url(#signalDrawdownFill)}
 .signal-drawdown-label{fill:var(--muted);font-family:var(--mono);font-size:10px}
 .signal-sector-row{display:grid;grid-template-columns:auto 1fr auto;gap:.7rem;align-items:center}
@@ -605,8 +606,8 @@ td.val-neg{color:var(--danger);font-family:var(--mono)}
 .badge.fund{background:rgba(0,0,0,.04);color:var(--muted2);border:1px solid var(--border2)}
 .badge.gold{background:rgba(255,77,26,.08);color:var(--orange);border:1px solid rgba(255,77,26,.2)}
 .chip{font-family:var(--mono);font-size:.5rem;letter-spacing:.1em;text-transform:uppercase;padding:.14rem .4rem;border-radius:3px}
-.chip.pos{background:rgba(74,222,128,.09);color:var(--green);border:1px solid rgba(74,222,128,.25)}
-.chip.neg{background:rgba(239,68,68,.08);color:var(--danger);border:1px solid rgba(239,68,68,.22)}
+.chip.pos{background:rgba(168,85,247,.09);color:var(--green);border:1px solid rgba(168,85,247,.28)}
+.chip.neg{background:rgba(255,122,48,.09);color:var(--danger);border:1px solid rgba(255,122,48,.28)}
 .pricing-tag{display:inline-flex;align-items:center;font-family:var(--mono);font-size:.49rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.14rem .45rem;border-radius:999px;border:1px solid var(--border2)}
 .pricing-tag.live{background:rgba(168,85,247,.12);color:var(--purple-hi);border-color:rgba(168,85,247,.28)}
 .pricing-tag.daily{background:rgba(255,122,48,.1);color:#ffb38e;border-color:rgba(255,122,48,.22)}
@@ -640,13 +641,13 @@ td.val-neg{color:var(--danger);font-family:var(--mono)}
 .quality-val{font-family:var(--mono);font-size:1.55rem;font-weight:700;line-height:1.1}
 .quality-val.ok{color:var(--text)}
 .quality-val.accent{color:var(--orange)}
-.quality-val.warn{color:rgba(0,0,0,.35)}
+.quality-val.warn{color:var(--orange)}
 .quality-sub{font-family:var(--mono);font-size:.55rem;color:var(--muted);margin-top:.3rem}
 @media(max-width:860px){.quality-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:480px){.quality-grid{grid-template-columns:1fr}}
 
 /* ── DARK PANEL TEXT CASCADE ── */
-.risk-card,.bullion-card,.boot-shell,.console-wrap{
+.risk-card,.bullion-card,.boot-shell,.console-wrap,.landing-preview-stat,.landing-preview-panel,.ai-input-card{
   --text:#f0eeff;
   --muted:#9890b8;
   --muted2:#c0bcd8;
@@ -655,7 +656,7 @@ td.val-neg{color:var(--danger);font-family:var(--mono)}
   color:var(--text);
 }
 /* light cards inside dark panels reset to dark text */
-.console-ai-block,.ai-kpi-strip{
+.ai-kpi-strip{
   --text:#0f0d1e;
   --muted:#5e5a78;
   --muted2:#4a4665;
@@ -928,8 +929,8 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 
 /* ── AI HERO ─────────────────────────────────────────────────────────────── */
 .ai-hero-wrap{position:relative;overflow:hidden;padding:130px 0 60px;background:var(--bg)}
-.ai-hero-dots{position:absolute;inset:0;background-image:radial-gradient(rgba(100,80,200,.06) 0.6px,transparent 0.6px);background-size:3px 3px;opacity:.5;pointer-events:none}
-.ai-hero-glow{position:absolute;width:600px;height:600px;border-radius:50%;filter:blur(120px);pointer-events:none;opacity:.35}
+.ai-hero-dots{position:absolute;inset:0;background-image:radial-gradient(rgba(100,80,200,.12) 1px,transparent 1px);background-size:28px 28px;opacity:.6;pointer-events:none}
+.ai-hero-glow{position:absolute;width:600px;height:600px;border-radius:50%;filter:blur(120px);pointer-events:none;opacity:.10}
 .ai-hero-glow-l{top:-120px;left:-160px;background:radial-gradient(circle,rgba(168,85,247,.7) 0%,rgba(99,44,180,.4) 50%,transparent 70%)}
 .ai-hero-glow-r{top:-80px;right:-160px;background:radial-gradient(circle,rgba(217,70,239,.55) 0%,rgba(59,130,246,.35) 50%,transparent 70%)}
 .ai-hero-inner{position:relative;max-width:820px;margin:0 auto;padding:0 24px;display:flex;flex-direction:column;align-items:center;text-align:center}
@@ -941,15 +942,15 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 .ai-hero-sub{font-size:.92rem;color:var(--muted);margin:0 0 2.2rem;max-width:500px;line-height:1.7}
 
 /* Input card */
-.ai-input-card{width:100%;background:#ffffff;border:1px solid rgba(110,63,243,.16);border-radius:18px;padding:20px 20px 16px;backdrop-filter:blur(12px);box-shadow:0 4px 18px rgba(100,80,200,.10);transition:border-color .25s,box-shadow .25s}
-.ai-input-card:focus-within{border-color:rgba(124,77,255,.45);box-shadow:0 4px 18px rgba(100,80,200,.14),0 0 0 1px rgba(124,77,255,.10)}
+.ai-input-card{width:100%;background:linear-gradient(180deg,rgba(14,11,26,.97),rgba(8,6,18,.96));border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:20px 20px 16px;backdrop-filter:blur(12px);box-shadow:0 8px 32px rgba(0,0,0,.32),0 2px 8px rgba(100,80,200,.10);transition:border-color .25s,box-shadow .25s}
+.ai-input-card:focus-within{border-color:rgba(124,77,255,.4);box-shadow:0 8px 32px rgba(0,0,0,.36),0 0 0 1px rgba(124,77,255,.14)}
 .ai-input-textarea{width:100%;min-height:90px;background:transparent;border:none;outline:none;resize:none;color:var(--text);font-family:var(--sans);font-size:1rem;line-height:1.6;padding:0;caret-color:var(--purple-hi)}
-.ai-input-textarea::placeholder{color:rgba(157,151,183,.5)}
-.ai-input-footer{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding-top:12px;border-top:1px solid rgba(178,154,233,.1);flex-wrap:wrap}
+.ai-input-textarea::placeholder{color:rgba(160,154,200,.45)}
+.ai-input-footer{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding-top:12px;border-top:1px solid rgba(255,255,255,.07);flex-wrap:wrap}
 .ai-input-chips{display:flex;flex-wrap:wrap;gap:.3rem}
 .ai-input-actions{display:flex;align-items:center;gap:.5rem;flex-shrink:0}
 .ai-refresh-btn{font-family:var(--mono);font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);background:transparent;border:1px solid var(--border2);border-radius:999px;padding:.4rem .85rem;cursor:pointer;transition:all .15s;white-space:nowrap}
-.ai-refresh-btn:hover{color:var(--text);border-color:rgba(0,0,0,.3)}
+.ai-refresh-btn:hover{color:var(--text);border-color:rgba(255,255,255,.28)}
 .ai-send-btn{display:flex;align-items:center;gap:.4rem;font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:#fff;background:linear-gradient(135deg,var(--purple) 0%,var(--purple-hi) 50%,var(--orange) 100%);border:none;border-radius:999px;padding:.55rem 1.1rem;cursor:pointer;transition:all .2s;white-space:nowrap}
 .ai-send-btn:hover{transform:translateY(-1px);filter:brightness(1.08)}
 .ai-send-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;filter:none}
@@ -1003,11 +1004,11 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
 
 /* AI output block */
 .console-ai-block{
-  background:var(--card) !important;
-  border:1px solid var(--border) !important;
+  background:rgba(255,255,255,.05) !important;
+  border:1px solid rgba(255,255,255,.09) !important;
   border-radius:10px !important;
 }
-.console-ai-block h4{ color:var(--purple) !important; font-weight:700 !important }
+.console-ai-block h4{ color:var(--purple-hi) !important; font-weight:700 !important }
 
 /* Stress card */
 .stress-card{
@@ -1060,6 +1061,10 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
   box-shadow:0 0 0 1px rgba(168,85,247,.06) inset !important;
 }
 .meta-panel-title{ color:var(--purple) !important }
+.meta-panel .kpi-mini{
+  background:rgba(255,255,255,.55) !important;
+  border-color:rgba(100,80,200,.10) !important;
+}
 
 /* Upgrade card */
 .upgrade-panel{ border-color:rgba(168,85,247,.25) !important; background:rgba(168,85,247,.05) !important }
@@ -1325,9 +1330,9 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
         <!-- Output mode — identical to original -->
         <div id="pro-ai-output" style="display:none">
           <div id="pro-ai-output-inner" style="min-height:120px;max-height:480px;overflow-y:auto;padding-bottom:.5rem"></div>
-          <div style="margin-top:1rem;padding-top:.75rem;border-top:1px solid rgba(100,80,200,.10);display:flex;justify-content:space-between;align-items:center">
+          <div style="margin-top:1rem;padding-top:.75rem;border-top:1px solid rgba(255,255,255,.07);display:flex;justify-content:space-between;align-items:center">
             <span id="pro-ai-meta" style="font-family:var(--mono);font-size:.58rem;color:var(--muted);letter-spacing:.08em"></span>
-            <button type="button" id="ai-new-question-btn" style="background:none;border:1px solid rgba(100,80,200,.16);border-radius:6px;font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;color:var(--muted2);cursor:pointer;padding:.3rem .75rem;text-transform:uppercase">New question</button>
+            <button type="button" id="ai-new-question-btn" style="background:none;border:1px solid rgba(255,255,255,.12);border-radius:6px;font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;color:var(--muted2);cursor:pointer;padding:.3rem .75rem;text-transform:uppercase">New question</button>
           </div>
         </div>
       </div>
@@ -1948,7 +1953,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       <div class="chart-card">
         <div class="chart-card-title">Account Allocation</div>
         <div class="chart-card-sub">By account type</div>
-        <canvas id="c-account" height="200"></canvas>
+        <canvas id="c-account" height="220"></canvas>
         <div class="legend">
           <div class="leg"><span class="leg-dot" style="background:#ff4d1a"></span>ASX Equities 50%</div>
           <div class="leg"><span class="leg-dot" style="background:#9b5de5"></span>Super 28%</div>
@@ -1959,7 +1964,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       <div class="chart-card">
         <div class="chart-card-title">Sector Allocation</div>
         <div class="chart-card-sub">By GICS sector</div>
-        <canvas id="c-sector" height="200"></canvas>
+        <canvas id="c-sector" height="220"></canvas>
         <div class="legend">
           <div class="leg"><span class="leg-dot" style="background:#ff4d1a"></span>Materials 32%</div>
           <div class="leg"><span class="leg-dot" style="background:#9b5de5"></span>Financials 26%</div>
@@ -1970,13 +1975,13 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       <div class="chart-card">
         <div class="chart-card-title">Top Holdings</div>
         <div class="chart-card-sub">By market value</div>
-        <canvas id="c-holdings" height="200"></canvas>
+        <canvas id="c-holdings" height="220"></canvas>
       </div>
       <div class="chart-card">
         <div class="chart-card-title">Portfolio History</div>
         <div class="chart-card-sub">Total value over time</div>
         <div style="position:relative">
-          <canvas id="c-history" height="200"></canvas>
+          <canvas id="c-history" height="220"></canvas>
           <div id="history-empty-state" hidden style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:1rem;font-family:var(--mono);font-size:0.62rem;letter-spacing:0.04em;color:var(--muted2);background:rgba(124,77,255,0.04);border-radius:8px">Import reports and refresh prices over time to build your portfolio history.</div>
           <div id="history-tooltip" style="display:none;position:absolute;pointer-events:none;background:#ffffff;border:1px solid rgba(100,80,200,0.18);border-radius:6px;padding:0.45rem 0.65rem;font-family:var(--mono);font-size:0.62rem;color:#0a0818;white-space:nowrap;z-index:10;box-shadow:0 4px 16px rgba(100,80,200,0.14)"></div>
         </div>
@@ -2240,7 +2245,36 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     </div>
     <div class="upgrade-modal-actions">
       <a href="/signin?mode=login&plan=plus" class="upgrade-btn-primary">Upgrade to Plus</a>
-      <button class="upgrade-btn-secondary" onclick="document.getElementById('upgrade-overlay').classList.remove('open')">Not now</button>
+      <button class="upgrade-btn-secondary" onclick="document.getElementById('upgrade-overlay')?.classList.remove('open')">Not now</button>
+    </div>
+  </div>
+</div>
+
+<div id="ai-limit-overlay" role="dialog" aria-modal="true" aria-labelledby="ai-limit-modal-title" style="position:fixed;inset:0;background:rgba(15,13,30,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:9999;opacity:0;pointer-events:none;transition:opacity .2s;padding:1rem">
+  <div style="background:#fff;border:1px solid rgba(100,80,200,.18);border-radius:20px;padding:0;max-width:420px;width:100%;box-shadow:0 24px 64px rgba(100,80,200,.18),0 4px 16px rgba(0,0,0,.1);overflow:hidden;transform:translateY(14px) scale(.97);transition:transform .22s">
+    <div style="height:3px;background:linear-gradient(90deg,#a855f7,#d946ef 50%,#ff7a30)"></div>
+    <div style="padding:2rem 1.75rem 1.75rem;text-align:center">
+      <div style="display:inline-flex;align-items:center;justify-content:center;width:52px;height:52px;border-radius:14px;background:rgba(124,77,255,.08);border:1px solid rgba(124,77,255,.18);margin-bottom:1rem">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7c4dff" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      </div>
+      <h2 id="ai-limit-modal-title" style="font-family:'Space Grotesk',sans-serif;font-size:1.2rem;font-weight:700;color:#0f0d1e;margin-bottom:.5rem;letter-spacing:-.02em">AI query limit reached</h2>
+      <p id="ai-limit-modal-body" style="font-size:.85rem;color:#5e5a78;line-height:1.65;margin-bottom:1.5rem">You've used all your Ask AI sessions for this month. Upgrade to get more.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1.25rem;text-align:left">
+        <button onclick="startStripeCheckout('plus',this)" style="display:flex;flex-direction:column;gap:.35rem;padding:1rem;border:1px solid rgba(100,80,200,.16);border-radius:14px;background:#faf9ff;cursor:pointer;text-align:left;font-family:inherit;transition:border-color .15s,transform .15s" onmouseover="this.style.borderColor='rgba(124,77,255,.4)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(100,80,200,.16)';this.style.transform=''">
+          <span style="font-size:.6rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#7c4dff;font-family:'DM Mono',monospace">Plus</span>
+          <span style="font-size:1.4rem;font-weight:700;color:#0f0d1e;line-height:1">$2.99<span style="font-size:.65rem;color:#9b8fbb;font-weight:500">/mo</span></span>
+          <span style="font-size:.76rem;color:#5e5a78;line-height:1.4">20 AI queries/month · Dip alerts</span>
+          <span class="ai-modal-cta-plus" style="margin-top:.4rem;display:block;text-align:center;padding:.35rem;border-radius:8px;font-size:.72rem;font-weight:600;background:rgba(124,77,255,.1);color:#7c4dff;border:1px solid rgba(124,77,255,.25)">Get Plus</span>
+        </button>
+        <button onclick="startStripeCheckout('pro',this)" style="display:flex;flex-direction:column;gap:.35rem;padding:1rem;border:1px solid rgba(124,77,255,.35);border-radius:14px;background:rgba(124,77,255,.05);cursor:pointer;text-align:left;font-family:inherit;transition:border-color .15s,transform .15s" onmouseover="this.style.borderColor='rgba(124,77,255,.6)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(124,77,255,.35)';this.style.transform=''">
+          <span style="font-size:.6rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#a855f7;font-family:'DM Mono',monospace">Pro</span>
+          <span style="font-size:1.4rem;font-weight:700;color:#0f0d1e;line-height:1">$9.99<span style="font-size:.65rem;color:#9b8fbb;font-weight:500">/mo</span></span>
+          <span style="font-size:.76rem;color:#5e5a78;line-height:1.4">Unlimited AI · Full quant console</span>
+          <span class="ai-modal-cta-pro" style="margin-top:.4rem;display:block;text-align:center;padding:.35rem;border-radius:8px;font-size:.72rem;font-weight:700;background:linear-gradient(135deg,#a855f7,#d946ef 50%,#ff7a30);color:#fff;border:none">Get Pro</span>
+        </button>
+      </div>
+      <p id="ai-modal-checkout-error" style="display:none;color:#dc2626;font-size:.75rem;margin:0 0 .75rem"></p>
+      <button onclick="var _o=document.getElementById('ai-limit-overlay');if(_o){_o.style.opacity='0';_o.style.pointerEvents='none';}" style="background:transparent;border:none;color:#9b8fbb;font-size:.8rem;cursor:pointer;padding:.25rem .5rem;transition:color .15s;font-family:inherit" onmouseover="this.style.color='#0f0d1e'" onmouseout="this.style.color='#9b8fbb'">Maybe later</button>
     </div>
   </div>
 </div>
@@ -2253,7 +2287,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
   const P = "#a855f7";
   const P2 = "#d946ef";
   const M = "rgba(160,100,255,.1)";
-  const TEXT = "#9b8fbb";
+  const TEXT = "#5e5a78";
   const MONO = "'DM Mono', monospace";
   const SOURCE_LABEL = { super: "SUPER", asx: "ASX", gold: "GOLD", index: "INDEX", fund: "FUND", crypto: "CRYPTO", savings: "SAVINGS", tax: "TAX" };
   const SOURCE_BADGE = { super: "super", asx: "asx", gold: "gold", index: "fund", fund: "fund", crypto: "crypto", savings: "fund", tax: "fund" };
@@ -2330,6 +2364,20 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
   ];
   const DEMO_PORTFOLIO_STATE = createDemoPortfolioState();
   const EMPTY_DEMO_PORTFOLIO_STATE = { holdings: [], snapshots: [], updatedAt: "", lastPriceRefreshAt: "" };
+  const DEMO_HISTORICAL_RISK_ESTIMATE = {
+    source: "yahoo_estimate",
+    betaToBenchmark: 0.72,
+    trackingErrorAnnualPct: 8.3,
+    correlationToBenchmark: 0.61,
+    cornishFisherVar95Pct: 0.9,
+    cornishFisherVar95Amount: null,
+    regime: { vix: 19.4, label: "Neutral", cssClass: "purple" },
+    factorExposure: { marketBeta: 0.72, sizeBeta: 0.18 },
+    sharpeRatioAnnual: 1.04,
+    sortinoRatioAnnual: 1.31,
+    returnSkewness: -0.12,
+    benchmarkPointsUsed: 63,
+  };
 
   const state = {
     demoMode: false,
@@ -2453,8 +2501,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     if (typeof window === "undefined") return false;
     const params = new URLSearchParams(window.location.search);
     if (params.get("demo") === "1" || params.get("mode") === "demo") return true;
-    if (params.get("mode") === "account") return false;
-    return true;
+    return false;
   }
 
   function getDemoUploadsRemaining() {
@@ -2635,7 +2682,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       holdings,
       snapshots: createDemoSnapshots(totalValue),
       updatedAt: now.toISOString(),
-      lastPriceRefreshAt: new Date(now.getTime() - 30 * 60 * 1000).toISOString(),
+      lastPriceRefreshAt: now.toISOString(),
     };
   }
 
@@ -2778,7 +2825,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     if (alertsSection) alertsSection.style.display = hasProAccess ? "" : "none";
     if (stressPanel) stressPanel.style.display = hasProAccess ? "" : "none";
     const monteCarloWrap = document.getElementById("monte-carlo-wrap");
-    if (monteCarloWrap) monteCarloWrap.style.display = hasProAccess ? "" : "none";
+    if (monteCarloWrap && !hasProAccess) monteCarloWrap.style.display = "none";
     if (metricsPanelSplit) metricsPanelSplit.classList.toggle("starter-layout", !hasProAccess);
     if (riskWindowTabs) riskWindowTabs.style.display = hasProAccess ? "" : "none";
     if (riskGrid) riskGrid.classList.toggle("starter-layout", !hasProAccess);
@@ -3118,68 +3165,49 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       .sort((a, b) => b.value - a.value);
   }
 
-  function computeTodayChange(holdings, snapshots) {
+  function computeTodayChange(holdings, snapshots, lastPriceRefreshAt) {
     const todayKeySydney = toSydneyDateKey(new Date());
+    const refreshedToday = lastPriceRefreshAt && toSydneyDateKey(lastPriceRefreshAt) === todayKeySydney;
+    // Only show a today-change when prices have actually been fetched today.
+    if (!refreshedToday) return { amount: null, pct: null };
+
     const preExistingHoldings = (holdings || []).filter((holding) => {
       const importedAt = new Date(holding?.importedAt || "");
-      if (Number.isNaN(importedAt.getTime())) {
-        return true;
-      }
+      if (Number.isNaN(importedAt.getTime())) return true;
       return toSydneyDateKey(importedAt) < todayKeySydney;
     });
-    const hasSameDayImports = preExistingHoldings.length < (holdings || []).length;
+
     const currentTotal = sum(preExistingHoldings.map((holding) => Number(holding.value) || 0));
-    let fallbackPreviousTotal = 0;
-    let fallbackCurrentTotal = 0;
-    let liveDataCount = 0; // holdings with a real prevClose (different from price)
+    let openTotal = 0; // portfolio value at market open (using sessionOpen price per holding)
+    let liveDataCount = 0; // holdings whose open price differs from current price
 
     for (const holding of preExistingHoldings) {
       const quantity = resolveHoldingUnits(Number(holding?.units), Number(holding?.value), Number(holding?.price));
       const price = Number(holding?.price);
+      const sessionOpen = Number(holding?.sessionOpen);
       const prevClose = Number(holding?.prevClose);
 
-      if (!Number.isFinite(quantity) || quantity <= 0 || !Number.isFinite(price) || !Number.isFinite(prevClose) || price <= 0 || prevClose <= 0) {
+      if (!Number.isFinite(quantity) || quantity <= 0 || !Number.isFinite(price) || price <= 0) {
+        // No tradeable units — treat as unchanged (contributes equally to both sides).
         const value = Number(holding?.value);
-        if (Number.isFinite(value) && value > 0) {
-          fallbackPreviousTotal += value;
-          fallbackCurrentTotal += value;
-        }
+        if (Number.isFinite(value) && value > 0) openTotal += value;
         continue;
       }
 
-      // Count holdings that have a live prevClose distinct from price
-      if (Math.abs(price - prevClose) / prevClose > 0.0001) liveDataCount++;
+      // Prefer sessionOpen (= Yahoo regularMarketOpen, set on first refresh each day) over prevClose.
+      const baseline = Number.isFinite(sessionOpen) && sessionOpen > 0
+        ? sessionOpen
+        : Number.isFinite(prevClose) && prevClose > 0
+          ? prevClose
+          : price;
 
-      fallbackPreviousTotal += quantity * prevClose;
-      fallbackCurrentTotal += quantity * price;
+      if (Math.abs(price - baseline) / baseline > 0.0001) liveDataCount++;
+      openTotal += quantity * baseline;
     }
 
-    const todaySnapshots = (snapshots || [])
-      .filter((snapshot) => Number.isFinite(snapshot?.value) && toSydneyDateKey(snapshot?.date) === todayKeySydney)
-      .sort((a, b) => String(a.date || "").localeCompare(String(b.date || "")));
-
-    if (hasSameDayImports || todaySnapshots.length === 0) {
-      if (fallbackPreviousTotal > 0) {
-        // If no holding has a live prevClose, data isn't refreshed yet — return null so UI shows "—"
-        if (liveDataCount === 0) return { amount: null, pct: null };
-        const amount = fallbackCurrentTotal - fallbackPreviousTotal;
-        return { amount, pct: (amount / fallbackPreviousTotal) * 100 };
-      }
-      return { amount: null, pct: null };
-    }
-
-    const dayStartValue = Number(todaySnapshots[0].value) || 0;
-    if (dayStartValue <= 0 && fallbackPreviousTotal > 0) {
-      if (liveDataCount === 0) return { amount: null, pct: null };
-      const amount = fallbackCurrentTotal - fallbackPreviousTotal;
-      return { amount, pct: (amount / fallbackPreviousTotal) * 100 };
-    }
-
-    const change = currentTotal - dayStartValue;
-    return {
-      amount: change,
-      pct: dayStartValue > 0 ? (change / dayStartValue) * 100 : 0,
-    };
+    if (openTotal <= 0 || liveDataCount === 0) return { amount: null, pct: null };
+    const amount = currentTotal - openTotal;
+    return { amount, pct: (amount / openTotal) * 100 };
   }
 
   function countKeywordHits(corpus, keywords) {
@@ -3248,6 +3276,11 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
 
   function dpr(canvas) {
     const r = window.devicePixelRatio || 1;
+    // Clear any stale inline dimensions written by a prior render while the canvas was hidden.
+    // Inline styles override CSS `!important`, so a poisoned '1px' from a hidden-tab render
+    // stays broken until cleared here before re-measuring.
+    canvas.style.width = '';
+    canvas.style.height = '';
     const rect = canvas.getBoundingClientRect();
     const fallbackWidth = canvas.parentElement?.clientWidth || canvas.clientWidth || 0;
     const fallbackHeight =
@@ -3257,9 +3290,13 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       200;
     const w = Math.max(1, Math.round(rect.width || fallbackWidth));
     const h = Math.max(1, Math.round(rect.height || fallbackHeight));
-    canvas.style.height = `${h}px`;
     canvas.width = Math.round(w * r);
     canvas.height = Math.round(h * r);
+    // Only pin the display size for HiDPI when the canvas has real dimensions.
+    // If the canvas is hidden (w ≤ 4), skip setting inline styles so CSS retains
+    // control and the layout isn't poisoned for the next visible render.
+    if (w > 4) canvas.style.width = `${w}px`;
+    if (h > 4) canvas.style.height = `${h}px`;
     const ctx = canvas.getContext("2d");
     if (!ctx) return null;
     ctx.setTransform(r, 0, 0, r, 0, 0);
@@ -3313,7 +3350,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     });
     ctx.beginPath();
     ctx.arc(cx, cy, r, 0, Math.PI * 2);
-    ctx.fillStyle = "rgba(249,248,255,.97)";
+    ctx.fillStyle = "#e8e5f8";
     ctx.fill();
     angle = -Math.PI / 2;
     data.forEach((d) => {
@@ -3322,7 +3359,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       ctx.moveTo(cx, cy);
       ctx.arc(cx, cy, R + 2, angle - 0.012, angle + 0.012);
       ctx.closePath();
-      ctx.fillStyle = "rgba(249,248,255,1)";
+      ctx.fillStyle = "#e8e5f8";
       ctx.fill();
       angle += sweep;
     });
@@ -3594,7 +3631,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     }).join("");
   }
 
-  function renderPreviewAllocation(items) {
+  function renderPreviewAllocation(items) { window.renderPreviewAllocation = renderPreviewAllocation;
     const legend = document.getElementById("preview-allocation-legend");
     if (!legend) return;
 
@@ -3835,7 +3872,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
   async function loadHistoricalRisk() {
     if (state.demoMode) {
       if (!hasDemoGuestWorkspace()) {
-        state.historicalRiskEstimate = null;
+        state.historicalRiskEstimate = cloneData(DEMO_HISTORICAL_RISK_ESTIMATE);
         return;
       }
       const apiWindow = RISK_API_WINDOW_MAP[state.riskWindow] || "3M";
@@ -3924,7 +3961,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     const used = state.aiUsedThisMonth;
     const atLimit = limit !== -1 && used >= limit;
 
-    askButton.disabled = state.holdingsAiLoading || !hasHoldings || atLimit;
+    askButton.disabled = state.holdingsAiLoading || !hasHoldings;
 
     const labelEl = document.getElementById("pro-ai-ask-label");
     if (state.holdingsAiLoading) {
@@ -3941,7 +3978,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       usageEl = document.createElement("div");
       usageEl.id = "ai-usage-counter";
       usageEl.className = "ai-usage-counter";
-      const card = document.getElementById("ai-hero-card");
+      const card = document.getElementById("pro-ai-ask-btn")?.closest(".ai-input-card");
       if (card?.parentNode) card.parentNode.insertBefore(usageEl, card.nextSibling);
     }
     if (limit === -1) {
@@ -4070,7 +4107,15 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     renderHoldingsAi();
   });
 
+  let _aiAbortController = null;
+
   async function runHoldingsAi() {
+    // Cancel any in-flight request before starting a new one
+    if (_aiAbortController) {
+      _aiAbortController.abort();
+      _aiAbortController = null;
+    }
+
     if (state.demoMode) {
       const questionInput = document.getElementById("pro-ai-question");
       const question = questionInput instanceof HTMLTextAreaElement && questionInput.value.trim().length > 0
@@ -4096,10 +4141,39 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       return;
     }
 
+    const _aiLimit = state.aiMonthlyLimit;
+    const _aiUsed = state.aiUsedThisMonth;
+    if (_aiLimit !== -1 && _aiUsed >= _aiLimit) {
+      const overlay = document.getElementById("ai-limit-overlay");
+      const body = document.getElementById("ai-limit-modal-body");
+      if (body) {
+        body.textContent = _aiLimit > 0
+          ? `You've used all ${_aiLimit} Ask AI sessions for this month. Upgrade to get more.`
+          : "You've reached your Ask AI limit for this month. Upgrade to get more.";
+      }
+      if (overlay) {
+        overlay.style.opacity = "1";
+        overlay.style.pointerEvents = "all";
+        const inner = overlay.querySelector("div");
+        if (inner) { inner.style.transform = "none"; }
+        overlay.addEventListener("click", function closeOnBackdrop(e) {
+          if (e.target === overlay) {
+            overlay.style.opacity = "0";
+            overlay.style.pointerEvents = "none";
+            overlay.removeEventListener("click", closeOnBackdrop);
+          }
+        }, { once: false });
+      }
+      return;
+    }
+
     const questionInput = document.getElementById("pro-ai-question");
     const question = questionInput instanceof HTMLTextAreaElement && questionInput.value.trim().length > 0
       ? questionInput.value.trim().slice(0, 700)
       : HOLDINGS_AI_DEFAULT_QUESTION;
+
+    _aiAbortController = new AbortController();
+    const _thisSignal = _aiAbortController.signal;
 
     state.holdingsAiLoading = true;
     state.holdingsAiStreamText = "";
@@ -4109,8 +4183,13 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     try {
       const response = await fetch("/api/pro/holdings-ai", {
         method: "POST",
+        signal: _thisSignal,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question }),
+        body: JSON.stringify({
+          question,
+          monteCarlo: window._lastMonteCarlo || null,
+          stressScenarios: window._lastStressScenarios || null,
+        }),
       });
 
       if (!response.ok || !response.body) {
@@ -4191,6 +4270,8 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
 
       throw new Error("AI stream ended without a complete response.");
     } catch (error) {
+      // Silently discard if this request was intentionally cancelled by a newer one
+      if (error instanceof Error && error.name === "AbortError") return;
       // Remove the optimistic user message if the request failed
       state.aiConversationMessages = state.aiConversationMessages.slice(0, -1);
       const errMsg = error instanceof Error ? error.message : "Failed to run Ask AI analysis.";
@@ -4203,6 +4284,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
         showToast(errMsg, "error");
       }
     } finally {
+      if (_aiAbortController && _aiAbortController.signal === _thisSignal) _aiAbortController = null;
       state.holdingsAiLoading = false;
       state.holdingsAiStreamText = "";
       renderHoldingsAi();
@@ -4210,11 +4292,11 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     }
   }
 
-  function renderPortfolio() {
+  function renderPortfolio() { window.renderPortfolio = renderPortfolio;
     const holdings = state.portfolio.holdings || [];
     const snapshots = state.portfolio.snapshots || [];
     const metrics = computeMetrics(holdings, snapshots, state.riskWindow);
-    const today = computeTodayChange(holdings, snapshots);
+    const today = computeTodayChange(holdings, snapshots, state.portfolio.lastPriceRefreshAt || "");
     const effectiveVar95Pct = metrics.var95Pct ?? state.historicalRiskEstimate?.var95Pct ?? null;
     const effectiveCvar95Pct = metrics.cvar95Pct ?? state.historicalRiskEstimate?.cvar95Pct ?? null;
     const effectiveMaxDrawdownPct = metrics.maxDrawdownPct ?? state.historicalRiskEstimate?.maxDrawdownPct ?? null;
@@ -4618,7 +4700,19 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
 
     const stressCards = Array.from(document.querySelectorAll(".stress-card"));
     if (stressCards.length >= 4) {
-      const scenarios = [-0.4, -0.08, -0.05, 0.145];
+      const stressDefs = [
+        { name: "GFC-style crash", shockPct: -40 },
+        { name: "Market correction", shockPct: -8 },
+        { name: "Flash crash", shockPct: -5 },
+        { name: "Bull rally", shockPct: 14.5 },
+      ];
+      const scenarios = stressDefs.map((s) => s.shockPct / 100);
+      window._lastStressScenarios = stressDefs.map((s, i) => ({
+        name: s.name,
+        shockPct: s.shockPct,
+        impact: Math.round(metrics.totalValue * scenarios[i]),
+        projected: Math.round(metrics.totalValue + metrics.totalValue * scenarios[i]),
+      }));
       stressCards.forEach((card, index) => {
         const impact = metrics.totalValue * scenarios[index];
         const projected = metrics.totalValue + impact;
@@ -4643,6 +4737,8 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     }));
     const normalizedAccount = normalizeSlices(accountSlices);
     const normalizedSector = normalizeSlices(sectorSlices);
+    window._lastAccountSlices = normalizedAccount;
+    window._lastSectorSlices = normalizedSector;
     drawDonut("c-account", normalizedAccount);
     drawDonut("c-sector", normalizedSector);
     renderPreviewAllocation(normalizedAccount);
@@ -4672,7 +4768,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
   function runMonteCarlo() { window.runMonteCarlo = runMonteCarlo;
     const isPro = Boolean(state.demoMode || state.sessionUser?.proEnabled);
     const wrap = document.getElementById("monte-carlo-wrap");
-    if (wrap) wrap.style.display = isPro ? "" : "none";
+    if (wrap && !isPro) wrap.style.display = "none";
     if (!isPro) return;
 
     const canvas = document.getElementById("c-monte-carlo");
@@ -4789,11 +4885,22 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     }
 
     // Summary stats
-    const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
     const fmtAUD = (v) => formatCurrency(v, {});
     setText("mc-stat-p50", fmtAUD(p50[N_DAYS]));
     setText("mc-stat-p90", fmtAUD(p90[N_DAYS]));
     setText("mc-stat-p10", fmtAUD(p10[N_DAYS]));
+
+    // Store for AI context
+    window._lastMonteCarlo = {
+      horizonDays: N_DAYS,
+      startValue: Math.round(startValue),
+      p10: Math.round(p10[N_DAYS]),
+      p25: Math.round(p25[N_DAYS]),
+      p50: Math.round(p50[N_DAYS]),
+      p75: Math.round(p75[N_DAYS]),
+      p90: Math.round(p90[N_DAYS]),
+      usedFallback: useFallback,
+    };
 
     if (loadingEl) loadingEl.style.display = "none";
 
@@ -5125,6 +5232,8 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       return;
     }
 
+    const addBtn = document.getElementById("add-alert-btn");
+    if (addBtn) { addBtn.disabled = true; }
     try {
       await apiJson("/api/alerts/price-dip", {
         method: "PUT",
@@ -5137,6 +5246,8 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       showToast(`Alert saved for ${ticker}.`);
     } catch (error) {
       showToast(error instanceof Error ? error.message : "Failed to save alert.", "error");
+    } finally {
+      if (addBtn) { addBtn.disabled = false; }
     }
   }
 
@@ -5152,11 +5263,14 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
       return;
     }
 
+    const delBtn = document.querySelector(`[data-delete-ticker="${CSS.escape(ticker)}"]`);
+    if (delBtn) delBtn.disabled = true;
     try {
       await apiJson(`/api/alerts/price-dip?ticker=${encodeURIComponent(ticker)}`, { method: "DELETE" });
       await loadAlerts();
       showToast(`Alert removed for ${ticker}.`);
     } catch (error) {
+      if (delBtn) delBtn.disabled = false;
       showToast(error instanceof Error ? error.message : "Failed to remove alert.", "error");
     }
   }
@@ -5376,13 +5490,13 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
         markBootReady();
       }
       renderPortfolio();
-      window.requestAnimationFrame(() => {
+      window.setTimeout(() => {
         if (!state.redirecting) {
           renderPortfolio();
         }
-      });
+      }, 120);
       // Auto-run AI only in demo mode — real users ask manually
-      if (state.demoMode && !state.holdingsAi && !state.holdingsAiLoading) {
+      if (state.demoMode && !state.holdingsAi && !state.holdingsAiLoading && state.holdings.length > 0) {
         window.setTimeout(() => { runHoldingsAi(); }, 800);
       }
     } catch (error) {
@@ -5530,13 +5644,22 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     // Re-draw canvases after tab becomes visible (they were 0-width when hidden)
     if (tab === 'quant') {
       requestAnimationFrame(function() {
-        if (typeof drawHistoryLine === 'function' && window._fullHistory) {
-          drawHistoryLine(window._fullHistory, window._historyCostBase || 0);
-        }
-        if (typeof runMonteCarlo === 'function') runMonteCarlo();
-        if (typeof drawHoldingsBars === 'function' && window._lastHoldingsBars) {
-          drawHoldingsBars(window._lastHoldingsBars);
-        }
+        requestAnimationFrame(function() {
+          if (typeof drawDonut === 'function') {
+            if (window._lastAccountSlices) drawDonut("c-account", window._lastAccountSlices);
+            if (window._lastSectorSlices) drawDonut("c-sector", window._lastSectorSlices);
+          }
+          if (typeof renderPreviewAllocation === 'function' && window._lastAccountSlices) {
+            renderPreviewAllocation(window._lastAccountSlices);
+          }
+          if (typeof drawHistoryLine === 'function' && window._fullHistory) {
+            drawHistoryLine(window._fullHistory, window._historyCostBase || 0);
+          }
+          if (typeof runMonteCarlo === 'function') runMonteCarlo();
+          if (typeof drawHoldingsBars === 'function' && window._lastHoldingsBars) {
+            drawHoldingsBars(window._lastHoldingsBars);
+          }
+        });
       });
     }
   }
@@ -5544,7 +5667,12 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
   document.querySelectorAll('.nav-tab').forEach(function(btn) {
     btn.addEventListener('click', function() {
       var tab = btn.getAttribute('data-tab');
-      if (tab === 'research') { window.location.href = (state.demoMode ? '/research?demo=1' : '/research'); return; }
+      if (tab === 'research') {
+        var _p = new URLSearchParams(window.location.search);
+        var _demo = _p.get('demo') === '1' || _p.get('mode') === 'demo';
+        window.location.href = _demo ? '/research?demo=1' : '/research';
+        return;
+      }
       switchTab(tab);
     });
   });
@@ -5554,7 +5682,12 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     btn.addEventListener('click', function() {
       var tab = btn.getAttribute('data-tab');
       if (!tab) return;
-      if (tab === 'research') { window.location.href = (state.demoMode ? '/research?demo=1' : '/research'); return; }
+      if (tab === 'research') {
+        var _p = new URLSearchParams(window.location.search);
+        var _demo = _p.get('demo') === '1' || _p.get('mode') === 'demo';
+        window.location.href = _demo ? '/research?demo=1' : '/research';
+        return;
+      }
       switchTab(tab);
     });
   });
@@ -5562,6 +5695,41 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
   var _initTab = new URLSearchParams(window.location.search).get('tab') || 'quant';
   if (_initTab === 'research') _initTab = 'quant';
   switchTab(_initTab);
+
+  // Redraw canvases when page is restored from back/forward cache (bfcache)
+  window.addEventListener('pageshow', function(e) {
+    if (e.persisted) {
+      var attempts = 0;
+      var CANVAS_IDS = ['c-account', 'c-sector', 'c-history', 'c-monte-carlo', 'c-holdings'];
+      function tryRedraw() {
+        // Wait until every visible canvas has a non-zero width
+        var notReady = CANVAS_IDS.some(function(id) {
+          var el = document.getElementById(id);
+          return el && el.offsetWidth === 0;
+        });
+        if (notReady && attempts < 30) {
+          attempts++;
+          window.setTimeout(tryRedraw, 50);
+          return;
+        }
+        if (typeof drawDonut === 'function') {
+          if (window._lastAccountSlices) drawDonut('c-account', window._lastAccountSlices);
+          if (window._lastSectorSlices) drawDonut('c-sector', window._lastSectorSlices);
+        }
+        if (typeof window.renderPreviewAllocation === 'function' && window._lastAccountSlices) {
+          window.renderPreviewAllocation(window._lastAccountSlices);
+        }
+        if (typeof drawHistoryLine === 'function' && window._fullHistory && window._fullHistory.length) {
+          drawHistoryLine(window._fullHistory, window._historyCostBase || 0);
+        }
+        if (typeof drawHoldingsBars === 'function' && window._lastHoldingsBars) {
+          drawHoldingsBars(window._lastHoldingsBars);
+        }
+        if (typeof runMonteCarlo === 'function') runMonteCarlo();
+      }
+      tryRedraw();
+    }
+  });
 })();
 
 /* ── TICKER BAR ── */
@@ -5628,6 +5796,35 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     if (attempts >= 20) clearInterval(poll);
   }, 1500);
 })();
+
+// ── Direct Stripe checkout (used by AI limit modal and other upgrade prompts) ──
+async function startStripeCheckout(plan, triggerEl) {
+  const ctaEl = triggerEl?.querySelector('.ai-modal-cta-plus, .ai-modal-cta-pro');
+  const origText = ctaEl ? ctaEl.textContent : null;
+  const errEl = document.getElementById('ai-modal-checkout-error');
+  if (errEl) errEl.style.display = 'none';
+  if (ctaEl) ctaEl.textContent = 'Redirecting…';
+  if (triggerEl) triggerEl.disabled = true;
+
+  try {
+    const res = await fetch('/api/billing/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ plan }),
+    });
+    if (!res.ok) throw new Error(`Checkout failed (${res.status})`);
+    const data = await res.json();
+    if (data.url) {
+      window.location.assign(data.url);
+    } else {
+      throw new Error(data.error || 'Unable to start checkout.');
+    }
+  } catch (err) {
+    if (ctaEl && origText) ctaEl.textContent = origText;
+    if (triggerEl) triggerEl.disabled = false;
+    if (errEl) { errEl.textContent = err.message || 'Unable to start checkout. Please try again.'; errEl.style.display = 'block'; }
+  }
+}
 </script>
 </body>
 </html>

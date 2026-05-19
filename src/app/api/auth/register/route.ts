@@ -95,7 +95,20 @@ export async function POST(request: Request) {
 
     const passwordHash = hashPassword(password);
     const termsAcceptedAt = new Date().toISOString();
-    const user = createAuthUser(email, passwordHash, displayName, termsAcceptedAt);
+    let user: ReturnType<typeof createAuthUser>;
+    try {
+      user = createAuthUser(email, passwordHash, displayName, termsAcceptedAt);
+    } catch (err) {
+      // Catch UNIQUE constraint race (two requests for same email in parallel)
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes("UNIQUE") || msg.includes("unique")) {
+        return NextResponse.json(
+          { error: "An account with this email already exists. Sign in, or reset your password if you've forgotten it." },
+          { status: 409 },
+        );
+      }
+      throw err;
+    }
     linkPreSignupBillingToUser(user.id, user.email);
 
     // Send verification email in the background — don't block signup

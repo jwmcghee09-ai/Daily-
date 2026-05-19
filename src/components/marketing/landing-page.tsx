@@ -158,7 +158,7 @@ const faqs = [
   {
     question: "How is AI analysis different on Pro vs Free?",
     answer:
-      "Every plan gets the same holdings-aware AI workflow, but usage limits differ. Free includes 10 AI sessions per month, Plus includes 20 per month, and Pro unlocks unlimited AI plus the deepest quant analytics.",
+      "Every plan gets the same holdings-aware AI workflow, but usage limits differ. Starter includes 3 AI sessions per month, Plus includes 20 per month, and Pro unlocks unlimited AI plus the deepest quant analytics.",
   },
   {
     question: "What data does the research terminal include?",
@@ -373,7 +373,7 @@ export default function LandingPage({
                 See Live Demo →
               </Link>
             </div>
-            <p className={`${styles.reveal}`} style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.35)", marginTop: "1rem", letterSpacing: "0.04em" }}>
+            <p className={`${styles.reveal}`} style={{ fontSize: "0.75rem", color: "rgba(80,60,130,0.65)", marginTop: "1rem", letterSpacing: "0.04em" }}>
               Built for Australian investors · No card required · Cancel anytime
             </p>
 
@@ -543,9 +543,9 @@ export default function LandingPage({
           </div>
 
           <div className={styles.researchCtaRow}>
-            <Link href="/research?demo=1" className={`${styles.button} ${styles.primaryButton}`}>
+            <a href="/research?demo=1" className={`${styles.button} ${styles.primaryButton}`}>
               See Research Demo
-            </Link>
+            </a>
             <Link href="/signin?mode=register&plan=plus" className={`${styles.button} ${styles.outlineButton}`}>
               Included in Plus
             </Link>

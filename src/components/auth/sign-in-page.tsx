@@ -344,8 +344,8 @@ export default function SignInPage({
 
   return (
     <main className={styles.page}>
-      <section className={styles.shell}>
-        <div className={styles.topbar}>
+      <header className={styles.topbar}>
+        <div className={styles.topbarInner}>
           <Link href="/" className={styles.brand}>
             SPECTRE
           </Link>
@@ -358,7 +358,9 @@ export default function SignInPage({
             </Link>
           </div>
         </div>
+      </header>
 
+      <div className={styles.shell}>
         <div className={styles.grid}>
           <aside className={styles.sideCard}>
             <div className={styles.pill}>Portfolio Intelligence</div>
@@ -618,7 +620,7 @@ export default function SignInPage({
                                 </div>
                                 <div className={styles.planOptionFeatures}>
                                   {plan === "free" ? (
-                                    <span>10 AI queries/month · Full dashboard</span>
+                                    <span>3 AI queries/month · Full dashboard</span>
                                   ) : plan === "plus" ? (
                                     <span>20 AI queries/month · Dip alerts · Full risk analytics</span>
                                   ) : (
@@ -699,7 +701,7 @@ export default function SignInPage({
             </div>
           </section>
         </div>
-      </section>
+      </div>
     </main>
   );
 }

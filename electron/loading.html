@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SPECTRE</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #e9e4f6;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    /* draggable so the user can move the window while it's loading */
+    -webkit-app-region: drag;
+    user-select: none;
+  }
+
+  /* Ambient glow matching the app background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 75% 55% at 50% -8%, rgba(124,77,255,.18) 0%, transparent 100%),
+      radial-gradient(ellipse 55% 70% at -5% 55%, rgba(124,77,255,.10) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.8rem;
+    position: relative;
+  }
+
+  .logo {
+    font-family: -apple-system, 'Space Grotesk', 'Segoe UI', sans-serif;
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: 0.22em;
+    background: linear-gradient(90deg, #7c4dff 0%, #d946ef 50%, #ff7a30 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .spinner-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .spinner {
+    width: 28px;
+    height: 28px;
+    border: 2px solid rgba(124,77,255,.18);
+    border-top-color: #7c4dff;
+    border-radius: 50%;
+    animation: spin 0.75s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .label {
+    font-family: -apple-system, 'DM Mono', 'Courier New', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #5e5a78;
+  }
+</style>
+</head>
+<body>
+  <div class="content">
+    <div class="logo">SPECTRE</div>
+    <div class="spinner-wrap">
+      <div class="spinner"></div>
+      <div class="label">Loading workspace…</div>
+    </div>
+  </div>
+</body>
+</html>

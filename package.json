@@ -2,6 +2,7 @@
     "name": "aladdin-web",
     "version": "0.1.0",
     "private": true,
+    "main": "electron/main.js",
     "engines": {
         "node": ">=22.11.0"
     },
@@ -18,7 +19,11 @@
         "dev:local": "powershell -ExecutionPolicy Bypass -File scripts/dev-local.ps1",
         "sync:push": "powershell -ExecutionPolicy Bypass -File scripts/save-and-push.ps1",
         "dev:sync": "powershell -ExecutionPolicy Bypass -File scripts/dev-sync.ps1",
-        "launch:check": "node scripts/release-readiness.mjs"
+        "launch:check": "node scripts/release-readiness.mjs",
+        "electron:dev": "electron .",
+        "electron:build": "electron-builder --mac --win",
+        "electron:build:mac": "electron-builder --mac",
+        "electron:build:win": "electron-builder --win"
     },
     "dependencies": {
         "@aws-sdk/client-s3": "^3.1002.0",
@@ -39,9 +44,46 @@
         "@types/papaparse": "^5.5.2",
         "@types/react": "^19",
         "@types/react-dom": "^19",
+        "electron": "^34.0.0",
+        "electron-builder": "^25.0.0",
         "eslint": "^9",
         "eslint-config-next": "16.1.6",
         "puppeteer": "^24.40.0",
         "typescript": "^5"
+    },
+    "build": {
+        "appId": "com.spectre.portfolio",
+        "productName": "SPECTRE",
+        "copyright": "Copyright © 2025 SPECTRE",
+        "directories": {
+            "output": "dist-electron"
+        },
+        "files": [
+            "electron/**/*"
+        ],
+        "mac": {
+            "category": "public.app-category.finance",
+            "icon": "electron/icons/icon.icns",
+            "hardenedRuntime": true,
+            "gatekeeperAssess": false,
+            "entitlements": "electron/entitlements.mac.plist",
+            "entitlementsInherit": "electron/entitlements.mac.plist",
+            "target": [
+                { "target": "dmg", "arch": ["arm64", "x64"] }
+            ]
+        },
+        "win": {
+            "icon": "electron/icons/icon.ico",
+            "target": [
+                { "target": "nsis", "arch": ["x64"] }
+            ]
+        },
+        "nsis": {
+            "oneClick": false,
+            "allowToChangeInstallationDirectory": true,
+            "createDesktopShortcut": true,
+            "createStartMenuShortcut": true
+        },
+        "publish": null
     }
 }
