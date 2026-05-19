@@ -202,6 +202,23 @@ function createWindow() {
   win.webContents.on('did-stop-loading',  () => win.setProgressBar(-1));
 
   const savedZoom = loadZoom();
+
+  // dom-ready fires before first paint — apply dark class here to kill the white flash
+  win.webContents.on('dom-ready', () => {
+    const url = win.webContents.getURL();
+    const isWebApp = url.startsWith(PROD_URL)
+      && !url.includes('/welcome')
+      && !url.includes('spectre-desktop-analytics');
+    if (!isWebApp) return;
+    const theme = loadTheme() || 'dark';
+    win.webContents.insertCSS(DESKTOP_CSS).catch(() => {});
+    win.webContents.insertCSS(DARK_WEB_CSS).catch(() => {});
+    win.webContents.executeJavaScript(
+      `document.documentElement.classList.toggle('electron-dark', ${theme === 'dark'});` +
+      `(function(){if(window.electronAPI)window.electronAPI.onThemeChange(function(t){document.documentElement.classList.toggle('electron-dark',t==='dark');});})();`
+    ).catch(() => {});
+  });
+
   win.webContents.on('did-finish-load', () => {
     if (savedZoom !== 1) win.webContents.setZoomFactor(savedZoom);
     const url = win.webContents.getURL();
@@ -209,14 +226,6 @@ function createWindow() {
       && !url.includes('/welcome')
       && !url.includes('spectre-desktop-analytics');
     if (isWebApp) {
-      const theme = loadTheme() || 'dark';
-      win.webContents.insertCSS(DESKTOP_CSS).catch(() => {});
-      win.webContents.insertCSS(DARK_WEB_CSS).catch(() => {});
-      // Apply dark class synchronously (no async IPC) to prevent white flash
-      win.webContents.executeJavaScript(
-        `document.documentElement.classList.toggle('electron-dark', ${theme === 'dark'});` +
-        `(function(){if(window.electronAPI)window.electronAPI.onThemeChange(function(t){document.documentElement.classList.toggle('electron-dark',t==='dark');});})();`
-      ).catch(() => {});
       win.webContents.executeJavaScript(ANALYTICS_TAB_JS).catch(() => {});
     }
   });
@@ -239,6 +248,10 @@ function createWindow() {
   win.webContents.on('will-navigate', (event, url) => {
     if (url === PROD_URL || url === PROD_URL + '/') {
       event.preventDefault(); win.loadURL(PROD_URL + '/dashboard'); return;
+    }
+    // Keep window background dark during navigation to avoid flash
+    if (url.startsWith(PROD_URL) && (loadTheme() || 'dark') === 'dark') {
+      win.setBackgroundColor('#07050f');
     }
     const isApp    = url.startsWith(PROD_URL) || url.startsWith('http://localhost');
     const isStripe = url.startsWith('https://billing.stripe.com') || url.startsWith('https://checkout.stripe.com');
