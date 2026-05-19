@@ -68,16 +68,24 @@ const ANALYTICS_TAB_JS = `
   if (location.href.includes('spectre-desktop-analytics') || location.href.includes('/welcome')) return;
   function inject() {
     if (document.getElementById('__sp-at')) return true;
-    var tabs = document.querySelector('.nav-tab-group');
-    if (!tabs) return false;
+    // Find the RESEARCH nav item by text — works regardless of CSS class names
+    var all = Array.from(document.querySelectorAll('a, span, button'));
+    var research = all.find(function(el) {
+      var t = el.textContent.trim().toUpperCase();
+      return t === 'RESEARCH' && el.offsetParent !== null;
+    });
+    if (!research) return false;
     var a = document.createElement('a');
-    a.id = '__sp-at'; a.href = '${ANALYTICS_URL}'; a.className = 'nav-tab-link';
-    a.textContent = 'Analytics'; a.style.cssText = 'text-decoration:none;cursor:pointer;';
-    tabs.appendChild(a);
+    a.id = '__sp-at';
+    a.href = '${ANALYTICS_URL}';
+    a.className = research.className;
+    a.textContent = 'Analytics';
+    a.style.cssText = 'text-decoration:none;cursor:pointer;';
+    research.parentNode.insertBefore(a, research.nextSibling);
     return true;
   }
   if (inject()) return;
-  var n = 0, t = setInterval(function() { if (inject() || ++n > 15) clearInterval(t); }, 200);
+  var n = 0, t = setInterval(function() { if (inject() || ++n > 20) clearInterval(t); }, 250);
 })();`;
 
 // ─── Window ──────────────────────────────────────────────────────────────────
