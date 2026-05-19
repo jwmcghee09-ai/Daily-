@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
-import { readUserEntitlements } from "@/lib/db";
 
 export const runtime = "nodejs";
 
@@ -299,10 +298,7 @@ export async function GET(request: NextRequest) {
   if (!isDemo) {
     const user = await getAuthenticatedUser();
     if (!user) return NextResponse.json({ error: "Please sign in first." }, { status: 401 });
-    const entitlements = readUserEntitlements(user.id);
-    if (entitlements.planTier === "none" && !entitlements.proEnabled) {
-      return NextResponse.json({ error: "Subscription required." }, { status: 403 });
-    }
+    // All authenticated users may fetch market data; client-side gating controls what they see
   }
 
   // Serve from cache if fresh — all users share one fetch cycle
