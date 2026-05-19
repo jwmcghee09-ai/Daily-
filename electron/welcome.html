@@ -177,7 +177,9 @@ h1 {
 .tour-slides {
   position: fixed; inset: 0; background: #07050f; z-index: 100;
   display: none; flex-direction: column; align-items: center; justify-content: center;
+  -webkit-app-region: no-drag; user-select: none;
 }
+.tour-slides.open { display: flex; }
 .tour-slide { max-width: 420px; text-align: center; padding: 0 24px; }
 .tour-icon { font-size: 2.8rem; margin-bottom: 20px; }
 .tour-title { font-size: 1.2rem; font-weight: 700; color: #f0eaff; margin-bottom: 10px; }
@@ -333,8 +335,7 @@ let tourStep = 0;
 
 function showTour() {
   tourStep = 0;
-  const slides = document.getElementById('tour-slides');
-  slides.style.display = 'flex';
+  document.getElementById('tour-slides').classList.add('open');
   renderSlide();
 }
 
