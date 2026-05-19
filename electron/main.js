@@ -1,6 +1,6 @@
 'use strict';
 
-const { app, BrowserWindow, Menu, shell, ipcMain, session, net } = require('electron');
+const { app, BrowserWindow, Menu, shell, ipcMain, session, net, nativeTheme } = require('electron');
 const path = require('path');
 const https = require('https');
 const fs   = require('fs');
@@ -42,6 +42,7 @@ function saveTheme(t) { try { fs.writeFileSync(THEME_FILE, JSON.stringify({ them
 
 // First launch = no theme saved yet
 const storedTheme = loadTheme();
+if (storedTheme) nativeTheme.themeSource = storedTheme;
 const APP_URL = process.env.SPECTRE_DEV_URL
   || (storedTheme === null ? WELCOME_URL : PROD_URL + '/dashboard');
 
@@ -161,7 +162,7 @@ function createWindow() {
 ipcMain.on('retry', () => { const w = BrowserWindow.getFocusedWindow(); if (w) w.loadURL(APP_URL); });
 ipcMain.handle('get-version', () => app.getVersion());
 ipcMain.handle('get-theme',   () => loadTheme() || 'dark');
-ipcMain.handle('set-theme',   (_, t) => { saveTheme(t); return t; });
+ipcMain.handle('set-theme',   (_, t) => { saveTheme(t); nativeTheme.themeSource = t; return t; });
 
 // ─── Menu ─────────────────────────────────────────────────────────────────────
 function buildMenu(win) {
@@ -187,8 +188,8 @@ function buildMenu(win) {
       { label: 'Settings',   accelerator: IS_MAC?'Cmd+4':'Ctrl+4', click: go(PROD_URL+'/settings') },
     ]},
     { label: 'Appearance', submenu: [
-      { label: 'Light Mode', click: () => { saveTheme('light'); win.webContents.send('theme-changed', 'light'); } },
-      { label: 'Dark Mode',  click: () => { saveTheme('dark');  win.webContents.send('theme-changed', 'dark');  } },
+      { label: 'Light Mode', click: () => { saveTheme('light'); nativeTheme.themeSource = 'light'; win.webContents.send('theme-changed', 'light'); } },
+      { label: 'Dark Mode',  click: () => { saveTheme('dark');  nativeTheme.themeSource = 'dark';  win.webContents.send('theme-changed', 'dark');  } },
     ]},
     { role: 'windowMenu' },
     { role: 'help', submenu: [{ label:'Open spectre-assets.com', click:()=>shell.openExternal(PROD_URL) }] },

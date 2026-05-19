@@ -180,8 +180,51 @@ h1 {
   -webkit-app-region: no-drag; user-select: none;
 }
 .tour-slides.open { display: flex; }
-.tour-slide { max-width: 420px; text-align: center; padding: 0 24px; }
-.tour-icon { font-size: 2.8rem; margin-bottom: 20px; }
+.tour-slide { max-width: 480px; text-align: center; padding: 0 24px; }
+.tour-icon { margin-bottom: 20px; }
+
+/* ── product mockups ── */
+.tp { border-radius: 12px; overflow: hidden; width: 100%; height: 200px; position: relative; margin-bottom: 4px; }
+
+.tp-analytics { background: #07050f; border: 1px solid rgba(124,77,255,.2); display: flex; flex-direction: column; }
+.tp-analytics .tp-hdr { height: 28px; background: rgba(5,3,12,.97); border-bottom: 1px solid rgba(124,77,255,.14); display: flex; align-items: center; padding: 0 10px; gap: 6px; flex-shrink: 0; }
+.tp-analytics .tp-logo { font-size: 6px; font-weight: 800; letter-spacing: .2em; background: linear-gradient(90deg,#7c4dff,#d946ef); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.tp-analytics .tp-pill { height: 10px; border-radius: 3px; background: rgba(124,77,255,.2); }
+.tp-analytics .tp-pill.on { background: rgba(168,85,247,.4); width: 22px; }
+.tp-analytics .tp-body { flex: 1; display: flex; }
+.tp-analytics .tp-chart { flex: 1; display: flex; align-items: flex-end; padding: 8px; gap: 3px; }
+.tp-analytics .tp-sidebar { width: 56px; border-left: 1px solid rgba(124,77,255,.1); padding: 6px 5px; display: flex; flex-direction: column; gap: 4px; }
+.tp-analytics .tp-srow { height: 14px; border-radius: 3px; background: rgba(124,77,255,.12); }
+.tp-analytics .tp-srow.sel { background: rgba(124,77,255,.3); }
+
+.tp-research { background: #ddd6f3; border: 1px solid rgba(124,77,255,.2); display: flex; flex-direction: column; }
+.tp-research .tp-hdr { height: 28px; background: rgba(233,228,246,.97); border-bottom: 1px solid rgba(124,77,255,.14); display: flex; align-items: center; padding: 0 10px; gap: 6px; flex-shrink: 0; }
+.tp-research .tp-logo { font-size: 6px; font-weight: 800; letter-spacing: .2em; background: linear-gradient(90deg,#7c4dff,#d946ef); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.tp-research .tp-ticker { height: 14px; background: rgba(124,77,255,.1); border-bottom: 1px solid rgba(124,77,255,.1); display: flex; align-items: center; padding: 0 6px; gap: 8px; flex-shrink: 0; }
+.tp-research .tp-tkitem { display: flex; gap: 3px; align-items: center; }
+.tp-research .tp-tksym { width: 14px; height: 5px; border-radius: 2px; background: rgba(124,77,255,.3); }
+.tp-research .tp-tkval { width: 18px; height: 5px; border-radius: 2px; background: rgba(34,197,94,.4); }
+.tp-research .tp-cards { display: grid; grid-template-columns: repeat(4,1fr); gap: 5px; padding: 8px; flex: 1; }
+.tp-research .tp-card { background: rgba(255,255,255,.6); border-radius: 8px; border: 1px solid rgba(124,77,255,.12); padding: 6px; display: flex; flex-direction: column; gap: 3px; }
+.tp-research .tp-clbl { height: 5px; border-radius: 2px; background: rgba(124,77,255,.25); width: 70%; }
+.tp-research .tp-cval { height: 8px; border-radius: 2px; background: rgba(15,13,30,.3); width: 90%; margin-top: 2px; }
+.tp-research .tp-cchg { height: 5px; border-radius: 2px; width: 55%; }
+.tp-research .tp-cchg.up { background: rgba(34,197,94,.5); }
+.tp-research .tp-cchg.dn { background: rgba(239,68,68,.4); }
+
+.tp-ai { background: #05030c; border: 1px solid rgba(124,77,255,.2); display: flex; flex-direction: column; }
+.tp-ai .tp-hdr { height: 28px; background: rgba(5,3,12,.97); border-bottom: 1px solid rgba(124,77,255,.14); display: flex; align-items: center; padding: 0 10px; gap: 6px; flex-shrink: 0; }
+.tp-ai .tp-logo { font-size: 6px; font-weight: 800; letter-spacing: .2em; background: linear-gradient(90deg,#7c4dff,#d946ef); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.tp-ai .tp-body { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 8px; }
+.tp-ai .tp-kpi { background: rgba(255,255,255,.04); border: 1px solid rgba(124,77,255,.12); border-radius: 8px; padding: 6px; display: flex; flex-direction: column; gap: 4px; }
+.tp-ai .tp-klbl { height: 5px; border-radius: 2px; background: rgba(124,77,255,.2); width: 60%; }
+.tp-ai .tp-kval { height: 10px; border-radius: 2px; background: rgba(168,85,247,.35); width: 80%; }
+.tp-ai .tp-kval.up { background: rgba(34,197,94,.4); }
+.tp-ai .tp-chat { background: rgba(124,77,255,.08); border: 1px solid rgba(124,77,255,.15); border-radius: 8px; padding: 7px; display: flex; flex-direction: column; gap: 4px; grid-column: 1/-1; }
+.tp-ai .tp-cmsg { height: 6px; border-radius: 3px; background: rgba(168,85,247,.25); }
+.tp-ai .tp-cmsg.short { width: 65%; }
+.tp-ai .tp-creply { height: 6px; border-radius: 3px; background: rgba(255,255,255,.08); margin-top: 2px; }
+.tp-ai .tp-creply.short { width: 80%; }
 .tour-title { font-size: 1.2rem; font-weight: 700; color: #f0eaff; margin-bottom: 10px; }
 .tour-body { font-size: .78rem; color: #6b6490; line-height: 1.7; margin-bottom: 32px; max-width: 340px; margin-left: auto; margin-right: auto; }
 .tour-dots { display: flex; gap: 8px; justify-content: center; margin-bottom: 28px; }
@@ -327,9 +370,63 @@ function pick(t) {
 }
 
 const TOUR = [
-  { icon: '📈', title: 'Bloomberg-style charts', body: 'Zoom, pan, and switch between Candle, OHLC, Line and Area views for any ASX stock, crypto, or ETF. Full portfolio and watchlist.' },
-  { icon: '🌏', title: 'Live market research', body: 'Real-time ASX 200, macro signals, sector heatmap, earnings calendar, and US market movers — all in one terminal view.' },
-  { icon: '🤖', title: 'AI grounded in your data', body: 'Ask your portfolio anything. The AI is connected to your live holdings, P&L, and risk metrics — not generic market chat.' },
+  {
+    preview: `<div class="tp tp-analytics">
+      <div class="tp-hdr"><span class="tp-logo">SPECTRE</span><div class="tp-pill on" style="width:28px"></div><div class="tp-pill" style="width:18px"></div><div class="tp-pill" style="width:22px"></div></div>
+      <div class="tp-body">
+        <div class="tp-chart">
+          <div class="p-candle"><div class="p-wick" style="height:8px;background:#ef4444"></div><div class="p-body" style="height:14px;background:#ef4444"></div><div class="p-wick" style="height:5px;background:#ef4444"></div></div>
+          <div class="p-candle"><div class="p-wick" style="height:6px;background:#22c55e"></div><div class="p-body" style="height:20px;background:#22c55e"></div><div class="p-wick" style="height:4px;background:#22c55e"></div></div>
+          <div class="p-candle"><div class="p-wick" style="height:5px;background:#22c55e"></div><div class="p-body" style="height:16px;background:#22c55e"></div><div class="p-wick" style="height:6px;background:#22c55e"></div></div>
+          <div class="p-candle"><div class="p-wick" style="height:4px;background:#ef4444"></div><div class="p-body" style="height:10px;background:#ef4444"></div><div class="p-wick" style="height:8px;background:#ef4444"></div></div>
+          <div class="p-candle"><div class="p-wick" style="height:7px;background:#22c55e"></div><div class="p-body" style="height:28px;background:#22c55e"></div><div class="p-wick" style="height:3px;background:#22c55e"></div></div>
+          <div class="p-candle"><div class="p-wick" style="height:4px;background:#22c55e"></div><div class="p-body" style="height:18px;background:#22c55e"></div><div class="p-wick" style="height:5px;background:#22c55e"></div></div>
+          <div class="p-candle"><div class="p-wick" style="height:9px;background:#ef4444"></div><div class="p-body" style="height:12px;background:#ef4444"></div><div class="p-wick" style="height:4px;background:#ef4444"></div></div>
+          <div class="p-candle"><div class="p-wick" style="height:3px;background:#22c55e"></div><div class="p-body" style="height:32px;background:#22c55e"></div><div class="p-wick" style="height:5px;background:#22c55e"></div></div>
+        </div>
+        <div class="tp-sidebar"><div class="tp-srow sel"></div><div class="tp-srow"></div><div class="tp-srow"></div><div class="tp-srow"></div><div class="tp-srow"></div></div>
+      </div>
+    </div>`,
+    title: 'Bloomberg-style charts',
+    body: 'Zoom, pan, and switch between Candle, OHLC, Line and Area views for any ASX stock, crypto, or ETF. Full portfolio and watchlist.',
+  },
+  {
+    preview: `<div class="tp tp-research">
+      <div class="tp-hdr"><span class="tp-logo">SPECTRE</span><div class="tp-pill on" style="width:28px;background:rgba(124,77,255,.4)"></div><div class="tp-pill" style="width:20px;background:rgba(15,13,30,.15)"></div><div class="tp-pill" style="width:24px;background:rgba(15,13,30,.15)"></div></div>
+      <div class="tp-ticker">
+        <div class="tp-tkitem"><div class="tp-tksym"></div><div class="tp-tkval"></div></div>
+        <div class="tp-tkitem"><div class="tp-tksym"></div><div class="tp-tkval" style="background:rgba(239,68,68,.4)"></div></div>
+        <div class="tp-tkitem"><div class="tp-tksym"></div><div class="tp-tkval"></div></div>
+        <div class="tp-tkitem"><div class="tp-tksym"></div><div class="tp-tkval" style="background:rgba(239,68,68,.4)"></div></div>
+      </div>
+      <div class="tp-cards">
+        <div class="tp-card"><div class="tp-clbl"></div><div class="tp-cval"></div><div class="tp-cchg up"></div></div>
+        <div class="tp-card"><div class="tp-clbl"></div><div class="tp-cval"></div><div class="tp-cchg dn"></div></div>
+        <div class="tp-card"><div class="tp-clbl"></div><div class="tp-cval"></div><div class="tp-cchg up"></div></div>
+        <div class="tp-card"><div class="tp-clbl"></div><div class="tp-cval"></div><div class="tp-cchg up"></div></div>
+      </div>
+    </div>`,
+    title: 'Live market research',
+    body: 'Real-time ASX 200, macro signals, sector heatmap, earnings calendar, and US market movers — all in one terminal view.',
+  },
+  {
+    preview: `<div class="tp tp-ai">
+      <div class="tp-hdr"><span class="tp-logo">SPECTRE</span><div class="tp-pill on" style="width:28px;background:rgba(124,77,255,.4)"></div><div class="tp-pill" style="width:20px"></div></div>
+      <div class="tp-body">
+        <div class="tp-kpi"><div class="tp-klbl"></div><div class="tp-kval up"></div></div>
+        <div class="tp-kpi"><div class="tp-klbl"></div><div class="tp-kval"></div></div>
+        <div class="tp-kpi"><div class="tp-klbl"></div><div class="tp-kval up"></div></div>
+        <div class="tp-kpi"><div class="tp-klbl"></div><div class="tp-kval"></div></div>
+        <div class="tp-chat">
+          <div class="tp-cmsg"></div><div class="tp-cmsg short"></div>
+          <div class="tp-creply"></div><div class="tp-creply short"></div>
+          <div class="tp-cmsg" style="width:55%;margin-top:4px"></div>
+        </div>
+      </div>
+    </div>`,
+    title: 'AI grounded in your data',
+    body: 'Ask your portfolio anything. The AI is connected to your live holdings, P&L, and risk metrics — not generic market chat.',
+  },
 ];
 let tourStep = 0;
 
@@ -341,7 +438,7 @@ function showTour() {
 
 function renderSlide() {
   const s = TOUR[tourStep];
-  document.getElementById('tour-icon').textContent = s.icon;
+  document.getElementById('tour-icon').innerHTML = s.preview;
   document.getElementById('tour-title').textContent = s.title;
   document.getElementById('tour-body').textContent = s.body;
   const dots = document.getElementById('tour-dots');
