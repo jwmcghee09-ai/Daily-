@@ -209,9 +209,14 @@ function createWindow() {
       && !url.includes('/welcome')
       && !url.includes('spectre-desktop-analytics');
     if (isWebApp) {
+      const theme = loadTheme() || 'dark';
       win.webContents.insertCSS(DESKTOP_CSS).catch(() => {});
       win.webContents.insertCSS(DARK_WEB_CSS).catch(() => {});
-      win.webContents.executeJavaScript(DARK_THEME_JS).catch(() => {});
+      // Apply dark class synchronously (no async IPC) to prevent white flash
+      win.webContents.executeJavaScript(
+        `document.documentElement.classList.toggle('electron-dark', ${theme === 'dark'});` +
+        `(function(){if(window.electronAPI)window.electronAPI.onThemeChange(function(t){document.documentElement.classList.toggle('electron-dark',t==='dark');});})();`
+      ).catch(() => {});
       win.webContents.executeJavaScript(ANALYTICS_TAB_JS).catch(() => {});
     }
   });
