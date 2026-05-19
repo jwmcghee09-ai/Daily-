@@ -92,8 +92,10 @@ html.electron-dark td, html.electron-dark th, html.electron-dark li,
 html.electron-dark div:not([class*="gradient"]) { color: inherit; }
 html.electron-dark nav,
 html.electron-dark .nav-wrap { background: rgba(7,5,15,.96) !important; border-bottom-color: rgba(124,77,255,.15) !important; }
+html.electron-dark .spectre-app-nav-tabs { background: rgba(124,77,255,.08) !important; border-color: rgba(124,77,255,.2) !important; }
 html.electron-dark .nav-tab { color: #9890b8 !important; }
-html.electron-dark .nav-tab-active { color: #d4c0f0 !important; }
+html.electron-dark .nav-tab:hover { background: rgba(124,77,255,.1) !important; color: #d4c0f0 !important; }
+html.electron-dark .nav-tab-active { color: #d4c0f0 !important; background: rgba(124,77,255,.18) !important; }
 html.electron-dark .nav-ticker { background: rgba(5,3,12,.97) !important; border-bottom-color: rgba(124,77,255,.1) !important; }
 html.electron-dark .nav-ticker-price,
 html.electron-dark .nav-ticker-name { color: #e4dcff !important; }
@@ -102,6 +104,7 @@ html.electron-dark .nav-settings-btn,
 html.electron-dark .btn-ghost { color: #d4c0f0 !important; border-color: rgba(124,77,255,.3) !important; }
 html.electron-dark .nav-btn:hover,
 html.electron-dark .nav-settings-btn:hover { background: rgba(124,77,255,.1) !important; color: #e4dcff !important; }
+html.electron-dark .nav-settings-active { color: #a855f7 !important; background: rgba(124,77,255,.12) !important; border-color: rgba(124,77,255,.4) !important; }
 html.electron-dark .kpi-card,
 html.electron-dark .panel-half,
 html.electron-dark .meta-panel,
