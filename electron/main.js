@@ -63,6 +63,62 @@ const DESKTOP_CSS = `
   footer { display: none !important; }
 ` + (IS_MAC ? `  .nav-inner { padding-left: 82px !important; }` : '');
 
+// ─── Dark web-app CSS override ────────────────────────────────────────────────
+// Injected into every spectre-assets.com page. The DARK_THEME_JS snippet
+// toggles class "electron-dark" on <html> so we can switch without a reload.
+const DARK_WEB_CSS = `
+html.electron-dark { color-scheme: dark; }
+html.electron-dark body { background: #07050f !important; color: #e4dcff !important; }
+html.electron-dark :root {
+  --bg: #07050f !important;
+  --card: #0d0a1a !important;
+  --card2: #0f0b1f !important;
+  --surface3: rgba(124,77,255,.08) !important;
+  --border: rgba(124,77,255,.15) !important;
+  --border2: rgba(124,77,255,.25) !important;
+  --text: #e4dcff !important;
+  --muted: #9890b8 !important;
+  --muted2: #7a7299 !important;
+  --shadow: 0 1px 3px rgba(0,0,0,.4),0 6px 20px rgba(124,77,255,.15) !important;
+  --sl-bg: #07050f !important;
+  --sl-page-text: #e4dcff !important;
+  --sl-page-muted: #9890b8 !important;
+}
+html.electron-dark nav,
+html.electron-dark .nav-wrap {
+  background: rgba(7,5,15,.96) !important;
+  border-bottom-color: rgba(124,77,255,.15) !important;
+}
+html.electron-dark .nav-ticker { background: rgba(5,3,12,.97) !important; border-bottom-color: rgba(124,77,255,.1) !important; }
+html.electron-dark .nav-ticker-price { color: #e4dcff !important; }
+html.electron-dark .nav-btn { color: #d4c0f0 !important; border-color: rgba(124,77,255,.3) !important; }
+html.electron-dark .nav-btn:hover { background: rgba(124,77,255,.1) !important; }
+html.electron-dark .nav-settings-btn { color: #d4c0f0 !important; border-color: rgba(124,77,255,.25) !important; }
+html.electron-dark .kpi-card,
+html.electron-dark .panel-half,
+html.electron-dark .meta-panel,
+html.electron-dark .upload-card,
+html.electron-dark .risk-bar-wrap,
+html.electron-dark .kpi-mini,
+html.electron-dark .perf-row,
+html.electron-dark .stress-card { background: #0d0a1a !important; border-color: rgba(124,77,255,.18) !important; }
+html.electron-dark .kpi-val,
+html.electron-dark .kpi-mini-val,
+html.electron-dark .panel-half-title { color: #e4dcff !important; }
+html.electron-dark .kpi-lbl,
+html.electron-dark .kpi-mini-lbl { color: #9890b8 !important; }
+`;
+
+const DARK_THEME_JS = `
+(function() {
+  function applyTheme(t) { document.documentElement.classList.toggle('electron-dark', t === 'dark'); }
+  if (window.electronAPI) {
+    window.electronAPI.getTheme().then(applyTheme).catch(function(){});
+    window.electronAPI.onThemeChange(applyTheme);
+  }
+})();
+`;
+
 // ─── Analytics tab injection ──────────────────────────────────────────────────
 const ANALYTICS_TAB_JS = `
 (function () {
@@ -105,7 +161,7 @@ function createWindow() {
       nodeIntegration: false,
       partition: 'persist:spectre',
     },
-    backgroundColor: '#ddd6f3',
+    backgroundColor: (loadTheme() === 'dark') ? '#07050f' : '#ddd6f3',
     show: false,
   });
 
@@ -125,6 +181,8 @@ function createWindow() {
       && !url.includes('spectre-desktop-analytics');
     if (isWebApp) {
       win.webContents.insertCSS(DESKTOP_CSS).catch(() => {});
+      win.webContents.insertCSS(DARK_WEB_CSS).catch(() => {});
+      win.webContents.executeJavaScript(DARK_THEME_JS).catch(() => {});
       win.webContents.executeJavaScript(ANALYTICS_TAB_JS).catch(() => {});
     }
   });
@@ -162,7 +220,11 @@ function createWindow() {
 ipcMain.on('retry', () => { const w = BrowserWindow.getFocusedWindow(); if (w) w.loadURL(APP_URL); });
 ipcMain.handle('get-version', () => app.getVersion());
 ipcMain.handle('get-theme',   () => loadTheme() || 'dark');
-ipcMain.handle('set-theme',   (_, t) => { saveTheme(t); nativeTheme.themeSource = t; return t; });
+ipcMain.handle('set-theme',   (_, t) => {
+  saveTheme(t); nativeTheme.themeSource = t;
+  BrowserWindow.getAllWindows().forEach(w => w.webContents.send('theme-changed', t));
+  return t;
+});
 
 // ─── Menu ─────────────────────────────────────────────────────────────────────
 function buildMenu(win) {
