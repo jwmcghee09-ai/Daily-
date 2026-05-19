@@ -84,16 +84,24 @@ html.electron-dark :root {
   --sl-page-text: #e4dcff !important;
   --sl-page-muted: #9890b8 !important;
 }
+/* catch-all: any element that still has #0f0d1e hardcoded gets flipped light */
+html.electron-dark h1, html.electron-dark h2, html.electron-dark h3,
+html.electron-dark h4, html.electron-dark h5, html.electron-dark h6,
+html.electron-dark p, html.electron-dark span, html.electron-dark label,
+html.electron-dark td, html.electron-dark th, html.electron-dark li,
+html.electron-dark div:not([class*="gradient"]) { color: inherit; }
 html.electron-dark nav,
-html.electron-dark .nav-wrap {
-  background: rgba(7,5,15,.96) !important;
-  border-bottom-color: rgba(124,77,255,.15) !important;
-}
+html.electron-dark .nav-wrap { background: rgba(7,5,15,.96) !important; border-bottom-color: rgba(124,77,255,.15) !important; }
+html.electron-dark .nav-tab,
+html.electron-dark .nav-tab-active { color: #d4c0f0 !important; }
 html.electron-dark .nav-ticker { background: rgba(5,3,12,.97) !important; border-bottom-color: rgba(124,77,255,.1) !important; }
-html.electron-dark .nav-ticker-price { color: #e4dcff !important; }
-html.electron-dark .nav-btn { color: #d4c0f0 !important; border-color: rgba(124,77,255,.3) !important; }
-html.electron-dark .nav-btn:hover { background: rgba(124,77,255,.1) !important; }
-html.electron-dark .nav-settings-btn { color: #d4c0f0 !important; border-color: rgba(124,77,255,.25) !important; }
+html.electron-dark .nav-ticker-price,
+html.electron-dark .nav-ticker-name { color: #e4dcff !important; }
+html.electron-dark .nav-btn,
+html.electron-dark .nav-settings-btn,
+html.electron-dark .btn-ghost { color: #d4c0f0 !important; border-color: rgba(124,77,255,.3) !important; }
+html.electron-dark .nav-btn:hover,
+html.electron-dark .nav-settings-btn:hover { background: rgba(124,77,255,.1) !important; color: #e4dcff !important; }
 html.electron-dark .kpi-card,
 html.electron-dark .panel-half,
 html.electron-dark .meta-panel,
@@ -101,12 +109,32 @@ html.electron-dark .upload-card,
 html.electron-dark .risk-bar-wrap,
 html.electron-dark .kpi-mini,
 html.electron-dark .perf-row,
-html.electron-dark .stress-card { background: #0d0a1a !important; border-color: rgba(124,77,255,.18) !important; }
+html.electron-dark .stress-card,
+html.electron-dark .card,
+html.electron-dark .modal,
+html.electron-dark [class*="-card"]:not([class*="gradient"]) { background: #0d0a1a !important; border-color: rgba(124,77,255,.18) !important; }
 html.electron-dark .kpi-val,
 html.electron-dark .kpi-mini-val,
-html.electron-dark .panel-half-title { color: #e4dcff !important; }
+html.electron-dark .panel-half-title,
+html.electron-dark .sec-title,
+html.electron-dark .upload-title,
+html.electron-dark .kpi-lbl-val,
+html.electron-dark [class*="-title"],
+html.electron-dark [class*="-val"] { color: #e4dcff !important; }
 html.electron-dark .kpi-lbl,
-html.electron-dark .kpi-mini-lbl { color: #9890b8 !important; }
+html.electron-dark .kpi-mini-lbl,
+html.electron-dark [class*="-lbl"],
+html.electron-dark [class*="-sub"],
+html.electron-dark [class*="-muted"],
+html.electron-dark [class*="-meta"] { color: #9890b8 !important; }
+html.electron-dark input, html.electron-dark select, html.electron-dark textarea {
+  background: #0d0a1a !important; color: #e4dcff !important;
+  border-color: rgba(124,77,255,.3) !important;
+}
+html.electron-dark table { background: transparent !important; }
+html.electron-dark thead th { background: rgba(124,77,255,.08) !important; color: #9890b8 !important; }
+html.electron-dark tbody tr:hover td { background: rgba(124,77,255,.07) !important; }
+html.electron-dark tbody td { color: #e4dcff !important; border-color: rgba(124,77,255,.08) !important; }
 `;
 
 const DARK_THEME_JS = `
