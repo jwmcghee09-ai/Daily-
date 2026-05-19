@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     }
 
     const entitlements = readUserEntitlements(user.id);
-    if ((entitlements.planTier === "none" || entitlements.planTier === "free") && !entitlements.proEnabled) {
+    if ((entitlements.planTier === "none" || entitlements.planTier === "free" || entitlements.planTier === "starter") && !entitlements.proEnabled) {
       return new NextResponse(buildUpgradeGate(), {
         headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" },
       });
