@@ -96,6 +96,8 @@ html.electron-dark .spectre-app-nav-tabs { background: rgba(124,77,255,.08) !imp
 html.electron-dark .nav-tab { color: #9890b8 !important; }
 html.electron-dark .nav-tab:hover { background: rgba(124,77,255,.1) !important; color: #d4c0f0 !important; }
 html.electron-dark .nav-tab-active { color: #d4c0f0 !important; background: rgba(124,77,255,.18) !important; }
+html.electron-dark #__sp-at { color: #9890b8 !important; background: none !important; }
+html.electron-dark #__sp-at:hover { color: #d4c0f0 !important; background: rgba(124,77,255,.1) !important; }
 html.electron-dark .nav-ticker { background: rgba(5,3,12,.97) !important; border-bottom-color: rgba(124,77,255,.1) !important; }
 html.electron-dark .nav-ticker-price,
 html.electron-dark .nav-ticker-name { color: #e4dcff !important; }

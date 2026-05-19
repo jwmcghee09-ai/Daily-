@@ -373,7 +373,13 @@ export default function Home() {
   const [holdingsAiLoading, setHoldingsAiLoading] = useState(false);
   const [holdingsAiError, setHoldingsAiError] = useState("");
   const [holdingsAiResult, setHoldingsAiResult] = useState<HoldingsAiAnalysis | null>(null);
-  const [activePage, setActivePage] = useState<"quant" | "ai" | "research" | "settings">("quant");
+  const [activePage, setActivePage] = useState<"quant" | "ai" | "research" | "settings">(() => {
+    if (typeof window !== "undefined") {
+      const tab = new URLSearchParams(window.location.search).get("tab");
+      if (tab === "ai" || tab === "research" || tab === "settings") return tab;
+    }
+    return "quant";
+  });
   const refreshInFlight = useRef(false);
   const lastAutoRefreshAttemptAtRef = useRef(0);
 
