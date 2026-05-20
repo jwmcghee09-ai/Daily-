@@ -211,16 +211,19 @@ function createWindow() {
   // dom-ready fires before first paint — apply dark class here to kill the white flash
   win.webContents.on('dom-ready', () => {
     const url = win.webContents.getURL();
+    const isAuthPage = url.includes('/sign-in') || url.includes('/signin')
+      || url.includes('/register') || url.includes('/verify')
+      || url.includes('/password') || url.includes('/terms') || url.includes('/privacy');
     const isWebApp = url.startsWith(PROD_URL)
       && !url.includes('/welcome')
       && !url.includes('spectre-desktop-analytics');
     if (!isWebApp) return;
     const theme = loadTheme() || 'dark';
     win.webContents.insertCSS(DESKTOP_CSS).catch(() => {});
-    win.webContents.insertCSS(DARK_WEB_CSS).catch(() => {});
+    if (!isAuthPage) win.webContents.insertCSS(DARK_WEB_CSS).catch(() => {});
     win.webContents.executeJavaScript(
-      `document.documentElement.classList.toggle('electron-dark', ${theme === 'dark'});` +
-      `(function(){if(window.electronAPI)window.electronAPI.onThemeChange(function(t){document.documentElement.classList.toggle('electron-dark',t==='dark');});})();`
+      `document.documentElement.classList.toggle('electron-dark', ${theme === 'dark' && !isAuthPage});` +
+      `(function(){if(window.electronAPI)window.electronAPI.onThemeChange(function(t){document.documentElement.classList.toggle('electron-dark',t==='dark'&&${!isAuthPage});});})();`
     ).catch(() => {});
   });
 
@@ -255,7 +258,11 @@ function createWindow() {
       event.preventDefault(); win.loadURL(PROD_URL + '/dashboard'); return;
     }
     // Keep window background dark during navigation to avoid flash
-    if (url.startsWith(PROD_URL) && (loadTheme() || 'dark') === 'dark') {
+    // Auth pages use the light background regardless of theme
+    const navIsAuth = url.includes('/sign-in') || url.includes('/signin')
+      || url.includes('/register') || url.includes('/verify')
+      || url.includes('/password');
+    if (url.startsWith(PROD_URL) && (loadTheme() || 'dark') === 'dark' && !navIsAuth) {
       win.setBackgroundColor('#07050f');
     }
     const isApp    = url.startsWith(PROD_URL) || url.startsWith('http://localhost');
