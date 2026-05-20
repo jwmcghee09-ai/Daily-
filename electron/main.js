@@ -80,7 +80,7 @@ html.electron-dark :root {
   --muted: #9890b8 !important;
   --muted2: #7a7299 !important;
   --shadow: 0 1px 3px rgba(0,0,0,.4),0 6px 20px rgba(124,77,255,.15) !important;
-  --sl-bg: #07050f !important;
+  --sl-bg: #0d0a1a !important;
   --sl-page-text: #e4dcff !important;
   --sl-page-muted: #9890b8 !important;
 }
