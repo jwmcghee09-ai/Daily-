@@ -315,18 +315,12 @@ export default function LandingPage({
           </Link>
 
           <div className={styles.navLinks}>
-            <a href="#workflow">Workflow</a>
             <a href="#features">Features</a>
             <a href="#ai">AI Analysis</a>
             <a href="#pricing">Pricing</a>
-            <a href="#security">Security</a>
           </div>
 
           <div className={styles.navActions}>
-            <Link href="/dashboard?demo=1" className={`${styles.button} ${styles.demoButton}`}>
-              <span className={styles.demoDot} />
-              Live Demo
-            </Link>
             <Link href="/signin" className={`${styles.button} ${styles.ghostButton}`}>
               Sign In
             </Link>
