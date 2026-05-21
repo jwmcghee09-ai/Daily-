@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════════
    Sign-in page — matches landing page design language
-   Lavender (#f3f1fb) bg · dark sideCard · white formCard
+   Lavender (#f3f1fb) bg · light sideCard · white formCard
    ═══════════════════════════════════════════════════════════ */
 
 .page {
@@ -75,15 +75,17 @@
   align-items: start;
 }
 
-/* ── Side card: dark, like landing page product preview ── */
+/* ── Side card: light lavender ── */
 .sideCard {
   position: relative;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(124, 77, 255, 0.18);
   border-radius: 20px;
-  background: rgba(10, 7, 22, 0.94);
+  background: rgba(255, 255, 255, 0.82);
   overflow: hidden;
   padding: 36px;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.18), 0 4px 16px rgba(100, 80, 200, 0.1);
+  box-shadow: 0 8px 40px rgba(100, 80, 200, 0.09), 0 1px 0 rgba(100, 80, 200, 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .sideCard::before {
@@ -112,7 +114,7 @@
   background: linear-gradient(90deg, transparent, #a855f7, #d946ef 50%, #ff7a30, transparent);
 }
 
-/* ── Side card content (dark text on dark bg = light text) ── */
+/* ── Side card content (dark text on light bg) ── */
 .pill {
   display: inline-flex;
   align-items: center;
@@ -121,13 +123,13 @@
   border-radius: 999px;
   border: 1px solid transparent;
   background:
-    linear-gradient(rgba(13, 10, 20, 1), rgba(13, 10, 20, 1)) padding-box,
+    linear-gradient(rgba(243, 241, 251, 1), rgba(243, 241, 251, 1)) padding-box,
     linear-gradient(90deg, #a855f7, #ff7a30) border-box;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-size: 11px;
   font-weight: 700;
-  color: #c4b0f0;
+  color: #7c4dff;
 }
 
 .pill::before {
@@ -146,7 +148,7 @@
   font-weight: 700;
   line-height: 1.1;
   letter-spacing: -0.03em;
-  color: #f4f0ff;
+  color: #0f0d1e;
 }
 
 .sideCard h1 span {
@@ -157,7 +159,7 @@
 }
 
 .sideCard > p {
-  color: #9b8fbb;
+  color: #5e5a78;
   font-size: 14px;
   line-height: 1.7;
   margin-bottom: 0;
@@ -174,8 +176,8 @@
   display: flex;
   gap: 10px;
   padding: 9px 0;
-  border-bottom: 1px solid rgba(160, 100, 255, 0.1);
-  color: #9b8fbb;
+  border-bottom: 1px solid rgba(124, 77, 255, 0.12);
+  color: #5e5a78;
   font-size: 13.5px;
   line-height: 1.5;
 }
@@ -197,7 +199,7 @@
   gap: 8px;
   margin-top: 24px;
   padding-top: 20px;
-  border-top: 1px solid rgba(160, 100, 255, 0.1);
+  border-top: 1px solid rgba(124, 77, 255, 0.12);
 }
 
 .sideMeta div {
@@ -207,19 +209,19 @@
 }
 
 .sideMeta span {
-  color: rgba(155, 143, 187, 0.45);
+  color: rgba(94, 90, 120, 0.6);
   font-size: 12.5px;
 }
 
 .sideMeta a {
-  color: #9b8fbb;
+  color: #6b5f8a;
   text-decoration: none;
   font-size: 12.5px;
   transition: color 0.15s;
 }
 
 .sideMeta a:hover {
-  color: #e8deff;
+  color: #7c4dff;
 }
 
 /* ── Form card URL bar ── */
