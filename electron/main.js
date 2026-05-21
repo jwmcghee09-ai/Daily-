@@ -61,7 +61,33 @@ const DESKTOP_CSS = `
   ::-webkit-scrollbar-thumb  { background: rgba(124,77,255,.32); border-radius: 3px; }
   ::-webkit-scrollbar-thumb:hover { background: rgba(124,77,255,.52); }
   footer { display: none !important; }
-` + (IS_MAC ? `  .nav-inner { padding-left: 82px !important; }` : '');
+` + (IS_MAC ? `  .nav-inner, .spectre-app-nav-inner { padding-left: 82px !important; }` : '');
+
+// ─── Loading overlay (hides white flash on page transitions) ─────────────────
+const LOADING_OVERLAY_JS = `
+(function() {
+  if (document.getElementById('__sp-loader')) return;
+  var bg = document.documentElement.classList.contains('electron-dark') ? '#07050f' : '#f3f1fb';
+  var el = document.createElement('div');
+  el.id = '__sp-loader';
+  el.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;gap:16px"><div style="font-family:sans-serif;font-size:1.5rem;font-weight:800;letter-spacing:.12em;background:linear-gradient(120deg,#a855f7,#f97316);-webkit-background-clip:text;-webkit-text-fill-color:transparent">SPECTRE</div><div id="__sp-spinner"></div></div>';
+  el.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:'+bg+';display:flex;align-items:center;justify-content:center;transition:opacity .3s ease;';
+  var style = document.createElement('style');
+  style.textContent = '#__sp-spinner{width:28px;height:28px;border:3px solid rgba(124,77,255,.2);border-top-color:#7c4dff;border-radius:50%;animation:__sp-spin .7s linear infinite}@keyframes __sp-spin{to{transform:rotate(360deg)}}';
+  document.head.appendChild(style);
+  document.body.appendChild(el);
+  // Remove overlay once the main content element appears
+  var attempts = 0;
+  var check = setInterval(function() {
+    var ready = document.querySelector('.spectre-app-nav, .dashboard-wrap, [class*="dashboard"], [class*="research"], main > div');
+    if (ready || ++attempts > 40) {
+      el.style.opacity = '0';
+      setTimeout(function() { el.remove(); style.remove(); }, 320);
+      clearInterval(check);
+    }
+  }, 150);
+})();
+`;
 
 // ─── Dark web-app CSS override ────────────────────────────────────────────────
 // Injected into every spectre-assets.com page. The DARK_THEME_JS snippet
@@ -221,6 +247,7 @@ function createWindow() {
     const theme = loadTheme() || 'dark';
     win.webContents.insertCSS(DESKTOP_CSS).catch(() => {});
     if (!isAuthPage) win.webContents.insertCSS(DARK_WEB_CSS).catch(() => {});
+    win.webContents.executeJavaScript(LOADING_OVERLAY_JS).catch(() => {});
     win.webContents.executeJavaScript(
       `document.documentElement.classList.toggle('electron-dark', ${theme === 'dark' && !isAuthPage});` +
       `(function(){if(window.electronAPI)window.electronAPI.onThemeChange(function(t){document.documentElement.classList.toggle('electron-dark',t==='dark'&&${!isAuthPage});});})();`
