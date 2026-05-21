@@ -5,18 +5,14 @@ const path = require('path');
 const https = require('https');
 const fs   = require('fs');
 
-// ─── Config ──────────────────────────────────────────────────────────────────
 const PROD_URL       = 'https://spectre-assets.com';
-const ANALYTICS_URL  = PROD_URL + '/spectre-desktop-analytics.html';
-const WELCOME_URL    = PROD_URL + '/welcome';
 const ANALYTICS_FILE = path.join(__dirname, 'analytics.html');
 const WELCOME_FILE   = path.join(__dirname, 'welcome.html');
 const IS_MAC         = process.platform === 'darwin';
 
-// ─── Persistence helpers ──────────────────────────────────────────────────────
+// ─── Persistence ─────────────────────────────────────────────────────────────
 const STATE_FILE = path.join(app.getPath('userData'), 'window-state.json');
 const ZOOM_FILE  = path.join(app.getPath('userData'), 'zoom.json');
-const THEME_FILE = path.join(app.getPath('userData'), 'theme.json');
 
 function loadWindowState() {
   try {
@@ -33,28 +29,10 @@ function saveWindowState(win) {
   if (win.isMaximized() || win.isMinimized() || win.isFullScreen()) return;
   try { fs.writeFileSync(STATE_FILE, JSON.stringify(win.getBounds())); } catch {}
 }
-
 function loadZoom()  { try { return JSON.parse(fs.readFileSync(ZOOM_FILE,'utf8')).factor ?? 1; } catch { return 1; } }
 function saveZoom(f) { try { fs.writeFileSync(ZOOM_FILE, JSON.stringify({ factor: f })); } catch {} }
 
-function loadTheme()  { try { return JSON.parse(fs.readFileSync(THEME_FILE,'utf8')).theme || null; } catch { return null; } }
-function saveTheme(t) { try { fs.writeFileSync(THEME_FILE, JSON.stringify({ theme: t })); } catch {} }
-
-// First launch = no theme saved yet
-const storedTheme = loadTheme();
-if (storedTheme) nativeTheme.themeSource = storedTheme;
-const APP_URL = process.env.SPECTRE_DEV_URL
-  || (storedTheme === null ? WELCOME_URL : PROD_URL + '/dashboard');
-
-// ─── Server wake-up ping ──────────────────────────────────────────────────────
-function pingServer() {
-  try {
-    const u = new URL(PROD_URL);
-    https.get({ hostname: u.hostname, path: '/api/health', timeout: 30000 }, () => {}).on('error', () => {});
-  } catch {}
-}
-
-// ─── Desktop CSS ──────────────────────────────────────────────────────────────
+// ─── Minimal desktop polish (scrollbar + Mac traffic-light padding) ───────────
 const DESKTOP_CSS = `
   ::-webkit-scrollbar        { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track  { background: transparent; }
@@ -63,147 +41,12 @@ const DESKTOP_CSS = `
   footer { display: none !important; }
 ` + (IS_MAC ? `  .nav-inner, .spectre-app-nav-inner { padding-left: 82px !important; }` : '');
 
-// ─── Loading overlay (hides white flash on page transitions) ─────────────────
-const LOADING_OVERLAY_JS = `
-(function() {
-  if (document.getElementById('__sp-loader')) return;
-  var bg = document.documentElement.classList.contains('electron-dark') ? '#07050f' : '#f3f1fb';
-  var el = document.createElement('div');
-  el.id = '__sp-loader';
-  el.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;gap:16px"><div style="font-family:sans-serif;font-size:1.5rem;font-weight:800;letter-spacing:.12em;background:linear-gradient(120deg,#a855f7,#f97316);-webkit-background-clip:text;-webkit-text-fill-color:transparent">SPECTRE</div><div id="__sp-spinner"></div></div>';
-  el.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:'+bg+';display:flex;align-items:center;justify-content:center;transition:opacity .3s ease;';
-  var style = document.createElement('style');
-  style.textContent = '#__sp-spinner{width:28px;height:28px;border:3px solid rgba(124,77,255,.2);border-top-color:#7c4dff;border-radius:50%;animation:__sp-spin .7s linear infinite}@keyframes __sp-spin{to{transform:rotate(360deg)}}';
-  document.head.appendChild(style);
-  document.body.appendChild(el);
-  // Remove overlay once the main content element appears
-  var attempts = 0;
-  var check = setInterval(function() {
-    var ready = document.querySelector('.spectre-app-nav, .dashboard-wrap, [class*="dashboard"], [class*="research"], main > div');
-    if (ready || ++attempts > 40) {
-      el.style.opacity = '0';
-      setTimeout(function() { el.remove(); style.remove(); }, 320);
-      clearInterval(check);
-    }
-  }, 150);
-})();
-`;
-
-// ─── Dark web-app CSS override ────────────────────────────────────────────────
-// Injected into every spectre-assets.com page. The DARK_THEME_JS snippet
-// toggles class "electron-dark" on <html> so we can switch without a reload.
-const DARK_WEB_CSS = `
-html.electron-dark { color-scheme: dark; }
-html.electron-dark body { background: #07050f !important; color: #e4dcff !important; }
-html.electron-dark :root {
-  --bg: #07050f !important;
-  --card: #0d0a1a !important;
-  --card2: #0f0b1f !important;
-  --surface3: rgba(124,77,255,.08) !important;
-  --border: rgba(124,77,255,.15) !important;
-  --border2: rgba(124,77,255,.25) !important;
-  --text: #e4dcff !important;
-  --muted: #9890b8 !important;
-  --muted2: #7a7299 !important;
-  --shadow: 0 1px 3px rgba(0,0,0,.4),0 6px 20px rgba(124,77,255,.15) !important;
-  --sl-bg: #0d0a1a !important;
-  --sl-page-text: #e4dcff !important;
-  --sl-page-muted: #9890b8 !important;
+function pingServer() {
+  try {
+    const u = new URL(PROD_URL);
+    https.get({ hostname: u.hostname, path: '/api/health', timeout: 30000 }, () => {}).on('error', () => {});
+  } catch {}
 }
-/* catch-all: any element that still has #0f0d1e hardcoded gets flipped light */
-html.electron-dark h1, html.electron-dark h2, html.electron-dark h3,
-html.electron-dark h4, html.electron-dark h5, html.electron-dark h6,
-html.electron-dark p, html.electron-dark span, html.electron-dark label,
-html.electron-dark td, html.electron-dark th, html.electron-dark li,
-html.electron-dark div:not([class*="gradient"]) { color: inherit; }
-html.electron-dark nav,
-html.electron-dark .nav-wrap { background: rgba(7,5,15,.96) !important; border-bottom-color: rgba(124,77,255,.15) !important; }
-html.electron-dark .spectre-app-nav-tabs { background: rgba(124,77,255,.08) !important; border-color: rgba(124,77,255,.2) !important; }
-html.electron-dark .nav-tab { color: #9890b8 !important; }
-html.electron-dark .nav-tab:hover { background: rgba(124,77,255,.1) !important; color: #d4c0f0 !important; }
-html.electron-dark .nav-tab-active { color: #d4c0f0 !important; background: rgba(124,77,255,.18) !important; }
-html.electron-dark #__sp-at { color: #9890b8 !important; background: none !important; }
-html.electron-dark #__sp-at:hover { color: #d4c0f0 !important; background: rgba(124,77,255,.1) !important; }
-html.electron-dark .nav-ticker { background: rgba(5,3,12,.97) !important; border-bottom-color: rgba(124,77,255,.1) !important; }
-html.electron-dark .nav-ticker-price,
-html.electron-dark .nav-ticker-name { color: #e4dcff !important; }
-html.electron-dark .nav-btn,
-html.electron-dark .nav-settings-btn,
-html.electron-dark .btn-ghost { color: #d4c0f0 !important; border-color: rgba(124,77,255,.3) !important; }
-html.electron-dark .nav-btn:hover,
-html.electron-dark .nav-settings-btn:hover { background: rgba(124,77,255,.1) !important; color: #e4dcff !important; }
-html.electron-dark .nav-settings-active { color: #a855f7 !important; background: rgba(124,77,255,.12) !important; border-color: rgba(124,77,255,.4) !important; }
-html.electron-dark .kpi-card,
-html.electron-dark .panel-half,
-html.electron-dark .meta-panel,
-html.electron-dark .upload-card,
-html.electron-dark .risk-bar-wrap,
-html.electron-dark .kpi-mini,
-html.electron-dark .perf-row,
-html.electron-dark .stress-card,
-html.electron-dark .card,
-html.electron-dark .modal,
-html.electron-dark [class*="-card"]:not([class*="gradient"]) { background: #0d0a1a !important; border-color: rgba(124,77,255,.18) !important; }
-html.electron-dark .kpi-val,
-html.electron-dark .kpi-mini-val,
-html.electron-dark .panel-half-title,
-html.electron-dark .sec-title,
-html.electron-dark .upload-title,
-html.electron-dark .kpi-lbl-val,
-html.electron-dark [class*="-title"],
-html.electron-dark [class*="-val"] { color: #e4dcff !important; }
-html.electron-dark .kpi-lbl,
-html.electron-dark .kpi-mini-lbl,
-html.electron-dark [class*="-lbl"],
-html.electron-dark [class*="-sub"],
-html.electron-dark [class*="-muted"],
-html.electron-dark [class*="-meta"] { color: #9890b8 !important; }
-html.electron-dark input, html.electron-dark select, html.electron-dark textarea {
-  background: #0d0a1a !important; color: #e4dcff !important;
-  border-color: rgba(124,77,255,.3) !important;
-}
-html.electron-dark table { background: transparent !important; }
-html.electron-dark thead th { background: rgba(124,77,255,.08) !important; color: #9890b8 !important; }
-html.electron-dark tbody tr:hover td { background: rgba(124,77,255,.07) !important; }
-html.electron-dark tbody td { color: #e4dcff !important; border-color: rgba(124,77,255,.08) !important; }
-`;
-
-const DARK_THEME_JS = `
-(function() {
-  function applyTheme(t) { document.documentElement.classList.toggle('electron-dark', t === 'dark'); }
-  if (window.electronAPI) {
-    window.electronAPI.getTheme().then(applyTheme).catch(function(){});
-    window.electronAPI.onThemeChange(applyTheme);
-  }
-})();
-`;
-
-// ─── Analytics tab injection ──────────────────────────────────────────────────
-const ANALYTICS_TAB_JS = `
-(function () {
-  if (location.href.includes('spectre-desktop-analytics') || location.href.includes('/welcome')) return;
-  function inject() {
-    if (document.getElementById('__sp-at')) return true;
-    // Find the RESEARCH nav item by text — works regardless of CSS class names
-    var all = Array.from(document.querySelectorAll('a, span, button'));
-    var research = all.find(function(el) {
-      var t = el.textContent.trim().toUpperCase();
-      return t === 'RESEARCH' && el.offsetParent !== null;
-    });
-    if (!research) return false;
-    var a = document.createElement('a');
-    a.id = '__sp-at';
-    a.href = '${ANALYTICS_URL}';
-    a.className = research.className;
-    a.classList.remove('nav-tab-active', 'active', 'selected', 'current');
-    a.textContent = 'Analytics';
-    a.style.cssText = 'text-decoration:none;cursor:pointer;border-bottom-color:transparent!important;';
-    research.parentNode.insertBefore(a, research.nextSibling);
-    return true;
-  }
-  if (inject()) return;
-  var n = 0, t = setInterval(function() { if (inject() || ++n > 20) clearInterval(t); }, 250);
-})();`;
 
 // ─── Window ──────────────────────────────────────────────────────────────────
 function createWindow() {
@@ -221,12 +64,12 @@ function createWindow() {
       nodeIntegration: false,
       partition: 'persist:spectre',
     },
-    backgroundColor: (loadTheme() === 'dark') ? '#07050f' : '#ddd6f3',
+    backgroundColor: '#f3f1fb',
     show: false,
   });
 
   if (state.maximized) win.maximize();
-  win.loadURL(APP_URL);
+  win.loadURL(process.env.SPECTRE_DEV_URL || PROD_URL + '/dashboard');
   win.once('ready-to-show', () => win.show());
 
   win.webContents.on('did-start-loading', () => win.setProgressBar(2));
@@ -234,35 +77,15 @@ function createWindow() {
 
   const savedZoom = loadZoom();
 
-  // dom-ready fires before first paint — apply dark class here to kill the white flash
   win.webContents.on('dom-ready', () => {
     const url = win.webContents.getURL();
-    const isAuthPage = url.includes('/sign-in') || url.includes('/signin')
-      || url.includes('/register') || url.includes('/verify')
-      || url.includes('/password') || url.includes('/terms') || url.includes('/privacy');
-    const isWebApp = url.startsWith(PROD_URL)
-      && !url.includes('/welcome')
-      && !url.includes('spectre-desktop-analytics');
-    if (!isWebApp) return;
-    const theme = loadTheme() || 'dark';
-    win.webContents.insertCSS(DESKTOP_CSS).catch(() => {});
-    if (!isAuthPage) win.webContents.insertCSS(DARK_WEB_CSS).catch(() => {});
-    win.webContents.executeJavaScript(LOADING_OVERLAY_JS).catch(() => {});
-    win.webContents.executeJavaScript(
-      `document.documentElement.classList.toggle('electron-dark', ${theme === 'dark' && !isAuthPage});` +
-      `(function(){if(window.electronAPI)window.electronAPI.onThemeChange(function(t){document.documentElement.classList.toggle('electron-dark',t==='dark'&&${!isAuthPage});});})();`
-    ).catch(() => {});
+    if (url.startsWith(PROD_URL)) {
+      win.webContents.insertCSS(DESKTOP_CSS).catch(() => {});
+    }
   });
 
   win.webContents.on('did-finish-load', () => {
     if (savedZoom !== 1) win.webContents.setZoomFactor(savedZoom);
-    const url = win.webContents.getURL();
-    const isWebApp = url.startsWith(PROD_URL)
-      && !url.includes('/welcome')
-      && !url.includes('spectre-desktop-analytics');
-    if (isWebApp) {
-      win.webContents.executeJavaScript(ANALYTICS_TAB_JS).catch(() => {});
-    }
   });
 
   win.webContents.on('zoom-changed', (_, dir) => {
@@ -284,14 +107,6 @@ function createWindow() {
     if (url === PROD_URL || url === PROD_URL + '/') {
       event.preventDefault(); win.loadURL(PROD_URL + '/dashboard'); return;
     }
-    // Keep window background dark during navigation to avoid flash
-    // Auth pages use the light background regardless of theme
-    const navIsAuth = url.includes('/sign-in') || url.includes('/signin')
-      || url.includes('/register') || url.includes('/verify')
-      || url.includes('/password');
-    if (url.startsWith(PROD_URL) && (loadTheme() || 'dark') === 'dark' && !navIsAuth) {
-      win.setBackgroundColor('#07050f');
-    }
     const isApp    = url.startsWith(PROD_URL) || url.startsWith('http://localhost');
     const isStripe = url.startsWith('https://billing.stripe.com') || url.startsWith('https://checkout.stripe.com');
     if (!isApp && !isStripe) { event.preventDefault(); shell.openExternal(url); }
@@ -303,14 +118,10 @@ function createWindow() {
 }
 
 // ─── IPC ─────────────────────────────────────────────────────────────────────
-ipcMain.on('retry', () => { const w = BrowserWindow.getFocusedWindow(); if (w) w.loadURL(APP_URL); });
 ipcMain.handle('get-version', () => app.getVersion());
-ipcMain.handle('get-theme',   () => loadTheme() || 'dark');
-ipcMain.handle('set-theme',   (_, t) => {
-  saveTheme(t); nativeTheme.themeSource = t;
-  BrowserWindow.getAllWindows().forEach(w => w.webContents.send('theme-changed', t));
-  return t;
-});
+ipcMain.handle('get-theme',   () => nativeTheme.shouldUseDarkColors ? 'dark' : 'light');
+ipcMain.handle('set-theme',   (_, t) => { nativeTheme.themeSource = t; return t; });
+ipcMain.on('retry', () => { const w = BrowserWindow.getFocusedWindow(); if (w) w.loadURL(PROD_URL + '/dashboard'); });
 
 // ─── Menu ─────────────────────────────────────────────────────────────────────
 function buildMenu(win) {
@@ -330,14 +141,9 @@ function buildMenu(win) {
       ...(!app.isPackaged ? [{ type:'separator' }, { role:'toggleDevTools' }] : []),
     ]},
     { label: 'Go', submenu: [
-      { label: 'Dashboard',  accelerator: IS_MAC?'Cmd+1':'Ctrl+1', click: go(PROD_URL+'/dashboard') },
-      { label: 'Analytics',  accelerator: IS_MAC?'Cmd+2':'Ctrl+2', click: go(ANALYTICS_URL) },
-      { label: 'Research',   accelerator: IS_MAC?'Cmd+3':'Ctrl+3', click: go(PROD_URL+'/research') },
-      { label: 'Settings',   accelerator: IS_MAC?'Cmd+4':'Ctrl+4', click: go(PROD_URL+'/settings') },
-    ]},
-    { label: 'Appearance', submenu: [
-      { label: 'Light Mode', click: () => { saveTheme('light'); nativeTheme.themeSource = 'light'; win.webContents.send('theme-changed', 'light'); } },
-      { label: 'Dark Mode',  click: () => { saveTheme('dark');  nativeTheme.themeSource = 'dark';  win.webContents.send('theme-changed', 'dark');  } },
+      { label: 'Dashboard', accelerator: IS_MAC?'Cmd+1':'Ctrl+1', click: go(PROD_URL+'/dashboard') },
+      { label: 'Research',  accelerator: IS_MAC?'Cmd+2':'Ctrl+2', click: go(PROD_URL+'/research') },
+      { label: 'Settings',  accelerator: IS_MAC?'Cmd+3':'Ctrl+3', click: go(PROD_URL+'/settings') },
     ]},
     { role: 'windowMenu' },
     { role: 'help', submenu: [{ label:'Open spectre-assets.com', click:()=>shell.openExternal(PROD_URL) }] },
