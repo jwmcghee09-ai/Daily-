@@ -54,18 +54,22 @@
   width: min(1200px, calc(100% - 40px));
   height: 100%;
   margin: 0 auto;
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  display: flex;
   align-items: center;
+  justify-content: space-between;
+  position: relative;
   gap: 24px;
 }
 
 .navInner .navLinks {
-  justify-self: center;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  justify-self: unset;
 }
 
 .navInner .navActions {
-  justify-self: end;
+  justify-self: unset;
 }
 
 .brand {
