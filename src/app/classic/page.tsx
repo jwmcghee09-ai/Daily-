@@ -304,6 +304,37 @@ interface HoldingsAiApiPayload {
   error?: string;
 }
 
+interface AlpacaAccount {
+  equity: string;
+  cash: string;
+  buying_power: string;
+  portfolio_value: string;
+  daytrade_count: number;
+  status: string;
+}
+
+interface AlpacaPosition {
+  symbol: string;
+  qty: string;
+  current_price: string;
+  market_value: string;
+  unrealized_pl: string;
+  unrealized_plpc: string;
+  side: string;
+}
+
+interface TraderMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+interface TradingChatPayload {
+  reply?: string;
+  error?: string;
+}
+
+const TRADER_EMAIL = "jwmcghee09@gmail.com";
+
 type CheckoutPlan = "free" | "plus" | "pro";
 
 const HOLDINGS_AI_DEFAULT_PROMPT = "What may be influencing the value of my current holdings?";
@@ -373,6 +404,13 @@ export default function Home() {
   const [holdingsAiLoading, setHoldingsAiLoading] = useState(false);
   const [holdingsAiError, setHoldingsAiError] = useState("");
   const [holdingsAiResult, setHoldingsAiResult] = useState<HoldingsAiAnalysis | null>(null);
+  const [alpacaAccount, setAlpacaAccount] = useState<AlpacaAccount | null>(null);
+  const [alpacaPositions, setAlpacaPositions] = useState<AlpacaPosition[]>([]);
+  const [alpacaLoading, setAlpacaLoading] = useState(false);
+  const [traderMessages, setTraderMessages] = useState<TraderMessage[]>([]);
+  const [traderInput, setTraderInput] = useState("");
+  const [traderLoading, setTraderLoading] = useState(false);
+  const traderEndRef = useRef<HTMLDivElement>(null);
   const [activePage, setActivePage] = useState<"quant" | "ai" | "research" | "settings">(() => {
     if (typeof window !== "undefined") {
       const tab = new URLSearchParams(window.location.search).get("tab");
@@ -760,6 +798,65 @@ export default function Home() {
     }
   }, [demoMode, loadDipAlerts]);
 
+  const loadAlpacaData = useCallback(async () => {
+    if (sessionUser?.email !== TRADER_EMAIL) return;
+    setAlpacaLoading(true);
+    try {
+      const [acctRes, posRes] = await Promise.all([
+        fetch("/api/trading/account", { cache: "no-store" }),
+        fetch("/api/trading/positions", { cache: "no-store" }),
+      ]);
+      if (acctRes.ok) {
+        const acct = (await acctRes.json()) as AlpacaAccount;
+        setAlpacaAccount(acct);
+      }
+      if (posRes.ok) {
+        const pos = (await posRes.json()) as AlpacaPosition[];
+        setAlpacaPositions(Array.isArray(pos) ? pos : []);
+      }
+    } catch {
+      // silently fail — trading data is supplementary
+    } finally {
+      setAlpacaLoading(false);
+    }
+  }, [sessionUser?.email]);
+
+  const sendTraderMessage = useCallback(async (event?: FormEvent) => {
+    event?.preventDefault();
+    const text = traderInput.trim();
+    if (!text || traderLoading) return;
+    const userMsg: TraderMessage = { role: "user", content: text };
+    const newMessages = [...traderMessages, userMsg];
+    setTraderMessages(newMessages);
+    setTraderInput("");
+    setTraderLoading(true);
+    setTimeout(() => traderEndRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
+    try {
+      const res = await fetch("/api/trading/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: newMessages }),
+      });
+      const payload = (await res.json()) as TradingChatPayload;
+      if (payload.reply) {
+        setTraderMessages((prev) => [...prev, { role: "assistant", content: payload.reply ?? "" }]);
+      } else {
+        setTraderMessages((prev) => [...prev, { role: "assistant", content: `Error: ${payload.error ?? "Unknown error"}` }]);
+      }
+    } catch {
+      setTraderMessages((prev) => [...prev, { role: "assistant", content: "Error: Failed to reach the trading agent." }]);
+    } finally {
+      setTraderLoading(false);
+      setTimeout(() => traderEndRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
+    }
+  }, [traderInput, traderLoading, traderMessages]);
+
+  useEffect(() => {
+    if (sessionUser?.email === TRADER_EMAIL) {
+      void loadAlpacaData();
+    }
+  }, [sessionUser?.email, loadAlpacaData]);
+
   const runHoldingsAi = useCallback(async (event?: FormEvent) => {
     event?.preventDefault();
 
@@ -1010,6 +1107,7 @@ export default function Home() {
   const proAnalyticsEnabled = sessionUser?.proEnabled === true;
   const askAiEnabled = sessionUser != null;
   const starterPlan = !proAnalyticsEnabled;
+  const isTrader = sessionUser?.email === TRADER_EMAIL;
   const dipAlertSlotsRemaining = Math.max(0, dipAlertMax - dipAlerts.length);
   const dipAlertPlanMessage = proAnalyticsEnabled
     ? `Pro plan: up to ${dipAlertMax} active dip alerts.`
@@ -2632,6 +2730,87 @@ export default function Home() {
       ) : null}
       {banner ? <div className={`banner ${banner.type}`}>{banner.message}</div> : null}
 
+      {isTrader && activePage === "quant" && (
+        <div className="trader-section">
+          <p className="trader-section-label">Myrmidon — Alpaca Paper Account</p>
+          <div className="alpaca-panel">
+            <div className="alpaca-panel-head">
+              <h3>Trading Account</h3>
+              <button type="button" className="trader-send-btn" onClick={() => void loadAlpacaData()} disabled={alpacaLoading}>
+                {alpacaLoading ? "Refreshing..." : "Refresh"}
+              </button>
+            </div>
+            {alpacaAccount ? (
+              <>
+                <div className="alpaca-stats">
+                  <div className="alpaca-stat">
+                    <div className="alpaca-stat-label">Portfolio Value</div>
+                    <div className="alpaca-stat-value">${parseFloat(alpacaAccount.portfolio_value).toLocaleString("en-US", { maximumFractionDigits: 2 })}</div>
+                  </div>
+                  <div className="alpaca-stat">
+                    <div className="alpaca-stat-label">Equity</div>
+                    <div className="alpaca-stat-value">${parseFloat(alpacaAccount.equity).toLocaleString("en-US", { maximumFractionDigits: 2 })}</div>
+                  </div>
+                  <div className="alpaca-stat">
+                    <div className="alpaca-stat-label">Cash</div>
+                    <div className="alpaca-stat-value">${parseFloat(alpacaAccount.cash).toLocaleString("en-US", { maximumFractionDigits: 2 })}</div>
+                  </div>
+                  <div className="alpaca-stat">
+                    <div className="alpaca-stat-label">Buying Power</div>
+                    <div className="alpaca-stat-value">${parseFloat(alpacaAccount.buying_power).toLocaleString("en-US", { maximumFractionDigits: 2 })}</div>
+                  </div>
+                  <div className="alpaca-stat">
+                    <div className="alpaca-stat-label">Day Trades</div>
+                    <div className="alpaca-stat-value">{alpacaAccount.daytrade_count}</div>
+                  </div>
+                  <div className="alpaca-stat">
+                    <div className="alpaca-stat-label">Status</div>
+                    <div className="alpaca-stat-value">{alpacaAccount.status}</div>
+                  </div>
+                </div>
+                {alpacaPositions.length > 0 ? (
+                  <table className="alpaca-positions-table">
+                    <thead>
+                      <tr>
+                        <th>Symbol</th>
+                        <th>Qty</th>
+                        <th>Price</th>
+                        <th>Market Value</th>
+                        <th>Unrealised P&L</th>
+                        <th>P&L %</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {alpacaPositions.map((pos) => {
+                        const pl = parseFloat(pos.unrealized_pl);
+                        const plPct = parseFloat(pos.unrealized_plpc) * 100;
+                        const isPos = pl >= 0;
+                        return (
+                          <tr key={pos.symbol}>
+                            <td><strong>{pos.symbol}</strong></td>
+                            <td>{pos.qty}</td>
+                            <td>${parseFloat(pos.current_price).toFixed(2)}</td>
+                            <td>${parseFloat(pos.market_value).toLocaleString("en-US", { maximumFractionDigits: 2 })}</td>
+                            <td className={isPos ? "alpaca-pnl-pos" : "alpaca-pnl-neg"}>{isPos ? "+" : ""}{pl.toLocaleString("en-US", { maximumFractionDigits: 2 })}</td>
+                            <td className={isPos ? "alpaca-pnl-pos" : "alpaca-pnl-neg"}>{isPos ? "+" : ""}{plPct.toFixed(2)}%</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                ) : (
+                  <p style={{ fontSize: "0.8rem", color: "var(--muted)", margin: 0 }}>No open positions.</p>
+                )}
+              </>
+            ) : (
+              <p style={{ fontSize: "0.8rem", color: "var(--muted)", margin: 0 }}>
+                {alpacaLoading ? "Loading trading data..." : "Could not load trading account. Check ALPACA_API_KEY is set in Render environment."}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
       {!demoMode && sessionUser.planTier === "none" && !sessionUser.proEnabled ? (
         <div className="upgrade-cta upgrade-cta-plus">
           <div className="upgrade-cta-content">
@@ -2843,13 +3022,44 @@ export default function Home() {
           disabledLabel={demoMode ? "Create account to upload" : undefined}
         />
       </section>
-      <div className="research-placeholder">
-        <div className="research-placeholder-inner">
-          <p className="research-placeholder-label">Research Terminal</p>
-          <h2>Research tools coming soon.</h2>
-          <p>Your uploaded reports are managed above. Advanced research capabilities — screeners, fundamentals, and market data — are planned for a future release.</p>
+      {isTrader ? (
+        <div className="trader-signals-panel">
+          <div className="trader-signals-head">
+            <p className="trader-section-label">Market Intelligence — Agent Watchlist</p>
+          </div>
+          <div className="trader-signal-item">
+            <div className="trader-signal-sym">NVDA</div>
+            <div className="trader-signal-desc">RSI 14-period crossed above 65. Volume 2.8× average. Positive divergence vs SPY (+3.2%). Agent monitoring for momentum continuation.</div>
+            <div className="trader-signal-badge trader-signal-buy">Bullish Signal</div>
+          </div>
+          <div className="trader-signal-item">
+            <div className="trader-signal-sym">ARM</div>
+            <div className="trader-signal-desc">Up 28% in 12 days. Bollinger upper band breach. Agent rule: never chase &gt;30% in 2 weeks. Flagged as extended — trim or hold.</div>
+            <div className="trader-signal-badge trader-signal-watch">Extended</div>
+          </div>
+          <div className="trader-signal-item">
+            <div className="trader-signal-sym">TSLA</div>
+            <div className="trader-signal-desc">Broke below 20-day MA. Volume confirms. RSI approaching 35. Agent watching for oversold bounce entry.</div>
+            <div className="trader-signal-badge trader-signal-watch">Watch</div>
+          </div>
+          <div className="trader-signal-item">
+            <div className="trader-signal-sym">QQQ</div>
+            <div className="trader-signal-desc">Benchmark SPY correlation 0.97. Held as diversification anchor. Agent uses QQQ relative strength as market-wide signal.</div>
+            <div className="trader-signal-badge trader-signal-buy">Core Hold</div>
+          </div>
+          <p style={{ fontSize: "0.72rem", color: "var(--muted)", marginTop: "1rem" }}>
+            Live scanner signals populate here when the VPS agent is active. Chat with the agent on the AI tab for real-time decisions.
+          </p>
         </div>
-      </div>
+      ) : (
+        <div className="research-placeholder">
+          <div className="research-placeholder-inner">
+            <p className="research-placeholder-label">Research Terminal</p>
+            <h2>Research tools coming soon.</h2>
+            <p>Your uploaded reports are managed above. Advanced research capabilities — screeners, fundamentals, and market data — are planned for a future release.</p>
+          </div>
+        </div>
+      )}
       </>
       )}
 
@@ -3163,7 +3373,52 @@ export default function Home() {
       </>
       )}
 
-      {activePage === "ai" ? (
+      {isTrader && activePage === "ai" ? (
+        <section className="ai-page-section">
+          <div className="trader-terminal">
+            <div className="trader-terminal-head">
+              <div className="trader-terminal-dot" />
+              <span className="trader-terminal-title">Myrmidon — Autonomous Trading Agent</span>
+            </div>
+            <div className="trader-messages">
+              {traderMessages.map((msg, i) => (
+                <div key={i} className={`trader-msg trader-msg-${msg.role}`}>
+                  <div className="trader-msg-label">{msg.role === "user" ? "You" : "Agent"}</div>
+                  <div className="trader-msg-bubble">{msg.content}</div>
+                </div>
+              ))}
+              {traderLoading ? (
+                <div className="trader-msg trader-msg-assistant">
+                  <div className="trader-msg-label">Agent</div>
+                  <div className="trader-msg-thinking">Analysing markets and executing tools…</div>
+                </div>
+              ) : null}
+              <div ref={traderEndRef} />
+            </div>
+            <form className="trader-input-row" onSubmit={(event) => void sendTraderMessage(event)}>
+              <textarea
+                className="trader-input"
+                placeholder="Talk to Myrmidon — &quot;run a full analysis&quot;, &quot;what should I trim?&quot;, &quot;buy 5 shares of NVDA&quot;…"
+                value={traderInput}
+                onChange={(event) => setTraderInput(event.target.value)}
+                disabled={traderLoading}
+                rows={1}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" && !event.shiftKey) {
+                    event.preventDefault();
+                    void sendTraderMessage();
+                  }
+                }}
+              />
+              <button type="submit" className="trader-send-btn" disabled={traderLoading || !traderInput.trim()}>
+                {traderLoading ? "Thinking…" : "Send"}
+              </button>
+            </form>
+          </div>
+        </section>
+      ) : null}
+
+      {!isTrader && activePage === "ai" ? (
         <section className="ai-page-section">
           {askAiEnabled ? (
             <div className="holdings-ai-panel">
