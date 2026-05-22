@@ -5979,15 +5979,10 @@ async function startStripeCheckout(plan, triggerEl) {
     hideHero();
   }
 
-  // Poll until session loads — watch #nav-user-email which gets set after loadSession()
-  var _t=setInterval(function(){
-    var emailEl=document.getElementById('nav-user-email');
-    var email=emailEl?emailEl.textContent.trim():'';
-    if(email&&email.indexOf('@')>-1){
-      clearInterval(_t);
-      if(email===TRADER)init();
-    }
-  },150);
+  // Fetch session directly — more reliable than polling the hidden DOM element
+  fetch('/api/auth/session',{cache:'no-store'}).then(function(r){return r.json();}).then(function(p){
+    if(p&&p.user&&p.user.email===TRADER)init();
+  }).catch(function(){});
 
   window.myrmSend=send;
   window.myrmKey=function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}};
