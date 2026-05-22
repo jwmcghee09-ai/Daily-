@@ -1,17 +1,19 @@
-﻿import fs from "node:fs/promises";
+import fs from "node:fs/promises";
 import path from "node:path";
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
 
 export const runtime = "nodejs";
 
+const TRADER_EMAIL = "jwmcghee09@gmail.com";
+
 const MYRMIDON_QUANT_BANNER = `<!-- MYRMIDON quant banner -->
 <div id="myrm-quant" data-page="quant" style="padding:1.2rem 2.5rem 0;max-width:960px;margin:0 auto;box-sizing:border-box">
-  <div style="display:flex;align-items:center;gap:.75rem;padding:.65rem 1rem;background:rgba(167,139,250,.06);border:1px solid rgba(167,139,250,.18);border-radius:8px;margin-bottom:1rem">
+  <div style="display:flex;align-items:center;gap:.75rem;padding:.65rem 1rem;background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.3);border-radius:8px;margin-bottom:1rem">
     <div style="width:7px;height:7px;border-radius:50%;background:#a78bfa;flex-shrink:0"></div>
     <span style="font-family:monospace;font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:#a78bfa;flex:1">Myrmidon · Alpaca Paper</span>
     <span id="myrm-sync-status" style="font-family:monospace;font-size:.56rem;color:#888"></span>
-    <button id="myrm-sync-btn" onclick="myrmSyncAlpaca()" style="font-family:monospace;font-size:.56rem;letter-spacing:.1em;text-transform:uppercase;color:#a78bfa;background:rgba(167,139,250,.12);border:1px solid rgba(167,139,250,.3);border-radius:4px;padding:.28rem .75rem;cursor:pointer;white-space:nowrap">Sync to Portfolio</button>
+    <button id="myrm-sync-btn" onclick="myrmSyncAlpaca()" style="font-family:monospace;font-size:.56rem;letter-spacing:.1em;text-transform:uppercase;color:#a78bfa;background:rgba(167,139,250,.18);border:1px solid rgba(167,139,250,.4);border-radius:4px;padding:.28rem .75rem;cursor:pointer;white-space:nowrap">Sync to Portfolio</button>
   </div>
 </div>`;
 
@@ -34,7 +36,6 @@ const MYRMIDON_AI_TERMINAL = `<!-- MYRMIDON AI terminal -->
 const MYRMIDON_SCRIPT = `<style>@keyframes myrmPulse{0%,100%{opacity:1}50%{opacity:.3}}</style>
 <script>
 (function(){
-  var TRADER='jwmcghee09@gmail.com';
   var msgs=[];
   var busy=false;
   function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
@@ -75,15 +76,15 @@ const MYRMIDON_SCRIPT = `<style>@keyframes myrmPulse{0%,100%{opacity:1}50%{opaci
       else{if(status)status.textContent=data.error||'Sync failed';if(btn){btn.disabled=false;btn.textContent='Sync to Portfolio';}}
     }catch(e){if(status)status.textContent='Network error';if(btn){btn.disabled=false;btn.textContent='Sync to Portfolio';}}
   }
+  // Trader is server-verified; init immediately on DOMContentLoaded
   function init(){
-    if(window._myrmDone)return;window._myrmDone=true;
     var ai=el('myrm-ai');if(ai)ai.style.display='';
     var hero=el('dashboard-top');if(hero)hero.style.display='none';
     var orig=window.switchTab;
     if(orig)window.switchTab=function(tab){orig(tab);var h=el('dashboard-top');if(h&&tab==='ai')h.style.display='none';};
     renderMsgs();
   }
-  fetch('/api/auth/session',{cache:'no-store'}).then(function(r){return r.json();}).then(function(p){if(p&&p.user&&p.user.email===TRADER)init();}).catch(function(){});
+  if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',init);}else{init();}
   window.myrmSend=send;
   window.myrmKey=function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}};
   window.myrmSyncAlpaca=syncAlpaca;
@@ -92,28 +93,29 @@ const MYRMIDON_SCRIPT = `<style>@keyframes myrmPulse{0%,100%{opacity:1}50%{opaci
 
 export async function GET(request: NextRequest) {
   const isDemo = request.nextUrl.searchParams.get("demo") === "1";
+  let isTrader = false;
+
   if (!isDemo) {
     const user = await getAuthenticatedUser();
     if (!user) {
       return NextResponse.redirect(buildRedirectUrl(request, "/signin"));
     }
+    isTrader = user.email === TRADER_EMAIL;
   }
 
   let html = await fs.readFile(path.join(process.cwd(), "public", "spectre-dashboard-v3.html"), "utf8");
 
-  // Always inject Myrmidon — remove stale copies first, then re-inject fresh
-  html = html.replace(/<!-- MYRMIDON quant banner[\s\S]*?<\/div>\s*<\/div>\s*/i, "");
-  html = html.replace(/<!-- MYRMIDON AI terminal[\s\S]*?<\/div>\s*<\/div>\s*<\/div>\s*<\/div>\s*/i, "");
-  html = html.replace(/<!-- MYRMIDON trading terminal[\s\S]*?<\/script>\s*/i, "");
-  html = html.replace(
-    "<!-- RESTORED DASHBOARD HERO -->",
-    MYRMIDON_QUANT_BANNER + "\n<!-- RESTORED DASHBOARD HERO -->",
-  );
-  html = html.replace(
-    "<!-- AI PAGE -->",
-    MYRMIDON_AI_TERMINAL + "\n<!-- AI PAGE -->",
-  );
-  html = html.replace("</body>", MYRMIDON_SCRIPT + "\n</body>");
+  if (isTrader) {
+    html = html.replace(
+      "<!-- RESTORED DASHBOARD HERO -->",
+      MYRMIDON_QUANT_BANNER + "\n<!-- RESTORED DASHBOARD HERO -->",
+    );
+    html = html.replace(
+      "<!-- AI PAGE -->",
+      MYRMIDON_AI_TERMINAL + "\n<!-- AI PAGE -->",
+    );
+    html = html.replace("</body>", MYRMIDON_SCRIPT + "\n</body>");
+  }
 
   return new NextResponse(html, {
     headers: {
