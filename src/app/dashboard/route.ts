@@ -101,18 +101,19 @@ export async function GET(request: NextRequest) {
 
   let html = await fs.readFile(path.join(process.cwd(), "public", "spectre-dashboard-v3.html"), "utf8");
 
-  // Inject Myrmidon elements if not already present (guards against cached public/ on Render)
-  if (!html.includes("myrm-quant")) {
-    html = html.replace(
-      "<!-- RESTORED DASHBOARD HERO -->",
-      MYRMIDON_QUANT_BANNER + "\n<!-- RESTORED DASHBOARD HERO -->",
-    );
-    html = html.replace(
-      "<!-- AI PAGE -->",
-      MYRMIDON_AI_TERMINAL + "\n<!-- AI PAGE -->",
-    );
-    html = html.replace("</body>", MYRMIDON_SCRIPT + "\n</body>");
-  }
+  // Always inject Myrmidon — remove stale copies first, then re-inject fresh
+  html = html.replace(/<!-- MYRMIDON quant banner[\s\S]*?<\/div>\s*<\/div>\s*/i, "");
+  html = html.replace(/<!-- MYRMIDON AI terminal[\s\S]*?<\/div>\s*<\/div>\s*<\/div>\s*<\/div>\s*/i, "");
+  html = html.replace(/<!-- MYRMIDON trading terminal[\s\S]*?<\/script>\s*/i, "");
+  html = html.replace(
+    "<!-- RESTORED DASHBOARD HERO -->",
+    MYRMIDON_QUANT_BANNER + "\n<!-- RESTORED DASHBOARD HERO -->",
+  );
+  html = html.replace(
+    "<!-- AI PAGE -->",
+    MYRMIDON_AI_TERMINAL + "\n<!-- AI PAGE -->",
+  );
+  html = html.replace("</body>", MYRMIDON_SCRIPT + "\n</body>");
 
   return new NextResponse(html, {
     headers: {
