@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
+import { readTradingMemory } from "@/lib/db";
 
 const TRADER_EMAIL = "jwmcghee09@gmail.com";
 const ALPACA_BASE = "https://paper-api.alpaca.markets/v2";
@@ -85,7 +86,7 @@ const TOOLS = [
   { name: "cancel_order", description: "Cancel an open order by order ID.", input_schema: { type: "object", properties: { order_id: { type: "string" } }, required: ["order_id"] } },
 ];
 
-const SYSTEM_PROMPT = `You are Myrmidon — SPECTRE's autonomous trading agent managing an Alpaca paper trading account.
+const BASE_SYSTEM_PROMPT = `You are Myrmidon — SPECTRE's autonomous trading agent managing an Alpaca paper trading account.
 
 RULES:
 - Max 10% of portfolio value per single position
@@ -119,6 +120,12 @@ export async function POST(request: NextRequest) {
   if (!Array.isArray(body.messages) || body.messages.length === 0) {
     return NextResponse.json({ error: "messages array required" }, { status: 400 });
   }
+
+  const memory = readTradingMemory();
+  const memorySection = memory?.strategy
+    ? `\n\nCURRENT STRATEGY MEMORY (from autonomous VPS agent):\n${memory.strategy}${memory.lessons.length > 0 ? `\n\nRECENT LESSONS:\n${memory.lessons.map((l, i) => `${i + 1}. ${l}`).join("\n")}` : ""}`
+    : "\n\nNo strategy memory yet — this is the first session.";
+  const SYSTEM_PROMPT = BASE_SYSTEM_PROMPT + memorySection;
 
   const inputMessages = (body.messages as ChatMessage[]).map((m) => ({ role: m.role, content: String(m.content) }));
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

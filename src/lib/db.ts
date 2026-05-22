@@ -521,6 +521,15 @@ function initSchema(db: DatabaseSync): void {
     );
   `);
 
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS trading_memory (
+      id TEXT PRIMARY KEY,
+      strategy TEXT NOT NULL DEFAULT '',
+      lessons TEXT NOT NULL DEFAULT '[]',
+      updated_at TEXT NOT NULL
+    );
+  `);
+
 }
 
 function normalizeSource(value: unknown): DataSource {
@@ -3655,4 +3664,34 @@ export function runInDbTransaction(fn: () => void): void {
     db.exec("ROLLBACK");
     throw e;
   }
+}
+
+interface TradingMemoryRow {
+  strategy: string;
+  lessons: string;
+  updated_at: string;
+}
+
+export interface TradingMemory {
+  strategy: string;
+  lessons: string[];
+  updatedAt: string;
+}
+
+export function readTradingMemory(): TradingMemory | null {
+  const db = getDb();
+  const row = db.prepare("SELECT strategy, lessons, updated_at FROM trading_memory WHERE id = 'myrmidon'").get() as TradingMemoryRow | undefined;
+  if (!row) return null;
+  let lessons: string[] = [];
+  try { lessons = JSON.parse(row.lessons) as string[]; } catch { lessons = []; }
+  return { strategy: row.strategy, lessons, updatedAt: row.updated_at };
+}
+
+export function writeTradingMemory(strategy: string, lessons: string[]): void {
+  const db = getDb();
+  const updatedAt = new Date().toISOString();
+  const lessonsJson = JSON.stringify(lessons.slice(-20));
+  db.prepare(
+    "INSERT INTO trading_memory (id, strategy, lessons, updated_at) VALUES ('myrmidon', ?, ?, ?) ON CONFLICT(id) DO UPDATE SET strategy=excluded.strategy, lessons=excluded.lessons, updated_at=excluded.updated_at"
+  ).run(strategy, lessonsJson, updatedAt);
 }
