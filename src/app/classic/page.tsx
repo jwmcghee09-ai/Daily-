@@ -2726,7 +2726,7 @@ export default function Home() {
 
       {isTrader && activePage === "quant" && (
         <div className="trader-section">
-          <p className="trader-section-label">Live Trading — Alpaca Paper Account</p>
+          <p className="trader-section-label">Myrmidon — Alpaca Paper Account</p>
           <div className="alpaca-panel">
             <div className="alpaca-panel-head">
               <h3>Trading Account</h3>
@@ -3372,7 +3372,7 @@ export default function Home() {
           <div className="trader-terminal">
             <div className="trader-terminal-head">
               <div className="trader-terminal-dot" />
-              <span className="trader-terminal-title">Trading Agent — Opus 4.7</span>
+              <span className="trader-terminal-title">Myrmidon — Autonomous Trading Agent</span>
             </div>
             <div className="trader-messages">
               {traderMessages.map((msg, i) => (
@@ -3392,7 +3392,7 @@ export default function Home() {
             <form className="trader-input-row" onSubmit={(event) => void sendTraderMessage(event)}>
               <textarea
                 className="trader-input"
-                placeholder="Ask the agent anything — &quot;run a full analysis&quot;, &quot;what should I trim?&quot;, &quot;buy 5 shares of NVDA&quot;…"
+                placeholder="Talk to Myrmidon — &quot;run a full analysis&quot;, &quot;what should I trim?&quot;, &quot;buy 5 shares of NVDA&quot;…"
                 value={traderInput}
                 onChange={(event) => setTraderInput(event.target.value)}
                 disabled={traderLoading}

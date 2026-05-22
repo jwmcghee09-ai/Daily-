@@ -7771,7 +7771,7 @@ button.spectre-app-nav-logo {
 }
 
 .trader-messages:empty::after {
-  content: "Agent ready. Ask me anything about the portfolio — or say \"run a full analysis and make trades if you see opportunities.\"";
+  content: "Myrmidon ready. Ask anything — or say \"run a full analysis and make trades if you see opportunities.\"";
   font-family: "DM Mono", "Azeret Mono", var(--font-geist-mono), monospace;
   font-size: 0.7rem;
   color: rgba(167,139,250,0.4);
