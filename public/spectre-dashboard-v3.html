@@ -6017,11 +6017,13 @@ async function startStripeCheckout(plan, triggerEl) {
     loadAlpaca();
   }
 
-  // Poll until session loads
+  // Poll until session loads — watch #nav-user-email which gets set after loadSession()
   var _t=setInterval(function(){
-    if(window.state&&window.state.sessionUser&&window.state.sessionUser.email){
+    var emailEl=document.getElementById('nav-user-email');
+    var email=emailEl?emailEl.textContent.trim():'';
+    if(email&&email.indexOf('@')>-1){
       clearInterval(_t);
-      if(window.state.sessionUser.email===TRADER)init();
+      if(email===TRADER)init();
     }
   },150);
 
