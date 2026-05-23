@@ -8,7 +8,7 @@ export const runtime = "nodejs";
 const TRADER_EMAIL = "jwmcghee09@gmail.com";
 
 const MYRMIDON_AI_TERMINAL = `<!-- MYRMIDON AI terminal -->
-<div id="myrm-ai" data-page="ai" style="margin-top:90px;min-height:calc(100vh - 60px);padding:2rem 2.5rem;max-width:960px;margin-left:auto;margin-right:auto;box-sizing:border-box">
+<div id="myrm-ai" style="display:none;margin-top:90px;min-height:calc(100vh - 60px);padding:2rem 2.5rem;max-width:960px;margin-left:auto;margin-right:auto;box-sizing:border-box">
   <div style="margin-bottom:.6rem"><span style="font-family:monospace;font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:#a78bfa">Myrmidon — Autonomous Trading Agent</span></div>
   <div style="background:#0a0a12;border:1px solid rgba(167,139,250,.2);border-radius:10px;overflow:hidden">
     <div style="display:flex;align-items:center;gap:.6rem;padding:.7rem 1.2rem;background:rgba(167,139,250,.06);border-bottom:1px solid rgba(167,139,250,.15)">
@@ -30,6 +30,14 @@ const MYRMIDON_SCRIPT = `<style>@keyframes myrmPulse{0%,100%{opacity:1}50%{opaci
   var busy=false;
   function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
   function el(id){return document.getElementById(id);}
+
+  function showMyrm(show){
+    var m=el('myrm-ai');
+    if(m)m.style.display=show?'block':'none';
+    var hero=el('dashboard-top');
+    if(hero)hero.style.display='none';
+  }
+
   function renderMsgs(){
     var box=el('myrm-msgs');if(!box)return;
     if(msgs.length===0){box.innerHTML='<div style="color:rgba(167,139,250,.4);font-family:monospace;font-size:.7rem">Myrmidon ready.</div>';return;}
@@ -67,12 +75,11 @@ const MYRMIDON_SCRIPT = `<style>@keyframes myrmPulse{0%,100%{opacity:1}50%{opaci
     }catch(e){if(status)status.textContent='Network error';if(syncBtn){syncBtn.disabled=false;syncBtn.textContent='Sync Alpaca';}}
   }
   function init(){
-    // Insert sync button next to the existing Refresh Prices button in the hero
+    // Sync button next to Refresh Prices
     var refreshBtn=el('hero-refresh-prices-btn');
     if(refreshBtn&&!el('myrm-sync-btn')){
       var sb=document.createElement('button');
-      sb.id='myrm-sync-btn';sb.type='button';
-      sb.onclick=syncAlpaca;
+      sb.id='myrm-sync-btn';sb.type='button';sb.onclick=syncAlpaca;
       sb.style.cssText='font-family:monospace;font-size:.56rem;letter-spacing:.1em;text-transform:uppercase;color:#a78bfa;background:rgba(167,139,250,.12);border:1px solid rgba(167,139,250,.3);border-radius:6px;padding:.45rem .9rem;cursor:pointer;white-space:nowrap;margin-left:.6rem';
       sb.textContent='Sync Alpaca';
       var ss=document.createElement('span');
@@ -81,11 +88,15 @@ const MYRMIDON_SCRIPT = `<style>@keyframes myrmPulse{0%,100%{opacity:1}50%{opaci
       refreshBtn.parentNode.insertBefore(sb,refreshBtn.nextSibling);
       refreshBtn.parentNode.insertBefore(ss,sb.nextSibling);
     }
-    // Remove data-page from normal AI hero so switchTab never re-shows it
-    var hero=el('dashboard-top');
-    if(hero){hero.removeAttribute('data-page');hero.style.display='none';}
-    // Do NOT force-show #myrm-ai here — switchTab('ai') handles it when the tab is clicked.
-    // Just pre-render the message area so it's ready.
+    // Own the AI tab click — bypass switchTab entirely
+    document.querySelectorAll('.nav-tab[data-tab]').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        showMyrm(btn.getAttribute('data-tab')==='ai');
+      });
+    });
+    // Show terminal now if AI tab is already active on load
+    var active=document.querySelector('.nav-tab-active');
+    showMyrm(active&&active.getAttribute('data-tab')==='ai');
     renderMsgs();
   }
   if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',init);}else{init();}
