@@ -4542,8 +4542,8 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     const _hasPlusAccess = Boolean(state.demoMode || state.sessionUser?.proEnabled || state.sessionUser?.planTier === "plus");
     const _hasProAccess = Boolean(state.demoMode || state.sessionUser?.proEnabled);
     const hasCorrData = corrMatrix && corrMatrix.tickers.length >= 2;
-    if (corrWrapEl) corrWrapEl.style.display = _hasPlusAccess && hasCorrData ? "" : "none";
-    if (corrDividerEl) corrDividerEl.style.display = _hasPlusAccess && hasCorrData ? "" : "none";
+    if (corrWrapEl) corrWrapEl.style.display = _hasPlusAccess && hasCorrData && (window._currentTab || 'quant') === 'quant' ? "" : "none";
+    if (corrDividerEl) corrDividerEl.style.display = _hasPlusAccess && hasCorrData && (window._currentTab || 'quant') === 'quant' ? "" : "none";
     if (corrContainer && hasCorrData) {
       const n = corrMatrix.tickers.length;
       let html = `<div class="corr-matrix" style="grid-template-columns:4.5rem repeat(${n},2.4rem)">`;
@@ -4577,8 +4577,8 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     const hasFactorData = Number.isFinite(marketBeta);
     const factorWrapEl = document.getElementById("factor-exposure-wrap");
     const factorDividerEl = document.getElementById("factor-exposure-divider");
-    if (factorWrapEl) factorWrapEl.style.display = _hasProAccess && hasFactorData ? "" : "none";
-    if (factorDividerEl) factorDividerEl.style.display = _hasProAccess && hasFactorData ? "" : "none";
+    if (factorWrapEl) factorWrapEl.style.display = _hasProAccess && hasFactorData && (window._currentTab || 'quant') === 'quant' ? "" : "none";
+    if (factorDividerEl) factorDividerEl.style.display = _hasProAccess && hasFactorData && (window._currentTab || 'quant') === 'quant' ? "" : "none";
     if (Number.isFinite(marketBeta)) {
       const clampedMkt = Math.max(-2, Math.min(2, marketBeta));
       const pct = Math.abs(clampedMkt) / 2 * 50;

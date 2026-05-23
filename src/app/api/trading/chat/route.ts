@@ -101,7 +101,7 @@ APPROACH:
 - When placing orders, confirm the math stays within the 10% rule
 - Be direct and decisive. This is paper trading — learn fast, act with discipline.`;
 
-async function proxyToVps(messages: ChatMessage[]): Promise<NextResponse> {
+async function proxyToVps(messages: ChatMessage[]): Promise<NextResponse | null> {
   const vpsUrl = (process.env.VPS_MYRMIDON_URL ?? "").replace(/\/$/, "");
   const vpsSecret = process.env.VPS_MYRMIDON_SECRET ?? "";
 
@@ -114,8 +114,9 @@ async function proxyToVps(messages: ChatMessage[]): Promise<NextResponse> {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       signal: AbortSignal.timeout(115_000) as any,
     });
-  } catch (err) {
-    return NextResponse.json({ error: `VPS unreachable: ${err instanceof Error ? err.message : String(err)}` }, { status: 502 });
+  } catch {
+    // VPS unreachable — return null so caller falls back to direct Claude.
+    return null;
   }
 
   if (!res.ok) {
@@ -143,9 +144,10 @@ export async function POST(request: NextRequest) {
 
   const messages = (body.messages as ChatMessage[]).map((m) => ({ role: m.role, content: String(m.content) }));
 
-  // If VPS is configured, proxy there — single agent, no dual-trading conflicts.
+  // If VPS is configured, try it first — falls back to direct Claude if unreachable.
   if (process.env.VPS_MYRMIDON_URL) {
-    return proxyToVps(messages);
+    const vpsResult = await proxyToVps(messages);
+    if (vpsResult) return vpsResult;
   }
 
   // Fallback: call Claude directly from SPECTRE.
