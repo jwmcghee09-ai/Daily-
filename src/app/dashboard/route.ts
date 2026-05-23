@@ -8,12 +8,15 @@ export const runtime = "nodejs";
 const TRADER_EMAIL = "jwmcghee09@gmail.com";
 
 const MYRMIDON_AI_TERMINAL = `<!-- MYRMIDON AI terminal -->
-<div id="myrm-ai" style="display:none;margin-top:90px;min-height:calc(100vh - 60px);padding:2rem 2.5rem;max-width:960px;margin-left:auto;margin-right:auto;box-sizing:border-box">
+<div id="myrm-ai" data-page="ai" style="margin-top:90px;min-height:calc(100vh - 60px);padding:2rem 2.5rem;max-width:960px;margin-left:auto;margin-right:auto;box-sizing:border-box">
   <div style="margin-bottom:.6rem"><span style="font-family:monospace;font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:#a78bfa">Myrmidon — Autonomous Trading Agent</span></div>
   <div style="background:#0a0a12;border:1px solid rgba(167,139,250,.2);border-radius:10px;overflow:hidden">
-    <div style="display:flex;align-items:center;gap:.6rem;padding:.7rem 1.2rem;background:rgba(167,139,250,.06);border-bottom:1px solid rgba(167,139,250,.15)">
-      <div style="width:8px;height:8px;border-radius:50%;background:#a78bfa"></div>
-      <span style="font-family:monospace;font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:#a78bfa">claude-opus-4-7 · live alpaca tools</span>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:.6rem;padding:.7rem 1.2rem;background:rgba(167,139,250,.06);border-bottom:1px solid rgba(167,139,250,.15)">
+      <div style="display:flex;align-items:center;gap:.6rem">
+        <div style="width:8px;height:8px;border-radius:50%;background:#a78bfa"></div>
+        <span style="font-family:monospace;font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:#a78bfa">claude-opus-4-7 · live alpaca tools</span>
+      </div>
+      <div id="myrm-header-actions" style="display:flex;align-items:center;gap:.4rem"></div>
     </div>
     <div id="myrm-msgs" style="height:390px;overflow-y:auto;padding:1.2rem;display:flex;flex-direction:column;gap:1rem;scroll-behavior:smooth"></div>
     <div style="display:flex;gap:.6rem;padding:.8rem 1.2rem;border-top:1px solid rgba(167,139,250,.1);background:rgba(0,0,0,.2)">
@@ -23,20 +26,12 @@ const MYRMIDON_AI_TERMINAL = `<!-- MYRMIDON AI terminal -->
   </div>
 </div>`;
 
-const MYRMIDON_SCRIPT = `<style>@keyframes myrmPulse{0%,100%{opacity:1}50%{opacity:.3}}</style>
-<script>
+const MYRMIDON_SCRIPT = `<script>
 (function(){
   var msgs=[];
   var busy=false;
   function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
   function el(id){return document.getElementById(id);}
-
-  function showMyrm(show){
-    var m=el('myrm-ai');
-    if(m)m.style.display=show?'block':'none';
-    var hero=el('dashboard-top');
-    if(hero)hero.style.display='none';
-  }
 
   function renderMsgs(){
     var box=el('myrm-msgs');if(!box)return;
@@ -75,40 +70,20 @@ const MYRMIDON_SCRIPT = `<style>@keyframes myrmPulse{0%,100%{opacity:1}50%{opaci
     }catch(e){if(status)status.textContent='Network error';if(syncBtn){syncBtn.disabled=false;syncBtn.textContent='Sync Alpaca';}}
   }
   function init(){
-    // Sync button next to Refresh Prices
-    var refreshBtn=el('hero-refresh-prices-btn');
-    if(refreshBtn&&!el('myrm-sync-btn')){
+    renderMsgs();
+    // Inject Sync Alpaca button into the Myrmidon terminal header area
+    var header=el('myrm-header-actions');
+    if(header&&!el('myrm-sync-btn')){
       var sb=document.createElement('button');
       sb.id='myrm-sync-btn';sb.type='button';sb.onclick=syncAlpaca;
-      sb.style.cssText='font-family:monospace;font-size:.56rem;letter-spacing:.1em;text-transform:uppercase;color:#a78bfa;background:rgba(167,139,250,.12);border:1px solid rgba(167,139,250,.3);border-radius:6px;padding:.45rem .9rem;cursor:pointer;white-space:nowrap;margin-left:.6rem';
+      sb.style.cssText='font-family:monospace;font-size:.56rem;letter-spacing:.1em;text-transform:uppercase;color:#a78bfa;background:rgba(167,139,250,.12);border:1px solid rgba(167,139,250,.3);border-radius:6px;padding:.35rem .8rem;cursor:pointer;white-space:nowrap';
       sb.textContent='Sync Alpaca';
       var ss=document.createElement('span');
       ss.id='myrm-sync-status';
       ss.style.cssText='font-family:monospace;font-size:.56rem;color:#a78bfa;margin-left:.5rem;opacity:.8';
-      refreshBtn.parentNode.insertBefore(sb,refreshBtn.nextSibling);
-      refreshBtn.parentNode.insertBefore(ss,sb.nextSibling);
+      header.appendChild(sb);
+      header.appendChild(ss);
     }
-    // Own the AI tab click — bypass switchTab entirely
-    document.querySelectorAll('.nav-tab[data-tab]').forEach(function(btn){
-      btn.addEventListener('click',function(){
-        showMyrm(btn.getAttribute('data-tab')==='ai');
-      });
-    });
-    // boot-pending CSS has display:none!important on all body>* while loading.
-    // Watch for it to be removed, then show the terminal if AI tab is active.
-    function applyTab(){
-      var active=document.querySelector('.nav-tab-active');
-      showMyrm(!!(active&&active.getAttribute('data-tab')==='ai'));
-    }
-    if(document.body.classList.contains('boot-pending')){
-      var obs=new MutationObserver(function(){
-        if(!document.body.classList.contains('boot-pending')){obs.disconnect();applyTab();}
-      });
-      obs.observe(document.body,{attributes:true,attributeFilter:['class']});
-    }else{
-      applyTab();
-    }
-    renderMsgs();
   }
   if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',init);}else{init();}
   window.myrmSend=send;
@@ -137,10 +112,10 @@ export async function GET(request: NextRequest) {
       "<!-- AI PAGE -->",
       MYRMIDON_AI_TERMINAL + "\n<!-- AI PAGE -->",
     );
-    // Strip data-page from #dashboard-top server-side so switchTab never shows it for the trader.
+    // Hide #dashboard-top permanently for the trader — #myrm-ai (data-page="ai") owns the AI tab.
     html = html.replace(
       'id="dashboard-top" data-page="ai"',
-      'id="dashboard-top"',
+      'id="dashboard-top" style="display:none"',
     );
     html = html.replace("</body>", MYRMIDON_SCRIPT + "\n</body>");
   }
