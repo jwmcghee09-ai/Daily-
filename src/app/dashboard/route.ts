@@ -84,9 +84,8 @@ const MYRMIDON_SCRIPT = `<style>@keyframes myrmPulse{0%,100%{opacity:1}50%{opaci
     // Remove data-page from normal AI hero so switchTab never re-shows it
     var hero=el('dashboard-top');
     if(hero){hero.removeAttribute('data-page');hero.style.display='none';}
-    // Show AI terminal (margin-top:90px already in HTML to clear fixed nav)
-    var ai=el('myrm-ai');
-    if(ai)ai.style.display='';
+    // Do NOT force-show #myrm-ai here — switchTab('ai') handles it when the tab is clicked.
+    // Just pre-render the message area so it's ready.
     renderMsgs();
   }
   if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',init);}else{init();}
