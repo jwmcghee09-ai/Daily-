@@ -38,8 +38,7 @@
   z-index: 50;
   height: calc(var(--navHeight) + var(--safeTop));
   padding-top: var(--safeTop);
-  border-bottom: 1px solid var(--border);
-  background: rgba(243, 241, 251, 0.94);
+  background: rgba(243, 241, 251, 0.96);
   backdrop-filter: blur(28px) saturate(1.4);
   -webkit-backdrop-filter: blur(28px) saturate(1.4);
   transition: height 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
@@ -47,8 +46,8 @@
 
 .navScrolled {
   height: 48px;
-  background: rgba(235, 232, 248, 0.97);
-  box-shadow: 0 1px 0 var(--border), 0 8px 32px rgba(100, 80, 200, 0.08);
+  background: rgba(238, 235, 250, 0.98);
+  box-shadow: 0 8px 32px rgba(100, 80, 200, 0.07);
 }
 
 .navInner {
@@ -58,7 +57,19 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  position: relative;
   gap: 24px;
+}
+
+.navInner .navLinks {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  justify-self: unset;
+}
+
+.navInner .navActions {
+  justify-self: unset;
 }
 
 .brand {
@@ -77,7 +88,7 @@
 
 .navLinks {
   display: flex;
-  gap: 28px;
+  gap: 22px;
 }
 
 .navLinks a {
@@ -102,7 +113,7 @@
 
 .navLinks a:hover,
 .navLinks a.active {
-  color: var(--text);
+  color: #a855f7;
 }
 
 .navLinks a:hover::after,
@@ -156,9 +167,15 @@
 
 .ghostButton,
 .outlineButton {
-  border-color: var(--borderStrong);
-  color: var(--text);
-  background: transparent;
+  border-color: rgba(168, 85, 247, 0.35);
+  color: #a855f7;
+  background: rgba(168, 85, 247, 0.06);
+}
+
+.ghostButton:hover,
+.outlineButton:hover {
+  border-color: rgba(168, 85, 247, 0.6);
+  background: rgba(168, 85, 247, 0.12);
 }
 
 .demoButton {
@@ -190,8 +207,14 @@
   z-index: 45;
   overflow: hidden;
   height: var(--tickerHeight);
+  border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
-  background: rgba(240, 238, 251, 0.92);
+  background: rgba(243, 241, 251, 0.96);
+  transition: top 0.3s ease;
+}
+
+.navScrolled + .ticker {
+  top: calc(48px + var(--safeTop));
 }
 
 .ticker::before,
@@ -1458,7 +1481,7 @@
 
 @keyframes ticker {
   from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
+  to { transform: translateX(-25%); }
 }
 
 @keyframes labelSlide {

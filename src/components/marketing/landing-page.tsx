@@ -315,18 +315,12 @@ export default function LandingPage({
           </Link>
 
           <div className={styles.navLinks}>
-            <a href="#workflow">Workflow</a>
             <a href="#features">Features</a>
             <a href="#ai">AI Analysis</a>
             <a href="#pricing">Pricing</a>
-            <a href="#security">Security</a>
           </div>
 
           <div className={styles.navActions}>
-            <Link href="/dashboard?demo=1" className={`${styles.button} ${styles.demoButton}`}>
-              <span className={styles.demoDot} />
-              Live Demo
-            </Link>
             <Link href="/signin" className={`${styles.button} ${styles.ghostButton}`}>
               Sign In
             </Link>
@@ -339,7 +333,7 @@ export default function LandingPage({
 
       <div className={styles.ticker}>
         <div className={styles.tickerTrack}>
-          {[...tickerItems, ...tickerItems].map(([symbol, price, delta, tone], index) => (
+          {[...tickerItems, ...tickerItems, ...tickerItems, ...tickerItems].map(([symbol, price, delta, tone], index) => (
             <span key={`${symbol}-${index}`} className={styles.tickerItem}>
               <span className={styles.tickerSymbol}>{symbol}</span>
               <span className={styles.tickerPrice}>{price}</span>

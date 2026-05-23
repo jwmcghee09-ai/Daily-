@@ -10,6 +10,7 @@ export async function GET() {
   return NextResponse.json({
     ok: true,
     service: "spectre-web",
+    build: "myrmidon-v1",
     timestamp: new Date().toISOString(),
     uptimeSeconds: Math.floor(process.uptime()),
     checks: {

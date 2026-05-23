@@ -1,22 +1,18 @@
 'use strict';
 
-const { app, BrowserWindow, Menu, shell, ipcMain, session, net } = require('electron');
+const { app, BrowserWindow, Menu, shell, ipcMain, session, net, nativeTheme } = require('electron');
 const path = require('path');
 const https = require('https');
 const fs   = require('fs');
 
-// ─── Config ──────────────────────────────────────────────────────────────────
 const PROD_URL       = 'https://spectre-assets.com';
-const ANALYTICS_URL  = PROD_URL + '/spectre-desktop-analytics.html';
-const WELCOME_URL    = PROD_URL + '/welcome';
 const ANALYTICS_FILE = path.join(__dirname, 'analytics.html');
 const WELCOME_FILE   = path.join(__dirname, 'welcome.html');
 const IS_MAC         = process.platform === 'darwin';
 
-// ─── Persistence helpers ──────────────────────────────────────────────────────
+// ─── Persistence ─────────────────────────────────────────────────────────────
 const STATE_FILE = path.join(app.getPath('userData'), 'window-state.json');
 const ZOOM_FILE  = path.join(app.getPath('userData'), 'zoom.json');
-const THEME_FILE = path.join(app.getPath('userData'), 'theme.json');
 
 function loadWindowState() {
   try {
@@ -33,60 +29,24 @@ function saveWindowState(win) {
   if (win.isMaximized() || win.isMinimized() || win.isFullScreen()) return;
   try { fs.writeFileSync(STATE_FILE, JSON.stringify(win.getBounds())); } catch {}
 }
-
 function loadZoom()  { try { return JSON.parse(fs.readFileSync(ZOOM_FILE,'utf8')).factor ?? 1; } catch { return 1; } }
 function saveZoom(f) { try { fs.writeFileSync(ZOOM_FILE, JSON.stringify({ factor: f })); } catch {} }
 
-function loadTheme()  { try { return JSON.parse(fs.readFileSync(THEME_FILE,'utf8')).theme || null; } catch { return null; } }
-function saveTheme(t) { try { fs.writeFileSync(THEME_FILE, JSON.stringify({ theme: t })); } catch {} }
-
-// First launch = no theme saved yet
-const storedTheme = loadTheme();
-const APP_URL = process.env.SPECTRE_DEV_URL
-  || (storedTheme === null ? WELCOME_URL : PROD_URL + '/dashboard');
-
-// ─── Server wake-up ping ──────────────────────────────────────────────────────
-function pingServer() {
-  try {
-    const u = new URL(PROD_URL);
-    https.get({ hostname: u.hostname, path: '/api/health', timeout: 30000 }, () => {}).on('error', () => {});
-  } catch {}
-}
-
-// ─── Desktop CSS ──────────────────────────────────────────────────────────────
+// ─── Minimal desktop polish (scrollbar + Mac traffic-light padding) ───────────
 const DESKTOP_CSS = `
   ::-webkit-scrollbar        { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track  { background: transparent; }
   ::-webkit-scrollbar-thumb  { background: rgba(124,77,255,.32); border-radius: 3px; }
   ::-webkit-scrollbar-thumb:hover { background: rgba(124,77,255,.52); }
   footer { display: none !important; }
-` + (IS_MAC ? `  .nav-inner { padding-left: 82px !important; }` : '');
+` + (IS_MAC ? `  .nav-inner, .spectre-app-nav-inner { padding-left: 82px !important; }` : '');
 
-// ─── Analytics tab injection ──────────────────────────────────────────────────
-const ANALYTICS_TAB_JS = `
-(function () {
-  if (location.href.includes('spectre-desktop-analytics') || location.href.includes('/welcome')) return;
-  function inject() {
-    if (document.getElementById('__sp-at')) return true;
-    // Find the RESEARCH nav item by text — works regardless of CSS class names
-    var all = Array.from(document.querySelectorAll('a, span, button'));
-    var research = all.find(function(el) {
-      var t = el.textContent.trim().toUpperCase();
-      return t === 'RESEARCH' && el.offsetParent !== null;
-    });
-    if (!research) return false;
-    var a = document.createElement('a');
-    a.id = '__sp-at';
-    a.href = '${ANALYTICS_URL}';
-    a.className = research.className;
-    a.textContent = 'Analytics';
-    a.style.cssText = 'text-decoration:none;cursor:pointer;';
-    research.parentNode.insertBefore(a, research.nextSibling);
-    return true;
-  }
-  if (inject()) return;
-  var n = 0, t = setInterval(function() { if (inject() || ++n > 20) clearInterval(t); }, 250);
-})();`;
+function pingServer() {
+  try {
+    const u = new URL(PROD_URL);
+    https.get({ hostname: u.hostname, path: '/api/health', timeout: 30000 }, () => {}).on('error', () => {});
+  } catch {}
+}
 
 // ─── Window ──────────────────────────────────────────────────────────────────
 function createWindow() {
@@ -104,28 +64,28 @@ function createWindow() {
       nodeIntegration: false,
       partition: 'persist:spectre',
     },
-    backgroundColor: '#ddd6f3',
+    backgroundColor: '#f3f1fb',
     show: false,
   });
 
   if (state.maximized) win.maximize();
-  win.loadURL(APP_URL);
+  win.loadURL(process.env.SPECTRE_DEV_URL || PROD_URL + '/dashboard');
   win.once('ready-to-show', () => win.show());
 
   win.webContents.on('did-start-loading', () => win.setProgressBar(2));
   win.webContents.on('did-stop-loading',  () => win.setProgressBar(-1));
 
   const savedZoom = loadZoom();
+
+  win.webContents.on('dom-ready', () => {
+    const url = win.webContents.getURL();
+    if (url.startsWith(PROD_URL)) {
+      win.webContents.insertCSS(DESKTOP_CSS).catch(() => {});
+    }
+  });
+
   win.webContents.on('did-finish-load', () => {
     if (savedZoom !== 1) win.webContents.setZoomFactor(savedZoom);
-    const url = win.webContents.getURL();
-    const isWebApp = url.startsWith(PROD_URL)
-      && !url.includes('/welcome')
-      && !url.includes('spectre-desktop-analytics');
-    if (isWebApp) {
-      win.webContents.insertCSS(DESKTOP_CSS).catch(() => {});
-      win.webContents.executeJavaScript(ANALYTICS_TAB_JS).catch(() => {});
-    }
   });
 
   win.webContents.on('zoom-changed', (_, dir) => {
@@ -158,10 +118,10 @@ function createWindow() {
 }
 
 // ─── IPC ─────────────────────────────────────────────────────────────────────
-ipcMain.on('retry', () => { const w = BrowserWindow.getFocusedWindow(); if (w) w.loadURL(APP_URL); });
 ipcMain.handle('get-version', () => app.getVersion());
-ipcMain.handle('get-theme',   () => loadTheme() || 'dark');
-ipcMain.handle('set-theme',   (_, t) => { saveTheme(t); return t; });
+ipcMain.handle('get-theme',   () => nativeTheme.shouldUseDarkColors ? 'dark' : 'light');
+ipcMain.handle('set-theme',   (_, t) => { nativeTheme.themeSource = t; return t; });
+ipcMain.on('retry', () => { const w = BrowserWindow.getFocusedWindow(); if (w) w.loadURL(PROD_URL + '/dashboard'); });
 
 // ─── Menu ─────────────────────────────────────────────────────────────────────
 function buildMenu(win) {
@@ -181,14 +141,9 @@ function buildMenu(win) {
       ...(!app.isPackaged ? [{ type:'separator' }, { role:'toggleDevTools' }] : []),
     ]},
     { label: 'Go', submenu: [
-      { label: 'Dashboard',  accelerator: IS_MAC?'Cmd+1':'Ctrl+1', click: go(PROD_URL+'/dashboard') },
-      { label: 'Analytics',  accelerator: IS_MAC?'Cmd+2':'Ctrl+2', click: go(ANALYTICS_URL) },
-      { label: 'Research',   accelerator: IS_MAC?'Cmd+3':'Ctrl+3', click: go(PROD_URL+'/research') },
-      { label: 'Settings',   accelerator: IS_MAC?'Cmd+4':'Ctrl+4', click: go(PROD_URL+'/settings') },
-    ]},
-    { label: 'Appearance', submenu: [
-      { label: 'Light Mode', click: () => { saveTheme('light'); win.webContents.send('theme-changed', 'light'); } },
-      { label: 'Dark Mode',  click: () => { saveTheme('dark');  win.webContents.send('theme-changed', 'dark');  } },
+      { label: 'Dashboard', accelerator: IS_MAC?'Cmd+1':'Ctrl+1', click: go(PROD_URL+'/dashboard') },
+      { label: 'Research',  accelerator: IS_MAC?'Cmd+2':'Ctrl+2', click: go(PROD_URL+'/research') },
+      { label: 'Settings',  accelerator: IS_MAC?'Cmd+3':'Ctrl+3', click: go(PROD_URL+'/settings') },
     ]},
     { role: 'windowMenu' },
     { role: 'help', submenu: [{ label:'Open spectre-assets.com', click:()=>shell.openExternal(PROD_URL) }] },
