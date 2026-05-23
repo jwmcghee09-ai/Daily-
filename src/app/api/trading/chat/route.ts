@@ -38,6 +38,17 @@ async function alpacaFetch(path: string, method = "GET", body?: unknown): Promis
   try { return JSON.parse(text); } catch { return { raw: text }; }
 }
 
+async function vpsFileFetch(endpoint: string, options?: RequestInit): Promise<unknown> {
+  const vpsUrl = (process.env.VPS_MYRMIDON_URL ?? "").replace(/\/$/, "");
+  const vpsSecret = process.env.VPS_MYRMIDON_SECRET ?? "";
+  const res = await fetch(`${vpsUrl}${endpoint}`, {
+    ...options,
+    headers: { ...(options?.headers ?? {}), "x-trading-secret": vpsSecret, "Content-Type": "application/json" },
+  });
+  const text = await res.text();
+  try { return JSON.parse(text); } catch { return { raw: text }; }
+}
+
 async function executeTool(name: string, input: Record<string, unknown>): Promise<string> {
   try {
     if (name === "get_account") return JSON.stringify(await alpacaFetch("/account"), null, 2);
@@ -70,6 +81,24 @@ async function executeTool(name: string, input: Record<string, unknown>): Promis
       if (!order_id) return JSON.stringify({ error: "order_id required" });
       return JSON.stringify(await alpacaFetch(`/orders/${order_id}`, "DELETE") ?? { cancelled: true }, null, 2);
     }
+    if (name === "read_vps_file") {
+      const path = String(input.path ?? "");
+      if (!path) return JSON.stringify({ error: "path required" });
+      return JSON.stringify(await vpsFileFetch(`/api/files?path=${encodeURIComponent(path)}`), null, 2);
+    }
+    if (name === "write_vps_file") {
+      const path = String(input.path ?? "");
+      const content = String(input.content ?? "");
+      if (!path) return JSON.stringify({ error: "path required" });
+      return JSON.stringify(await vpsFileFetch("/api/files", { method: "POST", body: JSON.stringify({ path, content }) }), null, 2);
+    }
+    if (name === "list_vps_files") {
+      const path = String(input.path ?? ".");
+      return JSON.stringify(await vpsFileFetch(`/api/files/list?path=${encodeURIComponent(path)}`), null, 2);
+    }
+    if (name === "restart_vps_server") {
+      return JSON.stringify(await vpsFileFetch("/api/restart", { method: "POST" }), null, 2);
+    }
     return JSON.stringify({ error: `Unknown tool: ${name}` });
   } catch (error) {
     return JSON.stringify({ error: error instanceof Error ? error.message : String(error) });
@@ -84,6 +113,10 @@ const TOOLS = [
   { name: "place_order", description: "Place a market or limit order. Max 10% of portfolio per position. Keep ≥20% cash.", input_schema: { type: "object", properties: { symbol: { type: "string" }, qty: { type: "number" }, side: { type: "string", enum: ["buy","sell"] }, type: { type: "string", enum: ["market","limit"] }, time_in_force: { type: "string", enum: ["day","gtc","ioc","fok"] } }, required: ["symbol","qty","side"] } },
   { name: "get_orders", description: "Get recent orders by status: open, closed, or all.", input_schema: { type: "object", properties: { status: { type: "string", enum: ["open","closed","all"] } }, required: [] } },
   { name: "cancel_order", description: "Cancel an open order by order ID.", input_schema: { type: "object", properties: { order_id: { type: "string" } }, required: ["order_id"] } },
+  { name: "read_vps_file", description: "Read any file in the VPS project directory. Path is relative to the project root (e.g. 'agent.py', 'config/memory.json').", input_schema: { type: "object", properties: { path: { type: "string" } }, required: ["path"] } },
+  { name: "write_vps_file", description: "Write or overwrite a file in the VPS project directory. Python changes take effect after restart_vps_server.", input_schema: { type: "object", properties: { path: { type: "string" }, content: { type: "string" } }, required: ["path", "content"] } },
+  { name: "list_vps_files", description: "List files and directories in the VPS project. Defaults to project root.", input_schema: { type: "object", properties: { path: { type: "string" } }, required: [] } },
+  { name: "restart_vps_server", description: "Restart the VPS FastAPI server so Python code changes take effect. Connection drops for ~2 seconds.", input_schema: { type: "object", properties: {}, required: [] } },
 ];
 
 const BASE_SYSTEM_PROMPT = `You are Myrmidon — SPECTRE's autonomous trading agent managing an Alpaca paper trading account.
