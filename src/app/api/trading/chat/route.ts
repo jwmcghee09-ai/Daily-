@@ -101,16 +101,36 @@ APPROACH:
 - When placing orders, confirm the math stays within the 10% rule
 - Be direct and decisive. This is paper trading — learn fast, act with discipline.`;
 
+async function proxyToVps(messages: ChatMessage[]): Promise<NextResponse> {
+  const vpsUrl = (process.env.VPS_MYRMIDON_URL ?? "").replace(/\/$/, "");
+  const vpsSecret = process.env.VPS_MYRMIDON_SECRET ?? "";
+
+  let res: Response;
+  try {
+    res = await fetch(`${vpsUrl}/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-trading-secret": vpsSecret },
+      body: JSON.stringify({ messages }),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      signal: AbortSignal.timeout(115_000) as any,
+    });
+  } catch (err) {
+    return NextResponse.json({ error: `VPS unreachable: ${err instanceof Error ? err.message : String(err)}` }, { status: 502 });
+  }
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    return NextResponse.json({ error: `VPS error ${res.status}: ${text}` }, { status: 502 });
+  }
+
+  const data = await res.json().catch(() => ({})) as Record<string, unknown>;
+  return NextResponse.json({ reply: data.reply ?? data.error ?? "No reply from VPS" });
+}
+
 export async function POST(request: NextRequest) {
   const user = await getAuthenticatedUser();
   if (!user || user.email !== TRADER_EMAIL) {
     return NextResponse.json({ error: "Not authorized" }, { status: 403 });
-  }
-
-  const anthropicKey = process.env.ANTHROPIC_API_KEY;
-  if (!anthropicKey) return NextResponse.json({ error: "AI not configured — add ANTHROPIC_API_KEY to Render environment" }, { status: 503 });
-  if (!process.env.ALPACA_API_KEY || !process.env.ALPACA_API_SECRET) {
-    return NextResponse.json({ error: "Trading credentials not configured — add ALPACA_API_KEY and ALPACA_API_SECRET to Render environment" }, { status: 503 });
   }
 
   let body: ChatBody;
@@ -121,15 +141,28 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "messages array required" }, { status: 400 });
   }
 
+  const messages = (body.messages as ChatMessage[]).map((m) => ({ role: m.role, content: String(m.content) }));
+
+  // If VPS is configured, proxy there — single agent, no dual-trading conflicts.
+  if (process.env.VPS_MYRMIDON_URL) {
+    return proxyToVps(messages);
+  }
+
+  // Fallback: call Claude directly from SPECTRE.
+  const anthropicKey = process.env.ANTHROPIC_API_KEY;
+  if (!anthropicKey) return NextResponse.json({ error: "AI not configured — add ANTHROPIC_API_KEY or VPS_MYRMIDON_URL to Render environment" }, { status: 503 });
+  if (!process.env.ALPACA_API_KEY || !process.env.ALPACA_API_SECRET) {
+    return NextResponse.json({ error: "Trading credentials not configured — add ALPACA_API_KEY and ALPACA_API_SECRET to Render environment" }, { status: 503 });
+  }
+
   const memory = readTradingMemory();
   const memorySection = memory?.strategy
     ? `\n\nCURRENT STRATEGY MEMORY (from autonomous VPS agent):\n${memory.strategy}${memory.lessons.length > 0 ? `\n\nRECENT LESSONS:\n${memory.lessons.map((l, i) => `${i + 1}. ${l}`).join("\n")}` : ""}`
     : "\n\nNo strategy memory yet — this is the first session.";
   const SYSTEM_PROMPT = BASE_SYSTEM_PROMPT + memorySection;
 
-  const inputMessages = (body.messages as ChatMessage[]).map((m) => ({ role: m.role, content: String(m.content) }));
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const claudeMessages: any[] = [...inputMessages];
+  const claudeMessages: any[] = [...messages];
   let assistantText = "";
 
   for (let turn = 0; turn < MAX_TOOL_TURNS; turn++) {
