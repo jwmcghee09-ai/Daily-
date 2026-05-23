@@ -115,6 +115,12 @@ export async function GET(request: NextRequest) {
       '  <div class="ai-page-layout">',
       MYRMIDON_AI_TERMINAL + '\n  <div class="ai-page-layout" style="display:none">',
     );
+    // Rebrand all visible SPECTRE text to Myrmidon for the trader account.
+    html = html.replace("<title>SPECTRE — Dashboard</title>", "<title>Myrmidon — Trading Terminal</title>");
+    html = html.replace('<span class="boot-label">SPECTRE</span>', '<span class="boot-label">Myrmidon</span>');
+    html = html.replace('id="nav-dashboard-logo">SPECTRE</a>', 'id="nav-dashboard-logo">Myrmidon</a>');
+    html = html.replace('<div class="hero-brand">SPECTRE</div>', '<div class="hero-brand">Myrmidon</div>');
+    html = html.replace('<span class="foot-logo">SPECTRE</span>', '<span class="foot-logo">Myrmidon</span>');
     html = html.replace("</body>", MYRMIDON_SCRIPT + "\n</body>");
   }
 
