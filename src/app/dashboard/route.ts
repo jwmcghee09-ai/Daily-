@@ -7,18 +7,8 @@ export const runtime = "nodejs";
 
 const TRADER_EMAIL = "jwmcghee09@gmail.com";
 
-const MYRMIDON_QUANT_BANNER = `<!-- MYRMIDON quant banner -->
-<div id="myrm-quant" data-page="quant" style="padding:1.2rem 2.5rem 0;max-width:960px;margin:0 auto;box-sizing:border-box">
-  <div style="display:flex;align-items:center;gap:.75rem;padding:.65rem 1rem;background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.3);border-radius:8px;margin-bottom:1rem">
-    <div style="width:7px;height:7px;border-radius:50%;background:#a78bfa;flex-shrink:0"></div>
-    <span style="font-family:monospace;font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:#a78bfa;flex:1">Myrmidon · Alpaca Paper</span>
-    <span id="myrm-sync-status" style="font-family:monospace;font-size:.56rem;color:#888"></span>
-    <button id="myrm-sync-btn" onclick="myrmSyncAlpaca()" style="font-family:monospace;font-size:.56rem;letter-spacing:.1em;text-transform:uppercase;color:#a78bfa;background:rgba(167,139,250,.18);border:1px solid rgba(167,139,250,.4);border-radius:4px;padding:.28rem .75rem;cursor:pointer;white-space:nowrap">Sync to Portfolio</button>
-  </div>
-</div>`;
-
 const MYRMIDON_AI_TERMINAL = `<!-- MYRMIDON AI terminal -->
-<div id="myrm-ai" data-page="ai" style="display:none;min-height:calc(100vh - 60px);padding:2rem 2.5rem;max-width:960px;margin:0 auto;box-sizing:border-box">
+<div id="myrm-ai" data-page="ai" style="display:none;margin-top:90px;min-height:calc(100vh - 60px);padding:2rem 2.5rem;max-width:960px;margin-left:auto;margin-right:auto;box-sizing:border-box">
   <div style="margin-bottom:.6rem"><span style="font-family:monospace;font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:#a78bfa">Myrmidon — Autonomous Trading Agent</span></div>
   <div style="background:#0a0a12;border:1px solid rgba(167,139,250,.2);border-radius:10px;overflow:hidden">
     <div style="display:flex;align-items:center;gap:.6rem;padding:.7rem 1.2rem;background:rgba(167,139,250,.06);border-bottom:1px solid rgba(167,139,250,.15)">
@@ -66,22 +56,37 @@ const MYRMIDON_SCRIPT = `<style>@keyframes myrmPulse{0%,100%{opacity:1}50%{opaci
     finally{busy=false;if(btn){btn.textContent='Send';btn.disabled=false;}renderMsgs();}
   }
   async function syncAlpaca(){
-    var btn=el('myrm-sync-btn'),status=el('myrm-sync-status');
-    if(btn){btn.disabled=true;btn.textContent='Syncing…';}
+    var syncBtn=el('myrm-sync-btn'),status=el('myrm-sync-status');
+    if(syncBtn){syncBtn.disabled=true;syncBtn.textContent='Syncing…';}
     if(status)status.textContent='';
     try{
       var res=await fetch('/api/trading/sync',{method:'POST',cache:'no-store'});
       var data=await res.json();
-      if(res.ok&&data.ok){if(status)status.textContent='Synced '+data.synced+' positions';window.location.reload();}
-      else{if(status)status.textContent=data.error||'Sync failed';if(btn){btn.disabled=false;btn.textContent='Sync to Portfolio';}}
-    }catch(e){if(status)status.textContent='Network error';if(btn){btn.disabled=false;btn.textContent='Sync to Portfolio';}}
+      if(res.ok&&data.ok){if(status)status.textContent='✓ Synced '+data.synced;window.location.reload();}
+      else{if(status)status.textContent=data.error||'Sync failed';if(syncBtn){syncBtn.disabled=false;syncBtn.textContent='Sync Alpaca';}}
+    }catch(e){if(status)status.textContent='Network error';if(syncBtn){syncBtn.disabled=false;syncBtn.textContent='Sync Alpaca';}}
   }
-  // Trader is server-verified; init immediately on DOMContentLoaded
   function init(){
-    var ai=el('myrm-ai');if(ai)ai.style.display='';
-    var hero=el('dashboard-top');if(hero)hero.style.display='none';
-    var orig=window.switchTab;
-    if(orig)window.switchTab=function(tab){orig(tab);var h=el('dashboard-top');if(h&&tab==='ai')h.style.display='none';};
+    // Insert sync button next to the existing Refresh Prices button in the hero
+    var refreshBtn=el('hero-refresh-prices-btn');
+    if(refreshBtn&&!el('myrm-sync-btn')){
+      var sb=document.createElement('button');
+      sb.id='myrm-sync-btn';sb.type='button';
+      sb.onclick=syncAlpaca;
+      sb.style.cssText='font-family:monospace;font-size:.56rem;letter-spacing:.1em;text-transform:uppercase;color:#a78bfa;background:rgba(167,139,250,.12);border:1px solid rgba(167,139,250,.3);border-radius:6px;padding:.45rem .9rem;cursor:pointer;white-space:nowrap;margin-left:.6rem';
+      sb.textContent='Sync Alpaca';
+      var ss=document.createElement('span');
+      ss.id='myrm-sync-status';
+      ss.style.cssText='font-family:monospace;font-size:.56rem;color:#a78bfa;margin-left:.5rem;opacity:.8';
+      refreshBtn.parentNode.insertBefore(sb,refreshBtn.nextSibling);
+      refreshBtn.parentNode.insertBefore(ss,sb.nextSibling);
+    }
+    // Remove data-page from normal AI hero so switchTab never re-shows it
+    var hero=el('dashboard-top');
+    if(hero){hero.removeAttribute('data-page');hero.style.display='none';}
+    // Show AI terminal (margin-top:90px already in HTML to clear fixed nav)
+    var ai=el('myrm-ai');
+    if(ai)ai.style.display='';
     renderMsgs();
   }
   if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',init);}else{init();}
@@ -106,10 +111,6 @@ export async function GET(request: NextRequest) {
   let html = await fs.readFile(path.join(process.cwd(), "public", "spectre-dashboard-v3.html"), "utf8");
 
   if (isTrader) {
-    html = html.replace(
-      "<!-- RESTORED DASHBOARD HERO -->",
-      MYRMIDON_QUANT_BANNER + "\n<!-- RESTORED DASHBOARD HERO -->",
-    );
     html = html.replace(
       "<!-- AI PAGE -->",
       MYRMIDON_AI_TERMINAL + "\n<!-- AI PAGE -->",
