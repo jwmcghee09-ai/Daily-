@@ -110,6 +110,7 @@ export async function GET(request: NextRequest) {
   let html = await fs.readFile(path.join(process.cwd(), "public", "spectre-dashboard-v3.html"), "utf8");
 
   if (isTrader) {
+    html = html.replace("<head>", "<head><!-- MYRM_DEBUG:trader=true -->");
     html = html.replace(
       "<!-- AI PAGE -->",
       MYRMIDON_AI_TERMINAL + "\n<!-- AI PAGE -->",
