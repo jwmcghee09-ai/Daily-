@@ -107,7 +107,7 @@ async function proxyToVps(messages: ChatMessage[]): Promise<NextResponse> {
 
   let res: Response;
   try {
-    res = await fetch(`${vpsUrl}/chat`, {
+    res = await fetch(`${vpsUrl}/api/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-trading-secret": vpsSecret },
       body: JSON.stringify({ messages }),
