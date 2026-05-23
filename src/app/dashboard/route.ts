@@ -8,7 +8,7 @@ export const runtime = "nodejs";
 const TRADER_EMAIL = "jwmcghee09@gmail.com";
 
 const MYRMIDON_AI_TERMINAL = `<!-- MYRMIDON AI terminal -->
-<div id="myrm-ai" data-page="ai" style="margin-top:90px;min-height:calc(100vh - 60px);padding:2rem 2.5rem;max-width:960px;margin-left:auto;margin-right:auto;box-sizing:border-box">
+<div id="myrm-ai" style="padding:0 2.5rem 2rem;max-width:960px;margin-left:auto;margin-right:auto;box-sizing:border-box">
   <div style="margin-bottom:.6rem"><span style="font-family:monospace;font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:#a78bfa">Myrmidon — Autonomous Trading Agent</span></div>
   <div style="background:#0a0a12;border:1px solid rgba(167,139,250,.2);border-radius:10px;overflow:hidden">
     <div style="display:flex;align-items:center;justify-content:space-between;gap:.6rem;padding:.7rem 1.2rem;background:rgba(167,139,250,.06);border-bottom:1px solid rgba(167,139,250,.15)">
@@ -108,14 +108,12 @@ export async function GET(request: NextRequest) {
 
   if (isTrader) {
     html = html.replace("<head>", "<head><!-- MYRM_DEBUG:trader=true -->");
+    // Inject Myrmidon terminal inside #dashboard-top (which has data-page="ai"),
+    // and hide the original Ask AI widget. switchTab('ai') shows #dashboard-top
+    // and everything inside it, so the terminal appears with no extra JS needed.
     html = html.replace(
-      "<!-- AI PAGE -->",
-      MYRMIDON_AI_TERMINAL + "\n<!-- AI PAGE -->",
-    );
-    // Hide #dashboard-top permanently for the trader — #myrm-ai (data-page="ai") owns the AI tab.
-    html = html.replace(
-      'id="dashboard-top" data-page="ai"',
-      'id="dashboard-top" style="display:none"',
+      '  <div class="ai-page-layout">',
+      MYRMIDON_AI_TERMINAL + '\n  <div class="ai-page-layout" style="display:none">',
     );
     html = html.replace("</body>", MYRMIDON_SCRIPT + "\n</body>");
   }
