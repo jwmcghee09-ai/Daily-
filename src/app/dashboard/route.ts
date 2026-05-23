@@ -94,9 +94,20 @@ const MYRMIDON_SCRIPT = `<style>@keyframes myrmPulse{0%,100%{opacity:1}50%{opaci
         showMyrm(btn.getAttribute('data-tab')==='ai');
       });
     });
-    // Show terminal now if AI tab is already active on load
-    var active=document.querySelector('.nav-tab-active');
-    showMyrm(active&&active.getAttribute('data-tab')==='ai');
+    // boot-pending CSS has display:none!important on all body>* while loading.
+    // Watch for it to be removed, then show the terminal if AI tab is active.
+    function applyTab(){
+      var active=document.querySelector('.nav-tab-active');
+      showMyrm(!!(active&&active.getAttribute('data-tab')==='ai'));
+    }
+    if(document.body.classList.contains('boot-pending')){
+      var obs=new MutationObserver(function(){
+        if(!document.body.classList.contains('boot-pending')){obs.disconnect();applyTab();}
+      });
+      obs.observe(document.body,{attributes:true,attributeFilter:['class']});
+    }else{
+      applyTab();
+    }
     renderMsgs();
   }
   if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',init);}else{init();}
