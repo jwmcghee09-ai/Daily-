@@ -152,16 +152,27 @@ APPROACH:
 - When placing orders, confirm the math stays within the 10% rule
 - Be direct and decisive. This is paper trading — learn fast, act with discipline.`;
 
-async function proxyToVps(messages: ChatMessage[]): Promise<NextResponse | null> {
+async function proxyToVps(messages: ChatMessage[], audUsdRate: number | null): Promise<NextResponse | null> {
   const vpsUrl = (process.env.VPS_MYRMIDON_URL ?? "").replace(/\/$/, "");
   const vpsSecret = process.env.VPS_MYRMIDON_SECRET ?? "";
+
+  // Prepend AUD/USD rate as context so the VPS Claude instance always reports in both currencies
+  const rateCtx = audUsdRate
+    ? `[CURRENCY CONTEXT: AUD/USD = ${audUsdRate.toFixed(4)}. Always show monetary values in both USD and AUD. To convert: AUD = USD ÷ ${audUsdRate.toFixed(4)}. Example: "$65,432 USD (~$104,870 AUD)"]`
+    : "[CURRENCY CONTEXT: AUD/USD rate unavailable — report USD only]";
+
+  const augmented: ChatMessage[] = [
+    { role: "user", content: rateCtx },
+    { role: "assistant", content: "Understood — I'll show all monetary values in both USD and AUD." },
+    ...messages,
+  ];
 
   let res: Response;
   try {
     res = await fetch(`${vpsUrl}/api/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-trading-secret": vpsSecret },
-      body: JSON.stringify({ messages }),
+      body: JSON.stringify({ messages: augmented }),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       signal: AbortSignal.timeout(115_000) as any,
     });
@@ -195,9 +206,12 @@ export async function POST(request: NextRequest) {
 
   const messages = (body.messages as ChatMessage[]).map((m) => ({ role: m.role, content: String(m.content) }));
 
+  // Fetch AUD/USD rate once — used for both VPS proxy context and direct fallback.
+  const audUsdRate = await fetchAudUsdRate();
+
   // If VPS is configured, try it first — falls back to direct Claude if unreachable.
   if (process.env.VPS_MYRMIDON_URL) {
-    const vpsResult = await proxyToVps(messages);
+    const vpsResult = await proxyToVps(messages, audUsdRate);
     if (vpsResult) return vpsResult;
   }
 
@@ -208,10 +222,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Trading credentials not configured — add ALPACA_API_KEY and ALPACA_API_SECRET to Render environment" }, { status: 503 });
   }
 
-  const [memory, audUsdRate] = await Promise.all([
-    Promise.resolve(readTradingMemory()),
-    fetchAudUsdRate(),
-  ]);
+  const memory = readTradingMemory();
   const rateSection = audUsdRate
     ? `\n\nCURRENT AUD/USD RATE: ${audUsdRate.toFixed(4)} (1 AUD = ${audUsdRate.toFixed(4)} USD → 1 USD = ${(1 / audUsdRate).toFixed(4)} AUD)`
     : "\n\nAUD/USD RATE: unavailable — omit AUD conversion if unsure.";
