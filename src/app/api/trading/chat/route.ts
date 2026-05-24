@@ -119,6 +119,19 @@ const TOOLS = [
   { name: "restart_vps_server", description: "Restart the VPS FastAPI server so Python code changes take effect. Connection drops for ~2 seconds.", input_schema: { type: "object", properties: {}, required: [] } },
 ];
 
+async function fetchAudUsdRate(): Promise<number | null> {
+  try {
+    const url = "https://query2.finance.yahoo.com/v8/finance/chart/AUDUSD%3DX?interval=1d&range=5d";
+    const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0" }, cache: "no-store" });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { chart?: { result?: Array<{ meta?: { regularMarketPrice?: number } }> } };
+    const rate = data?.chart?.result?.[0]?.meta?.regularMarketPrice;
+    return typeof rate === "number" && rate > 0 ? rate : null;
+  } catch {
+    return null;
+  }
+}
+
 const BASE_SYSTEM_PROMPT = `You are Myrmidon — SPECTRE's autonomous trading agent managing an Alpaca paper trading account.
 
 RULES:
@@ -127,6 +140,11 @@ RULES:
 - Cut losses at -15% unrealised P&L per position
 - Never chase a position up >30% in 2 weeks
 - Only trade US equities available on Alpaca
+
+CURRENCY:
+- All Alpaca values (portfolio_value, equity, cash, market_value, etc.) are in USD.
+- The user's dashboard displays AUD values. Always report both USD and AUD when mentioning dollar amounts.
+- AUD/USD rate is provided in context below. To convert: AUD = USD / rate.
 
 APPROACH:
 - Always check the account and positions first before making decisions
@@ -190,11 +208,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Trading credentials not configured — add ALPACA_API_KEY and ALPACA_API_SECRET to Render environment" }, { status: 503 });
   }
 
-  const memory = readTradingMemory();
+  const [memory, audUsdRate] = await Promise.all([
+    Promise.resolve(readTradingMemory()),
+    fetchAudUsdRate(),
+  ]);
+  const rateSection = audUsdRate
+    ? `\n\nCURRENT AUD/USD RATE: ${audUsdRate.toFixed(4)} (1 AUD = ${audUsdRate.toFixed(4)} USD → 1 USD = ${(1 / audUsdRate).toFixed(4)} AUD)`
+    : "\n\nAUD/USD RATE: unavailable — omit AUD conversion if unsure.";
   const memorySection = memory?.strategy
     ? `\n\nCURRENT STRATEGY MEMORY (from autonomous VPS agent):\n${memory.strategy}${memory.lessons.length > 0 ? `\n\nRECENT LESSONS:\n${memory.lessons.map((l, i) => `${i + 1}. ${l}`).join("\n")}` : ""}`
     : "\n\nNo strategy memory yet — this is the first session.";
-  const SYSTEM_PROMPT = BASE_SYSTEM_PROMPT + memorySection;
+  const SYSTEM_PROMPT = BASE_SYSTEM_PROMPT + rateSection + memorySection;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const claudeMessages: any[] = [...messages];
