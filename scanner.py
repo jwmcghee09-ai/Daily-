@@ -264,15 +264,16 @@ def main():
     decision = ask_haiku(anomalies, positions, state)
     log(f"Haiku → {decision.get('action')}: {decision.get('reason')}")
 
+    # Apply cooldown regardless of action so Haiku isn't re-called on same anomaly next scan
+    for a in anomalies:
+        set_cooldown(state, a["symbol"])
+
     if decision.get("action") == "invoke":
-        for a in anomalies:
-            set_cooldown(state, a["symbol"])
         state["opus_count"] += 1
         state["cost_usd"]    = round(state["cost_usd"] + 0.30, 4)
-        save_state(state)
         invoke_agent(anomalies, decision.get("priority", []))
-    else:
-        save_state(state)
+
+    save_state(state)
 
     log("── scan end ──")
 
