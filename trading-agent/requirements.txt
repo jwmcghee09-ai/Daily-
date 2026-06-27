@@ -1,0 +1,4 @@
+anthropic
+groq
+requests
+python-dotenv
