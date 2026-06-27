@@ -2,6 +2,7 @@ import os
 import json
 import requests
 from datetime import datetime, timedelta
+from indicators import analyse
 
 ALPACA_BASE = "https://paper-api.alpaca.markets/v2"
 ALPACA_DATA = "https://data.alpaca.markets/v2"
@@ -53,6 +54,30 @@ def get_bars(symbol: str, days: int = 5):
         timeout=10,
     )
     return r.json().get("bars", []) if r.ok else []
+
+
+def get_technical_analysis(symbol: str):
+    """Fetch 200 daily bars and compute full technical indicator suite."""
+    end   = datetime.utcnow()
+    start = end - timedelta(days=300)
+    r = requests.get(
+        f"{ALPACA_DATA}/stocks/{symbol}/bars",
+        headers=_headers(),
+        params={
+            "timeframe": "1Day",
+            "start":     start.strftime("%Y-%m-%dT00:00:00Z"),
+            "end":       end.strftime("%Y-%m-%dT00:00:00Z"),
+            "limit":     220,
+            "feed":      "iex",
+        },
+        timeout=15,
+    )
+    if not r.ok:
+        return {"symbol": symbol, "error": r.text}
+    bars = r.json().get("bars", [])
+    result = analyse(bars)
+    result["symbol"] = symbol
+    return result
 
 
 def place_order(symbol: str, qty: float, side: str):
