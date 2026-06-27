@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 scanner.py — Myrmidon 5-minute market anomaly scanner.
-Runs during US market hours, uses Gemini Flash (free) to triage,
+Runs during US market hours, uses Groq (free) to triage,
 invokes agent.py (Opus) only when actionable.
 """
 
@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-import google.generativeai as genai
+from groq import Groq
 import requests
 from dotenv import load_dotenv
 
@@ -35,7 +35,7 @@ WATCHLIST_EXTRA = [
     "JPM","V","UNH","LLY","XOM","COST","NFLX","AMD",
 ]
 
-GEMINI_MODEL = "gemini-2.0-flash"
+GROQ_MODEL = "llama-3.3-70b-versatile"
 ET = ZoneInfo("America/New_York")
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -170,9 +170,8 @@ def detect_anomalies(symbol: str, bars: list, position: dict | None) -> dict | N
     }
 
 
-def ask_gemini(anomalies: list, positions: list, state: dict) -> dict:
-    genai.configure(api_key=os.environ["GOOGLE_API_KEY"])
-    model = genai.GenerativeModel(GEMINI_MODEL)
+def ask_groq(anomalies: list, positions: list, state: dict) -> dict:
+    client = Groq(api_key=os.environ["GROQ_API_KEY"])
 
     pos_summary = ", ".join(
         f"{p['symbol']}({float(p.get('unrealized_plpc',0))*100:.1f}%)" for p in positions
@@ -196,11 +195,15 @@ or
 Invoke only for genuine opportunities or position risk. Skip noise."""
 
     try:
-        resp = model.generate_content(prompt)
-        text = resp.text.strip().strip("```json").strip("```").strip()
+        resp = client.chat.completions.create(
+            model=GROQ_MODEL,
+            max_tokens=200,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        text = resp.choices[0].message.content.strip().strip("```json").strip("```").strip()
         return json.loads(text)
     except Exception as e:
-        log(f"Gemini parse error: {e}")
+        log(f"Groq parse error: {e}")
         return {"action": "skip", "reason": "parse error", "priority": []}
 
 
@@ -254,9 +257,9 @@ def main():
         save_state(state)
         return
 
-    log(f"{len(anomalies)} anomaly(ies) — asking Gemini")
-    decision = ask_gemini(anomalies, positions, state)
-    log(f"Gemini → {decision.get('action')}: {decision.get('reason')}")
+    log(f"{len(anomalies)} anomaly(ies) — asking Groq")
+    decision = ask_groq(anomalies, positions, state)
+    log(f"Groq → {decision.get('action')}: {decision.get('reason')}")
 
     # Apply cooldown regardless of action so Haiku isn't re-called on same anomaly next scan
     for a in anomalies:
