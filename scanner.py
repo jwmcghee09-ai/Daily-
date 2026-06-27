@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 scanner.py — Myrmidon 5-minute market anomaly scanner.
-Runs during US market hours, uses Haiku (cheap) to triage,
+Runs during US market hours, uses Gemini Flash (free) to triage,
 invokes agent.py (Opus) only when actionable.
 """
 
@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-import anthropic
+import google.generativeai as genai
 import requests
 from dotenv import load_dotenv
 
@@ -35,7 +35,7 @@ WATCHLIST_EXTRA = [
     "JPM","V","UNH","LLY","XOM","COST","NFLX","AMD",
 ]
 
-HAIKU_MODEL = "claude-haiku-4-5"
+GEMINI_MODEL = "gemini-2.0-flash"
 ET = ZoneInfo("America/New_York")
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -170,40 +170,37 @@ def detect_anomalies(symbol: str, bars: list, position: dict | None) -> dict | N
     }
 
 
-def ask_haiku(anomalies: list, positions: list, state: dict) -> dict:
-    client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+def ask_gemini(anomalies: list, positions: list, state: dict) -> dict:
+    genai.configure(api_key=os.environ["GOOGLE_API_KEY"])
+    model = genai.GenerativeModel(GEMINI_MODEL)
 
     pos_summary = ", ".join(
         f"{p['symbol']}({float(p.get('unrealized_plpc',0))*100:.1f}%)" for p in positions
     )
     budget_left = MAX_OPUS_PER_DAY - state["opus_count"]
-    cost_left   = HARD_USD_CAP - state["cost_usd"]
 
-    msg = client.messages.create(
-        model=HAIKU_MODEL,
-        max_tokens=200,
-        messages=[{"role": "user", "content": f"""Trading scanner triage. Paper account ~$106k USD.
+    prompt = f"""Trading scanner triage. Paper account ~$106k USD.
 
 Positions: {pos_summary}
 
 Anomalies:
 {json.dumps(anomalies, indent=2)}
 
-Remaining budget: {budget_left} agent invocations, ${cost_left:.2f} USD today.
+Remaining agent budget: {budget_left} invocations today.
 
-Reply in JSON only:
-{{"action":"invoke"|"skip","reason":"one sentence","priority":["SYM1"]}}
+Reply in JSON only — no markdown, no explanation:
+{{"action":"invoke","reason":"one sentence","priority":["SYM1"]}}
+or
+{{"action":"skip","reason":"one sentence","priority":[]}}
 
-Invoke only for genuine opportunities or position risk. Skip noise."""}],
-    )
-
-    state["cost_usd"] = round(state["cost_usd"] + 0.002, 4)
+Invoke only for genuine opportunities or position risk. Skip noise."""
 
     try:
-        text = msg.content[0].text.strip().strip("```json").strip("```").strip()
+        resp = model.generate_content(prompt)
+        text = resp.text.strip().strip("```json").strip("```").strip()
         return json.loads(text)
     except Exception as e:
-        log(f"Haiku parse error: {e}")
+        log(f"Gemini parse error: {e}")
         return {"action": "skip", "reason": "parse error", "priority": []}
 
 
@@ -234,9 +231,6 @@ def main():
     if state["opus_count"] >= MAX_OPUS_PER_DAY:
         log(f"Opus cap {MAX_OPUS_PER_DAY}/day reached — exit")
         return
-    if state["cost_usd"] >= HARD_USD_CAP:
-        log(f"Cost cap ${HARD_USD_CAP} reached — exit")
-        return
 
     positions   = fetch_positions()
     pos_symbols = [p["symbol"] for p in positions if p.get("symbol")]
@@ -260,9 +254,9 @@ def main():
         save_state(state)
         return
 
-    log(f"{len(anomalies)} anomaly(ies) — asking Haiku")
-    decision = ask_haiku(anomalies, positions, state)
-    log(f"Haiku → {decision.get('action')}: {decision.get('reason')}")
+    log(f"{len(anomalies)} anomaly(ies) — asking Gemini")
+    decision = ask_gemini(anomalies, positions, state)
+    log(f"Gemini → {decision.get('action')}: {decision.get('reason')}")
 
     # Apply cooldown regardless of action so Haiku isn't re-called on same anomaly next scan
     for a in anomalies:
