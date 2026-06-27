@@ -87,25 +87,33 @@ TOOLS = [
 ]
 
 
+def _trim(result: str, max_chars: int = 2000) -> str:
+    """Truncate large tool results to stay within Groq TPM limits."""
+    if len(result) <= max_chars:
+        return result
+    return result[:max_chars] + f"... [truncated, {len(result) - max_chars} chars omitted]"
+
+
 def run_tool(name: str, inp: dict) -> str:
     try:
-        if name == "get_account":             return json.dumps(get_account())
-        if name == "get_portfolio":           return json.dumps(get_portfolio())
-        if name == "get_stock_price":         return json.dumps(get_stock_price(inp["symbol"]))
-        if name == "get_technical_analysis":  return json.dumps(get_technical_analysis(inp["symbol"]))
-        if name == "get_bars":                return json.dumps(get_bars(inp["symbol"], inp.get("days", 20)))
-        if name == "place_order":             return json.dumps(place_order(inp["symbol"], inp["qty"], inp["side"]))
-        if name == "get_open_orders":         return json.dumps(get_open_orders())
-        if name == "cancel_all_orders":       return json.dumps(cancel_all_orders())
-        if name == "read_memory":             return json.dumps(read_memory())
-        if name == "write_memory":
+        if name == "get_account":             result = json.dumps(get_account())
+        elif name == "get_portfolio":         result = json.dumps(get_portfolio())
+        elif name == "get_stock_price":       result = json.dumps(get_stock_price(inp["symbol"]))
+        elif name == "get_technical_analysis":result = json.dumps(get_technical_analysis(inp["symbol"]))
+        elif name == "get_bars":              result = json.dumps(get_bars(inp["symbol"], min(inp.get("days", 10), 10)))
+        elif name == "place_order":           result = json.dumps(place_order(inp["symbol"], inp["qty"], inp["side"]))
+        elif name == "get_open_orders":       result = json.dumps(get_open_orders())
+        elif name == "cancel_all_orders":     result = json.dumps(cancel_all_orders())
+        elif name == "read_memory":           result = json.dumps(read_memory())
+        elif name == "write_memory":
             write_memory(inp["strategy"], inp.get("lesson"))
-            return json.dumps({"ok": True})
-        if name == "log_trade":
+            result = json.dumps({"ok": True})
+        elif name == "log_trade":
             log_trade(inp["symbol"], inp["side"], inp["qty"], inp["price"], inp["reason"])
-            return json.dumps({"ok": True})
-        if name == "get_trade_history":       return json.dumps(get_trade_history(inp.get("days", 7)))
-        return json.dumps({"error": f"Unknown tool: {name}"})
+            result = json.dumps({"ok": True})
+        elif name == "get_trade_history":     result = json.dumps(get_trade_history(inp.get("days", 7)))
+        else:                                 result = json.dumps({"error": f"Unknown tool: {name}"})
+        return _trim(result)
     except Exception as e:
         return json.dumps({"error": str(e)})
 
@@ -136,13 +144,13 @@ def run():
         {"role": "user",   "content": f"Run your full 6-step trading session now.{trigger_ctx}"},
     ]
 
-    for turn in range(20):
+    for turn in range(15):
         resp    = client.chat.completions.create(
             model=GROQ_MODEL,
             messages=messages,
             tools=TOOLS,
             tool_choice="auto",
-            max_tokens=4096,
+            max_tokens=2048,
         )
         msg     = resp.choices[0].message
         reason  = resp.choices[0].finish_reason
