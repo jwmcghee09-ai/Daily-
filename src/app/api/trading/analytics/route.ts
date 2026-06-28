@@ -6,17 +6,30 @@ const ALPACA_BASE = "https://paper-api.alpaca.markets/v2";
 
 export const runtime = "nodejs";
 
-async function fetchAudUsdRate(): Promise<number | null> {
+interface YahooQuote {
+  price: number;
+  prev: number;
+  change: number;
+  changePct: number;
+}
+
+async function yahooQuote(symbol: string): Promise<YahooQuote | null> {
   try {
-    const url = "https://query2.finance.yahoo.com/v8/finance/chart/AUDUSD%3DX?interval=1d&range=5d";
-    const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0" }, cache: "no-store" });
+    const enc = encodeURIComponent(symbol);
+    const res = await fetch(
+      `https://query2.finance.yahoo.com/v8/finance/chart/${enc}?interval=1d&range=2d`,
+      { headers: { "User-Agent": "Mozilla/5.0" }, cache: "no-store" }
+    );
     if (!res.ok) return null;
-    const data = (await res.json()) as { chart?: { result?: Array<{ meta?: { regularMarketPrice?: number } }> } };
-    const rate = data?.chart?.result?.[0]?.meta?.regularMarketPrice;
-    return typeof rate === "number" && rate > 0 ? rate : null;
-  } catch {
-    return null;
-  }
+    const data = await res.json() as {
+      chart?: { result?: Array<{ meta?: { regularMarketPrice?: number; previousClose?: number; chartPreviousClose?: number } }> };
+    };
+    const meta = data?.chart?.result?.[0]?.meta;
+    if (!meta?.regularMarketPrice) return null;
+    const price = meta.regularMarketPrice;
+    const prev = meta.previousClose ?? meta.chartPreviousClose ?? price;
+    return { price, prev, change: price - prev, changePct: prev > 0 ? ((price - prev) / prev) * 100 : 0 };
+  } catch { return null; }
 }
 
 export async function GET() {
@@ -31,23 +44,43 @@ export async function GET() {
     return NextResponse.json({ error: "Trading credentials not configured" }, { status: 503 });
   }
 
-  const headers = {
-    "APCA-API-KEY-ID": apiKey,
-    "APCA-API-SECRET-KEY": apiSecret,
-  };
+  const h = { "APCA-API-KEY-ID": apiKey, "APCA-API-SECRET-KEY": apiSecret };
 
-  const [histRes, ordersRes, acctRes, audUsdRate] = await Promise.all([
-    fetch(`${ALPACA_BASE}/account/portfolio/history?period=1M&timeframe=1D`, { headers, cache: "no-store" }),
-    fetch(`${ALPACA_BASE}/orders?status=closed&limit=200&direction=desc`, { headers, cache: "no-store" }),
-    fetch(`${ALPACA_BASE}/account`, { headers, cache: "no-store" }),
-    fetchAudUsdRate(),
+  const [histRes, ordersRes, acctRes, posRes, openOrdRes, macro] = await Promise.all([
+    fetch(`${ALPACA_BASE}/account/portfolio/history?period=1M&timeframe=1D`, { headers: h, cache: "no-store" }),
+    fetch(`${ALPACA_BASE}/orders?status=closed&limit=200&direction=desc`, { headers: h, cache: "no-store" }),
+    fetch(`${ALPACA_BASE}/account`, { headers: h, cache: "no-store" }),
+    fetch(`${ALPACA_BASE}/positions`, { headers: h, cache: "no-store" }),
+    fetch(`${ALPACA_BASE}/orders?status=open&limit=20`, { headers: h, cache: "no-store" }),
+    Promise.all([
+      yahooQuote("AUDUSD=X"),
+      yahooQuote("^VIX"),
+      yahooQuote("^GSPC"),
+      yahooQuote("^IXIC"),
+      yahooQuote("^TNX"),
+      yahooQuote("GC=F"),
+      yahooQuote("CL=F"),
+      yahooQuote("BTC-USD"),
+    ]),
   ]);
 
-  const [history, orders, account] = await Promise.all([
+  const [history, orders, account, positions, openOrders] = await Promise.all([
     histRes.ok ? histRes.json() : null,
     ordersRes.ok ? ordersRes.json() : [],
     acctRes.ok ? acctRes.json() : null,
+    posRes.ok ? posRes.json() : [],
+    openOrdRes.ok ? openOrdRes.json() : [],
   ]);
 
-  return NextResponse.json({ history, orders, account, audUsdRate });
+  const [audUsd, vix, spx, nasdaq, treasury10y, gold, oil, btc] = macro;
+
+  return NextResponse.json({
+    history,
+    orders,
+    account,
+    positions,
+    openOrders,
+    audUsdRate: audUsd?.price ?? null,
+    macro: { audUsd, vix, spx, nasdaq, treasury10y, gold, oil, btc },
+  });
 }
