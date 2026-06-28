@@ -188,12 +188,8 @@ const MYRMIDON_ANALYTICS_SCRIPT = `<script>
   var _origSwitch=window.switchTab;
   window.switchTab=function(tab){if(_origSwitch)_origSwitch(tab);if(tab==='analytics')loadAnalytics();};
   window.myrmLoadAnalytics=loadAnalytics;
-  // Auto-load if already on analytics tab on page load
-  function tryAutoLoad(){
-    var active=document.querySelector('.nav-tab.active[data-tab="analytics"], [data-page="analytics"]:not([style*="display:none"])');
-    if(active)loadAnalytics();
-  }
-  if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',tryAutoLoad);}else{setTimeout(tryAutoLoad,200);}
+  // Auto-load on page load (render functions are no-ops if elements aren't in DOM)
+  if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',loadAnalytics);}else{setTimeout(loadAnalytics,300);}
 })();
 </script>`;
 

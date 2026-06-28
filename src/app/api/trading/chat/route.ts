@@ -168,7 +168,7 @@ async function groqLoop(
 ): Promise<string> {
   let reply = "";
   for (let turn = 0; turn < MAX_TURNS; turn++) {
-    const res = await fetch(GROQ_URL, {
+    let res = await fetch(GROQ_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json", "Authorization": `Bearer ${groqKey}` },
       body: JSON.stringify({
@@ -179,6 +179,22 @@ async function groqLoop(
         max_tokens: 900,
       }),
     });
+
+    // Retry once after 25s if rate limited
+    if (res.status === 429) {
+      await new Promise(r => setTimeout(r, 25000));
+      res = await fetch(GROQ_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${groqKey}` },
+        body: JSON.stringify({
+          model: GROQ_MODEL,
+          messages: [{ role: "system", content: systemPrompt }, ...messages],
+          tools: GROQ_TOOLS,
+          tool_choice: "auto",
+          max_tokens: 900,
+        }),
+      });
+    }
 
     if (!res.ok) {
       const err = await res.text();
