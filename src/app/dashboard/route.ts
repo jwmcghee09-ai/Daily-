@@ -44,7 +44,8 @@ const MYRMIDON_ANALYTICS_HTML = `<!-- MYRMIDON ANALYTICS PAGE -->
   <section class="sec">
     <div style="padding:.5rem 0 1.5rem">
       <div style="font-family:monospace;font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:#a78bfa;margin-bottom:.4rem">Myrmidon · Alpaca Paper Trading</div>
-      <h2 style="font-family:var(--disp);font-size:clamp(1.6rem,3vw,2.6rem);margin:0;background:linear-gradient(120deg,#a855f7 0%,#d946ef 35%,#ff7a30 72%,#ffb347 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Analytics</h2>
+      <h2 style="font-family:var(--disp);font-size:clamp(1.6rem,3vw,2.6rem);margin:0 0 .6rem;background:linear-gradient(120deg,#a855f7 0%,#d946ef 35%,#ff7a30 72%,#ffb347 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Analytics</h2>
+      <button onclick="window.myrmRefreshAnalytics&&window.myrmRefreshAnalytics()" style="font-family:monospace;font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;color:#a78bfa;background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.25);border-radius:6px;padding:.3rem .8rem;cursor:pointer">↺ Refresh</button>
     </div>
     <!-- Metrics strip -->
     <div id="myrm-metrics-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:1rem;margin-bottom:1.2rem">
@@ -78,31 +79,38 @@ const MYRMIDON_ANALYTICS_HTML = `<!-- MYRMIDON ANALYTICS PAGE -->
 
 const MYRMIDON_ANALYTICS_SCRIPT = `<script>
 (function(){
-  var loaded=false;
+  var loading=false;
   function fmtUsd(n){return n==null?'—':'$'+Math.round(n).toLocaleString();}
   function fmtAud(n,rate){return(!rate||n==null)?'—':'~$'+Math.round(n/rate).toLocaleString();}
   function fmtPct(n){if(n==null)return'—';var s=n>=0?'+':'';return s+n.toFixed(2)+'%';}
 
+  function setAll(msg){
+    var g=document.getElementById('myrm-metrics-grid');
+    var svg=document.getElementById('myrm-equity-chart');
+    var tb=document.getElementById('myrm-trades-tbody');
+    if(g)g.innerHTML='<div style="color:#ff7a30;font-family:monospace;font-size:.72rem;padding:.5rem 0">'+msg+'</div>';
+    if(svg)svg.innerHTML='<text x="50%" y="50%" text-anchor="middle" fill="rgba(167,139,250,.35)" font-size="11" font-family="monospace">'+msg+'</text>';
+    if(tb)tb.innerHTML='<tr><td colspan="7" style="text-align:center;color:rgba(167,139,250,.35);padding:1.5rem;font-family:monospace;font-size:.7rem">'+msg+'</td></tr>';
+  }
+
   async function loadAnalytics(){
-    if(loaded)return;
-    loaded=true;
+    if(loading)return;
+    loading=true;
+    setAll('Loading…');
     try{
-      var res=await fetch('/api/trading/analytics');
+      var res=await fetch('/api/trading/analytics?t='+Date.now());
       var d=await res.json();
-      if(!res.ok){showErr(d.error||'Failed to load');loaded=false;return;}
+      if(!res.ok){setAll('Error: '+(d.error||res.status));loading=false;return;}
+      if(!d.account){setAll('No account data from Alpaca — check credentials');loading=false;return;}
       renderMetrics(d.account,d.history,d.audUsdRate);
       renderChart(d.history);
       renderTrades(d.orders,d.audUsdRate);
-    }catch(e){showErr('Network error');loaded=false;}
-  }
-
-  function showErr(msg){
-    var g=document.getElementById('myrm-metrics-grid');
-    if(g)g.innerHTML='<div style="color:#ff7a30;font-family:monospace;font-size:.72rem;padding:.5rem">'+msg+'</div>';
+    }catch(e){setAll('Network error: '+e.message);}
+    loading=false;
   }
 
   function renderMetrics(acct,hist,rate){
-    var g=document.getElementById('myrm-metrics-grid');if(!g||!acct)return;
+    var g=document.getElementById('myrm-metrics-grid');if(!g)return;
     var equity=parseFloat(acct.equity)||0;
     var cash=parseFloat(acct.cash)||0;
     var bp=parseFloat(acct.buying_power)||0;
@@ -184,12 +192,11 @@ const MYRMIDON_ANALYTICS_SCRIPT = `<script>
     }).join('');
   }
 
-  // Hook tab switch to lazy-load
+  // Re-fetch every time user switches to analytics tab
   var _origSwitch=window.switchTab;
-  window.switchTab=function(tab){if(_origSwitch)_origSwitch(tab);if(tab==='analytics')loadAnalytics();};
+  window.switchTab=function(tab){if(_origSwitch)_origSwitch(tab);if(tab==='analytics'){loading=false;loadAnalytics();}};
   window.myrmLoadAnalytics=loadAnalytics;
-  // Auto-load on page load (render functions are no-ops if elements aren't in DOM)
-  if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',loadAnalytics);}else{setTimeout(loadAnalytics,300);}
+  window.myrmRefreshAnalytics=function(){loading=false;loadAnalytics();};
 })();
 </script>`;
 
