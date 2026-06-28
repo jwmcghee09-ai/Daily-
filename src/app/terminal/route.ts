@@ -77,6 +77,22 @@ tr:hover td{background:#0a0700}
 
 #statusbar{background:#030200;border-top:1px solid #111;padding:3px 10px;display:flex;justify-content:space-between;font-size:10px;color:#444;flex-shrink:0}
 
+/* macro ticker */
+#macro-bar{background:#050300;border-bottom:1px solid #1a1200;padding:3px 10px;display:flex;gap:0;align-items:stretch;flex-shrink:0;overflow-x:auto;min-height:28px}
+.mkt{display:flex;align-items:center;gap:5px;padding:0 10px;border-right:1px solid #1a1200;font-size:10px;white-space:nowrap}
+.mkt:last-child{border-right:none}
+.mkt-sym{color:#555;font-size:9px;letter-spacing:.08em;text-transform:uppercase}
+.mkt-val{color:#e8d5a0;font-weight:bold}
+.mkt-chg{font-size:9px}
+
+/* risk signals */
+#risk-bar{background:#030200;border-bottom:2px solid #1a1200;padding:3px 10px;display:flex;gap:5px;align-items:center;flex-shrink:0;flex-wrap:wrap;min-height:26px}
+.risk-lbl{color:#333;font-size:9px;text-transform:uppercase;letter-spacing:.1em;flex-shrink:0}
+.sig{font-size:9px;padding:1px 7px;border-radius:2px;white-space:nowrap;border:1px solid}
+.sig-ok{color:#005500;border-color:#003300;background:#010800}
+.sig-amb{color:#f90;border-color:#3a2500;background:#0a0500}
+.sig-red{color:#ff4444;border-color:#3a0000;background:#0d0000;font-weight:bold}
+
 .pos{color:#00e676}.neg{color:#ff4444}.amb{color:#f90}.cyn{color:#00bcd4}.dim{color:#444}
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:#030200}::-webkit-scrollbar-thumb{background:#1a1200}
 .placeholder{padding:12px;color:#222;font-size:11px;text-align:center}
@@ -96,6 +112,25 @@ tr:hover td{background:#0a0700}
 <div id="titlebar">
   <span>MYRMIDON // ALPACA PAPER TRADING TERMINAL</span>
   <span id="acct-num" style="font-size:11px;font-weight:normal;opacity:.7"></span>
+</div>
+
+<!-- MACRO TICKER -->
+<div id="macro-bar">
+  <div class="mkt"><span class="mkt-sym">VIX</span><span class="mkt-val" id="mk-vix">—</span><span class="mkt-chg" id="mk-vix-c"></span></div>
+  <div class="mkt"><span class="mkt-sym">SPX</span><span class="mkt-val" id="mk-spx">—</span><span class="mkt-chg" id="mk-spx-c"></span></div>
+  <div class="mkt"><span class="mkt-sym">NDX</span><span class="mkt-val" id="mk-ndx">—</span><span class="mkt-chg" id="mk-ndx-c"></span></div>
+  <div class="mkt"><span class="mkt-sym">10Y</span><span class="mkt-val" id="mk-10y">—</span><span class="mkt-chg" id="mk-10y-c"></span></div>
+  <div class="mkt"><span class="mkt-sym">Gold</span><span class="mkt-val" id="mk-gld">—</span><span class="mkt-chg" id="mk-gld-c"></span></div>
+  <div class="mkt"><span class="mkt-sym">Oil</span><span class="mkt-val" id="mk-oil">—</span><span class="mkt-chg" id="mk-oil-c"></span></div>
+  <div class="mkt"><span class="mkt-sym">BTC</span><span class="mkt-val" id="mk-btc">—</span><span class="mkt-chg" id="mk-btc-c"></span></div>
+  <div class="mkt"><span class="mkt-sym">AUD/USD</span><span class="mkt-val" id="mk-aud">—</span><span class="mkt-chg" id="mk-aud-c"></span></div>
+  <div class="mkt" style="margin-left:auto;border-right:none"><span id="mkt-status" style="font-size:9px;letter-spacing:.08em;color:#555">—</span></div>
+</div>
+
+<!-- RISK SIGNALS -->
+<div id="risk-bar">
+  <span class="risk-lbl">Risk</span>
+  <span id="risk-sigs"><span class="sig sig-amb">SCANNING…</span></span>
 </div>
 
 <div id="metrics">
@@ -234,6 +269,122 @@ tr:hover td{background:#0a0700}
     }
   }
 
+  // ── MACRO TICKER ──
+  function renderMacro(macro){
+    if(!macro)return;
+    function mktSet(valId,chgId,q,fmt,unit){
+      if(!q){document.getElementById(valId).textContent='—';return;}
+      document.getElementById(valId).textContent=(fmt?q.price.toFixed(fmt):Math.round(q.price).toLocaleString())+(unit||'');
+      var ce=document.getElementById(chgId);
+      if(!ce)return;
+      var up=q.changePct>=0;
+      ce.textContent=(up?'▲':' ▼')+(Math.abs(q.changePct)).toFixed(2)+'%';
+      ce.className='mkt-chg '+(up?'pos':'neg');
+    }
+    mktSet('mk-vix','mk-vix-c',macro.vix,2,'');
+    mktSet('mk-spx','mk-spx-c',macro.spx,0,'');
+    mktSet('mk-ndx','mk-ndx-c',macro.nasdaq,0,'');
+    mktSet('mk-10y','mk-10y-c',macro.treasury10y,2,'%');
+    mktSet('mk-gld','mk-gld-c',macro.gold,0,'');
+    mktSet('mk-oil','mk-oil-c',macro.oil,2,'');
+    mktSet('mk-btc','mk-btc-c',macro.btc,0,'');
+    mktSet('mk-aud','mk-aud-c',macro.audUsd,4,'');
+    // VIX color coding
+    var vixEl=$('mk-vix');
+    if(macro.vix){var v=macro.vix.price;vixEl.style.color=v>30?'#ff4444':v>20?'#f90':v>15?'#e8d5a0':'#00e676';}
+    // 10Y color coding
+    var t10El=$('mk-10y');
+    if(macro.treasury10y){var t=macro.treasury10y.price;t10El.style.color=t>5.0?'#ff4444':t>4.5?'#f90':'#e8d5a0';}
+    // Market status
+    var now=new Date(),utcH=now.getUTCHours(),utcM=now.getUTCMinutes(),utcMin=utcH*60+utcM;
+    var day=now.getUTCDay(); // 0=Sun, 6=Sat
+    var mktEl=$('mkt-status');
+    if(day===0||day===6){mktEl.textContent='MARKET CLOSED (WEEKEND)';mktEl.style.color='#555';}
+    else if(utcMin>=13*60+30&&utcMin<20*60){mktEl.textContent='● MARKET OPEN (EST)';mktEl.style.color='#00e676';}
+    else if(utcMin>=12*60&&utcMin<13*60+30){mktEl.textContent='PRE-MARKET';mktEl.style.color='#f90';}
+    else if(utcMin>=20*60&&utcMin<20*60+30){mktEl.textContent='AFTER-HOURS';mktEl.style.color='#555';}
+    else{mktEl.textContent='MARKET CLOSED';mktEl.style.color='#555';}
+  }
+
+  // ── RISK SIGNALS ──
+  function renderRisk(acct,positions,macro){
+    var eq=parseFloat(acct.equity)||0,cash=parseFloat(acct.cash)||0,bp=parseFloat(acct.buying_power)||0;
+    var sigs=[];
+
+    // 1. Cash floor
+    var cashPct=eq>0?cash/eq:0;
+    if(cashPct<0.20)sigs.push({c:'red',m:'CASH '+(cashPct*100).toFixed(1)+'% — BELOW 20% FLOOR'});
+    else if(cashPct<0.25)sigs.push({c:'amb',m:'Cash '+(cashPct*100).toFixed(1)+'% — near floor'});
+    else sigs.push({c:'ok',m:'Cash OK ('+(cashPct*100).toFixed(1)+'%)'});
+
+    // 2. Stop-loss proximity
+    var stopHit=false;
+    (positions||[]).forEach(function(p){
+      var plpc=parseFloat(p.unrealized_plpc)||0;
+      if(plpc<-0.15){sigs.push({c:'red',m:p.symbol+' '+(plpc*100).toFixed(1)+'% — STOP-LOSS'});stopHit=true;}
+      else if(plpc<-0.12)sigs.push({c:'amb',m:p.symbol+' '+(plpc*100).toFixed(1)+'% — near stop'});
+    });
+
+    // 3. Concentration >10%
+    (positions||[]).forEach(function(p){
+      var posPct=eq>0?(parseFloat(p.market_value)||0)/eq:0;
+      if(posPct>0.10)sigs.push({c:'red',m:p.symbol+' '+(posPct*100).toFixed(1)+'% — exceeds 10% limit'});
+    });
+
+    // 4. Core target deviation
+    var bySymbol={};
+    (positions||[]).forEach(function(p){bySymbol[p.symbol]=parseFloat(p.market_value)||0;});
+    var TARGETS={SPY:0.40,QQQ:0.20,VEA:0.15};
+    Object.keys(TARGETS).forEach(function(sym){
+      var target=TARGETS[sym],actual=eq>0?(bySymbol[sym]||0)/eq:0,diff=Math.abs(actual-target);
+      if(diff>0.08)sigs.push({c:'amb',m:sym+' '+(actual*100).toFixed(0)+'% vs '+(target*100)+'% target'});
+    });
+
+    // 5. SPY+QQQ overlap (both core = US large-cap concentration)
+    var spyPct=eq>0?(bySymbol.SPY||0)/eq:0;
+    var qqqPct=eq>0?(bySymbol.QQQ||0)/eq:0;
+    if(spyPct+qqqPct>0.65)sigs.push({c:'amb',m:'SPY+QQQ '+(( spyPct+qqqPct)*100).toFixed(0)+'% — US large-cap heavy'});
+
+    // 6. Intraday portfolio P&L
+    var dayPl=(positions||[]).reduce(function(s,p){return s+(parseFloat(p.unrealized_intraday_pl)||0);},0);
+    var dayPct=eq>0?(dayPl/eq)*100:0;
+    if(dayPct<-3)sigs.push({c:'red',m:'TODAY '+(dayPct).toFixed(2)+'% ('+( dayPl>=0?'+':'')+Math.round(dayPl).toLocaleString()+')'});
+    else if(dayPct<-1)sigs.push({c:'amb',m:'TODAY '+(dayPct).toFixed(2)+'% ('+Math.round(dayPl).toLocaleString()+')'});
+    else if(dayPct>0.5)sigs.push({c:'ok',m:'TODAY +'+(dayPct).toFixed(2)+'% (+'+Math.round(dayPl).toLocaleString()+')'});
+
+    // 7. Buying power utilisation
+    var invested=(positions||[]).reduce(function(s,p){return s+(parseFloat(p.market_value)||0);},0);
+    var bpUtil=eq>0?invested/eq:0;
+    if(bpUtil>0.90)sigs.push({c:'amb',m:'Invested '+(bpUtil*100).toFixed(0)+'% — very little room'});
+
+    // 8. VIX regime (from macro)
+    if(macro&&macro.vix){
+      var v=macro.vix.price;
+      if(v>30)sigs.push({c:'red',m:'VIX '+v.toFixed(1)+' — HIGH FEAR'});
+      else if(v>20)sigs.push({c:'amb',m:'VIX '+v.toFixed(1)+' — elevated vol'});
+      else sigs.push({c:'ok',m:'VIX '+v.toFixed(1)+' — calm'});
+    }
+
+    // 9. SPX direction today
+    if(macro&&macro.spx){
+      var spxChg=macro.spx.changePct;
+      if(spxChg<-2)sigs.push({c:'red',m:'SPX '+(spxChg).toFixed(2)+'% TODAY — sell-off'});
+      else if(spxChg<-1)sigs.push({c:'amb',m:'SPX '+(spxChg).toFixed(2)+'% today'});
+    }
+
+    // 10. 10Y yield
+    if(macro&&macro.treasury10y){
+      var t=macro.treasury10y.price;
+      if(t>5.0)sigs.push({c:'red',m:'10Y '+t.toFixed(2)+'% — HIGH RATES'});
+      else if(t>4.5)sigs.push({c:'amb',m:'10Y '+t.toFixed(2)+'% — elevated rates'});
+    }
+
+    if(!sigs.length)sigs.push({c:'ok',m:'All signals clear'});
+    $('risk-sigs').innerHTML=sigs.map(function(s){
+      return'<span class="sig sig-'+s.c+'">'+s.m+'</span>';
+    }).join('');
+  }
+
   // Core ETFs — anything else is alpha
   var CORE_ETFS={SPY:0.40,QQQ:0.20,VEA:0.15};
   var BROAD_ETFS={'IWM':1,'VTI':1,'IVV':1,'DIA':1,'GLD':1,'TLT':1,'BND':1,'AGG':1,
@@ -243,16 +394,20 @@ tr:hover td{background:#0a0700}
   function posRow(p,colorClass){
     var unrl=parseFloat(p.unrealized_pl)||0,plpc=parseFloat(p.unrealized_plpc)||0;
     var mv=parseFloat(p.market_value)||0,qty=parseFloat(p.qty)||0,price=parseFloat(p.current_price)||0;
+    var dayChg=parseFloat(p.change_today)||0; // fraction e.g. 0.0123 = 1.23%
+    var dayPl=parseFloat(p.unrealized_intraday_pl)||0;
     var c=unrl>=0?'pos':'neg';
+    var dc=dayChg>=0?'pos':'neg';
     var sym='<td class="'+(colorClass||'amb')+'" style="font-weight:bold">'+p.symbol+'</td>';
     return'<tr>'+sym+
       '<td style="text-align:right;color:#777;font-size:10px">'+qty.toFixed(qty%1?4:0)+'</td>'+
       '<td class="cyn" style="text-align:right">'+usd(price,2)+'</td>'+
       '<td style="text-align:right">'+usd(mv)+'</td>'+
-      '<td class="'+c+'" style="text-align:right">'+(unrl>=0?'+':'-')+usd(Math.abs(unrl))+'</td>'+
+      '<td class="'+dc+'" style="text-align:right;font-size:10px">'+(dayChg>=0?'+':'')+(dayChg*100).toFixed(2)+'%</td>'+
+      '<td class="'+c+'" style="text-align:right;font-size:10px">'+(dayPl>=0?'+':'')+usd(dayPl)+'</td>'+
       '<td class="'+c+'" style="text-align:right;font-size:10px">'+pct(plpc*100)+'</td></tr>';
   }
-  var POS_HEAD='<table><thead><tr><th>Sym</th><th style="text-align:right">Qty</th><th style="text-align:right">Price</th><th style="text-align:right">Mkt Val</th><th style="text-align:right">P&L</th><th style="text-align:right">%</th></tr></thead><tbody>';
+  var POS_HEAD='<table><thead><tr><th>Sym</th><th style="text-align:right">Qty</th><th style="text-align:right">Price</th><th style="text-align:right">Mkt Val</th><th style="text-align:right">Day%</th><th style="text-align:right">Day P&L</th><th style="text-align:right">Total%</th></tr></thead><tbody>';
 
   function renderPositions(positions,equity){
     if(!positions){
@@ -360,14 +515,19 @@ tr:hover td{background:#0a0700}
       var d=await r.json();
       if(!r.ok){conn('ERROR',false);status('ERROR: '+(d.error||r.status));loading=false;return;}
       if(!d.account){conn('ERROR',false);status('ERROR: NO ACCOUNT DATA');loading=false;return;}
+      var eq=parseFloat(d.account.equity)||0;
       renderMetrics(d.account,d.history,d.rate,d.positions);
+      renderMacro(d.macro);
+      renderRisk(d.account,d.positions||[],d.macro);
       renderStrategy(d.memory);
-      renderPositions(d.positions,parseFloat(d.account.equity)||0);
+      renderPositions(d.positions,eq);
       renderChart(d.history);
       renderTrades(d.orders,d.rate);
       renderOpenOrders(d.openOrders);
       conn('CONNECTED',true);ts();
-      status('$'+Math.round(parseFloat(d.account.equity)||0).toLocaleString()+' USD · '+(d.positions&&d.positions.length||0)+' positions · '+(d.openOrders&&d.openOrders.length||0)+' open orders');
+      var dayPl=(d.positions||[]).reduce(function(s,p){return s+(parseFloat(p.unrealized_intraday_pl)||0);},0);
+      var dayStr=dayPl>=0?'+$'+Math.round(dayPl).toLocaleString():'-$'+Math.round(Math.abs(dayPl)).toLocaleString();
+      status('$'+Math.round(eq).toLocaleString()+' USD equity · '+(d.positions&&d.positions.length||0)+' positions · TODAY '+dayStr+' · '+(d.openOrders&&d.openOrders.length||0)+' open orders');
     }catch(e){conn('ERROR',false);status('ERROR: '+e.message);}
     loading=false;
   }
