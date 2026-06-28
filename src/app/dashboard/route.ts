@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
 
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
 const TRADER_EMAIL = "jwmcghee09@gmail.com";
 
@@ -195,12 +196,25 @@ const MYRMIDON_ANALYTICS_SCRIPT = `<script>
   async function loadAnalytics(){
     if(loading)return;
     loading=true;
+    var st=document.getElementById('myrm-mkt-status');
+    if(st)st.textContent='⟳ Fetching…';
     setAll('Loading…');
     try{
-      var res=await fetch('/api/trading/analytics?t='+Date.now());
-      var d=await res.json();
-      if(!res.ok){setAll('Error: '+(d.error||res.status));loading=false;return;}
-      if(!d.account){setAll('No account data from Alpaca — check credentials');loading=false;return;}
+      var ctrl=new AbortController();
+      var timer=setTimeout(function(){ctrl.abort();},30000);
+      var res;
+      try{res=await fetch('/api/trading/analytics?t='+Date.now(),{signal:ctrl.signal});}
+      finally{clearTimeout(timer);}
+      var text=await res.text();
+      var d;
+      try{d=JSON.parse(text);}catch(je){setAll('Error: server returned non-JSON (status '+res.status+') — check Render logs');loading=false;return;}
+      if(!res.ok){
+        var em=d.error||('HTTP '+res.status);
+        if(res.status===503)em='Alpaca API keys not configured — add ALPACA_API_KEY and ALPACA_API_SECRET in Render dashboard → Environment';
+        if(res.status===403)em='Auth check failed — try signing out and back in';
+        setAll('Error: '+em);loading=false;return;
+      }
+      if(!d.account){setAll('No Alpaca account data — verify ALPACA_API_KEY and ALPACA_API_SECRET are correct');loading=false;return;}
       var equity=parseFloat(d.account.equity)||0;
       renderMetrics(d.account,d.history,d.audUsdRate);
       renderChart(d.history);
@@ -209,7 +223,10 @@ const MYRMIDON_ANALYTICS_SCRIPT = `<script>
       renderRisk(d.account,d.positions,d.macro);
       renderPositions(d.positions,equity,d.audUsdRate);
       renderOpenOrders(d.openOrders);
-    }catch(e){setAll('Network error: '+e.message);}
+    }catch(e){
+      var msg=e.name==='AbortError'?'Timed out after 30s — Alpaca API unreachable from Render or taking too long':('Fetch error: '+e.message);
+      setAll(msg);
+    }
     loading=false;
   }
 
@@ -595,7 +612,7 @@ async function dashYahooQuote(symbol: string): Promise<MqData | null> {
   try {
     const res = await fetch(
       `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=2d`,
-      { headers: { "User-Agent": "Mozilla/5.0" }, cache: "no-store" }
+      { headers: { "User-Agent": "Mozilla/5.0" }, cache: "no-store", signal: AbortSignal.timeout(5000) }
     );
     if (!res.ok) return null;
     const data = await res.json() as { chart?: { result?: Array<{ meta?: { regularMarketPrice?: number; previousClose?: number; chartPreviousClose?: number } }> } };
@@ -611,31 +628,29 @@ async function fetchTraderAnalytics(): Promise<Record<string, unknown> | null> {
   const apiKey = process.env.ALPACA_API_KEY;
   const apiSecret = process.env.ALPACA_API_SECRET;
   if (!apiKey || !apiSecret) return null;
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 9000);
   try {
     const h = { "APCA-API-KEY-ID": apiKey, "APCA-API-SECRET-KEY": apiSecret };
     const BASE = "https://paper-api.alpaca.markets/v2";
-    const sig = ctrl.signal;
-    const [histRes, ordersRes, acctRes, posRes, openOrdRes, macro] = await Promise.all([
-      fetch(`${BASE}/account/portfolio/history?period=1M&timeframe=1D`, { headers: h, cache: "no-store", signal: sig }),
-      fetch(`${BASE}/orders?status=closed&limit=200&direction=desc`, { headers: h, cache: "no-store", signal: sig }),
-      fetch(`${BASE}/account`, { headers: h, cache: "no-store", signal: sig }),
-      fetch(`${BASE}/positions`, { headers: h, cache: "no-store", signal: sig }),
-      fetch(`${BASE}/orders?status=open&limit=20`, { headers: h, cache: "no-store", signal: sig }),
-      Promise.all(["AUDUSD=X", "^VIX", "^GSPC", "^IXIC", "^TNX", "GC=F", "CL=F", "BTC-USD"].map(dashYahooQuote)),
+    const af = (url: string) => fetch(url, { headers: h, cache: "no-store", signal: AbortSignal.timeout(20000) });
+    const [histRes, ordersRes, acctRes, posRes, openOrdRes] = await Promise.all([
+      af(`${BASE}/account/portfolio/history?period=1M&timeframe=1D`),
+      af(`${BASE}/orders?status=closed&limit=200&direction=desc`),
+      af(`${BASE}/account`),
+      af(`${BASE}/positions`),
+      af(`${BASE}/orders?status=open&limit=20`),
     ]);
+    if (!acctRes.ok) return null;
     const [history, orders, account, positions, openOrders] = await Promise.all([
       histRes.ok ? histRes.json() : null,
       ordersRes.ok ? ordersRes.json() : [],
-      acctRes.ok ? acctRes.json() : null,
+      acctRes.json(),
       posRes.ok ? posRes.json() : [],
       openOrdRes.ok ? openOrdRes.json() : [],
     ]);
+    const macro = await Promise.all(["AUDUSD=X", "^VIX", "^GSPC", "^IXIC", "^TNX", "GC=F", "CL=F", "BTC-USD"].map(dashYahooQuote));
     const [audUsd, vix, spx, nasdaq, treasury10y, gold, oil, btc] = macro;
     return { history, orders, account, positions, openOrders, audUsdRate: audUsd?.price ?? null, macro: { audUsd, vix, spx, nasdaq, treasury10y, gold, oil, btc } };
   } catch { return null; }
-  finally { clearTimeout(timer); }
 }
 
 export async function GET(request: NextRequest) {
