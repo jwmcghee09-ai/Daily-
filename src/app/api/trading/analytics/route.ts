@@ -5,6 +5,7 @@ const TRADER_EMAIL = "jwmcghee09@gmail.com";
 const ALPACA_BASE = "https://paper-api.alpaca.markets/v2";
 
 export const runtime = "nodejs";
+export const maxDuration = 30;
 
 interface YahooQuote {
   price: number;
