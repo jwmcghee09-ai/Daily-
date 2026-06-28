@@ -59,6 +59,19 @@ async function alpacaDataGet(path: string): Promise<unknown> {
   try { return await res.json(); } catch { return { error: res.statusText }; }
 }
 
+async function fetchAudUsdRate(): Promise<number | null> {
+  try {
+    const url = "https://query2.finance.yahoo.com/v8/finance/chart/AUDUSD%3DX?interval=1d&range=5d";
+    const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0" }, cache: "no-store" });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { chart?: { result?: Array<{ meta?: { regularMarketPrice?: number } }> } };
+    const rate = data?.chart?.result?.[0]?.meta?.regularMarketPrice;
+    return typeof rate === "number" && rate > 0 ? rate : null;
+  } catch {
+    return null;
+  }
+}
+
 async function executeTool(name: string, args: Record<string, unknown>): Promise<string> {
   try {
     if (name === "get_account") {
@@ -136,6 +149,11 @@ PORTFOLIO RULES:
 - Always maintain ≥20% cash floor
 - Stop-loss: cut at -15% unrealised P&L
 - Never chase a position up >30% in 2 weeks
+
+CURRENCY:
+- All Alpaca values (portfolio_value, equity, cash, market_value, etc.) are in USD.
+- The user's dashboard displays AUD values. Always report both USD and AUD when mentioning dollar amounts.
+- AUD/USD rate is provided in context below. To convert: AUD = USD / rate.
 
 APPROACH:
 - Check account and positions before any recommendation
@@ -277,7 +295,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "messages array required" }, { status: 400 });
   }
 
-  const memory = readTradingMemory();
+  const [audUsdRate, memory] = await Promise.all([fetchAudUsdRate(), Promise.resolve(readTradingMemory())]);
+
+  const rateSection = audUsdRate
+    ? `\n\nCURRENT AUD/USD RATE: ${audUsdRate.toFixed(4)} (1 USD = ${(1 / audUsdRate).toFixed(4)} AUD)`
+    : "\n\nAUD/USD RATE: unavailable — report USD only.";
+
   const memSection = memory?.strategy
     ? `\n\nSTRATEGY MEMORY:\n${memory.strategy}${
         Array.isArray(memory.lessons) && memory.lessons.length
@@ -288,7 +311,7 @@ export async function POST(request: NextRequest) {
       }`
     : "";
 
-  const systemPrompt = BASE_SYSTEM + memSection;
+  const systemPrompt = BASE_SYSTEM + rateSection + memSection;
   const messages: OAIMessage[] = (body.messages as OAIMessage[]).map(m => ({
     role: m.role,
     content: String(m.content ?? ""),

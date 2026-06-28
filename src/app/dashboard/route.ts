@@ -26,6 +26,169 @@ const MYRMIDON_AI_TERMINAL = `<!-- MYRMIDON AI terminal -->
   </div>
 </div>`;
 
+const MYRMIDON_ANALYTICS_HTML = `<!-- MYRMIDON ANALYTICS PAGE -->
+<style>
+.myrm-stat-card{background:rgba(10,10,18,.8);border:1px solid rgba(167,139,250,.15);border-radius:10px;padding:1.2rem}
+.myrm-stat-label{font-family:monospace;font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(167,139,250,.5);margin-bottom:.4rem}
+.myrm-stat-value{font-family:monospace;font-size:1.3rem;font-weight:600;color:#fff;margin-bottom:.2rem;line-height:1.2}
+.myrm-stat-sub{font-family:monospace;font-size:.62rem;color:rgba(167,139,250,.5)}
+.myrm-dark-card{background:rgba(10,10,18,.8);border:1px solid rgba(167,139,250,.15);border-radius:10px;padding:1.2rem;margin-bottom:1.2rem}
+.myrm-section-label{font-family:monospace;font-size:.55rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(167,139,250,.5);margin-bottom:.9rem}
+.myrm-table{width:100%;border-collapse:collapse;font-size:.78rem}
+.myrm-table th{text-align:left;padding:.45rem .6rem;font-family:monospace;font-size:.52rem;letter-spacing:.1em;color:rgba(167,139,250,.45);font-weight:600;text-transform:uppercase;border-bottom:1px solid rgba(167,139,250,.12)}
+.myrm-table td{padding:.5rem .6rem;border-bottom:1px solid rgba(167,139,250,.06);vertical-align:middle}
+.myrm-table tr:last-child td{border-bottom:none}
+.myrm-table tr:hover td{background:rgba(167,139,250,.04)}
+</style>
+<div class="wrap" data-page="analytics">
+  <section class="sec">
+    <div style="padding:.5rem 0 1.5rem">
+      <div style="font-family:monospace;font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:#a78bfa;margin-bottom:.4rem">Myrmidon · Alpaca Paper Trading</div>
+      <h2 style="font-family:var(--disp);font-size:clamp(1.6rem,3vw,2.6rem);margin:0;background:linear-gradient(120deg,#a855f7 0%,#d946ef 35%,#ff7a30 72%,#ffb347 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Analytics</h2>
+    </div>
+    <!-- Metrics strip -->
+    <div id="myrm-metrics-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:1rem;margin-bottom:1.2rem">
+      <div class="myrm-stat-card"><div class="myrm-stat-label">Portfolio Equity</div><div class="myrm-stat-value" style="font-size:.9rem;color:rgba(167,139,250,.4)">Loading…</div></div>
+    </div>
+    <!-- Equity curve -->
+    <div class="myrm-dark-card">
+      <div class="myrm-section-label">30-Day Equity Curve</div>
+      <svg id="myrm-equity-chart" style="width:100%;height:180px;display:block" preserveAspectRatio="none">
+        <text x="50%" y="50%" text-anchor="middle" fill="rgba(167,139,250,.35)" font-size="11" font-family="monospace">Loading…</text>
+      </svg>
+    </div>
+    <!-- Trade history -->
+    <div class="myrm-dark-card">
+      <div class="myrm-section-label">Recent Trades</div>
+      <div style="overflow-x:auto">
+        <table class="myrm-table">
+          <thead><tr>
+            <th>Symbol</th><th>Side</th><th style="text-align:right">Qty</th>
+            <th style="text-align:right">Fill Price</th><th style="text-align:right">Total (USD)</th>
+            <th style="text-align:right">Total (AUD)</th><th style="text-align:right">Date</th>
+          </tr></thead>
+          <tbody id="myrm-trades-tbody">
+            <tr><td colspan="7" style="text-align:center;color:rgba(167,139,250,.35);padding:1.5rem;font-family:monospace;font-size:.7rem">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</div>`;
+
+const MYRMIDON_ANALYTICS_SCRIPT = `<script>
+(function(){
+  var loaded=false;
+  function fmtUsd(n){return n==null?'—':'$'+Math.round(n).toLocaleString();}
+  function fmtAud(n,rate){return(!rate||n==null)?'—':'~$'+Math.round(n/rate).toLocaleString();}
+  function fmtPct(n){if(n==null)return'—';var s=n>=0?'+':'';return s+n.toFixed(2)+'%';}
+
+  async function loadAnalytics(){
+    if(loaded)return;
+    try{
+      var res=await fetch('/api/trading/analytics');
+      var d=await res.json();
+      if(!res.ok){showErr(d.error||'Failed to load');return;}
+      loaded=true;
+      renderMetrics(d.account,d.history,d.audUsdRate);
+      renderChart(d.history);
+      renderTrades(d.orders,d.audUsdRate);
+    }catch(e){showErr('Network error');}
+  }
+
+  function showErr(msg){
+    var g=document.getElementById('myrm-metrics-grid');
+    if(g)g.innerHTML='<div style="color:#ff7a30;font-family:monospace;font-size:.72rem;padding:.5rem">'+msg+'</div>';
+  }
+
+  function renderMetrics(acct,hist,rate){
+    var g=document.getElementById('myrm-metrics-grid');if(!g||!acct)return;
+    var equity=parseFloat(acct.equity)||0;
+    var cash=parseFloat(acct.cash)||0;
+    var bp=parseFloat(acct.buying_power)||0;
+    var startEq=equity,retUsd=0,retPct=0;
+    if(hist&&hist.equity&&hist.equity.length>1){
+      var vals=hist.equity.filter(function(v){return v!=null&&v>0;});
+      if(vals.length>1){startEq=vals[0];retUsd=equity-startEq;retPct=startEq>0?(retUsd/startEq)*100:0;}
+    }
+    var pos=retUsd>=0;var col=pos?'#4ade80':'#ff7a30';
+    g.innerHTML=[
+      card('Portfolio Equity',fmtUsd(equity),fmtAud(equity,rate),'#fff'),
+      card('30-Day Return',fmtPct(retPct),(pos?'+':'')+fmtUsd(Math.abs(retUsd))+' USD',col),
+      card('Uninvested Cash',fmtUsd(cash),(cash&&equity?(cash/equity*100).toFixed(1)+'% of portfolio':''),'#fff'),
+      card('Buying Power',fmtUsd(bp),fmtAud(bp,rate),'#fff'),
+    ].join('');
+  }
+
+  function card(label,val,sub,col){
+    return '<div class="myrm-stat-card">'+
+      '<div class="myrm-stat-label">'+label+'</div>'+
+      '<div class="myrm-stat-value" style="color:'+col+'">'+val+'</div>'+
+      '<div class="myrm-stat-sub">'+sub+'</div>'+
+    '</div>';
+  }
+
+  function renderChart(hist){
+    var svg=document.getElementById('myrm-equity-chart');if(!svg||!hist||!hist.equity)return;
+    var vals=hist.equity.filter(function(v){return v!=null&&v>0;});
+    var ts=hist.timestamp||[];
+    if(vals.length<2){svg.innerHTML='<text x="50%" y="50%" text-anchor="middle" fill="rgba(167,139,250,.35)" font-size="11" font-family="monospace">Not enough data</text>';return;}
+    var W=800,H=160,PX=8,PY=14;
+    var lo=Math.min.apply(null,vals)*0.999,hi=Math.max.apply(null,vals)*1.001,rng=hi-lo;
+    var tx=function(i){return PX+(i/(vals.length-1))*(W-PX*2);};
+    var ty=function(v){return H-PY-((v-lo)/rng)*(H-PY*2);};
+    var start=vals[0],end=vals[vals.length-1],isPos=end>=start;
+    var col=isPos?'#4ade80':'#ff7a30';
+    var pts=vals.map(function(v,i){return tx(i)+','+ty(v);});
+    var path='M '+pts.join(' L ');
+    var fill=path+' L '+tx(vals.length-1)+','+(H-PY)+' L '+tx(0)+','+(H-PY)+' Z';
+    var startY=ty(start);
+    var fmtD=function(ts){if(!ts)return'';var d=new Date(ts*1000);return(d.getMonth()+1)+'/'+(d.getDate());};
+    svg.setAttribute('viewBox','0 0 '+W+' '+H);
+    svg.innerHTML='<defs><linearGradient id="eg" x1="0" y1="0" x2="0" y2="1">'+
+      '<stop offset="0%" stop-color="'+col+'" stop-opacity="0.18"/>'+
+      '<stop offset="100%" stop-color="'+col+'" stop-opacity="0.01"/>'+
+    '</linearGradient></defs>'+
+    '<line x1="'+PX+'" y1="'+startY+'" x2="'+(W-PX)+'" y2="'+startY+'" stroke="rgba(255,255,255,.08)" stroke-width="1" stroke-dasharray="3,4"/>'+
+    '<path d="'+fill+'" fill="url(#eg)"/>'+
+    '<path d="'+path+'" fill="none" stroke="'+col+'" stroke-width="2" stroke-linejoin="round"/>'+
+    '<circle cx="'+tx(0)+'" cy="'+ty(start)+'" r="3" fill="'+col+'" opacity="0.5"/>'+
+    '<circle cx="'+tx(vals.length-1)+'" cy="'+ty(end)+'" r="4" fill="'+col+'"/>'+
+    '<text x="'+PX+'" y="'+(H-3)+'" font-family="monospace" font-size="8" fill="rgba(167,139,250,.45)">'+fmtD(ts[0])+'</text>'+
+    '<text x="'+(W-PX)+'" y="'+(H-3)+'" font-family="monospace" font-size="8" fill="rgba(167,139,250,.45)" text-anchor="end">'+fmtD(ts[ts.length-1])+'</text>'+
+    '<text x="'+(tx(vals.length-1)-6)+'" y="'+(ty(end)-7)+'" font-family="monospace" font-size="10" fill="'+col+'" text-anchor="end">$'+Math.round(end).toLocaleString()+'</text>';
+  }
+
+  function renderTrades(orders,rate){
+    var tb=document.getElementById('myrm-trades-tbody');if(!tb)return;
+    var filled=(orders||[]).filter(function(o){return o.status==='filled'&&o.filled_avg_price;});
+    if(!filled.length){tb.innerHTML='<tr><td colspan="7" style="text-align:center;color:rgba(167,139,250,.35);padding:1.5rem;font-family:monospace;font-size:.7rem">No filled trades yet</td></tr>';return;}
+    tb.innerHTML=filled.slice(0,100).map(function(o){
+      var isBuy=o.side==='buy';var sc=isBuy?'#4ade80':'#ff7a30';
+      var price=parseFloat(o.filled_avg_price)||0;
+      var qty=parseFloat(o.filled_qty)||parseFloat(o.qty)||0;
+      var total=price*qty;
+      var dt=o.filled_at?new Date(o.filled_at).toLocaleDateString('en-AU',{month:'short',day:'numeric',year:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
+      var audVal=rate?'~$'+Math.round(total/rate).toLocaleString():'—';
+      return'<tr>'+
+        '<td style="font-weight:600;color:#fff">'+o.symbol+'</td>'+
+        '<td style="color:'+sc+';font-family:monospace;font-size:.65rem;font-weight:700">'+(isBuy?'↑ BUY':'↓ SELL')+'</td>'+
+        '<td style="text-align:right;font-family:monospace">'+qty.toLocaleString()+'</td>'+
+        '<td style="text-align:right;font-family:monospace">$'+price.toFixed(2)+'</td>'+
+        '<td style="text-align:right;font-family:monospace">$'+Math.round(total).toLocaleString()+'</td>'+
+        '<td style="text-align:right;font-family:monospace;color:rgba(167,139,250,.7)">'+audVal+'</td>'+
+        '<td style="text-align:right;color:rgba(167,139,250,.5);font-size:.68rem">'+dt+'</td>'+
+      '</tr>';
+    }).join('');
+  }
+
+  // Hook tab switch to lazy-load
+  var _origSwitch=window.switchTab;
+  window.switchTab=function(tab){if(_origSwitch)_origSwitch(tab);if(tab==='analytics')loadAnalytics();};
+  window.myrmLoadAnalytics=loadAnalytics;
+})();
+</script>`;
+
 const MYRMIDON_SCRIPT = `<script>
 (function(){
   var msgs=[];
@@ -121,7 +284,14 @@ export async function GET(request: NextRequest) {
     html = html.replace('id="nav-dashboard-logo">SPECTRE</a>', 'id="nav-dashboard-logo">Myrmidon</a>');
     html = html.replace('<div class="hero-brand">SPECTRE</div>', '<div class="hero-brand">Myrmidon</div>');
     html = html.replace('<span class="foot-logo">SPECTRE</span>', '<span class="foot-logo">Myrmidon</span>');
-    html = html.replace("</body>", MYRMIDON_SCRIPT + "\n</body>");
+    // Add Analytics nav tab.
+    html = html.replace(
+      '<button type="button" class="nav-tab" data-tab="research">Research</button>',
+      '<button type="button" class="nav-tab" data-tab="research">Research</button>\n      <button type="button" class="nav-tab" data-tab="analytics">Analytics</button>',
+    );
+    // Inject analytics page content after the research section.
+    html = html.replace("<!-- UPLOADS (moved to quant tab) -->", MYRMIDON_ANALYTICS_HTML + "\n<!-- UPLOADS (moved to quant tab) -->");
+    html = html.replace("</body>", MYRMIDON_SCRIPT + "\n" + MYRMIDON_ANALYTICS_SCRIPT + "\n</body>");
   }
 
   return new NextResponse(html, {
