@@ -22,6 +22,14 @@ services:
         value: true
       - key: BACKUP_OFFSITE_PREFIX
         value: spectre/prod
+      - key: ALPACA_API_KEY
+        sync: false
+      - key: ALPACA_API_SECRET
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
       - key: PRO_ACCESS_EMAILS
         sync: false
       - key: BACKUP_PASSPHRASE

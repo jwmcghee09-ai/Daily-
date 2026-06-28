@@ -484,17 +484,32 @@ const MYRMIDON_ANALYTICS_SCRIPT = `<script>
     }).join('');
   }
 
-  // Auto-load 600ms after page start — data populates hidden sections so they're
-  // ready the moment the user clicks Analytics.
-  setTimeout(loadAnalytics, 600);
+  // Render immediately from server-injected preload (no fetch, no delay).
+  if(window.__MYRM_PRELOAD){
+    try{
+      var pd=window.__MYRM_PRELOAD;
+      window.__MYRM_PRELOAD=null;
+      var eq=parseFloat((pd.account&&pd.account.equity)||0);
+      renderMetrics(pd.account,pd.history,pd.audUsdRate);
+      renderChart(pd.history);
+      renderTrades(pd.orders,pd.audUsdRate);
+      renderMacro(pd.macro);
+      renderRisk(pd.account,pd.positions,pd.macro);
+      renderPositions(pd.positions,eq,pd.audUsdRate);
+      renderOpenOrders(pd.openOrders);
+    }catch(pe){setAll('Render error: '+pe.message);}
+  } else {
+    // No preload (env creds missing) — try fetching from API.
+    setTimeout(loadAnalytics, 100);
+  }
 
-  // Re-fetch when Analytics tab is explicitly opened (capture phase fires before switchTab)
+  // Re-fetch fresh data when Analytics tab is explicitly opened.
   document.addEventListener('click', function(e){
     var t = e.target;
     while(t && t !== document){
       if(t.getAttribute && t.getAttribute('data-tab') === 'analytics'){
         loading = false;
-        setTimeout(loadAnalytics, 20);
+        setTimeout(loadAnalytics, 50);
         break;
       }
       t = t.parentElement;
@@ -504,11 +519,6 @@ const MYRMIDON_ANALYTICS_SCRIPT = `<script>
   // Refresh button + programmatic access
   window.myrmLoadAnalytics = loadAnalytics;
   window.myrmRefreshAnalytics = function(){ loading=false; loadAnalytics(); };
-
-  // URL param: if the page is opened directly on analytics tab
-  if(new URLSearchParams(window.location.search).get('tab') === 'analytics'){
-    loading = false; loadAnalytics();
-  }
 })();
 </script>`;
 
@@ -523,8 +533,9 @@ const MYRMIDON_SCRIPT = `<script>
     var box=el('myrm-msgs');if(!box)return;
     if(msgs.length===0){box.innerHTML='<div style="color:rgba(167,139,250,.4);font-family:monospace;font-size:.7rem">Myrmidon ready.</div>';return;}
     box.innerHTML=msgs.map(function(m){var isU=m.role==='user';
+      var lbl=isU?'You':('Myrmidon'+(m.model?' · <span style="color:rgba(167,139,250,.45)">'+esc(m.model)+'</span>':''));
       return '<div style="display:flex;flex-direction:column;gap:.25rem;max-width:85%;align-self:'+(isU?'flex-end':'flex-start')+'">'+
-        '<div style="font-family:monospace;font-size:.5rem;text-transform:uppercase;color:#666;'+(isU?'text-align:right':'')+'">'+( isU?'You':'Myrmidon')+'</div>'+
+        '<div style="font-family:monospace;font-size:.5rem;text-transform:uppercase;color:#666;'+(isU?'text-align:right':'')+'">'+lbl+'</div>'+
         '<div style="padding:.62rem .88rem;border-radius:8px;font-size:.82rem;line-height:1.6;white-space:pre-wrap;word-break:break-word;'+(isU?'background:rgba(167,139,250,.15);border:1px solid rgba(167,139,250,.2);color:#e2d9ff':'background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:#fff')+'">'+esc(m.content)+'</div>'+
       '</div>';
     }).join('');
@@ -540,7 +551,7 @@ const MYRMIDON_SCRIPT = `<script>
     try{
       var res=await fetch('/api/trading/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:msgs})});
       var data=await res.json();
-      msgs.push({role:'assistant',content:data.reply||('Error: '+(data.error||'Unknown'))});
+      msgs.push({role:'assistant',content:data.reply||('Error: '+(data.error||'Unknown')),model:data.model||''});
     }catch(e){msgs.push({role:'assistant',content:'Error: network failure'});}
     finally{busy=false;if(btn){btn.textContent='Send';btn.disabled=false;}renderMsgs();}
   }
@@ -578,6 +589,55 @@ const MYRMIDON_SCRIPT = `<script>
 })();
 </script>`;
 
+interface MqData { price: number; prev: number; change: number; changePct: number; }
+
+async function dashYahooQuote(symbol: string): Promise<MqData | null> {
+  try {
+    const res = await fetch(
+      `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=2d`,
+      { headers: { "User-Agent": "Mozilla/5.0" }, cache: "no-store" }
+    );
+    if (!res.ok) return null;
+    const data = await res.json() as { chart?: { result?: Array<{ meta?: { regularMarketPrice?: number; previousClose?: number; chartPreviousClose?: number } }> } };
+    const meta = data?.chart?.result?.[0]?.meta;
+    if (!meta?.regularMarketPrice) return null;
+    const price = meta.regularMarketPrice;
+    const prev = meta.previousClose ?? meta.chartPreviousClose ?? price;
+    return { price, prev, change: price - prev, changePct: prev > 0 ? ((price - prev) / prev) * 100 : 0 };
+  } catch { return null; }
+}
+
+async function fetchTraderAnalytics(): Promise<Record<string, unknown> | null> {
+  const apiKey = process.env.ALPACA_API_KEY;
+  const apiSecret = process.env.ALPACA_API_SECRET;
+  if (!apiKey || !apiSecret) return null;
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 9000);
+  try {
+    const h = { "APCA-API-KEY-ID": apiKey, "APCA-API-SECRET-KEY": apiSecret };
+    const BASE = "https://paper-api.alpaca.markets/v2";
+    const sig = ctrl.signal;
+    const [histRes, ordersRes, acctRes, posRes, openOrdRes, macro] = await Promise.all([
+      fetch(`${BASE}/account/portfolio/history?period=1M&timeframe=1D`, { headers: h, cache: "no-store", signal: sig }),
+      fetch(`${BASE}/orders?status=closed&limit=200&direction=desc`, { headers: h, cache: "no-store", signal: sig }),
+      fetch(`${BASE}/account`, { headers: h, cache: "no-store", signal: sig }),
+      fetch(`${BASE}/positions`, { headers: h, cache: "no-store", signal: sig }),
+      fetch(`${BASE}/orders?status=open&limit=20`, { headers: h, cache: "no-store", signal: sig }),
+      Promise.all(["AUDUSD=X", "^VIX", "^GSPC", "^IXIC", "^TNX", "GC=F", "CL=F", "BTC-USD"].map(dashYahooQuote)),
+    ]);
+    const [history, orders, account, positions, openOrders] = await Promise.all([
+      histRes.ok ? histRes.json() : null,
+      ordersRes.ok ? ordersRes.json() : [],
+      acctRes.ok ? acctRes.json() : null,
+      posRes.ok ? posRes.json() : [],
+      openOrdRes.ok ? openOrdRes.json() : [],
+    ]);
+    const [audUsd, vix, spx, nasdaq, treasury10y, gold, oil, btc] = macro;
+    return { history, orders, account, positions, openOrders, audUsdRate: audUsd?.price ?? null, macro: { audUsd, vix, spx, nasdaq, treasury10y, gold, oil, btc } };
+  } catch { return null; }
+  finally { clearTimeout(timer); }
+}
+
 export async function GET(request: NextRequest) {
   const isDemo = request.nextUrl.searchParams.get("demo") === "1";
   let isTrader = false;
@@ -614,7 +674,12 @@ export async function GET(request: NextRequest) {
     );
     // Inject analytics page content after the research section.
     html = html.replace("<!-- UPLOADS (moved to quant tab) -->", MYRMIDON_ANALYTICS_HTML + "\n<!-- UPLOADS (moved to quant tab) -->");
-    html = html.replace("</body>", MYRMIDON_SCRIPT + "\n" + MYRMIDON_ANALYTICS_SCRIPT + "\n</body>");
+    // Server-side preload: fetch analytics data now so the page renders instantly.
+    const preload = await fetchTraderAnalytics();
+    const preloadScript = preload
+      ? `<script>window.__MYRM_PRELOAD=${JSON.stringify(preload)};</script>`
+      : "";
+    html = html.replace("</body>", MYRMIDON_SCRIPT + "\n" + preloadScript + "\n" + MYRMIDON_ANALYTICS_SCRIPT + "\n</body>");
   }
 
   return new NextResponse(html, {
