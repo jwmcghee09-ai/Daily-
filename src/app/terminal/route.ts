@@ -105,10 +105,31 @@ tr:hover td{background:#0a0700}
   <div class="mc"><div class="ml">AUD/USD · Positions</div><div class="mv cyn" id="m-fx">—</div><div class="ms" id="m-pos-ct">—</div></div>
 </div>
 
-<div id="strat-bar">
-  <span class="strat-label">Strategy</span>
-  <span id="strat-text">Loading strategy memory…</span>
+<div id="strat-bar" onclick="toggleStrat()" style="cursor:pointer">
+  <span class="strat-label">▶ Strategy</span>
+  <span id="strat-text">Click to expand…</span>
   <span id="lessons-wrap"></span>
+</div>
+<div id="strat-detail" style="display:none;background:#030200;border-bottom:1px solid #1a1200;padding:8px 10px;flex-shrink:0;font-size:11px;line-height:1.7;color:#888">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 24px">
+    <div>
+      <div style="color:#f90;font-size:9px;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">Portfolio Rules</div>
+      <div>Core sleeve <span style="color:#e8d5a0">(70%)</span>: SPY 40% · QQQ 20% · VEA 15%</div>
+      <div>Rebalance if <span style="color:#e8d5a0">&gt;5% off target</span></div>
+      <div>Satellite sleeve <span style="color:#e8d5a0">(30%)</span>: active trades, max <span style="color:#e8d5a0">10% per position</span></div>
+      <div>Always maintain <span style="color:#00e676">≥20% cash floor</span></div>
+      <div>Stop-loss: cut at <span style="color:#ff4444">−15% unrealised P&amp;L</span></div>
+      <div>Never chase a position up <span style="color:#ff4444">&gt;30% in 2 weeks</span></div>
+    </div>
+    <div>
+      <div style="color:#f90;font-size:9px;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">Active Strategy Memory</div>
+      <div id="strat-memory-text" style="white-space:pre-wrap;color:#aaa">No strategy memory saved yet. Ask Myrmidon to "save strategy" after a session.</div>
+      <div id="strat-lessons" style="margin-top:6px;color:#666"></div>
+    </div>
+  </div>
+  <div style="margin-top:6px;color:#2a2000;font-size:9px;border-top:1px solid #0d0900;padding-top:4px">
+    DATA SOURCES: Alpaca Paper Trading API (positions, orders, history) · Yahoo Finance (AUD/USD rate) · Groq LLaMA-3.3-70B (AI chat) · All prices USD
+  </div>
 </div>
 
 <div id="main">
@@ -190,11 +211,23 @@ tr:hover td{background:#0a0700}
   }
 
   // strategy
+  var stratOpen=false;
+  window.toggleStrat=function(){
+    stratOpen=!stratOpen;
+    $('strat-detail').style.display=stratOpen?'block':'none';
+    $('strat-bar').querySelector('.strat-label').textContent=(stratOpen?'▼':'▶')+' Strategy';
+  };
   function renderStrategy(memory){
-    if(!memory||!memory.strategy){$('strat-text').textContent='No strategy memory recorded yet.';return;}
-    $('strat-text').textContent=memory.strategy.slice(0,300)+(memory.strategy.length>300?'…':'');
+    if(!memory||!memory.strategy){
+      $('strat-text').textContent='Portfolio rules: SPY 40% · QQQ 20% · VEA 15% core · ≥20% cash · −15% stop-loss · Click to expand';
+      return;
+    }
+    $('strat-text').textContent=memory.strategy.slice(0,200)+(memory.strategy.length>200?'…':'')+' — Click to expand';
+    $('strat-memory-text').textContent=memory.strategy;
     if(memory.lessons&&memory.lessons.length){
-      $('lessons-wrap').textContent='['+memory.lessons.length+' lesson'+(memory.lessons.length!==1?'s':'')+' recorded]';
+      $('lessons-wrap').textContent='['+memory.lessons.length+' lesson'+(memory.lessons.length!==1?'s':'')+']';
+      $('strat-lessons').innerHTML='<div style="color:#f90;font-size:9px;text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px">Recent Lessons</div>'+
+        memory.lessons.slice(-4).map(function(l,i){return'<div>'+(i+1)+'. '+esc(typeof l==='string'?l:(l.lesson||''))+'</div>';}).join('');
     }
   }
 
@@ -313,9 +346,10 @@ tr:hover td{background:#0a0700}
     think.style.display='block';btn.disabled=true;btn.textContent='…';
     try{
       var r=await fetch('/api/terminal/chat',{method:'POST',headers:{'Content-Type':'application/json','x-terminal-key':''},body:JSON.stringify({messages:chatMsgs})});
-      var data=await r.json();
+      var raw=await r.text();
+      var data;try{data=JSON.parse(raw);}catch(pe){data={reply:'Server returned invalid response. Check GROQ_API_KEY in .env.local and restart npm run dev.'};}
       chatMsgs.push({role:'assistant',content:data.reply||(data.error?'Error: '+data.error:'No response.')});
-    }catch(e){chatMsgs.push({role:'assistant',content:'Network error: '+e.message});}
+    }catch(e){chatMsgs.push({role:'assistant',content:'Request failed: '+e.message+'. Is npm run dev still running?'});}
     finally{chatBusy=false;think.style.display='none';btn.disabled=false;btn.textContent='Send';renderChat();}
   }
   window.chatSend=chatSend;

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
+export const maxDuration = 120;
 
 const ALPACA_BASE = "https://paper-api.alpaca.markets/v2";
 const ALPACA_DATA = "https://data.alpaca.markets/v2";
@@ -87,10 +88,9 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({ model: GROQ_MODEL, messages: [{ role: "system", content: SYSTEM }, ...messages], tools: TOOLS, tool_choice: "auto", max_tokens: 900 }),
     });
     if (res.status === 429) {
-      await new Promise(r => setTimeout(r, 25000));
-      res = await fetch(GROQ_URL, { method: "POST", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${groqKey}` }, body: JSON.stringify({ model: GROQ_MODEL, messages: [{ role: "system", content: SYSTEM }, ...messages], tools: TOOLS, tool_choice: "auto", max_tokens: 900 }) });
+      return NextResponse.json({ reply: "Groq rate limit hit — wait 30 seconds and try again (free tier: 12k tokens/min)." });
     }
-    if (!res.ok) { const err = await res.text(); throw new Error(`Groq: ${err.slice(0, 300)}`); }
+    if (!res.ok) { const err = await res.text(); throw new Error(`Groq ${res.status}: ${err.slice(0, 200)}`); }
 
     const data = await res.json() as { choices: [{ message: { content: string | null; tool_calls?: { id: string; type: "function"; function: { name: string; arguments: string } }[] }; finish_reason: string }] };
     const msg = data.choices[0].message;
