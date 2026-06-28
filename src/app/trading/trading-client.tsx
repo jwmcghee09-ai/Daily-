@@ -375,7 +375,7 @@ export default function TradingClient() {
                     tick={{ fill: "#555", fontSize: 10 }} axisLine={false} tickLine={false} />
                   <YAxis domain={[0, 100]} ticks={[30, 50, 70]}
                     tick={{ fill: "#555", fontSize: 10 }} axisLine={false} tickLine={false} width={28} />
-                  <Tooltip formatter={(v: number) => v?.toFixed(1)} labelFormatter={fmtDate} />
+                  <Tooltip formatter={(v: number | undefined) => v?.toFixed(1) ?? ""} labelFormatter={fmtDate} />
                   <ReferenceLine y={70} stroke="rgba(255,75,51,0.4)" strokeDasharray="3 2" />
                   <ReferenceLine y={30} stroke="rgba(0,230,118,0.4)" strokeDasharray="3 2" />
                   <ReferenceLine y={50} stroke="rgba(255,255,255,0.07)" />
@@ -393,7 +393,7 @@ export default function TradingClient() {
                     tick={{ fill: "#555", fontSize: 10 }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fill: "#555", fontSize: 10 }}
                     axisLine={false} tickLine={false} width={36} />
-                  <Tooltip formatter={(v: number) => v?.toFixed(4)} labelFormatter={fmtDate} />
+                  <Tooltip formatter={(v: number | undefined) => v?.toFixed(4) ?? ""} labelFormatter={fmtDate} />
                   <ReferenceLine y={0} stroke="#333340" />
                   <Bar dataKey="histogram" maxBarSize={3}>
                     {chartData.map((entry, i) => (
