@@ -40,14 +40,15 @@ body{background:#000;color:#e8d5a0;font-family:'Courier New',Courier,monospace;f
 #main{display:grid;grid-template-columns:300px 1fr 320px;flex:1;min-height:0}
 
 /* panels */
-#left{border-right:1px solid #1a1200;display:flex;flex-direction:column;min-height:0}
+#left{border-right:1px solid #1a1200;display:flex;flex-direction:column;min-height:0;overflow:hidden}
 #center{display:flex;flex-direction:column;min-height:0;border-right:1px solid #1a1200}
 #chat-panel{display:flex;flex-direction:column;min-height:0}
 
 .ph{background:#0a0600;border-bottom:1px solid #1a1200;padding:3px 8px;color:#f90;font-size:9px;letter-spacing:.12em;text-transform:uppercase;flex-shrink:0}
 
-/* positions */
-#pos-wrap{flex:1;overflow-y:auto;min-height:0}
+/* position buckets */
+#core-wrap{overflow-y:auto;max-height:44%}
+#alpha-wrap{flex:1;overflow-y:auto;min-height:0}
 
 /* center: chart top, trades bottom */
 #chart-area{flex:1;min-height:0;padding:6px 10px 4px;position:relative}
@@ -133,10 +134,12 @@ tr:hover td{background:#0a0700}
 </div>
 
 <div id="main">
-  <!-- LEFT: positions -->
+  <!-- LEFT: positions split into two buckets -->
   <div id="left">
-    <div class="ph">■ OPEN POSITIONS</div>
-    <div id="pos-wrap"><div class="placeholder">LOADING…</div></div>
+    <div class="ph">■ CORE · INDEX SLEEVE <span style="float:right;color:#333;font-size:8px" id="core-pct"></span></div>
+    <div id="core-wrap" style="border-bottom:1px solid #1a1200"><div class="placeholder">LOADING…</div></div>
+    <div class="ph" style="background:#030a04;border-color:#003300;color:#00e676">■ ALPHA · SATELLITE SLEEVE <span style="float:right;color:#003300;font-size:8px" id="alpha-pct"></span></div>
+    <div id="alpha-wrap" style="flex:1;overflow-y:auto;min-height:0"><div class="placeholder">LOADING…</div></div>
   </div>
 
   <!-- CENTER: chart + trades + open orders -->
@@ -231,22 +234,63 @@ tr:hover td{background:#0a0700}
     }
   }
 
-  // positions
-  function renderPositions(positions){
-    var wrap=$('pos-wrap');
-    if(!positions||!positions.length){wrap.innerHTML='<div class="placeholder">NO OPEN POSITIONS</div>';return;}
-    var rows=positions.map(function(p){
-      var unrl=parseFloat(p.unrealized_pl)||0,plpc=parseFloat(p.unrealized_plpc)||0;
-      var mv=parseFloat(p.market_value)||0,qty=parseFloat(p.qty)||0,price=parseFloat(p.current_price)||0;
-      var c=unrl>=0?'pos':'neg';
-      return'<tr><td class="amb" style="font-weight:bold">'+p.symbol+'</td>'+
-        '<td style="text-align:right;color:#aaa;font-size:10px">'+qty.toFixed(qty%1?4:0)+'</td>'+
-        '<td class="cyn" style="text-align:right">'+usd(price,2)+'</td>'+
-        '<td style="text-align:right">'+usd(mv)+'</td>'+
-        '<td class="'+c+'" style="text-align:right">'+(unrl>=0?'+':'')+usd(Math.abs(unrl))+'</td>'+
-        '<td class="'+c+'" style="text-align:right;font-size:10px">'+pct(plpc*100)+'</td></tr>';
-    }).join('');
-    wrap.innerHTML='<table><thead><tr><th>Sym</th><th style="text-align:right">Qty</th><th style="text-align:right">Price</th><th style="text-align:right">Mkt Val</th><th style="text-align:right">P&L</th><th style="text-align:right">%</th></tr></thead><tbody>'+rows+'</tbody></table>';
+  // Core ETFs — anything else is alpha
+  var CORE_ETFS={SPY:0.40,QQQ:0.20,VEA:0.15};
+  var BROAD_ETFS={'IWM':1,'VTI':1,'IVV':1,'DIA':1,'GLD':1,'TLT':1,'BND':1,'AGG':1,
+    'XLE':1,'XLF':1,'XLV':1,'XLI':1,'XLY':1,'XLP':1,'XLU':1,'XLB':1,'XLRE':1,'XLK':1,
+    'VNQ':1,'EFA':1,'EEM':1,'VWO':1,'VO':1,'VB':1,'SCHD':1,'JEPI':1,'JEPQ':1};
+
+  function posRow(p,colorClass){
+    var unrl=parseFloat(p.unrealized_pl)||0,plpc=parseFloat(p.unrealized_plpc)||0;
+    var mv=parseFloat(p.market_value)||0,qty=parseFloat(p.qty)||0,price=parseFloat(p.current_price)||0;
+    var c=unrl>=0?'pos':'neg';
+    var sym='<td class="'+(colorClass||'amb')+'" style="font-weight:bold">'+p.symbol+'</td>';
+    return'<tr>'+sym+
+      '<td style="text-align:right;color:#777;font-size:10px">'+qty.toFixed(qty%1?4:0)+'</td>'+
+      '<td class="cyn" style="text-align:right">'+usd(price,2)+'</td>'+
+      '<td style="text-align:right">'+usd(mv)+'</td>'+
+      '<td class="'+c+'" style="text-align:right">'+(unrl>=0?'+':'-')+usd(Math.abs(unrl))+'</td>'+
+      '<td class="'+c+'" style="text-align:right;font-size:10px">'+pct(plpc*100)+'</td></tr>';
+  }
+  var POS_HEAD='<table><thead><tr><th>Sym</th><th style="text-align:right">Qty</th><th style="text-align:right">Price</th><th style="text-align:right">Mkt Val</th><th style="text-align:right">P&L</th><th style="text-align:right">%</th></tr></thead><tbody>';
+
+  function renderPositions(positions,equity){
+    if(!positions){
+      $('core-wrap').innerHTML='<div class="placeholder">—</div>';
+      $('alpha-wrap').innerHTML='<div class="placeholder">—</div>';
+      return;
+    }
+    var core=[],alpha=[];
+    positions.forEach(function(p){
+      if(CORE_ETFS[p.symbol]||BROAD_ETFS[p.symbol])core.push(p);else alpha.push(p);
+    });
+    var totalMv=positions.reduce(function(s,p){return s+(parseFloat(p.market_value)||0);},0);
+
+    // Core bucket with target % indicators
+    if(!core.length){
+      $('core-wrap').innerHTML='<div class="placeholder dim">No core positions yet · SPY/QQQ/VEA targets unmet</div>';
+    }else{
+      var crows=core.map(function(p){
+        var mv=parseFloat(p.market_value)||0;
+        var actual=equity>0?(mv/equity*100):0;
+        var target=CORE_ETFS[p.symbol]?CORE_ETFS[p.symbol]*100:null;
+        var tgtStr=target?'<span style="color:#444;font-size:9px"> ('+actual.toFixed(0)+'%↔'+target+'%)</span>':'';
+        return posRow(p,'amb')+tgtStr;
+      }).join('');
+      var coreMv=core.reduce(function(s,p){return s+(parseFloat(p.market_value)||0);},0);
+      $('core-wrap').innerHTML=POS_HEAD+crows+'</tbody></table>';
+      $('core-pct').textContent=equity>0?(coreMv/equity*100).toFixed(1)+'% of equity · target 70%':'';
+    }
+
+    // Alpha bucket
+    if(!alpha.length){
+      $('alpha-wrap').innerHTML='<div class="placeholder" style="color:#003300">No alpha positions · capital available for high-conviction picks</div>';
+      $('alpha-pct').textContent='0% · target 30%';
+    }else{
+      var alphaMv=alpha.reduce(function(s,p){return s+(parseFloat(p.market_value)||0);},0);
+      $('alpha-wrap').innerHTML=POS_HEAD+alpha.map(function(p){return posRow(p,'pos');}).join('')+'</tbody></table>';
+      $('alpha-pct').textContent=equity>0?(alphaMv/equity*100).toFixed(1)+'% of equity · target 30%':'';
+    }
   }
 
   // chart
@@ -318,7 +362,7 @@ tr:hover td{background:#0a0700}
       if(!d.account){conn('ERROR',false);status('ERROR: NO ACCOUNT DATA');loading=false;return;}
       renderMetrics(d.account,d.history,d.rate,d.positions);
       renderStrategy(d.memory);
-      renderPositions(d.positions);
+      renderPositions(d.positions,parseFloat(d.account.equity)||0);
       renderChart(d.history);
       renderTrades(d.orders,d.rate);
       renderOpenOrders(d.openOrders);
