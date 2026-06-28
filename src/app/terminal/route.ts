@@ -226,7 +226,7 @@ tr:hover td{background:#0d0900}
     $('m-ret2').textContent=(retUsd>=0?'+':'-')+usd(Math.abs(retUsd))+' USD';
 
     $('m-cash').textContent=usd(cash);
-    $('m-cash2').textContent=equity>0?(cash/eq*100).toFixed(1)+'% of portfolio':'—';
+    $('m-cash2').textContent=eq>0?(cash/eq*100).toFixed(1)+'% of portfolio':'—';
 
     $('m-bp').textContent=usd(bp);
     $('m-bp2').textContent=aud(bp,rate);
