@@ -273,5 +273,68 @@ Always check account and positions before recommending trades. Use get_macro for
     }
   }
 
+  // Auto-save memory after every response
+  if (reply) {
+    autoSaveMemory(messages, reply, groqKey, memory).catch(() => { /* silent */ });
+  }
+
   return NextResponse.json({ reply: reply || "No response." });
+}
+
+async function autoSaveMemory(
+  messages: Array<{ role: string; content: string | null }>,
+  reply: string,
+  groqKey: string,
+  existing: { strategy: string; lessons: string[]; updatedAt: string } | null
+) {
+  // Build a compact conversation transcript (user + assistant turns only)
+  const transcript = messages
+    .filter(m => m.role === "user" || m.role === "assistant")
+    .map(m => `${m.role === "user" ? "USER" : "MYRMIDON"}: ${(m.content ?? "").slice(0, 400)}`)
+    .join("\n")
+    .slice(0, 3000);
+
+  const existingStrategy = existing?.strategy ?? "";
+  const existingLessons = existing?.lessons ?? [];
+
+  const prompt = `You are a memory extractor for an AI trading agent called Myrmidon.
+
+Current saved strategy: ${existingStrategy || "(none)"}
+Current lessons (${existingLessons.length}): ${existingLessons.slice(-5).join(" | ") || "(none)"}
+
+Latest conversation:
+${transcript}
+
+MYRMIDON final reply: ${reply.slice(0, 800)}
+
+Extract what should be saved to persistent memory. Output valid JSON only, no markdown:
+{
+  "strategy": "updated overall portfolio strategy if it changed or was discussed — keep existing text if no change, null to skip",
+  "lesson": "one specific actionable lesson, trade decision, market observation, or rule update from THIS conversation — null if nothing new"
+}`;
+
+  try {
+    const res = await fetch(GROQ_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${groqKey}` },
+      body: JSON.stringify({
+        model: "llama-3.1-8b-instant",
+        messages: [{ role: "user", content: prompt }],
+        max_tokens: 400,
+        temperature: 0.1,
+      }),
+    });
+    if (!res.ok) return;
+    const data = await res.json() as { choices: [{ message: { content: string } }] };
+    const text = data.choices[0].message.content ?? "";
+    const match = text.match(/\{[\s\S]*\}/);
+    if (!match) return;
+    const parsed = JSON.parse(match[0]) as { strategy?: string | null; lesson?: string | null };
+    const newStrategy = parsed.strategy ?? existingStrategy;
+    const newLesson = parsed.lesson && parsed.lesson !== "null" ? parsed.lesson.trim() : null;
+    const newLessons = newLesson ? [...existingLessons, newLesson] : existingLessons;
+    if (newStrategy || newLessons.length) {
+      writeTradingMemory(newStrategy, newLessons);
+    }
+  } catch { /* silent */ }
 }
