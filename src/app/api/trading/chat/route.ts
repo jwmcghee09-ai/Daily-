@@ -319,12 +319,21 @@ export async function POST(request: NextRequest) {
 
   try {
     let reply: string;
+    let model: string;
     if (groqKey) {
-      reply = await groqLoop(messages, systemPrompt, groqKey);
+      try {
+        reply = await groqLoop(messages, systemPrompt, groqKey);
+        model = "groq/llama-3.3-70b";
+      } catch (groqErr) {
+        if (!anthropicKey) throw groqErr;
+        reply = await claudeLoop(messages, systemPrompt, anthropicKey);
+        model = "claude-opus-4-7";
+      }
     } else {
       reply = await claudeLoop(messages, systemPrompt, anthropicKey!);
+      model = "claude-opus-4-7";
     }
-    return NextResponse.json({ reply, model: groqKey ? "groq/llama-3.3-70b" : "claude-opus-4-7" });
+    return NextResponse.json({ reply, model });
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     return NextResponse.json({ error: msg }, { status: 502 });
