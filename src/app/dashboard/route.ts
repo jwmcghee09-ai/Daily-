@@ -14,7 +14,7 @@ const MYRMIDON_AI_TERMINAL = `<!-- MYRMIDON AI terminal -->
     <div style="display:flex;align-items:center;justify-content:space-between;gap:.6rem;padding:.7rem 1.2rem;background:rgba(167,139,250,.06);border-bottom:1px solid rgba(167,139,250,.15)">
       <div style="display:flex;align-items:center;gap:.6rem">
         <div style="width:8px;height:8px;border-radius:50%;background:#a78bfa"></div>
-        <span style="font-family:monospace;font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:#a78bfa">claude-opus-4-7 · live alpaca tools</span>
+        <span style="font-family:monospace;font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:#a78bfa">myrmidon · live alpaca tools</span>
       </div>
       <div id="myrm-header-actions" style="display:flex;align-items:center;gap:.4rem"></div>
     </div>
