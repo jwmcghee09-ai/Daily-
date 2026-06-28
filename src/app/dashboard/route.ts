@@ -63,6 +63,7 @@ const MYRMIDON_ANALYTICS_HTML = `<!-- MYRMIDON ANALYTICS PAGE -->
       <div>
         <div style="font-family:monospace;font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:#a78bfa;margin-bottom:.4rem">Myrmidon · Alpaca Paper Trading</div>
         <h2 style="font-family:var(--disp);font-size:clamp(1.6rem,3vw,2.6rem);margin:0;background:linear-gradient(120deg,#a855f7 0%,#d946ef 35%,#ff7a30 72%,#ffb347 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Analytics</h2>
+        <div id="myrm-api-status" style="font-family:monospace;font-size:.58rem;color:#ff7a30;margin-top:.4rem;min-height:1em">⚙ Initialising…</div>
       </div>
       <div style="display:flex;align-items:center;gap:.6rem">
         <span id="myrm-mkt-status" style="font-family:monospace;font-size:.58rem;letter-spacing:.08em;color:rgba(167,139,250,.4)">—</span>
@@ -168,6 +169,8 @@ const MYRMIDON_ANALYTICS_SCRIPT = `<script>
 (function(){
   var loading=false;
   var CORE_ETFS={SPY:0.40,QQQ:0.20,VEA:0.15};
+  var apiStatusEl=document.getElementById('myrm-api-status');
+  function setStatus(msg,col){if(apiStatusEl){apiStatusEl.textContent=msg;apiStatusEl.style.color=col||'#ff7a30';}}
   var BROAD_ETFS={'IWM':1,'VTI':1,'IVV':1,'DIA':1,'GLD':1,'TLT':1,'BND':1,'AGG':1,
     'XLE':1,'XLF':1,'XLV':1,'XLI':1,'XLY':1,'XLP':1,'XLU':1,'XLB':1,'XLRE':1,'XLK':1,
     'VNQ':1,'EFA':1,'EEM':1,'VWO':1,'VO':1,'VB':1,'SCHD':1,'JEPI':1,'JEPQ':1};
@@ -196,8 +199,7 @@ const MYRMIDON_ANALYTICS_SCRIPT = `<script>
   async function loadAnalytics(){
     if(loading)return;
     loading=true;
-    var st=document.getElementById('myrm-mkt-status');
-    if(st)st.textContent='⟳ Fetching…';
+    setStatus('⟳ Fetching analytics from Alpaca…');
     setAll('Loading…');
     try{
       var ctrl=new AbortController();
@@ -207,14 +209,20 @@ const MYRMIDON_ANALYTICS_SCRIPT = `<script>
       finally{clearTimeout(timer);}
       var text=await res.text();
       var d;
-      try{d=JSON.parse(text);}catch(je){setAll('Error: server returned non-JSON (status '+res.status+') — check Render logs');loading=false;return;}
+      try{d=JSON.parse(text);}catch(je){
+        var em2='Server returned non-JSON (status '+res.status+') — check Render logs';
+        setStatus('✗ '+em2,'#f87171');setAll('Error: '+em2);loading=false;return;
+      }
       if(!res.ok){
         var em=d.error||('HTTP '+res.status);
-        if(res.status===503)em='Alpaca API keys not configured — add ALPACA_API_KEY and ALPACA_API_SECRET in Render dashboard → Environment';
-        if(res.status===403)em='Auth check failed — try signing out and back in';
-        setAll('Error: '+em);loading=false;return;
+        if(res.status===503)em='Alpaca keys missing — add ALPACA_API_KEY + ALPACA_API_SECRET in Render → Environment';
+        if(res.status===403)em='Auth failed — sign out and back in';
+        setStatus('✗ '+em,'#f87171');setAll('Error: '+em);loading=false;return;
       }
-      if(!d.account){setAll('No Alpaca account data — verify ALPACA_API_KEY and ALPACA_API_SECRET are correct');loading=false;return;}
+      if(!d.account){
+        var em3='No Alpaca account data — verify keys are correct in Render dashboard';
+        setStatus('✗ '+em3,'#f87171');setAll(em3);loading=false;return;
+      }
       var equity=parseFloat(d.account.equity)||0;
       renderMetrics(d.account,d.history,d.audUsdRate);
       renderChart(d.history);
@@ -223,9 +231,10 @@ const MYRMIDON_ANALYTICS_SCRIPT = `<script>
       renderRisk(d.account,d.positions,d.macro);
       renderPositions(d.positions,equity,d.audUsdRate);
       renderOpenOrders(d.openOrders);
+      setStatus('✓ Loaded','#4ade80');
     }catch(e){
-      var msg=e.name==='AbortError'?'Timed out after 30s — Alpaca API unreachable from Render or taking too long':('Fetch error: '+e.message);
-      setAll(msg);
+      var msg=e.name==='AbortError'?'Timed out after 30s — Alpaca unreachable from Render (are keys set in Render dashboard?)':('Fetch error: '+e.message);
+      setStatus('✗ '+msg,'#f87171');setAll(msg);
     }
     loading=false;
   }
@@ -503,6 +512,7 @@ const MYRMIDON_ANALYTICS_SCRIPT = `<script>
 
   // Render immediately from server-injected preload (no fetch, no delay).
   if(window.__MYRM_PRELOAD){
+    setStatus('⟳ Rendering preloaded data…');
     try{
       var pd=window.__MYRM_PRELOAD;
       window.__MYRM_PRELOAD=null;
@@ -514,9 +524,10 @@ const MYRMIDON_ANALYTICS_SCRIPT = `<script>
       renderRisk(pd.account,pd.positions,pd.macro);
       renderPositions(pd.positions,eq,pd.audUsdRate);
       renderOpenOrders(pd.openOrders);
-    }catch(pe){setAll('Render error: '+pe.message);}
+      setStatus('✓ Loaded (preloaded)','#4ade80');
+    }catch(pe){setStatus('✗ Render error: '+pe.message,'#f87171');setAll('Render error: '+pe.message);}
   } else {
-    // No preload (env creds missing) — try fetching from API.
+    setStatus('→ No preload — fetching from API (ALPACA_API_KEY in Render?)');
     setTimeout(loadAnalytics, 100);
   }
 
