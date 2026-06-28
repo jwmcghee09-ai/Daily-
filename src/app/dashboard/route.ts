@@ -484,35 +484,31 @@ const MYRMIDON_ANALYTICS_SCRIPT = `<script>
     }).join('');
   }
 
-  function attachAnalyticsHook(){
-    // Intercept window._currentTab (set by dashboard's switchTab) for reliable tab detection
-    var _tabVal=window._currentTab||'quant';
-    try{
-      Object.defineProperty(window,'_currentTab',{
-        get:function(){return _tabVal;},
-        set:function(v){_tabVal=v;if(v==='analytics'){loading=false;loadAnalytics();}},
-        configurable:true
-      });
-    }catch(e){/* already defined as non-configurable, fall through to click listener */}
-    // Fallback: direct click listener
-    document.querySelectorAll('.nav-tab[data-tab="analytics"]').forEach(function(btn){
-      btn.addEventListener('click',function(){loading=false;setTimeout(loadAnalytics,0);});
-    });
-    // Fallback: event delegation on document
-    document.addEventListener('click',function(e){
-      var t=e.target;
-      while(t&&t!==document){
-        if(t.getAttribute&&t.getAttribute('data-tab')==='analytics'){loading=false;setTimeout(loadAnalytics,50);break;}
-        t=t.parentElement;
+  // Auto-load 600ms after page start — data populates hidden sections so they're
+  // ready the moment the user clicks Analytics.
+  setTimeout(loadAnalytics, 600);
+
+  // Re-fetch when Analytics tab is explicitly opened (capture phase fires before switchTab)
+  document.addEventListener('click', function(e){
+    var t = e.target;
+    while(t && t !== document){
+      if(t.getAttribute && t.getAttribute('data-tab') === 'analytics'){
+        loading = false;
+        setTimeout(loadAnalytics, 20);
+        break;
       }
-    });
-    // URL param or already-active tab
-    if((new URLSearchParams(window.location.search).get('tab')==='analytics')||_tabVal==='analytics'){loadAnalytics();}
+      t = t.parentElement;
+    }
+  }, true);
+
+  // Refresh button + programmatic access
+  window.myrmLoadAnalytics = loadAnalytics;
+  window.myrmRefreshAnalytics = function(){ loading=false; loadAnalytics(); };
+
+  // URL param: if the page is opened directly on analytics tab
+  if(new URLSearchParams(window.location.search).get('tab') === 'analytics'){
+    loading = false; loadAnalytics();
   }
-  if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',attachAnalyticsHook);}
-  else{attachAnalyticsHook();}
-  window.myrmLoadAnalytics=loadAnalytics;
-  window.myrmRefreshAnalytics=function(){loading=false;loadAnalytics();};
 })();
 </script>`;
 
