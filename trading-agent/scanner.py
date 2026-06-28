@@ -110,7 +110,7 @@ def fetch_bars(symbols: list, limit: int = 26) -> dict:
     return r.json().get("bars", {}) if r.ok else {}
 
 
-def rsi(closes: list, period: int = 14) -> float | None:
+def rsi(closes: list, period: int = 14) -> object:
     if len(closes) < period + 1:
         return None
     gains = [max(closes[i] - closes[i-1], 0) for i in range(1, len(closes))]
@@ -120,7 +120,7 @@ def rsi(closes: list, period: int = 14) -> float | None:
     return 100.0 if al == 0 else 100 - 100 / (1 + ag / al)
 
 
-def detect_anomalies(symbol: str, bars: list, position: dict | None) -> dict | None:
+def detect_anomalies(symbol: str, bars: list, position: object) -> object:
     if len(bars) < 10:
         return None
 

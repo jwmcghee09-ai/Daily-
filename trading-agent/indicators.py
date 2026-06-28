@@ -11,7 +11,7 @@ def ema_series(values: list, period: int) -> list:
     return result
 
 
-def rsi(closes: list, period: int = 14) -> float | None:
+def rsi(closes: list, period: int = 14) -> object:
     if len(closes) < period + 1:
         return None
     gains  = [max(closes[i] - closes[i-1], 0) for i in range(1, len(closes))]
@@ -21,7 +21,7 @@ def rsi(closes: list, period: int = 14) -> float | None:
     return 100.0 if al == 0 else round(100 - 100 / (1 + ag / al), 2)
 
 
-def macd(closes: list) -> dict | None:
+def macd(closes: list) -> object:
     if len(closes) < 35:
         return None
     fast   = ema_series(closes, 12)
@@ -41,7 +41,7 @@ def macd(closes: list) -> dict | None:
     }
 
 
-def bollinger_bands(closes: list, period: int = 20, mult: float = 2.0) -> dict | None:
+def bollinger_bands(closes: list, period: int = 20, mult: float = 2.0) -> object:
     if len(closes) < period:
         return None
     window   = closes[-period:]
@@ -58,7 +58,7 @@ def bollinger_bands(closes: list, period: int = 20, mult: float = 2.0) -> dict |
     }
 
 
-def atr(highs: list, lows: list, closes: list, period: int = 14) -> float | None:
+def atr(highs: list, lows: list, closes: list, period: int = 14) -> object:
     if len(closes) < period + 1:
         return None
     trs = [
@@ -68,7 +68,7 @@ def atr(highs: list, lows: list, closes: list, period: int = 14) -> float | None
     return round(sum(trs[-period:]) / period, 4)
 
 
-def adx(highs: list, lows: list, closes: list, period: int = 14) -> dict | None:
+def adx(highs: list, lows: list, closes: list, period: int = 14) -> object:
     if len(closes) < period * 2 + 1:
         return None
     pdm, mdm, trs = [], [], []
@@ -117,7 +117,7 @@ def moving_averages(closes: list) -> dict:
     return result
 
 
-def volume_analysis(volumes: list, period: int = 20) -> dict | None:
+def volume_analysis(volumes: list, period: int = 20) -> object:
     if len(volumes) < period + 1:
         return None
     avg = sum(volumes[-period-1:-1]) / period
