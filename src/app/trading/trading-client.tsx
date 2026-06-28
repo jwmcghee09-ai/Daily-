@@ -69,8 +69,8 @@ function isMarketOpen(): boolean {
   return mins >= 570 && mins < 960; // 9:30–16:00
 }
 
-function fmtDate(iso: string): string {
-  const d = new Date(iso + "T12:00:00");
+function fmtDate(iso: unknown): string {
+  const d = new Date(String(iso) + "T12:00:00");
   return d.toLocaleDateString("en-AU", { month: "short", day: "numeric" });
 }
 
