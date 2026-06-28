@@ -7,7 +7,6 @@ import {
   CartesianGrid, Tooltip, ResponsiveContainer,
   ReferenceLine, Cell,
 } from "recharts";
-import type { TooltipProps } from "recharts";
 import styles from "./trading.module.css";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -81,7 +80,11 @@ function lessonText(l: string | { lesson: string; date: string }): string {
 
 // ── Custom Tooltip ────────────────────────────────────────────────────────────
 
-function PriceTooltip({ active, payload, label }: TooltipProps<number, string>) {
+function PriceTooltip({ active, payload, label }: {
+  active?: boolean;
+  payload?: Array<{ payload: ChartBar }>;
+  label?: string;
+}) {
   if (!active || !payload?.length) return null;
   const d = payload[0]?.payload as ChartBar;
   const rsiColor = d.rsi == null ? "#666" : d.rsi > 70 ? "#ff4b33" : d.rsi < 30 ? "#00e676" : "#a1a1aa";
