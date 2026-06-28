@@ -100,7 +100,7 @@ def run_tool(name: str, inp: dict) -> str:
         elif name == "get_portfolio":         result = json.dumps(get_portfolio())
         elif name == "get_stock_price":       result = json.dumps(get_stock_price(inp["symbol"]))
         elif name == "get_technical_analysis":result = json.dumps(get_technical_analysis(inp["symbol"]))
-        elif name == "get_bars":              result = json.dumps(get_bars(inp["symbol"], min(inp.get("days", 10), 10)))
+        elif name == "get_bars":              result = json.dumps(get_bars(inp["symbol"], min(int(inp.get("days", 10)), 10)))
         elif name == "place_order":           result = json.dumps(place_order(inp["symbol"], inp["qty"], inp["side"]))
         elif name == "get_open_orders":       result = json.dumps(get_open_orders())
         elif name == "cancel_all_orders":     result = json.dumps(cancel_all_orders())
@@ -111,7 +111,7 @@ def run_tool(name: str, inp: dict) -> str:
         elif name == "log_trade":
             log_trade(inp["symbol"], inp["side"], inp["qty"], inp["price"], inp["reason"])
             result = json.dumps({"ok": True})
-        elif name == "get_trade_history":     result = json.dumps(get_trade_history(inp.get("days", 7)))
+        elif name == "get_trade_history":     result = json.dumps(get_trade_history(int(inp.get("days", 7))))
         else:                                 result = json.dumps({"error": f"Unknown tool: {name}"})
         return _trim(result)
     except Exception as e:
