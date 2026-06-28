@@ -701,11 +701,23 @@ export async function GET(request: NextRequest) {
     // Inject analytics page content after the research section.
     html = html.replace("<!-- UPLOADS (moved to quant tab) -->", MYRMIDON_ANALYTICS_HTML + "\n<!-- UPLOADS (moved to quant tab) -->");
     // Server-side preload: fetch analytics data now so the page renders instantly.
+    const hasKey = !!process.env.ALPACA_API_KEY;
+    const hasSec = !!process.env.ALPACA_API_SECRET;
     const preload = await fetchTraderAnalytics();
     const preloadScript = preload
       ? `<script>window.__MYRM_PRELOAD=${JSON.stringify(preload)};</script>`
       : "";
-    html = html.replace("</body>", MYRMIDON_SCRIPT + "\n" + preloadScript + "\n" + MYRMIDON_ANALYTICS_SCRIPT + "\n</body>");
+    // Inject server-side status immediately (no JS async needed — text set synchronously).
+    let srvStatus: string;
+    if (!hasKey || !hasSec) {
+      srvStatus = `SERVER: ALPACA_API_KEY ${hasKey ? "OK" : "MISSING"} | ALPACA_API_SECRET ${hasSec ? "OK" : "MISSING"} — add in Render → Environment`;
+    } else if (preload) {
+      srvStatus = `SERVER: keys OK, preloaded ${preload.account ? "account data" : "but account null — check key validity"}`;
+    } else {
+      srvStatus = `SERVER: keys set but Alpaca timed out — API unreachable from Render`;
+    }
+    const srvStatusScript = `<script>(function(){var e=document.getElementById('myrm-api-status');if(e)e.textContent=${JSON.stringify(srvStatus)};})();</script>`;
+    html = html.replace("</body>", MYRMIDON_SCRIPT + "\n" + preloadScript + "\n" + srvStatusScript + "\n" + MYRMIDON_ANALYTICS_SCRIPT + "\n</body>");
   }
 
   return new NextResponse(html, {
