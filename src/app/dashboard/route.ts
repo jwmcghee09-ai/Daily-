@@ -203,7 +203,7 @@ const MYRMIDON_ANALYTICS_SCRIPT = `<script>
     setAll('Loading…');
     try{
       var ctrl=new AbortController();
-      var timer=setTimeout(function(){ctrl.abort();},30000);
+      var timer=setTimeout(function(){ctrl.abort();},12000);
       var res;
       try{res=await fetch('/api/trading/analytics?t='+Date.now(),{signal:ctrl.signal});}
       finally{clearTimeout(timer);}
@@ -510,39 +510,52 @@ const MYRMIDON_ANALYTICS_SCRIPT = `<script>
     }).join('');
   }
 
-  // Render immediately from server-injected preload (no fetch, no delay).
-  if(window.__MYRM_PRELOAD){
-    setStatus('⟳ Rendering preloaded data…');
-    try{
-      var pd=window.__MYRM_PRELOAD;
-      window.__MYRM_PRELOAD=null;
-      var eq=parseFloat((pd.account&&pd.account.equity)||0);
-      renderMetrics(pd.account,pd.history,pd.audUsdRate);
-      renderChart(pd.history);
-      renderTrades(pd.orders,pd.audUsdRate);
-      renderMacro(pd.macro);
-      renderRisk(pd.account,pd.positions,pd.macro);
-      renderPositions(pd.positions,eq,pd.audUsdRate);
-      renderOpenOrders(pd.openOrders);
-      setStatus('✓ Loaded (preloaded)','#4ade80');
-    }catch(pe){setStatus('✗ Render error: '+pe.message,'#f87171');setAll('Render error: '+pe.message);}
-  } else {
-    setStatus('→ No preload — fetching from API (ALPACA_API_KEY in Render?)');
-    setTimeout(loadAnalytics, 100);
+  function renderAll(d){
+    if(!d||!d.account)return false;
+    var eq=parseFloat(d.account.equity)||0;
+    renderMetrics(d.account,d.history,d.audUsdRate);
+    renderChart(d.history);
+    renderTrades(d.orders,d.audUsdRate);
+    renderMacro(d.macro);
+    renderRisk(d.account,d.positions,d.macro);
+    renderPositions(d.positions,eq,d.audUsdRate);
+    renderOpenOrders(d.openOrders);
+    return true;
   }
 
-  // Re-fetch fresh data when Analytics tab is explicitly opened.
-  document.addEventListener('click', function(e){
-    var t = e.target;
-    while(t && t !== document){
-      if(t.getAttribute && t.getAttribute('data-tab') === 'analytics'){
-        loading = false;
-        setTimeout(loadAnalytics, 50);
-        break;
+  // Render immediately from server-injected preload (no fetch, no delay).
+  if(window.__MYRM_PRELOAD){
+    try{
+      var ok=renderAll(window.__MYRM_PRELOAD);
+      window.__MYRM_PRELOAD=null;
+      setStatus(ok?'✓ Loaded':'✗ Preload had no account data',ok?'#4ade80':'#f87171');
+    }catch(pe){setStatus('✗ '+pe.message,'#f87171');setAll('Render error: '+pe.message);}
+  } else {
+    // No server preload — load from API immediately (no delay).
+    setStatus('Fetching from Alpaca API…');
+    loadAnalytics();
+  }
+
+  // Intercept window._currentTab (set by switchTab in the dashboard) to reload when Analytics opens.
+  var _ctVal=window._currentTab;
+  try{
+    Object.defineProperty(window,'_currentTab',{configurable:true,
+      get:function(){return _ctVal;},
+      set:function(v){
+        _ctVal=v;
+        if(v==='analytics'&&!loading){setTimeout(loadAnalytics,20);}
       }
-      t = t.parentElement;
-    }
-  }, true);
+    });
+  }catch(e){
+    // Fallback: click listener
+    document.addEventListener('click',function(ev){
+      var t=ev.target;
+      while(t&&t!==document){
+        if(t.getAttribute&&t.getAttribute('data-tab')==='analytics'){if(!loading)setTimeout(loadAnalytics,30);break;}
+        t=t.parentElement;
+      }
+    },true);
+  }
 
   // Refresh button + programmatic access
   window.myrmLoadAnalytics = loadAnalytics;
