@@ -19,6 +19,11 @@ interface AlpacaPosition {
   asset_class?: string;
 }
 
+interface AlpacaAccount {
+  cash: string;
+  portfolio_value: string;
+}
+
 async function fetchAudUsdRate(): Promise<number> {
   try {
     const url = "https://query2.finance.yahoo.com/v8/finance/chart/AUDUSD%3DX?interval=1d&range=5d";
@@ -40,17 +45,21 @@ async function syncAlpacaPrices(userId: string): Promise<boolean> {
   const apiSecret = process.env.ALPACA_API_SECRET;
   if (!apiKey || !apiSecret) return false;
 
-  const posRes = await fetch(`${ALPACA_BASE}/positions`, {
-    headers: {
-      "APCA-API-KEY-ID": apiKey,
-      "APCA-API-SECRET-KEY": apiSecret,
-    },
-    cache: "no-store",
-  });
+  const headers = {
+    "APCA-API-KEY-ID": apiKey,
+    "APCA-API-SECRET-KEY": apiSecret,
+  };
+
+  const [posRes, acctRes] = await Promise.all([
+    fetch(`${ALPACA_BASE}/positions`, { headers, cache: "no-store" }),
+    fetch(`${ALPACA_BASE}/account`, { headers, cache: "no-store" }),
+  ]);
 
   if (!posRes.ok) return false;
 
   const positions = (await posRes.json()) as AlpacaPosition[];
+  const account = acctRes.ok ? (await acctRes.json()) as AlpacaAccount : null;
+
   if (!Array.isArray(positions) || positions.length === 0) return false;
 
   const audUsdRate = await fetchAudUsdRate();
@@ -80,6 +89,27 @@ async function syncAlpacaPrices(userId: string): Promise<boolean> {
       reportDate: today,
       importedAt: now,
     }));
+
+  // Add uninvested cash as a holding so it appears in the portfolio total
+  const cashUsd = account ? parseFloat(account.cash) : 0;
+  if (isFinite(cashUsd) && cashUsd > 0) {
+    const cashAud = toAud(cashUsd);
+    holdings.push({
+      id: "alpaca-cash",
+      source: "us" as const,
+      account: "Alpaca Paper",
+      ticker: "ALPACACASH",
+      name: "Uninvested Cash",
+      units: 1,
+      price: cashAud,
+      prevClose: cashAud,
+      value: cashAud,
+      costBase: cashAud,
+      sector: "Cash",
+      reportDate: today,
+      importedAt: now,
+    });
+  }
 
   if (holdings.length === 0) return false;
 

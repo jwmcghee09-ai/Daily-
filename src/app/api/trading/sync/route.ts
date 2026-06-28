@@ -18,11 +18,16 @@ interface AlpacaPosition {
   asset_class?: string;
 }
 
+interface AlpacaAccount {
+  cash: string;
+  portfolio_value: string;
+}
+
 async function fetchAudUsdRate(): Promise<number> {
   try {
     const url = "https://query2.finance.yahoo.com/v8/finance/chart/AUDUSD%3DX?interval=1d&range=5d";
     const res = await fetch(url, {
-      headers: { "User-Agent": "Mozilla/5.0 (compatible; SPECTRE/1.0)" },
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; Myrmidon/1.0)" },
       cache: "no-store",
     });
     if (!res.ok) return 0;
@@ -46,19 +51,22 @@ export async function POST() {
     return NextResponse.json({ error: "Trading credentials not configured" }, { status: 503 });
   }
 
-  const posRes = await fetch(`${ALPACA_BASE}/positions`, {
-    headers: {
-      "APCA-API-KEY-ID": apiKey,
-      "APCA-API-SECRET-KEY": apiSecret,
-    },
-    cache: "no-store",
-  });
+  const headers = {
+    "APCA-API-KEY-ID": apiKey,
+    "APCA-API-SECRET-KEY": apiSecret,
+  };
+
+  const [posRes, acctRes] = await Promise.all([
+    fetch(`${ALPACA_BASE}/positions`, { headers, cache: "no-store" }),
+    fetch(`${ALPACA_BASE}/account`, { headers, cache: "no-store" }),
+  ]);
 
   if (!posRes.ok) {
     return NextResponse.json({ error: "Failed to fetch positions from Alpaca" }, { status: 502 });
   }
 
   const positions = (await posRes.json()) as AlpacaPosition[];
+  const account = acctRes.ok ? (await acctRes.json()) as AlpacaAccount : null;
 
   if (!Array.isArray(positions) || positions.length === 0) {
     return NextResponse.json({ ok: true, synced: 0, message: "No open positions to sync" });
@@ -92,10 +100,31 @@ export async function POST() {
       importedAt: now,
     }));
 
+  // Add uninvested cash as a separate holding so it appears in the portfolio total
+  const cashUsd = account ? parseFloat(account.cash) : 0;
+  if (isFinite(cashUsd) && cashUsd > 0) {
+    const cashAud = toAud(cashUsd);
+    holdings.push({
+      id: "alpaca-cash",
+      source: "us" as const,
+      account: "Alpaca Paper",
+      ticker: "ALPACACASH",
+      name: "Uninvested Cash",
+      units: 1,
+      price: cashAud,
+      prevClose: cashAud,
+      value: cashAud,
+      costBase: cashAud,
+      sector: "Cash",
+      reportDate: today,
+      importedAt: now,
+    });
+  }
+
   if (holdings.length === 0) {
     return NextResponse.json({ ok: true, synced: 0, message: "No equity positions to sync" });
   }
 
   saveImport(user.id, "us", holdings);
-  return NextResponse.json({ ok: true, synced: holdings.length });
+  return NextResponse.json({ ok: true, synced: holdings.length, cashAud: cashUsd > 0 ? toAud(cashUsd) : null });
 }
