@@ -85,15 +85,15 @@ const MYRMIDON_ANALYTICS_SCRIPT = `<script>
 
   async function loadAnalytics(){
     if(loaded)return;
+    loaded=true;
     try{
       var res=await fetch('/api/trading/analytics');
       var d=await res.json();
-      if(!res.ok){showErr(d.error||'Failed to load');return;}
-      loaded=true;
+      if(!res.ok){showErr(d.error||'Failed to load');loaded=false;return;}
       renderMetrics(d.account,d.history,d.audUsdRate);
       renderChart(d.history);
       renderTrades(d.orders,d.audUsdRate);
-    }catch(e){showErr('Network error');}
+    }catch(e){showErr('Network error');loaded=false;}
   }
 
   function showErr(msg){
@@ -129,7 +129,9 @@ const MYRMIDON_ANALYTICS_SCRIPT = `<script>
   }
 
   function renderChart(hist){
-    var svg=document.getElementById('myrm-equity-chart');if(!svg||!hist||!hist.equity)return;
+    var svg=document.getElementById('myrm-equity-chart');
+    if(!svg)return;
+    if(!hist||!hist.equity){svg.innerHTML='<text x="50%" y="50%" text-anchor="middle" fill="rgba(167,139,250,.35)" font-size="11" font-family="monospace">No history data from Alpaca</text>';return;}
     var vals=hist.equity.filter(function(v){return v!=null&&v>0;});
     var ts=hist.timestamp||[];
     if(vals.length<2){svg.innerHTML='<text x="50%" y="50%" text-anchor="middle" fill="rgba(167,139,250,.35)" font-size="11" font-family="monospace">Not enough data</text>';return;}
@@ -186,6 +188,12 @@ const MYRMIDON_ANALYTICS_SCRIPT = `<script>
   var _origSwitch=window.switchTab;
   window.switchTab=function(tab){if(_origSwitch)_origSwitch(tab);if(tab==='analytics')loadAnalytics();};
   window.myrmLoadAnalytics=loadAnalytics;
+  // Auto-load if already on analytics tab on page load
+  function tryAutoLoad(){
+    var active=document.querySelector('.nav-tab.active[data-tab="analytics"], [data-page="analytics"]:not([style*="display:none"])');
+    if(active)loadAnalytics();
+  }
+  if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',tryAutoLoad);}else{setTimeout(tryAutoLoad,200);}
 })();
 </script>`;
 
