@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { readTradingMemory } from "@/lib/db";
 
 export const runtime = "nodejs";
 
@@ -38,20 +39,25 @@ export async function GET(req: NextRequest) {
   }
 
   const h = headers();
-  const [acctR, posR, histR, ordR, rate] = await Promise.all([
+  const [acctR, posR, histR, ordR, openOrdR, rate] = await Promise.all([
     fetch(`${ALPACA_BASE}/account`, { headers: h, cache: "no-store" }),
     fetch(`${ALPACA_BASE}/positions`, { headers: h, cache: "no-store" }),
     fetch(`${ALPACA_BASE}/account/portfolio/history?period=1M&timeframe=1D`, { headers: h, cache: "no-store" }),
     fetch(`${ALPACA_BASE}/orders?status=closed&limit=100&direction=desc`, { headers: h, cache: "no-store" }),
+    fetch(`${ALPACA_BASE}/orders?status=open&limit=20`, { headers: h, cache: "no-store" }),
     audUsd(),
   ]);
 
-  const [account, positions, history, orders] = await Promise.all([
+  const [account, positions, history, orders, openOrders] = await Promise.all([
     acctR.ok ? acctR.json() : null,
     posR.ok ? posR.json() : [],
     histR.ok ? histR.json() : null,
     ordR.ok ? ordR.json() : [],
+    openOrdR.ok ? openOrdR.json() : [],
   ]);
 
-  return NextResponse.json({ account, positions, history, orders, rate });
+  let memory = null;
+  try { memory = readTradingMemory(); } catch { /* DB not configured locally */ }
+
+  return NextResponse.json({ account, positions, history, orders, openOrders, rate, memory });
 }
