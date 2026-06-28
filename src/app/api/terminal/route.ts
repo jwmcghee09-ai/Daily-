@@ -25,13 +25,11 @@ async function audUsd(): Promise<number | null> {
 }
 
 export async function GET(req: NextRequest) {
-  // Dev: always allow. Prod: require x-terminal-key matching TRADING_SECRET.
-  if (process.env.NODE_ENV !== "development") {
+  // Only lock down if TRADING_SECRET is explicitly set; otherwise open access.
+  const secret = process.env.TRADING_SECRET;
+  if (secret) {
     const key = req.headers.get("x-terminal-key");
-    const secret = process.env.TRADING_SECRET;
-    if (!secret || key !== secret) {
-      return NextResponse.json({ error: "Not authorized" }, { status: 403 });
-    }
+    if (key !== secret) return NextResponse.json({ error: "Not authorized" }, { status: 403 });
   }
 
   if (!process.env.ALPACA_API_KEY || !process.env.ALPACA_API_SECRET) {

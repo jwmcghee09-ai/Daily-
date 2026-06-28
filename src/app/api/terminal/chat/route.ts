@@ -64,10 +64,10 @@ PORTFOLIO RULES: Core sleeve (70%): SPY 40%, QQQ 20%, VEA 15%. Satellite sleeve 
 Always check account and positions before recommending trades. Be decisive, explain reasoning clearly.`;
 
 export async function POST(req: NextRequest) {
-  if (process.env.NODE_ENV !== "development") {
+  const secret = process.env.TRADING_SECRET;
+  if (secret) {
     const key = req.headers.get("x-terminal-key");
-    const secret = process.env.TRADING_SECRET;
-    if (!secret || key !== secret) return NextResponse.json({ error: "Not authorized" }, { status: 403 });
+    if (key !== secret) return NextResponse.json({ error: "Not authorized" }, { status: 403 });
   }
 
   const groqKey = process.env.GROQ_API_KEY;
