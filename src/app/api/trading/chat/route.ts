@@ -176,7 +176,7 @@ async function groqLoop(
         messages: [{ role: "system", content: systemPrompt }, ...messages],
         tools: GROQ_TOOLS,
         tool_choice: "auto",
-        max_tokens: 2048,
+        max_tokens: 900,
       }),
     });
 
@@ -201,7 +201,7 @@ async function groqLoop(
       let args: Record<string, unknown> = {};
       try { args = JSON.parse(tc.function.arguments); } catch { /* empty */ }
       const result = await executeTool(tc.function.name, args);
-      messages.push({ role: "tool", tool_call_id: tc.id, content: result.slice(0, 3000) });
+      messages.push({ role: "tool", tool_call_id: tc.id, content: result.slice(0, 1200) });
     }
   }
   return reply || "No response.";
