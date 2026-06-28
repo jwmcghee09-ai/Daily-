@@ -192,9 +192,17 @@ const MYRMIDON_ANALYTICS_SCRIPT = `<script>
     }).join('');
   }
 
-  // Re-fetch every time user switches to analytics tab
-  var _origSwitch=window.switchTab;
-  window.switchTab=function(tab){if(_origSwitch)_origSwitch(tab);if(tab==='analytics'){loading=false;loadAnalytics();}};
+  // The dashboard's switchTab is scoped inside an IIFE (not on window).
+  // Attach our own click listener to the analytics nav button instead.
+  function attachAnalyticsHook(){
+    document.querySelectorAll('.nav-tab[data-tab="analytics"]').forEach(function(btn){
+      btn.addEventListener('click',function(){loading=false;loadAnalytics();});
+    });
+    // Also load immediately if analytics is the initial tab from the URL.
+    if(new URLSearchParams(window.location.search).get('tab')==='analytics'){loadAnalytics();}
+  }
+  if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',attachAnalyticsHook);}
+  else{attachAnalyticsHook();}
   window.myrmLoadAnalytics=loadAnalytics;
   window.myrmRefreshAnalytics=function(){loading=false;loadAnalytics();};
 })();
