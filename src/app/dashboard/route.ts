@@ -166,7 +166,9 @@ const MYRMIDON_ANALYTICS_HTML = `<!-- MYRMIDON ANALYTICS PAGE -->
 </div>`;
 
 const MYRMIDON_ANALYTICS_SCRIPT = `<script>
-// Global error catcher — writes any uncaught error to the status div before anything else.
+// DBG-A: fires immediately when <script> tag is parsed — before IIFE
+(function(){var _e=document.getElementById('myrm-api-status');if(_e){_e.textContent='DBG-A: script tag executing';_e.style.color='#38bdf8';}})();
+// Global error catcher
 window.addEventListener('error',function(ev){
   var e=document.getElementById('myrm-api-status');
   if(e)e.textContent='JS ERROR: '+(ev.message||ev)+(ev.filename?' @ '+ev.filename+':'+ev.lineno:'');
@@ -174,11 +176,12 @@ window.addEventListener('error',function(ev){
 (function(){
   var loading=false;
   var CORE_ETFS={SPY:0.40,QQQ:0.20,VEA:0.15};
-  // Re-query the element each call — handles rare cases where it isn't available yet at IIFE init.
   function setStatus(msg,col){
     var e=document.getElementById('myrm-api-status');
     if(e){e.textContent=msg;e.style.color=col||'#ff7a30';}
   }
+  // DBG-B: IIFE started
+  setStatus('DBG-B: IIFE started, preload='+typeof window.__MYRM_PRELOAD);
   var BROAD_ETFS={'IWM':1,'VTI':1,'IVV':1,'DIA':1,'GLD':1,'TLT':1,'BND':1,'AGG':1,
     'XLE':1,'XLF':1,'XLV':1,'XLI':1,'XLY':1,'XLP':1,'XLU':1,'XLB':1,'XLRE':1,'XLK':1,
     'VNQ':1,'EFA':1,'EEM':1,'VWO':1,'VO':1,'VB':1,'SCHD':1,'JEPI':1,'JEPQ':1};
@@ -535,7 +538,9 @@ window.addEventListener('error',function(ev){
   }
 
   // Render immediately from server-injected preload (no fetch, no delay).
+  setStatus('DBG-C: checking preload');
   if(window.__MYRM_PRELOAD){
+    setStatus('DBG-D: preload found, account='+(window.__MYRM_PRELOAD.account?'Y':'N'));
     try{
       var ok=renderAll(window.__MYRM_PRELOAD);
       window.__MYRM_PRELOAD=null;
