@@ -21,7 +21,7 @@ BASE_DIR = pathlib.Path(__file__).parent
 PARENT_DIR = BASE_DIR.parent
 sys.path.insert(0, str(PARENT_DIR))
 
-from market_scanner.scanner import scan_tickers  # noqa: E402
+from market_scanner.scanner import scan_tickers, scan_with_summary, get_ticker_summary  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # App setup
@@ -40,7 +40,19 @@ HOLDINGS_FILE = BASE_DIR / "data" / "holdings.json"
 STATIC_DIR = BASE_DIR / "static"
 OLLAMA_URL = "http://localhost:11434/api/generate"
 OLLAMA_MODEL = "qwen2.5"
-SYSTEM_PROMPT = "You are a trading analyst assistant. Answer concisely."
+SYSTEM_PROMPT = (
+    "You are an AI trading analyst managing a hybrid portfolio: 70% in index funds "
+    "(SPY/QQQ/EWJ rotated by market conditions) and 30% in high-growth single stocks "
+    "(medium swing trade, 2-8 week holds). "
+    "\n\n"
+    "When analyzing anomalies, always include: signal strength, suggested action "
+    "(BUY/SELL/HOLD/WATCH), position size as % of the 30% allocation, and stop-loss level. "
+    "For index rotation decisions, compare momentum and RSI across SPY/QQQ/EWJ."
+    "\n\n"
+    "Be concise and decisive. Always give a clear recommendation."
+)
+
+INDEX_ETFS = ["SPY", "QQQ", "EWJ", "VTI"]
 
 
 # ---------------------------------------------------------------------------
@@ -86,7 +98,19 @@ async def scan(tickers: str = "AAPL,TSLA,NVDA"):
     if not ticker_list:
         raise HTTPException(status_code=400, detail="No tickers provided")
     try:
-        results = scan_tickers(ticker_list)
+        results = scan_with_summary(ticker_list)
+        return JSONResponse(content=results)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/market-overview")
+async def market_overview():
+    """Scan index ETFs (SPY, QQQ, EWJ, VTI) and return their summaries."""
+    try:
+        results = {}
+        for ticker in INDEX_ETFS:
+            results[ticker] = get_ticker_summary(ticker)
         return JSONResponse(content=results)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

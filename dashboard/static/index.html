@@ -209,6 +209,23 @@
   #custom-tickers { width: 240px; }
   #scan-meta { font-size: 11px; color: var(--muted); margin-left: auto; }
 
+  /* Market Breadth Bar */
+  #market-breadth-bar {
+    display: none;
+    padding: 8px 14px;
+    background: var(--bg3);
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    gap: 20px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  #market-breadth-bar .breadth-label { color: var(--muted); font-size: 11px; letter-spacing: 1px; margin-right: 6px; }
+  .breadth-advancing { color: var(--green); font-weight: bold; }
+  .breadth-declining { color: var(--red); font-weight: bold; }
+  .breadth-rsi { color: var(--cyan); font-weight: bold; }
+  .breadth-volume { color: var(--yellow); font-weight: bold; }
+
   #scan-results {
     padding: 12px 14px;
     display: flex;
@@ -237,6 +254,16 @@
   .card-body { color: var(--muted); font-size: 12px; line-height: 1.6; }
   .card-body strong { color: var(--white); }
   .card-price { color: var(--cyan); font-size: 13px; text-align: right; }
+  .card-metrics {
+    margin-top: 5px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .card-metrics span { white-space: nowrap; }
+  .card-metrics strong { color: var(--white); }
 
   .scan-empty { color: var(--muted); font-size: 13px; padding: 20px; text-align: center; }
 
@@ -306,6 +333,151 @@
     margin-left: 6px;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     PORTFOLIO STRATEGY TAB
+  ══════════════════════════════════════════════════════════════════════════ */
+  #strategy-panel { overflow-y: auto; }
+
+  .strategy-section {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .strategy-section-title {
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .strategy-section-title .alloc-badge {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    padding: 2px 8px;
+    color: var(--cyan);
+    font-size: 10px;
+  }
+
+  /* Index ETF cards */
+  .index-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .index-card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    padding: 10px 12px;
+    position: relative;
+  }
+  .index-card.recommended { border-color: var(--green); }
+  .index-card .ic-ticker { font-size: 18px; font-weight: bold; color: var(--white); }
+  .index-card .ic-price { color: var(--cyan); font-size: 14px; margin-top: 2px; }
+  .index-card .ic-change { font-size: 12px; margin-top: 2px; }
+  .index-card .ic-metrics { font-size: 11px; color: var(--muted); margin-top: 6px; line-height: 1.8; }
+  .index-card .ic-metrics strong { color: var(--white); }
+  .index-card .rec-badge {
+    position: absolute;
+    top: 6px; right: 6px;
+    font-size: 9px;
+    letter-spacing: 1px;
+    background: var(--green-dim);
+    color: var(--green);
+    padding: 2px 6px;
+    border: 1px solid var(--green);
+  }
+
+  /* Alpha picks / watchlist */
+  .watchlist-wrap {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+    align-items: center;
+  }
+  .watchlist-tag {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    padding: 3px 10px;
+    font-size: 12px;
+    color: var(--cyan);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .watchlist-tag .wl-remove {
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 10px;
+    background: none;
+    border: none;
+    padding: 0;
+    line-height: 1;
+  }
+  .watchlist-tag .wl-remove:hover { color: var(--red); background: none; border: none; }
+
+  /* Portfolio health */
+  .health-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 8px;
+  }
+  .health-card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    padding: 10px 14px;
+    text-align: center;
+  }
+  .health-card .hc-label { font-size: 10px; color: var(--muted); letter-spacing: 1px; margin-bottom: 4px; }
+  .health-card .hc-value { font-size: 18px; color: var(--cyan); font-weight: bold; }
+  .health-card .hc-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  /* alloc bar */
+  .alloc-bar-wrap { margin: 8px 0; }
+  .alloc-bar {
+    height: 14px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    display: flex;
+  }
+  .alloc-bar .bar-index { background: var(--cyan-dim); height: 100%; transition: width 0.4s; }
+  .alloc-bar .bar-alpha { background: var(--green-dim); height: 100%; transition: width 0.4s; }
+  .alloc-bar-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); margin-top: 3px; }
+
+  /* Rotation advice box */
+  #rotation-advice-box {
+    display: none;
+    margin-top: 10px;
+    background: var(--bg3);
+    border: 1px solid var(--green-dim);
+    padding: 10px 14px;
+    font-size: 12px;
+    color: var(--green);
+    white-space: pre-wrap;
+    line-height: 1.6;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
+  /* Watchlist analysis box */
+  #watchlist-advice-box {
+    display: none;
+    margin-top: 10px;
+    background: var(--bg3);
+    border: 1px solid var(--green-dim);
+    padding: 10px 14px;
+    font-size: 12px;
+    color: var(--green);
+    white-space: pre-wrap;
+    line-height: 1.6;
+    max-height: 200px;
+    overflow-y: auto;
+  }
 </style>
 </head>
 <body>
@@ -322,6 +494,7 @@
   <button class="tab-btn active" data-tab="chat">CHAT</button>
   <button class="tab-btn" data-tab="scan">SCANNER</button>
   <button class="tab-btn" data-tab="holdings">HOLDINGS</button>
+  <button class="tab-btn" data-tab="strategy">PORTFOLIO STRATEGY</button>
 </div>
 
 <!-- ── Main ───────────────────────────────────────────────────────────── -->
@@ -347,6 +520,14 @@
       <button class="primary" id="scan-btn" onclick="runScan()">▶ RUN SCAN</button>
       <button onclick="sendScanToOllama()" id="analyze-btn" style="display:none">⬡ ANALYZE WITH AI</button>
       <span id="scan-meta"></span>
+    </div>
+    <!-- Market Breadth Bar -->
+    <div id="market-breadth-bar">
+      <span class="breadth-label">MARKET BREADTH</span>
+      <span>Advancing: <span class="breadth-advancing" id="mb-advancing">—</span></span>
+      <span>Declining: <span class="breadth-declining" id="mb-declining">—</span></span>
+      <span>Avg RSI: <span class="breadth-rsi" id="mb-rsi">—</span></span>
+      <span>High Volume: <span class="breadth-volume" id="mb-volume">—</span></span>
     </div>
     <div id="scan-results">
       <div class="scan-empty">Select a watchlist and run scan.</div>
@@ -388,6 +569,80 @@
     </div>
   </div>
 
+  <!-- ══ PORTFOLIO STRATEGY ══════════════════════════════════════════════ -->
+  <div class="tab-panel" id="strategy-panel">
+
+    <!-- Index Allocation 70% -->
+    <div class="strategy-section">
+      <div class="strategy-section-title">
+        INDEX ALLOCATION
+        <span class="alloc-badge">70%</span>
+        <button onclick="loadMarketOverview()" id="index-refresh-btn" style="margin-left:auto;font-size:11px">↻ REFRESH</button>
+        <button onclick="getRotationAdvice()" id="rotation-btn" class="primary" style="font-size:11px">⬡ GET ROTATION ADVICE</button>
+      </div>
+      <div class="index-grid" id="index-grid">
+        <div style="color:var(--muted);font-size:12px;padding:10px">Loading index data…</div>
+      </div>
+      <div id="rotation-advice-box"></div>
+    </div>
+
+    <!-- Alpha Picks 30% -->
+    <div class="strategy-section">
+      <div class="strategy-section-title">
+        ALPHA PICKS — SINGLE STOCKS
+        <span class="alloc-badge">30%</span>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px">CURRENT HOLDINGS (single stocks)</div>
+      <div id="alpha-holdings-list" style="margin-bottom:14px;font-size:12px;color:var(--muted)">Loading…</div>
+
+      <div style="font-size:11px;color:var(--muted);margin-bottom:6px">WATCHLIST</div>
+      <div class="watchlist-wrap" id="watchlist-wrap">
+        <!-- tags rendered here -->
+        <input id="watchlist-input" type="text" placeholder="Add ticker…" style="width:110px;text-transform:uppercase"/>
+        <button onclick="addToWatchlist()">+ ADD</button>
+        <button onclick="analyzeWatchlist()" id="wl-analyze-btn" class="primary">⬡ ANALYZE WATCHLIST</button>
+      </div>
+      <div id="watchlist-advice-box"></div>
+    </div>
+
+    <!-- Portfolio Health -->
+    <div class="strategy-section">
+      <div class="strategy-section-title">PORTFOLIO HEALTH</div>
+      <div class="health-grid" id="health-grid">
+        <div class="health-card">
+          <div class="hc-label">TOTAL VALUE</div>
+          <div class="hc-value" id="ph-total">$0.00</div>
+        </div>
+        <div class="health-card">
+          <div class="hc-label">POSITIONS</div>
+          <div class="hc-value" id="ph-positions">0</div>
+          <div class="hc-sub" id="ph-positions-sub">0 index · 0 stock</div>
+        </div>
+        <div class="health-card">
+          <div class="hc-label">INDEX ALLOCATION</div>
+          <div class="hc-value" id="ph-index-alloc">—</div>
+          <div class="hc-sub">target 70%</div>
+        </div>
+        <div class="health-card">
+          <div class="hc-label">ALPHA ALLOCATION</div>
+          <div class="hc-value" id="ph-alpha-alloc">—</div>
+          <div class="hc-sub">target 30%</div>
+        </div>
+      </div>
+      <div class="alloc-bar-wrap" style="margin-top:10px">
+        <div class="alloc-bar">
+          <div class="bar-index" id="alloc-bar-index" style="width:70%"></div>
+          <div class="bar-alpha" id="alloc-bar-alpha" style="width:30%"></div>
+        </div>
+        <div class="alloc-bar-labels">
+          <span style="color:var(--cyan)">INDEX (70%)</span>
+          <span style="color:var(--green)">ALPHA (30%)</span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /strategy-panel -->
+
 </div><!-- /main -->
 
 <!-- ── Status bar ─────────────────────────────────────────────────────── -->
@@ -402,10 +657,13 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    STATE
 ══════════════════════════════════════════════════════════════════════════════ */
-let lastScanResults = [];
+let lastScanData = null;   // full scan_with_summary response
 let holdings = [];
 let prices = {};
 let chatStreaming = false;
+let indexData = {};        // market overview data
+const INDEX_TICKERS = ['SPY', 'QQQ', 'EWJ', 'VTI'];
+const WATCHLIST_KEY = 'trading_terminal_watchlist';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    CLOCK + OLLAMA STATUS
@@ -436,6 +694,12 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById(btn.dataset.tab + '-panel').classList.add('active');
+    if (btn.dataset.tab === 'strategy') {
+      renderAlphaHoldings();
+      renderPortfolioHealth();
+      renderWatchlist();
+      if (Object.keys(indexData).length === 0) loadMarketOverview();
+    }
   });
 });
 
@@ -548,16 +812,28 @@ async function runScan() {
 
   const resultsDiv = document.getElementById('scan-results');
   resultsDiv.innerHTML = '<div class="scan-empty">Fetching data…</div>';
+  document.getElementById('market-breadth-bar').style.display = 'none';
 
   try {
     const r = await fetch('/scan?tickers=' + encodeURIComponent(tickers));
     const data = await r.json();
-    lastScanResults = data;
-    renderScanResults(data);
+    lastScanData = data;
+
+    // Render market breadth
+    const breadth = data.market_breadth || {};
+    document.getElementById('mb-advancing').textContent = breadth.advancing ?? '—';
+    document.getElementById('mb-declining').textContent = breadth.declining ?? '—';
+    document.getElementById('mb-rsi').textContent = breadth.avg_rsi != null ? breadth.avg_rsi.toFixed(1) : '—';
+    document.getElementById('mb-volume').textContent = breadth.high_volume_count ?? '—';
+    document.getElementById('market-breadth-bar').style.display = 'flex';
+
+    const anomalies = data.anomalies || [];
+    renderScanResults(anomalies);
+
     const now = new Date().toLocaleTimeString('en-US', {hour12: false});
-    document.getElementById('scan-meta').textContent = `Last scan: ${now} • ${data.length} anomaly(ies)`;
+    document.getElementById('scan-meta').textContent = `Last scan: ${now} • ${anomalies.length} anomaly(ies)`;
     document.getElementById('sb-scan').textContent = now;
-    document.getElementById('analyze-btn').style.display = data.length > 0 ? 'inline-block' : 'none';
+    document.getElementById('analyze-btn').style.display = anomalies.length > 0 ? 'inline-block' : 'none';
   } catch (e) {
     resultsDiv.innerHTML = `<div class="scan-empty" style="color:var(--red)">Error: ${e.message}</div>`;
   }
@@ -582,25 +858,38 @@ function renderScanResults(results) {
     const card = document.createElement('div');
     card.className = `anomaly-card ${item.severity || 'LOW'}`;
 
-    // Build detail lines
-    const details = [];
-    if (item.rsi !== undefined) details.push(`RSI: <strong>${item.rsi?.toFixed(1) ?? '—'}</strong>`);
-    if (item.volume_ratio !== undefined) details.push(`Vol Ratio: <strong>${item.volume_ratio?.toFixed(2) ?? '—'}x</strong>`);
-    if (item.price_change_pct !== undefined) details.push(`Δ Price: <strong>${item.price_change_pct?.toFixed(2) ?? '—'}%</strong>`);
-    if (item.bb_position !== undefined) details.push(`BB Pos: <strong>${item.bb_position?.toFixed(2) ?? '—'}</strong>`);
-    if (item.macd_histogram !== undefined) details.push(`MACD Hist: <strong>${item.macd_histogram?.toFixed(4) ?? '—'}</strong>`);
+    const changeClass = (item.change_pct ?? 0) >= 0 ? 'pos' : 'neg';
+    const changeFmt = item.change_pct != null ? `${item.change_pct >= 0 ? '+' : ''}${item.change_pct.toFixed(2)}%` : '—';
+
+    // Metric pills
+    const metrics = [];
+    if (item.rsi != null) {
+      const rsiColor = item.rsi > 70 ? 'var(--red)' : item.rsi < 30 ? 'var(--green)' : 'var(--white)';
+      metrics.push(`<span>RSI: <strong style="color:${rsiColor}">${item.rsi.toFixed(1)}</strong></span>`);
+    }
+    if (item.volume_ratio != null) {
+      metrics.push(`<span>Vol Ratio: <strong>${item.volume_ratio.toFixed(2)}x</strong></span>`);
+    }
+    if (item.pct_from_52w_high != null) {
+      metrics.push(`<span>From 52w High: <strong style="color:var(--yellow)">${item.pct_from_52w_high.toFixed(1)}%</strong></span>`);
+    }
+    if (item.macd_value != null) {
+      metrics.push(`<span>MACD: <strong>${item.macd_value.toFixed(3)}</strong> / Sig: <strong>${(item.signal_value ?? 0).toFixed(3)}</strong></span>`);
+    }
 
     card.innerHTML = `
       <div>
         <div class="card-ticker">${item.ticker || '?'}</div>
         <div class="card-severity ${item.severity}">${item.severity || ''}</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:4px">${item.type || ''}</div>
       </div>
       <div class="card-body">
-        ${item.signal || item.anomaly || item.reason || 'Anomaly detected'}
-        ${details.length ? '<br/>' + details.join(' &nbsp;│&nbsp; ') : ''}
+        ${item.details || item.signal || item.anomaly || item.reason || 'Anomaly detected'}
+        ${metrics.length ? `<div class="card-metrics">${metrics.join('')}</div>` : ''}
       </div>
       <div class="card-price">
-        ${item.price !== undefined ? '$' + Number(item.price).toFixed(2) : ''}
+        ${item.price != null ? '$' + Number(item.price).toFixed(2) : ''}
+        <div class="${changeClass}" style="font-size:11px">${changeFmt}</div>
       </div>
     `;
     div.appendChild(card);
@@ -608,11 +897,15 @@ function renderScanResults(results) {
 }
 
 function sendScanToOllama() {
-  if (!lastScanResults.length) return;
-  const summary = lastScanResults.map(r =>
-    `${r.ticker} [${r.severity}]: ${r.signal || r.anomaly || r.reason || 'anomaly'} | RSI:${r.rsi?.toFixed(1)??'?'} VolRatio:${r.volume_ratio?.toFixed(2)??'?'}x Price:${r.price_change_pct?.toFixed(2)??'?'}%`
+  if (!lastScanData) return;
+  const anomalies = lastScanData.anomalies || [];
+  if (!anomalies.length) return;
+  const summary = anomalies.map(r =>
+    `${r.ticker} [${r.severity}] ${r.type}: ${r.details || r.signal || r.anomaly || 'anomaly'} | RSI:${r.rsi?.toFixed(1)??'?'} VolRatio:${r.volume_ratio?.toFixed(2)??'?'}x From52wH:${r.pct_from_52w_high?.toFixed(1)??'?'}% MACD:${r.macd_value?.toFixed(3)??'?'}`
   ).join('\n');
-  const msg = `Analyze these market scan anomalies and give brief trading insights:\n\n${summary}`;
+  const breadth = lastScanData.market_breadth || {};
+  const breadthStr = `Market Breadth — Advancing:${breadth.advancing??'?'} Declining:${breadth.declining??'?'} AvgRSI:${breadth.avg_rsi??'?'} HighVol:${breadth.high_volume_count??'?'}`;
+  const msg = `Analyze these market scan anomalies and give brief trading insights:\n\n${breadthStr}\n\n${summary}`;
   // Switch to chat tab
   document.querySelector('[data-tab="chat"]').click();
   sendChat(msg);
@@ -741,6 +1034,303 @@ async function refreshPrices() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   PORTFOLIO STRATEGY — INDEX ALLOCATION
+══════════════════════════════════════════════════════════════════════════════ */
+async function loadMarketOverview() {
+  const btn = document.getElementById('index-refresh-btn');
+  btn.disabled = true;
+  btn.innerHTML = 'LOADING<span class="spinner"></span>';
+  setStatus('FETCHING INDEX DATA…');
+
+  const grid = document.getElementById('index-grid');
+  grid.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:10px">Loading…</div>';
+
+  try {
+    const r = await fetch('/market-overview');
+    indexData = await r.json();
+    renderIndexGrid();
+  } catch (e) {
+    grid.innerHTML = `<div style="color:var(--red);font-size:12px;padding:10px">Error: ${e.message}</div>`;
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '↻ REFRESH';
+  setStatus('READY');
+}
+
+function renderIndexGrid(recommendedTicker) {
+  const grid = document.getElementById('index-grid');
+  grid.innerHTML = '';
+
+  INDEX_TICKERS.forEach(ticker => {
+    const d = indexData[ticker];
+    const card = document.createElement('div');
+    card.className = 'index-card' + (ticker === recommendedTicker ? ' recommended' : '');
+
+    if (!d || d.error) {
+      card.innerHTML = `<div class="ic-ticker">${ticker}</div><div style="color:var(--red);font-size:11px">${d?.error || 'No data'}</div>`;
+      grid.appendChild(card);
+      return;
+    }
+
+    const changeClass = d.change_pct >= 0 ? 'pos' : 'neg';
+    const changeFmt = `${d.change_pct >= 0 ? '+' : ''}${d.change_pct.toFixed(2)}%`;
+    const rsiColor = d.rsi > 70 ? 'var(--red)' : d.rsi < 30 ? 'var(--green)' : 'var(--white)';
+
+    card.innerHTML = `
+      ${ticker === recommendedTicker ? '<div class="rec-badge">OVERWEIGHT</div>' : ''}
+      <div class="ic-ticker">${ticker}</div>
+      <div class="ic-price">$${d.price.toFixed(2)}</div>
+      <div class="ic-change ${changeClass}">${changeFmt}</div>
+      <div class="ic-metrics">
+        RSI: <strong style="color:${rsiColor}">${d.rsi.toFixed(1)}</strong><br/>
+        Mom 5d: <strong class="${d.momentum_5d >= 0 ? 'pos' : 'neg'}">${d.momentum_5d >= 0 ? '+' : ''}${d.momentum_5d.toFixed(2)}%</strong><br/>
+        Mom 20d: <strong class="${d.momentum_20d >= 0 ? 'pos' : 'neg'}">${d.momentum_20d >= 0 ? '+' : ''}${d.momentum_20d.toFixed(2)}%</strong><br/>
+        MACD: <strong>${d.macd.toFixed(3)}</strong>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+async function getRotationAdvice() {
+  if (Object.keys(indexData).length === 0) {
+    await loadMarketOverview();
+  }
+
+  const btn = document.getElementById('rotation-btn');
+  btn.disabled = true;
+  btn.innerHTML = 'ANALYZING<span class="spinner"></span>';
+
+  const adviceBox = document.getElementById('rotation-advice-box');
+  adviceBox.style.display = 'block';
+  adviceBox.textContent = 'Analyzing index rotation…';
+
+  const summary = INDEX_TICKERS.map(t => {
+    const d = indexData[t];
+    if (!d || d.error) return `${t}: no data`;
+    return `${t}: price $${d.price} change ${d.change_pct >= 0 ? '+' : ''}${d.change_pct.toFixed(2)}% RSI ${d.rsi.toFixed(1)} Mom5d ${d.momentum_5d.toFixed(2)}% Mom20d ${d.momentum_20d.toFixed(2)}% MACD ${d.macd.toFixed(3)}`;
+  }).join('\n');
+
+  const prompt = `Given my 70% index allocation across SPY (US large cap), QQQ (US tech/growth), EWJ (Japan/Asia), and VTI (US total market), analyze the following current data and recommend which ETF(s) to overweight for the next 2-4 weeks. Give a concise rotation recommendation with reasoning:\n\n${summary}`;
+
+  let buffer = '';
+  adviceBox.textContent = '';
+
+  try {
+    const resp = await fetch('/chat', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({message: prompt})
+    });
+    const reader = resp.body.getReader();
+    const dec = new TextDecoder();
+    let leftover = '';
+
+    while (true) {
+      const {done, value} = await reader.read();
+      if (done) break;
+      leftover += dec.decode(value, {stream: true});
+      const lines = leftover.split('\n');
+      leftover = lines.pop();
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const token = line.slice(6);
+        if (token === '[DONE]') break;
+        buffer += token.replace(/\\n/g, '\n');
+        adviceBox.textContent = buffer;
+      }
+    }
+
+    // Try to highlight recommended ticker in grid
+    const upper = buffer.toUpperCase();
+    const rec = INDEX_TICKERS.find(t => upper.includes('OVERWEIGHT ' + t) || upper.includes(t + ' TO OVERWEIGHT') || upper.includes('RECOMMEND ' + t));
+    if (rec) renderIndexGrid(rec);
+
+  } catch (e) {
+    adviceBox.textContent = 'Error: ' + e.message;
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '⬡ GET ROTATION ADVICE';
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PORTFOLIO STRATEGY — ALPHA PICKS / WATCHLIST
+══════════════════════════════════════════════════════════════════════════════ */
+function isIndexTicker(ticker) {
+  return ['SPY', 'QQQ', 'EWJ', 'VTI', 'IWM', 'DIA', 'GLD', 'SLV', 'TLT', 'BND'].includes(ticker.toUpperCase());
+}
+
+function renderAlphaHoldings() {
+  const el = document.getElementById('alpha-holdings-list');
+  const singleStocks = holdings.filter(h => !isIndexTicker(h.ticker));
+  if (!singleStocks.length) {
+    el.innerHTML = '<span style="color:var(--muted)">No single-stock positions. Add via Holdings tab.</span>';
+    return;
+  }
+  el.innerHTML = singleStocks.map(h => {
+    const p = prices[h.ticker] || {};
+    const price = p.price ?? h.current_price;
+    const pct = p.change_pct;
+    const cls = pct != null && pct >= 0 ? 'pos' : 'neg';
+    return `<span style="margin-right:16px;color:var(--cyan)">${h.ticker}</span>` +
+      (price != null ? `<span>$${price.toFixed(2)}</span> ` : '') +
+      (pct != null ? `<span class="${cls}">${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%</span>` : '') +
+      `<span style="color:var(--muted);margin-left:8px">${h.shares} sh @ $${h.avg_cost.toFixed(2)}</span>`;
+  }).map(s => `<div style="margin-bottom:5px">${s}</div>`).join('');
+}
+
+function getWatchlist() {
+  try { return JSON.parse(localStorage.getItem(WATCHLIST_KEY) || '[]'); } catch { return []; }
+}
+function saveWatchlistLS(list) {
+  localStorage.setItem(WATCHLIST_KEY, JSON.stringify(list));
+}
+
+function renderWatchlist() {
+  const wrap = document.getElementById('watchlist-wrap');
+  const existing = wrap.querySelectorAll('.watchlist-tag');
+  existing.forEach(e => e.remove());
+
+  const list = getWatchlist();
+  const input = document.getElementById('watchlist-input');
+  list.forEach(ticker => {
+    const tag = document.createElement('div');
+    tag.className = 'watchlist-tag';
+    tag.innerHTML = `${ticker} <button class="wl-remove" onclick="removeFromWatchlist('${ticker}')">✕</button>`;
+    wrap.insertBefore(tag, input);
+  });
+}
+
+function addToWatchlist() {
+  const input = document.getElementById('watchlist-input');
+  const ticker = input.value.trim().toUpperCase();
+  if (!ticker) return;
+  const list = getWatchlist();
+  if (!list.includes(ticker)) {
+    list.push(ticker);
+    saveWatchlistLS(list);
+  }
+  input.value = '';
+  renderWatchlist();
+}
+
+function removeFromWatchlist(ticker) {
+  const list = getWatchlist().filter(t => t !== ticker);
+  saveWatchlistLS(list);
+  renderWatchlist();
+}
+
+document.getElementById('watchlist-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); addToWatchlist(); }
+});
+
+async function analyzeWatchlist() {
+  const list = getWatchlist();
+  if (!list.length) { setStatus('ADD TICKERS TO WATCHLIST FIRST'); return; }
+
+  const btn = document.getElementById('wl-analyze-btn');
+  btn.disabled = true;
+  btn.innerHTML = 'SCANNING<span class="spinner"></span>';
+  setStatus('SCANNING WATCHLIST…');
+
+  const adviceBox = document.getElementById('watchlist-advice-box');
+  adviceBox.style.display = 'block';
+  adviceBox.textContent = 'Fetching data…';
+
+  try {
+    const r = await fetch('/scan?tickers=' + encodeURIComponent(list.join(',')));
+    const data = await r.json();
+    const anomalies = data.anomalies || [];
+    const tickerData = data.tickers || {};
+
+    const summaryLines = list.map(t => {
+      const d = tickerData[t];
+      if (!d || d.error) return `${t}: no data`;
+      return `${t}: $${d.price} chg ${d.change_pct >= 0 ? '+' : ''}${d.change_pct.toFixed(2)}% RSI ${d.rsi.toFixed(1)} Mom5d ${d.momentum_5d.toFixed(2)}% MACD ${d.macd.toFixed(3)} 52wH ${d.pct_from_52w_high.toFixed(1)}% anomalies:[${(d.anomalies||[]).map(a=>a.type).join(',')||'none'}]`;
+    }).join('\n');
+
+    const prompt = `Analyze these watchlist stocks for my 30% alpha/single-stock allocation. I'm looking for medium swing trades (2-8 week holds). For each ticker, give: signal strength, BUY/SELL/HOLD/WATCH recommendation, suggested position size (% of 30% allocation), and stop-loss level:\n\n${summaryLines}`;
+
+    adviceBox.textContent = '';
+    let buffer = '';
+
+    const resp = await fetch('/chat', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({message: prompt})
+    });
+    const reader = resp.body.getReader();
+    const dec = new TextDecoder();
+    let leftover = '';
+
+    while (true) {
+      const {done, value} = await reader.read();
+      if (done) break;
+      leftover += dec.decode(value, {stream: true});
+      const lines = leftover.split('\n');
+      leftover = lines.pop();
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const token = line.slice(6);
+        if (token === '[DONE]') break;
+        buffer += token.replace(/\\n/g, '\n');
+        adviceBox.textContent = buffer;
+      }
+    }
+
+  } catch (e) {
+    adviceBox.textContent = 'Error: ' + e.message;
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '⬡ ANALYZE WATCHLIST';
+  setStatus('READY');
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PORTFOLIO STRATEGY — HEALTH
+══════════════════════════════════════════════════════════════════════════════ */
+function renderPortfolioHealth() {
+  let totalValue = 0;
+  let indexValue = 0;
+  let alphaValue = 0;
+  let indexCount = 0;
+  let alphaCount = 0;
+
+  holdings.forEach(h => {
+    const p = prices[h.ticker] || {};
+    const price = p.price ?? h.current_price ?? null;
+    const value = price !== null ? price * h.shares : 0;
+    totalValue += value;
+    if (isIndexTicker(h.ticker)) {
+      indexValue += value;
+      indexCount++;
+    } else {
+      alphaValue += value;
+      alphaCount++;
+    }
+  });
+
+  document.getElementById('ph-total').textContent = `$${totalValue.toFixed(2)}`;
+  document.getElementById('ph-positions').textContent = holdings.length;
+  document.getElementById('ph-positions-sub').textContent = `${indexCount} index · ${alphaCount} stock`;
+
+  if (totalValue > 0) {
+    const indexPct = (indexValue / totalValue * 100).toFixed(1);
+    const alphaPct = (alphaValue / totalValue * 100).toFixed(1);
+    document.getElementById('ph-index-alloc').textContent = `${indexPct}%`;
+    document.getElementById('ph-alpha-alloc').textContent = `${alphaPct}%`;
+    document.getElementById('alloc-bar-index').style.width = `${indexPct}%`;
+    document.getElementById('alloc-bar-alpha').style.width = `${alphaPct}%`;
+  } else {
+    document.getElementById('ph-index-alloc').textContent = '—';
+    document.getElementById('ph-alpha-alloc').textContent = '—';
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    UTIL
 ══════════════════════════════════════════════════════════════════════════════ */
 function setStatus(msg) {
@@ -751,6 +1341,7 @@ function setStatus(msg) {
    INIT
 ══════════════════════════════════════════════════════════════════════════════ */
 loadHoldings();
+renderWatchlist();
 </script>
 </body>
 </html>
