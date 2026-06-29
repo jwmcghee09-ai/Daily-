@@ -9,20 +9,46 @@ export const maxDuration = 60;
 const TRADER_EMAIL = "jwmcghee09@gmail.com";
 
 const MYRMIDON_AI_TERMINAL = `<!-- MYRMIDON AI terminal -->
+<style>
+.myrm-tab-btn{font-family:monospace;font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;padding:.65rem 1.1rem;border:none;background:transparent;color:rgba(167,139,250,.5);cursor:pointer;border-bottom:2px solid transparent;transition:color .15s}
+.myrm-tab-btn:hover{color:#a78bfa}
+.myrm-tab-btn.myrm-tab-active{color:#a78bfa;border-bottom-color:#a78bfa}
+.myrm-tool-badge{display:inline-flex;align-items:center;font-family:monospace;font-size:.57rem;padding:.18rem .55rem;border-radius:4px;border:1px solid rgba(167,139,250,.25);background:rgba(167,139,250,.06);color:#a78bfa;margin:.15rem .15rem 0 0;white-space:nowrap}
+.myrm-tool-badge.calling{border-color:rgba(251,191,36,.35);background:rgba(251,191,36,.05);color:#fbbf24}
+.myrm-tool-badge.done{border-color:rgba(74,222,128,.3);background:rgba(74,222,128,.05);color:#4ade80}
+.myrm-log-row{border-bottom:1px solid rgba(167,139,250,.08);padding:.65rem .2rem;cursor:pointer}
+.myrm-log-row:hover{background:rgba(167,139,250,.03);border-radius:4px}
+.myrm-log-exp{display:none;padding:.6rem .3rem;font-family:monospace;font-size:.68rem;color:rgba(167,139,250,.75);white-space:pre-wrap;word-break:break-word;max-height:180px;overflow-y:auto;border-top:1px solid rgba(167,139,250,.08);margin-top:.45rem;line-height:1.55}
+</style>
 <div id="myrm-ai" style="padding:0 2.5rem 2rem;max-width:960px;margin-left:auto;margin-right:auto;box-sizing:border-box">
   <div style="margin-bottom:.6rem"><span style="font-family:monospace;font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:#a78bfa">Myrmidon — Autonomous Trading Agent</span></div>
   <div style="background:#0a0a12;border:1px solid rgba(167,139,250,.2);border-radius:10px;overflow:hidden">
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:.6rem;padding:.7rem 1.2rem;background:rgba(167,139,250,.06);border-bottom:1px solid rgba(167,139,250,.15)">
-      <div style="display:flex;align-items:center;gap:.6rem">
-        <div style="width:8px;height:8px;border-radius:50%;background:#a78bfa"></div>
-        <span style="font-family:monospace;font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:#a78bfa">myrmidon · live alpaca tools</span>
-      </div>
-      <div id="myrm-header-actions" style="display:flex;align-items:center;gap:.4rem"></div>
+    <div style="display:flex;align-items:stretch;border-bottom:1px solid rgba(167,139,250,.15);background:rgba(167,139,250,.04)">
+      <button class="myrm-tab-btn myrm-tab-active" data-myrm-tab="chat" onclick="myrmTab('chat')">Chat</button>
+      <button class="myrm-tab-btn" data-myrm-tab="log" onclick="myrmTab('log')">Log</button>
+      <button class="myrm-tab-btn" data-myrm-tab="perf" onclick="myrmTab('perf')">Performance</button>
+      <div id="myrm-header-actions" style="margin-left:auto;display:flex;align-items:center;gap:.4rem;padding:0 .8rem"></div>
     </div>
-    <div id="myrm-msgs" style="height:390px;overflow-y:auto;padding:1.2rem;display:flex;flex-direction:column;gap:1rem;scroll-behavior:smooth"></div>
-    <div style="display:flex;gap:.6rem;padding:.8rem 1.2rem;border-top:1px solid rgba(167,139,250,.1);background:rgba(0,0,0,.2)">
-      <textarea id="myrm-input" onkeydown="myrmKey(event)" rows="1" placeholder="Talk to Myrmidon…" style="flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(167,139,250,.2);border-radius:6px;color:#fff;font-size:.82rem;padding:.5rem .8rem;font-family:inherit;resize:none;min-height:38px;max-height:100px;overflow-y:auto;outline:none"></textarea>
-      <button id="myrm-btn" onclick="myrmSend()" style="background:rgba(167,139,250,.15);border:1px solid rgba(167,139,250,.3);border-radius:6px;color:#a78bfa;font-family:monospace;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;padding:.5rem .95rem;cursor:pointer;white-space:nowrap;align-self:flex-end">Send</button>
+    <div id="myrm-panel-chat">
+      <div id="myrm-msgs" style="height:360px;overflow-y:auto;padding:1.2rem;display:flex;flex-direction:column;gap:.9rem;scroll-behavior:smooth"></div>
+      <div style="display:flex;gap:.6rem;padding:.75rem 1.2rem;border-top:1px solid rgba(167,139,250,.1);background:rgba(0,0,0,.2)">
+        <textarea id="myrm-input" onkeydown="myrmKey(event)" rows="1" placeholder="Talk to Myrmidon…" style="flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(167,139,250,.2);border-radius:6px;color:#fff;font-size:.82rem;padding:.5rem .8rem;font-family:inherit;resize:none;min-height:38px;max-height:100px;overflow-y:auto;outline:none"></textarea>
+        <button id="myrm-btn" onclick="myrmSend()" style="background:rgba(167,139,250,.15);border:1px solid rgba(167,139,250,.3);border-radius:6px;color:#a78bfa;font-family:monospace;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;padding:.5rem .95rem;cursor:pointer;white-space:nowrap;align-self:flex-end">Send</button>
+      </div>
+    </div>
+    <div id="myrm-panel-log" style="display:none">
+      <div style="padding:.7rem 1.2rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(167,139,250,.1)">
+        <span style="font-family:monospace;font-size:.54rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(167,139,250,.45)">Decision Log — every AI recommendation saved</span>
+        <button onclick="myrmLoadLog(true)" style="font-family:monospace;font-size:.54rem;letter-spacing:.1em;text-transform:uppercase;color:#a78bfa;background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.25);border-radius:5px;padding:.25rem .65rem;cursor:pointer">Refresh</button>
+      </div>
+      <div id="myrm-log-content" style="height:420px;overflow-y:auto;padding:.6rem 1.2rem"></div>
+    </div>
+    <div id="myrm-panel-perf" style="display:none">
+      <div style="padding:.7rem 1.2rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(167,139,250,.1)">
+        <span style="font-family:monospace;font-size:.54rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(167,139,250,.45)">Performance — equity curve &amp; trade history</span>
+        <button onclick="myrmLoadPerf(true)" style="font-family:monospace;font-size:.54rem;letter-spacing:.1em;text-transform:uppercase;color:#a78bfa;background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.25);border-radius:5px;padding:.25rem .65rem;cursor:pointer">Refresh</button>
+      </div>
+      <div id="myrm-perf-content" style="height:420px;overflow-y:auto;padding:1rem 1.2rem"></div>
     </div>
   </div>
 </div>`;
@@ -589,35 +615,289 @@ const MYRMIDON_SCRIPT = `<script>
 (function(){
   var msgs=[];
   var busy=false;
+  var logLoaded=false;
+  var perfLoaded=false;
+  var logDecisions=[];
+
   function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
   function el(id){return document.getElementById(id);}
+  function fmtUsd(n){return n==null?'—':'$'+Math.round(n).toLocaleString();}
+  function fmtPct(n){if(n==null)return'—';return(n>=0?'+':'')+n.toFixed(2)+'%';}
 
-  function renderMsgs(){
-    var box=el('myrm-msgs');if(!box)return;
-    if(msgs.length===0){box.innerHTML='<div style="color:rgba(167,139,250,.4);font-family:monospace;font-size:.7rem">Myrmidon ready.</div>';return;}
-    box.innerHTML=msgs.map(function(m){var isU=m.role==='user';
-      var lbl=isU?'You':('Myrmidon'+(m.model?' · <span style="color:rgba(167,139,250,.45)">'+esc(m.model)+'</span>':''));
-      return '<div style="display:flex;flex-direction:column;gap:.25rem;max-width:85%;align-self:'+(isU?'flex-end':'flex-start')+'">'+
-        '<div style="font-family:monospace;font-size:.5rem;text-transform:uppercase;color:#666;'+(isU?'text-align:right':'')+'">'+lbl+'</div>'+
-        '<div style="padding:.62rem .88rem;border-radius:8px;font-size:.82rem;line-height:1.6;white-space:pre-wrap;word-break:break-word;'+(isU?'background:rgba(167,139,250,.15);border:1px solid rgba(167,139,250,.2);color:#e2d9ff':'background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:#fff')+'">'+esc(m.content)+'</div>'+
-      '</div>';
-    }).join('');
-    box.scrollTop=box.scrollHeight;
+  window.myrmTab=function(name){
+    ['chat','log','perf'].forEach(function(p){
+      var panel=el('myrm-panel-'+p);
+      if(panel)panel.style.display=(p===name)?'block':'none';
+      var btn=document.querySelector('[data-myrm-tab="'+p+'"]');
+      if(btn)btn.className='myrm-tab-btn'+(p===name?' myrm-tab-active':'');
+    });
+    if(name==='log'&&!logLoaded)myrmLoadLog(false);
+    if(name==='perf'&&!perfLoaded)myrmLoadPerf(false);
+  };
+
+  function initChat(){
+    var box=el('myrm-msgs');
+    if(box&&msgs.length===0){
+      box.innerHTML='<div style="color:rgba(167,139,250,.4);font-family:monospace;font-size:.7rem;padding:.2rem 0">Myrmidon ready — ask about positions, request a trade analysis, or run a strategy review.</div>';
+    }
   }
-  async function send(){
+
+  function addUserBubble(text){
+    var box=el('myrm-msgs');if(!box)return;
+    var d=document.createElement('div');
+    d.style.cssText='align-self:flex-end;max-width:82%';
+    d.innerHTML='<div style="font-family:monospace;font-size:.48rem;text-transform:uppercase;color:rgba(255,255,255,.3);text-align:right;margin-bottom:.18rem">You</div>'+
+      '<div style="padding:.6rem .85rem;border-radius:8px;background:rgba(167,139,250,.15);border:1px solid rgba(167,139,250,.2);color:#e2d9ff;font-size:.82rem;line-height:1.6;white-space:pre-wrap;word-break:break-word">'+esc(text)+'</div>';
+    box.appendChild(d);box.scrollTop=box.scrollHeight;
+  }
+
+  function createAssistantBubble(){
+    var box=el('myrm-msgs');if(!box)return null;
+    var wrap=document.createElement('div');
+    wrap.style.cssText='align-self:flex-start;max-width:92%;display:flex;flex-direction:column;gap:.25rem;min-width:160px';
+    wrap.innerHTML='<div class="mab-lbl" style="font-family:monospace;font-size:.48rem;text-transform:uppercase;color:rgba(255,255,255,.3)">Myrmidon</div>'+
+      '<div class="mab-tools" style="display:flex;flex-wrap:wrap;gap:0"></div>'+
+      '<div class="mab-text" style="padding:.6rem .85rem;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:#fff;font-size:.82rem;line-height:1.65;white-space:pre-wrap;word-break:break-word;min-height:24px"></div>';
+    box.appendChild(wrap);box.scrollTop=box.scrollHeight;
+    return wrap;
+  }
+
+  window.myrmSend=function(){
     var inp=el('myrm-input'),btn=el('myrm-btn');
     if(!inp)return;var text=inp.value.trim();if(!text||busy)return;
-    inp.value='';msgs.push({role:'user',content:text});busy=true;renderMsgs();
-    var box=el('myrm-msgs');
-    if(box){var t=document.createElement('div');t.style.cssText='color:rgba(167,139,250,.6);font-family:monospace;font-size:.62rem;align-self:flex-start';t.textContent='Analysing…';box.appendChild(t);}
-    if(btn){btn.textContent='…';btn.disabled=true;}
-    try{
-      var res=await fetch('/api/trading/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:msgs})});
-      var data=await res.json();
-      msgs.push({role:'assistant',content:data.reply||('Error: '+(data.error||'Unknown')),model:data.model||''});
-    }catch(e){msgs.push({role:'assistant',content:'Error: network failure'});}
-    finally{busy=false;if(btn){btn.textContent='Send';btn.disabled=false;}renderMsgs();}
+    inp.value='';
+    busy=true;if(btn){btn.textContent='…';btn.disabled=true;}
+    msgs.push({role:'user',content:text});
+    addUserBubble(text);
+    var bubble=createAssistantBubble();
+    var textEl=bubble?bubble.querySelector('.mab-text'):null;
+    var toolsEl=bubble?bubble.querySelector('.mab-tools'):null;
+    var lblEl=bubble?bubble.querySelector('.mab-lbl'):null;
+    var activeBadges={};
+    var streamedText='';
+
+    function finalize(){
+      if(!busy)return;
+      busy=false;
+      if(btn){btn.textContent='Send';btn.disabled=false;}
+      if(streamedText)msgs.push({role:'assistant',content:streamedText});
+    }
+
+    fetch('/api/trading/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:msgs})})
+    .then(function(res){
+      if(!res.body){
+        if(textEl)textEl.textContent='Error: no response body';
+        finalize();return;
+      }
+      var reader=res.body.getReader();
+      var dec=new TextDecoder();
+      var buf='';
+      function read(){
+        reader.read().then(function(chunk){
+          if(chunk.done){finalize();return;}
+          buf+=dec.decode(chunk.value,{stream:true});
+          var parts=buf.split('\\n\\n');
+          buf=parts.pop()||'';
+          parts.forEach(function(part){
+            var line=part.trim();
+            if(line.slice(0,5)!=='data:')return;
+            var json=line.slice(5).trim();
+            var ev;try{ev=JSON.parse(json);}catch(e2){return;}
+            if(ev.type==='tool_call'){
+              var b=document.createElement('span');
+              b.className='myrm-tool-badge calling';
+              b.dataset.tool=ev.name;
+              b.textContent=String(ev.name||'').replace(/_/g,' ');
+              if(toolsEl)toolsEl.appendChild(b);
+              activeBadges[ev.name]=b;
+            } else if(ev.type==='tool_result'){
+              var ab=activeBadges[ev.name];
+              if(ab){ab.className='myrm-tool-badge done';ab.title=String(ev.preview||'');}
+            } else if(ev.type==='text_delta'){
+              streamedText+=String(ev.delta||'');
+              if(textEl)textEl.textContent=streamedText;
+              var box2=el('myrm-msgs');if(box2)box2.scrollTop=box2.scrollHeight;
+            } else if(ev.type==='done'){
+              if(lblEl)lblEl.textContent='Myrmidon · '+esc(String(ev.model||''));
+            } else if(ev.type==='status'){
+              if(textEl&&!streamedText)textEl.innerHTML='<span style="color:#fbbf24;font-size:.76rem;font-family:monospace">'+esc(String(ev.message||''))+'</span>';
+            } else if(ev.type==='error'){
+              if(textEl)textEl.textContent='Error: '+String(ev.message||'unknown');
+              finalize();
+            }
+          });
+          read();
+        }).catch(function(e3){
+          if(textEl)textEl.textContent='Stream error: '+String(e3&&e3.message||e3);
+          finalize();
+        });
+      }
+      read();
+    }).catch(function(e4){
+      if(textEl)textEl.textContent='Network error: '+String(e4&&e4.message||e4);
+      finalize();
+    });
+  };
+
+  window.myrmKey=function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();window.myrmSend();}};
+
+  window.myrmLoadLog=function(force){
+    var content=el('myrm-log-content');if(!content)return;
+    if(logLoaded&&!force)return;
+    content.innerHTML='<div style="color:rgba(167,139,250,.4);font-family:monospace;font-size:.7rem;padding:1rem 0">Loading…</div>';
+    fetch('/api/trading/decisions?limit=50').then(function(r){return r.json();}).then(function(data){
+      logLoaded=true;
+      logDecisions=data.decisions||[];
+      if(!logDecisions.length){
+        content.innerHTML='<div style="color:rgba(167,139,250,.4);font-family:monospace;font-size:.7rem;padding:1rem 0">No decisions logged yet — start chatting with Myrmidon!</div>';
+        return;
+      }
+      content.innerHTML=logDecisions.map(function(d,i){
+        var tools=[];try{tools=JSON.parse(d.tool_calls||'[]');}catch(e5){}
+        var toolNames=tools.map(function(t){return String(t.name||'').replace(/_/g,' ');}).join(', ')||'none';
+        var dt=new Date(d.created_at).toLocaleString('en-AU',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+        var eq=d.equity_usd?'$'+Math.round(parseFloat(d.equity_usd)).toLocaleString():'';
+        var shortQ=esc(String(d.user_message||'').slice(0,90))+(String(d.user_message||'').length>90?'…':'');
+        var modelShort=esc(String(d.model||'').split('/').pop()||String(d.model||''));
+        return '<div class="myrm-log-row" onclick="myrmToggleLog(this,'+i+')" tabindex="0">'+
+          '<div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap">'+
+          '<span style="font-family:monospace;font-size:.58rem;color:rgba(167,139,250,.45);flex-shrink:0;white-space:nowrap">'+esc(dt)+'</span>'+
+          '<span style="font-size:.8rem;color:#e2d9ff;flex:1;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">'+shortQ+'</span>'+
+          (eq?'<span style="font-family:monospace;font-size:.56rem;color:#4ade80;flex-shrink:0">'+esc(eq)+'</span>':'')+
+          '<span style="font-family:monospace;font-size:.54rem;color:rgba(167,139,250,.35);flex-shrink:0">'+modelShort+'</span>'+
+          '</div>'+
+          '<div style="font-family:monospace;font-size:.55rem;color:rgba(167,139,250,.38);margin-top:.22rem">tools: '+esc(toolNames)+'</div>'+
+          '<div class="myrm-log-exp"></div>'+
+          '</div>';
+      }).join('');
+    }).catch(function(){
+      content.innerHTML='<div style="color:#f87171;font-family:monospace;font-size:.7rem;padding:1rem 0">Failed to load decisions log</div>';
+    });
+  };
+
+  window.myrmToggleLog=function(row,i){
+    var exp=row.querySelector('.myrm-log-exp');if(!exp)return;
+    if(exp.style.display==='block'){exp.style.display='none';return;}
+    exp.style.display='block';
+    if(!exp.dataset.filled){
+      exp.dataset.filled='1';
+      var d=logDecisions[i];
+      exp.textContent=(d&&d.ai_response)||'(no response recorded)';
+    }
+  };
+
+  window.myrmLoadPerf=function(force){
+    var content=el('myrm-perf-content');if(!content)return;
+    if(perfLoaded&&!force)return;
+    content.innerHTML='<div style="color:rgba(167,139,250,.4);font-family:monospace;font-size:.7rem">Loading performance data…</div>';
+    fetch('/api/trading/analytics?t='+Date.now()).then(function(r){return r.json();}).then(function(d){
+      perfLoaded=true;
+      if(!d||!d.account){
+        content.innerHTML='<div style="color:#f87171;font-family:monospace;font-size:.7rem">'+esc(String(d&&d.error?d.error:'No account data'))+'</div>';
+        return;
+      }
+      var equity=parseFloat(d.account.equity)||0;
+      var startEq=equity,retPct=0,retUsd=0,maxDd=0;
+      if(d.history&&d.history.equity){
+        var vals=d.history.equity.filter(function(v){return v!=null&&v>0;});
+        if(vals.length>1){
+          startEq=vals[0];retUsd=equity-startEq;
+          retPct=startEq>0?(retUsd/startEq)*100:0;
+          var pk=vals[0];
+          for(var ii=1;ii<vals.length;ii++){
+            if(vals[ii]>pk)pk=vals[ii];
+            var dd=pk>0?(pk-vals[ii])/pk*100:0;
+            if(dd>maxDd)maxDd=dd;
+          }
+        }
+      }
+      var orders=d.orders||[];
+      var fills=orders.filter(function(o){return o.status==='filled'&&o.filled_avg_price;});
+      var sells=fills.filter(function(o){return o.side==='sell';});
+      var buys=fills.filter(function(o){return o.side==='buy';});
+      var retCol=retPct>=0?'#4ade80':'#f87171';
+      function scard(lbl,val,sub,c){
+        return '<div style="background:rgba(10,10,18,.9);border:1px solid rgba(167,139,250,.14);border-radius:8px;padding:.9rem">'+
+          '<div style="font-family:monospace;font-size:.51rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(167,139,250,.42);margin-bottom:.3rem">'+lbl+'</div>'+
+          '<div style="font-family:monospace;font-size:1.05rem;font-weight:600;color:'+(c||'#fff')+'">'+val+'</div>'+
+          (sub?'<div style="font-family:monospace;font-size:.56rem;color:rgba(167,139,250,.38);margin-top:.18rem">'+sub+'</div>':'')+
+        '</div>';
+      }
+      var html='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:.65rem;margin-bottom:1rem">';
+      html+=scard('Portfolio Equity',fmtUsd(equity),'USD',retCol);
+      html+=scard('30-Day Return',fmtPct(retPct),(retUsd>=0?'+':'')+fmtUsd(Math.abs(retUsd)),retCol);
+      html+=scard('Max Drawdown',maxDd>0?'-'+maxDd.toFixed(2)+'%':'0%','30d period',maxDd>5?'#f87171':maxDd>2?'#ff7a30':'#4ade80');
+      html+=scard('Total Filled',String(fills.length),'buys: '+buys.length+' · sells: '+sells.length,'#38bdf8');
+      html+=scard('Cash',fmtUsd(parseFloat(d.account.cash)||0),(equity>0?(((parseFloat(d.account.cash)||0)/equity)*100).toFixed(1):'0')+'% of equity','#fff');
+      html+='</div>';
+      html+='<div style="background:rgba(10,10,18,.9);border:1px solid rgba(167,139,250,.14);border-radius:8px;padding:.9rem;margin-bottom:1rem">';
+      html+='<div style="font-family:monospace;font-size:.51rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(167,139,250,.42);margin-bottom:.6rem">30-Day Equity Curve</div>';
+      html+='<svg id="myrm-perf-chart" style="width:100%;height:140px;display:block" preserveAspectRatio="none"><text x="50%" y="50%" text-anchor="middle" fill="rgba(167,139,250,.35)" font-size="11" font-family="monospace">Loading…</text></svg>';
+      html+='</div>';
+      if(fills.length){
+        html+='<div style="background:rgba(10,10,18,.9);border:1px solid rgba(167,139,250,.14);border-radius:8px;padding:.9rem">';
+        html+='<div style="font-family:monospace;font-size:.51rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(167,139,250,.42);margin-bottom:.6rem">Recent Fills ('+fills.length+')</div>';
+        html+='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:.75rem;font-family:monospace">';
+        html+='<thead><tr style="border-bottom:1px solid rgba(167,139,250,.12)">';
+        ['Symbol','Side','Qty','Fill $','Total','Date'].forEach(function(h,hi){
+          html+='<th style="padding:.3rem .45rem;font-size:.5rem;letter-spacing:.09em;color:rgba(167,139,250,.42);font-weight:600;text-transform:uppercase;text-align:'+(hi<=1?'left':'right')+'">'+h+'</th>';
+        });
+        html+='</tr></thead><tbody>';
+        html+=fills.slice(0,40).map(function(o){
+          var price=parseFloat(o.filled_avg_price)||0;
+          var qty=parseFloat(o.filled_qty)||parseFloat(o.qty)||0;
+          var total=price*qty;
+          var isBuy=o.side==='buy';
+          var sc=isBuy?'#4ade80':'#ff7a30';
+          var dt=o.filled_at?new Date(o.filled_at).toLocaleDateString('en-AU',{month:'short',day:'numeric'}):'—';
+          return'<tr style="border-bottom:1px solid rgba(167,139,250,.05)">'+
+            '<td style="padding:.35rem .45rem;color:#fff;font-weight:600">'+esc(String(o.symbol||''))+'</td>'+
+            '<td style="padding:.35rem .45rem;color:'+sc+';font-size:.65rem;font-weight:700">'+(isBuy?'BUY':'SELL')+'</td>'+
+            '<td style="padding:.35rem .45rem;text-align:right">'+qty.toLocaleString()+'</td>'+
+            '<td style="padding:.35rem .45rem;text-align:right">$'+price.toFixed(2)+'</td>'+
+            '<td style="padding:.35rem .45rem;text-align:right">$'+Math.round(total).toLocaleString()+'</td>'+
+            '<td style="padding:.35rem .45rem;text-align:right;color:rgba(167,139,250,.45);font-size:.65rem">'+dt+'</td>'+
+          '</tr>';
+        }).join('');
+        html+='</tbody></table></div></div>';
+      }
+      content.innerHTML=html;
+      if(d.history&&d.history.equity)myrmPerfChart(d.history);
+    }).catch(function(e6){
+      content.innerHTML='<div style="color:#f87171;font-family:monospace;font-size:.7rem">Failed to load performance data'+(e6?' — '+esc(String(e6.message||e6)):'')+'</div>';
+      perfLoaded=false;
+    });
+  };
+
+  function myrmPerfChart(hist){
+    var svg=document.getElementById('myrm-perf-chart');if(!svg)return;
+    var vals=(hist.equity||[]).filter(function(v){return v!=null&&v>0;});
+    var ts=hist.timestamp||[];
+    if(vals.length<2){svg.innerHTML='<text x="50%" y="50%" text-anchor="middle" fill="rgba(167,139,250,.35)" font-size="11" font-family="monospace">Not enough data</text>';return;}
+    var W=800,H=130,PX=8,PY=12;
+    var lo=Math.min.apply(null,vals)*0.999,hi=Math.max.apply(null,vals)*1.001,rng=hi-lo||1;
+    var tx=function(i){return PX+(i/(vals.length-1))*(W-PX*2);};
+    var ty=function(v){return H-PY-((v-lo)/rng)*(H-PY*2);};
+    var start=vals[0],end=vals[vals.length-1];
+    var col=end>=start?'#4ade80':'#f87171';
+    var pts=vals.map(function(v,i){return tx(i)+','+ty(v);}).join(' L ');
+    var path='M '+pts;
+    var fill=path+' L '+tx(vals.length-1)+','+(H-PY)+' L '+tx(0)+','+(H-PY)+' Z';
+    svg.setAttribute('viewBox','0 0 '+W+' '+H);
+    svg.innerHTML='<defs><linearGradient id="pfg" x1="0" y1="0" x2="0" y2="1">'+
+      '<stop offset="0%" stop-color="'+col+'" stop-opacity="0.18"/>'+
+      '<stop offset="100%" stop-color="'+col+'" stop-opacity="0.01"/>'+
+    '</linearGradient></defs>'+
+    '<line x1="'+PX+'" y1="'+ty(start)+'" x2="'+(W-PX)+'" y2="'+ty(start)+'" stroke="rgba(255,255,255,.07)" stroke-width="1" stroke-dasharray="3,4"/>'+
+    '<path d="'+fill+'" fill="url(#pfg)"/>'+
+    '<path d="'+path+'" fill="none" stroke="'+col+'" stroke-width="2" stroke-linejoin="round"/>'+
+    '<circle cx="'+tx(0)+'" cy="'+ty(start)+'" r="3" fill="'+col+'" opacity="0.5"/>'+
+    '<circle cx="'+tx(vals.length-1)+'" cy="'+ty(end)+'" r="4" fill="'+col+'"/>'+
+    '<text x="'+PX+'" y="'+(H-2)+'" font-family="monospace" font-size="8" fill="rgba(167,139,250,.42)">'+(ts[0]?new Date(ts[0]*1000).toLocaleDateString('en-AU',{month:'short',day:'numeric'}):'start')+'</text>'+
+    '<text x="'+(W-PX)+'" y="'+(H-2)+'" font-family="monospace" font-size="8" fill="rgba(167,139,250,.42)" text-anchor="end">'+(ts[ts.length-1]?new Date(ts[ts.length-1]*1000).toLocaleDateString('en-AU',{month:'short',day:'numeric'}):'now')+'</text>'+
+    '<text x="'+(tx(vals.length-1)-6)+'" y="'+(ty(end)-6)+'" font-family="monospace" font-size="10" fill="'+col+'" text-anchor="end">$'+Math.round(end).toLocaleString()+'</text>';
   }
+
   async function syncAlpaca(){
     var syncBtn=el('myrm-sync-btn'),status=el('myrm-sync-status');
     if(syncBtn){syncBtn.disabled=true;syncBtn.textContent='Syncing…';}
@@ -625,29 +905,26 @@ const MYRMIDON_SCRIPT = `<script>
     try{
       var res=await fetch('/api/trading/sync',{method:'POST',cache:'no-store'});
       var data=await res.json();
-      if(res.ok&&data.ok){if(status)status.textContent='✓ Synced '+data.synced;window.location.reload();}
-      else{if(status)status.textContent=data.error||'Sync failed';if(syncBtn){syncBtn.disabled=false;syncBtn.textContent='Sync Alpaca';}}
-    }catch(e){if(status)status.textContent='Network error';if(syncBtn){syncBtn.disabled=false;syncBtn.textContent='Sync Alpaca';}}
+      if(res.ok&&data.ok){if(status)status.textContent='Synced';window.location.reload();}
+      else{if(status)status.textContent=data.error||'Failed';if(syncBtn){syncBtn.disabled=false;syncBtn.textContent='Sync';}}
+    }catch(e7){if(status)status.textContent='Error';if(syncBtn){syncBtn.disabled=false;syncBtn.textContent='Sync';}}
   }
+
   function init(){
-    renderMsgs();
-    // Inject Sync Alpaca button into the Myrmidon terminal header area
+    initChat();
     var header=el('myrm-header-actions');
     if(header&&!el('myrm-sync-btn')){
       var sb=document.createElement('button');
       sb.id='myrm-sync-btn';sb.type='button';sb.onclick=syncAlpaca;
-      sb.style.cssText='font-family:monospace;font-size:.56rem;letter-spacing:.1em;text-transform:uppercase;color:#a78bfa;background:rgba(167,139,250,.12);border:1px solid rgba(167,139,250,.3);border-radius:6px;padding:.35rem .8rem;cursor:pointer;white-space:nowrap';
+      sb.style.cssText='font-family:monospace;font-size:.54rem;letter-spacing:.09em;text-transform:uppercase;color:rgba(167,139,250,.7);background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.2);border-radius:5px;padding:.28rem .65rem;cursor:pointer;white-space:nowrap';
       sb.textContent='Sync Alpaca';
-      var ss=document.createElement('span');
-      ss.id='myrm-sync-status';
-      ss.style.cssText='font-family:monospace;font-size:.56rem;color:#a78bfa;margin-left:.5rem;opacity:.8';
-      header.appendChild(sb);
-      header.appendChild(ss);
+      var ss=document.createElement('span');ss.id='myrm-sync-status';
+      ss.style.cssText='font-family:monospace;font-size:.54rem;color:#4ade80;opacity:.8';
+      header.appendChild(sb);header.appendChild(ss);
     }
   }
+
   if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',init);}else{init();}
-  window.myrmSend=send;
-  window.myrmKey=function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}};
   window.myrmSyncAlpaca=syncAlpaca;
 })();
 </script>`;

@@ -528,6 +528,18 @@ function initSchema(db: DatabaseSync): void {
       lessons TEXT NOT NULL DEFAULT '[]',
       updated_at TEXT NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS trading_decisions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      created_at TEXT NOT NULL,
+      user_message TEXT NOT NULL,
+      tool_calls TEXT NOT NULL DEFAULT '[]',
+      ai_response TEXT NOT NULL,
+      model TEXT NOT NULL DEFAULT '',
+      equity_usd TEXT,
+      cash_usd TEXT,
+      outcome_note TEXT NOT NULL DEFAULT ''
+    );
   `);
 
 }
@@ -3694,4 +3706,45 @@ export function writeTradingMemory(strategy: string, lessons: string[]): void {
   db.prepare(
     "INSERT INTO trading_memory (id, strategy, lessons, updated_at) VALUES ('myrmidon', ?, ?, ?) ON CONFLICT(id) DO UPDATE SET strategy=excluded.strategy, lessons=excluded.lessons, updated_at=excluded.updated_at"
   ).run(strategy, lessonsJson, updatedAt);
+}
+
+export interface TradingDecision {
+  id: number;
+  created_at: string;
+  user_message: string;
+  tool_calls: string;
+  ai_response: string;
+  model: string;
+  equity_usd: string | null;
+  cash_usd: string | null;
+  outcome_note: string;
+}
+
+export function insertTradingDecision(d: {
+  user_message: string;
+  tool_calls: Array<{ name: string; input: Record<string, unknown>; output_preview: string }>;
+  ai_response: string;
+  model: string;
+  equity_usd?: string | null;
+  cash_usd?: string | null;
+}): void {
+  const db = getDb();
+  db.prepare(
+    "INSERT INTO trading_decisions (created_at, user_message, tool_calls, ai_response, model, equity_usd, cash_usd) VALUES (?, ?, ?, ?, ?, ?, ?)"
+  ).run(
+    new Date().toISOString(),
+    d.user_message.slice(0, 2000),
+    JSON.stringify(d.tool_calls),
+    d.ai_response.slice(0, 8000),
+    d.model,
+    d.equity_usd ?? null,
+    d.cash_usd ?? null,
+  );
+}
+
+export function listTradingDecisions(limit = 50): TradingDecision[] {
+  const db = getDb();
+  return db.prepare(
+    "SELECT id, created_at, user_message, tool_calls, ai_response, model, equity_usd, cash_usd, outcome_note FROM trading_decisions ORDER BY id DESC LIMIT ?"
+  ).all(limit) as TradingDecision[];
 }
