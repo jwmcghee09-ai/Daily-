@@ -274,6 +274,123 @@
   background: rgba(255,255,255,0.02); border-radius: 6px; padding: 12px;
 }
 
+/* ── Tool badges (chat) ──────────────────────────────────────────────────── */
+.toolBadges {
+  display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px;
+}
+.toolBadge {
+  display: inline-block; padding: 2px 7px; border-radius: 3px;
+  font-size: 9px; letter-spacing: 0.5px; font-family: var(--font-geist-mono), monospace;
+  font-weight: 600; cursor: default; transition: all 0.15s;
+}
+.toolBadgeCalling {
+  background: rgba(255,140,64,0.12); border: 1px solid rgba(255,140,64,0.4);
+  color: #ff8c40;
+  animation: toolPulse 1s ease-in-out infinite;
+}
+@keyframes toolPulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+.toolBadgeDone {
+  background: rgba(0,230,118,0.08); border: 1px solid rgba(0,230,118,0.25);
+  color: #00e676;
+}
+.modelTag {
+  display: inline-block; margin-left: 6px; padding: 1px 5px; border-radius: 2px;
+  font-size: 8px; letter-spacing: 0.5px; color: #555;
+  background: rgba(255,255,255,0.04); border: 1px solid #1e1e26;
+  font-family: var(--font-geist-mono), monospace; vertical-align: middle;
+}
+
+/* ── Panel header (log + perf) ───────────────────────────────────────────── */
+.panelHeader {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px;
+}
+.refreshBtn {
+  padding: 3px 8px; border-radius: 4px; cursor: pointer;
+  background: transparent; border: 1px solid #2a2a36; color: #555;
+  font-size: 9px; letter-spacing: 1px; font-family: var(--font-geist-mono), monospace;
+  transition: all 0.12s;
+}
+.refreshBtn:hover { border-color: rgba(255,75,51,0.4); color: #ff4b33; }
+
+/* ── Decision log ────────────────────────────────────────────────────────── */
+.logList { display: flex; flex-direction: column; gap: 6px; }
+.logEntry {
+  border: 1px solid #1a1a26; border-radius: 6px;
+  background: rgba(255,255,255,0.02); overflow: hidden;
+  transition: border-color 0.12s;
+}
+.logEntry:hover { border-color: #2a2a36; }
+.logEntryExpanded { border-color: rgba(255,75,51,0.2) !important; }
+
+.logEntryHeader {
+  display: flex; align-items: center; gap: 6px; padding: 8px 10px;
+  cursor: pointer; flex-wrap: wrap;
+}
+.logEntryHeader:hover { background: rgba(255,255,255,0.015); }
+
+.logDate {
+  font-size: 9px; color: rgba(255,75,51,0.6); flex-shrink: 0;
+  font-family: var(--font-geist-mono), monospace; letter-spacing: 0.5px;
+}
+.logPrompt {
+  flex: 1; font-size: 11px; color: #888; min-width: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.logMeta {
+  display: flex; align-items: center; gap: 5px; flex-shrink: 0;
+}
+.logEq {
+  font-size: 9px; color: #00e676; font-family: var(--font-geist-mono), monospace;
+}
+.logModel {
+  font-size: 9px; color: #444; font-family: var(--font-geist-mono), monospace;
+}
+.logChevron {
+  font-size: 9px; color: #444; width: 10px; text-align: center;
+}
+.logTools {
+  display: flex; flex-wrap: wrap; gap: 3px; padding: 0 10px 7px;
+}
+.logToolTag {
+  font-size: 8px; padding: 1px 5px; border-radius: 2px;
+  background: rgba(255,140,64,0.08); border: 1px solid rgba(255,140,64,0.2);
+  color: #ff8c40; font-family: var(--font-geist-mono), monospace; letter-spacing: 0.3px;
+}
+.logBody {
+  padding: 8px 10px 10px; border-top: 1px solid #1a1a26;
+  background: rgba(0,0,0,0.2);
+}
+.logBodyLabel {
+  font-size: 8px; letter-spacing: 2px; color: #444; margin-bottom: 5px;
+  font-family: var(--font-geist-mono), monospace;
+}
+.logBodyText {
+  font-size: 11px; line-height: 1.65; color: #666; white-space: pre-wrap;
+  word-break: break-word; max-height: 240px; overflow-y: auto;
+}
+
+/* ── Performance grid ────────────────────────────────────────────────────── */
+.perfGrid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 12px;
+}
+.perfCard {
+  padding: 10px 12px; border-radius: 6px;
+  background: rgba(255,255,255,0.03); border: 1px solid #1e1e26;
+}
+.perfCardLabel {
+  font-size: 8px; letter-spacing: 1.5px; text-transform: uppercase;
+  color: #444; margin-bottom: 4px; font-family: var(--font-geist-mono), monospace;
+}
+.perfCardVal {
+  font-size: 18px; font-weight: 700; color: #f4f4f5;
+  font-family: var(--font-geist-mono), monospace; line-height: 1.1;
+}
+.perfCardSub {
+  font-size: 9px; color: #555; margin-top: 2px;
+  font-family: var(--font-geist-mono), monospace;
+}
+
 /* ── Tooltip ─────────────────────────────────────────────────────────────── */
 .tooltip {
   background: #0e0e18; border: 1px solid #2a2a36; border-radius: 6px;
