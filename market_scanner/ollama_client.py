@@ -8,7 +8,7 @@ import sys
 import requests
 
 OLLAMA_URL = "http://localhost:11434/api/generate"
-OLLAMA_MODEL = "qwen3.6"
+OLLAMA_MODEL = "nemotron-3-super:cloud"
 REQUEST_TIMEOUT = 120  # seconds for the initial connection
 
 
