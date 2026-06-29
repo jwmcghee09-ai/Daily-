@@ -7,7 +7,8 @@ const ALPACA_BASE = "https://paper-api.alpaca.markets/v2";
 const ALPACA_DATA = "https://data.alpaca.markets/v2";
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 const CLAUDE_URL = "https://api.anthropic.com/v1/messages";
-const GROQ_MODEL = "llama-3.3-70b-versatile";
+// llama-3.1-8b-instant has ~3x the token/min rate limits vs the 70b model on Groq free tier.
+const GROQ_MODEL = "llama-3.1-8b-instant";
 const CLAUDE_MODEL = "claude-opus-4-7";
 const MAX_TURNS = 8;
 
@@ -115,7 +116,18 @@ async function executeTool(name: string, args: Record<string, unknown>): Promise
     }
     if (name === "get_orders") {
       const status = String(args.status ?? "open");
-      return JSON.stringify(await alpacaGet(`/orders?status=${status}&limit=20`));
+      const limit = Math.min(Number(args.limit ?? 20), 50);
+      return JSON.stringify(await alpacaGet(`/orders?status=${status}&limit=${limit}&direction=desc`));
+    }
+    if (name === "get_portfolio_history") {
+      // Returns daily equity + P&L curve for the last 30 days
+      return JSON.stringify(await alpacaGet("/account/portfolio/history?period=1M&timeframe=1D"));
+    }
+    if (name === "get_pnl_summary") {
+      // Closed orders with fill prices — use to evaluate trade outcomes
+      const limit = Math.min(Number(args.limit ?? 50), 200);
+      const orders = await alpacaGet(`/orders?status=closed&limit=${limit}&direction=desc`);
+      return JSON.stringify(orders);
     }
     return JSON.stringify({ error: `Unknown tool: ${name}` });
   } catch (e) {
@@ -129,7 +141,9 @@ const GROQ_TOOLS = [
   { type: "function", function: { name: "get_quote", description: "Get live price snapshot for a US stock symbol.", parameters: { type: "object", properties: { symbol: { type: "string", description: "Ticker symbol e.g. SPY" } }, required: ["symbol"] } } },
   { type: "function", function: { name: "get_bars", description: "Get daily OHLCV bars for a symbol (max 30 days).", parameters: { type: "object", properties: { symbol: { type: "string" }, days: { type: "number", description: "Number of days, max 30" } }, required: ["symbol"] } } },
   { type: "function", function: { name: "place_order", description: "Place a market order on Alpaca paper account. Keep ≥20% cash, max 10% per position.", parameters: { type: "object", properties: { symbol: { type: "string" }, qty: { type: "number" }, side: { type: "string", enum: ["buy", "sell"] } }, required: ["symbol", "qty", "side"] } } },
-  { type: "function", function: { name: "get_orders", description: "Get recent orders.", parameters: { type: "object", properties: { status: { type: "string", enum: ["open", "closed", "all"] } }, required: [] } } },
+  { type: "function", function: { name: "get_orders", description: "Get recent orders.", parameters: { type: "object", properties: { status: { type: "string", enum: ["open", "closed", "all"] }, limit: { type: "number", description: "Max orders to return, up to 50" } }, required: [] } } },
+  { type: "function", function: { name: "get_portfolio_history", description: "Get 30-day daily equity curve and P&L history. Use to analyse portfolio performance over time.", parameters: { type: "object", properties: {}, required: [] } } },
+  { type: "function", function: { name: "get_pnl_summary", description: "Get closed orders with fill prices to evaluate trade outcomes and test strategy performance.", parameters: { type: "object", properties: { limit: { type: "number", description: "Number of closed orders to fetch, default 50, max 200" } }, required: [] } } },
 ];
 
 const CLAUDE_TOOLS = [
@@ -138,7 +152,9 @@ const CLAUDE_TOOLS = [
   { name: "get_quote", description: "Get live price snapshot for a US stock symbol.", input_schema: { type: "object", properties: { symbol: { type: "string", description: "Ticker symbol e.g. SPY" } }, required: ["symbol"] } },
   { name: "get_bars", description: "Get daily OHLCV bars for a symbol (max 30 days).", input_schema: { type: "object", properties: { symbol: { type: "string" }, days: { type: "number", description: "Number of days, max 30" } }, required: ["symbol"] } },
   { name: "place_order", description: "Place a market order on Alpaca paper account. Keep ≥20% cash, max 10% per position.", input_schema: { type: "object", properties: { symbol: { type: "string" }, qty: { type: "number" }, side: { type: "string", enum: ["buy", "sell"] } }, required: ["symbol", "qty", "side"] } },
-  { name: "get_orders", description: "Get recent orders.", input_schema: { type: "object", properties: { status: { type: "string", enum: ["open", "closed", "all"] } }, required: [] } },
+  { name: "get_orders", description: "Get recent orders.", input_schema: { type: "object", properties: { status: { type: "string", enum: ["open", "closed", "all"] }, limit: { type: "number", description: "Max orders to return, up to 50" } }, required: [] } },
+  { name: "get_portfolio_history", description: "Get 30-day daily equity curve and P&L history. Use to analyse portfolio performance over time.", input_schema: { type: "object", properties: {}, required: [] } },
+  { name: "get_pnl_summary", description: "Get closed orders with fill prices to evaluate trade outcomes and test strategy performance.", input_schema: { type: "object", properties: { limit: { type: "number", description: "Number of closed orders to fetch, default 50, max 200" } }, required: [] } },
 ];
 
 const BASE_SYSTEM = `You are Myrmidon — SPECTRE's autonomous trading agent managing a US equities paper trading account on Alpaca.
@@ -159,7 +175,13 @@ APPROACH:
 - Check account and positions before any recommendation
 - Use get_bars for recent price context before trading
 - Explain entry logic, risk sizing, and expected catalysts clearly
-- This is paper trading — be decisive, learn fast, respect the rules`;
+- This is paper trading — be decisive, learn fast, respect the rules
+
+PERFORMANCE ANALYSIS:
+- Use get_portfolio_history to get the 30-day equity curve and evaluate overall returns
+- Use get_pnl_summary to fetch closed trades and compute win rate, avg gain/loss, best/worst trades
+- When asked to "test the strategy" or "evaluate predictions", pull both and give a structured analysis:
+  equity growth, number of trades, win rate, largest winners/losers, and whether core sleeve targets were hit`;
 
 async function groqLoop(
   messages: OAIMessage[],
@@ -180,9 +202,10 @@ async function groqLoop(
       }),
     });
 
-    // Retry once after 25s if rate limited
+    // Retry once if rate limited — respect Groq's retry-after header
     if (res.status === 429) {
-      await new Promise(r => setTimeout(r, 25000));
+      const retryAfter = Math.min(Number(res.headers.get("retry-after") ?? "10"), 30);
+      await new Promise(r => setTimeout(r, retryAfter * 1000));
       res = await fetch(GROQ_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${groqKey}` },
@@ -198,7 +221,7 @@ async function groqLoop(
 
     if (!res.ok) {
       const err = await res.text();
-      throw new Error(`Groq error: ${err.slice(0, 400)}`);
+      throw new Error(`Groq ${res.status}: ${err.slice(0, 300)}`);
     }
 
     const data = await res.json() as {
