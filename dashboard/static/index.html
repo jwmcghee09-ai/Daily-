@@ -449,6 +449,79 @@
   .alloc-bar .bar-alpha { background: var(--green-dim); height: 100%; transition: width 0.4s; }
   .alloc-bar-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); margin-top: 3px; }
 
+  /* Fundamentals collapsible section on anomaly cards */
+  .fund-toggle {
+    margin-top: 6px;
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 2px 8px;
+    cursor: pointer;
+    color: var(--muted);
+    border-color: var(--border);
+    background: none;
+  }
+  .fund-toggle:hover { color: var(--cyan); border-color: var(--cyan); background: none; }
+  .fund-section {
+    display: none;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+  }
+  .fund-section.open { display: block; }
+  .fund-metrics {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .fund-metrics span { white-space: nowrap; }
+  .fund-metrics strong { color: var(--white); }
+  .rec-buy { color: var(--green) !important; }
+  .rec-hold { color: var(--yellow) !important; }
+  .rec-sell { color: var(--red) !important; }
+  .fund-news { list-style: none; margin-top: 6px; display: flex; flex-direction: column; gap: 4px; }
+  .fund-news li { font-size: 11px; line-height: 1.4; }
+  .fund-news a { color: var(--cyan); text-decoration: none; }
+  .fund-news a:hover { text-decoration: underline; }
+  .fund-news .news-meta { color: var(--muted); font-size: 10px; margin-left: 4px; }
+
+  /* Fundamentals modal */
+  #fund-modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+  #fund-modal-overlay.open { display: flex; }
+  #fund-modal {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 16px 20px;
+    min-width: 340px;
+    max-width: 520px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    position: relative;
+  }
+  #fund-modal h3 { color: var(--cyan); font-size: 14px; margin-bottom: 10px; letter-spacing: 1px; }
+  #fund-modal .modal-close {
+    position: absolute;
+    top: 10px; right: 12px;
+    background: none; border: none;
+    color: var(--muted); font-size: 14px; cursor: pointer; padding: 0;
+  }
+  #fund-modal .modal-close:hover { color: var(--red); background: none; }
+  #fund-modal-body { font-size: 12px; color: var(--muted); line-height: 1.7; }
+  #fund-modal-body strong { color: var(--white); }
+  #fund-modal-body .modal-section { margin-bottom: 10px; }
+  #fund-modal-body .modal-section-title { color: var(--muted); font-size: 10px; letter-spacing: 2px; margin-bottom: 4px; border-bottom: 1px solid var(--border); padding-bottom: 2px; }
+
   /* Rotation advice box */
   #rotation-advice-box {
     display: none;
@@ -644,6 +717,15 @@
   </div><!-- /strategy-panel -->
 
 </div><!-- /main -->
+
+<!-- ── Fundamentals Modal ──────────────────────────────────────────────── -->
+<div id="fund-modal-overlay" onclick="closeFundModal(event)">
+  <div id="fund-modal">
+    <button class="modal-close" onclick="closeFundModal()">✕</button>
+    <h3 id="fund-modal-title">—</h3>
+    <div id="fund-modal-body"><span style="color:var(--muted)">Loading…</span></div>
+  </div>
+</div>
 
 <!-- ── Status bar ─────────────────────────────────────────────────────── -->
 <div id="statusbar">
@@ -877,6 +959,37 @@ function renderScanResults(results) {
       metrics.push(`<span>MACD: <strong>${item.macd_value.toFixed(3)}</strong> / Sig: <strong>${(item.signal_value ?? 0).toFixed(3)}</strong></span>`);
     }
 
+    // Build fundamentals section if available
+    const fund = item.fundamentals || (lastScanData && lastScanData.tickers && lastScanData.tickers[item.ticker] && lastScanData.tickers[item.ticker].fundamentals) || null;
+    let fundHtml = '';
+    if (fund) {
+      const cardId = `fund-${item.ticker}-${Math.random().toString(36).slice(2,7)}`;
+      const recClass = fund.recommendation
+        ? (fund.recommendation.includes('buy') ? 'rec-buy' : fund.recommendation.includes('sell') ? 'rec-sell' : 'rec-hold')
+        : '';
+      const fundMetrics = [];
+      if (fund.pe_ratio != null) fundMetrics.push(`<span>P/E: <strong>${fund.pe_ratio}</strong></span>`);
+      if (fund.forward_pe != null) fundMetrics.push(`<span>Fwd P/E: <strong>${fund.forward_pe}</strong></span>`);
+      if (fund.analyst_target != null) fundMetrics.push(`<span>Target: <strong>$${fund.analyst_target}</strong></span>`);
+      if (fund.upside_pct != null) {
+        const uClass = fund.upside_pct >= 0 ? 'pos' : 'neg';
+        fundMetrics.push(`<span>Upside: <strong class="${uClass}">${fund.upside_pct >= 0 ? '+' : ''}${fund.upside_pct}%</strong></span>`);
+      }
+      if (fund.recommendation) fundMetrics.push(`<span>Rec: <strong class="${recClass}">${fund.recommendation.toUpperCase()}</strong></span>`);
+      if (fund.next_earnings && fund.next_earnings !== 'Unknown') fundMetrics.push(`<span>Earnings: <strong style="color:var(--yellow)">${fund.next_earnings}</strong></span>`);
+
+      const newsHtml = (fund.news && fund.news.length)
+        ? `<ul class="fund-news">${fund.news.map(n => `<li><a href="${n.link || '#'}" target="_blank" rel="noopener">${n.title}</a><span class="news-meta">${n.publisher ? n.publisher + ' · ' : ''}${n.published}</span></li>`).join('')}</ul>`
+        : '';
+
+      fundHtml = `
+        <button class="fund-toggle" onclick="toggleFund('${cardId}')">▸ FUNDAMENTALS</button>
+        <div class="fund-section" id="${cardId}">
+          ${fundMetrics.length ? `<div class="fund-metrics">${fundMetrics.join('')}</div>` : ''}
+          ${newsHtml}
+        </div>`;
+    }
+
     card.innerHTML = `
       <div>
         <div class="card-ticker">${item.ticker || '?'}</div>
@@ -886,6 +999,7 @@ function renderScanResults(results) {
       <div class="card-body">
         ${item.details || item.signal || item.anomaly || item.reason || 'Anomaly detected'}
         ${metrics.length ? `<div class="card-metrics">${metrics.join('')}</div>` : ''}
+        ${fundHtml}
       </div>
       <div class="card-price">
         ${item.price != null ? '$' + Number(item.price).toFixed(2) : ''}
@@ -1088,6 +1202,7 @@ function renderIndexGrid(recommendedTicker) {
         Mom 20d: <strong class="${d.momentum_20d >= 0 ? 'pos' : 'neg'}">${d.momentum_20d >= 0 ? '+' : ''}${d.momentum_20d.toFixed(2)}%</strong><br/>
         MACD: <strong>${d.macd.toFixed(3)}</strong>
       </div>
+      <button class="fund-toggle" style="margin-top:8px" onclick="openFundModal('${ticker}')">▸ DETAILS</button>
     `;
     grid.appendChild(card);
   });
@@ -1198,7 +1313,7 @@ function renderWatchlist() {
   list.forEach(ticker => {
     const tag = document.createElement('div');
     tag.className = 'watchlist-tag';
-    tag.innerHTML = `${ticker} <button class="wl-remove" onclick="removeFromWatchlist('${ticker}')">✕</button>`;
+    tag.innerHTML = `${ticker} <button class="fund-toggle" style="margin:0 2px;font-size:9px;padding:1px 5px" onclick="openFundModal('${ticker}')">▸</button><button class="wl-remove" onclick="removeFromWatchlist('${ticker}')">✕</button>`;
     wrap.insertBefore(tag, input);
   });
 }
@@ -1328,6 +1443,94 @@ function renderPortfolioHealth() {
     document.getElementById('ph-index-alloc').textContent = '—';
     document.getElementById('ph-alpha-alloc').textContent = '—';
   }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   FUNDAMENTALS TOGGLE + MODAL
+══════════════════════════════════════════════════════════════════════════════ */
+function toggleFund(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.toggle('open');
+  const btn = el.previousElementSibling;
+  if (btn) btn.textContent = el.classList.contains('open') ? '▾ FUNDAMENTALS' : '▸ FUNDAMENTALS';
+}
+
+async function openFundModal(ticker) {
+  const overlay = document.getElementById('fund-modal-overlay');
+  const title = document.getElementById('fund-modal-title');
+  const body = document.getElementById('fund-modal-body');
+
+  title.textContent = ticker + ' — DETAILS';
+  body.innerHTML = '<span style="color:var(--muted)">Loading<span class="spinner"></span></span>';
+  overlay.classList.add('open');
+
+  try {
+    const r = await fetch('/fundamentals/' + encodeURIComponent(ticker));
+    const d = await r.json();
+    body.innerHTML = renderFundModalBody(d);
+  } catch (e) {
+    body.innerHTML = `<span style="color:var(--red)">Error: ${e.message}</span>`;
+  }
+}
+
+function renderFundModalBody(d) {
+  const row = (label, val) => val != null && val !== '' && val !== 'Unknown'
+    ? `<div><span style="color:var(--muted)">${label}:</span> <strong>${val}</strong></div>`
+    : '';
+
+  const recClass = d.recommendation
+    ? (d.recommendation.includes('buy') ? 'rec-buy' : d.recommendation.includes('sell') ? 'rec-sell' : 'rec-hold')
+    : '';
+
+  const pct = v => v != null ? `${v >= 0 ? '+' : ''}${v}%` : null;
+
+  const newsHtml = (d.news && d.news.length)
+    ? `<div class="modal-section">
+        <div class="modal-section-title">RECENT NEWS</div>
+        <ul class="fund-news">${d.news.map(n =>
+          `<li><a href="${n.link || '#'}" target="_blank" rel="noopener">${n.title}</a><span class="news-meta">${n.publisher ? n.publisher + ' · ' : ''}${n.published}</span></li>`
+        ).join('')}</ul>
+       </div>`
+    : '';
+
+  return `
+    <div class="modal-section">
+      <div class="modal-section-title">COMPANY</div>
+      ${row('Name', d.company_name)}
+      ${row('Sector', d.sector)}
+      ${row('Industry', d.industry)}
+      ${row('Market Cap', d.market_cap_b != null ? `$${d.market_cap_b}B` : null)}
+    </div>
+    <div class="modal-section">
+      <div class="modal-section-title">VALUATION</div>
+      ${row('P/E (TTM)', d.pe_ratio)}
+      ${row('Fwd P/E', d.forward_pe)}
+      ${row('EPS (TTM)', d.eps != null ? `$${d.eps}` : null)}
+      ${row('Revenue Growth', pct(d.revenue_growth))}
+      ${row('Earnings Growth', pct(d.earnings_growth))}
+      ${row('Profit Margin', pct(d.profit_margin))}
+    </div>
+    <div class="modal-section">
+      <div class="modal-section-title">ANALYST</div>
+      ${row('Recommendation', d.recommendation ? `<span class="${recClass}">${d.recommendation.toUpperCase()}</span>` : null)}
+      ${row('# Analysts', d.analyst_count)}
+      ${row('Target (Mean)', d.analyst_target != null ? `$${d.analyst_target}` : null)}
+      ${row('Target Low', d.analyst_low != null ? `$${d.analyst_low}` : null)}
+      ${row('Target High', d.analyst_high != null ? `$${d.analyst_high}` : null)}
+      ${row('Upside', d.upside_pct != null ? `<span class="${d.upside_pct >= 0 ? 'pos' : 'neg'}">${pct(d.upside_pct)}</span>` : null)}
+    </div>
+    <div class="modal-section">
+      <div class="modal-section-title">EARNINGS</div>
+      ${row('Next Earnings', d.next_earnings && d.next_earnings !== 'Unknown' ? `<span style="color:var(--yellow)">${d.next_earnings}</span>` : null)}
+    </div>
+    ${newsHtml}
+  `;
+}
+
+function closeFundModal(event) {
+  if (event && event.target !== document.getElementById('fund-modal-overlay')) return;
+  document.getElementById('fund-modal-overlay').classList.remove('open');
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

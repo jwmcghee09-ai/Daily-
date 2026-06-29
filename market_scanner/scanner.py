@@ -4,10 +4,169 @@ No TA library dependencies (no ta-lib, pandas-ta, etc.)
 """
 
 import warnings
+from datetime import datetime, timezone
 import pandas as pd
 import yfinance as yf
 
 warnings.filterwarnings("ignore")
+
+
+# ---------------------------------------------------------------------------
+# Fundamentals / news helper
+# ---------------------------------------------------------------------------
+
+def get_ticker_fundamentals(ticker: str) -> dict:
+    """
+    Fetch fundamental data, analyst targets, earnings dates, and recent news
+    for a single ticker using yfinance.
+    """
+    result: dict = {
+        "ticker": ticker,
+        "company_name": None,
+        "sector": None,
+        "industry": None,
+        "market_cap_b": None,
+        "pe_ratio": None,
+        "forward_pe": None,
+        "eps": None,
+        "revenue_growth": None,
+        "earnings_growth": None,
+        "profit_margin": None,
+        "analyst_target": None,
+        "analyst_low": None,
+        "analyst_high": None,
+        "recommendation": None,
+        "analyst_count": None,
+        "upside_pct": None,
+        "next_earnings": "Unknown",
+        "news": [],
+    }
+
+    try:
+        stock = yf.Ticker(ticker)
+
+        # --- info fields -------------------------------------------------------
+        try:
+            info = stock.info or {}
+        except Exception:
+            info = {}
+
+        current_price = info.get("currentPrice") or info.get("regularMarketPrice")
+
+        result["company_name"] = info.get("longName")
+        result["sector"] = info.get("sector")
+        result["industry"] = info.get("industry")
+
+        market_cap = info.get("marketCap")
+        result["market_cap_b"] = round(market_cap / 1e9, 2) if market_cap else None
+
+        pe = info.get("trailingPE")
+        result["pe_ratio"] = round(pe, 2) if pe is not None else None
+
+        fpe = info.get("forwardPE")
+        result["forward_pe"] = round(fpe, 2) if fpe is not None else None
+
+        eps = info.get("trailingEps")
+        result["eps"] = round(eps, 2) if eps is not None else None
+
+        rev_growth = info.get("revenueGrowth")
+        result["revenue_growth"] = round(rev_growth * 100, 2) if rev_growth is not None else None
+
+        earn_growth = info.get("earningsGrowth")
+        result["earnings_growth"] = round(earn_growth * 100, 2) if earn_growth is not None else None
+
+        profit_margin = info.get("profitMargins")
+        result["profit_margin"] = round(profit_margin * 100, 2) if profit_margin is not None else None
+
+        target_mean = info.get("targetMeanPrice")
+        target_low = info.get("targetLowPrice")
+        target_high = info.get("targetHighPrice")
+        result["analyst_target"] = round(target_mean, 2) if target_mean is not None else None
+        result["analyst_low"] = round(target_low, 2) if target_low is not None else None
+        result["analyst_high"] = round(target_high, 2) if target_high is not None else None
+        result["recommendation"] = info.get("recommendationKey")
+        result["analyst_count"] = info.get("numberOfAnalystOpinions")
+
+        if target_mean is not None and current_price and current_price > 0:
+            result["upside_pct"] = round((target_mean - current_price) / current_price * 100, 2)
+
+        # --- next earnings date ------------------------------------------------
+        try:
+            ed = stock.earnings_dates
+            if ed is not None and not ed.empty:
+                today = datetime.now(timezone.utc).date()
+                idx = ed.index
+                if hasattr(idx, "tz") and idx.tz is not None:
+                    dates = idx.date
+                else:
+                    dates = pd.DatetimeIndex(idx).date
+                future = [d for d in dates if d >= today]
+                if future:
+                    result["next_earnings"] = str(min(future))
+        except Exception:
+            pass
+
+        # --- news -------------------------------------------------------
+        try:
+            raw_news = stock.news or []
+            news_items = []
+            now_ts = datetime.now(timezone.utc).timestamp()
+            for item in raw_news[:5]:
+                content = item.get("content", item)  # yfinance >= 0.2.54 wraps in "content"
+                title = content.get("title", "") if isinstance(content, dict) else item.get("title", "")
+                publisher = ""
+                link = ""
+                pub_time = None
+
+                if isinstance(content, dict):
+                    provider = content.get("provider", {})
+                    publisher = provider.get("displayName", "") if isinstance(provider, dict) else ""
+                    # canonical URL
+                    click_through = content.get("clickThroughUrl", {})
+                    if isinstance(click_through, dict):
+                        link = click_through.get("url", "")
+                    if not link:
+                        link = content.get("canonicalUrl", {}).get("url", "") if isinstance(content.get("canonicalUrl"), dict) else ""
+                    pub_date = content.get("pubDate") or content.get("providerPublishTime")
+                    if isinstance(pub_date, str):
+                        try:
+                            pub_time = datetime.fromisoformat(pub_date.replace("Z", "+00:00")).timestamp()
+                        except Exception:
+                            pub_time = None
+                    elif isinstance(pub_date, (int, float)):
+                        pub_time = float(pub_date)
+                else:
+                    publisher = item.get("publisher", "")
+                    link = item.get("link", "")
+                    pub_time = item.get("providerPublishTime")
+
+                # Format relative time
+                if pub_time is not None:
+                    diff_h = (now_ts - pub_time) / 3600
+                    if diff_h < 24:
+                        published = f"{int(diff_h)}h ago"
+                    else:
+                        dt = datetime.fromtimestamp(pub_time, tz=timezone.utc)
+                        published = dt.strftime("%b %d")
+                else:
+                    published = ""
+
+                if title:
+                    news_items.append({
+                        "title": title,
+                        "publisher": publisher,
+                        "link": link,
+                        "published": published,
+                    })
+
+            result["news"] = news_items
+        except Exception:
+            pass
+
+    except Exception:
+        pass
+
+    return result
 
 
 # ---------------------------------------------------------------------------
@@ -330,6 +489,7 @@ def get_ticker_summary(ticker: str) -> dict:
         pct_from_high = (today_close - high_52w) / high_52w * 100 if high_52w else 0.0
 
         anomalies = detect_anomalies(ticker, df)
+        fundamentals = get_ticker_fundamentals(ticker)
 
         return {
             "ticker": ticker,
@@ -348,6 +508,7 @@ def get_ticker_summary(ticker: str) -> dict:
             "52w_low": round(low_52w, 2),
             "pct_from_52w_high": round(pct_from_high, 2),
             "anomalies": anomalies,
+            "fundamentals": fundamentals,
         }
 
     except Exception as exc:

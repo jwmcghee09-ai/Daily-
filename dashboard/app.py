@@ -21,7 +21,7 @@ BASE_DIR = pathlib.Path(__file__).parent
 PARENT_DIR = BASE_DIR.parent
 sys.path.insert(0, str(PARENT_DIR))
 
-from market_scanner.scanner import scan_tickers, scan_with_summary, get_ticker_summary  # noqa: E402
+from market_scanner.scanner import scan_tickers, scan_with_summary, get_ticker_summary, get_ticker_fundamentals  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # App setup
@@ -48,6 +48,13 @@ SYSTEM_PROMPT = (
     "When analyzing anomalies, always include: signal strength, suggested action "
     "(BUY/SELL/HOLD/WATCH), position size as % of the 30% allocation, and stop-loss level. "
     "For index rotation decisions, compare momentum and RSI across SPY/QQQ/EWJ."
+    "\n\n"
+    "Fundamentals and news data are now available for each ticker. When making recommendations, "
+    "factor in: upcoming earnings dates (avoid entering positions just before earnings unless "
+    "the setup is very strong), P/E vs growth rate (PEG ratio — prefer PEG < 1.5 for growth "
+    "plays), analyst price targets and upside %, analyst consensus (buy/hold/sell), and recent "
+    "news sentiment (positive catalysts support long trades; negative news or regulatory risk "
+    "warrants caution or a tighter stop-loss)."
     "\n\n"
     "Be concise and decisive. Always give a clear recommendation."
 )
@@ -100,6 +107,17 @@ async def scan(tickers: str = "AAPL,TSLA,NVDA"):
     try:
         results = scan_with_summary(ticker_list)
         return JSONResponse(content=results)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/fundamentals/{ticker}")
+async def get_fundamentals(ticker: str):
+    """Return fundamental data, analyst targets, earnings dates, and news for a ticker."""
+    ticker = ticker.strip().upper()
+    try:
+        data = get_ticker_fundamentals(ticker)
+        return JSONResponse(content=data)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
