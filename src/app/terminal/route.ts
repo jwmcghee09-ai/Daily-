@@ -67,7 +67,18 @@ body{background:#000;color:#e8d5a0;font-family:'Courier New',Courier,monospace;f
 #chat-send{background:#1a0f00;border:1px solid #f90;border-radius:3px;color:#f90;font-family:'Courier New',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;padding:5px 10px;cursor:pointer;white-space:nowrap;align-self:flex-end}
 #chat-send:hover{background:#2a1800}
 #chat-send:disabled{opacity:.4;cursor:default}
-#chat-thinking{color:#f90;font-size:10px;padding:4px 8px;font-style:italic;display:none}
+/* tool badges */
+.tbadge{display:inline-block;font-size:8px;padding:1px 5px;border-radius:2px;border:1px solid;font-family:'Courier New',monospace;white-space:nowrap;margin:0 2px 2px 0;vertical-align:middle}
+.tbadge-calling{color:#f90;border-color:#3a2500;background:#0a0500;animation:tbp .9s ease-in-out infinite}
+@keyframes tbp{0%,100%{opacity:1}50%{opacity:.4}}
+.tbadge-done{color:#00e676;border-color:#003300;background:#010800}
+/* log panel */
+#log-panel{display:none;flex-direction:column;flex-shrink:0;border-top:2px solid #1a1200;height:210px}
+#log-panel.lp-open{display:flex}
+#log-content{flex:1;overflow-y:auto;padding:4px 8px;font-size:10px}
+.log-row{border-bottom:1px solid #0a0700;padding:4px 0;cursor:pointer;line-height:1.4}
+.log-row:hover{background:#050300}
+.log-exp{display:none;font-size:9px;color:#666;white-space:pre-wrap;word-break:break-word;max-height:100px;overflow-y:auto;padding:4px 0;border-top:1px solid #0a0700;margin-top:3px;line-height:1.55}
 
 /* tables */
 table{width:100%;border-collapse:collapse;font-size:11px}
@@ -103,6 +114,7 @@ tr:hover td{background:#0a0700}
 <div id="topbar">
   <span class="fkey" onclick="doRefresh()">F2</span><span class="flabel">REFRESH</span>
   <span class="fkey" onclick="focusChat()">F8</span><span class="flabel">CHAT</span>
+  <span class="fkey" onclick="toggleLog()">F9</span><span class="flabel">LOG</span>
   <div class="right">
     <span id="conn">CONNECTING…</span>
     <span id="clock">UTC 00:00:00</span>
@@ -197,14 +209,17 @@ tr:hover td{background:#0a0700}
 
   <!-- RIGHT: Myrmidon chat -->
   <div id="chat-panel">
-    <div class="ph">■ MYRMIDON · GROQ/LLAMA-3.3-70B <span id="chat-model" style="float:right;color:#333;font-size:8px"></span></div>
+    <div class="ph">■ MYRMIDON · <span id="chat-model-lbl">LLAMA-3.1-8B</span> <span id="chat-model" style="float:right;color:#333;font-size:8px"></span></div>
     <div id="chat-msgs">
       <div class="cmsg-sys">Ask Myrmidon about positions, trades, market analysis…</div>
     </div>
-    <div id="chat-thinking">Analysing…</div>
     <div id="chat-input-row">
       <textarea id="chat-in" rows="1" placeholder="Ask Myrmidon…" onkeydown="chatKey(event)"></textarea>
       <button id="chat-send" onclick="chatSend()">Send</button>
+    </div>
+    <div id="log-panel">
+      <div class="ph" style="font-size:8px">■ DECISION LOG <button onclick="loadLog(true)" style="float:right;background:none;border:none;cursor:pointer;color:#555;font-family:'Courier New',monospace;font-size:8px;text-transform:uppercase;letter-spacing:.05em">↺ REFRESH</button></div>
+      <div id="log-content"><span style="color:#333;font-style:italic;font-size:10px">Loading…</span></div>
     </div>
   </div>
 </div>
@@ -533,37 +548,138 @@ tr:hover td{background:#0a0700}
   }
   window.doRefresh=function(){loading=false;load();};
 
-  // chat
+  // ── CHAT (SSE streaming) ─────────────────────────────────────────────────
   var chatMsgs=[],chatBusy=false;
-  function renderChat(){
+
+  function chatSend(){
+    var inp=$('chat-in'),btn=$('chat-send');
+    if(!inp)return;
+    var text=inp.value.trim();if(!text||chatBusy)return;
+    inp.value='';chatBusy=true;btn.disabled=true;btn.textContent='…';
+    chatMsgs.push({role:'user',content:text});
+
     var box=$('chat-msgs');
-    if(!chatMsgs.length){box.innerHTML='<div class="cmsg-sys">Ask Myrmidon about positions, trades, market analysis…</div>';return;}
-    box.innerHTML=chatMsgs.map(function(m){
-      return m.role==='user'?'<div class="cmsg-u">'+esc(m.content)+'</div>':'<div class="cmsg-a">'+esc(m.content)+'</div>';
-    }).join('');
-    box.scrollTop=box.scrollHeight;
-  }
-  async function chatSend(){
-    var inp=$('chat-in'),btn=$('chat-send'),think=$('chat-thinking');
-    if(!inp)return;var text=inp.value.trim();if(!text||chatBusy)return;
-    inp.value='';chatMsgs.push({role:'user',content:text});chatBusy=true;renderChat();
-    think.style.display='block';btn.disabled=true;btn.textContent='…';
-    try{
-      var r=await fetch('/api/terminal/chat',{method:'POST',headers:{'Content-Type':'application/json','x-terminal-key':''},body:JSON.stringify({messages:chatMsgs})});
-      var raw=await r.text();
-      var data;try{data=JSON.parse(raw);}catch(pe){data={reply:'Server returned invalid response. Check GROQ_API_KEY in .env.local and restart npm run dev.'};}
-      chatMsgs.push({role:'assistant',content:data.reply||(data.error?'Error: '+data.error:'No response.')});
-    }catch(e){chatMsgs.push({role:'assistant',content:'Request failed: '+e.message+'. Is npm run dev still running?'});}
-    finally{chatBusy=false;think.style.display='none';btn.disabled=false;btn.textContent='Send';renderChat();}
+    var uDiv=document.createElement('div');uDiv.className='cmsg-u';uDiv.textContent=text;
+    box.appendChild(uDiv);box.scrollTop=box.scrollHeight;
+
+    var aWrap=document.createElement('div');aWrap.className='cmsg-a';
+    var toolsDiv=document.createElement('div');toolsDiv.style.cssText='display:flex;flex-wrap:wrap;margin-bottom:3px';
+    var textDiv=document.createElement('div');
+    aWrap.appendChild(toolsDiv);aWrap.appendChild(textDiv);
+    box.appendChild(aWrap);box.scrollTop=box.scrollHeight;
+
+    var activeBadges={},streamedText='',done=false;
+
+    function finalize(){
+      if(done)return;done=true;
+      chatBusy=false;btn.disabled=false;btn.textContent='Send';
+      if(streamedText)chatMsgs.push({role:'assistant',content:streamedText});
+    }
+
+    fetch('/api/terminal/chat',{method:'POST',
+      headers:{'Content-Type':'application/json','x-terminal-key':''},
+      body:JSON.stringify({messages:chatMsgs})
+    }).then(function(res){
+      if(!res.body){textDiv.textContent='Error: no stream';finalize();return;}
+      var reader=res.body.getReader(),dec=new TextDecoder(),buf='';
+      function read(){
+        reader.read().then(function(chunk){
+          if(chunk.done){finalize();return;}
+          buf+=dec.decode(chunk.value,{stream:true});
+          var parts=buf.split('\n\n');buf=parts.pop()||'';
+          parts.forEach(function(part){
+            var line=part.trim();
+            if(line.slice(0,5)!=='data:')return;
+            var ev;try{ev=JSON.parse(line.slice(5).trim());}catch(e2){return;}
+            if(ev.type==='tool_call'){
+              var b=document.createElement('span');
+              b.className='tbadge tbadge-calling';
+              b.textContent=String(ev.name||'').replace(/_/g,' ');
+              toolsDiv.appendChild(b);activeBadges[ev.name]=b;
+            }else if(ev.type==='tool_result'){
+              var ab=activeBadges[ev.name];
+              if(ab){ab.className='tbadge tbadge-done';ab.title=String(ev.preview||'');}
+            }else if(ev.type==='text_delta'){
+              streamedText+=String(ev.delta||'');
+              textDiv.textContent=streamedText;
+              box.scrollTop=box.scrollHeight;
+            }else if(ev.type==='status'){
+              if(!streamedText)textDiv.innerHTML='<span style="color:#f90;font-size:10px;font-style:italic">'+esc(String(ev.message||''))+'</span>';
+            }else if(ev.type==='done'){
+              var mdl=String(ev.model||'').replace('llama-','').replace('-instant','').replace('-versatile','');
+              $('chat-model').textContent=mdl;
+              finalize();return;
+            }else if(ev.type==='error'){
+              textDiv.textContent='Error: '+String(ev.message||'unknown');
+              finalize();return;
+            }
+          });
+          read();
+        }).catch(function(e3){textDiv.textContent='Stream error: '+String(e3&&e3.message||e3);finalize();});
+      }
+      read();
+    }).catch(function(e4){
+      var errDiv=document.createElement('div');errDiv.className='cmsg-a';
+      errDiv.textContent='Network error: '+String(e4&&e4.message||e4);
+      box.appendChild(errDiv);finalize();
+    });
   }
   window.chatSend=chatSend;
   window.chatKey=function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();chatSend();}};
   window.focusChat=function(){var el=$('chat-in');if(el)el.focus();};
 
-  // keyboard
+  // ── DECISION LOG ─────────────────────────────────────────────────────────
+  var logLoaded=false,logData=[],logOpen=false;
+
+  window.toggleLog=function(){
+    logOpen=!logOpen;
+    var panel=$('log-panel');
+    if(logOpen){panel.classList.add('lp-open');if(!logLoaded)loadLog(false);}
+    else panel.classList.remove('lp-open');
+  };
+
+  function loadLog(force){
+    var content=$('log-content');if(!content)return;
+    if(logLoaded&&!force)return;
+    content.innerHTML='<span style="color:#333;font-style:italic;font-size:10px">Loading…</span>';
+    fetch('/api/trading/decisions?limit=50')
+      .then(function(r){return r.json();})
+      .then(function(data){
+        logLoaded=true;logData=data.decisions||[];
+        if(!logData.length){
+          content.innerHTML='<span style="color:#333;font-style:italic;font-size:10px">No decisions logged yet — chat with Myrmidon</span>';
+          return;
+        }
+        content.innerHTML=logData.map(function(d,i){
+          var tools=[];try{tools=JSON.parse(d.tool_calls||'[]');}catch(e5){}
+          var toolNames=tools.map(function(t){return String(t.name||'').replace(/_/g,' ');}).join(', ')||'—';
+          var dt=new Date(d.created_at).toLocaleString('en-AU',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+          var eq=d.equity_usd?'$'+Math.round(parseFloat(d.equity_usd)).toLocaleString():'';
+          var shortQ=String(d.user_message||'').slice(0,75)+(String(d.user_message||'').length>75?'…':'');
+          return'<div class="log-row" onclick="toggleLogEntry(this,'+i+')" tabindex="0">'+
+            '<span style="color:#444">'+esc(dt)+'</span> '+
+            '<span style="color:#888">'+esc(shortQ)+'</span>'+
+            (eq?'  <span style="color:#00e676">'+esc(eq)+'</span>':'')+
+            '<div style="color:#333;font-size:9px">tools: '+esc(toolNames)+'</div>'+
+            '<div class="log-exp"></div>'+
+            '</div>';
+        }).join('');
+      })
+      .catch(function(){content.innerHTML='<span style="color:#ff4444;font-size:10px">Failed to load — check session</span>';});
+  }
+
+  window.toggleLogEntry=function(row,i){
+    var expEl=row.querySelector('.log-exp');if(!expEl)return;
+    if(expEl.style.display==='block'){expEl.style.display='none';}
+    else{var d=logData[i];expEl.style.display='block';expEl.textContent=d?d.ai_response||'(no response)':'?';}
+  };
+  window.loadLog=loadLog;
+
+  // ── KEYBOARD ─────────────────────────────────────────────────────────────
   document.addEventListener('keydown',function(e){
     if(e.key==='F2'||(e.key==='r'&&e.ctrlKey)){e.preventDefault();window.doRefresh();}
     if(e.key==='F8'){e.preventDefault();window.focusChat();}
+    if(e.key==='F9'){e.preventDefault();window.toggleLog();}
   });
 
   load();
