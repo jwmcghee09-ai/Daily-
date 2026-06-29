@@ -166,11 +166,19 @@ const MYRMIDON_ANALYTICS_HTML = `<!-- MYRMIDON ANALYTICS PAGE -->
 </div>`;
 
 const MYRMIDON_ANALYTICS_SCRIPT = `<script>
+// Global error catcher — writes any uncaught error to the status div before anything else.
+window.addEventListener('error',function(ev){
+  var e=document.getElementById('myrm-api-status');
+  if(e)e.textContent='JS ERROR: '+(ev.message||ev)+(ev.filename?' @ '+ev.filename+':'+ev.lineno:'');
+});
 (function(){
   var loading=false;
   var CORE_ETFS={SPY:0.40,QQQ:0.20,VEA:0.15};
-  var apiStatusEl=document.getElementById('myrm-api-status');
-  function setStatus(msg,col){if(apiStatusEl){apiStatusEl.textContent=msg;apiStatusEl.style.color=col||'#ff7a30';}}
+  // Re-query the element each call — handles rare cases where it isn't available yet at IIFE init.
+  function setStatus(msg,col){
+    var e=document.getElementById('myrm-api-status');
+    if(e){e.textContent=msg;e.style.color=col||'#ff7a30';}
+  }
   var BROAD_ETFS={'IWM':1,'VTI':1,'IVV':1,'DIA':1,'GLD':1,'TLT':1,'BND':1,'AGG':1,
     'XLE':1,'XLF':1,'XLV':1,'XLI':1,'XLY':1,'XLP':1,'XLU':1,'XLB':1,'XLRE':1,'XLK':1,
     'VNQ':1,'EFA':1,'EEM':1,'VWO':1,'VO':1,'VB':1,'SCHD':1,'JEPI':1,'JEPQ':1};
@@ -233,7 +241,7 @@ const MYRMIDON_ANALYTICS_SCRIPT = `<script>
       renderOpenOrders(d.openOrders);
       setStatus('✓ Loaded','#4ade80');
     }catch(e){
-      var msg=e.name==='AbortError'?'Timed out after 30s — Alpaca unreachable from Render (are keys set in Render dashboard?)':('Fetch error: '+e.message);
+      var msg=e.name==='AbortError'?'Timed out (12s) — Alpaca API slow or unreachable from Render':('Fetch error: '+(e.message||e));
       setStatus('✗ '+msg,'#f87171');setAll(msg);
     }
     loading=false;
@@ -510,6 +518,8 @@ const MYRMIDON_ANALYTICS_SCRIPT = `<script>
     }).join('');
   }
 
+  var dataLoadedAt = 0; // timestamp of last successful render
+
   function renderAll(d){
     if(!d||!d.account)return false;
     var eq=parseFloat(d.account.equity)||0;
@@ -520,6 +530,7 @@ const MYRMIDON_ANALYTICS_SCRIPT = `<script>
     renderRisk(d.account,d.positions,d.macro);
     renderPositions(d.positions,eq,d.audUsdRate);
     renderOpenOrders(d.openOrders);
+    dataLoadedAt = Date.now();
     return true;
   }
 
@@ -528,30 +539,36 @@ const MYRMIDON_ANALYTICS_SCRIPT = `<script>
     try{
       var ok=renderAll(window.__MYRM_PRELOAD);
       window.__MYRM_PRELOAD=null;
-      setStatus(ok?'✓ Loaded':'✗ Preload had no account data',ok?'#4ade80':'#f87171');
-    }catch(pe){setStatus('✗ '+pe.message,'#f87171');setAll('Render error: '+pe.message);}
+      setStatus(ok?'✓ Loaded (server preload)':'✗ Preload had no account data',ok?'#4ade80':'#f87171');
+    }catch(pe){setStatus('✗ Render error: '+(pe&&pe.message||pe),'#f87171');setAll('Render error: '+(pe&&pe.message||pe));}
   } else {
     // No server preload — load from API immediately (no delay).
-    setStatus('Fetching from Alpaca API…');
+    setStatus('No preload — fetching from Alpaca API…');
     loadAnalytics();
   }
 
-  // Intercept window._currentTab (set by switchTab in the dashboard) to reload when Analytics opens.
+  // Intercept window._currentTab (set by switchTab in the dashboard).
+  // Only trigger a fresh load if no data loaded yet, or data is > 5 min old.
   var _ctVal=window._currentTab;
   try{
     Object.defineProperty(window,'_currentTab',{configurable:true,
       get:function(){return _ctVal;},
       set:function(v){
         _ctVal=v;
-        if(v==='analytics'&&!loading){setTimeout(loadAnalytics,20);}
+        if(v==='analytics'&&!loading&&(Date.now()-dataLoadedAt>300000)){
+          setTimeout(loadAnalytics,20);
+        }
       }
     });
   }catch(e){
-    // Fallback: click listener
+    // Fallback: click listener (only if data is stale)
     document.addEventListener('click',function(ev){
       var t=ev.target;
       while(t&&t!==document){
-        if(t.getAttribute&&t.getAttribute('data-tab')==='analytics'){if(!loading)setTimeout(loadAnalytics,30);break;}
+        if(t.getAttribute&&t.getAttribute('data-tab')==='analytics'){
+          if(!loading&&(Date.now()-dataLoadedAt>300000))setTimeout(loadAnalytics,30);
+          break;
+        }
         t=t.parentElement;
       }
     },true);
@@ -559,7 +576,7 @@ const MYRMIDON_ANALYTICS_SCRIPT = `<script>
 
   // Refresh button + programmatic access
   window.myrmLoadAnalytics = loadAnalytics;
-  window.myrmRefreshAnalytics = function(){ loading=false; loadAnalytics(); };
+  window.myrmRefreshAnalytics = function(){ loading=false; dataLoadedAt=0; loadAnalytics(); };
 })();
 </script>`;
 
@@ -718,7 +735,7 @@ export async function GET(request: NextRequest) {
     const hasSec = !!process.env.ALPACA_API_SECRET;
     const preload = await fetchTraderAnalytics();
     const preloadScript = preload
-      ? `<script>window.__MYRM_PRELOAD=${JSON.stringify(preload)};</script>`
+      ? `<script>window.__MYRM_PRELOAD=${JSON.stringify(preload).replace(/<\/script>/gi, "<\\/script>")};</script>`
       : "";
     // Inject server-side status immediately (no JS async needed — text set synchronously).
     let srvStatus: string;
