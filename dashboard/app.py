@@ -2,6 +2,7 @@
 dashboard/app.py - FastAPI trading terminal backend
 """
 
+import os
 import sys
 import json
 import pathlib
@@ -40,7 +41,10 @@ app.add_middleware(
 HOLDINGS_FILE = BASE_DIR / "data" / "holdings.json"
 STATIC_DIR = BASE_DIR / "static"
 OLLAMA_URL = "http://localhost:11434/api/generate"
-OLLAMA_MODEL = "qwen2.5:7b"
+OLLAMA_MODEL = "qwen2.5"
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
+GROQ_MODEL = "llama-3.3-70b-versatile"
+GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 SYSTEM_PROMPT = (
     "You are an AI trading analyst managing a single Alpaca paper trading account. "
     "The ONLY portfolio you manage is the Alpaca account — ignore any manually entered holdings. "
@@ -143,6 +147,41 @@ class ChatMessage(BaseModel):
 
 @app.post("/chat")
 async def chat(body: ChatMessage):
+    async def stream_groq():
+        headers = {
+            "Authorization": f"Bearer {GROQ_API_KEY}",
+            "Content-Type": "application/json",
+        }
+        payload = {
+            "model": GROQ_MODEL,
+            "messages": [
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": body.message},
+            ],
+            "stream": True,
+            "max_tokens": 1024,
+        }
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            async with client.stream("POST", GROQ_URL, headers=headers, json=payload) as resp:
+                if resp.status_code != 200:
+                    body_text = await resp.aread()
+                    raise RuntimeError(f"Groq HTTP {resp.status_code}: {body_text[:200].decode()}")
+                async for line in resp.aiter_lines():
+                    if not line.startswith("data:"):
+                        continue
+                    data = line[5:].strip()
+                    if data == "[DONE]":
+                        yield "data: [DONE]\n\n"
+                        return
+                    try:
+                        chunk = json.loads(data)
+                        token = chunk["choices"][0]["delta"].get("content", "")
+                        if token:
+                            safe = token.replace("\n", "\\n")
+                            yield f"data: {safe}\n\n"
+                    except (json.JSONDecodeError, KeyError, IndexError):
+                        continue
+
     async def stream_ollama():
         payload = {
             "model": OLLAMA_MODEL,
@@ -150,34 +189,41 @@ async def chat(body: ChatMessage):
             "prompt": body.message,
             "stream": True,
         }
-        try:
-            async with httpx.AsyncClient(timeout=120.0) as client:
-                async with client.stream("POST", OLLAMA_URL, json=payload) as resp:
-                    async for line in resp.aiter_lines():
-                        if not line.strip():
-                            continue
-                        try:
-                            chunk = json.loads(line)
-                            error = chunk.get("error", "")
-                            if error:
-                                safe = error.replace("\n", "\\n")
-                                yield f"data: [OLLAMA ERROR] {safe}\n\n"
-                                yield "data: [DONE]\n\n"
-                                return
-                            token = chunk.get("response", "")
-                            if token:
-                                safe = token.replace("\n", "\\n")
-                                yield f"data: {safe}\n\n"
-                            if chunk.get("done", False):
-                                yield "data: [DONE]\n\n"
-                                return
-                        except json.JSONDecodeError:
-                            continue
-        except Exception as e:
-            yield f"data: ERROR: {e}\n\n"
-            yield "data: [DONE]\n\n"
+        async with httpx.AsyncClient(timeout=120.0) as client:
+            async with client.stream("POST", OLLAMA_URL, json=payload) as resp:
+                async for line in resp.aiter_lines():
+                    if not line.strip():
+                        continue
+                    try:
+                        chunk = json.loads(line)
+                        error = chunk.get("error", "")
+                        if error:
+                            safe = error.replace("\n", "\\n")
+                            yield f"data: [Ollama error] {safe}\n\n"
+                            yield "data: [DONE]\n\n"
+                            return
+                        token = chunk.get("response", "")
+                        if token:
+                            safe = token.replace("\n", "\\n")
+                            yield f"data: {safe}\n\n"
+                        if chunk.get("done", False):
+                            yield "data: [DONE]\n\n"
+                            return
+                    except json.JSONDecodeError:
+                        continue
 
-    return StreamingResponse(stream_ollama(), media_type="text/event-stream")
+    async def stream_with_fallback():
+        if GROQ_API_KEY:
+            try:
+                async for chunk in stream_groq():
+                    yield chunk
+                return
+            except Exception as e:
+                yield f"data: [Groq unavailable, falling back to local model: {e}]\\n\n\n"
+        async for chunk in stream_ollama():
+            yield chunk
+
+    return StreamingResponse(stream_with_fallback(), media_type="text/event-stream")
 
 
 @app.get("/holdings")
