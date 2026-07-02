@@ -22,6 +22,7 @@ PARENT_DIR = BASE_DIR.parent
 sys.path.insert(0, str(PARENT_DIR))
 
 from market_scanner.scanner import scan_tickers, scan_with_summary, get_ticker_summary, get_ticker_fundamentals  # noqa: E402
+from dashboard import alpaca_trader  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # App setup
@@ -221,6 +222,89 @@ async def delete_holding(ticker: str):
     holdings = [h for h in holdings if h["ticker"] != ticker]
     save_holdings(holdings)
     return holdings
+
+
+# ---------------------------------------------------------------------------
+# Alpaca routes
+# ---------------------------------------------------------------------------
+
+def _alpaca_keys_configured():
+    return bool(alpaca_trader.API_KEY and alpaca_trader.SECRET_KEY)
+
+
+@app.get("/alpaca/account")
+async def alpaca_account():
+    if not _alpaca_keys_configured():
+        return JSONResponse(content={"error": "Alpaca API keys not configured"})
+    return JSONResponse(content=alpaca_trader.get_account())
+
+
+@app.get("/alpaca/positions")
+async def alpaca_positions():
+    if not _alpaca_keys_configured():
+        return JSONResponse(content={"error": "Alpaca API keys not configured"})
+    return JSONResponse(content=alpaca_trader.get_positions())
+
+
+@app.get("/alpaca/orders")
+async def alpaca_orders(status: str = "open"):
+    if not _alpaca_keys_configured():
+        return JSONResponse(content={"error": "Alpaca API keys not configured"})
+    return JSONResponse(content=alpaca_trader.get_orders(status=status))
+
+
+class AlpacaOrderRequest(BaseModel):
+    ticker: str
+    qty: float
+    side: str
+    order_type: Optional[str] = "market"
+    limit_price: Optional[float] = None
+    stop_loss_pct: Optional[float] = None
+
+
+@app.post("/alpaca/order")
+async def alpaca_place_order(body: AlpacaOrderRequest):
+    if not _alpaca_keys_configured():
+        return JSONResponse(content={"error": "Alpaca API keys not configured"})
+    result = alpaca_trader.place_order(
+        ticker=body.ticker,
+        qty=body.qty,
+        side=body.side,
+        order_type=body.order_type or "market",
+        limit_price=body.limit_price,
+        stop_loss_pct=body.stop_loss_pct,
+    )
+    return JSONResponse(content=result)
+
+
+@app.delete("/alpaca/order/{order_id}")
+async def alpaca_cancel_order(order_id: str):
+    if not _alpaca_keys_configured():
+        return JSONResponse(content={"error": "Alpaca API keys not configured"})
+    return JSONResponse(content=alpaca_trader.cancel_order(order_id))
+
+
+@app.delete("/alpaca/position/{ticker}")
+async def alpaca_close_position(ticker: str):
+    if not _alpaca_keys_configured():
+        return JSONResponse(content={"error": "Alpaca API keys not configured"})
+    return JSONResponse(content=alpaca_trader.close_position(ticker))
+
+
+@app.get("/alpaca/clock")
+async def alpaca_clock():
+    if not _alpaca_keys_configured():
+        return JSONResponse(content={"error": "Alpaca API keys not configured"})
+    try:
+        api = alpaca_trader.get_api()
+        clock = api.get_clock()
+        return JSONResponse(content={
+            "is_open": clock.is_open,
+            "next_open": str(clock.next_open),
+            "next_close": str(clock.next_close),
+        })
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)})
 
 
 @app.get("/prices")

@@ -551,6 +551,95 @@
     max-height: 200px;
     overflow-y: auto;
   }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     ALPACA TAB
+  ══════════════════════════════════════════════════════════════════════════ */
+  #alpaca-panel { overflow-y: auto; }
+
+  #alpaca-account-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 10px 14px;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    align-items: center;
+  }
+  .alpaca-stat { display: flex; flex-direction: column; gap: 2px; }
+  .alpaca-stat-label { font-size: 10px; color: var(--muted); letter-spacing: 1px; }
+  .alpaca-stat-val { font-size: 14px; color: var(--cyan); font-weight: bold; }
+  #alpaca-market-status {
+    margin-left: auto;
+    padding: 3px 10px;
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    border: 1px solid var(--border);
+  }
+  #alpaca-market-status.open { color: var(--green); border-color: var(--green); }
+  #alpaca-market-status.closed { color: var(--red); border-color: var(--red); }
+
+  .alpaca-section {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .alpaca-section-title {
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* Side toggle buttons */
+  .side-toggle { display: flex; gap: 0; }
+  .side-toggle button {
+    width: 70px;
+    border-radius: 0;
+  }
+  .side-toggle button.active-buy { background: var(--green-dim); border-color: var(--green); color: var(--green); }
+  .side-toggle button.active-sell { background: #6e1a1a; border-color: var(--red); color: var(--red); }
+
+  /* Order type toggle */
+  .type-toggle { display: flex; gap: 0; }
+  .type-toggle button { width: 80px; border-radius: 0; }
+  .type-toggle button.active-type { background: var(--cyan-dim); border-color: var(--cyan); color: var(--cyan); }
+
+  #alpaca-trade-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    max-width: 520px;
+  }
+  #alpaca-trade-form .form-full { grid-column: 1 / -1; }
+  .form-field { display: flex; flex-direction: column; gap: 4px; }
+  .form-label { font-size: 10px; color: var(--muted); letter-spacing: 1px; }
+
+  #alpaca-msg {
+    margin-top: 8px;
+    padding: 6px 10px;
+    font-size: 12px;
+    display: none;
+  }
+  #alpaca-msg.success { color: var(--green); border: 1px solid var(--green-dim); background: rgba(63,185,80,0.05); }
+  #alpaca-msg.error { color: var(--red); border: 1px solid var(--red); background: rgba(248,81,73,0.05); }
+
+  #alpaca-ai-box {
+    display: none;
+    margin-top: 10px;
+    background: var(--bg3);
+    border: 1px solid var(--green-dim);
+    padding: 10px 14px;
+    font-size: 12px;
+    color: var(--green);
+    white-space: pre-wrap;
+    line-height: 1.6;
+    max-height: 220px;
+    overflow-y: auto;
+  }
 </style>
 </head>
 <body>
@@ -568,6 +657,7 @@
   <button class="tab-btn" data-tab="scan">SCANNER</button>
   <button class="tab-btn" data-tab="holdings">HOLDINGS</button>
   <button class="tab-btn" data-tab="strategy">PORTFOLIO STRATEGY</button>
+  <button class="tab-btn" data-tab="alpaca">ALPACA</button>
 </div>
 
 <!-- ── Main ───────────────────────────────────────────────────────────── -->
@@ -716,6 +806,130 @@
 
   </div><!-- /strategy-panel -->
 
+  <!-- ══ ALPACA ══════════════════════════════════════════════════════════ -->
+  <div class="tab-panel" id="alpaca-panel">
+
+    <!-- Account Bar -->
+    <div id="alpaca-account-bar">
+      <div class="alpaca-stat">
+        <span class="alpaca-stat-label">PORTFOLIO VALUE</span>
+        <span class="alpaca-stat-val" id="alp-portfolio">—</span>
+      </div>
+      <div class="alpaca-stat">
+        <span class="alpaca-stat-label">BUYING POWER</span>
+        <span class="alpaca-stat-val" id="alp-buying-power">—</span>
+      </div>
+      <div class="alpaca-stat">
+        <span class="alpaca-stat-label">CASH</span>
+        <span class="alpaca-stat-val" id="alp-cash">—</span>
+      </div>
+      <div class="alpaca-stat">
+        <span class="alpaca-stat-label">TODAY'S P&amp;L</span>
+        <span class="alpaca-stat-val" id="alp-pnl">—</span>
+      </div>
+      <div id="alpaca-market-status">—</div>
+      <button onclick="loadAlpacaAccount()" style="margin-left:4px;font-size:11px">↻ REFRESH</button>
+    </div>
+
+    <!-- Positions Section -->
+    <div class="alpaca-section">
+      <div class="alpaca-section-title">
+        POSITIONS
+        <button onclick="loadAlpacaPositions()" style="font-size:11px">↻ REFRESH</button>
+      </div>
+      <div style="overflow-x:auto">
+        <table id="alpaca-positions-table">
+          <thead>
+            <tr>
+              <th>TICKER</th>
+              <th>QTY</th>
+              <th>AVG COST</th>
+              <th>CURRENT</th>
+              <th>MARKET VALUE</th>
+              <th>P&amp;L $</th>
+              <th>P&amp;L %</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="alpaca-positions-body">
+            <tr><td colspan="8" style="color:var(--muted);text-align:center;padding:16px">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Orders Section -->
+    <div class="alpaca-section">
+      <div class="alpaca-section-title">
+        OPEN ORDERS
+        <button onclick="loadAlpacaOrders()" style="font-size:11px">↻ REFRESH ORDERS</button>
+      </div>
+      <div style="overflow-x:auto">
+        <table id="alpaca-orders-table">
+          <thead>
+            <tr>
+              <th>TICKER</th>
+              <th>QTY</th>
+              <th>SIDE</th>
+              <th>TYPE</th>
+              <th>STATUS</th>
+              <th>LIMIT $</th>
+              <th>SUBMITTED</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="alpaca-orders-body">
+            <tr><td colspan="8" style="color:var(--muted);text-align:center;padding:16px">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Quick Trade Panel -->
+    <div class="alpaca-section">
+      <div class="alpaca-section-title">QUICK TRADE</div>
+      <div id="alpaca-trade-form">
+        <div class="form-field">
+          <span class="form-label">TICKER</span>
+          <input id="alp-ticker" type="text" placeholder="AAPL" style="text-transform:uppercase;width:100%"/>
+        </div>
+        <div class="form-field">
+          <span class="form-label">QUANTITY</span>
+          <input id="alp-qty" type="number" placeholder="10" min="1" step="1" style="width:100%"/>
+        </div>
+        <div class="form-field">
+          <span class="form-label">SIDE</span>
+          <div class="side-toggle">
+            <button id="alp-side-buy" class="active-buy" onclick="setAlpacaSide('buy')">BUY</button>
+            <button id="alp-side-sell" onclick="setAlpacaSide('sell')">SELL</button>
+          </div>
+        </div>
+        <div class="form-field">
+          <span class="form-label">ORDER TYPE</span>
+          <div class="type-toggle">
+            <button id="alp-type-market" class="active-type" onclick="setAlpacaOrderType('market')">MARKET</button>
+            <button id="alp-type-limit" onclick="setAlpacaOrderType('limit')">LIMIT</button>
+          </div>
+        </div>
+        <div class="form-field" id="alp-limit-row" style="display:none">
+          <span class="form-label">LIMIT PRICE</span>
+          <input id="alp-limit-price" type="number" placeholder="150.00" step="0.01" style="width:100%"/>
+        </div>
+        <div class="form-field">
+          <span class="form-label">STOP LOSS %</span>
+          <input id="alp-stop-loss" type="number" placeholder="5 (optional)" step="0.1" min="0" style="width:100%"/>
+        </div>
+        <div class="form-full" style="display:flex;gap:8px;align-items:center;margin-top:4px">
+          <button class="primary" onclick="placeAlpacaOrder()" style="letter-spacing:1px">PLACE ORDER</button>
+          <button onclick="getAlpacaAISuggestion()" style="color:var(--cyan);border-color:var(--cyan)">⬡ GET AI TRADE SUGGESTION</button>
+        </div>
+      </div>
+      <div id="alpaca-msg"></div>
+      <div id="alpaca-ai-box"></div>
+    </div>
+
+  </div><!-- /alpaca-panel -->
+
 </div><!-- /main -->
 
 <!-- ── Fundamentals Modal ──────────────────────────────────────────────── -->
@@ -781,6 +995,11 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
       renderPortfolioHealth();
       renderWatchlist();
       if (Object.keys(indexData).length === 0) loadMarketOverview();
+    }
+    if (btn.dataset.tab === 'alpaca') {
+      loadAlpacaAccount();
+      loadAlpacaPositions();
+      loadAlpacaOrders();
     }
   });
 });
@@ -1538,6 +1757,289 @@ function closeFundModal(event) {
 ══════════════════════════════════════════════════════════════════════════════ */
 function setStatus(msg) {
   document.getElementById('sb-status').textContent = msg;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ALPACA
+══════════════════════════════════════════════════════════════════════════════ */
+let alpacaSide = 'buy';
+let alpacaOrderType = 'market';
+
+function setAlpacaSide(side) {
+  alpacaSide = side;
+  const buyBtn = document.getElementById('alp-side-buy');
+  const sellBtn = document.getElementById('alp-side-sell');
+  buyBtn.className = side === 'buy' ? 'active-buy' : '';
+  sellBtn.className = side === 'sell' ? 'active-sell' : '';
+}
+
+function setAlpacaOrderType(type) {
+  alpacaOrderType = type;
+  document.getElementById('alp-type-market').className = type === 'market' ? 'active-type' : '';
+  document.getElementById('alp-type-limit').className = type === 'limit' ? 'active-type' : '';
+  document.getElementById('alp-limit-row').style.display = type === 'limit' ? '' : 'none';
+}
+
+function fmtMoney(v) {
+  if (v == null) return '—';
+  return '$' + Number(v).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+}
+
+async function loadAlpacaAccount() {
+  try {
+    const r = await fetch('/alpaca/account');
+    const d = await r.json();
+    if (d.error) {
+      document.getElementById('alp-portfolio').textContent = 'ERROR';
+      return;
+    }
+    document.getElementById('alp-portfolio').textContent = fmtMoney(d.portfolio_value);
+    document.getElementById('alp-buying-power').textContent = fmtMoney(d.buying_power);
+    document.getElementById('alp-cash').textContent = fmtMoney(d.cash);
+    const pnlEl = document.getElementById('alp-pnl');
+    const pnl = d.pnl_today ?? 0;
+    const pnlPct = d.pnl_today_pct ?? 0;
+    pnlEl.textContent = `${pnl >= 0 ? '+' : ''}${fmtMoney(pnl)} (${pnl >= 0 ? '+' : ''}${Number(pnlPct).toFixed(2)}%)`;
+    pnlEl.style.color = pnl >= 0 ? 'var(--green)' : 'var(--red)';
+  } catch (e) {
+    console.error('Alpaca account error:', e);
+  }
+
+  // Load clock
+  try {
+    const cr = await fetch('/alpaca/clock');
+    const cd = await cr.json();
+    const msEl = document.getElementById('alpaca-market-status');
+    if (cd.is_open) {
+      msEl.textContent = 'MARKET OPEN';
+      msEl.className = 'open';
+    } else {
+      msEl.textContent = 'MARKET CLOSED';
+      msEl.className = 'closed';
+    }
+  } catch (e) { /* ignore */ }
+}
+
+async function loadAlpacaPositions() {
+  const tbody = document.getElementById('alpaca-positions-body');
+  tbody.innerHTML = '<tr><td colspan="8" style="color:var(--muted);text-align:center;padding:12px">Loading…</td></tr>';
+  try {
+    const r = await fetch('/alpaca/positions');
+    const data = await r.json();
+    if (data.error) {
+      tbody.innerHTML = `<tr><td colspan="8" style="color:var(--red);text-align:center;padding:12px">${data.error}</td></tr>`;
+      return;
+    }
+    if (!data.length) {
+      tbody.innerHTML = '<tr><td colspan="8" style="color:var(--muted);text-align:center;padding:12px">No open positions.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = '';
+    data.forEach(pos => {
+      const pnlClass = pos.pnl >= 0 ? 'pos' : 'neg';
+      const pnlPctClass = pos.pnl_pct >= 0 ? 'pos' : 'neg';
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td style="color:var(--cyan);font-weight:bold">${pos.ticker}</td>
+        <td>${pos.qty}</td>
+        <td>${fmtMoney(pos.avg_cost)}</td>
+        <td>${fmtMoney(pos.current_price)}</td>
+        <td>${fmtMoney(pos.market_value)}</td>
+        <td class="${pnlClass}">${pos.pnl >= 0 ? '+' : ''}${fmtMoney(pos.pnl)}</td>
+        <td class="${pnlPctClass}">${pos.pnl_pct >= 0 ? '+' : ''}${Number(pos.pnl_pct).toFixed(2)}%</td>
+        <td><button class="danger" onclick="closeAlpacaPosition('${pos.ticker}')">CLOSE</button></td>
+      `;
+      tbody.appendChild(tr);
+    });
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="8" style="color:var(--red);text-align:center;padding:12px">Error: ${e.message}</td></tr>`;
+  }
+}
+
+async function loadAlpacaOrders() {
+  const tbody = document.getElementById('alpaca-orders-body');
+  tbody.innerHTML = '<tr><td colspan="8" style="color:var(--muted);text-align:center;padding:12px">Loading…</td></tr>';
+  try {
+    const r = await fetch('/alpaca/orders?status=open');
+    const data = await r.json();
+    if (data.error) {
+      tbody.innerHTML = `<tr><td colspan="8" style="color:var(--red);text-align:center;padding:12px">${data.error}</td></tr>`;
+      return;
+    }
+    if (!data.length) {
+      tbody.innerHTML = '<tr><td colspan="8" style="color:var(--muted);text-align:center;padding:12px">No open orders.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = '';
+    data.forEach(o => {
+      const sideColor = o.side === 'buy' ? 'var(--green)' : 'var(--red)';
+      const timeStr = o.submitted_at ? o.submitted_at.slice(0, 19).replace('T', ' ') : '—';
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td style="color:var(--cyan);font-weight:bold">${o.ticker}</td>
+        <td>${o.qty ?? '—'}</td>
+        <td style="color:${sideColor};font-weight:bold">${(o.side || '').toUpperCase()}</td>
+        <td>${(o.type || '').toUpperCase()}</td>
+        <td style="color:var(--muted)">${(o.status || '').toUpperCase()}</td>
+        <td>${o.limit_price ? fmtMoney(o.limit_price) : '—'}</td>
+        <td style="color:var(--muted);font-size:11px">${timeStr}</td>
+        <td><button class="danger" onclick="cancelAlpacaOrder('${o.id}')">CANCEL</button></td>
+      `;
+      tbody.appendChild(tr);
+    });
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="8" style="color:var(--red);text-align:center;padding:12px">Error: ${e.message}</td></tr>`;
+  }
+}
+
+async function closeAlpacaPosition(ticker) {
+  if (!confirm(`Close entire position in ${ticker}? This will sell all shares at market.`)) return;
+  setStatus('CLOSING ' + ticker + '…');
+  try {
+    const r = await fetch('/alpaca/position/' + encodeURIComponent(ticker), {method: 'DELETE'});
+    const d = await r.json();
+    if (d.error) { showAlpacaMsg('error', 'Error: ' + d.error); }
+    else { showAlpacaMsg('success', `Position in ${ticker} closed.`); }
+    await loadAlpacaPositions();
+    await loadAlpacaAccount();
+  } catch (e) { showAlpacaMsg('error', 'Error: ' + e.message); }
+  setStatus('READY');
+}
+
+async function cancelAlpacaOrder(orderId) {
+  if (!confirm(`Cancel order ${orderId}?`)) return;
+  setStatus('CANCELLING ORDER…');
+  try {
+    const r = await fetch('/alpaca/order/' + encodeURIComponent(orderId), {method: 'DELETE'});
+    const d = await r.json();
+    if (d.error) { showAlpacaMsg('error', 'Error: ' + d.error); }
+    else { showAlpacaMsg('success', 'Order cancelled.'); }
+    await loadAlpacaOrders();
+  } catch (e) { showAlpacaMsg('error', 'Error: ' + e.message); }
+  setStatus('READY');
+}
+
+async function placeAlpacaOrder() {
+  const ticker = document.getElementById('alp-ticker').value.trim().toUpperCase();
+  const qty = parseFloat(document.getElementById('alp-qty').value);
+  const stopLossPct = parseFloat(document.getElementById('alp-stop-loss').value) || null;
+  const limitPrice = alpacaOrderType === 'limit' ? parseFloat(document.getElementById('alp-limit-price').value) : null;
+
+  if (!ticker || isNaN(qty) || qty <= 0) {
+    showAlpacaMsg('error', 'Enter a valid ticker and quantity.');
+    return;
+  }
+  if (alpacaOrderType === 'limit' && (!limitPrice || isNaN(limitPrice))) {
+    showAlpacaMsg('error', 'Enter a valid limit price.');
+    return;
+  }
+
+  const typeLabel = alpacaOrderType === 'market' ? 'Market' : `Limit @ ${fmtMoney(limitPrice)}`;
+  const stopLabel = stopLossPct ? ` Stop loss at ${stopLossPct}%.` : '';
+  const confirmMsg = `${alpacaSide.charAt(0).toUpperCase() + alpacaSide.slice(1)} ${qty} shares of ${ticker} at ${typeLabel}.${stopLabel} Confirm?`;
+  if (!confirm(confirmMsg)) return;
+
+  setStatus('PLACING ORDER…');
+  try {
+    const body = {ticker, qty, side: alpacaSide, order_type: alpacaOrderType};
+    if (limitPrice) body.limit_price = limitPrice;
+    if (stopLossPct) body.stop_loss_pct = stopLossPct;
+
+    const r = await fetch('/alpaca/order', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(body)
+    });
+    const d = await r.json();
+    if (d.error) {
+      showAlpacaMsg('error', 'Order failed: ' + d.error);
+    } else {
+      const val = d.estimated_value ? ` (~${fmtMoney(d.estimated_value)})` : '';
+      showAlpacaMsg('success', `Order placed! ID: ${d.id} | ${d.side?.toUpperCase()} ${d.qty} ${d.ticker} | Status: ${d.status}${val}`);
+      // Clear form
+      document.getElementById('alp-ticker').value = '';
+      document.getElementById('alp-qty').value = '';
+      document.getElementById('alp-stop-loss').value = '';
+      if (alpacaOrderType === 'limit') document.getElementById('alp-limit-price').value = '';
+      // Refresh
+      await loadAlpacaPositions();
+      await loadAlpacaOrders();
+      await loadAlpacaAccount();
+    }
+  } catch (e) {
+    showAlpacaMsg('error', 'Error: ' + e.message);
+  }
+  setStatus('READY');
+}
+
+function showAlpacaMsg(type, text) {
+  const el = document.getElementById('alpaca-msg');
+  el.className = type;
+  el.textContent = text;
+  el.style.display = 'block';
+  setTimeout(() => { el.style.display = 'none'; }, 8000);
+}
+
+async function getAlpacaAISuggestion() {
+  const aiBox = document.getElementById('alpaca-ai-box');
+  aiBox.style.display = 'block';
+  aiBox.textContent = 'Fetching account and market data…';
+
+  let accountData, positionsData, scanData;
+  try {
+    const [acctR, posR, scanR] = await Promise.all([
+      fetch('/alpaca/account'),
+      fetch('/alpaca/positions'),
+      fetch('/scan?tickers=AAPL,TSLA,NVDA,MSFT,GOOGL,AMZN,META')
+    ]);
+    accountData = await acctR.json();
+    positionsData = await posR.json();
+    scanData = await scanR.json();
+  } catch (e) {
+    aiBox.textContent = 'Error fetching data: ' + e.message;
+    return;
+  }
+
+  const portfolioVal = accountData.portfolio_value ? fmtMoney(accountData.portfolio_value) : 'unknown';
+  const posStr = Array.isArray(positionsData) && positionsData.length
+    ? positionsData.map(p => `${p.ticker}: ${p.qty} shares @ avg ${fmtMoney(p.avg_cost)}, current ${fmtMoney(p.current_price)}, P&L ${p.pnl >= 0 ? '+' : ''}${fmtMoney(p.pnl)} (${p.pnl_pct >= 0 ? '+' : ''}${Number(p.pnl_pct).toFixed(2)}%)`).join('; ')
+    : 'no open positions';
+
+  const anomalies = (scanData.anomalies || []).map(a =>
+    `${a.ticker} [${a.severity}] ${a.type}: ${a.details || a.signal || 'anomaly'} | RSI:${a.rsi?.toFixed(1) ?? '?'} VolRatio:${a.volume_ratio?.toFixed(2) ?? '?'}x`
+  ).join('\n');
+
+  const prompt = `Based on my current Alpaca paper trading account (portfolio: ${portfolioVal}, positions: [${posStr}]) and these market anomalies:\n${anomalies || 'none detected'}\n\nWhat specific trade should I make right now? Give me: ticker, buy/sell, quantity for a ${portfolioVal} portfolio, stop loss %, and reasoning in 3 sentences.`;
+
+  aiBox.textContent = '';
+  let buffer = '';
+
+  try {
+    const resp = await fetch('/chat', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({message: prompt})
+    });
+    const reader = resp.body.getReader();
+    const dec = new TextDecoder();
+    let leftover = '';
+    while (true) {
+      const {done, value} = await reader.read();
+      if (done) break;
+      leftover += dec.decode(value, {stream: true});
+      const lines = leftover.split('\n');
+      leftover = lines.pop();
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const token = line.slice(6);
+        if (token === '[DONE]') break;
+        buffer += token.replace(/\\n/g, '\n');
+        aiBox.textContent = buffer;
+      }
+    }
+  } catch (e) {
+    aiBox.textContent = 'Error: ' + e.message;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
