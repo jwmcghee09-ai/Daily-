@@ -226,6 +226,7 @@ tr:hover td { background: var(--bg3); }
 }
 .msg.user .msg-text { color: var(--orange); border-color: var(--orange2); background: rgba(255,102,0,0.05); }
 .msg.assistant .msg-text { color: #ffffff !important; border-color: var(--border2); background: var(--bg2); }
+.msg.system-alert .msg-text { color: #ffcc00; border-color: #ffcc00; background: rgba(255,204,0,0.08); font-size:10px; letter-spacing:1px; }
 
 #chat-input-row {
   display: flex;
@@ -1209,7 +1210,7 @@ function appendMsg(role, text) {
   div.className = `msg ${role}`;
   const label = document.createElement('div');
   label.className = 'msg-label';
-  label.textContent = role === 'user' ? 'YOU' : 'ANALYST';
+  label.textContent = role === 'user' ? 'YOU' : role === 'system-alert' ? '⚠ ALERT' : 'ANALYST';
   const textEl = document.createElement('div');
   textEl.className = 'msg-text';
   textEl.textContent = text;
@@ -2098,23 +2099,61 @@ renderWatchlist();
 fetchAlpacaPositions();
 
 // ---------------------------------------------------------------------------
-// Auto-scan: run on page load + every 5 minutes in background
+// Auto-scan: run on page load + every 5 minutes, auto-analyze on new anomalies
 // ---------------------------------------------------------------------------
 const AUTO_SCAN_TICKERS = 'AAPL,TSLA,NVDA,MSFT,GOOGL,AMZN,META,AMD,SPY,QQQ';
 const AUTO_SCAN_INTERVAL = 5 * 60 * 1000;
+let prevAnomalyKeys = new Set();
+let isFirstScan = true;
+
+function anomalyKey(a) {
+  return `${a.ticker}|${a.type}|${a.severity}`;
+}
+
+async function autoAnalyzeAnomalies(newAnomalies) {
+  if (chatStreaming) return; // don't interrupt active chat
+  const lines = newAnomalies.map(a =>
+    `${a.ticker} — ${a.type.replace(/_/g,' ').toUpperCase()} (${a.severity}) price=$${a.price?.toFixed(2)} chg=${a.change_pct?.toFixed(2)}%`
+  ).join('\n');
+  const msg = `New market anomalies detected — analyze each and give a brief trading action (BUY/SELL/HOLD/WATCH) with reasoning:\n\n${lines}`;
+
+  // Switch to chat tab and show alert
+  document.querySelector('[data-tab="chat"]')?.click();
+  appendMsg('system-alert', `AUTO-SCAN ALERT: ${newAnomalies.length} new anomaly/anomalies detected`);
+  await sendChat(msg);
+}
 
 async function backgroundScan() {
   try {
     const r = await fetch('/scan?tickers=' + encodeURIComponent(AUTO_SCAN_TICKERS));
     const data = await r.json();
     window.lastScanData = data;
-    // If scan tab is visible, re-render it silently
+
+    // Re-render scan table if tab is visible
     const scanPanel = document.getElementById('scanner-panel');
     if (scanPanel && scanPanel.style.display !== 'none' && data.results) {
       renderScanTable(data.results, data);
     }
+
     const ts = new Date().toLocaleTimeString();
-    document.getElementById('scan-last-run') && (document.getElementById('scan-last-run').textContent = 'Last auto-scan: ' + ts);
+    const el = document.getElementById('scan-last-run');
+    if (el) el.textContent = 'Auto-scan: ' + ts;
+
+    // Detect new anomalies vs previous scan
+    const anomalies = data.anomalies || [];
+    const currentKeys = new Set(anomalies.map(anomalyKey));
+    const newAnomalies = anomalies.filter(a => !prevAnomalyKeys.has(anomalyKey(a)));
+    const highSeverity = newAnomalies.filter(a => a.severity === 'HIGH');
+
+    if (!isFirstScan && newAnomalies.length > 0) {
+      // Always alert on HIGH severity; alert on any new anomaly if ≥2 new ones
+      if (highSeverity.length > 0 || newAnomalies.length >= 2) {
+        await autoAnalyzeAnomalies(highSeverity.length > 0 ? highSeverity : newAnomalies);
+      }
+    }
+
+    prevAnomalyKeys = currentKeys;
+    isFirstScan = false;
   } catch(e) { console.warn('Auto-scan failed:', e); }
 }
 
