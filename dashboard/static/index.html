@@ -1221,16 +1221,33 @@ function appendMsg(role, text) {
 function clearChat() { document.getElementById('chat-history').innerHTML = ''; }
 
 async function buildContextPrefix() {
-  const pos = window.alpacaPositions.length ? window.alpacaPositions : await fetchAlpacaPositions();
-  if (!pos.length) return '';
-  const posStr = pos.map(p => `${p.ticker}: ${p.qty} shares @ $${Number(p.avg_cost).toFixed(2)}, current $${Number(p.current_price).toFixed(2)}, P&L: $${Number(p.pnl).toFixed(2)} (${Number(p.pnl_pct).toFixed(2)}%)`).join('; ');
-  return `[Current Alpaca positions: ${posStr}]\n\n`;
-}
+  const lines = [];
 
-function msgNeedsPortfolioContext(msg) {
-  const lower = msg.toLowerCase();
-  const keywords = ['portfolio','position','holding','buy','sell','trade','allocat','recommend','review','stock','ticker','market','invest','alpaca','crwd','aapl','spy','qqq','arm','mdb','ge','vea','xle','xlf','xlv','nvda','tsla','msft','googl','amzn','meta','amd'];
-  return keywords.some(k => lower.includes(k));
+  // Account summary
+  try {
+    const r = await fetch('/alpaca/account');
+    const d = await r.json();
+    if (!d.error) {
+      lines.push(`ALPACA ACCOUNT: portfolio_value=$${Number(d.portfolio_value).toFixed(2)}, cash=$${Number(d.cash).toFixed(2)}, buying_power=$${Number(d.buying_power).toFixed(2)}, equity=$${Number(d.equity??d.portfolio_value).toFixed(2)}`);
+    }
+  } catch {}
+
+  // Positions
+  const pos = window.alpacaPositions.length ? window.alpacaPositions : await fetchAlpacaPositions();
+  if (pos.length) {
+    const posStr = pos.map(p => `${p.ticker}: ${p.qty}sh avg=$${Number(p.avg_cost).toFixed(2)} cur=$${Number(p.current_price).toFixed(2)} mktval=$${Number(p.market_value).toFixed(2)} pnl=$${Number(p.pnl).toFixed(2)}(${Number(p.pnl_pct).toFixed(2)}%)`).join('; ');
+    lines.push(`POSITIONS: ${posStr}`);
+  } else {
+    lines.push('POSITIONS: none (all closed or not loaded)');
+  }
+
+  // Recent scan data
+  if (window.lastScanData && window.lastScanData.anomalies && window.lastScanData.anomalies.length) {
+    const scanStr = window.lastScanData.anomalies.slice(0,5).map(a => `${a.ticker} ${a.type} ${a.severity} chg=${a.change_pct?.toFixed(2)}%`).join('; ');
+    lines.push(`RECENT SCAN ANOMALIES: ${scanStr}`);
+  }
+
+  return lines.length ? `[CONTEXT: ${lines.join(' | ')}]\n\n` : '';
 }
 
 async function sendChat(overrideMsg) {
@@ -1249,7 +1266,7 @@ async function sendChat(overrideMsg) {
   let buffer = '';
 
   try {
-    const prefix = (overrideMsg || msgNeedsPortfolioContext(rawMsg)) ? await buildContextPrefix() : '';
+    const prefix = await buildContextPrefix();
     const message = prefix + rawMsg;
     const resp = await fetch('/chat', {
       method:'POST',
