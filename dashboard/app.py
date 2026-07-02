@@ -40,7 +40,7 @@ app.add_middleware(
 HOLDINGS_FILE = BASE_DIR / "data" / "holdings.json"
 STATIC_DIR = BASE_DIR / "static"
 OLLAMA_URL = "http://localhost:11434/api/generate"
-OLLAMA_MODEL = "qwen2.5"
+OLLAMA_MODEL = "qwen2.5:7b"
 SYSTEM_PROMPT = (
     "You are an AI trading analyst managing a single Alpaca paper trading account. "
     "The ONLY portfolio you manage is the Alpaca account — ignore any manually entered holdings. "
@@ -158,9 +158,14 @@ async def chat(body: ChatMessage):
                             continue
                         try:
                             chunk = json.loads(line)
+                            error = chunk.get("error", "")
+                            if error:
+                                safe = error.replace("\n", "\\n")
+                                yield f"data: [OLLAMA ERROR] {safe}\n\n"
+                                yield "data: [DONE]\n\n"
+                                return
                             token = chunk.get("response", "")
                             if token:
-                                # Escape newlines for SSE
                                 safe = token.replace("\n", "\\n")
                                 yield f"data: {safe}\n\n"
                             if chunk.get("done", False):
