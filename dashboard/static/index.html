@@ -1226,6 +1226,12 @@ async function buildContextPrefix() {
   return `[Current Alpaca positions: ${posStr}]\n\n`;
 }
 
+function msgNeedsPortfolioContext(msg) {
+  const lower = msg.toLowerCase();
+  const keywords = ['portfolio','position','holding','buy','sell','trade','allocat','recommend','review','stock','ticker','market','invest','alpaca','crwd','aapl','spy','qqq','arm','mdb','ge','vea','xle','xlf','xlv','nvda','tsla','msft','googl','amzn','meta','amd'];
+  return keywords.some(k => lower.includes(k));
+}
+
 async function sendChat(overrideMsg) {
   if (chatStreaming) return;
   const input = document.getElementById('chat-input');
@@ -1242,7 +1248,7 @@ async function sendChat(overrideMsg) {
   let buffer = '';
 
   try {
-    const prefix = await buildContextPrefix();
+    const prefix = (overrideMsg || msgNeedsPortfolioContext(rawMsg)) ? await buildContextPrefix() : '';
     const message = prefix + rawMsg;
     const resp = await fetch('/chat', {
       method:'POST',
