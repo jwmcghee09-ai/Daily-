@@ -2098,6 +2098,31 @@ loadHoldings();
 renderWatchlist();
 fetchAlpacaPositions();
 
+// Restore saved chat history from server
+(async () => {
+  try {
+    const r = await fetch('/chat/history');
+    const history = await r.json();
+    if (Array.isArray(history) && history.length) {
+      const hist = document.getElementById('chat-history');
+      history.forEach(msg => {
+        const div = document.createElement('div');
+        div.className = `msg ${msg.role}`;
+        const label = document.createElement('div');
+        label.className = 'msg-label';
+        label.textContent = msg.role === 'user' ? 'YOU' : 'ANALYST';
+        const textEl = document.createElement('div');
+        textEl.className = 'msg-text';
+        textEl.textContent = msg.content;
+        div.appendChild(label);
+        div.appendChild(textEl);
+        hist.appendChild(div);
+      });
+      hist.scrollTop = hist.scrollHeight;
+    }
+  } catch(e) { console.warn('Could not restore chat history:', e); }
+})();
+
 // ---------------------------------------------------------------------------
 // Auto-scan: run on page load + every 5 minutes, auto-analyze on new anomalies
 // ---------------------------------------------------------------------------

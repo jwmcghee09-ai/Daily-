@@ -326,6 +326,11 @@ async def chat(body: ChatMessage):
     return StreamingResponse(stream_with_fallback(), media_type="text/event-stream")
 
 
+@app.get("/chat/history")
+async def get_chat_history():
+    return JSONResponse(content=load_chat_history())
+
+
 @app.delete("/chat/history")
 async def clear_chat_history():
     save_chat_history([])
