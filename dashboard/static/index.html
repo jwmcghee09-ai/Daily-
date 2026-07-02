@@ -5,985 +5,1125 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>TRADING TERMINAL</title>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  :root {
-    --bg:        #0d1117;
-    --bg2:       #161b22;
-    --bg3:       #21262d;
-    --border:    #30363d;
-    --green:     #3fb950;
-    --green-dim: #238636;
-    --cyan:      #58a6ff;
-    --cyan-dim:  #1f6feb;
-    --red:       #f85149;
-    --yellow:    #d29922;
-    --white:     #e6edf3;
-    --muted:     #8b949e;
-    --font:      'Courier New', Courier, monospace;
-  }
+:root {
+  --bg:      #000000;
+  --bg2:     #0a0a0a;
+  --bg3:     #111111;
+  --bg4:     #181818;
+  --border:  #1a1a1a;
+  --border2: #2a2a2a;
+  --orange:  #ff6600;
+  --orange2: #cc4400;
+  --white:   #ffffff;
+  --gray:    #999999;
+  --green:   #00cc44;
+  --red:     #ff3333;
+  --cyan:    #00aaff;
+  --yellow:  #ffcc00;
+  --font:    'Courier New', Courier, monospace;
+}
 
-  html, body {
-    height: 100%;
-    background: var(--bg);
-    color: var(--white);
-    font-family: var(--font);
-    font-size: 13px;
-    overflow: hidden;
-  }
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--white);
+  font-family: var(--font);
+  font-size: 12px;
+  overflow: hidden;
+}
 
-  /* ── Header ─────────────────────────────────────────────────────────── */
-  #header {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 8px 16px;
-    background: var(--bg2);
-    border-bottom: 1px solid var(--border);
-    height: 44px;
-  }
-  #header .logo {
-    color: var(--green);
-    font-size: 15px;
-    font-weight: bold;
-    letter-spacing: 3px;
-  }
-  #header .clock {
-    color: var(--muted);
-    font-size: 12px;
-    margin-left: auto;
-  }
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: #333; }
 
-  /* ── Tabs ────────────────────────────────────────────────────────────── */
-  #tabs {
-    display: flex;
-    gap: 0;
-    background: var(--bg2);
-    border-bottom: 1px solid var(--border);
-  }
-  .tab-btn {
-    padding: 8px 22px;
-    background: none;
-    border: none;
-    border-bottom: 2px solid transparent;
-    color: var(--muted);
-    font-family: var(--font);
-    font-size: 13px;
-    cursor: pointer;
-    letter-spacing: 1px;
-    transition: color 0.15s, border-color 0.15s;
-  }
-  .tab-btn:hover { color: var(--white); }
-  .tab-btn.active { color: var(--cyan); border-bottom-color: var(--cyan); }
+/* ── HEADER ── */
+#header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 12px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--orange);
+  height: 30px;
+  flex-shrink: 0;
+}
+.logo {
+  color: var(--orange);
+  font-size: 13px;
+  font-weight: bold;
+  letter-spacing: 4px;
+}
+.header-divider { color: #333; }
+.header-item { font-size: 10px; color: var(--gray); letter-spacing: 1px; }
+.header-item span { color: var(--white); }
+#clock { color: var(--orange); font-size: 12px; margin-left: auto; letter-spacing: 2px; }
+#market-status-badge {
+  font-size: 10px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  padding: 1px 6px;
+  border: 1px solid #333;
+  color: var(--gray);
+}
+#market-status-badge.open { color: var(--green); border-color: var(--green); }
+#market-status-badge.closed { color: var(--red); border-color: var(--red); }
 
-  /* ── Main layout ─────────────────────────────────────────────────────── */
-  #main {
-    height: calc(100vh - 44px - 35px);
-    overflow: hidden;
-  }
-  .tab-panel { display: none; height: 100%; }
-  .tab-panel.active { display: flex; flex-direction: column; height: 100%; }
+/* ── TABS ── */
+#tabs {
+  display: flex;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border2);
+  flex-shrink: 0;
+}
+.tab-btn {
+  padding: 6px 18px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--gray);
+  font-family: var(--font);
+  font-size: 11px;
+  cursor: pointer;
+  letter-spacing: 2px;
+  transition: color 0.1s;
+}
+.tab-btn:hover { color: var(--white); background: none; }
+.tab-btn.active { color: var(--orange); border-bottom-color: var(--orange); background: none; }
 
-  /* ── Generic controls ────────────────────────────────────────────────── */
-  button {
-    background: var(--bg3);
-    color: var(--white);
-    border: 1px solid var(--border);
-    padding: 5px 12px;
-    font-family: var(--font);
-    font-size: 12px;
-    cursor: pointer;
-    transition: background 0.15s, border-color 0.15s;
-  }
-  button:hover { background: var(--border); border-color: var(--cyan); color: var(--cyan); }
-  button.primary { background: var(--green-dim); border-color: var(--green); color: var(--green); }
-  button.primary:hover { background: var(--green); color: var(--bg); }
-  button.danger { border-color: var(--red); color: var(--red); }
-  button.danger:hover { background: var(--red); color: var(--bg); }
+/* ── MAIN ── */
+#main {
+  height: calc(100vh - 30px - 28px - 20px);
+  overflow: hidden;
+}
+.tab-panel { display: none; height: 100%; }
+.tab-panel.active { display: flex; flex-direction: column; height: 100%; }
 
-  input[type="text"], input[type="number"] {
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    color: var(--white);
-    padding: 5px 8px;
-    font-family: var(--font);
-    font-size: 12px;
-    outline: none;
-    transition: border-color 0.15s;
-  }
-  input:focus { border-color: var(--cyan); }
+/* ── BUTTONS ── */
+button {
+  background: var(--bg3);
+  color: var(--gray);
+  border: 1px solid var(--border2);
+  padding: 3px 10px;
+  font-family: var(--font);
+  font-size: 10px;
+  cursor: pointer;
+  letter-spacing: 1px;
+}
+button:hover { background: var(--bg4); border-color: var(--gray); color: var(--white); }
+button.btn-orange {
+  background: var(--orange2);
+  border-color: var(--orange);
+  color: var(--orange);
+}
+button.btn-orange:hover { background: var(--orange); color: #000; }
+button.btn-cyan { border-color: var(--cyan); color: var(--cyan); background: none; }
+button.btn-cyan:hover { background: var(--cyan); color: #000; }
+button.btn-red { border-color: var(--red); color: var(--red); background: none; }
+button.btn-red:hover { background: var(--red); color: #000; }
+button.btn-green { border-color: var(--green); color: var(--green); background: none; }
+button.btn-green:hover { background: var(--green); color: #000; }
 
-  /* scrollbar */
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: var(--bg2); }
-  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+input[type="text"], input[type="number"], textarea {
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  color: var(--white);
+  padding: 3px 7px;
+  font-family: var(--font);
+  font-size: 11px;
+  outline: none;
+}
+input:focus, textarea:focus { border-color: var(--orange); }
 
-  /* ── STATUS BAR ──────────────────────────────────────────────────────── */
-  #statusbar {
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
-    height: 22px;
-    background: var(--bg2);
-    border-top: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    padding: 0 12px;
-    gap: 16px;
-    font-size: 11px;
-    color: var(--muted);
-    z-index: 100;
-  }
-  #statusbar .status-item { display: flex; gap: 6px; }
-  #statusbar .status-label { color: var(--muted); }
-  #statusbar .status-val { color: var(--cyan); }
+select {
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  color: var(--white);
+  padding: 3px 7px;
+  font-family: var(--font);
+  font-size: 11px;
+  outline: none;
+}
 
-  /* ═══════════════════════════════════════════════════════════════════════
-     CHAT TAB
-  ══════════════════════════════════════════════════════════════════════════ */
-  #chat-panel { flex: 1; overflow: hidden; }
+.spinner {
+  display: inline-block;
+  width: 10px; height: 10px;
+  border: 1px solid #333;
+  border-top-color: var(--orange);
+  animation: spin 0.7s linear infinite;
+  vertical-align: middle;
+  margin-left: 5px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
 
-  #chat-history {
-    flex: 1;
-    overflow-y: auto;
-    padding: 12px 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    background: var(--bg);
-    height: calc(100% - 55px);
-  }
+/* ── TABLES ── */
+table { width: 100%; border-collapse: collapse; font-size: 11px; }
+th {
+  text-align: left;
+  color: var(--gray);
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--border2);
+  font-size: 10px;
+  letter-spacing: 1px;
+  font-weight: normal;
+}
+td { padding: 4px 8px; border-bottom: 1px solid var(--border); color: var(--white); }
+tr:hover td { background: var(--bg3); }
+.pos { color: var(--green); }
+.neg { color: var(--red); }
+.muted { color: var(--gray); }
 
-  .msg { max-width: 90%; display: flex; flex-direction: column; gap: 3px; }
-  .msg.user { align-self: flex-end; }
-  .msg.assistant { align-self: flex-start; }
-  .msg-label { font-size: 10px; color: var(--muted); letter-spacing: 1px; }
-  .msg-label.user-label { text-align: right; color: var(--cyan); }
-  .msg-label.ai-label { color: var(--green); }
-  .msg-text {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    padding: 8px 12px;
-    white-space: pre-wrap;
-    line-height: 1.5;
-    font-size: 13px;
-  }
-  .msg.user .msg-text { border-color: var(--cyan-dim); color: var(--cyan); }
-  .msg.assistant .msg-text { border-color: var(--green-dim); color: var(--green); }
+/* ── STATUS BAR ── */
+#statusbar {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: 20px;
+  background: var(--bg2);
+  border-top: 1px solid var(--border2);
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  gap: 16px;
+  font-size: 10px;
+  color: var(--gray);
+  z-index: 100;
+}
+.sb-item { display: flex; gap: 5px; }
+.sb-label { color: var(--gray); }
+.sb-val { color: var(--orange); }
 
-  #chat-input-row {
-    display: flex;
-    gap: 6px;
-    padding: 8px 12px;
-    background: var(--bg2);
-    border-top: 1px solid var(--border);
-    align-items: center;
-  }
-  #chat-input {
-    flex: 1;
-    resize: none;
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    color: var(--white);
-    padding: 6px 10px;
-    font-family: var(--font);
-    font-size: 13px;
-    outline: none;
-    height: 36px;
-  }
-  #chat-input:focus { border-color: var(--cyan); }
+/* ═══ CHAT TAB ═══ */
+#chat-panel { flex-direction: row !important; }
+#chat-left {
+  flex: 7;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border2);
+}
+#chat-history {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--bg);
+}
+.msg { display: flex; flex-direction: column; gap: 2px; max-width: 95%; }
+.msg.user { align-self: flex-end; }
+.msg.assistant { align-self: flex-start; }
+.msg-label { font-size: 10px; letter-spacing: 1px; }
+.msg.user .msg-label { color: var(--orange); text-align: right; }
+.msg.assistant .msg-label { color: var(--gray); }
+.msg-text {
+  padding: 6px 10px;
+  border: 1px solid var(--border2);
+  white-space: pre-wrap;
+  line-height: 1.5;
+  font-size: 12px;
+}
+.msg.user .msg-text { color: var(--orange); border-color: var(--orange2); background: rgba(255,102,0,0.05); }
+.msg.assistant .msg-text { color: var(--white); border-color: var(--border2); background: var(--bg2); }
 
-  /* ═══════════════════════════════════════════════════════════════════════
-     SCANNER TAB
-  ══════════════════════════════════════════════════════════════════════════ */
-  #scan-panel { overflow-y: auto; }
+#chat-input-row {
+  display: flex;
+  gap: 6px;
+  padding: 6px 10px;
+  background: var(--bg2);
+  border-top: 1px solid var(--border2);
+  align-items: center;
+}
+#chat-input {
+  flex: 1;
+  resize: none;
+  height: 30px;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  color: var(--white);
+  padding: 5px 8px;
+  font-family: var(--font);
+  font-size: 11px;
+  outline: none;
+}
+#chat-input:focus { border-color: var(--orange); }
 
-  #scan-toolbar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    padding: 10px 14px;
-    background: var(--bg2);
-    border-bottom: 1px solid var(--border);
-    align-items: center;
-  }
-  #custom-tickers { width: 240px; }
-  #scan-meta { font-size: 11px; color: var(--muted); margin-left: auto; }
+#chat-right {
+  flex: 3;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg2);
+  overflow-y: auto;
+}
+.panel-header {
+  padding: 5px 10px;
+  border-bottom: 1px solid var(--border2);
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--orange);
+  background: var(--bg3);
+  flex-shrink: 0;
+}
+#chat-context-body {
+  flex: 1;
+  padding: 8px 10px;
+  font-size: 10px;
+  color: var(--gray);
+  line-height: 1.8;
+  overflow-y: auto;
+}
+.ctx-row { display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px solid var(--border); }
+.ctx-label { color: var(--gray); }
+.ctx-val { color: var(--white); }
+.ctx-section { font-size: 10px; color: var(--orange); letter-spacing: 1px; margin: 6px 0 4px; }
 
-  /* Market Breadth Bar */
-  #market-breadth-bar {
-    display: none;
-    padding: 8px 14px;
-    background: var(--bg3);
-    border-bottom: 1px solid var(--border);
-    font-size: 12px;
-    gap: 20px;
-    align-items: center;
-    flex-wrap: wrap;
-  }
-  #market-breadth-bar .breadth-label { color: var(--muted); font-size: 11px; letter-spacing: 1px; margin-right: 6px; }
-  .breadth-advancing { color: var(--green); font-weight: bold; }
-  .breadth-declining { color: var(--red); font-weight: bold; }
-  .breadth-rsi { color: var(--cyan); font-weight: bold; }
-  .breadth-volume { color: var(--yellow); font-weight: bold; }
+/* ═══ SCANNER TAB ═══ */
+#scan-panel { overflow: hidden; flex-direction: row !important; }
+#scan-left {
+  flex: 65;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border2);
+  overflow: hidden;
+}
+#scan-right {
+  flex: 35;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+#scan-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 6px 10px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border2);
+  align-items: center;
+  flex-shrink: 0;
+}
+#scan-toolbar .wl-preset { font-size: 10px; letter-spacing: 1px; }
+#custom-tickers { width: 200px; }
+#scan-meta { font-size: 10px; color: var(--gray); margin-left: auto; }
 
-  #scan-results {
-    padding: 12px 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    overflow-y: auto;
-  }
+#market-breadth-bar {
+  display: none;
+  padding: 5px 10px;
+  background: var(--bg3);
+  border-bottom: 1px solid var(--border2);
+  font-size: 10px;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+.breadth-track {
+  height: 6px;
+  background: var(--bg4);
+  flex: 1;
+  min-width: 80px;
+  display: flex;
+  overflow: hidden;
+  border: 1px solid var(--border2);
+}
+.breadth-adv-fill { background: var(--green); height: 100%; }
+.breadth-dec-fill { background: var(--red); height: 100%; }
 
-  .anomaly-card {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--border);
-    padding: 10px 14px;
-    display: grid;
-    grid-template-columns: 80px 1fr auto;
-    gap: 8px;
-    align-items: start;
-  }
-  .anomaly-card.HIGH { border-left-color: var(--red); }
-  .anomaly-card.MEDIUM { border-left-color: var(--yellow); }
-  .anomaly-card.LOW { border-left-color: var(--green); }
-  .card-ticker { font-size: 16px; font-weight: bold; color: var(--white); }
-  .card-severity.HIGH { color: var(--red); font-size: 11px; }
-  .card-severity.MEDIUM { color: var(--yellow); font-size: 11px; }
-  .card-severity.LOW { color: var(--green); font-size: 11px; }
-  .card-body { color: var(--muted); font-size: 12px; line-height: 1.6; }
-  .card-body strong { color: var(--white); }
-  .card-price { color: var(--cyan); font-size: 13px; text-align: right; }
-  .card-metrics {
-    margin-top: 5px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    font-size: 11px;
-    color: var(--muted);
-  }
-  .card-metrics span { white-space: nowrap; }
-  .card-metrics strong { color: var(--white); }
+#scan-results-wrap {
+  flex: 1;
+  overflow-y: auto;
+}
+#scan-results-table thead th { position: sticky; top: 0; background: var(--bg2); z-index: 5; }
+.sev-high { color: var(--red); }
+.sev-med { color: var(--yellow); }
+.sev-low { color: var(--green); }
+.row-high td { border-left: 2px solid var(--red); }
+.row-med td:first-child { border-left: 2px solid var(--yellow); }
+.row-low td:first-child { border-left: 2px solid var(--green); }
 
-  .scan-empty { color: var(--muted); font-size: 13px; padding: 20px; text-align: center; }
+#scan-right-content { flex: 1; overflow: hidden; padding: 8px; display: flex; flex-direction: column; gap: 8px; }
+.sparkline-wrap { flex: 1; min-height: 120px; position: relative; }
+.sparkline-wrap svg { width: 100%; height: 100%; }
+.spark-label { font-size: 10px; color: var(--gray); }
+#selected-ticker-info { padding: 6px 8px; background: var(--bg3); border: 1px solid var(--border2); }
+#selected-ticker-info .sti-ticker { font-size: 14px; color: var(--orange); letter-spacing: 2px; }
+#selected-ticker-info .sti-price { font-size: 12px; color: var(--white); }
+#selected-ticker-info .sti-metrics { font-size: 10px; color: var(--gray); margin-top: 4px; line-height: 1.8; }
 
-  /* ═══════════════════════════════════════════════════════════════════════
-     HOLDINGS TAB
-  ══════════════════════════════════════════════════════════════════════════ */
-  #holdings-panel { overflow-y: auto; }
+/* ═══ HOLDINGS TAB ═══ */
+#holdings-panel { overflow: hidden; }
+#holdings-filter-bar {
+  display: flex;
+  gap: 6px;
+  padding: 6px 10px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border2);
+  align-items: center;
+  flex-shrink: 0;
+}
+.source-filter-btn { font-size: 10px; letter-spacing: 2px; }
+.source-filter-btn.active { border-color: var(--orange); color: var(--orange); background: rgba(255,102,0,0.08); }
+.badge-alp {
+  display: inline-block;
+  font-size: 9px;
+  padding: 1px 4px;
+  border: 1px solid var(--orange);
+  color: var(--orange);
+  letter-spacing: 0;
+  margin-right: 2px;
+}
+.badge-man {
+  display: inline-block;
+  font-size: 9px;
+  padding: 1px 4px;
+  border: 1px solid #444;
+  color: var(--gray);
+  letter-spacing: 0;
+  margin-right: 2px;
+}
+#holdings-table-wrap { flex: 1; overflow: auto; }
+#holdings-footer {
+  padding: 6px 10px;
+  border-top: 1px solid var(--border2);
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  background: var(--bg2);
+  flex-shrink: 0;
+  font-size: 11px;
+}
+.hf-stat { display: flex; gap: 6px; }
+.hf-label { color: var(--gray); font-size: 10px; letter-spacing: 1px; }
+.hf-val { color: var(--orange); font-weight: bold; }
+#holdings-add-section {
+  padding: 6px 10px;
+  background: var(--bg3);
+  border-top: 1px solid var(--border2);
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+#holdings-add-section input { width: 90px; }
+#add-ticker-input { width: 70px; text-transform: uppercase; }
 
-  #holdings-add-row {
-    display: flex;
-    gap: 8px;
-    padding: 10px 14px;
-    background: var(--bg2);
-    border-bottom: 1px solid var(--border);
-    align-items: center;
-    flex-wrap: wrap;
-  }
-  #holdings-add-row input { width: 110px; }
-  #add-ticker-input { width: 90px; text-transform: uppercase; }
+/* ═══ PORTFOLIO TAB ═══ */
+#strategy-panel { overflow-y: auto; }
+.port-section {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border2);
+}
+.port-section-title {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--orange);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.alloc-badge {
+  background: rgba(255,102,0,0.1);
+  border: 1px solid var(--orange2);
+  color: var(--orange);
+  padding: 1px 6px;
+  font-size: 10px;
+}
 
-  #holdings-table-wrap {
-    overflow-x: auto;
-    padding: 12px 14px;
-  }
+/* ETF cards */
+.etf-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.etf-card {
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  padding: 8px 10px;
+  position: relative;
+  cursor: pointer;
+}
+.etf-card.recommended { border-color: var(--orange); }
+.etf-card .ec-ticker { font-size: 16px; font-weight: bold; color: var(--white); letter-spacing: 2px; }
+.etf-card .ec-price { color: var(--cyan); font-size: 13px; margin-top: 2px; }
+.etf-card .ec-chg { font-size: 11px; }
+.etf-card .ec-metrics { font-size: 10px; color: var(--gray); margin-top: 5px; line-height: 1.9; }
+.etf-card .ec-metrics strong { color: var(--white); }
+.etf-card .rec-badge {
+  position: absolute; top: 5px; right: 5px;
+  font-size: 9px; letter-spacing: 1px;
+  background: rgba(255,102,0,0.15); color: var(--orange);
+  padding: 1px 5px; border: 1px solid var(--orange2);
+}
+.etf-spark-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.etf-spark-box {
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  padding: 4px;
+  height: 60px;
+}
+.etf-spark-label { font-size: 9px; color: var(--gray); letter-spacing: 1px; margin-bottom: 2px; }
+.etf-spark-box svg { width: 100%; height: 44px; }
 
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 12px;
-  }
-  th {
-    text-align: left;
-    color: var(--muted);
-    padding: 6px 10px;
-    border-bottom: 1px solid var(--border);
-    letter-spacing: 1px;
-    font-size: 11px;
-  }
-  td {
-    padding: 7px 10px;
-    border-bottom: 1px solid #21262d;
-    color: var(--white);
-  }
-  tr:hover td { background: var(--bg2); }
-  .pos { color: var(--green); }
-  .neg { color: var(--red); }
-  .muted { color: var(--muted); }
+/* Watchlist */
+.watchlist-wrap { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
+.watchlist-tag {
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  padding: 2px 8px;
+  font-size: 11px;
+  color: var(--cyan);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.wl-remove { cursor: pointer; color: var(--gray); font-size: 10px; background: none; border: none; padding: 0; }
+.wl-remove:hover { color: var(--red); background: none; border: none; }
 
-  #holdings-footer {
-    padding: 10px 14px;
-    border-top: 1px solid var(--border);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: var(--bg2);
-  }
-  #total-value { color: var(--cyan); font-size: 15px; font-weight: bold; }
+/* Portfolio health */
+.health-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+.health-card {
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  padding: 8px 10px;
+  text-align: center;
+}
+.hc-label { font-size: 10px; color: var(--gray); letter-spacing: 1px; margin-bottom: 3px; }
+.hc-value { font-size: 16px; color: var(--orange); font-weight: bold; }
+.hc-sub { font-size: 10px; color: var(--gray); margin-top: 2px; }
 
-  .spinner {
-    display: inline-block;
-    width: 12px; height: 12px;
-    border: 2px solid var(--border);
-    border-top-color: var(--cyan);
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-    vertical-align: middle;
-    margin-left: 6px;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
+.alloc-bar-wrap { margin-top: 8px; }
+.alloc-bar {
+  height: 8px;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  overflow: hidden;
+  display: flex;
+}
+.bar-index { background: var(--cyan); height: 100%; transition: width 0.4s; }
+.bar-alpha { background: var(--green); height: 100%; transition: width 0.4s; }
+.alloc-bar-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--gray); margin-top: 3px; }
 
-  /* ═══════════════════════════════════════════════════════════════════════
-     PORTFOLIO STRATEGY TAB
-  ══════════════════════════════════════════════════════════════════════════ */
-  #strategy-panel { overflow-y: auto; }
+#rotation-advice-box {
+  display: none;
+  margin-top: 8px;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  padding: 8px 10px;
+  font-size: 11px;
+  color: var(--white);
+  white-space: pre-wrap;
+  line-height: 1.6;
+  max-height: 160px;
+  overflow-y: auto;
+}
+#watchlist-advice-box {
+  display: none;
+  margin-top: 8px;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  padding: 8px 10px;
+  font-size: 11px;
+  color: var(--white);
+  white-space: pre-wrap;
+  line-height: 1.6;
+  max-height: 160px;
+  overflow-y: auto;
+}
 
-  .strategy-section {
-    padding: 12px 14px;
-    border-bottom: 1px solid var(--border);
-  }
-  .strategy-section-title {
-    font-size: 11px;
-    letter-spacing: 2px;
-    color: var(--muted);
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .strategy-section-title .alloc-badge {
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    padding: 2px 8px;
-    color: var(--cyan);
-    font-size: 10px;
-  }
+/* ═══ ALPACA TAB ═══ */
+#alpaca-panel { overflow: hidden; flex-direction: row !important; }
+#alpaca-left {
+  flex: 6;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border2);
+  overflow: hidden;
+}
+#alpaca-right {
+  flex: 4;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  background: var(--bg2);
+}
 
-  /* Index ETF cards */
-  .index-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 8px;
-    margin-bottom: 10px;
-  }
-  .index-card {
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    padding: 10px 12px;
-    position: relative;
-  }
-  .index-card.recommended { border-color: var(--green); }
-  .index-card .ic-ticker { font-size: 18px; font-weight: bold; color: var(--white); }
-  .index-card .ic-price { color: var(--cyan); font-size: 14px; margin-top: 2px; }
-  .index-card .ic-change { font-size: 12px; margin-top: 2px; }
-  .index-card .ic-metrics { font-size: 11px; color: var(--muted); margin-top: 6px; line-height: 1.8; }
-  .index-card .ic-metrics strong { color: var(--white); }
-  .index-card .rec-badge {
-    position: absolute;
-    top: 6px; right: 6px;
-    font-size: 9px;
-    letter-spacing: 1px;
-    background: var(--green-dim);
-    color: var(--green);
-    padding: 2px 6px;
-    border: 1px solid var(--green);
-  }
+#alpaca-account-bar {
+  display: flex;
+  gap: 0;
+  padding: 0;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border2);
+  flex-shrink: 0;
+}
+.alp-stat {
+  display: flex;
+  flex-direction: column;
+  padding: 5px 12px;
+  border-right: 1px solid var(--border2);
+}
+.alp-stat-label { font-size: 9px; color: var(--gray); letter-spacing: 1px; }
+.alp-stat-val { font-size: 13px; color: var(--white); font-weight: bold; margin-top: 1px; }
+#alp-pnl-stat { }
+#alpaca-market-status {
+  margin-left: auto;
+  padding: 0 10px;
+  font-size: 10px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  color: var(--gray);
+  display: flex;
+  align-items: center;
+}
+#alpaca-market-status.open { color: var(--green); }
+#alpaca-market-status.closed { color: var(--red); }
 
-  /* Alpha picks / watchlist */
-  .watchlist-wrap {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin-bottom: 10px;
-    align-items: center;
-  }
-  .watchlist-tag {
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    padding: 3px 10px;
-    font-size: 12px;
-    color: var(--cyan);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .watchlist-tag .wl-remove {
-    cursor: pointer;
-    color: var(--muted);
-    font-size: 10px;
-    background: none;
-    border: none;
-    padding: 0;
-    line-height: 1;
-  }
-  .watchlist-tag .wl-remove:hover { color: var(--red); background: none; border: none; }
+.alpaca-section {
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border2);
+  flex-shrink: 0;
+}
+.alpaca-section.scrollable { flex: 1; overflow-y: auto; }
+.alpaca-section-title {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--orange);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 
-  /* Portfolio health */
-  .health-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 8px;
-  }
-  .health-card {
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    padding: 10px 14px;
-    text-align: center;
-  }
-  .health-card .hc-label { font-size: 10px; color: var(--muted); letter-spacing: 1px; margin-bottom: 4px; }
-  .health-card .hc-value { font-size: 18px; color: var(--cyan); font-weight: bold; }
-  .health-card .hc-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.side-toggle { display: flex; }
+.side-toggle button { width: 60px; }
+.side-toggle button.active-buy { background: rgba(0,204,68,0.15); border-color: var(--green); color: var(--green); }
+.side-toggle button.active-sell { background: rgba(255,51,51,0.15); border-color: var(--red); color: var(--red); }
+.type-toggle { display: flex; }
+.type-toggle button { width: 70px; }
+.type-toggle button.active-type { background: rgba(0,170,255,0.1); border-color: var(--cyan); color: var(--cyan); }
 
-  /* alloc bar */
-  .alloc-bar-wrap { margin: 8px 0; }
-  .alloc-bar {
-    height: 14px;
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    border-radius: 2px;
-    overflow: hidden;
-    display: flex;
-  }
-  .alloc-bar .bar-index { background: var(--cyan-dim); height: 100%; transition: width 0.4s; }
-  .alloc-bar .bar-alpha { background: var(--green-dim); height: 100%; transition: width 0.4s; }
-  .alloc-bar-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); margin-top: 3px; }
+.trade-form { display: flex; flex-direction: column; gap: 6px; }
+.form-field { display: flex; flex-direction: column; gap: 3px; }
+.form-label { font-size: 9px; color: var(--gray); letter-spacing: 1px; }
+.form-field input { width: 100%; }
 
-  /* Fundamentals collapsible section on anomaly cards */
-  .fund-toggle {
-    margin-top: 6px;
-    font-size: 10px;
-    letter-spacing: 1px;
-    padding: 2px 8px;
-    cursor: pointer;
-    color: var(--muted);
-    border-color: var(--border);
-    background: none;
-  }
-  .fund-toggle:hover { color: var(--cyan); border-color: var(--cyan); background: none; }
-  .fund-section {
-    display: none;
-    margin-top: 8px;
-    padding-top: 8px;
-    border-top: 1px solid var(--border);
-  }
-  .fund-section.open { display: block; }
-  .fund-metrics {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    font-size: 11px;
-    color: var(--muted);
-    margin-bottom: 6px;
-  }
-  .fund-metrics span { white-space: nowrap; }
-  .fund-metrics strong { color: var(--white); }
-  .rec-buy { color: var(--green) !important; }
-  .rec-hold { color: var(--yellow) !important; }
-  .rec-sell { color: var(--red) !important; }
-  .fund-news { list-style: none; margin-top: 6px; display: flex; flex-direction: column; gap: 4px; }
-  .fund-news li { font-size: 11px; line-height: 1.4; }
-  .fund-news a { color: var(--cyan); text-decoration: none; }
-  .fund-news a:hover { text-decoration: underline; }
-  .fund-news .news-meta { color: var(--muted); font-size: 10px; margin-left: 4px; }
+#alpaca-msg {
+  margin-top: 6px;
+  padding: 4px 8px;
+  font-size: 11px;
+  display: none;
+}
+#alpaca-msg.success { color: var(--green); border: 1px solid var(--green); }
+#alpaca-msg.error { color: var(--red); border: 1px solid var(--red); }
 
-  /* Fundamentals modal */
-  #fund-modal-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.7);
-    z-index: 200;
-    align-items: center;
-    justify-content: center;
-  }
-  #fund-modal-overlay.open { display: flex; }
-  #fund-modal {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    padding: 16px 20px;
-    min-width: 340px;
-    max-width: 520px;
-    width: 90%;
-    max-height: 80vh;
-    overflow-y: auto;
-    position: relative;
-  }
-  #fund-modal h3 { color: var(--cyan); font-size: 14px; margin-bottom: 10px; letter-spacing: 1px; }
-  #fund-modal .modal-close {
-    position: absolute;
-    top: 10px; right: 12px;
-    background: none; border: none;
-    color: var(--muted); font-size: 14px; cursor: pointer; padding: 0;
-  }
-  #fund-modal .modal-close:hover { color: var(--red); background: none; }
-  #fund-modal-body { font-size: 12px; color: var(--muted); line-height: 1.7; }
-  #fund-modal-body strong { color: var(--white); }
-  #fund-modal-body .modal-section { margin-bottom: 10px; }
-  #fund-modal-body .modal-section-title { color: var(--muted); font-size: 10px; letter-spacing: 2px; margin-bottom: 4px; border-bottom: 1px solid var(--border); padding-bottom: 2px; }
+#alpaca-ai-box {
+  display: none;
+  margin-top: 6px;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  padding: 8px 10px;
+  font-size: 11px;
+  color: var(--white);
+  white-space: pre-wrap;
+  line-height: 1.6;
+  max-height: 200px;
+  overflow-y: auto;
+}
 
-  /* Rotation advice box */
-  #rotation-advice-box {
-    display: none;
-    margin-top: 10px;
-    background: var(--bg3);
-    border: 1px solid var(--green-dim);
-    padding: 10px 14px;
-    font-size: 12px;
-    color: var(--green);
-    white-space: pre-wrap;
-    line-height: 1.6;
-    max-height: 200px;
-    overflow-y: auto;
-  }
+/* ═══ FUND MODAL ═══ */
+#fund-modal-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+}
+#fund-modal-overlay.open { display: flex; }
+#fund-modal {
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  padding: 14px 16px;
+  min-width: 320px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  position: relative;
+}
+#fund-modal h3 { color: var(--orange); font-size: 13px; margin-bottom: 10px; letter-spacing: 2px; }
+#fund-modal .modal-close {
+  position: absolute; top: 10px; right: 12px;
+  background: none; border: none; color: var(--gray); font-size: 13px; cursor: pointer; padding: 0;
+}
+#fund-modal .modal-close:hover { color: var(--red); background: none; }
+#fund-modal-body { font-size: 11px; color: var(--gray); line-height: 1.8; }
+#fund-modal-body strong { color: var(--white); }
+.modal-section { margin-bottom: 10px; }
+.modal-section-title { color: var(--orange); font-size: 10px; letter-spacing: 2px; margin-bottom: 4px; border-bottom: 1px solid var(--border2); padding-bottom: 2px; }
+.fund-news { list-style: none; display: flex; flex-direction: column; gap: 4px; margin-top: 4px; }
+.fund-news li { font-size: 10px; line-height: 1.5; }
+.fund-news a { color: var(--cyan); text-decoration: none; }
+.fund-news a:hover { text-decoration: underline; }
+.fund-news .news-meta { color: var(--gray); font-size: 9px; margin-left: 4px; }
 
-  /* Watchlist analysis box */
-  #watchlist-advice-box {
-    display: none;
-    margin-top: 10px;
-    background: var(--bg3);
-    border: 1px solid var(--green-dim);
-    padding: 10px 14px;
-    font-size: 12px;
-    color: var(--green);
-    white-space: pre-wrap;
-    line-height: 1.6;
-    max-height: 200px;
-    overflow-y: auto;
-  }
+.rec-buy { color: var(--green) !important; }
+.rec-hold { color: var(--yellow) !important; }
+.rec-sell { color: var(--red) !important; }
 
-  /* ═══════════════════════════════════════════════════════════════════════
-     ALPACA TAB
-  ══════════════════════════════════════════════════════════════════════════ */
-  #alpaca-panel { overflow-y: auto; }
+.fund-toggle {
+  margin-top: 4px;
+  font-size: 9px;
+  letter-spacing: 1px;
+  padding: 1px 6px;
+  cursor: pointer;
+  color: var(--gray);
+  border-color: #333;
+  background: none;
+}
+.fund-toggle:hover { color: var(--cyan); border-color: var(--cyan); background: none; }
+.fund-section { display: none; margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--border2); }
+.fund-section.open { display: block; }
+.fund-metrics { display: flex; flex-wrap: wrap; gap: 8px; font-size: 10px; color: var(--gray); margin-bottom: 4px; }
+.fund-metrics span { white-space: nowrap; }
+.fund-metrics strong { color: var(--white); }
 
-  #alpaca-account-bar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-    padding: 10px 14px;
-    background: var(--bg2);
-    border-bottom: 1px solid var(--border);
-    align-items: center;
-  }
-  .alpaca-stat { display: flex; flex-direction: column; gap: 2px; }
-  .alpaca-stat-label { font-size: 10px; color: var(--muted); letter-spacing: 1px; }
-  .alpaca-stat-val { font-size: 14px; color: var(--cyan); font-weight: bold; }
-  #alpaca-market-status {
-    margin-left: auto;
-    padding: 3px 10px;
-    font-size: 11px;
-    font-weight: bold;
-    letter-spacing: 2px;
-    border: 1px solid var(--border);
-  }
-  #alpaca-market-status.open { color: var(--green); border-color: var(--green); }
-  #alpaca-market-status.closed { color: var(--red); border-color: var(--red); }
-
-  .alpaca-section {
-    padding: 12px 14px;
-    border-bottom: 1px solid var(--border);
-  }
-  .alpaca-section-title {
-    font-size: 11px;
-    letter-spacing: 2px;
-    color: var(--muted);
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  /* Side toggle buttons */
-  .side-toggle { display: flex; gap: 0; }
-  .side-toggle button {
-    width: 70px;
-    border-radius: 0;
-  }
-  .side-toggle button.active-buy { background: var(--green-dim); border-color: var(--green); color: var(--green); }
-  .side-toggle button.active-sell { background: #6e1a1a; border-color: var(--red); color: var(--red); }
-
-  /* Order type toggle */
-  .type-toggle { display: flex; gap: 0; }
-  .type-toggle button { width: 80px; border-radius: 0; }
-  .type-toggle button.active-type { background: var(--cyan-dim); border-color: var(--cyan); color: var(--cyan); }
-
-  #alpaca-trade-form {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    max-width: 520px;
-  }
-  #alpaca-trade-form .form-full { grid-column: 1 / -1; }
-  .form-field { display: flex; flex-direction: column; gap: 4px; }
-  .form-label { font-size: 10px; color: var(--muted); letter-spacing: 1px; }
-
-  #alpaca-msg {
-    margin-top: 8px;
-    padding: 6px 10px;
-    font-size: 12px;
-    display: none;
-  }
-  #alpaca-msg.success { color: var(--green); border: 1px solid var(--green-dim); background: rgba(63,185,80,0.05); }
-  #alpaca-msg.error { color: var(--red); border: 1px solid var(--red); background: rgba(248,81,73,0.05); }
-
-  #alpaca-ai-box {
-    display: none;
-    margin-top: 10px;
-    background: var(--bg3);
-    border: 1px solid var(--green-dim);
-    padding: 10px 14px;
-    font-size: 12px;
-    color: var(--green);
-    white-space: pre-wrap;
-    line-height: 1.6;
-    max-height: 220px;
-    overflow-y: auto;
-  }
+#alpha-holdings-list { font-size: 11px; color: var(--gray); margin-bottom: 8px; line-height: 1.8; }
 </style>
 </head>
 <body>
 
-<!-- ── Header ─────────────────────────────────────────────────────────── -->
+<!-- HEADER -->
 <div id="header">
-  <span class="logo">▸ TRADING TERMINAL</span>
-  <span style="color:var(--muted);font-size:11px">OLLAMA: <span id="ollama-status" style="color:var(--yellow)">checking…</span></span>
-  <span class="clock" id="clock">--:--:--</span>
+  <span class="logo">TRADING TERMINAL</span>
+  <span class="header-divider">|</span>
+  <span class="header-item">OLLAMA: <span id="ollama-status" style="color:var(--yellow)">CHECKING</span></span>
+  <span class="header-divider">|</span>
+  <span class="header-item">ALPACA: <span id="alp-header-status" style="color:var(--gray)">—</span></span>
+  <span id="market-status-badge">—</span>
+  <span id="clock">--:--:--</span>
 </div>
 
-<!-- ── Tabs ───────────────────────────────────────────────────────────── -->
+<!-- TABS -->
 <div id="tabs">
   <button class="tab-btn active" data-tab="chat">CHAT</button>
-  <button class="tab-btn" data-tab="scan">SCANNER</button>
+  <button class="tab-btn" data-tab="scan">MARKET SCANNER</button>
   <button class="tab-btn" data-tab="holdings">HOLDINGS</button>
-  <button class="tab-btn" data-tab="strategy">PORTFOLIO STRATEGY</button>
+  <button class="tab-btn" data-tab="strategy">PORTFOLIO</button>
   <button class="tab-btn" data-tab="alpaca">ALPACA</button>
 </div>
 
-<!-- ── Main ───────────────────────────────────────────────────────────── -->
+<!-- MAIN -->
 <div id="main">
 
-  <!-- ══ CHAT ════════════════════════════════════════════════════════════ -->
+  <!-- ══ CHAT ══ -->
   <div class="tab-panel active" id="chat-panel">
-    <div id="chat-history"></div>
-    <div id="chat-input-row">
-      <input id="chat-input" type="text" placeholder="Ask about markets, positions, or paste scan results…" autocomplete="off"/>
-      <button class="primary" id="chat-send-btn" onclick="sendChat()">SEND</button>
-      <button onclick="clearChat()" style="color:var(--muted)">CLEAR</button>
+    <div id="chat-left">
+      <div id="chat-history"></div>
+      <div id="chat-input-row">
+        <input id="chat-input" type="text" placeholder="Ask about markets, positions, scan results…" autocomplete="off"/>
+        <button class="btn-orange" id="chat-send-btn" onclick="sendChat()">SEND</button>
+        <button onclick="clearChat()">CLEAR</button>
+      </div>
+    </div>
+    <div id="chat-right">
+      <div class="panel-header">CONTEXT</div>
+      <div id="chat-context-body">
+        <div style="color:var(--gray);font-size:10px">Run a scan or load positions to populate context.</div>
+      </div>
     </div>
   </div>
 
-  <!-- ══ SCANNER ═════════════════════════════════════════════════════════ -->
+  <!-- ══ SCANNER ══ -->
   <div class="tab-panel" id="scan-panel">
-    <div id="scan-toolbar">
-      <button onclick="setWatchlist('mag7')">Mag 7</button>
-      <button onclick="setWatchlist('tech')">Tech</button>
-      <button onclick="setWatchlist('custom')">Custom</button>
-      <input id="custom-tickers" type="text" placeholder="AAPL,TSLA,NVDA" value="AAPL,TSLA,NVDA"/>
-      <button class="primary" id="scan-btn" onclick="runScan()">▶ RUN SCAN</button>
-      <button onclick="sendScanToOllama()" id="analyze-btn" style="display:none">⬡ ANALYZE WITH AI</button>
-      <span id="scan-meta"></span>
+    <div id="scan-left">
+      <div id="scan-toolbar">
+        <button class="wl-preset" onclick="setWatchlist('mag7')">MAG7</button>
+        <button class="wl-preset" onclick="setWatchlist('tech')">TECH</button>
+        <button class="wl-preset" onclick="setWatchlist('custom')">CUSTOM</button>
+        <input id="custom-tickers" type="text" placeholder="AAPL,TSLA,NVDA" value="AAPL,TSLA,NVDA"/>
+        <button class="btn-orange" id="scan-btn" onclick="runScan()">RUN SCAN</button>
+        <button class="btn-cyan" onclick="sendScanToOllama()" id="analyze-btn" style="display:none">SEND TO AI</button>
+        <span id="scan-meta"></span>
+      </div>
+      <div id="market-breadth-bar">
+        <span style="font-size:10px;color:var(--gray);letter-spacing:1px">BREADTH</span>
+        <span>ADV: <span style="color:var(--green)" id="mb-advancing">—</span></span>
+        <span>DEC: <span style="color:var(--red)" id="mb-declining">—</span></span>
+        <div class="breadth-track"><div class="breadth-adv-fill" id="mb-adv-fill" style="width:50%"></div><div class="breadth-dec-fill" id="mb-dec-fill" style="width:50%"></div></div>
+        <span>AVG RSI: <span style="color:var(--cyan)" id="mb-rsi">—</span></span>
+        <span>HIGH VOL: <span style="color:var(--yellow)" id="mb-volume">—</span></span>
+      </div>
+      <div id="scan-results-wrap">
+        <table id="scan-results-table">
+          <thead>
+            <tr>
+              <th>TICKER</th>
+              <th>TYPE</th>
+              <th>SEV</th>
+              <th>PRICE</th>
+              <th>CHG%</th>
+              <th>RSI</th>
+              <th>VOL</th>
+              <th>52WH%</th>
+              <th>DETAILS</th>
+            </tr>
+          </thead>
+          <tbody id="scan-results-body">
+            <tr><td colspan="9" style="color:var(--gray);text-align:center;padding:20px;font-size:11px">SELECT WATCHLIST AND RUN SCAN</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
-    <!-- Market Breadth Bar -->
-    <div id="market-breadth-bar">
-      <span class="breadth-label">MARKET BREADTH</span>
-      <span>Advancing: <span class="breadth-advancing" id="mb-advancing">—</span></span>
-      <span>Declining: <span class="breadth-declining" id="mb-declining">—</span></span>
-      <span>Avg RSI: <span class="breadth-rsi" id="mb-rsi">—</span></span>
-      <span>High Volume: <span class="breadth-volume" id="mb-volume">—</span></span>
-    </div>
-    <div id="scan-results">
-      <div class="scan-empty">Select a watchlist and run scan.</div>
+    <div id="scan-right">
+      <div class="panel-header">TICKER CHART</div>
+      <div id="scan-right-content">
+        <div id="selected-ticker-info">
+          <div class="sti-ticker" id="chart-ticker">—</div>
+          <div class="sti-price" id="chart-price"></div>
+          <div class="sti-metrics" id="chart-metrics"></div>
+        </div>
+        <div class="spark-label">PRICE HISTORY (20D)</div>
+        <div class="sparkline-wrap">
+          <svg id="ticker-sparkline" viewBox="0 0 200 80" preserveAspectRatio="none"></svg>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- ══ HOLDINGS ════════════════════════════════════════════════════════ -->
+  <!-- ══ HOLDINGS ══ -->
   <div class="tab-panel" id="holdings-panel">
-    <div id="holdings-add-row">
-      <span style="color:var(--muted);font-size:11px">ADD POSITION:</span>
-      <input id="add-ticker-input" type="text" placeholder="TICKER"/>
-      <input id="add-shares-input" type="number" placeholder="Shares" step="0.01" style="width:90px"/>
-      <input id="add-cost-input" type="number" placeholder="Avg Cost" step="0.01" style="width:100px"/>
-      <button class="primary" onclick="addHolding()">+ ADD</button>
-      <button onclick="refreshPrices()" id="refresh-btn" style="margin-left:8px">↻ REFRESH PRICES</button>
+    <div id="holdings-filter-bar">
+      <span style="font-size:10px;color:var(--gray);letter-spacing:1px;margin-right:4px">SOURCE:</span>
+      <button class="source-filter-btn active" data-filter="ALL" onclick="setHoldingsFilter('ALL')">ALL</button>
+      <button class="source-filter-btn" data-filter="MANUAL" onclick="setHoldingsFilter('MANUAL')">MANUAL</button>
+      <button class="source-filter-btn" data-filter="ALPACA" onclick="setHoldingsFilter('ALPACA')">ALPACA</button>
+      <button class="btn-cyan" onclick="syncAlpacaHoldings()" id="sync-alp-btn" style="margin-left:8px">SYNC ALPACA</button>
+      <button onclick="refreshPrices()" id="refresh-btn" style="margin-left:4px">REFRESH PRICES</button>
     </div>
     <div id="holdings-table-wrap">
       <table id="holdings-table">
         <thead>
           <tr>
+            <th>SOURCE</th>
             <th>TICKER</th>
             <th>SHARES</th>
             <th>AVG COST</th>
             <th>CURRENT</th>
+            <th>VALUE</th>
             <th>P&amp;L $</th>
             <th>P&amp;L %</th>
-            <th>VALUE</th>
             <th></th>
           </tr>
         </thead>
         <tbody id="holdings-body">
-          <tr><td colspan="8" style="color:var(--muted);text-align:center;padding:20px">Loading…</td></tr>
+          <tr><td colspan="9" style="color:var(--gray);text-align:center;padding:20px">LOADING…</td></tr>
         </tbody>
       </table>
     </div>
     <div id="holdings-footer">
-      <span style="color:var(--muted);font-size:11px">TOTAL PORTFOLIO VALUE</span>
-      <span id="total-value">$0.00</span>
+      <div class="hf-stat"><span class="hf-label">TOTAL VALUE</span><span class="hf-val" id="hf-total">$0.00</span></div>
+      <div class="hf-stat"><span class="hf-label">TOTAL P&amp;L</span><span class="hf-val" id="hf-pnl">$0.00</span></div>
+      <div class="hf-stat"><span class="hf-label">ALPACA</span><span class="hf-val" id="hf-alp-total">$0.00</span></div>
+      <div class="hf-stat"><span class="hf-label">MANUAL</span><span class="hf-val" id="hf-man-total">$0.00</span></div>
+    </div>
+    <div id="holdings-add-section">
+      <span style="font-size:10px;color:var(--orange);letter-spacing:1px">ADD MANUAL:</span>
+      <input id="add-ticker-input" type="text" placeholder="TICKER"/>
+      <input id="add-shares-input" type="number" placeholder="Shares" step="0.01" style="width:80px"/>
+      <input id="add-cost-input" type="number" placeholder="Avg Cost" step="0.01" style="width:90px"/>
+      <button class="btn-orange" onclick="addHolding()">+ ADD</button>
     </div>
   </div>
 
-  <!-- ══ PORTFOLIO STRATEGY ══════════════════════════════════════════════ -->
+  <!-- ══ PORTFOLIO ══ -->
   <div class="tab-panel" id="strategy-panel">
 
-    <!-- Index Allocation 70% -->
-    <div class="strategy-section">
-      <div class="strategy-section-title">
-        INDEX ALLOCATION
-        <span class="alloc-badge">70%</span>
-        <button onclick="loadMarketOverview()" id="index-refresh-btn" style="margin-left:auto;font-size:11px">↻ REFRESH</button>
-        <button onclick="getRotationAdvice()" id="rotation-btn" class="primary" style="font-size:11px">⬡ GET ROTATION ADVICE</button>
+    <!-- Index Allocation -->
+    <div class="port-section">
+      <div class="port-section-title">
+        INDEX ALLOCATION <span class="alloc-badge">70%</span>
+        <button onclick="loadMarketOverview()" id="index-refresh-btn" style="margin-left:auto">REFRESH</button>
+        <button class="btn-orange" onclick="getRotationAdvice()" id="rotation-btn">GET ROTATION ADVICE</button>
       </div>
-      <div class="index-grid" id="index-grid">
-        <div style="color:var(--muted);font-size:12px;padding:10px">Loading index data…</div>
+      <div class="etf-grid" id="etf-grid">
+        <div style="color:var(--gray);font-size:11px;padding:10px;grid-column:span 4">LOADING INDEX DATA…</div>
+      </div>
+      <div class="etf-spark-grid" id="etf-spark-grid">
+        <div class="etf-spark-box"><div class="etf-spark-label">SPY</div><svg id="spark-SPY" viewBox="0 0 100 40" preserveAspectRatio="none"></svg></div>
+        <div class="etf-spark-box"><div class="etf-spark-label">QQQ</div><svg id="spark-QQQ" viewBox="0 0 100 40" preserveAspectRatio="none"></svg></div>
+        <div class="etf-spark-box"><div class="etf-spark-label">EWJ</div><svg id="spark-EWJ" viewBox="0 0 100 40" preserveAspectRatio="none"></svg></div>
+        <div class="etf-spark-box"><div class="etf-spark-label">VTI</div><svg id="spark-VTI" viewBox="0 0 100 40" preserveAspectRatio="none"></svg></div>
       </div>
       <div id="rotation-advice-box"></div>
     </div>
 
-    <!-- Alpha Picks 30% -->
-    <div class="strategy-section">
-      <div class="strategy-section-title">
-        ALPHA PICKS — SINGLE STOCKS
-        <span class="alloc-badge">30%</span>
-      </div>
-      <div style="font-size:11px;color:var(--muted);margin-bottom:8px">CURRENT HOLDINGS (single stocks)</div>
-      <div id="alpha-holdings-list" style="margin-bottom:14px;font-size:12px;color:var(--muted)">Loading…</div>
-
-      <div style="font-size:11px;color:var(--muted);margin-bottom:6px">WATCHLIST</div>
+    <!-- Alpha Picks -->
+    <div class="port-section">
+      <div class="port-section-title">ALPHA PICKS — SINGLE STOCKS <span class="alloc-badge">30%</span></div>
+      <div style="font-size:10px;color:var(--gray);letter-spacing:1px;margin-bottom:5px">CURRENT HOLDINGS</div>
+      <div id="alpha-holdings-list">LOADING…</div>
+      <div style="font-size:10px;color:var(--gray);letter-spacing:1px;margin-bottom:5px;margin-top:8px">WATCHLIST</div>
       <div class="watchlist-wrap" id="watchlist-wrap">
-        <!-- tags rendered here -->
-        <input id="watchlist-input" type="text" placeholder="Add ticker…" style="width:110px;text-transform:uppercase"/>
+        <input id="watchlist-input" type="text" placeholder="ADD TICKER" style="width:100px;text-transform:uppercase"/>
         <button onclick="addToWatchlist()">+ ADD</button>
-        <button onclick="analyzeWatchlist()" id="wl-analyze-btn" class="primary">⬡ ANALYZE WATCHLIST</button>
+        <button class="btn-orange" onclick="analyzeWatchlist()" id="wl-analyze-btn">ANALYZE WATCHLIST</button>
       </div>
       <div id="watchlist-advice-box"></div>
     </div>
 
     <!-- Portfolio Health -->
-    <div class="strategy-section">
-      <div class="strategy-section-title">PORTFOLIO HEALTH</div>
-      <div class="health-grid" id="health-grid">
-        <div class="health-card">
-          <div class="hc-label">TOTAL VALUE</div>
-          <div class="hc-value" id="ph-total">$0.00</div>
-        </div>
-        <div class="health-card">
-          <div class="hc-label">POSITIONS</div>
-          <div class="hc-value" id="ph-positions">0</div>
-          <div class="hc-sub" id="ph-positions-sub">0 index · 0 stock</div>
-        </div>
-        <div class="health-card">
-          <div class="hc-label">INDEX ALLOCATION</div>
-          <div class="hc-value" id="ph-index-alloc">—</div>
-          <div class="hc-sub">target 70%</div>
-        </div>
-        <div class="health-card">
-          <div class="hc-label">ALPHA ALLOCATION</div>
-          <div class="hc-value" id="ph-alpha-alloc">—</div>
-          <div class="hc-sub">target 30%</div>
-        </div>
+    <div class="port-section">
+      <div class="port-section-title">PORTFOLIO HEALTH</div>
+      <div class="health-grid">
+        <div class="health-card"><div class="hc-label">TOTAL VALUE</div><div class="hc-value" id="ph-total">$0.00</div></div>
+        <div class="health-card"><div class="hc-label">POSITIONS</div><div class="hc-value" id="ph-positions">0</div><div class="hc-sub" id="ph-pos-sub">0 index · 0 stock</div></div>
+        <div class="health-card"><div class="hc-label">INDEX ALLOC</div><div class="hc-value" id="ph-index-alloc">—</div><div class="hc-sub">TARGET 70%</div></div>
+        <div class="health-card"><div class="hc-label">ALPHA ALLOC</div><div class="hc-value" id="ph-alpha-alloc">—</div><div class="hc-sub">TARGET 30%</div></div>
       </div>
-      <div class="alloc-bar-wrap" style="margin-top:10px">
+      <div class="alloc-bar-wrap">
         <div class="alloc-bar">
           <div class="bar-index" id="alloc-bar-index" style="width:70%"></div>
           <div class="bar-alpha" id="alloc-bar-alpha" style="width:30%"></div>
         </div>
         <div class="alloc-bar-labels">
-          <span style="color:var(--cyan)">INDEX (70%)</span>
-          <span style="color:var(--green)">ALPHA (30%)</span>
+          <span style="color:var(--cyan)">INDEX</span>
+          <span style="color:var(--green)">ALPHA</span>
         </div>
       </div>
     </div>
 
   </div><!-- /strategy-panel -->
 
-  <!-- ══ ALPACA ══════════════════════════════════════════════════════════ -->
+  <!-- ══ ALPACA ══ -->
   <div class="tab-panel" id="alpaca-panel">
-
-    <!-- Account Bar -->
-    <div id="alpaca-account-bar">
-      <div class="alpaca-stat">
-        <span class="alpaca-stat-label">PORTFOLIO VALUE</span>
-        <span class="alpaca-stat-val" id="alp-portfolio">—</span>
+    <div id="alpaca-left">
+      <!-- Account bar -->
+      <div id="alpaca-account-bar">
+        <div class="alp-stat"><span class="alp-stat-label">PORTFOLIO VALUE</span><span class="alp-stat-val" id="alp-portfolio">—</span></div>
+        <div class="alp-stat"><span class="alp-stat-label">BUYING POWER</span><span class="alp-stat-val" id="alp-buying-power">—</span></div>
+        <div class="alp-stat"><span class="alp-stat-label">CASH</span><span class="alp-stat-val" id="alp-cash">—</span></div>
+        <div class="alp-stat" id="alp-pnl-stat"><span class="alp-stat-label">TODAY P&amp;L</span><span class="alp-stat-val" id="alp-pnl">—</span></div>
+        <div id="alpaca-market-status">—</div>
+        <button onclick="loadAlpacaAll()" style="margin:5px 8px;font-size:10px">REFRESH</button>
       </div>
-      <div class="alpaca-stat">
-        <span class="alpaca-stat-label">BUYING POWER</span>
-        <span class="alpaca-stat-val" id="alp-buying-power">—</span>
-      </div>
-      <div class="alpaca-stat">
-        <span class="alpaca-stat-label">CASH</span>
-        <span class="alpaca-stat-val" id="alp-cash">—</span>
-      </div>
-      <div class="alpaca-stat">
-        <span class="alpaca-stat-label">TODAY'S P&amp;L</span>
-        <span class="alpaca-stat-val" id="alp-pnl">—</span>
-      </div>
-      <div id="alpaca-market-status">—</div>
-      <button onclick="loadAlpacaAccount()" style="margin-left:4px;font-size:11px">↻ REFRESH</button>
-    </div>
-
-    <!-- Positions Section -->
-    <div class="alpaca-section">
-      <div class="alpaca-section-title">
-        POSITIONS
-        <button onclick="loadAlpacaPositions()" style="font-size:11px">↻ REFRESH</button>
-      </div>
-      <div style="overflow-x:auto">
-        <table id="alpaca-positions-table">
-          <thead>
-            <tr>
-              <th>TICKER</th>
-              <th>QTY</th>
-              <th>AVG COST</th>
-              <th>CURRENT</th>
-              <th>MARKET VALUE</th>
-              <th>P&amp;L $</th>
-              <th>P&amp;L %</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="alpaca-positions-body">
-            <tr><td colspan="8" style="color:var(--muted);text-align:center;padding:16px">Loading…</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Orders Section -->
-    <div class="alpaca-section">
-      <div class="alpaca-section-title">
-        OPEN ORDERS
-        <button onclick="loadAlpacaOrders()" style="font-size:11px">↻ REFRESH ORDERS</button>
-      </div>
-      <div style="overflow-x:auto">
-        <table id="alpaca-orders-table">
-          <thead>
-            <tr>
-              <th>TICKER</th>
-              <th>QTY</th>
-              <th>SIDE</th>
-              <th>TYPE</th>
-              <th>STATUS</th>
-              <th>LIMIT $</th>
-              <th>SUBMITTED</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="alpaca-orders-body">
-            <tr><td colspan="8" style="color:var(--muted);text-align:center;padding:16px">Loading…</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Quick Trade Panel -->
-    <div class="alpaca-section">
-      <div class="alpaca-section-title">QUICK TRADE</div>
-      <div id="alpaca-trade-form">
-        <div class="form-field">
-          <span class="form-label">TICKER</span>
-          <input id="alp-ticker" type="text" placeholder="AAPL" style="text-transform:uppercase;width:100%"/>
+      <!-- Positions -->
+      <div class="alpaca-section scrollable">
+        <div class="alpaca-section-title">
+          POSITIONS
+          <button onclick="loadAlpacaPositions()" style="font-size:10px">REFRESH</button>
         </div>
-        <div class="form-field">
-          <span class="form-label">QUANTITY</span>
-          <input id="alp-qty" type="number" placeholder="10" min="1" step="1" style="width:100%"/>
+        <div style="overflow-x:auto">
+          <table id="alpaca-positions-table">
+            <thead>
+              <tr><th>TICKER</th><th>QTY</th><th>AVG COST</th><th>CURRENT</th><th>MKT VALUE</th><th>P&amp;L $</th><th>P&amp;L %</th><th></th></tr>
+            </thead>
+            <tbody id="alpaca-positions-body">
+              <tr><td colspan="8" style="color:var(--gray);text-align:center;padding:12px">LOADING…</td></tr>
+            </tbody>
+          </table>
         </div>
-        <div class="form-field">
-          <span class="form-label">SIDE</span>
-          <div class="side-toggle">
-            <button id="alp-side-buy" class="active-buy" onclick="setAlpacaSide('buy')">BUY</button>
-            <button id="alp-side-sell" onclick="setAlpacaSide('sell')">SELL</button>
+      </div>
+      <!-- Orders -->
+      <div class="alpaca-section" style="flex-shrink:0">
+        <div class="alpaca-section-title">
+          OPEN ORDERS
+          <button onclick="loadAlpacaOrders()" style="font-size:10px">REFRESH</button>
+        </div>
+        <div style="overflow-x:auto">
+          <table id="alpaca-orders-table">
+            <thead>
+              <tr><th>TICKER</th><th>QTY</th><th>SIDE</th><th>TYPE</th><th>STATUS</th><th>LIMIT</th><th>SUBMITTED</th><th></th></tr>
+            </thead>
+            <tbody id="alpaca-orders-body">
+              <tr><td colspan="8" style="color:var(--gray);text-align:center;padding:12px">LOADING…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Trade form -->
+    <div id="alpaca-right">
+      <div class="panel-header">QUICK TRADE</div>
+      <div class="alpaca-section" style="flex:1;border:none">
+        <div class="trade-form">
+          <div class="form-field">
+            <span class="form-label">TICKER</span>
+            <input id="alp-ticker" type="text" placeholder="AAPL" style="text-transform:uppercase"/>
+          </div>
+          <div class="form-field">
+            <span class="form-label">QUANTITY</span>
+            <input id="alp-qty" type="number" placeholder="10" min="1" step="1"/>
+          </div>
+          <div class="form-field">
+            <span class="form-label">SIDE</span>
+            <div class="side-toggle">
+              <button id="alp-side-buy" class="active-buy" onclick="setAlpacaSide('buy')">BUY</button>
+              <button id="alp-side-sell" onclick="setAlpacaSide('sell')">SELL</button>
+            </div>
+          </div>
+          <div class="form-field">
+            <span class="form-label">ORDER TYPE</span>
+            <div class="type-toggle">
+              <button id="alp-type-market" class="active-type" onclick="setAlpacaOrderType('market')">MARKET</button>
+              <button id="alp-type-limit" onclick="setAlpacaOrderType('limit')">LIMIT</button>
+            </div>
+          </div>
+          <div class="form-field" id="alp-limit-row" style="display:none">
+            <span class="form-label">LIMIT PRICE</span>
+            <input id="alp-limit-price" type="number" placeholder="150.00" step="0.01"/>
+          </div>
+          <div class="form-field">
+            <span class="form-label">STOP LOSS %</span>
+            <input id="alp-stop-loss" type="number" placeholder="5 (optional)" step="0.1" min="0"/>
+          </div>
+          <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap">
+            <button class="btn-orange" onclick="placeAlpacaOrder()">PLACE ORDER</button>
+            <button class="btn-cyan" onclick="getAlpacaAISuggestion()">GET AI SUGGESTION</button>
           </div>
         </div>
-        <div class="form-field">
-          <span class="form-label">ORDER TYPE</span>
-          <div class="type-toggle">
-            <button id="alp-type-market" class="active-type" onclick="setAlpacaOrderType('market')">MARKET</button>
-            <button id="alp-type-limit" onclick="setAlpacaOrderType('limit')">LIMIT</button>
-          </div>
-        </div>
-        <div class="form-field" id="alp-limit-row" style="display:none">
-          <span class="form-label">LIMIT PRICE</span>
-          <input id="alp-limit-price" type="number" placeholder="150.00" step="0.01" style="width:100%"/>
-        </div>
-        <div class="form-field">
-          <span class="form-label">STOP LOSS %</span>
-          <input id="alp-stop-loss" type="number" placeholder="5 (optional)" step="0.1" min="0" style="width:100%"/>
-        </div>
-        <div class="form-full" style="display:flex;gap:8px;align-items:center;margin-top:4px">
-          <button class="primary" onclick="placeAlpacaOrder()" style="letter-spacing:1px">PLACE ORDER</button>
-          <button onclick="getAlpacaAISuggestion()" style="color:var(--cyan);border-color:var(--cyan)">⬡ GET AI TRADE SUGGESTION</button>
-        </div>
+        <div id="alpaca-msg"></div>
+        <div id="alpaca-ai-box"></div>
       </div>
-      <div id="alpaca-msg"></div>
-      <div id="alpaca-ai-box"></div>
     </div>
-
   </div><!-- /alpaca-panel -->
 
 </div><!-- /main -->
 
-<!-- ── Fundamentals Modal ──────────────────────────────────────────────── -->
+<!-- Fund Modal -->
 <div id="fund-modal-overlay" onclick="closeFundModal(event)">
   <div id="fund-modal">
-    <button class="modal-close" onclick="closeFundModal()">✕</button>
+    <button class="modal-close" onclick="closeFundModal()">X</button>
     <h3 id="fund-modal-title">—</h3>
-    <div id="fund-modal-body"><span style="color:var(--muted)">Loading…</span></div>
+    <div id="fund-modal-body"><span style="color:var(--gray)">LOADING…</span></div>
   </div>
 </div>
 
-<!-- ── Status bar ─────────────────────────────────────────────────────── -->
+<!-- Status bar -->
 <div id="statusbar">
-  <span class="status-item"><span class="status-label">LAST SCAN:</span><span class="status-val" id="sb-scan">—</span></span>
-  <span class="status-item"><span class="status-label">HOLDINGS:</span><span class="status-val" id="sb-holdings">0</span></span>
-  <span class="status-item"><span class="status-label">PORTFOLIO:</span><span class="status-val" id="sb-portfolio">$0.00</span></span>
-  <span class="status-item" style="margin-left:auto"><span class="status-label">STATUS:</span><span class="status-val" id="sb-status">READY</span></span>
+  <span class="sb-item"><span class="sb-label">SCAN:</span><span class="sb-val" id="sb-scan">—</span></span>
+  <span class="sb-item"><span class="sb-label">HOLDINGS:</span><span class="sb-val" id="sb-holdings">0</span></span>
+  <span class="sb-item"><span class="sb-label">PORTFOLIO:</span><span class="sb-val" id="sb-portfolio">$0.00</span></span>
+  <span class="sb-item"><span class="sb-label">ALPACA:</span><span class="sb-val" id="sb-alpaca-val">—</span></span>
+  <span class="sb-item" style="margin-left:auto"><span class="sb-label">STATUS:</span><span class="sb-val" id="sb-status">READY</span></span>
 </div>
 
 <script>
-/* ═══════════════════════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════════════════
    STATE
-══════════════════════════════════════════════════════════════════════════════ */
-let lastScanData = null;   // full scan_with_summary response
+═══════════════════════════════════════════════════════════════ */
+window.lastScanData = null;
+window.alpacaPositions = [];
 let holdings = [];
 let prices = {};
 let chatStreaming = false;
-let indexData = {};        // market overview data
-const INDEX_TICKERS = ['SPY', 'QQQ', 'EWJ', 'VTI'];
-const WATCHLIST_KEY = 'trading_terminal_watchlist';
+let indexData = {};
+let holdingsFilter = 'ALL';
+let alpacaSide = 'buy';
+let alpacaOrderType = 'market';
+const INDEX_TICKERS = ['SPY','QQQ','EWJ','VTI'];
+const WATCHLIST_KEY = 'tt_watchlist_v2';
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   CLOCK + OLLAMA STATUS
-══════════════════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════
+   CLOCK
+═══════════════════════════════════════════════════════════════ */
 function updateClock() {
-  document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-US', {hour12: false});
+  document.getElementById('clock').textContent =
+    new Date().toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
 }
-setInterval(updateClock, 1000);
+setInterval(updateClock,1000);
 updateClock();
 
+/* ═══════════════════════════════════════════════════════════════
+   OLLAMA
+═══════════════════════════════════════════════════════════════ */
 async function checkOllama() {
   const el = document.getElementById('ollama-status');
   try {
-    const r = await fetch('http://localhost:11434/', {signal: AbortSignal.timeout(3000)});
-    if (r.ok || r.status < 500) { el.textContent = 'ONLINE'; el.style.color = 'var(--green)'; }
-    else { el.textContent = 'ERROR'; el.style.color = 'var(--red)'; }
-  } catch { el.textContent = 'OFFLINE'; el.style.color = 'var(--red)'; }
+    const r = await fetch('http://localhost:11434/',{signal:AbortSignal.timeout(3000)});
+    if (r.ok||r.status<500){el.textContent='ONLINE';el.style.color='var(--green)';}
+    else{el.textContent='ERROR';el.style.color='var(--red)';}
+  } catch {el.textContent='OFFLINE';el.style.color='var(--red)';}
 }
 checkOllama();
-setInterval(checkOllama, 30000);
+setInterval(checkOllama,30000);
 
-/* ═══════════════════════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════════════════
+   SPARKLINES
+═══════════════════════════════════════════════════════════════ */
+function drawSparkline(svgEl, dataPoints, color) {
+  svgEl.innerHTML = '';
+  if (!dataPoints || dataPoints.length < 2) return;
+  const W = parseFloat(svgEl.getAttribute('viewBox').split(' ')[2]) || 200;
+  const H = parseFloat(svgEl.getAttribute('viewBox').split(' ')[3]) || 80;
+  const pad = 2;
+  const min = Math.min(...dataPoints);
+  const max = Math.max(...dataPoints);
+  const range = max - min || 1;
+  const pts = dataPoints.map((v,i) => {
+    const x = pad + (i / (dataPoints.length-1)) * (W - pad*2);
+    const y = pad + (1 - (v - min) / range) * (H - pad*2);
+    return `${x.toFixed(2)},${y.toFixed(2)}`;
+  }).join(' ');
+  // baseline
+  const baseY = (pad + (1 - (0 - min) / range) * (H - pad*2)).toFixed(2);
+  const clampedBaseY = Math.min(H - pad, Math.max(pad, parseFloat(baseY)));
+  const baseLine = document.createElementNS('http://www.w3.org/2000/svg','line');
+  baseLine.setAttribute('x1', pad); baseLine.setAttribute('x2', W - pad);
+  baseLine.setAttribute('y1', clampedBaseY); baseLine.setAttribute('y2', clampedBaseY);
+  baseLine.setAttribute('stroke', '#333'); baseLine.setAttribute('stroke-width', '0.5');
+  svgEl.appendChild(baseLine);
+  // grid
+  for (let g = 1; g < 4; g++) {
+    const gy = pad + (g/4) * (H - pad*2);
+    const gl = document.createElementNS('http://www.w3.org/2000/svg','line');
+    gl.setAttribute('x1',pad); gl.setAttribute('x2',W-pad);
+    gl.setAttribute('y1',gy.toFixed(2)); gl.setAttribute('y2',gy.toFixed(2));
+    gl.setAttribute('stroke','#222'); gl.setAttribute('stroke-width','0.5');
+    svgEl.appendChild(gl);
+  }
+  // fill
+  const firstPt = pts.split(' ')[0];
+  const lastPt = pts.split(' ')[pts.split(' ').length-1];
+  const [lx] = lastPt.split(',');
+  const [fx] = firstPt.split(',');
+  const fillPts = `${fx},${H-pad} ${pts} ${lx},${H-pad}`;
+  const fill = document.createElementNS('http://www.w3.org/2000/svg','polygon');
+  fill.setAttribute('points', fillPts);
+  fill.setAttribute('fill', color.replace(')',',0.1)').replace('rgb(','rgba(').replace('#','').length > 8 ? color+'1a' : color+'1a');
+  fill.setAttribute('fill-opacity','0.12');
+  svgEl.appendChild(fill);
+  // line
+  const line = document.createElementNS('http://www.w3.org/2000/svg','polyline');
+  line.setAttribute('points', pts);
+  line.setAttribute('fill','none');
+  line.setAttribute('stroke', color);
+  line.setAttribute('stroke-width','1.2');
+  svgEl.appendChild(line);
+  // last dot
+  const [dx, dy] = lastPt.split(',');
+  const dot = document.createElementNS('http://www.w3.org/2000/svg','circle');
+  dot.setAttribute('cx', dx); dot.setAttribute('cy', dy); dot.setAttribute('r','2');
+  dot.setAttribute('fill', color);
+  svgEl.appendChild(dot);
+}
+
+/* ═══════════════════════════════════════════════════════════════
    TABS
-══════════════════════════════════════════════════════════════════════════════ */
+═══════════════════════════════════════════════════════════════ */
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -996,23 +1136,76 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
       renderWatchlist();
       if (Object.keys(indexData).length === 0) loadMarketOverview();
     }
-    if (btn.dataset.tab === 'alpaca') {
-      loadAlpacaAccount();
-      loadAlpacaPositions();
-      loadAlpacaOrders();
-    }
+    if (btn.dataset.tab === 'alpaca') loadAlpacaAll();
+    if (btn.dataset.tab === 'holdings') syncAlpacaHoldings();
   });
 });
 
-/* ═══════════════════════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════════════════
+   CONTEXT PANEL
+═══════════════════════════════════════════════════════════════ */
+function updateContextPanel() {
+  const body = document.getElementById('chat-context-body');
+  let html = '';
+
+  // Alpaca positions
+  if (window.alpacaPositions && window.alpacaPositions.length) {
+    html += `<div class="ctx-section">ALPACA POSITIONS</div>`;
+    window.alpacaPositions.forEach(p => {
+      const cls = p.pnl >= 0 ? 'pos' : 'neg';
+      html += `<div class="ctx-row"><span class="ctx-label">${p.ticker}</span><span class="ctx-val">${p.qty}sh <span class="${cls}">${p.pnl>=0?'+':''}$${Number(p.pnl).toFixed(0)}</span></span></div>`;
+    });
+  }
+
+  // Last scan
+  if (window.lastScanData) {
+    const a = window.lastScanData.anomalies || [];
+    const b = window.lastScanData.market_breadth || {};
+    html += `<div class="ctx-section">LAST SCAN</div>`;
+    html += `<div class="ctx-row"><span class="ctx-label">ANOMALIES</span><span class="ctx-val">${a.length}</span></div>`;
+    html += `<div class="ctx-row"><span class="ctx-label">ADV/DEC</span><span class="ctx-val"><span class="pos">${b.advancing??'?'}</span>/<span class="neg">${b.declining??'?'}</span></span></div>`;
+    html += `<div class="ctx-row"><span class="ctx-label">AVG RSI</span><span class="ctx-val">${b.avg_rsi!=null?b.avg_rsi.toFixed(1):'?'}</span></div>`;
+    const high = a.filter(x=>x.severity==='HIGH');
+    const med = a.filter(x=>x.severity==='MEDIUM');
+    html += `<div class="ctx-row"><span class="ctx-label">HIGH</span><span class="ctx-val" style="color:var(--red)">${high.length}</span></div>`;
+    html += `<div class="ctx-row"><span class="ctx-label">MEDIUM</span><span class="ctx-val" style="color:var(--yellow)">${med.length}</span></div>`;
+    if (a.length) {
+      html += `<div class="ctx-section">TOP ANOMALIES</div>`;
+      a.slice(0,5).forEach(x => {
+        html += `<div class="ctx-row"><span class="ctx-label">${x.ticker}</span><span class="ctx-val ${x.severity==='HIGH'?'neg':x.severity==='MEDIUM'?'':'pos'}">${x.severity}</span></div>`;
+      });
+    }
+  }
+
+  if (!html) html = '<div style="color:var(--gray);font-size:10px">RUN A SCAN OR LOAD POSITIONS TO POPULATE CONTEXT.</div>';
+  body.innerHTML = html;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ALPACA POSITIONS (shared fetch)
+═══════════════════════════════════════════════════════════════ */
+async function fetchAlpacaPositions() {
+  try {
+    const r = await fetch('/alpaca/positions');
+    const data = await r.json();
+    if (Array.isArray(data) && !data.error) {
+      window.alpacaPositions = data;
+      updateContextPanel();
+      return data;
+    }
+  } catch(e) { console.error('fetchAlpacaPositions error:', e); }
+  return [];
+}
+
+/* ═══════════════════════════════════════════════════════════════
    CHAT
-══════════════════════════════════════════════════════════════════════════════ */
+═══════════════════════════════════════════════════════════════ */
 function appendMsg(role, text) {
   const hist = document.getElementById('chat-history');
   const div = document.createElement('div');
   div.className = `msg ${role}`;
   const label = document.createElement('div');
-  label.className = `msg-label ${role === 'user' ? 'user-label' : 'ai-label'}`;
+  label.className = 'msg-label';
   label.textContent = role === 'user' ? 'YOU' : 'ANALYST';
   const textEl = document.createElement('div');
   textEl.className = 'msg-text';
@@ -1024,237 +1217,219 @@ function appendMsg(role, text) {
   return textEl;
 }
 
-function clearChat() {
-  document.getElementById('chat-history').innerHTML = '';
+function clearChat() { document.getElementById('chat-history').innerHTML = ''; }
+
+async function buildContextPrefix() {
+  const pos = window.alpacaPositions.length ? window.alpacaPositions : await fetchAlpacaPositions();
+  if (!pos.length) return '';
+  const posStr = pos.map(p => `${p.ticker}: ${p.qty} shares @ $${Number(p.avg_cost).toFixed(2)}, current $${Number(p.current_price).toFixed(2)}, P&L: $${Number(p.pnl).toFixed(2)} (${Number(p.pnl_pct).toFixed(2)}%)`).join('; ');
+  return `[Current Alpaca positions: ${posStr}]\n\n`;
 }
 
 async function sendChat(overrideMsg) {
   if (chatStreaming) return;
   const input = document.getElementById('chat-input');
-  const message = overrideMsg || input.value.trim();
-  if (!message) return;
-
+  const rawMsg = overrideMsg || input.value.trim();
+  if (!rawMsg) return;
   input.value = '';
-  appendMsg('user', message);
+  appendMsg('user', rawMsg);
 
   const btn = document.getElementById('chat-send-btn');
-  btn.disabled = true;
-  btn.textContent = '…';
-  chatStreaming = true;
-  setStatus('STREAMING…');
+  btn.disabled = true; btn.textContent = '…';
+  chatStreaming = true; setStatus('STREAMING…');
 
   const aiEl = appendMsg('assistant', '');
   let buffer = '';
 
   try {
+    const prefix = await buildContextPrefix();
+    const message = prefix + rawMsg;
     const resp = await fetch('/chat', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
       body: JSON.stringify({message})
     });
-
     const reader = resp.body.getReader();
     const dec = new TextDecoder();
     let leftover = '';
-
     while (true) {
-      const {done, value} = await reader.read();
+      const {done,value} = await reader.read();
       if (done) break;
-      leftover += dec.decode(value, {stream: true});
+      leftover += dec.decode(value,{stream:true});
       const lines = leftover.split('\n');
       leftover = lines.pop();
       for (const line of lines) {
         if (!line.startsWith('data: ')) continue;
         const token = line.slice(6);
-        if (token === '[DONE]') break;
-        // unescape newlines encoded server-side
-        buffer += token.replace(/\\n/g, '\n');
+        if (token==='[DONE]') break;
+        buffer += token.replace(/\\n/g,'\n');
         aiEl.textContent = buffer;
-        document.getElementById('chat-history').scrollTop = document.getElementById('chat-history').scrollHeight;
+        document.getElementById('chat-history').scrollTop = 99999;
       }
     }
-  } catch (e) {
-    aiEl.textContent = 'Error: ' + e.message;
-  }
+  } catch(e) { aiEl.textContent = 'Error: '+e.message; }
 
-  btn.disabled = false;
-  btn.textContent = 'SEND';
-  chatStreaming = false;
-  setStatus('READY');
+  btn.disabled = false; btn.textContent = 'SEND';
+  chatStreaming = false; setStatus('READY');
 }
 
 document.getElementById('chat-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
+  if (e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat();}
 });
 
-/* ═══════════════════════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════════════════
    SCANNER
-══════════════════════════════════════════════════════════════════════════════ */
+═══════════════════════════════════════════════════════════════ */
 const WATCHLISTS = {
   mag7: 'AAPL,MSFT,NVDA,GOOGL,AMZN,META,TSLA',
   tech: 'AMD,INTC,QCOM,AVGO,CRM,ORCL,ADBE',
 };
 
 function setWatchlist(name) {
-  const input = document.getElementById('custom-tickers');
-  if (WATCHLISTS[name]) {
-    input.value = WATCHLISTS[name];
-  }
-  // else leave as-is for custom
+  if (WATCHLISTS[name]) document.getElementById('custom-tickers').value = WATCHLISTS[name];
 }
 
 async function runScan() {
   const tickers = document.getElementById('custom-tickers').value.trim();
   if (!tickers) return;
   const btn = document.getElementById('scan-btn');
-  btn.disabled = true;
-  btn.innerHTML = 'SCANNING<span class="spinner"></span>';
-  setStatus('SCANNING ' + tickers);
+  btn.disabled = true; btn.innerHTML = 'SCANNING<span class="spinner"></span>';
+  setStatus('SCANNING '+tickers);
 
-  const resultsDiv = document.getElementById('scan-results');
-  resultsDiv.innerHTML = '<div class="scan-empty">Fetching data…</div>';
+  const tbody = document.getElementById('scan-results-body');
+  tbody.innerHTML = '<tr><td colspan="9" style="color:var(--gray);text-align:center;padding:16px">FETCHING DATA…</td></tr>';
   document.getElementById('market-breadth-bar').style.display = 'none';
 
   try {
-    const r = await fetch('/scan?tickers=' + encodeURIComponent(tickers));
+    const r = await fetch('/scan?tickers='+encodeURIComponent(tickers));
     const data = await r.json();
-    lastScanData = data;
+    window.lastScanData = data;
 
-    // Render market breadth
-    const breadth = data.market_breadth || {};
-    document.getElementById('mb-advancing').textContent = breadth.advancing ?? '—';
-    document.getElementById('mb-declining').textContent = breadth.declining ?? '—';
-    document.getElementById('mb-rsi').textContent = breadth.avg_rsi != null ? breadth.avg_rsi.toFixed(1) : '—';
-    document.getElementById('mb-volume').textContent = breadth.high_volume_count ?? '—';
+    const b = data.market_breadth || {};
+    const adv = b.advancing ?? 0;
+    const dec = b.declining ?? 0;
+    const total = adv + dec || 1;
+    document.getElementById('mb-advancing').textContent = adv;
+    document.getElementById('mb-declining').textContent = dec;
+    document.getElementById('mb-rsi').textContent = b.avg_rsi!=null?b.avg_rsi.toFixed(1):'—';
+    document.getElementById('mb-volume').textContent = b.high_volume_count??'—';
+    document.getElementById('mb-adv-fill').style.width = (adv/total*100)+'%';
+    document.getElementById('mb-dec-fill').style.width = (dec/total*100)+'%';
     document.getElementById('market-breadth-bar').style.display = 'flex';
 
-    const anomalies = data.anomalies || [];
-    renderScanResults(anomalies);
+    renderScanTable(data.anomalies || [], data);
 
-    const now = new Date().toLocaleTimeString('en-US', {hour12: false});
-    document.getElementById('scan-meta').textContent = `Last scan: ${now} • ${anomalies.length} anomaly(ies)`;
+    const now = new Date().toLocaleTimeString('en-US',{hour12:false});
+    document.getElementById('scan-meta').textContent = `${now} · ${(data.anomalies||[]).length} ANOMALIES`;
     document.getElementById('sb-scan').textContent = now;
-    document.getElementById('analyze-btn').style.display = anomalies.length > 0 ? 'inline-block' : 'none';
-  } catch (e) {
-    resultsDiv.innerHTML = `<div class="scan-empty" style="color:var(--red)">Error: ${e.message}</div>`;
+    document.getElementById('analyze-btn').style.display = (data.anomalies||[]).length>0?'inline-block':'none';
+
+    updateContextPanel();
+
+    // Draw sparklines for first ticker
+    const tickerKeys = Object.keys(data.tickers || {});
+    if (tickerKeys.length > 0) showTickerChart(tickerKeys[0], data);
+
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="9" style="color:var(--red);text-align:center;padding:16px">ERROR: ${e.message}</td></tr>`;
   }
 
-  btn.disabled = false;
-  btn.innerHTML = '▶ RUN SCAN';
+  btn.disabled = false; btn.innerHTML = 'RUN SCAN';
   setStatus('READY');
 }
 
-function renderScanResults(results) {
-  const div = document.getElementById('scan-results');
-  if (!results || results.length === 0) {
-    div.innerHTML = '<div class="scan-empty">No anomalies detected in this watchlist.</div>';
+function renderScanTable(results, fullData) {
+  const tbody = document.getElementById('scan-results-body');
+  if (!results.length) {
+    tbody.innerHTML = '<tr><td colspan="9" style="color:var(--gray);text-align:center;padding:16px">NO ANOMALIES DETECTED</td></tr>';
     return;
   }
-  div.innerHTML = '';
-  // Sort: HIGH first, then MEDIUM, then LOW
-  const order = {HIGH: 0, MEDIUM: 1, LOW: 2};
-  results.sort((a, b) => (order[a.severity] ?? 3) - (order[b.severity] ?? 3));
-
+  tbody.innerHTML = '';
+  const order = {HIGH:0,MEDIUM:1,LOW:2};
+  results.sort((a,b) => (order[a.severity]??3)-(order[b.severity]??3));
   results.forEach(item => {
-    const card = document.createElement('div');
-    card.className = `anomaly-card ${item.severity || 'LOW'}`;
-
-    const changeClass = (item.change_pct ?? 0) >= 0 ? 'pos' : 'neg';
-    const changeFmt = item.change_pct != null ? `${item.change_pct >= 0 ? '+' : ''}${item.change_pct.toFixed(2)}%` : '—';
-
-    // Metric pills
-    const metrics = [];
-    if (item.rsi != null) {
-      const rsiColor = item.rsi > 70 ? 'var(--red)' : item.rsi < 30 ? 'var(--green)' : 'var(--white)';
-      metrics.push(`<span>RSI: <strong style="color:${rsiColor}">${item.rsi.toFixed(1)}</strong></span>`);
-    }
-    if (item.volume_ratio != null) {
-      metrics.push(`<span>Vol Ratio: <strong>${item.volume_ratio.toFixed(2)}x</strong></span>`);
-    }
-    if (item.pct_from_52w_high != null) {
-      metrics.push(`<span>From 52w High: <strong style="color:var(--yellow)">${item.pct_from_52w_high.toFixed(1)}%</strong></span>`);
-    }
-    if (item.macd_value != null) {
-      metrics.push(`<span>MACD: <strong>${item.macd_value.toFixed(3)}</strong> / Sig: <strong>${(item.signal_value ?? 0).toFixed(3)}</strong></span>`);
-    }
-
-    // Build fundamentals section if available
-    const fund = item.fundamentals || (lastScanData && lastScanData.tickers && lastScanData.tickers[item.ticker] && lastScanData.tickers[item.ticker].fundamentals) || null;
-    let fundHtml = '';
-    if (fund) {
-      const cardId = `fund-${item.ticker}-${Math.random().toString(36).slice(2,7)}`;
-      const recClass = fund.recommendation
-        ? (fund.recommendation.includes('buy') ? 'rec-buy' : fund.recommendation.includes('sell') ? 'rec-sell' : 'rec-hold')
-        : '';
-      const fundMetrics = [];
-      if (fund.pe_ratio != null) fundMetrics.push(`<span>P/E: <strong>${fund.pe_ratio}</strong></span>`);
-      if (fund.forward_pe != null) fundMetrics.push(`<span>Fwd P/E: <strong>${fund.forward_pe}</strong></span>`);
-      if (fund.analyst_target != null) fundMetrics.push(`<span>Target: <strong>$${fund.analyst_target}</strong></span>`);
-      if (fund.upside_pct != null) {
-        const uClass = fund.upside_pct >= 0 ? 'pos' : 'neg';
-        fundMetrics.push(`<span>Upside: <strong class="${uClass}">${fund.upside_pct >= 0 ? '+' : ''}${fund.upside_pct}%</strong></span>`);
-      }
-      if (fund.recommendation) fundMetrics.push(`<span>Rec: <strong class="${recClass}">${fund.recommendation.toUpperCase()}</strong></span>`);
-      if (fund.next_earnings && fund.next_earnings !== 'Unknown') fundMetrics.push(`<span>Earnings: <strong style="color:var(--yellow)">${fund.next_earnings}</strong></span>`);
-
-      const newsHtml = (fund.news && fund.news.length)
-        ? `<ul class="fund-news">${fund.news.map(n => `<li><a href="${n.link || '#'}" target="_blank" rel="noopener">${n.title}</a><span class="news-meta">${n.publisher ? n.publisher + ' · ' : ''}${n.published}</span></li>`).join('')}</ul>`
-        : '';
-
-      fundHtml = `
-        <button class="fund-toggle" onclick="toggleFund('${cardId}')">▸ FUNDAMENTALS</button>
-        <div class="fund-section" id="${cardId}">
-          ${fundMetrics.length ? `<div class="fund-metrics">${fundMetrics.join('')}</div>` : ''}
-          ${newsHtml}
-        </div>`;
-    }
-
-    card.innerHTML = `
-      <div>
-        <div class="card-ticker">${item.ticker || '?'}</div>
-        <div class="card-severity ${item.severity}">${item.severity || ''}</div>
-        <div style="font-size:10px;color:var(--muted);margin-top:4px">${item.type || ''}</div>
-      </div>
-      <div class="card-body">
-        ${item.details || item.signal || item.anomaly || item.reason || 'Anomaly detected'}
-        ${metrics.length ? `<div class="card-metrics">${metrics.join('')}</div>` : ''}
-        ${fundHtml}
-      </div>
-      <div class="card-price">
-        ${item.price != null ? '$' + Number(item.price).toFixed(2) : ''}
-        <div class="${changeClass}" style="font-size:11px">${changeFmt}</div>
-      </div>
+    const sevClass = item.severity==='HIGH'?'sev-high':item.severity==='MEDIUM'?'sev-med':'sev-low';
+    const rowClass = item.severity==='HIGH'?'row-high':item.severity==='MEDIUM'?'row-med':'row-low';
+    const chgCls = (item.change_pct??0)>=0?'pos':'neg';
+    const chgFmt = item.change_pct!=null?`${item.change_pct>=0?'+':''}${item.change_pct.toFixed(2)}%`:'—';
+    const rsiColor = item.rsi>70?'var(--red)':item.rsi<30?'var(--green)':'var(--white)';
+    const tr = document.createElement('tr');
+    tr.className = rowClass;
+    tr.style.cursor = 'pointer';
+    tr.onclick = () => showTickerChart(item.ticker, fullData||window.lastScanData);
+    tr.innerHTML = `
+      <td style="color:var(--orange);font-weight:bold;letter-spacing:1px">${item.ticker}</td>
+      <td style="color:var(--gray);font-size:10px">${(item.type||'').replace(/_/g,' ')}</td>
+      <td class="${sevClass}" style="font-weight:bold;font-size:10px">${item.severity||'—'}</td>
+      <td>${item.price!=null?'$'+Number(item.price).toFixed(2):'—'}</td>
+      <td class="${chgCls}">${chgFmt}</td>
+      <td style="color:${rsiColor}">${item.rsi!=null?item.rsi.toFixed(1):'—'}</td>
+      <td style="color:var(--yellow)">${item.volume_ratio!=null?item.volume_ratio.toFixed(2)+'x':'—'}</td>
+      <td style="color:var(--gray)">${item.pct_from_52w_high!=null?item.pct_from_52w_high.toFixed(1)+'%':'—'}</td>
+      <td style="color:var(--gray);font-size:10px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.details||item.signal||item.anomaly||item.reason||'—'}</td>
     `;
-    div.appendChild(card);
+    tbody.appendChild(tr);
   });
 }
 
-function sendScanToOllama() {
-  if (!lastScanData) return;
-  const anomalies = lastScanData.anomalies || [];
-  if (!anomalies.length) return;
-  const summary = anomalies.map(r =>
-    `${r.ticker} [${r.severity}] ${r.type}: ${r.details || r.signal || r.anomaly || 'anomaly'} | RSI:${r.rsi?.toFixed(1)??'?'} VolRatio:${r.volume_ratio?.toFixed(2)??'?'}x From52wH:${r.pct_from_52w_high?.toFixed(1)??'?'}% MACD:${r.macd_value?.toFixed(3)??'?'}`
-  ).join('\n');
-  const breadth = lastScanData.market_breadth || {};
-  const breadthStr = `Market Breadth — Advancing:${breadth.advancing??'?'} Declining:${breadth.declining??'?'} AvgRSI:${breadth.avg_rsi??'?'} HighVol:${breadth.high_volume_count??'?'}`;
-  const msg = `Analyze these market scan anomalies and give brief trading insights:\n\n${breadthStr}\n\n${summary}`;
-  // Switch to chat tab
-  document.querySelector('[data-tab="chat"]').click();
-  sendChat(msg);
+function showTickerChart(ticker, data) {
+  if (!data) return;
+  const tickerData = (data.tickers||{})[ticker];
+  if (!tickerData) return;
+
+  document.getElementById('chart-ticker').textContent = ticker;
+  const price = tickerData.price;
+  const chg = tickerData.change_pct;
+  const chgCls = (chg??0)>=0?'pos':'neg';
+  document.getElementById('chart-price').innerHTML = price!=null
+    ? `$${price.toFixed(2)} <span class="${chgCls}">${chg!=null?(chg>=0?'+':'')+chg.toFixed(2)+'%':''}</span>`
+    : '—';
+  document.getElementById('chart-metrics').innerHTML = [
+    tickerData.rsi!=null?`RSI: ${tickerData.rsi.toFixed(1)}`:'',
+    tickerData.volume_ratio!=null?`VOL RATIO: ${tickerData.volume_ratio.toFixed(2)}x`:'',
+    tickerData.pct_from_52w_high!=null?`FROM 52W HIGH: ${tickerData.pct_from_52w_high.toFixed(1)}%`:'',
+    tickerData.macd!=null?`MACD: ${tickerData.macd.toFixed(3)}`:'',
+  ].filter(Boolean).join('  ·  ');
+
+  const svgEl = document.getElementById('ticker-sparkline');
+  const closes = tickerData.closes || tickerData.history || [];
+  if (closes.length >= 2) {
+    drawSparkline(svgEl, closes.slice(-20), '#ff6600');
+  } else {
+    svgEl.innerHTML = '<text x="50%" y="50%" text-anchor="middle" fill="#444" font-size="10">NO HISTORY</text>';
+  }
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
+function sendScanToOllama() {
+  if (!window.lastScanData) return;
+  const anomalies = window.lastScanData.anomalies || [];
+  if (!anomalies.length) return;
+  const summary = anomalies.map(r =>
+    `${r.ticker} [${r.severity}] ${r.type}: ${r.details||r.signal||r.anomaly||'anomaly'} | RSI:${r.rsi?.toFixed(1)??'?'} Vol:${r.volume_ratio?.toFixed(2)??'?'}x 52wH:${r.pct_from_52w_high?.toFixed(1)??'?'}%`
+  ).join('\n');
+  const b = window.lastScanData.market_breadth || {};
+  const msg = `Analyze these market scan anomalies:\n\nBREADTH: ADV ${b.advancing??'?'} DEC ${b.declining??'?'} AVGRSI ${b.avg_rsi??'?'}\n\n${summary}`;
+  document.querySelector('[data-tab="chat"]').click();
+  setTimeout(() => sendChat(msg), 100);
+}
+
+/* ═══════════════════════════════════════════════════════════════
    HOLDINGS
-══════════════════════════════════════════════════════════════════════════════ */
+═══════════════════════════════════════════════════════════════ */
+function setHoldingsFilter(f) {
+  holdingsFilter = f;
+  document.querySelectorAll('.source-filter-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.filter === f);
+  });
+  renderHoldings();
+}
+
 async function loadHoldings() {
   try {
     const r = await fetch('/holdings');
     holdings = await r.json();
     await loadPrices();
-  } catch (e) {
-    console.error('Holdings load error:', e);
-  }
+  } catch(e) { console.error('Holdings error:', e); }
 }
 
 async function loadPrices() {
@@ -1266,787 +1441,613 @@ async function loadPrices() {
   renderHoldings();
 }
 
+async function syncAlpacaHoldings() {
+  const btn = document.getElementById('sync-alp-btn');
+  btn.disabled = true; btn.innerHTML = 'SYNCING<span class="spinner"></span>';
+  await fetchAlpacaPositions();
+  btn.disabled = false; btn.textContent = 'SYNC ALPACA';
+  renderHoldings();
+}
+
 function renderHoldings() {
   const tbody = document.getElementById('holdings-body');
   tbody.innerHTML = '';
 
-  if (!holdings.length) {
-    tbody.innerHTML = '<tr><td colspan="8" style="color:var(--muted);text-align:center;padding:20px">No positions. Add one above.</td></tr>';
-    document.getElementById('total-value').textContent = '$0.00';
-    document.getElementById('sb-holdings').textContent = '0';
-    document.getElementById('sb-portfolio').textContent = '$0.00';
-    return;
-  }
-
-  let totalValue = 0;
-  holdings.forEach(h => {
+  // Build combined list
+  const manualRows = holdings.map(h => {
     const p = prices[h.ticker] || {};
-    const currentPrice = p.price ?? h.current_price ?? null;
-    const pnlDollar = currentPrice !== null ? (currentPrice - h.avg_cost) * h.shares : null;
-    const pnlPct = currentPrice !== null && h.avg_cost > 0 ? ((currentPrice - h.avg_cost) / h.avg_cost * 100) : null;
-    const value = currentPrice !== null ? currentPrice * h.shares : null;
-    if (value) totalValue += value;
-
-    const posNeg = v => v === null ? '' : v >= 0 ? 'pos' : 'neg';
-    const fmt = v => v === null ? '<span class="muted">—</span>' : v;
-    const fmtDollar = v => v === null ? '<span class="muted">—</span>' : `<span class="${posNeg(v)}">${v >= 0 ? '+' : ''}$${Math.abs(v).toFixed(2)}</span>`;
-    const fmtPct = v => v === null ? '<span class="muted">—</span>' : `<span class="${posNeg(v)}">${v >= 0 ? '+' : ''}${v.toFixed(2)}%</span>`;
-    const fmtVal = v => v === null ? '<span class="muted">—</span>' : `$${v.toFixed(2)}`;
-
-    const changePct = p.change_pct;
-    const priceHtml = currentPrice === null
-      ? '<span class="muted">—</span>'
-      : `$${currentPrice.toFixed(2)} <span class="${posNeg(changePct)}" style="font-size:11px">${changePct !== null && changePct !== undefined ? (changePct >= 0 ? '+' : '') + changePct.toFixed(2) + '%' : ''}</span>`;
-
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td style="color:var(--cyan);font-weight:bold">${h.ticker}</td>
-      <td>${h.shares}</td>
-      <td>$${h.avg_cost.toFixed(2)}</td>
-      <td>${priceHtml}</td>
-      <td>${fmtDollar(pnlDollar)}</td>
-      <td>${fmtPct(pnlPct)}</td>
-      <td>${fmtVal(value)}</td>
-      <td><button class="danger" onclick="deleteHolding('${h.ticker}')">✕</button></td>
-    `;
-    tbody.appendChild(tr);
+    const cur = p.price ?? h.current_price ?? null;
+    const pnlD = cur!=null?(cur-h.avg_cost)*h.shares:null;
+    const pnlP = cur!=null&&h.avg_cost>0?((cur-h.avg_cost)/h.avg_cost*100):null;
+    const val = cur!=null?cur*h.shares:null;
+    return {source:'MANUAL', ticker:h.ticker, shares:h.shares, avg_cost:h.avg_cost, current:cur, value:val, pnlD, pnlP, changePct:p.change_pct??null, isManual:true};
   });
 
-  const fmtTotal = `$${totalValue.toFixed(2)}`;
-  document.getElementById('total-value').textContent = fmtTotal;
-  document.getElementById('sb-holdings').textContent = holdings.length;
-  document.getElementById('sb-portfolio').textContent = fmtTotal;
+  const alpacaRows = (window.alpacaPositions||[]).map(p => {
+    const pnlD = p.pnl!=null?Number(p.pnl):null;
+    const pnlP = p.pnl_pct!=null?Number(p.pnl_pct):null;
+    const val = p.market_value!=null?Number(p.market_value):null;
+    return {source:'ALPACA', ticker:p.ticker, shares:Number(p.qty), avg_cost:Number(p.avg_cost), current:Number(p.current_price), value:val, pnlD, pnlP, changePct:null, isManual:false};
+  });
+
+  let rows = [];
+  if (holdingsFilter === 'ALL') rows = [...manualRows, ...alpacaRows];
+  else if (holdingsFilter === 'MANUAL') rows = manualRows;
+  else if (holdingsFilter === 'ALPACA') rows = alpacaRows;
+
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="9" style="color:var(--gray);text-align:center;padding:20px">NO POSITIONS${holdingsFilter!=='ALL'?' IN '+holdingsFilter+' SOURCE':''}</td></tr>`;
+  } else {
+    rows.forEach(row => {
+      const fmtD = v => v==null?'<span class="muted">—</span>':`<span class="${v>=0?'pos':'neg'}">${v>=0?'+':''}$${Math.abs(v).toFixed(2)}</span>`;
+      const fmtP = v => v==null?'<span class="muted">—</span>':`<span class="${v>=0?'pos':'neg'}">${v>=0?'+':''}${v.toFixed(2)}%</span>`;
+      const fmtV = v => v==null?'<span class="muted">—</span>':`$${v.toFixed(2)}`;
+      const curHtml = row.current==null?'<span class="muted">—</span>'
+        :`$${row.current.toFixed(2)}${row.changePct!=null?` <span class="${row.changePct>=0?'pos':'neg'}" style="font-size:10px">${row.changePct>=0?'+':''}${row.changePct.toFixed(2)}%</span>`:''}`;
+      const badge = row.source==='ALPACA'
+        ? '<span class="badge-alp">ALP</span>'
+        : '<span class="badge-man">MAN</span>';
+      const deleteBtn = row.isManual
+        ? `<button class="btn-red" onclick="deleteHolding('${row.ticker}')" style="font-size:9px;padding:2px 6px">X</button>`
+        : `<button onclick="closeAlpacaPosition('${row.ticker}')" style="font-size:9px;padding:2px 6px">CLOSE</button>`;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${badge}</td>
+        <td style="color:var(--orange);font-weight:bold;letter-spacing:1px">${row.ticker}</td>
+        <td>${row.shares}</td>
+        <td>$${row.avg_cost.toFixed(2)}</td>
+        <td>${curHtml}</td>
+        <td>${fmtV(row.value)}</td>
+        <td>${fmtD(row.pnlD)}</td>
+        <td>${fmtP(row.pnlP)}</td>
+        <td>${deleteBtn}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  // Footer totals
+  let totalVal=0, totalPnl=0, alpTotal=0, manTotal=0;
+  [...manualRows,...alpacaRows].forEach(r => {
+    if (r.value) { totalVal += r.value; r.source==='ALPACA'?alpTotal+=r.value:manTotal+=r.value; }
+    if (r.pnlD) totalPnl += r.pnlD;
+  });
+  document.getElementById('hf-total').textContent = '$'+totalVal.toFixed(2);
+  const pnlEl = document.getElementById('hf-pnl');
+  pnlEl.textContent = (totalPnl>=0?'+':'')+'$'+Math.abs(totalPnl).toFixed(2);
+  pnlEl.style.color = totalPnl>=0?'var(--green)':'var(--red)';
+  document.getElementById('hf-alp-total').textContent = '$'+alpTotal.toFixed(2);
+  document.getElementById('hf-man-total').textContent = '$'+manTotal.toFixed(2);
+  document.getElementById('sb-holdings').textContent = rows.length;
+  document.getElementById('sb-portfolio').textContent = '$'+totalVal.toFixed(2);
 }
 
 async function addHolding() {
   const ticker = document.getElementById('add-ticker-input').value.trim().toUpperCase();
   const shares = parseFloat(document.getElementById('add-shares-input').value);
   const avg_cost = parseFloat(document.getElementById('add-cost-input').value);
-
-  if (!ticker || isNaN(shares) || isNaN(avg_cost)) {
-    setStatus('FILL ALL FIELDS');
-    return;
-  }
-
-  setStatus('ADDING ' + ticker + '…');
+  if (!ticker||isNaN(shares)||isNaN(avg_cost)) { setStatus('FILL ALL FIELDS'); return; }
+  setStatus('ADDING '+ticker+'…');
   try {
-    const r = await fetch('/holdings', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ticker, shares, avg_cost})
-    });
+    const r = await fetch('/holdings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ticker,shares,avg_cost})});
     holdings = await r.json();
-    document.getElementById('add-ticker-input').value = '';
-    document.getElementById('add-shares-input').value = '';
-    document.getElementById('add-cost-input').value = '';
+    document.getElementById('add-ticker-input').value='';
+    document.getElementById('add-shares-input').value='';
+    document.getElementById('add-cost-input').value='';
     await loadPrices();
-  } catch (e) {
-    setStatus('ERROR: ' + e.message);
-    return;
-  }
+  } catch(e) { setStatus('ERROR: '+e.message); return; }
   setStatus('READY');
 }
 
 async function deleteHolding(ticker) {
   try {
-    const r = await fetch('/holdings/' + ticker, {method: 'DELETE'});
+    const r = await fetch('/holdings/'+ticker,{method:'DELETE'});
     holdings = await r.json();
     await loadPrices();
-  } catch (e) { setStatus('ERROR: ' + e.message); }
+  } catch(e) { setStatus('ERROR: '+e.message); }
 }
 
 async function refreshPrices() {
   const btn = document.getElementById('refresh-btn');
-  btn.disabled = true;
-  btn.innerHTML = 'REFRESHING<span class="spinner"></span>';
+  btn.disabled = true; btn.innerHTML = 'REFRESHING<span class="spinner"></span>';
   setStatus('FETCHING PRICES…');
   await loadPrices();
-  btn.disabled = false;
-  btn.innerHTML = '↻ REFRESH PRICES';
+  btn.disabled = false; btn.textContent = 'REFRESH PRICES';
   setStatus('READY');
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   PORTFOLIO STRATEGY — INDEX ALLOCATION
-══════════════════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════
+   PORTFOLIO — INDEX
+═══════════════════════════════════════════════════════════════ */
 async function loadMarketOverview() {
   const btn = document.getElementById('index-refresh-btn');
-  btn.disabled = true;
-  btn.innerHTML = 'LOADING<span class="spinner"></span>';
+  btn.disabled = true; btn.innerHTML = 'LOADING<span class="spinner"></span>';
   setStatus('FETCHING INDEX DATA…');
-
-  const grid = document.getElementById('index-grid');
-  grid.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:10px">Loading…</div>';
-
+  const grid = document.getElementById('etf-grid');
+  grid.innerHTML = '<div style="color:var(--gray);font-size:11px;padding:10px;grid-column:span 4">LOADING…</div>';
   try {
     const r = await fetch('/market-overview');
     indexData = await r.json();
-    renderIndexGrid();
-  } catch (e) {
-    grid.innerHTML = `<div style="color:var(--red);font-size:12px;padding:10px">Error: ${e.message}</div>`;
+    renderEtfGrid();
+    renderEtfSparklines();
+  } catch(e) {
+    grid.innerHTML = `<div style="color:var(--red);font-size:11px;padding:10px;grid-column:span 4">ERROR: ${e.message}</div>`;
   }
-
-  btn.disabled = false;
-  btn.innerHTML = '↻ REFRESH';
+  btn.disabled = false; btn.textContent = 'REFRESH';
   setStatus('READY');
 }
 
-function renderIndexGrid(recommendedTicker) {
-  const grid = document.getElementById('index-grid');
+function renderEtfGrid(recommended) {
+  const grid = document.getElementById('etf-grid');
   grid.innerHTML = '';
-
-  INDEX_TICKERS.forEach(ticker => {
-    const d = indexData[ticker];
+  INDEX_TICKERS.forEach(t => {
+    const d = indexData[t];
     const card = document.createElement('div');
-    card.className = 'index-card' + (ticker === recommendedTicker ? ' recommended' : '');
-
-    if (!d || d.error) {
-      card.innerHTML = `<div class="ic-ticker">${ticker}</div><div style="color:var(--red);font-size:11px">${d?.error || 'No data'}</div>`;
-      grid.appendChild(card);
-      return;
+    card.className = 'etf-card' + (t===recommended?' recommended':'');
+    if (!d||d.error) {
+      card.innerHTML = `<div class="ec-ticker">${t}</div><div style="color:var(--red);font-size:10px">${d?.error||'NO DATA'}</div>`;
+    } else {
+      const chgCls = d.change_pct>=0?'pos':'neg';
+      const chgFmt = `${d.change_pct>=0?'+':''}${d.change_pct.toFixed(2)}%`;
+      const rsiColor = d.rsi>70?'var(--red)':d.rsi<30?'var(--green)':'var(--white)';
+      card.innerHTML = `
+        ${t===recommended?'<div class="rec-badge">▲ OVERWEIGHT</div>':''}
+        <div class="ec-ticker">${t}</div>
+        <div class="ec-price">$${d.price.toFixed(2)}</div>
+        <div class="ec-chg ${chgCls}">${chgFmt}</div>
+        <div class="ec-metrics">
+          RSI: <strong style="color:${rsiColor}">${d.rsi.toFixed(1)}</strong><br/>
+          MOM 5D: <strong class="${d.momentum_5d>=0?'pos':'neg'}">${d.momentum_5d>=0?'+':''}${d.momentum_5d.toFixed(2)}%</strong><br/>
+          MOM 20D: <strong class="${d.momentum_20d>=0?'pos':'neg'}">${d.momentum_20d>=0?'+':''}${d.momentum_20d.toFixed(2)}%</strong><br/>
+          MACD: <strong>${d.macd.toFixed(3)}</strong>
+        </div>
+        <button class="fund-toggle" onclick="openFundModal('${t}')" style="margin-top:6px">DETAILS</button>
+      `;
     }
-
-    const changeClass = d.change_pct >= 0 ? 'pos' : 'neg';
-    const changeFmt = `${d.change_pct >= 0 ? '+' : ''}${d.change_pct.toFixed(2)}%`;
-    const rsiColor = d.rsi > 70 ? 'var(--red)' : d.rsi < 30 ? 'var(--green)' : 'var(--white)';
-
-    card.innerHTML = `
-      ${ticker === recommendedTicker ? '<div class="rec-badge">OVERWEIGHT</div>' : ''}
-      <div class="ic-ticker">${ticker}</div>
-      <div class="ic-price">$${d.price.toFixed(2)}</div>
-      <div class="ic-change ${changeClass}">${changeFmt}</div>
-      <div class="ic-metrics">
-        RSI: <strong style="color:${rsiColor}">${d.rsi.toFixed(1)}</strong><br/>
-        Mom 5d: <strong class="${d.momentum_5d >= 0 ? 'pos' : 'neg'}">${d.momentum_5d >= 0 ? '+' : ''}${d.momentum_5d.toFixed(2)}%</strong><br/>
-        Mom 20d: <strong class="${d.momentum_20d >= 0 ? 'pos' : 'neg'}">${d.momentum_20d >= 0 ? '+' : ''}${d.momentum_20d.toFixed(2)}%</strong><br/>
-        MACD: <strong>${d.macd.toFixed(3)}</strong>
-      </div>
-      <button class="fund-toggle" style="margin-top:8px" onclick="openFundModal('${ticker}')">▸ DETAILS</button>
-    `;
     grid.appendChild(card);
   });
 }
 
+function renderEtfSparklines() {
+  INDEX_TICKERS.forEach(t => {
+    const svgEl = document.getElementById('spark-'+t);
+    if (!svgEl) return;
+    const d = indexData[t];
+    if (!d||d.error) return;
+    const closes = d.closes || d.history || [];
+    if (closes.length >= 2) drawSparkline(svgEl, closes.slice(-20), '#ff6600');
+  });
+}
+
 async function getRotationAdvice() {
-  if (Object.keys(indexData).length === 0) {
-    await loadMarketOverview();
-  }
-
+  if (Object.keys(indexData).length===0) await loadMarketOverview();
   const btn = document.getElementById('rotation-btn');
-  btn.disabled = true;
-  btn.innerHTML = 'ANALYZING<span class="spinner"></span>';
-
-  const adviceBox = document.getElementById('rotation-advice-box');
-  adviceBox.style.display = 'block';
-  adviceBox.textContent = 'Analyzing index rotation…';
+  btn.disabled = true; btn.innerHTML = 'ANALYZING<span class="spinner"></span>';
+  const advBox = document.getElementById('rotation-advice-box');
+  advBox.style.display = 'block';
+  advBox.textContent = 'ANALYZING INDEX ROTATION…';
 
   const summary = INDEX_TICKERS.map(t => {
     const d = indexData[t];
-    if (!d || d.error) return `${t}: no data`;
-    return `${t}: price $${d.price} change ${d.change_pct >= 0 ? '+' : ''}${d.change_pct.toFixed(2)}% RSI ${d.rsi.toFixed(1)} Mom5d ${d.momentum_5d.toFixed(2)}% Mom20d ${d.momentum_20d.toFixed(2)}% MACD ${d.macd.toFixed(3)}`;
+    if (!d||d.error) return `${t}: no data`;
+    return `${t}: price $${d.price} chg ${d.change_pct>=0?'+':''}${d.change_pct.toFixed(2)}% RSI ${d.rsi.toFixed(1)} Mom5d ${d.momentum_5d.toFixed(2)}% Mom20d ${d.momentum_20d.toFixed(2)}% MACD ${d.macd.toFixed(3)}`;
   }).join('\n');
 
-  const prompt = `Given my 70% index allocation across SPY (US large cap), QQQ (US tech/growth), EWJ (Japan/Asia), and VTI (US total market), analyze the following current data and recommend which ETF(s) to overweight for the next 2-4 weeks. Give a concise rotation recommendation with reasoning:\n\n${summary}`;
-
+  const prompt = `Given my 70% index allocation across SPY (US large cap), QQQ (US tech/growth), EWJ (Japan), and VTI (US total market), analyze the following and recommend which ETF to overweight for the next 2-4 weeks:\n\n${summary}`;
   let buffer = '';
-  adviceBox.textContent = '';
-
+  advBox.textContent = '';
   try {
-    const resp = await fetch('/chat', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({message: prompt})
-    });
-    const reader = resp.body.getReader();
-    const dec = new TextDecoder();
-    let leftover = '';
-
+    const resp = await fetch('/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:prompt})});
+    const reader = resp.body.getReader(); const dec = new TextDecoder(); let leftover = '';
     while (true) {
-      const {done, value} = await reader.read();
-      if (done) break;
-      leftover += dec.decode(value, {stream: true});
-      const lines = leftover.split('\n');
-      leftover = lines.pop();
+      const {done,value} = await reader.read(); if (done) break;
+      leftover += dec.decode(value,{stream:true});
+      const lines = leftover.split('\n'); leftover = lines.pop();
       for (const line of lines) {
         if (!line.startsWith('data: ')) continue;
-        const token = line.slice(6);
-        if (token === '[DONE]') break;
-        buffer += token.replace(/\\n/g, '\n');
-        adviceBox.textContent = buffer;
+        const token = line.slice(6); if (token==='[DONE]') break;
+        buffer += token.replace(/\\n/g,'\n'); advBox.textContent = buffer;
       }
     }
-
-    // Try to highlight recommended ticker in grid
     const upper = buffer.toUpperCase();
-    const rec = INDEX_TICKERS.find(t => upper.includes('OVERWEIGHT ' + t) || upper.includes(t + ' TO OVERWEIGHT') || upper.includes('RECOMMEND ' + t));
-    if (rec) renderIndexGrid(rec);
-
-  } catch (e) {
-    adviceBox.textContent = 'Error: ' + e.message;
-  }
-
-  btn.disabled = false;
-  btn.innerHTML = '⬡ GET ROTATION ADVICE';
+    const rec = INDEX_TICKERS.find(t => upper.includes('OVERWEIGHT '+t)||upper.includes(t+' TO OVERWEIGHT')||upper.includes('RECOMMEND '+t));
+    if (rec) renderEtfGrid(rec);
+  } catch(e) { advBox.textContent = 'ERROR: '+e.message; }
+  btn.disabled = false; btn.innerHTML = 'GET ROTATION ADVICE';
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   PORTFOLIO STRATEGY — ALPHA PICKS / WATCHLIST
-══════════════════════════════════════════════════════════════════════════════ */
-function isIndexTicker(ticker) {
-  return ['SPY', 'QQQ', 'EWJ', 'VTI', 'IWM', 'DIA', 'GLD', 'SLV', 'TLT', 'BND'].includes(ticker.toUpperCase());
+/* ═══════════════════════════════════════════════════════════════
+   PORTFOLIO — ALPHA / WATCHLIST
+═══════════════════════════════════════════════════════════════ */
+function isIndexTicker(t) {
+  return ['SPY','QQQ','EWJ','VTI','IWM','DIA','GLD','SLV','TLT','BND'].includes(t.toUpperCase());
 }
 
 function renderAlphaHoldings() {
   const el = document.getElementById('alpha-holdings-list');
-  const singleStocks = holdings.filter(h => !isIndexTicker(h.ticker));
-  if (!singleStocks.length) {
-    el.innerHTML = '<span style="color:var(--muted)">No single-stock positions. Add via Holdings tab.</span>';
-    return;
-  }
-  el.innerHTML = singleStocks.map(h => {
-    const p = prices[h.ticker] || {};
-    const price = p.price ?? h.current_price;
+  const stocks = holdings.filter(h => !isIndexTicker(h.ticker));
+  if (!stocks.length) { el.innerHTML = '<span style="color:var(--gray)">NO SINGLE-STOCK POSITIONS. ADD VIA HOLDINGS TAB.</span>'; return; }
+  el.innerHTML = stocks.map(h => {
+    const p = prices[h.ticker]||{};
+    const price = p.price??h.current_price;
     const pct = p.change_pct;
-    const cls = pct != null && pct >= 0 ? 'pos' : 'neg';
-    return `<span style="margin-right:16px;color:var(--cyan)">${h.ticker}</span>` +
-      (price != null ? `<span>$${price.toFixed(2)}</span> ` : '') +
-      (pct != null ? `<span class="${cls}">${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%</span>` : '') +
-      `<span style="color:var(--muted);margin-left:8px">${h.shares} sh @ $${h.avg_cost.toFixed(2)}</span>`;
-  }).map(s => `<div style="margin-bottom:5px">${s}</div>`).join('');
+    const cls = pct!=null&&pct>=0?'pos':'neg';
+    return `<span style="color:var(--orange);margin-right:10px">${h.ticker}</span>`+
+      (price!=null?`<span>$${price.toFixed(2)}</span> `:'')+
+      (pct!=null?`<span class="${cls}">${pct>=0?'+':''}${pct.toFixed(2)}%</span> `:'')+
+      `<span style="color:var(--gray)">${h.shares}sh@$${h.avg_cost.toFixed(2)}</span>`;
+  }).map(s=>`<div style="margin-bottom:4px">${s}</div>`).join('');
 }
 
-function getWatchlist() {
-  try { return JSON.parse(localStorage.getItem(WATCHLIST_KEY) || '[]'); } catch { return []; }
-}
-function saveWatchlistLS(list) {
-  localStorage.setItem(WATCHLIST_KEY, JSON.stringify(list));
-}
+function getWatchlist() { try { return JSON.parse(localStorage.getItem(WATCHLIST_KEY)||'[]'); } catch { return []; } }
+function saveWatchlistLS(list) { localStorage.setItem(WATCHLIST_KEY,JSON.stringify(list)); }
 
 function renderWatchlist() {
   const wrap = document.getElementById('watchlist-wrap');
-  const existing = wrap.querySelectorAll('.watchlist-tag');
-  existing.forEach(e => e.remove());
-
+  wrap.querySelectorAll('.watchlist-tag').forEach(e => e.remove());
   const list = getWatchlist();
-  const input = document.getElementById('watchlist-input');
+  const inp = document.getElementById('watchlist-input');
   list.forEach(ticker => {
     const tag = document.createElement('div');
     tag.className = 'watchlist-tag';
-    tag.innerHTML = `${ticker} <button class="fund-toggle" style="margin:0 2px;font-size:9px;padding:1px 5px" onclick="openFundModal('${ticker}')">▸</button><button class="wl-remove" onclick="removeFromWatchlist('${ticker}')">✕</button>`;
-    wrap.insertBefore(tag, input);
+    tag.innerHTML = `${ticker}<button class="wl-remove" onclick="removeFromWatchlist('${ticker}')">X</button>`;
+    wrap.insertBefore(tag, inp);
   });
 }
 
 function addToWatchlist() {
-  const input = document.getElementById('watchlist-input');
-  const ticker = input.value.trim().toUpperCase();
+  const inp = document.getElementById('watchlist-input');
+  const ticker = inp.value.trim().toUpperCase();
   if (!ticker) return;
   const list = getWatchlist();
-  if (!list.includes(ticker)) {
-    list.push(ticker);
-    saveWatchlistLS(list);
-  }
-  input.value = '';
-  renderWatchlist();
+  if (!list.includes(ticker)) { list.push(ticker); saveWatchlistLS(list); }
+  inp.value = ''; renderWatchlist();
 }
 
 function removeFromWatchlist(ticker) {
-  const list = getWatchlist().filter(t => t !== ticker);
-  saveWatchlistLS(list);
+  saveWatchlistLS(getWatchlist().filter(t=>t!==ticker));
   renderWatchlist();
 }
 
 document.getElementById('watchlist-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter') { e.preventDefault(); addToWatchlist(); }
+  if (e.key==='Enter'){e.preventDefault();addToWatchlist();}
 });
 
 async function analyzeWatchlist() {
   const list = getWatchlist();
   if (!list.length) { setStatus('ADD TICKERS TO WATCHLIST FIRST'); return; }
-
   const btn = document.getElementById('wl-analyze-btn');
-  btn.disabled = true;
-  btn.innerHTML = 'SCANNING<span class="spinner"></span>';
+  btn.disabled = true; btn.innerHTML = 'SCANNING<span class="spinner"></span>';
   setStatus('SCANNING WATCHLIST…');
-
-  const adviceBox = document.getElementById('watchlist-advice-box');
-  adviceBox.style.display = 'block';
-  adviceBox.textContent = 'Fetching data…';
-
+  const advBox = document.getElementById('watchlist-advice-box');
+  advBox.style.display = 'block'; advBox.textContent = 'FETCHING DATA…';
   try {
-    const r = await fetch('/scan?tickers=' + encodeURIComponent(list.join(',')));
+    const r = await fetch('/scan?tickers='+encodeURIComponent(list.join(',')));
     const data = await r.json();
-    const anomalies = data.anomalies || [];
     const tickerData = data.tickers || {};
-
     const summaryLines = list.map(t => {
       const d = tickerData[t];
-      if (!d || d.error) return `${t}: no data`;
-      return `${t}: $${d.price} chg ${d.change_pct >= 0 ? '+' : ''}${d.change_pct.toFixed(2)}% RSI ${d.rsi.toFixed(1)} Mom5d ${d.momentum_5d.toFixed(2)}% MACD ${d.macd.toFixed(3)} 52wH ${d.pct_from_52w_high.toFixed(1)}% anomalies:[${(d.anomalies||[]).map(a=>a.type).join(',')||'none'}]`;
+      if (!d||d.error) return `${t}: no data`;
+      return `${t}: $${d.price} chg ${d.change_pct>=0?'+':''}${d.change_pct.toFixed(2)}% RSI ${d.rsi.toFixed(1)} Mom5d ${d.momentum_5d.toFixed(2)}% MACD ${d.macd.toFixed(3)} 52wH ${d.pct_from_52w_high.toFixed(1)}%`;
     }).join('\n');
-
-    const prompt = `Analyze these watchlist stocks for my 30% alpha/single-stock allocation. I'm looking for medium swing trades (2-8 week holds). For each ticker, give: signal strength, BUY/SELL/HOLD/WATCH recommendation, suggested position size (% of 30% allocation), and stop-loss level:\n\n${summaryLines}`;
-
-    adviceBox.textContent = '';
+    const prompt = `Analyze these watchlist stocks for my 30% alpha allocation. Swing trades 2-8 weeks. For each: signal strength, BUY/SELL/HOLD/WATCH, suggested size (% of 30%), stop-loss:\n\n${summaryLines}`;
+    advBox.textContent = '';
     let buffer = '';
-
-    const resp = await fetch('/chat', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({message: prompt})
-    });
-    const reader = resp.body.getReader();
-    const dec = new TextDecoder();
-    let leftover = '';
-
+    const resp = await fetch('/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:prompt})});
+    const reader = resp.body.getReader(); const dec = new TextDecoder(); let leftover = '';
     while (true) {
-      const {done, value} = await reader.read();
-      if (done) break;
-      leftover += dec.decode(value, {stream: true});
-      const lines = leftover.split('\n');
-      leftover = lines.pop();
+      const {done,value} = await reader.read(); if (done) break;
+      leftover += dec.decode(value,{stream:true});
+      const lines = leftover.split('\n'); leftover = lines.pop();
       for (const line of lines) {
         if (!line.startsWith('data: ')) continue;
-        const token = line.slice(6);
-        if (token === '[DONE]') break;
-        buffer += token.replace(/\\n/g, '\n');
-        adviceBox.textContent = buffer;
+        const token = line.slice(6); if (token==='[DONE]') break;
+        buffer += token.replace(/\\n/g,'\n'); advBox.textContent = buffer;
       }
     }
-
-  } catch (e) {
-    adviceBox.textContent = 'Error: ' + e.message;
-  }
-
-  btn.disabled = false;
-  btn.innerHTML = '⬡ ANALYZE WATCHLIST';
+  } catch(e) { advBox.textContent = 'ERROR: '+e.message; }
+  btn.disabled = false; btn.innerHTML = 'ANALYZE WATCHLIST';
   setStatus('READY');
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   PORTFOLIO STRATEGY — HEALTH
-══════════════════════════════════════════════════════════════════════════════ */
 function renderPortfolioHealth() {
-  let totalValue = 0;
-  let indexValue = 0;
-  let alphaValue = 0;
-  let indexCount = 0;
-  let alphaCount = 0;
-
+  let totalVal=0, indexVal=0, alphaVal=0, indexCnt=0, alphaCnt=0;
   holdings.forEach(h => {
-    const p = prices[h.ticker] || {};
-    const price = p.price ?? h.current_price ?? null;
-    const value = price !== null ? price * h.shares : 0;
-    totalValue += value;
-    if (isIndexTicker(h.ticker)) {
-      indexValue += value;
-      indexCount++;
-    } else {
-      alphaValue += value;
-      alphaCount++;
-    }
+    const p = prices[h.ticker]||{};
+    const price = p.price??h.current_price??null;
+    const val = price!=null?price*h.shares:0;
+    totalVal += val;
+    if (isIndexTicker(h.ticker)) { indexVal+=val; indexCnt++; } else { alphaVal+=val; alphaCnt++; }
   });
-
-  document.getElementById('ph-total').textContent = `$${totalValue.toFixed(2)}`;
+  document.getElementById('ph-total').textContent = '$'+totalVal.toFixed(2);
   document.getElementById('ph-positions').textContent = holdings.length;
-  document.getElementById('ph-positions-sub').textContent = `${indexCount} index · ${alphaCount} stock`;
-
-  if (totalValue > 0) {
-    const indexPct = (indexValue / totalValue * 100).toFixed(1);
-    const alphaPct = (alphaValue / totalValue * 100).toFixed(1);
-    document.getElementById('ph-index-alloc').textContent = `${indexPct}%`;
-    document.getElementById('ph-alpha-alloc').textContent = `${alphaPct}%`;
-    document.getElementById('alloc-bar-index').style.width = `${indexPct}%`;
-    document.getElementById('alloc-bar-alpha').style.width = `${alphaPct}%`;
-  } else {
-    document.getElementById('ph-index-alloc').textContent = '—';
-    document.getElementById('ph-alpha-alloc').textContent = '—';
+  document.getElementById('ph-pos-sub').textContent = `${indexCnt} INDEX · ${alphaCnt} STOCK`;
+  if (totalVal>0) {
+    const ip = (indexVal/totalVal*100).toFixed(1);
+    const ap = (alphaVal/totalVal*100).toFixed(1);
+    document.getElementById('ph-index-alloc').textContent = ip+'%';
+    document.getElementById('ph-alpha-alloc').textContent = ap+'%';
+    document.getElementById('alloc-bar-index').style.width = ip+'%';
+    document.getElementById('alloc-bar-alpha').style.width = ap+'%';
   }
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   FUNDAMENTALS TOGGLE + MODAL
-══════════════════════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════
+   FUND MODAL
+═══════════════════════════════════════════════════════════════ */
 function toggleFund(id) {
   const el = document.getElementById(id);
   if (!el) return;
   el.classList.toggle('open');
   const btn = el.previousElementSibling;
-  if (btn) btn.textContent = el.classList.contains('open') ? '▾ FUNDAMENTALS' : '▸ FUNDAMENTALS';
+  if (btn) btn.textContent = el.classList.contains('open')?'▾ FUNDAMENTALS':'▸ FUNDAMENTALS';
 }
 
 async function openFundModal(ticker) {
   const overlay = document.getElementById('fund-modal-overlay');
-  const title = document.getElementById('fund-modal-title');
-  const body = document.getElementById('fund-modal-body');
-
-  title.textContent = ticker + ' — DETAILS';
-  body.innerHTML = '<span style="color:var(--muted)">Loading<span class="spinner"></span></span>';
+  document.getElementById('fund-modal-title').textContent = ticker+' — DETAILS';
+  document.getElementById('fund-modal-body').innerHTML = '<span style="color:var(--gray)">LOADING<span class="spinner"></span></span>';
   overlay.classList.add('open');
-
   try {
-    const r = await fetch('/fundamentals/' + encodeURIComponent(ticker));
+    const r = await fetch('/fundamentals/'+encodeURIComponent(ticker));
     const d = await r.json();
-    body.innerHTML = renderFundModalBody(d);
-  } catch (e) {
-    body.innerHTML = `<span style="color:var(--red)">Error: ${e.message}</span>`;
-  }
+    document.getElementById('fund-modal-body').innerHTML = renderFundModalBody(d);
+  } catch(e) { document.getElementById('fund-modal-body').innerHTML = `<span style="color:var(--red)">ERROR: ${e.message}</span>`; }
 }
 
 function renderFundModalBody(d) {
-  const row = (label, val) => val != null && val !== '' && val !== 'Unknown'
-    ? `<div><span style="color:var(--muted)">${label}:</span> <strong>${val}</strong></div>`
-    : '';
-
-  const recClass = d.recommendation
-    ? (d.recommendation.includes('buy') ? 'rec-buy' : d.recommendation.includes('sell') ? 'rec-sell' : 'rec-hold')
-    : '';
-
-  const pct = v => v != null ? `${v >= 0 ? '+' : ''}${v}%` : null;
-
-  const newsHtml = (d.news && d.news.length)
-    ? `<div class="modal-section">
-        <div class="modal-section-title">RECENT NEWS</div>
-        <ul class="fund-news">${d.news.map(n =>
-          `<li><a href="${n.link || '#'}" target="_blank" rel="noopener">${n.title}</a><span class="news-meta">${n.publisher ? n.publisher + ' · ' : ''}${n.published}</span></li>`
-        ).join('')}</ul>
-       </div>`
-    : '';
-
+  const row = (label,val) => val!=null&&val!==''&&val!=='Unknown'
+    ? `<div><span style="color:var(--gray)">${label}:</span> <strong>${val}</strong></div>` : '';
+  const recClass = d.recommendation?(d.recommendation.includes('buy')?'rec-buy':d.recommendation.includes('sell')?'rec-sell':'rec-hold'):'';
+  const pct = v => v!=null?`${v>=0?'+':''}${v}%`:null;
+  const newsHtml = (d.news&&d.news.length)
+    ? `<div class="modal-section"><div class="modal-section-title">RECENT NEWS</div><ul class="fund-news">${d.news.map(n=>`<li><a href="${n.link||'#'}" target="_blank">${n.title}</a><span class="news-meta">${n.publisher?n.publisher+' · ':''}${n.published}</span></li>`).join('')}</ul></div>` : '';
   return `
-    <div class="modal-section">
-      <div class="modal-section-title">COMPANY</div>
-      ${row('Name', d.company_name)}
-      ${row('Sector', d.sector)}
-      ${row('Industry', d.industry)}
-      ${row('Market Cap', d.market_cap_b != null ? `$${d.market_cap_b}B` : null)}
-    </div>
-    <div class="modal-section">
-      <div class="modal-section-title">VALUATION</div>
-      ${row('P/E (TTM)', d.pe_ratio)}
-      ${row('Fwd P/E', d.forward_pe)}
-      ${row('EPS (TTM)', d.eps != null ? `$${d.eps}` : null)}
-      ${row('Revenue Growth', pct(d.revenue_growth))}
-      ${row('Earnings Growth', pct(d.earnings_growth))}
-      ${row('Profit Margin', pct(d.profit_margin))}
-    </div>
-    <div class="modal-section">
-      <div class="modal-section-title">ANALYST</div>
-      ${row('Recommendation', d.recommendation ? `<span class="${recClass}">${d.recommendation.toUpperCase()}</span>` : null)}
-      ${row('# Analysts', d.analyst_count)}
-      ${row('Target (Mean)', d.analyst_target != null ? `$${d.analyst_target}` : null)}
-      ${row('Target Low', d.analyst_low != null ? `$${d.analyst_low}` : null)}
-      ${row('Target High', d.analyst_high != null ? `$${d.analyst_high}` : null)}
-      ${row('Upside', d.upside_pct != null ? `<span class="${d.upside_pct >= 0 ? 'pos' : 'neg'}">${pct(d.upside_pct)}</span>` : null)}
-    </div>
-    <div class="modal-section">
-      <div class="modal-section-title">EARNINGS</div>
-      ${row('Next Earnings', d.next_earnings && d.next_earnings !== 'Unknown' ? `<span style="color:var(--yellow)">${d.next_earnings}</span>` : null)}
-    </div>
-    ${newsHtml}
-  `;
+    <div class="modal-section"><div class="modal-section-title">COMPANY</div>
+      ${row('NAME',d.company_name)}${row('SECTOR',d.sector)}${row('INDUSTRY',d.industry)}
+      ${row('MKT CAP',d.market_cap_b!=null?`$${d.market_cap_b}B`:null)}</div>
+    <div class="modal-section"><div class="modal-section-title">VALUATION</div>
+      ${row('P/E TTM',d.pe_ratio)}${row('FWD P/E',d.forward_pe)}${row('EPS TTM',d.eps!=null?`$${d.eps}`:null)}
+      ${row('REV GROWTH',pct(d.revenue_growth))}${row('EARN GROWTH',pct(d.earnings_growth))}${row('MARGIN',pct(d.profit_margin))}</div>
+    <div class="modal-section"><div class="modal-section-title">ANALYST</div>
+      ${row('RECOMMENDATION',d.recommendation?`<span class="${recClass}">${d.recommendation.toUpperCase()}</span>`:null)}
+      ${row('# ANALYSTS',d.analyst_count)}${row('TARGET MEAN',d.analyst_target!=null?`$${d.analyst_target}`:null)}
+      ${row('TARGET LOW',d.analyst_low!=null?`$${d.analyst_low}`:null)}${row('TARGET HIGH',d.analyst_high!=null?`$${d.analyst_high}`:null)}
+      ${row('UPSIDE',d.upside_pct!=null?`<span class="${d.upside_pct>=0?'pos':'neg'}">${pct(d.upside_pct)}</span>`:null)}</div>
+    <div class="modal-section"><div class="modal-section-title">EARNINGS</div>
+      ${row('NEXT EARNINGS',d.next_earnings&&d.next_earnings!=='Unknown'?`<span style="color:var(--yellow)">${d.next_earnings}</span>`:null)}</div>
+    ${newsHtml}`;
 }
 
 function closeFundModal(event) {
-  if (event && event.target !== document.getElementById('fund-modal-overlay')) return;
+  if (event&&event.target!==document.getElementById('fund-modal-overlay')) return;
   document.getElementById('fund-modal-overlay').classList.remove('open');
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   UTIL
-══════════════════════════════════════════════════════════════════════════════ */
-function setStatus(msg) {
-  document.getElementById('sb-status').textContent = msg;
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════════════════
    ALPACA
-══════════════════════════════════════════════════════════════════════════════ */
-let alpacaSide = 'buy';
-let alpacaOrderType = 'market';
-
+═══════════════════════════════════════════════════════════════ */
 function setAlpacaSide(side) {
   alpacaSide = side;
-  const buyBtn = document.getElementById('alp-side-buy');
-  const sellBtn = document.getElementById('alp-side-sell');
-  buyBtn.className = side === 'buy' ? 'active-buy' : '';
-  sellBtn.className = side === 'sell' ? 'active-sell' : '';
+  document.getElementById('alp-side-buy').className = side==='buy'?'active-buy':'';
+  document.getElementById('alp-side-sell').className = side==='sell'?'active-sell':'';
 }
 
 function setAlpacaOrderType(type) {
   alpacaOrderType = type;
-  document.getElementById('alp-type-market').className = type === 'market' ? 'active-type' : '';
-  document.getElementById('alp-type-limit').className = type === 'limit' ? 'active-type' : '';
-  document.getElementById('alp-limit-row').style.display = type === 'limit' ? '' : 'none';
+  document.getElementById('alp-type-market').className = type==='market'?'active-type':'';
+  document.getElementById('alp-type-limit').className = type==='limit'?'active-type':'';
+  document.getElementById('alp-limit-row').style.display = type==='limit'?'':'none';
 }
 
 function fmtMoney(v) {
-  if (v == null) return '—';
-  return '$' + Number(v).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  if (v==null) return '—';
+  return '$'+Number(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+
+async function loadAlpacaAll() {
+  await Promise.all([loadAlpacaAccount(), loadAlpacaPositions(), loadAlpacaOrders()]);
 }
 
 async function loadAlpacaAccount() {
   try {
     const r = await fetch('/alpaca/account');
     const d = await r.json();
-    if (d.error) {
-      document.getElementById('alp-portfolio').textContent = 'ERROR';
-      return;
-    }
+    if (d.error) { document.getElementById('alp-portfolio').textContent = 'ERROR'; return; }
     document.getElementById('alp-portfolio').textContent = fmtMoney(d.portfolio_value);
     document.getElementById('alp-buying-power').textContent = fmtMoney(d.buying_power);
     document.getElementById('alp-cash').textContent = fmtMoney(d.cash);
+    const pnl = d.pnl_today??0;
     const pnlEl = document.getElementById('alp-pnl');
-    const pnl = d.pnl_today ?? 0;
-    const pnlPct = d.pnl_today_pct ?? 0;
-    pnlEl.textContent = `${pnl >= 0 ? '+' : ''}${fmtMoney(pnl)} (${pnl >= 0 ? '+' : ''}${Number(pnlPct).toFixed(2)}%)`;
-    pnlEl.style.color = pnl >= 0 ? 'var(--green)' : 'var(--red)';
-  } catch (e) {
-    console.error('Alpaca account error:', e);
-  }
-
-  // Load clock
+    pnlEl.textContent = `${pnl>=0?'+':''}${fmtMoney(pnl)} (${(d.pnl_today_pct??0)>=0?'+':''}${Number(d.pnl_today_pct??0).toFixed(2)}%)`;
+    pnlEl.style.color = pnl>=0?'var(--green)':'var(--red)';
+    document.getElementById('sb-alpaca-val').textContent = fmtMoney(d.portfolio_value);
+    document.getElementById('alp-header-status').textContent = fmtMoney(d.portfolio_value);
+    document.getElementById('alp-header-status').style.color = 'var(--green)';
+  } catch(e) { console.error('Alpaca account error:',e); }
   try {
     const cr = await fetch('/alpaca/clock');
     const cd = await cr.json();
     const msEl = document.getElementById('alpaca-market-status');
+    const hbEl = document.getElementById('market-status-badge');
     if (cd.is_open) {
-      msEl.textContent = 'MARKET OPEN';
-      msEl.className = 'open';
+      msEl.textContent='MARKET OPEN'; msEl.className='open';
+      hbEl.textContent='OPEN'; hbEl.className='open';
     } else {
-      msEl.textContent = 'MARKET CLOSED';
-      msEl.className = 'closed';
+      msEl.textContent='MARKET CLOSED'; msEl.className='closed';
+      hbEl.textContent='CLOSED'; hbEl.className='closed';
     }
-  } catch (e) { /* ignore */ }
+  } catch {}
 }
 
 async function loadAlpacaPositions() {
   const tbody = document.getElementById('alpaca-positions-body');
-  tbody.innerHTML = '<tr><td colspan="8" style="color:var(--muted);text-align:center;padding:12px">Loading…</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="8" style="color:var(--gray);text-align:center;padding:10px">LOADING…</td></tr>';
   try {
-    const r = await fetch('/alpaca/positions');
-    const data = await r.json();
-    if (data.error) {
-      tbody.innerHTML = `<tr><td colspan="8" style="color:var(--red);text-align:center;padding:12px">${data.error}</td></tr>`;
-      return;
-    }
+    const data = await fetchAlpacaPositions();
     if (!data.length) {
-      tbody.innerHTML = '<tr><td colspan="8" style="color:var(--muted);text-align:center;padding:12px">No open positions.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8" style="color:var(--gray);text-align:center;padding:10px">NO OPEN POSITIONS</td></tr>';
       return;
     }
     tbody.innerHTML = '';
     data.forEach(pos => {
-      const pnlClass = pos.pnl >= 0 ? 'pos' : 'neg';
-      const pnlPctClass = pos.pnl_pct >= 0 ? 'pos' : 'neg';
+      const pnlCls = pos.pnl>=0?'pos':'neg';
+      const pCls = pos.pnl_pct>=0?'pos':'neg';
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td style="color:var(--cyan);font-weight:bold">${pos.ticker}</td>
+        <td style="color:var(--orange);font-weight:bold">${pos.ticker}</td>
         <td>${pos.qty}</td>
         <td>${fmtMoney(pos.avg_cost)}</td>
         <td>${fmtMoney(pos.current_price)}</td>
         <td>${fmtMoney(pos.market_value)}</td>
-        <td class="${pnlClass}">${pos.pnl >= 0 ? '+' : ''}${fmtMoney(pos.pnl)}</td>
-        <td class="${pnlPctClass}">${pos.pnl_pct >= 0 ? '+' : ''}${Number(pos.pnl_pct).toFixed(2)}%</td>
-        <td><button class="danger" onclick="closeAlpacaPosition('${pos.ticker}')">CLOSE</button></td>
+        <td class="${pnlCls}">${pos.pnl>=0?'+':''}${fmtMoney(pos.pnl)}</td>
+        <td class="${pCls}">${pos.pnl_pct>=0?'+':''}${Number(pos.pnl_pct).toFixed(2)}%</td>
+        <td><button class="btn-red" onclick="closeAlpacaPosition('${pos.ticker}')" style="font-size:9px">CLOSE</button></td>
       `;
       tbody.appendChild(tr);
     });
-  } catch (e) {
-    tbody.innerHTML = `<tr><td colspan="8" style="color:var(--red);text-align:center;padding:12px">Error: ${e.message}</td></tr>`;
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="8" style="color:var(--red);text-align:center;padding:10px">ERROR: ${e.message}</td></tr>`;
   }
 }
 
 async function loadAlpacaOrders() {
   const tbody = document.getElementById('alpaca-orders-body');
-  tbody.innerHTML = '<tr><td colspan="8" style="color:var(--muted);text-align:center;padding:12px">Loading…</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="8" style="color:var(--gray);text-align:center;padding:10px">LOADING…</td></tr>';
   try {
     const r = await fetch('/alpaca/orders?status=open');
     const data = await r.json();
-    if (data.error) {
-      tbody.innerHTML = `<tr><td colspan="8" style="color:var(--red);text-align:center;padding:12px">${data.error}</td></tr>`;
-      return;
-    }
-    if (!data.length) {
-      tbody.innerHTML = '<tr><td colspan="8" style="color:var(--muted);text-align:center;padding:12px">No open orders.</td></tr>';
+    if (data.error||!data.length) {
+      tbody.innerHTML = `<tr><td colspan="8" style="color:var(--gray);text-align:center;padding:10px">${data.error?'ERROR: '+data.error:'NO OPEN ORDERS'}</td></tr>`;
       return;
     }
     tbody.innerHTML = '';
     data.forEach(o => {
-      const sideColor = o.side === 'buy' ? 'var(--green)' : 'var(--red)';
-      const timeStr = o.submitted_at ? o.submitted_at.slice(0, 19).replace('T', ' ') : '—';
+      const sideColor = o.side==='buy'?'var(--green)':'var(--red)';
+      const timeStr = o.submitted_at?o.submitted_at.slice(0,19).replace('T',' '):'—';
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td style="color:var(--cyan);font-weight:bold">${o.ticker}</td>
-        <td>${o.qty ?? '—'}</td>
-        <td style="color:${sideColor};font-weight:bold">${(o.side || '').toUpperCase()}</td>
-        <td>${(o.type || '').toUpperCase()}</td>
-        <td style="color:var(--muted)">${(o.status || '').toUpperCase()}</td>
-        <td>${o.limit_price ? fmtMoney(o.limit_price) : '—'}</td>
-        <td style="color:var(--muted);font-size:11px">${timeStr}</td>
-        <td><button class="danger" onclick="cancelAlpacaOrder('${o.id}')">CANCEL</button></td>
+        <td style="color:var(--orange);font-weight:bold">${o.ticker}</td>
+        <td>${o.qty??'—'}</td>
+        <td style="color:${sideColor};font-weight:bold">${(o.side||'').toUpperCase()}</td>
+        <td>${(o.type||'').toUpperCase()}</td>
+        <td style="color:var(--gray)">${(o.status||'').toUpperCase()}</td>
+        <td>${o.limit_price?fmtMoney(o.limit_price):'—'}</td>
+        <td style="color:var(--gray);font-size:10px">${timeStr}</td>
+        <td><button class="btn-red" onclick="cancelAlpacaOrder('${o.id}')" style="font-size:9px">CANCEL</button></td>
       `;
       tbody.appendChild(tr);
     });
-  } catch (e) {
-    tbody.innerHTML = `<tr><td colspan="8" style="color:var(--red);text-align:center;padding:12px">Error: ${e.message}</td></tr>`;
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="8" style="color:var(--red);text-align:center;padding:10px">ERROR: ${e.message}</td></tr>`;
   }
 }
 
 async function closeAlpacaPosition(ticker) {
-  if (!confirm(`Close entire position in ${ticker}? This will sell all shares at market.`)) return;
-  setStatus('CLOSING ' + ticker + '…');
+  if (!confirm(`Close entire position in ${ticker}?`)) return;
+  setStatus('CLOSING '+ticker+'…');
   try {
-    const r = await fetch('/alpaca/position/' + encodeURIComponent(ticker), {method: 'DELETE'});
+    const r = await fetch('/alpaca/position/'+encodeURIComponent(ticker),{method:'DELETE'});
     const d = await r.json();
-    if (d.error) { showAlpacaMsg('error', 'Error: ' + d.error); }
-    else { showAlpacaMsg('success', `Position in ${ticker} closed.`); }
-    await loadAlpacaPositions();
-    await loadAlpacaAccount();
-  } catch (e) { showAlpacaMsg('error', 'Error: ' + e.message); }
+    if (d.error) showAlpacaMsg('error','Error: '+d.error);
+    else showAlpacaMsg('success',`${ticker} position closed.`);
+    await loadAlpacaAll();
+    renderHoldings();
+  } catch(e) { showAlpacaMsg('error','Error: '+e.message); }
   setStatus('READY');
 }
 
 async function cancelAlpacaOrder(orderId) {
-  if (!confirm(`Cancel order ${orderId}?`)) return;
+  if (!confirm('Cancel order?')) return;
   setStatus('CANCELLING ORDER…');
   try {
-    const r = await fetch('/alpaca/order/' + encodeURIComponent(orderId), {method: 'DELETE'});
+    const r = await fetch('/alpaca/order/'+encodeURIComponent(orderId),{method:'DELETE'});
     const d = await r.json();
-    if (d.error) { showAlpacaMsg('error', 'Error: ' + d.error); }
-    else { showAlpacaMsg('success', 'Order cancelled.'); }
+    if (d.error) showAlpacaMsg('error','Error: '+d.error);
+    else showAlpacaMsg('success','Order cancelled.');
     await loadAlpacaOrders();
-  } catch (e) { showAlpacaMsg('error', 'Error: ' + e.message); }
+  } catch(e) { showAlpacaMsg('error','Error: '+e.message); }
   setStatus('READY');
 }
 
 async function placeAlpacaOrder() {
   const ticker = document.getElementById('alp-ticker').value.trim().toUpperCase();
   const qty = parseFloat(document.getElementById('alp-qty').value);
-  const stopLossPct = parseFloat(document.getElementById('alp-stop-loss').value) || null;
-  const limitPrice = alpacaOrderType === 'limit' ? parseFloat(document.getElementById('alp-limit-price').value) : null;
-
-  if (!ticker || isNaN(qty) || qty <= 0) {
-    showAlpacaMsg('error', 'Enter a valid ticker and quantity.');
-    return;
-  }
-  if (alpacaOrderType === 'limit' && (!limitPrice || isNaN(limitPrice))) {
-    showAlpacaMsg('error', 'Enter a valid limit price.');
-    return;
-  }
-
-  const typeLabel = alpacaOrderType === 'market' ? 'Market' : `Limit @ ${fmtMoney(limitPrice)}`;
-  const stopLabel = stopLossPct ? ` Stop loss at ${stopLossPct}%.` : '';
-  const confirmMsg = `${alpacaSide.charAt(0).toUpperCase() + alpacaSide.slice(1)} ${qty} shares of ${ticker} at ${typeLabel}.${stopLabel} Confirm?`;
-  if (!confirm(confirmMsg)) return;
-
+  const stopLossPct = parseFloat(document.getElementById('alp-stop-loss').value)||null;
+  const limitPrice = alpacaOrderType==='limit'?parseFloat(document.getElementById('alp-limit-price').value):null;
+  if (!ticker||isNaN(qty)||qty<=0) { showAlpacaMsg('error','ENTER VALID TICKER AND QUANTITY'); return; }
+  if (alpacaOrderType==='limit'&&(!limitPrice||isNaN(limitPrice))) { showAlpacaMsg('error','ENTER VALID LIMIT PRICE'); return; }
+  const typeLabel = alpacaOrderType==='market'?'MARKET':`LIMIT @ ${fmtMoney(limitPrice)}`;
+  if (!confirm(`${alpacaSide.toUpperCase()} ${qty} ${ticker} @ ${typeLabel}${stopLossPct?` STOP LOSS ${stopLossPct}%`:''}`)) return;
   setStatus('PLACING ORDER…');
   try {
-    const body = {ticker, qty, side: alpacaSide, order_type: alpacaOrderType};
+    const body = {ticker,qty,side:alpacaSide,order_type:alpacaOrderType};
     if (limitPrice) body.limit_price = limitPrice;
     if (stopLossPct) body.stop_loss_pct = stopLossPct;
-
-    const r = await fetch('/alpaca/order', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(body)
-    });
+    const r = await fetch('/alpaca/order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     const d = await r.json();
-    if (d.error) {
-      showAlpacaMsg('error', 'Order failed: ' + d.error);
-    } else {
-      const val = d.estimated_value ? ` (~${fmtMoney(d.estimated_value)})` : '';
-      showAlpacaMsg('success', `Order placed! ID: ${d.id} | ${d.side?.toUpperCase()} ${d.qty} ${d.ticker} | Status: ${d.status}${val}`);
-      // Clear form
-      document.getElementById('alp-ticker').value = '';
-      document.getElementById('alp-qty').value = '';
-      document.getElementById('alp-stop-loss').value = '';
-      if (alpacaOrderType === 'limit') document.getElementById('alp-limit-price').value = '';
-      // Refresh
-      await loadAlpacaPositions();
-      await loadAlpacaOrders();
-      await loadAlpacaAccount();
+    if (d.error) { showAlpacaMsg('error','ORDER FAILED: '+d.error); }
+    else {
+      const val = d.estimated_value?` (~${fmtMoney(d.estimated_value)})`:'';
+      showAlpacaMsg('success',`ORDER PLACED: ${d.side?.toUpperCase()} ${d.qty} ${d.ticker} | ${d.status}${val}`);
+      document.getElementById('alp-ticker').value='';
+      document.getElementById('alp-qty').value='';
+      document.getElementById('alp-stop-loss').value='';
+      if (alpacaOrderType==='limit') document.getElementById('alp-limit-price').value='';
+      await loadAlpacaAll();
+      renderHoldings();
     }
-  } catch (e) {
-    showAlpacaMsg('error', 'Error: ' + e.message);
-  }
+  } catch(e) { showAlpacaMsg('error','ERROR: '+e.message); }
   setStatus('READY');
 }
 
 function showAlpacaMsg(type, text) {
   const el = document.getElementById('alpaca-msg');
-  el.className = type;
-  el.textContent = text;
-  el.style.display = 'block';
-  setTimeout(() => { el.style.display = 'none'; }, 8000);
+  el.className = type; el.textContent = text; el.style.display = 'block';
+  setTimeout(()=>{el.style.display='none';},8000);
 }
 
 async function getAlpacaAISuggestion() {
   const aiBox = document.getElementById('alpaca-ai-box');
-  aiBox.style.display = 'block';
-  aiBox.textContent = 'Fetching account and market data…';
-
-  let accountData, positionsData, scanData;
+  aiBox.style.display = 'block'; aiBox.textContent = 'FETCHING DATA…';
+  let accountData, scanData;
   try {
-    const [acctR, posR, scanR] = await Promise.all([
-      fetch('/alpaca/account'),
-      fetch('/alpaca/positions'),
-      fetch('/scan?tickers=AAPL,TSLA,NVDA,MSFT,GOOGL,AMZN,META')
-    ]);
+    const pos = await fetchAlpacaPositions();
+    const [acctR, scanR] = await Promise.all([fetch('/alpaca/account'), fetch('/scan?tickers=AAPL,TSLA,NVDA,MSFT,GOOGL,AMZN,META')]);
     accountData = await acctR.json();
-    positionsData = await posR.json();
     scanData = await scanR.json();
-  } catch (e) {
-    aiBox.textContent = 'Error fetching data: ' + e.message;
-    return;
-  }
-
-  const portfolioVal = accountData.portfolio_value ? fmtMoney(accountData.portfolio_value) : 'unknown';
-  const posStr = Array.isArray(positionsData) && positionsData.length
-    ? positionsData.map(p => `${p.ticker}: ${p.qty} shares @ avg ${fmtMoney(p.avg_cost)}, current ${fmtMoney(p.current_price)}, P&L ${p.pnl >= 0 ? '+' : ''}${fmtMoney(p.pnl)} (${p.pnl_pct >= 0 ? '+' : ''}${Number(p.pnl_pct).toFixed(2)}%)`).join('; ')
-    : 'no open positions';
-
-  const anomalies = (scanData.anomalies || []).map(a =>
-    `${a.ticker} [${a.severity}] ${a.type}: ${a.details || a.signal || 'anomaly'} | RSI:${a.rsi?.toFixed(1) ?? '?'} VolRatio:${a.volume_ratio?.toFixed(2) ?? '?'}x`
-  ).join('\n');
-
-  const prompt = `Based on my current Alpaca paper trading account (portfolio: ${portfolioVal}, positions: [${posStr}]) and these market anomalies:\n${anomalies || 'none detected'}\n\nWhat specific trade should I make right now? Give me: ticker, buy/sell, quantity for a ${portfolioVal} portfolio, stop loss %, and reasoning in 3 sentences.`;
-
-  aiBox.textContent = '';
-  let buffer = '';
-
-  try {
-    const resp = await fetch('/chat', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({message: prompt})
-    });
-    const reader = resp.body.getReader();
-    const dec = new TextDecoder();
-    let leftover = '';
+    const portfolioVal = fmtMoney(accountData.portfolio_value);
+    const posStr = pos.length?pos.map(p=>`${p.ticker}: ${p.qty}sh @ ${fmtMoney(p.avg_cost)}, cur ${fmtMoney(p.current_price)}, P&L ${p.pnl>=0?'+':''}${fmtMoney(p.pnl)} (${Number(p.pnl_pct).toFixed(2)}%)`).join('; '):'no open positions';
+    const anomalies = (scanData.anomalies||[]).map(a=>`${a.ticker} [${a.severity}] ${a.type}: ${a.details||a.signal||'anomaly'} RSI:${a.rsi?.toFixed(1)??'?'}`).join('\n');
+    const prompt = `My Alpaca portfolio: ${portfolioVal}. Positions: [${posStr}]. Market anomalies:\n${anomalies||'none'}\n\nWhat specific trade should I make? Give: ticker, buy/sell, quantity, stop loss %, reasoning in 3 sentences.`;
+    aiBox.textContent = '';
+    let buffer = '';
+    const resp = await fetch('/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:prompt})});
+    const reader = resp.body.getReader(); const dec = new TextDecoder(); let leftover = '';
     while (true) {
-      const {done, value} = await reader.read();
-      if (done) break;
-      leftover += dec.decode(value, {stream: true});
-      const lines = leftover.split('\n');
-      leftover = lines.pop();
+      const {done,value} = await reader.read(); if (done) break;
+      leftover += dec.decode(value,{stream:true});
+      const lines = leftover.split('\n'); leftover = lines.pop();
       for (const line of lines) {
         if (!line.startsWith('data: ')) continue;
-        const token = line.slice(6);
-        if (token === '[DONE]') break;
-        buffer += token.replace(/\\n/g, '\n');
-        aiBox.textContent = buffer;
+        const token = line.slice(6); if (token==='[DONE]') break;
+        buffer += token.replace(/\\n/g,'\n'); aiBox.textContent = buffer;
       }
     }
-  } catch (e) {
-    aiBox.textContent = 'Error: ' + e.message;
-  }
+  } catch(e) { aiBox.textContent = 'ERROR: '+e.message; }
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════════════════
+   UTIL
+═══════════════════════════════════════════════════════════════ */
+function setStatus(msg) { document.getElementById('sb-status').textContent = msg; }
+
+/* ═══════════════════════════════════════════════════════════════
    INIT
-══════════════════════════════════════════════════════════════════════════════ */
+═══════════════════════════════════════════════════════════════ */
 loadHoldings();
 renderWatchlist();
+fetchAlpacaPositions();
 </script>
 </body>
 </html>
