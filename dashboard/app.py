@@ -39,6 +39,8 @@ app.add_middleware(
 )
 
 HOLDINGS_FILE = BASE_DIR / "data" / "holdings.json"
+CHAT_HISTORY_FILE = BASE_DIR / "data" / "chat_history.json"
+LAST_SCAN_FILE = BASE_DIR / "data" / "last_scan.json"
 STATIC_DIR = BASE_DIR / "static"
 OLLAMA_URL = "http://localhost:11434/api/generate"
 OLLAMA_MODEL = "qwen2.5"
@@ -83,6 +85,40 @@ def save_holdings(holdings: list[dict]) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Memory: chat history + last scan
+# ---------------------------------------------------------------------------
+
+MAX_HISTORY = 20  # number of message pairs to remember
+
+def load_chat_history() -> list[dict]:
+    try:
+        if CHAT_HISTORY_FILE.exists():
+            return json.loads(CHAT_HISTORY_FILE.read_text())
+    except Exception:
+        pass
+    return []
+
+
+def save_chat_history(history: list[dict]) -> None:
+    CHAT_HISTORY_FILE.parent.mkdir(parents=True, exist_ok=True)
+    CHAT_HISTORY_FILE.write_text(json.dumps(history[-MAX_HISTORY * 2:], indent=2))
+
+
+def load_last_scan() -> dict:
+    try:
+        if LAST_SCAN_FILE.exists():
+            return json.loads(LAST_SCAN_FILE.read_text())
+    except Exception:
+        pass
+    return {}
+
+
+def save_last_scan(data: dict) -> None:
+    LAST_SCAN_FILE.parent.mkdir(parents=True, exist_ok=True)
+    LAST_SCAN_FILE.write_text(json.dumps(data, indent=2))
+
+
+# ---------------------------------------------------------------------------
 # Routes
 # ---------------------------------------------------------------------------
 
@@ -107,6 +143,8 @@ async def scan(tickers: str = "AAPL,TSLA,NVDA"):
         raise HTTPException(status_code=400, detail="No tickers provided")
     try:
         results = scan_with_summary(ticker_list)
+        from datetime import datetime
+        save_last_scan({"timestamp": datetime.now().isoformat(), "tickers": ticker_list, "results": results})
         return JSONResponse(content=results)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -173,6 +211,20 @@ def build_portfolio_context() -> str:
     except Exception:
         lines.append("POSITIONS: unavailable")
 
+    # Add last scan summary
+    try:
+        scan = load_last_scan()
+        if scan.get("timestamp") and scan.get("results"):
+            ts = scan["timestamp"][:16].replace("T", " ")
+            anomalies = scan["results"].get("anomalies", [])
+            if anomalies:
+                anom_str = "; ".join(f"{a['ticker']} {a['type']} ({a['severity']})" for a in anomalies[:6])
+                lines.append(f"LAST SCAN ({ts}): {anom_str}")
+            else:
+                lines.append(f"LAST SCAN ({ts}): no anomalies detected")
+    except Exception:
+        pass
+
     return "[LIVE PORTFOLIO CONTEXT: " + " | ".join(lines) + "]\n\n" if lines else ""
 
 
@@ -181,6 +233,12 @@ async def chat(body: ChatMessage):
     context = build_portfolio_context() if _alpaca_keys_configured() else ""
     user_message = context + body.message
 
+    # Load past conversation for multi-turn memory
+    history = load_chat_history()
+    messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+    messages.extend(history)
+    messages.append({"role": "user", "content": user_message})
+
     async def stream_groq():
         headers = {
             "Authorization": f"Bearer {GROQ_API_KEY}",
@@ -188,10 +246,7 @@ async def chat(body: ChatMessage):
         }
         payload = {
             "model": GROQ_MODEL,
-            "messages": [
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": user_message},
-            ],
+            "messages": messages,
             "stream": True,
             "max_tokens": 1024,
         }
@@ -247,10 +302,21 @@ async def chat(body: ChatMessage):
                         continue
 
     async def stream_with_fallback():
+        full_response = []
+        generator = stream_groq() if GROQ_API_KEY else stream_ollama()
         if GROQ_API_KEY:
             try:
                 async for chunk in stream_groq():
+                    if chunk.startswith("data: ") and chunk.strip() != "data: [DONE]":
+                        token = chunk[6:].rstrip("\n").replace("\\n", "\n")
+                        full_response.append(token)
                     yield chunk
+                # Save to history
+                assistant_reply = "".join(full_response)
+                if assistant_reply:
+                    history.append({"role": "user", "content": body.message})
+                    history.append({"role": "assistant", "content": assistant_reply})
+                    save_chat_history(history)
                 return
             except Exception as e:
                 yield f"data: [Groq unavailable, falling back to local model: {e}]\\n\n\n"
@@ -258,6 +324,12 @@ async def chat(body: ChatMessage):
             yield chunk
 
     return StreamingResponse(stream_with_fallback(), media_type="text/event-stream")
+
+
+@app.delete("/chat/history")
+async def clear_chat_history():
+    save_chat_history([])
+    return {"status": "cleared"}
 
 
 @app.get("/holdings")

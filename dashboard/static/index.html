@@ -736,6 +736,7 @@ tr:hover td { background: var(--bg3); }
         <input id="chat-input" type="text" placeholder="Ask about markets, positions, scan results…" autocomplete="off"/>
         <button class="btn-orange" id="chat-send-btn" onclick="sendChat()">SEND</button>
         <button onclick="clearChat()">CLEAR</button>
+        <button onclick="clearChatHistory()" style="color:#ff4444;border-color:#ff4444">CLEAR MEMORY</button>
       </div>
     </div>
     <div id="chat-right">
@@ -757,6 +758,7 @@ tr:hover td { background: var(--bg3); }
         <button class="btn-orange" id="scan-btn" onclick="runScan()">RUN SCAN</button>
         <button class="btn-cyan" onclick="sendScanToOllama()" id="analyze-btn" style="display:none">SEND TO AI</button>
         <span id="scan-meta"></span>
+        <span id="scan-last-run" style="font-size:10px;color:var(--gray);margin-left:8px"></span>
       </div>
       <div id="market-breadth-bar">
         <span style="font-size:10px;color:var(--gray);letter-spacing:1px">BREADTH</span>
@@ -2094,6 +2096,39 @@ function setStatus(msg) { document.getElementById('sb-status').textContent = msg
 loadHoldings();
 renderWatchlist();
 fetchAlpacaPositions();
+
+// ---------------------------------------------------------------------------
+// Auto-scan: run on page load + every 5 minutes in background
+// ---------------------------------------------------------------------------
+const AUTO_SCAN_TICKERS = 'AAPL,TSLA,NVDA,MSFT,GOOGL,AMZN,META,AMD,SPY,QQQ';
+const AUTO_SCAN_INTERVAL = 5 * 60 * 1000;
+
+async function backgroundScan() {
+  try {
+    const r = await fetch('/scan?tickers=' + encodeURIComponent(AUTO_SCAN_TICKERS));
+    const data = await r.json();
+    window.lastScanData = data;
+    // If scan tab is visible, re-render it silently
+    const scanPanel = document.getElementById('scanner-panel');
+    if (scanPanel && scanPanel.style.display !== 'none' && data.results) {
+      renderScanTable(data.results, data);
+    }
+    const ts = new Date().toLocaleTimeString();
+    document.getElementById('scan-last-run') && (document.getElementById('scan-last-run').textContent = 'Last auto-scan: ' + ts);
+  } catch(e) { console.warn('Auto-scan failed:', e); }
+}
+
+// Run immediately on load, then every 5 min
+backgroundScan();
+setInterval(backgroundScan, AUTO_SCAN_INTERVAL);
+
+// Clear chat history button
+async function clearChatHistory() {
+  if (!confirm('Clear conversation memory?')) return;
+  await fetch('/chat/history', {method:'DELETE'});
+  document.getElementById('chat-history').innerHTML = '';
+  setStatus('MEMORY CLEARED');
+}
 </script>
 </body>
 </html>
