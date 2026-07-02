@@ -924,6 +924,7 @@ tr:hover td { background: var(--bg3); }
         <div class="alpaca-section-title">
           POSITIONS
           <button onclick="loadAlpacaPositions()" style="font-size:10px">REFRESH</button>
+          <button onclick="closeAllPositions()" style="font-size:10px;background:#330000;color:#ff4444;border-color:#ff4444;margin-left:6px">CLOSE ALL</button>
         </div>
         <div style="overflow-x:auto">
           <table id="alpaca-positions-table">
@@ -1900,6 +1901,7 @@ async function loadAlpacaPositions() {
       const pnlCls = pos.pnl>=0?'pos':'neg';
       const pCls = pos.pnl_pct>=0?'pos':'neg';
       const tr = document.createElement('tr');
+      tr.dataset.ticker = pos.ticker;
       tr.innerHTML = `
         <td style="color:var(--orange);font-weight:bold">${pos.ticker}</td>
         <td>${pos.qty}</td>
@@ -1960,6 +1962,27 @@ async function closeAlpacaPosition(ticker) {
     await loadAlpacaAll();
     renderHoldings();
   } catch(e) { showAlpacaMsg('error','Error: '+e.message); }
+  setStatus('READY');
+}
+
+async function closeAllPositions() {
+  const rows = document.querySelectorAll('#alpaca-positions-body tr[data-ticker]');
+  if (!rows.length) { showAlpacaMsg('error','No open positions.'); return; }
+  const tickers = [...rows].map(r => r.dataset.ticker).filter(Boolean);
+  if (!confirm(`Close ALL ${tickers.length} positions (${tickers.join(', ')})?`)) return;
+  setStatus('CLOSING ALL POSITIONS…');
+  let closed = 0, errors = 0;
+  for (const ticker of tickers) {
+    try {
+      const r = await fetch('/alpaca/position/'+encodeURIComponent(ticker),{method:'DELETE'});
+      const d = await r.json();
+      if (d.error) errors++;
+      else closed++;
+    } catch(e) { errors++; }
+  }
+  showAlpacaMsg(errors ? 'error' : 'success', `Closed ${closed} position(s).${errors ? ' '+errors+' error(s).' : ''}`);
+  await loadAlpacaAll();
+  renderHoldings();
   setStatus('READY');
 }
 
