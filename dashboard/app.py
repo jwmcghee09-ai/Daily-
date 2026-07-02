@@ -139,8 +139,48 @@ class ChatMessage(BaseModel):
     message: str
 
 
+def build_portfolio_context() -> str:
+    """Pull live Alpaca data and format as context for the LLM."""
+    lines = []
+    try:
+        acct = alpaca_trader.get_account()
+        if not acct.get("error"):
+            lines.append(
+                f"ALPACA ACCOUNT: portfolio_value=${float(acct.get('portfolio_value',0)):.2f}, "
+                f"cash=${float(acct.get('cash',0)):.2f}, "
+                f"buying_power=${float(acct.get('buying_power',0)):.2f}, "
+                f"equity=${float(acct.get('equity', acct.get('portfolio_value',0))):.2f}"
+            )
+    except Exception:
+        pass
+
+    try:
+        positions = alpaca_trader.get_positions()
+        if isinstance(positions, list) and positions:
+            pos_parts = []
+            for p in positions:
+                ticker = p.get("ticker","?")
+                qty = p.get("qty","?")
+                avg = float(p.get("avg_cost", 0))
+                cur = float(p.get("current_price", 0))
+                mv = float(p.get("market_value", 0))
+                pnl = float(p.get("pnl", 0))
+                pnl_pct = float(p.get("pnl_pct", 0))
+                pos_parts.append(f"{ticker}: {qty}sh avg=${avg:.2f} cur=${cur:.2f} mktval=${mv:.2f} pnl=${pnl:.2f}({pnl_pct:.2f}%)")
+            lines.append("POSITIONS: " + "; ".join(pos_parts))
+        else:
+            lines.append("POSITIONS: none (all closed or account empty)")
+    except Exception:
+        lines.append("POSITIONS: unavailable")
+
+    return "[LIVE PORTFOLIO CONTEXT: " + " | ".join(lines) + "]\n\n" if lines else ""
+
+
 @app.post("/chat")
 async def chat(body: ChatMessage):
+    context = build_portfolio_context() if _alpaca_keys_configured() else ""
+    user_message = context + body.message
+
     async def stream_groq():
         headers = {
             "Authorization": f"Bearer {GROQ_API_KEY}",
@@ -150,7 +190,7 @@ async def chat(body: ChatMessage):
             "model": GROQ_MODEL,
             "messages": [
                 {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": body.message},
+                {"role": "user", "content": user_message},
             ],
             "stream": True,
             "max_tokens": 1024,
@@ -180,7 +220,7 @@ async def chat(body: ChatMessage):
         payload = {
             "model": OLLAMA_MODEL,
             "system": SYSTEM_PROMPT,
-            "prompt": body.message,
+            "prompt": user_message,
             "stream": True,
         }
         async with httpx.AsyncClient(timeout=120.0) as client:
