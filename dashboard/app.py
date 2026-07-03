@@ -609,7 +609,7 @@ async def toggle_strategy(strategy_id: str):
     return strategies
 
 
-def _condition_met(entry: dict, summary: dict) -> tuple[bool, float | None]:
+def _condition_met(entry: dict, summary: dict):
     indicator = entry.get("indicator")
     op = entry.get("op")
     target = entry.get("value")
