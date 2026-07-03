@@ -799,6 +799,7 @@ tr:hover td { background: var(--bg3); }
   <button class="tab-btn" data-tab="holdings">HOLDINGS</button>
   <button class="tab-btn" data-tab="strategy">PORTFOLIO</button>
   <button class="tab-btn" data-tab="alpaca">ALPACA</button>
+  <button class="tab-btn" data-tab="automate">AUTOMATE</button>
 </div>
 
 <!-- MAIN -->
@@ -1080,6 +1081,31 @@ tr:hover td { background: var(--bg3); }
     </div>
   </div><!-- /alpaca-panel -->
 
+  <!-- ══ AUTOMATE ══ -->
+  <div class="tab-panel" id="automate-panel" style="overflow-y:auto">
+    <div class="port-section">
+      <div class="port-section-title">CREATE STRATEGY <span class="alloc-badge">PLAIN ENGLISH</span></div>
+      <div style="font-size:11px;color:var(--gray);margin-bottom:8px">
+        Describe a rule in plain English and the AI converts it into an automated strategy, monitored every 5 minutes and executed on your Alpaca paper account.
+        E.g. "Buy 10 shares of AAPL if RSI drops below 30, take profit at 5%, stop loss 2%".
+      </div>
+      <div style="display:flex;gap:8px;align-items:flex-start">
+        <textarea id="strategy-input" rows="2" style="flex:1;resize:vertical" placeholder="Buy 5 NVDA if RSI falls below 35, stop loss 3%"></textarea>
+        <button class="btn-orange" id="strategy-create-btn" onclick="createStrategy()">CREATE</button>
+      </div>
+      <div id="strategy-msg" style="display:none;margin-top:8px;padding:6px 10px;border-radius:8px;font-size:11px"></div>
+    </div>
+    <div class="port-section">
+      <div class="port-section-title">
+        ACTIVE STRATEGIES
+        <button onclick="loadStrategies()" style="margin-left:auto">REFRESH</button>
+      </div>
+      <div id="strategies-list" style="display:flex;flex-direction:column;gap:8px">
+        <span style="color:var(--gray);font-size:11px">LOADING…</span>
+      </div>
+    </div>
+  </div><!-- /automate-panel -->
+
 </div><!-- /main -->
 
 <!-- Fund Modal -->
@@ -1217,6 +1243,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     }
     if (btn.dataset.tab === 'alpaca') loadAlpacaAll();
     if (btn.dataset.tab === 'holdings') syncAlpacaHoldings();
+    if (btn.dataset.tab === 'automate') loadStrategies();
   });
 });
 
@@ -2274,6 +2301,88 @@ async function backgroundScan() {
 // Run immediately on load, then every 5 min
 backgroundScan();
 setInterval(backgroundScan, AUTO_SCAN_INTERVAL);
+
+/* ═══════════════════════════════════════════════════════════════
+   AUTOMATE — plain-English strategies
+═══════════════════════════════════════════════════════════════ */
+function showStrategyMsg(ok, text) {
+  const el = document.getElementById('strategy-msg');
+  el.style.display = 'block';
+  el.style.color = ok ? 'var(--green)' : 'var(--red)';
+  el.style.border = `1px solid ${ok ? 'var(--green)' : 'var(--red)'}`;
+  el.textContent = text;
+  setTimeout(() => { el.style.display = 'none'; }, 8000);
+}
+
+async function createStrategy() {
+  const input = document.getElementById('strategy-input');
+  const text = input.value.trim();
+  if (!text) return;
+  const btn = document.getElementById('strategy-create-btn');
+  btn.disabled = true; btn.innerHTML = 'PARSING<span class="spinner"></span>';
+  try {
+    const r = await fetch('/strategies', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({text})});
+    const d = await r.json();
+    if (d.error) showStrategyMsg(false, d.error);
+    else { showStrategyMsg(true, 'Strategy armed: ' + (d.rule?.summary || text)); input.value = ''; }
+    await loadStrategies();
+  } catch(e) { showStrategyMsg(false, 'Error: ' + e.message); }
+  btn.disabled = false; btn.textContent = 'CREATE';
+}
+
+async function loadStrategies() {
+  const list = document.getElementById('strategies-list');
+  try {
+    const r = await fetch('/strategies');
+    const strategies = await r.json();
+    if (!strategies.length) {
+      list.innerHTML = '<span style="color:var(--gray);font-size:11px">No strategies yet. Create one above.</span>';
+      return;
+    }
+    list.innerHTML = '';
+    strategies.slice().reverse().forEach(s => {
+      const rule = s.rule || {};
+      const entry = rule.entry || {};
+      const action = rule.action || {};
+      const exit = rule.exit || {};
+      const lastLog = (s.log && s.log.length) ? s.log[s.log.length-1] : null;
+      const triggered = lastLog && String(lastLog.event||'').startsWith('TRIGGERED');
+      const statusColor = triggered ? 'var(--orange)' : s.active ? 'var(--green)' : 'var(--gray)';
+      const statusText = triggered ? 'TRIGGERED' : s.active ? 'ARMED' : 'PAUSED';
+      const card = document.createElement('div');
+      card.style.cssText = 'background:var(--bg3);border:1px solid var(--border2);border-radius:12px;padding:10px 12px';
+      card.innerHTML = `
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-weight:700;color:var(--purple2)">${rule.ticker||'?'}</span>
+          <span style="font-size:10px;font-weight:700;letter-spacing:1px;padding:2px 9px;border-radius:999px;border:1px solid ${statusColor};color:${statusColor}">${statusText}</span>
+          <span style="margin-left:auto;display:flex;gap:6px">
+            <button onclick="toggleStrategy('${s.id}')" style="font-size:10px">${s.active?'PAUSE':'RESUME'}</button>
+            <button class="btn-red" onclick="deleteStrategy('${s.id}')" style="font-size:10px">DELETE</button>
+          </span>
+        </div>
+        <div style="font-size:12px;color:var(--white);margin-top:6px">${rule.summary || s.text}</div>
+        <div style="font-size:10px;color:var(--gray);margin-top:4px">
+          ${(action.side||'').toUpperCase()} ${action.qty??1} when ${entry.indicator} ${entry.op} ${entry.value}
+          ${exit.take_profit_pct!=null?` · TP +${exit.take_profit_pct}%`:''}${exit.stop_loss_pct!=null?` · SL -${exit.stop_loss_pct}%`:''}
+          · created ${s.created?.replace('T',' ')??''}
+        </div>
+        ${lastLog ? `<div style="font-size:10px;color:${triggered?'var(--orange)':'var(--gray)'};margin-top:4px">LAST: ${lastLog.time.replace('T',' ')} — ${lastLog.event}${lastLog.order?(' → '+(lastLog.order.error?('ERROR: '+lastLog.order.error):(lastLog.order.status||JSON.stringify(lastLog.order)))):''}</div>` : ''}
+      `;
+      list.appendChild(card);
+    });
+  } catch(e) { list.innerHTML = `<span style="color:var(--red);font-size:11px">ERROR: ${e.message}</span>`; }
+}
+
+async function toggleStrategy(id) {
+  await fetch('/strategies/'+id+'/toggle', {method:'POST'});
+  loadStrategies();
+}
+
+async function deleteStrategy(id) {
+  if (!confirm('Delete this strategy?')) return;
+  await fetch('/strategies/'+id, {method:'DELETE'});
+  loadStrategies();
+}
 
 // Clear chat history button
 async function clearChatHistory() {

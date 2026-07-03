@@ -39,6 +39,7 @@ app.add_middleware(
 )
 
 HOLDINGS_FILE = BASE_DIR / "data" / "holdings.json"
+STRATEGIES_FILE = BASE_DIR / "data" / "strategies.json"
 CHAT_HISTORY_FILE = BASE_DIR / "data" / "chat_history.json"
 LAST_SCAN_FILE = BASE_DIR / "data" / "last_scan.json"
 STATIC_DIR = BASE_DIR / "static"
@@ -495,3 +496,184 @@ async def get_prices():
             result[ticker] = {"price": None, "change_pct": None, "value": None, "error": str(e)}
 
     return result
+
+
+# ---------------------------------------------------------------------------
+# Strategy automation (Capitalise.ai-style): plain-English rules -> auto-trade
+# ---------------------------------------------------------------------------
+import uuid
+import asyncio
+from datetime import datetime
+
+STRATEGY_CHECK_INTERVAL = 300  # seconds
+
+STRATEGY_PARSE_PROMPT = (
+    "You convert plain-English trading instructions into a JSON rule. "
+    "Respond with ONLY valid JSON, no markdown, matching this schema:\n"
+    "{\n"
+    '  "ticker": "AAPL",\n'
+    '  "entry": {"indicator": "rsi|price|change_pct|volume_ratio", "op": "<|>|<=|>=", "value": 30},\n'
+    '  "action": {"side": "buy|sell", "qty": 10},\n'
+    '  "exit": {"take_profit_pct": 5, "stop_loss_pct": 2},\n'
+    '  "summary": "Buy 10 AAPL when RSI drops below 30; exit +5%/-2%"\n'
+    "}\n"
+    "exit values are optional (use null if not specified). qty defaults to 1 if unspecified. "
+    "If the instruction cannot be expressed in this schema, respond with "
+    '{"error": "<short reason>"}.'
+)
+
+
+def load_strategies() -> list[dict]:
+    try:
+        if STRATEGIES_FILE.exists():
+            return json.loads(STRATEGIES_FILE.read_text())
+    except Exception:
+        pass
+    return []
+
+
+def save_strategies(strategies: list[dict]) -> None:
+    STRATEGIES_FILE.parent.mkdir(parents=True, exist_ok=True)
+    STRATEGIES_FILE.write_text(json.dumps(strategies, indent=2))
+
+
+async def parse_strategy_text(text: str) -> dict:
+    """Use Groq to convert plain English into a structured rule."""
+    if not GROQ_API_KEY:
+        return {"error": "GROQ_API_KEY not set - strategy parsing needs Groq"}
+    headers = {"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"}
+    payload = {
+        "model": GROQ_MODEL,
+        "messages": [
+            {"role": "system", "content": STRATEGY_PARSE_PROMPT},
+            {"role": "user", "content": text},
+        ],
+        "max_tokens": 300,
+        "temperature": 0,
+    }
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        resp = await client.post(GROQ_URL, headers=headers, json=payload)
+        if resp.status_code != 200:
+            return {"error": f"Groq HTTP {resp.status_code}"}
+        content = resp.json()["choices"][0]["message"]["content"].strip()
+        if content.startswith("```"):
+            content = content.strip("`").lstrip("json").strip()
+        try:
+            return json.loads(content)
+        except json.JSONDecodeError:
+            return {"error": "Could not parse strategy - try rephrasing"}
+
+
+class StrategyCreate(BaseModel):
+    text: str
+
+
+@app.post("/strategies")
+async def create_strategy(body: StrategyCreate):
+    rule = await parse_strategy_text(body.text.strip())
+    if rule.get("error"):
+        return JSONResponse(content=rule, status_code=422)
+    strategy = {
+        "id": uuid.uuid4().hex[:8],
+        "text": body.text.strip(),
+        "rule": rule,
+        "active": True,
+        "created": datetime.now().isoformat(timespec="seconds"),
+        "log": [],
+    }
+    strategies = load_strategies()
+    strategies.append(strategy)
+    save_strategies(strategies)
+    return strategy
+
+
+@app.get("/strategies")
+async def list_strategies():
+    return JSONResponse(content=load_strategies())
+
+
+@app.delete("/strategies/{strategy_id}")
+async def delete_strategy(strategy_id: str):
+    strategies = [s for s in load_strategies() if s["id"] != strategy_id]
+    save_strategies(strategies)
+    return strategies
+
+
+@app.post("/strategies/{strategy_id}/toggle")
+async def toggle_strategy(strategy_id: str):
+    strategies = load_strategies()
+    for s in strategies:
+        if s["id"] == strategy_id:
+            s["active"] = not s["active"]
+    save_strategies(strategies)
+    return strategies
+
+
+def _condition_met(entry: dict, summary: dict) -> tuple[bool, float | None]:
+    indicator = entry.get("indicator")
+    op = entry.get("op")
+    target = entry.get("value")
+    current = summary.get(indicator)
+    if current is None or target is None:
+        return False, None
+    ops = {"<": current < target, ">": current > target,
+           "<=": current <= target, ">=": current >= target}
+    return ops.get(op, False), current
+
+
+async def evaluate_strategies():
+    """Check every active strategy against live data; execute when triggered."""
+    strategies = load_strategies()
+    changed = False
+    for s in strategies:
+        if not s.get("active"):
+            continue
+        rule = s.get("rule", {})
+        ticker = rule.get("ticker")
+        entry = rule.get("entry", {})
+        if not ticker or not entry:
+            continue
+        try:
+            summary = get_ticker_summary(ticker)
+        except Exception as e:
+            s["log"].append({"time": datetime.now().isoformat(timespec="seconds"),
+                             "event": f"data error: {e}"})
+            changed = True
+            continue
+        met, current = _condition_met(entry, summary)
+        if not met:
+            continue
+        action = rule.get("action", {})
+        exit_rule = rule.get("exit") or {}
+        result = {"status": "skipped - Alpaca keys not configured"}
+        if _alpaca_keys_configured():
+            result = alpaca_trader.place_order(
+                ticker=ticker,
+                qty=float(action.get("qty", 1)),
+                side=action.get("side", "buy"),
+                order_type="market",
+                stop_loss_pct=exit_rule.get("stop_loss_pct"),
+            )
+        s["active"] = False  # one-shot: disarm after triggering
+        s["log"].append({
+            "time": datetime.now().isoformat(timespec="seconds"),
+            "event": f"TRIGGERED: {entry.get('indicator')}={current} {entry.get('op')} {entry.get('value')}",
+            "order": result,
+        })
+        changed = True
+    if changed:
+        save_strategies(strategies)
+
+
+async def _strategy_loop():
+    while True:
+        try:
+            await evaluate_strategies()
+        except Exception:
+            pass
+        await asyncio.sleep(STRATEGY_CHECK_INTERVAL)
+
+
+@app.on_event("startup")
+async def _start_strategy_loop():
+    asyncio.create_task(_strategy_loop())
