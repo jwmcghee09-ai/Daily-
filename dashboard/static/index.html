@@ -3,100 +3,145 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>TRADING TERMINAL</title>
+<title>SPECTRE TERMINAL</title>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg:      #000000;
-  --bg2:     #0a0a0a;
-  --bg3:     #111111;
-  --bg4:     #181818;
-  --border:  #1a1a1a;
-  --border2: #2a2a2a;
-  --orange:  #ff6600;
-  --orange2: #cc4400;
-  --white:   #ffffff;
-  --gray:    #999999;
-  --green:   #00cc44;
-  --red:     #ff3333;
-  --cyan:    #00aaff;
-  --yellow:  #ffcc00;
-  --font:    'Courier New', Courier, monospace;
+  /* Spectre palette: lavender page, dark navy cards, purple + orange accents */
+  --page:    #ece8f6;
+  --bg:      #0e1120;
+  --bg2:     #131730;
+  --bg3:     #1a1f3d;
+  --bg4:     #232952;
+  --border:  #232849;
+  --border2: #2e3560;
+  --orange:  #ff6b35;
+  --orange2: #d14e1f;
+  --purple:  #7c4dff;
+  --purple2: #9d7bff;
+  --white:   #f2f1fa;
+  --gray:    #8b90b3;
+  --green:   #2fd67b;
+  --red:     #ff5c7a;
+  --cyan:    #57b8ff;
+  --yellow:  #ffc857;
+  --radius:  14px;
+  --font:    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', Roboto, Helvetica, Arial, sans-serif;
 }
 
 html, body {
   height: 100%;
-  background: var(--bg);
+  background: var(--page);
   color: var(--white);
   font-family: var(--font);
-  font-size: 12px;
+  font-size: 13px;
   overflow: hidden;
 }
 
 /* ── SCROLLBAR ── */
-::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-track { background: var(--bg); }
-::-webkit-scrollbar-thumb { background: #333; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #3a4170; border-radius: 3px; }
 
 /* ── HEADER ── */
 #header {
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 0 12px;
-  background: var(--bg2);
-  border-bottom: 1px solid var(--orange);
-  height: 30px;
+  padding: 0 18px;
+  background: var(--bg);
+  border-radius: var(--radius);
+  margin: 10px 12px 0;
+  height: 46px;
   flex-shrink: 0;
+  box-shadow: 0 6px 20px rgba(30,20,80,0.18);
 }
 .logo {
-  color: var(--orange);
-  font-size: 13px;
-  font-weight: bold;
-  letter-spacing: 4px;
+  color: var(--white);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 1px;
 }
-.header-divider { color: #333; }
-.header-item { font-size: 10px; color: var(--gray); letter-spacing: 1px; }
+.logo::before { content: '◆ '; color: var(--purple); }
+.header-divider { color: #3a4170; }
+.header-item { font-size: 11px; color: var(--gray); letter-spacing: 0.5px; }
 .header-item span { color: var(--white); }
-#clock { color: var(--orange); font-size: 12px; margin-left: auto; letter-spacing: 2px; }
+#clock { color: var(--purple2); font-size: 13px; margin-left: auto; letter-spacing: 1px; font-weight: 600; }
 #market-status-badge {
   font-size: 10px;
-  font-weight: bold;
-  letter-spacing: 2px;
-  padding: 1px 6px;
-  border: 1px solid #333;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid #3a4170;
   color: var(--gray);
 }
-#market-status-badge.open { color: var(--green); border-color: var(--green); }
-#market-status-badge.closed { color: var(--red); border-color: var(--red); }
+#market-status-badge.open { color: var(--green); border-color: var(--green); background: rgba(47,214,123,0.1); }
+#market-status-badge.closed { color: var(--red); border-color: var(--red); background: rgba(255,92,122,0.1); }
+
+/* ── TICKER TAPE ── */
+#ticker-tape {
+  overflow: hidden;
+  height: 28px;
+  margin: 8px 12px 0;
+  border-radius: 999px;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 14px rgba(30,20,80,0.14);
+}
+#ticker-track {
+  display: inline-flex;
+  gap: 34px;
+  white-space: nowrap;
+  padding-left: 100%;
+  animation: tickerScroll 45s linear infinite;
+  font-size: 11.5px;
+  font-weight: 600;
+}
+@keyframes tickerScroll { to { transform: translateX(-100%); } }
+.tt-item { color: var(--gray); }
+.tt-item b { color: var(--white); margin-right: 5px; }
 
 /* ── TABS ── */
 #tabs {
   display: flex;
-  background: var(--bg2);
-  border-bottom: 1px solid var(--border2);
+  gap: 6px;
+  background: transparent;
+  padding: 10px 12px 8px;
   flex-shrink: 0;
 }
 .tab-btn {
-  padding: 6px 18px;
-  background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
-  color: var(--gray);
+  padding: 8px 20px;
+  background: rgba(255,255,255,0.55);
+  border: 1px solid rgba(124,77,255,0.15);
+  border-radius: 999px;
+  color: #4a4570;
   font-family: var(--font);
-  font-size: 11px;
+  font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
-  letter-spacing: 2px;
-  transition: color 0.1s;
+  letter-spacing: 0.5px;
+  transition: all 0.15s;
 }
-.tab-btn:hover { color: var(--white); background: none; }
-.tab-btn.active { color: var(--orange); border-bottom-color: var(--orange); background: none; }
+.tab-btn:hover { color: #2a2550; background: rgba(255,255,255,0.85); }
+.tab-btn.active {
+  color: #fff;
+  background: var(--purple);
+  border-color: var(--purple);
+  box-shadow: 0 4px 14px rgba(124,77,255,0.35);
+}
 
 /* ── MAIN ── */
 #main {
-  height: calc(100vh - 30px - 28px - 20px);
+  height: calc(100vh - 56px - 36px - 54px - 30px);
   overflow: hidden;
+  margin: 0 12px;
+  background: var(--bg);
+  border-radius: var(--radius);
+  box-shadow: 0 10px 30px rgba(30,20,80,0.2);
 }
 .tab-panel { display: none; height: 100%; }
 .tab-panel.active { display: flex; flex-direction: column; height: 100%; }
@@ -106,19 +151,23 @@ button {
   background: var(--bg3);
   color: var(--gray);
   border: 1px solid var(--border2);
-  padding: 3px 10px;
+  border-radius: 8px;
+  padding: 5px 12px;
   font-family: var(--font);
-  font-size: 10px;
+  font-size: 11px;
+  font-weight: 600;
   cursor: pointer;
-  letter-spacing: 1px;
+  letter-spacing: 0.4px;
+  transition: all 0.12s;
 }
-button:hover { background: var(--bg4); border-color: var(--gray); color: var(--white); }
+button:hover { background: var(--bg4); border-color: var(--purple2); color: var(--white); }
 button.btn-orange {
-  background: var(--orange2);
+  background: var(--orange);
   border-color: var(--orange);
-  color: var(--orange);
+  color: #fff;
+  box-shadow: 0 3px 10px rgba(255,107,53,0.3);
 }
-button.btn-orange:hover { background: var(--orange); color: #000; }
+button.btn-orange:hover { background: #ff824f; color: #fff; }
 button.btn-cyan { border-color: var(--cyan); color: var(--cyan); background: none; }
 button.btn-cyan:hover { background: var(--cyan); color: #000; }
 button.btn-red { border-color: var(--red); color: var(--red); background: none; }
@@ -129,29 +178,32 @@ button.btn-green:hover { background: var(--green); color: #000; }
 input[type="text"], input[type="number"], textarea {
   background: var(--bg3);
   border: 1px solid var(--border2);
+  border-radius: 8px;
   color: var(--white);
-  padding: 3px 7px;
+  padding: 5px 10px;
   font-family: var(--font);
-  font-size: 11px;
+  font-size: 12px;
   outline: none;
 }
-input:focus, textarea:focus { border-color: var(--orange); }
+input:focus, textarea:focus { border-color: var(--purple); }
 
 select {
   background: var(--bg3);
   border: 1px solid var(--border2);
+  border-radius: 8px;
   color: var(--white);
-  padding: 3px 7px;
+  padding: 5px 10px;
   font-family: var(--font);
-  font-size: 11px;
+  font-size: 12px;
   outline: none;
 }
 
 .spinner {
   display: inline-block;
   width: 10px; height: 10px;
-  border: 1px solid #333;
-  border-top-color: var(--orange);
+  border: 1px solid #3a4170;
+  border-top-color: var(--purple);
+  border-radius: 50%;
   animation: spin 0.7s linear infinite;
   vertical-align: middle;
   margin-left: 5px;
@@ -179,20 +231,20 @@ tr:hover td { background: var(--bg3); }
 #statusbar {
   position: fixed;
   bottom: 0; left: 0; right: 0;
-  height: 20px;
-  background: var(--bg2);
-  border-top: 1px solid var(--border2);
+  height: 26px;
+  background: transparent;
   display: flex;
   align-items: center;
-  padding: 0 10px;
-  gap: 16px;
-  font-size: 10px;
-  color: var(--gray);
+  padding: 0 24px;
+  gap: 20px;
+  font-size: 11px;
+  color: #6a6590;
   z-index: 100;
+  font-weight: 600;
 }
 .sb-item { display: flex; gap: 5px; }
-.sb-label { color: var(--gray); }
-.sb-val { color: var(--orange); }
+.sb-label { color: #8a85ab; }
+.sb-val { color: var(--purple); }
 
 /* ═══ CHAT TAB ═══ */
 #chat-panel { flex-direction: row !important; }
@@ -224,9 +276,10 @@ tr:hover td { background: var(--bg3); }
   line-height: 1.5;
   font-size: 12px;
 }
-.msg.user .msg-text { color: var(--orange); border-color: var(--orange2); background: rgba(255,102,0,0.05); }
+.msg-text { border-radius: 12px; }
+.msg.user .msg-text { color: #fff; border-color: var(--purple); background: rgba(124,77,255,0.18); }
 .msg.assistant .msg-text { color: #ffffff !important; border-color: var(--border2); background: var(--bg2); }
-.msg.system-alert .msg-text { color: #ffcc00; border-color: #ffcc00; background: rgba(255,204,0,0.08); font-size:10px; letter-spacing:1px; }
+.msg.system-alert .msg-text { color: var(--yellow); border-color: var(--yellow); background: rgba(255,200,87,0.08); font-size:10px; letter-spacing:1px; }
 
 #chat-input-row {
   display: flex;
@@ -258,12 +311,13 @@ tr:hover td { background: var(--bg3); }
   overflow-y: auto;
 }
 .panel-header {
-  padding: 5px 10px;
+  padding: 7px 12px;
   border-bottom: 1px solid var(--border2);
-  font-size: 10px;
-  letter-spacing: 2px;
-  color: var(--orange);
-  background: var(--bg3);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: var(--purple2);
+  background: var(--bg2);
   flex-shrink: 0;
 }
 #chat-context-body {
@@ -417,20 +471,23 @@ tr:hover td { background: var(--bg3); }
   border-bottom: 1px solid var(--border2);
 }
 .port-section-title {
-  font-size: 10px;
-  letter-spacing: 2px;
-  color: var(--orange);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: var(--purple2);
   margin-bottom: 8px;
   display: flex;
   align-items: center;
   gap: 10px;
 }
 .alloc-badge {
-  background: rgba(255,102,0,0.1);
-  border: 1px solid var(--orange2);
+  background: rgba(255,107,53,0.12);
+  border: 1px solid var(--orange);
+  border-radius: 999px;
   color: var(--orange);
-  padding: 1px 6px;
+  padding: 2px 9px;
   font-size: 10px;
+  font-weight: 700;
 }
 
 /* ETF cards */
@@ -443,21 +500,24 @@ tr:hover td { background: var(--bg3); }
 .etf-card {
   background: var(--bg3);
   border: 1px solid var(--border2);
-  padding: 8px 10px;
+  border-radius: 12px;
+  padding: 10px 12px;
   position: relative;
   cursor: pointer;
+  transition: border-color 0.15s;
 }
-.etf-card.recommended { border-color: var(--orange); }
-.etf-card .ec-ticker { font-size: 16px; font-weight: bold; color: var(--white); letter-spacing: 2px; }
-.etf-card .ec-price { color: var(--cyan); font-size: 13px; margin-top: 2px; }
+.etf-card:hover { border-color: var(--purple); }
+.etf-card.recommended { border-color: var(--purple); box-shadow: 0 0 0 1px var(--purple); }
+.etf-card .ec-ticker { font-size: 16px; font-weight: 700; color: var(--white); letter-spacing: 1px; }
+.etf-card .ec-price { color: var(--purple2); font-size: 14px; font-weight: 600; margin-top: 2px; }
 .etf-card .ec-chg { font-size: 11px; }
 .etf-card .ec-metrics { font-size: 10px; color: var(--gray); margin-top: 5px; line-height: 1.9; }
 .etf-card .ec-metrics strong { color: var(--white); }
 .etf-card .rec-badge {
-  position: absolute; top: 5px; right: 5px;
-  font-size: 9px; letter-spacing: 1px;
-  background: rgba(255,102,0,0.15); color: var(--orange);
-  padding: 1px 5px; border: 1px solid var(--orange2);
+  position: absolute; top: 6px; right: 6px;
+  font-size: 9px; letter-spacing: 1px; font-weight: 700;
+  background: rgba(124,77,255,0.2); color: var(--purple2);
+  padding: 2px 7px; border: 1px solid var(--purple); border-radius: 999px;
 }
 .etf-spark-grid {
   display: grid;
@@ -498,23 +558,25 @@ tr:hover td { background: var(--bg3); }
 .health-card {
   background: var(--bg3);
   border: 1px solid var(--border2);
-  padding: 8px 10px;
+  border-radius: 12px;
+  padding: 12px 10px;
   text-align: center;
 }
 .hc-label { font-size: 10px; color: var(--gray); letter-spacing: 1px; margin-bottom: 3px; }
-.hc-value { font-size: 16px; color: var(--orange); font-weight: bold; }
+.hc-value { font-size: 19px; color: var(--white); font-weight: 700; }
 .hc-sub { font-size: 10px; color: var(--gray); margin-top: 2px; }
 
 .alloc-bar-wrap { margin-top: 8px; }
 .alloc-bar {
-  height: 8px;
+  height: 10px;
   background: var(--bg3);
   border: 1px solid var(--border2);
+  border-radius: 999px;
   overflow: hidden;
   display: flex;
 }
-.bar-index { background: var(--cyan); height: 100%; transition: width 0.4s; }
-.bar-alpha { background: var(--green); height: 100%; transition: width 0.4s; }
+.bar-index { background: var(--purple); height: 100%; transition: width 0.4s; }
+.bar-alpha { background: var(--orange); height: 100%; transition: width 0.4s; }
 .alloc-bar-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--gray); margin-top: 3px; }
 
 #rotation-advice-box {
@@ -598,9 +660,10 @@ tr:hover td { background: var(--bg3); }
 }
 .alpaca-section.scrollable { flex: 1; overflow-y: auto; }
 .alpaca-section-title {
-  font-size: 10px;
-  letter-spacing: 2px;
-  color: var(--orange);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: var(--purple2);
   margin-bottom: 6px;
   display: flex;
   align-items: center;
@@ -708,13 +771,18 @@ tr:hover td { background: var(--bg3); }
 
 <!-- HEADER -->
 <div id="header">
-  <span class="logo">TRADING TERMINAL</span>
+  <span class="logo">SPECTRE TERMINAL</span>
   <span class="header-divider">|</span>
   <span class="header-item">OLLAMA: <span id="ollama-status" style="color:var(--yellow)">CHECKING</span></span>
   <span class="header-divider">|</span>
   <span class="header-item">ALPACA: <span id="alp-header-status" style="color:var(--gray)">—</span></span>
   <span id="market-status-badge">—</span>
   <span id="clock">--:--:--</span>
+</div>
+
+<!-- TICKER TAPE -->
+<div id="ticker-tape">
+  <div id="ticker-track"><span class="tt-item">Loading market data…</span></div>
 </div>
 
 <!-- TABS -->
@@ -902,8 +970,8 @@ tr:hover td { background: var(--bg3); }
           <div class="bar-alpha" id="alloc-bar-alpha" style="width:30%"></div>
         </div>
         <div class="alloc-bar-labels">
-          <span style="color:var(--cyan)">INDEX</span>
-          <span style="color:var(--green)">ALPHA</span>
+          <span style="color:var(--purple2)">INDEX (TARGET 70%)</span>
+          <span style="color:var(--orange)">ALPHA (TARGET 30%)</span>
         </div>
       </div>
     </div>
@@ -1421,7 +1489,7 @@ function showTickerChart(ticker, data) {
   const svgEl = document.getElementById('ticker-sparkline');
   const closes = tickerData.closes || tickerData.history || [];
   if (closes.length >= 2) {
-    drawSparkline(svgEl, closes.slice(-20), '#ff6600');
+    drawSparkline(svgEl, closes.slice(-20), '#7c4dff');
   } else {
     svgEl.innerHTML = '<text x="50%" y="50%" text-anchor="middle" fill="#444" font-size="10">NO HISTORY</text>';
   }
@@ -1642,7 +1710,7 @@ function renderEtfSparklines() {
     const d = indexData[t];
     if (!d||d.error) return;
     const closes = d.closes || d.history || [];
-    if (closes.length >= 2) drawSparkline(svgEl, closes.slice(-20), '#ff6600');
+    if (closes.length >= 2) drawSparkline(svgEl, closes.slice(-20), '#7c4dff');
   });
 }
 
@@ -2131,6 +2199,19 @@ const AUTO_SCAN_INTERVAL = 5 * 60 * 1000;
 let prevAnomalyKeys = new Set();
 let isFirstScan = true;
 
+function updateTickerTape(data) {
+  const track = document.getElementById('ticker-track');
+  if (!track || !data || !data.tickers) return;
+  const items = Object.entries(data.tickers).map(([t, d]) => {
+    if (!d || d.price == null) return '';
+    const chg = d.change_pct ?? 0;
+    const color = chg >= 0 ? 'var(--green)' : 'var(--red)';
+    const arrow = chg >= 0 ? '▲' : '▼';
+    return `<span class="tt-item"><b>${t}</b>$${Number(d.price).toFixed(2)} <span style="color:${color}">${arrow} ${chg >= 0 ? '+' : ''}${Number(chg).toFixed(2)}%</span></span>`;
+  }).filter(Boolean);
+  if (items.length) track.innerHTML = items.join('');
+}
+
 function anomalyKey(a) {
   return `${a.ticker}|${a.type}|${a.severity}`;
 }
@@ -2153,6 +2234,7 @@ async function backgroundScan() {
     const r = await fetch('/scan?tickers=' + encodeURIComponent(AUTO_SCAN_TICKERS));
     const data = await r.json();
     window.lastScanData = data;
+    updateTickerTape(data);
 
     // Re-render scan table if tab is visible
     const scanPanel = document.getElementById('scanner-panel');
