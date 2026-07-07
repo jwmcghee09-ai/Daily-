@@ -5,6 +5,7 @@ dashboard/app.py - FastAPI trading terminal backend
 import os
 import sys
 import json
+import asyncio
 import pathlib
 import httpx
 import yfinance as yf
@@ -143,7 +144,7 @@ async def scan(tickers: str = "AAPL,TSLA,NVDA"):
     if not ticker_list:
         raise HTTPException(status_code=400, detail="No tickers provided")
     try:
-        results = scan_with_summary(ticker_list)
+        results = await asyncio.to_thread(scan_with_summary, ticker_list)
         from datetime import datetime
         save_last_scan({"timestamp": datetime.now().isoformat(), "tickers": ticker_list, "results": results})
         return JSONResponse(content=results)
@@ -156,7 +157,7 @@ async def get_fundamentals(ticker: str):
     """Return fundamental data, analyst targets, earnings dates, and news for a ticker."""
     ticker = ticker.strip().upper()
     try:
-        data = get_ticker_fundamentals(ticker)
+        data = await asyncio.to_thread(get_ticker_fundamentals, ticker)
         return JSONResponse(content=data)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -166,9 +167,16 @@ async def get_fundamentals(ticker: str):
 async def market_overview():
     """Scan index ETFs (SPY, QQQ, EWJ, VTI) and return their summaries."""
     try:
+        summaries = await asyncio.gather(
+            *(asyncio.to_thread(get_ticker_summary, t) for t in INDEX_ETFS),
+            return_exceptions=True,
+        )
         results = {}
-        for ticker in INDEX_ETFS:
-            results[ticker] = get_ticker_summary(ticker)
+        for ticker, summary in zip(INDEX_ETFS, summaries):
+            if isinstance(summary, Exception):
+                results[ticker] = {"error": str(summary)}
+            else:
+                results[ticker] = summary
         return JSONResponse(content=results)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -502,7 +510,6 @@ async def get_prices():
 # Strategy automation (Capitalise.ai-style): plain-English rules -> auto-trade
 # ---------------------------------------------------------------------------
 import uuid
-import asyncio
 from datetime import datetime
 
 STRATEGY_CHECK_INTERVAL = 300  # seconds
@@ -634,7 +641,7 @@ async def evaluate_strategies():
         if not ticker or not entry:
             continue
         try:
-            summary = get_ticker_summary(ticker)
+            summary = await asyncio.to_thread(get_ticker_summary, ticker)
         except Exception as e:
             s["log"].append({"time": datetime.now().isoformat(timespec="seconds"),
                              "event": f"data error: {e}"})
