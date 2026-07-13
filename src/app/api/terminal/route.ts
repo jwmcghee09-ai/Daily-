@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readTradingMemory } from "@/lib/db";
+import { isTerminalRequestAuthorized } from "@/lib/terminal-auth";
 
 export const runtime = "nodejs";
 
@@ -45,10 +46,8 @@ async function yahooQuote(symbol: string): Promise<YahooQuote | null> {
 }
 
 export async function GET(req: NextRequest) {
-  const secret = process.env.TRADING_SECRET;
-  if (secret) {
-    const key = req.headers.get("x-terminal-key");
-    if (key !== secret) return NextResponse.json({ error: "Not authorized" }, { status: 403 });
+  if (!(await isTerminalRequestAuthorized(req))) {
+    return NextResponse.json({ error: "Not authorized — sign in at /signin first" }, { status: 403 });
   }
 
   if (!process.env.ALPACA_API_KEY || !process.env.ALPACA_API_SECRET) {

@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { isTraderSession } from "@/lib/terminal-auth";
 
 export const runtime = "nodejs";
 
@@ -912,7 +913,13 @@ tr:hover td{background:#0e0d1c}
 </body>
 </html>`;
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  if (!(await isTraderSession())) {
+    const host = (request.headers.get("x-forwarded-host") || request.headers.get("host") || "").trim();
+    const proto = (request.headers.get("x-forwarded-proto") || "https").trim() || "https";
+    const base = host ? `${proto}://${host}` : request.url;
+    return NextResponse.redirect(new URL("/signin", base));
+  }
   return new NextResponse(HTML, {
     headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" },
   });

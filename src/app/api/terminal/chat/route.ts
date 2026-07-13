@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { readTradingMemory, writeTradingMemory, insertTradingDecision } from "@/lib/db";
+import { isTerminalRequestAuthorized } from "@/lib/terminal-auth";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -178,10 +179,8 @@ const TOOLS = [
 ];
 
 export async function POST(req: NextRequest) {
-  const secret = process.env.TRADING_SECRET;
-  if (secret) {
-    const key = req.headers.get("x-terminal-key");
-    if (key !== secret) return new Response(JSON.stringify({ error: "Not authorized" }), { status: 403 });
+  if (!(await isTerminalRequestAuthorized(req))) {
+    return new Response(JSON.stringify({ error: "Not authorized — sign in at /signin first" }), { status: 403 });
   }
 
   const groqKey = process.env.GROQ_API_KEY;
