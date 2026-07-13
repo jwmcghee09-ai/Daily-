@@ -636,9 +636,12 @@ export async function GET(request: NextRequest) {
     // Inject Myrmidon terminal inside #dashboard-top (which has data-page="ai"),
     // and hide the original Ask AI widget. switchTab('ai') shows #dashboard-top
     // and everything inside it, so the terminal appears with no extra JS needed.
+    // NOTE: replacement callbacks everywhere dynamic content is injected —
+    // a plain replacement string treats $', $&, $` etc. as special patterns,
+    // which silently corrupted any injected script containing '$' + '...'.
     html = html.replace(
       '  <div class="ai-page-layout">',
-      MYRMIDON_AI_TERMINAL + '\n  <div class="ai-page-layout" style="display:none">',
+      () => MYRMIDON_AI_TERMINAL + '\n  <div class="ai-page-layout" style="display:none">',
     );
     // Rebrand all visible SPECTRE text to Myrmidon for the trader account.
     html = html.replace("<title>SPECTRE — Dashboard</title>", "<title>Myrmidon — Trading Terminal</title>");
@@ -652,7 +655,7 @@ export async function GET(request: NextRequest) {
       '<button type="button" class="nav-tab" data-tab="research">Research</button>\n      <button type="button" class="nav-tab" data-tab="analytics">Analytics</button>',
     );
     // Inject analytics page content after the research section.
-    html = html.replace("<!-- UPLOADS (moved to quant tab) -->", MYRMIDON_ANALYTICS_HTML + "\n<!-- UPLOADS (moved to quant tab) -->");
+    html = html.replace("<!-- UPLOADS (moved to quant tab) -->", () => MYRMIDON_ANALYTICS_HTML + "\n<!-- UPLOADS (moved to quant tab) -->");
     // Server-side preload: fetch analytics data now so the page renders instantly.
     // Hard 4.5s cap — a slow Alpaca/Yahoo must never stall the whole dashboard;
     // the client falls back to fetching /api/trading/analytics itself.
@@ -675,7 +678,7 @@ export async function GET(request: NextRequest) {
       srvStatus = `SERVER: preload skipped (slow upstream) — loading live in browser…`;
     }
     const srvStatusScript = `<script>(function(){var e=document.getElementById('myrm-api-status');if(e)e.textContent=${JSON.stringify(srvStatus)};})();</script>`;
-    html = html.replace("</body>", preloadScript + "\n" + srvStatusScript + "\n" + MYRMIDON_ANALYTICS_SCRIPT + "\n</body>");
+    html = html.replace("</body>", () => preloadScript + "\n" + srvStatusScript + "\n" + MYRMIDON_ANALYTICS_SCRIPT + "\n</body>");
   }
 
   return new NextResponse(html, {
