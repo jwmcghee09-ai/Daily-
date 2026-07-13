@@ -654,9 +654,14 @@ export async function GET(request: NextRequest) {
     // Inject analytics page content after the research section.
     html = html.replace("<!-- UPLOADS (moved to quant tab) -->", MYRMIDON_ANALYTICS_HTML + "\n<!-- UPLOADS (moved to quant tab) -->");
     // Server-side preload: fetch analytics data now so the page renders instantly.
+    // Hard 4.5s cap — a slow Alpaca/Yahoo must never stall the whole dashboard;
+    // the client falls back to fetching /api/trading/analytics itself.
     const hasKey = !!process.env.ALPACA_API_KEY;
     const hasSec = !!process.env.ALPACA_API_SECRET;
-    const preload = await fetchTraderAnalytics();
+    const preload = await Promise.race([
+      fetchTraderAnalytics(),
+      new Promise<null>(resolve => setTimeout(() => resolve(null), 4500)),
+    ]);
     const preloadScript = preload
       ? `<script>window.__MYRM_PRELOAD=${JSON.stringify(preload).replace(/<\/script>/gi, "<\\/script>")};</script>`
       : "";
@@ -667,7 +672,7 @@ export async function GET(request: NextRequest) {
     } else if (preload) {
       srvStatus = `SERVER: keys OK, preloaded ${preload.account ? "account data" : "but account null — check key validity"}`;
     } else {
-      srvStatus = `SERVER: keys set but Alpaca timed out — API unreachable from Render`;
+      srvStatus = `SERVER: preload skipped (slow upstream) — loading live in browser…`;
     }
     const srvStatusScript = `<script>(function(){var e=document.getElementById('myrm-api-status');if(e)e.textContent=${JSON.stringify(srvStatus)};})();</script>`;
     html = html.replace("</body>", preloadScript + "\n" + srvStatusScript + "\n" + MYRMIDON_ANALYTICS_SCRIPT + "\n</body>");
