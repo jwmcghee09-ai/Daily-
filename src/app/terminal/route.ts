@@ -79,6 +79,29 @@ body{background:#000;color:#e8d5a0;font-family:'Courier New',Courier,monospace;f
 .log-row{border-bottom:1px solid #0a0700;padding:4px 0;cursor:pointer;line-height:1.4}
 .log-row:hover{background:#050300}
 .log-exp{display:none;font-size:9px;color:#666;white-space:pre-wrap;word-break:break-word;max-height:100px;overflow-y:auto;padding:4px 0;border-top:1px solid #0a0700;margin-top:3px;line-height:1.55}
+/* strategy panel */
+#strategy-panel{display:none;flex-direction:column;flex-shrink:0;border-top:2px solid #1a1200;height:340px}
+#strategy-panel.sp-open{display:flex}
+#strategy-content{flex:1;overflow-y:auto;padding:6px 8px;font-size:10px}
+.sfield{display:flex;align-items:center;gap:5px;margin-bottom:4px}
+.sfield label{color:#555;font-size:9px;text-transform:uppercase;letter-spacing:.05em;width:88px;flex-shrink:0}
+.sfield select,.sfield input[type=text],.sfield input[type=number]{flex:1;background:#050300;border:1px solid #2a1e00;border-radius:2px;color:#e8d5a0;font-family:'Courier New',monospace;font-size:10px;padding:2px 5px;outline:none;min-width:0}
+.sfield select:focus,.sfield input:focus{border-color:#f90}
+.sfield input[type=checkbox]{accent-color:#f90}
+#strat-custom-prompt{width:100%;background:#050300;border:1px solid #2a1e00;border-radius:2px;color:#e8d5a0;font-family:'Courier New',monospace;font-size:10px;padding:3px 5px;resize:vertical;min-height:40px;outline:none;box-sizing:border-box}
+.sbtn{background:#1a0f00;border:1px solid #f90;border-radius:2px;color:#f90;font-family:'Courier New',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;cursor:pointer}
+.sbtn:hover{background:#2a1800}
+.sbtn:disabled{opacity:.4;cursor:default}
+.sbtn-danger{border-color:#ff4444;color:#ff4444}
+.sbtn-green{border-color:#00e676;color:#00e676}
+.spill{font-size:8px;padding:1px 6px;border-radius:2px;border:1px solid;text-transform:uppercase;letter-spacing:.05em}
+.spill-on{color:#00e676;border-color:#003300;background:#010800}
+.spill-off{color:#555;border-color:#222;background:#050300}
+.spill-auto{color:#ff4444;border-color:#3a0000;background:#0d0000;font-weight:bold}
+.ptrade{border:1px solid #2a1e00;border-radius:3px;padding:4px 6px;margin-bottom:4px;background:#050300}
+.srun{border-bottom:1px solid #0a0700;padding:3px 0;cursor:pointer;line-height:1.4}
+.srun:hover{background:#050300}
+.srun-exp{display:none;font-size:9px;color:#666;white-space:pre-wrap;word-break:break-word;padding:3px 0;line-height:1.5}
 
 /* tables */
 table{width:100%;border-collapse:collapse;font-size:11px}
@@ -115,6 +138,8 @@ tr:hover td{background:#0a0700}
   <span class="fkey" onclick="doRefresh()">F2</span><span class="flabel">REFRESH</span>
   <span class="fkey" onclick="focusChat()">F8</span><span class="flabel">CHAT</span>
   <span class="fkey" onclick="toggleLog()">F9</span><span class="flabel">LOG</span>
+  <span class="fkey" onclick="toggleStrategy()">F10</span><span class="flabel">STRATEGY</span>
+  <span id="strat-status-pill" class="spill spill-off" style="margin-left:4px">BOT OFF</span>
   <div class="right">
     <span id="conn">CONNECTING…</span>
     <span id="clock">UTC 00:00:00</span>
@@ -220,6 +245,10 @@ tr:hover td{background:#0a0700}
     <div id="log-panel">
       <div class="ph" style="font-size:8px">■ DECISION LOG <button onclick="loadLog(true)" style="float:right;background:none;border:none;cursor:pointer;color:#555;font-family:'Courier New',monospace;font-size:8px;text-transform:uppercase;letter-spacing:.05em">↺ REFRESH</button></div>
       <div id="log-content"><span style="color:#333;font-style:italic;font-size:10px">Loading…</span></div>
+    </div>
+    <div id="strategy-panel">
+      <div class="ph" style="font-size:8px">■ AI STRATEGY ENGINE <button onclick="loadStrategy(true)" style="float:right;background:none;border:none;cursor:pointer;color:#555;font-family:'Courier New',monospace;font-size:8px;text-transform:uppercase;letter-spacing:.05em">↺ REFRESH</button></div>
+      <div id="strategy-content"><span style="color:#333;font-style:italic;font-size:10px">Loading…</span></div>
     </div>
   </div>
 </div>
@@ -586,7 +615,7 @@ tr:hover td{background:#0a0700}
         reader.read().then(function(chunk){
           if(chunk.done){finalize();return;}
           buf+=dec.decode(chunk.value,{stream:true});
-          var parts=buf.split('\n\n');buf=parts.pop()||'';
+          var parts=buf.split('\\n\\n');buf=parts.pop()||'';
           parts.forEach(function(part){
             var line=part.trim();
             if(line.slice(0,5)!=='data:')return;
@@ -675,11 +704,172 @@ tr:hover td{background:#0a0700}
   };
   window.loadLog=loadLog;
 
+  // ── STRATEGY ENGINE ──────────────────────────────────────────────────────
+  var stratOpen2=false,stratState=null,stratBusy=false;
+
+  window.toggleStrategy=function(){
+    stratOpen2=!stratOpen2;
+    var panel=$('strategy-panel');
+    if(stratOpen2){panel.classList.add('sp-open');loadStrategy(false);}
+    else panel.classList.remove('sp-open');
+  };
+
+  function stratPill(cfg){
+    var pill=$('strat-status-pill');if(!pill)return;
+    if(!cfg||!cfg.enabled){pill.className='spill spill-off';pill.textContent='BOT OFF';}
+    else if(cfg.autopilot){pill.className='spill spill-auto';pill.textContent='AUTOPILOT';}
+    else{pill.className='spill spill-on';pill.textContent='BOT ON · CONFIRM';}
+  }
+
+  function loadStrategy(force){
+    var content=$('strategy-content');if(!content)return;
+    if(stratState&&!force){renderStrategy2();return;}
+    content.innerHTML='<span style="color:#333;font-style:italic;font-size:10px">Loading…</span>';
+    fetch('/api/trading/strategy').then(function(r){return r.json();}).then(function(data){
+      if(data.error){content.innerHTML='<span style="color:#ff4444">'+esc(data.error)+' — log in on this domain first</span>';return;}
+      stratState=data;stratPill(data.config);renderStrategy2();
+    }).catch(function(e){content.innerHTML='<span style="color:#ff4444">Failed: '+esc(String(e&&e.message||e))+'</span>';});
+  }
+  window.loadStrategy=loadStrategy;
+
+  function selOpt(val,cur,label){return'<option value="'+val+'"'+(val===cur?' selected':'')+'>'+label+'</option>';}
+
+  function renderStrategy2(){
+    var content=$('strategy-content');if(!content||!stratState)return;
+    var c=stratState.config;
+    var h='';
+    // config form
+    h+='<div class="sfield"><label>Mode</label><select id="sp-mode" onchange="spModeChange()">'+
+      selOpt('dip_buyer',c.mode,'DIP BUYER')+selOpt('momentum',c.mode,'MOMENTUM')+
+      selOpt('index_rotator',c.mode,'INDEX ROTATOR')+selOpt('custom',c.mode,'CUSTOM (your own)')+
+      '</select></div>';
+    h+='<div id="sp-custom-wrap" style="display:'+(c.mode==='custom'?'block':'none')+';margin-bottom:4px">'+
+      '<textarea id="strat-custom-prompt" placeholder="Describe your strategy in plain english — e.g. buy semiconductor dips of 4%+, take profit at +10%, never hold through earnings…">'+esc(c.custom_prompt||'')+'</textarea></div>';
+    h+='<div class="sfield"><label>Risk</label><select id="sp-risk">'+
+      selOpt('conservative',c.risk_tolerance,'CONSERVATIVE')+selOpt('balanced',c.risk_tolerance,'BALANCED')+selOpt('aggressive',c.risk_tolerance,'AGGRESSIVE')+
+      '</select></div>';
+    h+='<div class="sfield"><label>Max pos %</label><input type="number" id="sp-maxpos" value="'+c.max_position_pct+'" min="1" max="25">'+
+      '<label style="width:auto">Trades/run</label><input type="number" id="sp-maxtrades" value="'+c.max_trades_per_run+'" min="1" max="10" style="width:44px;flex:none"></div>';
+    h+='<div class="sfield"><label>Daily cap $</label><input type="number" id="sp-dailycap" value="'+c.max_daily_spend_usd+'" min="100" step="500"></div>';
+    h+='<div class="sfield"><label>Watchlist</label><input type="text" id="sp-watchlist" placeholder="empty = any symbol" value="'+esc((c.watchlist||[]).join(','))+'"></div>';
+    h+='<div class="sfield" style="gap:10px">'+
+      '<label style="width:auto;cursor:pointer"><input type="checkbox" id="sp-enabled"'+(c.enabled?' checked':'')+'> ENABLED</label>'+
+      '<label style="width:auto;cursor:pointer"><input type="checkbox" id="sp-autopilot"'+(c.autopilot?' checked':'')+'> AUTOPILOT</label>'+
+      '<label style="width:auto;cursor:pointer"><input type="checkbox" id="sp-mkt-hours"'+(c.market_hours_only?' checked':'')+'> MKT HRS ONLY</label></div>';
+    h+='<div style="display:flex;gap:6px;margin:6px 0 8px"><button class="sbtn" onclick="saveStrategy()" id="sp-save">Save</button>'+
+      '<button class="sbtn sbtn-green" onclick="runStrategyNow()" id="sp-run">▶ Run now</button>'+
+      '<span id="sp-msg" style="color:#555;font-size:9px;align-self:center"></span></div>';
+    h+='<div style="color:#333;font-size:8px;margin-bottom:6px">AUTOPILOT executes instantly. Off = trades queue for 5 min so you can cancel (they fire on the next run/refresh after that). Hard limits enforced in code: 20% cash floor, position cap, daily cap.</div>';
+
+    // pending trades
+    var pend=(stratState.pending||[]).filter(function(t){return t.status==='pending';});
+    var resolved=(stratState.pending||[]).filter(function(t){return t.status!=='pending';}).slice(0,5);
+    h+='<div class="ph" style="font-size:8px;background:none;padding:3px 0">■ PENDING TRADES ('+pend.length+')</div>';
+    if(!pend.length)h+='<div style="color:#333;font-style:italic;padding:2px 0 6px">None queued</div>';
+    pend.forEach(function(t){
+      var due=new Date(t.execute_after).getTime()-Date.now();
+      var dueStr=due>0?'fires in ~'+Math.max(1,Math.round(due/60000))+'m':'due — fires on next run';
+      h+='<div class="ptrade"><span class="'+(t.side==='buy'?'pos':'neg')+'" style="font-weight:bold">'+(t.side==='buy'?'▲ BUY':'▼ SELL')+' '+t.qty+' '+esc(t.symbol)+'</span>'+
+        (t.est_price?' <span class="cyn">@~$'+Number(t.est_price).toFixed(2)+'</span>':'')+
+        ' <span style="color:#555;font-size:9px">'+dueStr+'</span>'+
+        '<div style="color:#666;font-size:9px;margin:2px 0">'+esc(t.reason||'')+'</div>'+
+        '<button class="sbtn sbtn-green" style="font-size:8px;padding:2px 6px" onclick="pendingAction('+t.id+',\\'execute_now\\')">EXEC NOW</button> '+
+        '<button class="sbtn sbtn-danger" style="font-size:8px;padding:2px 6px" onclick="pendingAction('+t.id+',\\'cancel\\')">CANCEL</button></div>';
+    });
+    if(resolved.length){
+      h+='<div style="color:#333;font-size:8px;margin:2px 0">Recent: '+resolved.map(function(t){
+        var col=t.status==='executed'?'#00e676':t.status==='cancelled'?'#555':'#ff4444';
+        return'<span style="color:'+col+'">'+t.side+' '+t.qty+' '+esc(t.symbol)+' ('+t.status+')</span>';
+      }).join(' · ')+'</div>';
+    }
+
+    // recent runs
+    var runs=stratState.runs||[];
+    h+='<div class="ph" style="font-size:8px;background:none;padding:5px 0 3px">■ RUN HISTORY ('+runs.length+')</div>';
+    if(!runs.length)h+='<div style="color:#333;font-style:italic;padding:2px 0">No runs yet — hit ▶ Run now</div>';
+    runs.forEach(function(r,i){
+      var dt=new Date(r.created_at).toLocaleString('en-AU',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+      var col=r.status==='ok'?'#00e676':r.status==='skipped'?'#555':'#ff4444';
+      h+='<div class="srun" onclick="toggleRunEntry(this,'+i+')"><span style="color:#444">'+esc(dt)+'</span> '+
+        '<span style="color:'+col+'">['+esc(r.status)+']</span> <span style="color:#888">'+esc(r.summary||'')+'</span>'+
+        '<div class="srun-exp"></div></div>';
+    });
+    content.innerHTML=h;
+  }
+
+  window.spModeChange=function(){
+    var w=$('sp-custom-wrap'),m=$('sp-mode');
+    if(w&&m)w.style.display=m.value==='custom'?'block':'none';
+  };
+
+  window.toggleRunEntry=function(row,i){
+    var expEl=row.querySelector('.srun-exp');if(!expEl)return;
+    if(expEl.style.display==='block'){expEl.style.display='none';return;}
+    var r=(stratState&&stratState.runs||[])[i];
+    var txt=r?(r.assessment||'(no assessment)'):'?';
+    if(r&&r.actions){try{var acts=JSON.parse(r.actions);if(acts.length)txt+='\\n\\nActions:\\n'+acts.map(function(a){return'- '+(a.verdict==='rejected'?'REJECTED ':'')+(a.side||a.action||'')+' '+(a.qty||'')+' '+(a.symbol||'')+(a.rejected?' — '+a.rejected:'')+(a.reason?' — '+a.reason:'');}).join('\\n');}catch(e6){}}
+    expEl.style.display='block';expEl.textContent=txt;
+  };
+
+  window.saveStrategy=function(){
+    if(stratBusy)return;stratBusy=true;
+    var msg=$('sp-msg');if(msg)msg.textContent='saving…';
+    var body={
+      mode:$('sp-mode').value,
+      custom_prompt:($('strat-custom-prompt')||{value:''}).value,
+      risk_tolerance:$('sp-risk').value,
+      max_position_pct:parseFloat($('sp-maxpos').value)||10,
+      max_trades_per_run:parseInt($('sp-maxtrades').value)||3,
+      max_daily_spend_usd:parseFloat($('sp-dailycap').value)||10000,
+      watchlist:$('sp-watchlist').value.split(',').map(function(s){return s.trim().toUpperCase();}).filter(Boolean),
+      enabled:$('sp-enabled').checked,
+      autopilot:$('sp-autopilot').checked,
+      market_hours_only:$('sp-mkt-hours').checked
+    };
+    fetch('/api/trading/strategy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+    .then(function(r){return r.json();}).then(function(data){
+      stratBusy=false;
+      if(data.error){if(msg)msg.textContent='error: '+data.error;return;}
+      if(stratState)stratState.config=data.config;
+      stratPill(data.config);
+      if(msg)msg.textContent='✓ saved';
+      setTimeout(function(){if(msg)msg.textContent='';},2500);
+    }).catch(function(e){stratBusy=false;if(msg)msg.textContent='failed: '+String(e&&e.message||e);});
+  };
+
+  window.runStrategyNow=function(){
+    if(stratBusy)return;stratBusy=true;
+    var btn=$('sp-run'),msg=$('sp-msg');
+    if(btn){btn.disabled=true;btn.textContent='running…';}
+    if(msg)msg.textContent='AI analysing portfolio…';
+    fetch('/api/trading/strategy/run',{method:'POST'})
+    .then(function(r){return r.json();}).then(function(data){
+      stratBusy=false;
+      if(btn){btn.disabled=false;btn.textContent='▶ Run now';}
+      if(msg)msg.textContent=data.summary||data.error||'done';
+      stratState=null;loadStrategy(true);
+    }).catch(function(e){
+      stratBusy=false;
+      if(btn){btn.disabled=false;btn.textContent='▶ Run now';}
+      if(msg)msg.textContent='failed: '+String(e&&e.message||e);
+    });
+  };
+
+  window.pendingAction=function(id,action){
+    fetch('/api/trading/strategy/pending',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:id,action:action})})
+    .then(function(r){return r.json();}).then(function(){stratState=null;loadStrategy(true);})
+    .catch(function(){stratState=null;loadStrategy(true);});
+  };
+
+  // fetch config once at boot so the topbar pill is accurate
+  fetch('/api/trading/strategy').then(function(r){return r.json();}).then(function(d){if(d&&d.config)stratPill(d.config);}).catch(function(){});
+
   // ── KEYBOARD ─────────────────────────────────────────────────────────────
   document.addEventListener('keydown',function(e){
     if(e.key==='F2'||(e.key==='r'&&e.ctrlKey)){e.preventDefault();window.doRefresh();}
     if(e.key==='F8'){e.preventDefault();window.focusChat();}
     if(e.key==='F9'){e.preventDefault();window.toggleLog();}
+    if(e.key==='F10'){e.preventDefault();window.toggleStrategy();}
   });
 
   load();

@@ -540,6 +540,49 @@ function initSchema(db: DatabaseSync): void {
       cash_usd TEXT,
       outcome_note TEXT NOT NULL DEFAULT ''
     );
+
+    CREATE TABLE IF NOT EXISTS trading_strategy (
+      id TEXT PRIMARY KEY,
+      mode TEXT NOT NULL DEFAULT 'dip_buyer',
+      custom_prompt TEXT NOT NULL DEFAULT '',
+      enabled INTEGER NOT NULL DEFAULT 0,
+      autopilot INTEGER NOT NULL DEFAULT 0,
+      max_position_pct REAL NOT NULL DEFAULT 10,
+      max_trades_per_run INTEGER NOT NULL DEFAULT 3,
+      max_daily_spend_usd REAL NOT NULL DEFAULT 10000,
+      market_hours_only INTEGER NOT NULL DEFAULT 1,
+      risk_tolerance TEXT NOT NULL DEFAULT 'balanced',
+      watchlist TEXT NOT NULL DEFAULT '[]',
+      updated_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS strategy_runs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      created_at TEXT NOT NULL,
+      trigger TEXT NOT NULL DEFAULT 'cron',
+      status TEXT NOT NULL DEFAULT 'ok',
+      summary TEXT NOT NULL DEFAULT '',
+      assessment TEXT NOT NULL DEFAULT '',
+      actions TEXT NOT NULL DEFAULT '[]',
+      model TEXT NOT NULL DEFAULT '',
+      equity_usd TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS pending_trades (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      created_at TEXT NOT NULL,
+      run_id INTEGER,
+      symbol TEXT NOT NULL,
+      side TEXT NOT NULL,
+      qty REAL NOT NULL,
+      est_price REAL,
+      reason TEXT NOT NULL DEFAULT '',
+      status TEXT NOT NULL DEFAULT 'pending',
+      execute_after TEXT NOT NULL,
+      resolved_at TEXT,
+      order_id TEXT,
+      note TEXT NOT NULL DEFAULT ''
+    );
   `);
 
 }
@@ -3747,4 +3790,188 @@ export function listTradingDecisions(limit = 50): TradingDecision[] {
   return db.prepare(
     "SELECT id, created_at, user_message, tool_calls, ai_response, model, equity_usd, cash_usd, outcome_note FROM trading_decisions ORDER BY id DESC LIMIT ?"
   ).all(limit) as TradingDecision[];
+}
+
+// ── Strategy engine ──────────────────────────────────────────────────────────
+
+export type StrategyMode = "dip_buyer" | "momentum" | "index_rotator" | "custom";
+export type RiskTolerance = "conservative" | "balanced" | "aggressive";
+
+export interface TradingStrategyConfig {
+  mode: StrategyMode;
+  custom_prompt: string;
+  enabled: boolean;
+  autopilot: boolean;
+  max_position_pct: number;
+  max_trades_per_run: number;
+  max_daily_spend_usd: number;
+  market_hours_only: boolean;
+  risk_tolerance: RiskTolerance;
+  watchlist: string[];
+  updated_at: string;
+}
+
+interface TradingStrategyRow {
+  mode: string;
+  custom_prompt: string;
+  enabled: number;
+  autopilot: number;
+  max_position_pct: number;
+  max_trades_per_run: number;
+  max_daily_spend_usd: number;
+  market_hours_only: number;
+  risk_tolerance: string;
+  watchlist: string;
+  updated_at: string;
+}
+
+const STRATEGY_MODES: StrategyMode[] = ["dip_buyer", "momentum", "index_rotator", "custom"];
+const RISK_TOLERANCES: RiskTolerance[] = ["conservative", "balanced", "aggressive"];
+
+export function readTradingStrategy(): TradingStrategyConfig | null {
+  const db = getDb();
+  const row = db.prepare(
+    "SELECT mode, custom_prompt, enabled, autopilot, max_position_pct, max_trades_per_run, max_daily_spend_usd, market_hours_only, risk_tolerance, watchlist, updated_at FROM trading_strategy WHERE id = 'active'"
+  ).get() as TradingStrategyRow | undefined;
+  if (!row) return null;
+  let watchlist: string[] = [];
+  try { watchlist = JSON.parse(row.watchlist) as string[]; } catch { watchlist = []; }
+  return {
+    mode: STRATEGY_MODES.includes(row.mode as StrategyMode) ? row.mode as StrategyMode : "dip_buyer",
+    custom_prompt: row.custom_prompt,
+    enabled: row.enabled === 1,
+    autopilot: row.autopilot === 1,
+    max_position_pct: row.max_position_pct,
+    max_trades_per_run: row.max_trades_per_run,
+    max_daily_spend_usd: row.max_daily_spend_usd,
+    market_hours_only: row.market_hours_only === 1,
+    risk_tolerance: RISK_TOLERANCES.includes(row.risk_tolerance as RiskTolerance) ? row.risk_tolerance as RiskTolerance : "balanced",
+    watchlist,
+    updated_at: row.updated_at,
+  };
+}
+
+export function writeTradingStrategy(c: Omit<TradingStrategyConfig, "updated_at">): void {
+  const db = getDb();
+  db.prepare(
+    `INSERT INTO trading_strategy (id, mode, custom_prompt, enabled, autopilot, max_position_pct, max_trades_per_run, max_daily_spend_usd, market_hours_only, risk_tolerance, watchlist, updated_at)
+     VALUES ('active', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+     ON CONFLICT(id) DO UPDATE SET
+       mode=excluded.mode, custom_prompt=excluded.custom_prompt, enabled=excluded.enabled, autopilot=excluded.autopilot,
+       max_position_pct=excluded.max_position_pct, max_trades_per_run=excluded.max_trades_per_run,
+       max_daily_spend_usd=excluded.max_daily_spend_usd, market_hours_only=excluded.market_hours_only,
+       risk_tolerance=excluded.risk_tolerance, watchlist=excluded.watchlist, updated_at=excluded.updated_at`
+  ).run(
+    c.mode, c.custom_prompt.slice(0, 2000), c.enabled ? 1 : 0, c.autopilot ? 1 : 0,
+    c.max_position_pct, c.max_trades_per_run, c.max_daily_spend_usd, c.market_hours_only ? 1 : 0,
+    c.risk_tolerance, JSON.stringify(c.watchlist.slice(0, 30)), new Date().toISOString(),
+  );
+}
+
+export interface StrategyRun {
+  id: number;
+  created_at: string;
+  trigger: string;
+  status: string;
+  summary: string;
+  assessment: string;
+  actions: string;
+  model: string;
+  equity_usd: string | null;
+}
+
+export function insertStrategyRun(r: {
+  trigger: string;
+  status: string;
+  summary: string;
+  assessment: string;
+  actions: unknown[];
+  model: string;
+  equity_usd?: string | null;
+}): number {
+  const db = getDb();
+  const res = db.prepare(
+    "INSERT INTO strategy_runs (created_at, trigger, status, summary, assessment, actions, model, equity_usd) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+  ).run(
+    new Date().toISOString(), r.trigger, r.status, r.summary.slice(0, 1000),
+    r.assessment.slice(0, 4000), JSON.stringify(r.actions), r.model, r.equity_usd ?? null,
+  ) as { lastInsertRowid: number | bigint };
+  return Number(res.lastInsertRowid);
+}
+
+export function listStrategyRuns(limit = 20): StrategyRun[] {
+  const db = getDb();
+  return db.prepare(
+    "SELECT id, created_at, trigger, status, summary, assessment, actions, model, equity_usd FROM strategy_runs ORDER BY id DESC LIMIT ?"
+  ).all(limit) as StrategyRun[];
+}
+
+export interface PendingTrade {
+  id: number;
+  created_at: string;
+  run_id: number | null;
+  symbol: string;
+  side: string;
+  qty: number;
+  est_price: number | null;
+  reason: string;
+  status: string;
+  execute_after: string;
+  resolved_at: string | null;
+  order_id: string | null;
+  note: string;
+}
+
+export function insertPendingTrade(t: {
+  run_id: number | null;
+  symbol: string;
+  side: "buy" | "sell";
+  qty: number;
+  est_price: number | null;
+  reason: string;
+  execute_after: string;
+}): number {
+  const db = getDb();
+  const res = db.prepare(
+    "INSERT INTO pending_trades (created_at, run_id, symbol, side, qty, est_price, reason, status, execute_after) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?)"
+  ).run(new Date().toISOString(), t.run_id, t.symbol, t.side, t.qty, t.est_price, t.reason.slice(0, 500), t.execute_after) as { lastInsertRowid: number | bigint };
+  return Number(res.lastInsertRowid);
+}
+
+export function listPendingTrades(limit = 30): PendingTrade[] {
+  const db = getDb();
+  return db.prepare(
+    "SELECT id, created_at, run_id, symbol, side, qty, est_price, reason, status, execute_after, resolved_at, order_id, note FROM pending_trades ORDER BY id DESC LIMIT ?"
+  ).all(limit) as PendingTrade[];
+}
+
+export function listDuePendingTrades(): PendingTrade[] {
+  const db = getDb();
+  return db.prepare(
+    "SELECT id, created_at, run_id, symbol, side, qty, est_price, reason, status, execute_after, resolved_at, order_id, note FROM pending_trades WHERE status = 'pending' AND execute_after <= ? ORDER BY id ASC"
+  ).all(new Date().toISOString()) as PendingTrade[];
+}
+
+export function getPendingTrade(id: number): PendingTrade | null {
+  const db = getDb();
+  const row = db.prepare(
+    "SELECT id, created_at, run_id, symbol, side, qty, est_price, reason, status, execute_after, resolved_at, order_id, note FROM pending_trades WHERE id = ?"
+  ).get(id) as PendingTrade | undefined;
+  return row ?? null;
+}
+
+export function resolvePendingTrade(id: number, status: "executed" | "cancelled" | "failed" | "expired", note = "", orderId: string | null = null): void {
+  const db = getDb();
+  db.prepare(
+    "UPDATE pending_trades SET status = ?, resolved_at = ?, note = ?, order_id = ? WHERE id = ? AND status = 'pending'"
+  ).run(status, new Date().toISOString(), note.slice(0, 500), orderId, id);
+}
+
+export function sumExecutedBuyNotionalToday(): number {
+  const db = getDb();
+  const today = new Date().toISOString().slice(0, 10);
+  const row = db.prepare(
+    "SELECT COALESCE(SUM(qty * COALESCE(est_price, 0)), 0) AS total FROM pending_trades WHERE side = 'buy' AND status = 'executed' AND resolved_at >= ?"
+  ).get(today + "T00:00:00.000Z") as { total: number };
+  return row.total;
 }
