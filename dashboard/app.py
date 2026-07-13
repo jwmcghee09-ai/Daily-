@@ -505,32 +505,44 @@ async def get_prices():
 
     return result
 
-
 # ---------------------------------------------------------------------------
-# Strategy automation (Capitalise.ai-style): plain-English rules -> auto-trade
+# AI Strategy Profiles: continuous trade management with adaptive risk stops
 # ---------------------------------------------------------------------------
 import uuid
 from datetime import datetime
 
 STRATEGY_CHECK_INTERVAL = 300  # seconds
+MAX_LOG_ENTRIES = 60
 
-STRATEGY_PARSE_PROMPT = (
-    "You convert plain-English trading instructions into a JSON rule. "
-    "Respond with ONLY valid JSON, no markdown, matching this schema:\n"
+DESIGNER_PROMPT = (
+    "You are Spectre's strategy designer. Convert the user's trading idea into a JSON "
+    "strategy profile. Live market context may be provided - use it to pick sensible "
+    "thresholds. Respond with ONLY valid JSON, no markdown fences, matching:\n"
     "{\n"
-    '  "ticker": "AAPL",\n'
-    '  "entry": {"indicator": "rsi|price|change_pct|volume_ratio", "op": "<|>|<=|>=", "value": 30},\n'
-    '  "action": {"side": "buy|sell", "qty": 10},\n'
-    '  "exit": {"take_profit_pct": 5, "stop_loss_pct": 2},\n'
-    '  "summary": "Buy 10 AAPL when RSI drops below 30; exit +5%/-2%"\n'
+    '  "name": "Dip Buyer NVDA",\n'
+    '  "tickers": ["NVDA"],\n'
+    '  "entry": [{"indicator": "rsi|price|change_pct|volume_ratio|momentum_5d|pct_from_52w_high", "op": "<|>|<=|>=", "value": 35}],\n'
+    '  "sizing": {"qty": 5} OR {"dollars": 2000},\n'
+    '  "exits": {\n'
+    '    "atr_mult": 2.0,\n'
+    '    "trail": true,\n'
+    '    "take_profit_pct": 8,\n'
+    '    "tighten_rsi_above": 72,\n'
+    '    "tighten_volume_below": 0.6,\n'
+    '    "tighten_on_high_anomaly": true\n'
+    "  },\n"
+    '  "bucket": "alpha|index",\n'
+    '  "summary": "one sentence describing entry, size, and exit management"\n'
     "}\n"
-    "exit values are optional (use null if not specified). qty defaults to 1 if unspecified. "
-    "If the instruction cannot be expressed in this schema, respond with "
+    "Rules: entry is a list of conditions ANDed together. All exits fields are required "
+    "(pick sensible defaults if the user did not specify: atr_mult 2.0, trail true, "
+    "take_profit_pct 8, tighten_rsi_above 72, tighten_volume_below 0.6, "
+    "tighten_on_high_anomaly true). If the idea cannot be expressed, respond "
     '{"error": "<short reason>"}.'
 )
 
 
-def load_strategies() -> list[dict]:
+def load_strategies() -> list:
     try:
         if STRATEGIES_FILE.exists():
             return json.loads(STRATEGIES_FILE.read_text())
@@ -539,23 +551,44 @@ def load_strategies() -> list[dict]:
     return []
 
 
-def save_strategies(strategies: list[dict]) -> None:
+def save_strategies(strategies: list) -> None:
     STRATEGIES_FILE.parent.mkdir(parents=True, exist_ok=True)
     STRATEGIES_FILE.write_text(json.dumps(strategies, indent=2))
 
 
-async def parse_strategy_text(text: str) -> dict:
-    """Use Groq to convert plain English into a structured rule."""
+def _slog(s: dict, event: str, **extra) -> None:
+    entry = {"time": datetime.now().isoformat(timespec="seconds"), "event": event}
+    entry.update(extra)
+    s.setdefault("log", []).append(entry)
+    s["log"] = s["log"][-MAX_LOG_ENTRIES:]
+
+
+# --- gentle data layer: per-ticker summary cache to avoid hammering Yahoo ---
+_summary_cache = {}
+SUMMARY_TTL = 240  # seconds
+
+
+async def get_summary_cached(ticker: str) -> dict:
+    import time
+    now = time.time()
+    hit = _summary_cache.get(ticker)
+    if hit and now - hit[0] < SUMMARY_TTL:
+        return hit[1]
+    summary = await asyncio.to_thread(get_ticker_summary, ticker)
+    if not summary.get("error"):
+        _summary_cache[ticker] = (now, summary)
+    return summary
+
+
+async def groq_json(system: str, user: str) -> dict:
+    """One-shot Groq call that must return JSON."""
     if not GROQ_API_KEY:
-        return {"error": "GROQ_API_KEY not set - strategy parsing needs Groq"}
+        return {"error": "GROQ_API_KEY not set - the strategy designer needs Groq"}
     headers = {"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"}
     payload = {
         "model": GROQ_MODEL,
-        "messages": [
-            {"role": "system", "content": STRATEGY_PARSE_PROMPT},
-            {"role": "user", "content": text},
-        ],
-        "max_tokens": 300,
+        "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
+        "max_tokens": 700,
         "temperature": 0,
     }
     async with httpx.AsyncClient(timeout=30.0) as client:
@@ -564,30 +597,73 @@ async def parse_strategy_text(text: str) -> dict:
             return {"error": f"Groq HTTP {resp.status_code}"}
         content = resp.json()["choices"][0]["message"]["content"].strip()
         if content.startswith("```"):
-            content = content.strip("`").lstrip("json").strip()
+            content = content.strip("`")
+            if content.startswith("json"):
+                content = content[4:]
         try:
-            return json.loads(content)
+            return json.loads(content.strip())
         except json.JSONDecodeError:
-            return {"error": "Could not parse strategy - try rephrasing"}
+            return {"error": "Could not parse the strategy - try rephrasing"}
 
 
-class StrategyCreate(BaseModel):
+class StrategyDesign(BaseModel):
     text: str
+    draft: Optional[dict] = None
+
+
+@app.post("/strategies/design")
+async def design_strategy(body: StrategyDesign):
+    """Turn a plain-English idea (optionally refining an existing draft) into a profile draft."""
+    user = body.text.strip()
+
+    # Give the designer live risk-signal context for any tickers mentioned
+    context_lines = []
+    scan = load_last_scan()
+    anomalies = (scan.get("results") or {}).get("anomalies", [])
+    if anomalies:
+        context_lines.append("CURRENT ANOMALIES: " + "; ".join(
+            f"{a['ticker']} {a['type']} ({a['severity']})" for a in anomalies[:8]))
+    words = {w.strip(",.").upper() for w in user.split()}
+    for t in list(words)[:4]:
+        if 1 < len(t) <= 5 and t.isalpha():
+            cached = _summary_cache.get(t)
+            if cached:
+                d = cached[1]
+                context_lines.append(
+                    f"{t}: price={d.get('price')} rsi={d.get('rsi')} atr={d.get('atr')} "
+                    f"vol_ratio={d.get('volume_ratio')} mom5d={d.get('momentum_5d')}")
+    prompt = ""
+    if context_lines:
+        prompt += "[MARKET CONTEXT: " + " | ".join(context_lines) + "]\n\n"
+    if body.draft:
+        prompt += "Existing draft to refine:\n" + json.dumps(body.draft) + "\n\nUser adjustment: "
+    prompt += user
+
+    draft = await groq_json(DESIGNER_PROMPT, prompt)
+    if draft.get("error"):
+        return JSONResponse(content=draft, status_code=422)
+    return JSONResponse(content=draft)
+
+
+class StrategyConfirm(BaseModel):
+    profile: dict
 
 
 @app.post("/strategies")
-async def create_strategy(body: StrategyCreate):
-    rule = await parse_strategy_text(body.text.strip())
-    if rule.get("error"):
-        return JSONResponse(content=rule, status_code=422)
+async def create_strategy(body: StrategyConfirm):
+    profile = body.profile
+    if not profile.get("tickers") or not profile.get("entry"):
+        return JSONResponse(content={"error": "Profile needs tickers and entry conditions"}, status_code=422)
     strategy = {
         "id": uuid.uuid4().hex[:8],
-        "text": body.text.strip(),
-        "rule": rule,
+        "profile": profile,
         "active": True,
+        "status": "scanning",
+        "position": None,
         "created": datetime.now().isoformat(timespec="seconds"),
         "log": [],
     }
+    _slog(strategy, f"armed: {profile.get('summary', profile.get('name', ''))}")
     strategies = load_strategies()
     strategies.append(strategy)
     save_strategies(strategies)
@@ -612,63 +688,146 @@ async def toggle_strategy(strategy_id: str):
     for s in strategies:
         if s["id"] == strategy_id:
             s["active"] = not s["active"]
+            _slog(s, "resumed" if s["active"] else "paused")
     save_strategies(strategies)
     return strategies
 
 
-def _condition_met(entry: dict, summary: dict):
-    indicator = entry.get("indicator")
-    op = entry.get("op")
-    target = entry.get("value")
-    current = summary.get(indicator)
-    if current is None or target is None:
-        return False, None
-    ops = {"<": current < target, ">": current > target,
-           "<=": current <= target, ">=": current >= target}
-    return ops.get(op, False), current
+def _entry_met(conditions: list, summary: dict):
+    """All conditions must pass. Returns (met, detail string)."""
+    details = []
+    for c in conditions:
+        cur = summary.get(c.get("indicator"))
+        target = c.get("value")
+        op = c.get("op")
+        if cur is None or target is None:
+            return False, f"{c.get('indicator')} unavailable"
+        ok = {"<": cur < target, ">": cur > target, "<=": cur <= target, ">=": cur >= target}.get(op, False)
+        details.append(f"{c['indicator']}={cur}{op}{target}:{'Y' if ok else 'N'}")
+        if not ok:
+            return False, " ".join(details)
+    return True, " ".join(details)
+
+
+def _risk_deteriorating(exits: dict, summary: dict):
+    """Spectre risk signals: returns list of reasons the stop should tighten."""
+    reasons = []
+    rsi = summary.get("rsi")
+    if rsi is not None and rsi >= exits.get("tighten_rsi_above", 72):
+        reasons.append(f"RSI overheated ({rsi})")
+    vol = summary.get("volume_ratio")
+    if vol is not None and vol <= exits.get("tighten_volume_below", 0.6):
+        reasons.append(f"volume fading ({vol}x)")
+    if exits.get("tighten_on_high_anomaly", True):
+        for a in summary.get("anomalies", []):
+            if a.get("severity") == "HIGH":
+                reasons.append(f"HIGH anomaly: {a.get('type')}")
+                break
+    return reasons
+
+
+async def _manage_strategy(s: dict) -> bool:
+    """One management pass for a strategy. Returns True if state changed."""
+    profile = s.get("profile", {})
+    exits = profile.get("exits", {})
+    changed = False
+
+    if s.get("status") == "scanning":
+        for ticker in profile.get("tickers", []):
+            summary = await get_summary_cached(ticker)
+            if summary.get("error"):
+                continue
+            met, detail = _entry_met(profile.get("entry", []), summary)
+            if not met:
+                continue
+            price = float(summary["price"])
+            atr = float(summary.get("atr") or 0) or price * 0.02
+            sizing = profile.get("sizing", {})
+            qty = float(sizing.get("qty") or 0)
+            if not qty and sizing.get("dollars"):
+                qty = max(1, int(float(sizing["dollars"]) / price))
+            qty = qty or 1
+            result = {"status": "paper-skip: Alpaca keys not configured"}
+            if _alpaca_keys_configured():
+                result = await asyncio.to_thread(
+                    alpaca_trader.place_order,
+                    ticker=ticker, qty=qty, side="buy", order_type="market",
+                )
+            if result.get("error"):
+                _slog(s, f"ENTRY FAILED {ticker}: {result['error']}")
+                changed = True
+                continue
+            stop = price - exits.get("atr_mult", 2.0) * atr
+            s["status"] = "in_position"
+            s["position"] = {
+                "ticker": ticker, "qty": qty, "entry_price": price,
+                "stop": round(stop, 2), "atr": atr, "high_water": price,
+                "opened": datetime.now().isoformat(timespec="seconds"),
+            }
+            _slog(s, f"ENTERED {ticker}: {qty} @ ${price:.2f} ({detail}), initial stop ${stop:.2f}", order=result)
+            changed = True
+            break
+
+    elif s.get("status") == "in_position" and s.get("position"):
+        pos = s["position"]
+        ticker = pos["ticker"]
+        summary = await get_summary_cached(ticker)
+        if summary.get("error"):
+            return False
+        price = float(summary["price"])
+        atr = float(summary.get("atr") or pos.get("atr") or price * 0.02)
+        pos["atr"] = atr
+
+        # Adaptive stop: volatility-scaled, trailing, tightened on risk signals
+        mult = float(exits.get("atr_mult", 2.0))
+        reasons = _risk_deteriorating(exits, summary)
+        if reasons:
+            mult *= 0.5  # risk deteriorating -> halve the leash
+        if exits.get("trail", True):
+            pos["high_water"] = max(pos.get("high_water", price), price)
+        anchor = pos.get("high_water", price) if exits.get("trail", True) else pos["entry_price"]
+        new_stop = round(anchor - mult * atr, 2)
+        if new_stop > pos["stop"]:
+            _slog(s, f"stop {pos['stop']} -> {new_stop}" + (f" (tightened: {'; '.join(reasons)})" if reasons else " (trail)"))
+            pos["stop"] = new_stop
+            changed = True
+
+        take_profit = pos["entry_price"] * (1 + float(exits.get("take_profit_pct", 8)) / 100)
+        exit_reason = None
+        if price <= pos["stop"]:
+            exit_reason = f"stop hit (${price:.2f} <= ${pos['stop']:.2f})"
+        elif price >= take_profit:
+            exit_reason = f"take profit (${price:.2f} >= ${take_profit:.2f})"
+
+        if exit_reason:
+            result = {"status": "paper-skip: Alpaca keys not configured"}
+            if _alpaca_keys_configured():
+                result = await asyncio.to_thread(
+                    alpaca_trader.place_order,
+                    ticker=ticker, qty=pos["qty"], side="sell", order_type="market",
+                )
+            pnl = (price - pos["entry_price"]) * pos["qty"]
+            _slog(s, f"EXITED {ticker}: {exit_reason}, est P&L ${pnl:+.2f}", order=result)
+            s["status"] = "scanning"
+            s["position"] = None
+            changed = True
+
+    return changed
 
 
 async def evaluate_strategies():
-    """Check every active strategy against live data; execute when triggered."""
     strategies = load_strategies()
-    changed = False
+    any_changed = False
     for s in strategies:
         if not s.get("active"):
             continue
-        rule = s.get("rule", {})
-        ticker = rule.get("ticker")
-        entry = rule.get("entry", {})
-        if not ticker or not entry:
-            continue
         try:
-            summary = await asyncio.to_thread(get_ticker_summary, ticker)
+            if await _manage_strategy(s):
+                any_changed = True
         except Exception as e:
-            s["log"].append({"time": datetime.now().isoformat(timespec="seconds"),
-                             "event": f"data error: {e}"})
-            changed = True
-            continue
-        met, current = _condition_met(entry, summary)
-        if not met:
-            continue
-        action = rule.get("action", {})
-        exit_rule = rule.get("exit") or {}
-        result = {"status": "skipped - Alpaca keys not configured"}
-        if _alpaca_keys_configured():
-            result = alpaca_trader.place_order(
-                ticker=ticker,
-                qty=float(action.get("qty", 1)),
-                side=action.get("side", "buy"),
-                order_type="market",
-                stop_loss_pct=exit_rule.get("stop_loss_pct"),
-            )
-        s["active"] = False  # one-shot: disarm after triggering
-        s["log"].append({
-            "time": datetime.now().isoformat(timespec="seconds"),
-            "event": f"TRIGGERED: {entry.get('indicator')}={current} {entry.get('op')} {entry.get('value')}",
-            "order": result,
-        })
-        changed = True
-    if changed:
+            _slog(s, f"manager error: {e}")
+            any_changed = True
+    if any_changed:
         save_strategies(strategies)
 
 

@@ -1031,24 +1031,40 @@ tr:hover td { background: var(--panel); }
   <!-- ══ AUTOMATE ══ -->
   <div class="tab-panel" id="automate-panel" style="overflow-y:auto">
     <div class="port-section">
-      <div class="port-section-title">CREATE STRATEGY <span class="alloc-badge">PLAIN ENGLISH</span></div>
-      <div style="font-size:11px;color:var(--gray);margin-bottom:8px">
-        Describe a rule in plain English and the AI converts it into an automated strategy, monitored every 5 minutes and executed on your Alpaca paper account.
-        E.g. "Buy 10 shares of AAPL if RSI drops below 30, take profit at 5%, stop loss 2%".
+      <div class="port-section-title">Strategy Designer <span class="alloc-badge">AI-managed</span></div>
+      <div style="font-size:12px;color:var(--gray);margin-bottom:10px;line-height:1.6">
+        Describe your strategy in plain English — the AI drafts it using live risk signals, you review it, then arm it.
+        Armed strategies are managed continuously: entries when your conditions hit, volatility-scaled (ATR) trailing stops
+        that tighten automatically when Spectre's risk signals deteriorate, and take-profit exits. Runs on your Alpaca paper account.
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+        <button onclick="usePreset('momentum')">⚡ Momentum Rider</button>
+        <button onclick="usePreset('dip')">▼ Dip Buyer</button>
+        <button onclick="usePreset('rotator')">◔ Index Rotator</button>
       </div>
       <div style="display:flex;gap:8px;align-items:flex-start">
-        <textarea id="strategy-input" rows="2" style="flex:1;resize:vertical" placeholder="Buy 5 NVDA if RSI falls below 35, stop loss 3%"></textarea>
-        <button class="btn-orange" id="strategy-create-btn" onclick="createStrategy()">CREATE</button>
+        <textarea id="strategy-input" rows="2" style="flex:1;resize:vertical" placeholder="Buy $2000 of NVDA when RSI drops below 35 and volume is above average. Trail a 2x ATR stop, take profit at 10%."></textarea>
+        <button class="btn-orange" id="strategy-create-btn" onclick="designStrategy()">DESIGN</button>
       </div>
       <div id="strategy-msg" style="display:none;margin-top:8px;padding:6px 10px;border-radius:8px;font-size:11px"></div>
+      <div id="strategy-draft" style="display:none;margin-top:10px;background:var(--card);border:1px solid var(--accent);border-radius:10px;padding:14px 16px">
+        <div style="font-size:12px;font-weight:600;color:var(--white)" id="draft-name"></div>
+        <div style="font-size:12px;color:var(--gray2);margin-top:6px;line-height:1.6" id="draft-summary"></div>
+        <div style="font-size:11px;color:var(--gray);margin-top:6px;font-family:monospace" id="draft-detail"></div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn-green" onclick="armStrategy()">ARM STRATEGY</button>
+          <button onclick="discardDraft()">DISCARD</button>
+          <span style="font-size:11px;color:var(--gray);align-self:center">…or type an adjustment above and hit DESIGN to refine.</span>
+        </div>
+      </div>
     </div>
     <div class="port-section">
       <div class="port-section-title">
-        ACTIVE STRATEGIES
+        Strategies
         <button onclick="loadStrategies()" style="margin-left:auto">REFRESH</button>
       </div>
       <div id="strategies-list" style="display:flex;flex-direction:column;gap:8px">
-        <span style="color:var(--gray);font-size:11px">LOADING…</span>
+        <span style="color:var(--gray);font-size:11px">Loading…</span>
       </div>
     </div>
   </div><!-- /automate-panel -->
@@ -2250,8 +2266,20 @@ backgroundScan();
 setInterval(backgroundScan, AUTO_SCAN_INTERVAL);
 
 /* ═══════════════════════════════════════════════════════════════
-   AUTOMATE — plain-English strategies
+   AUTOMATE — AI strategy designer + managed strategies
 ═══════════════════════════════════════════════════════════════ */
+let strategyDraft = null;
+
+const STRATEGY_PRESETS = {
+  momentum: "Momentum Rider: buy $1500 of the ticker when 5-day momentum is above 4% and volume ratio is above 1.3. Trail a 2.5x ATR stop, tighten when RSI goes above 75 or a high-severity anomaly appears, take profit at 12%. Ticker: NVDA.",
+  dip: "Dip Buyer: buy $1500 of AAPL when RSI drops below 32. Trail a 2x ATR stop, tighten if volume fades below 0.6x average, take profit at 8%.",
+  rotator: "Index Rotator: buy $3000 of QQQ when its 20-day momentum is above 2% and RSI is below 65. Trail a 1.5x ATR stop, take profit at 6%. This is for my 70% index bucket."
+};
+
+function usePreset(name) {
+  document.getElementById('strategy-input').value = STRATEGY_PRESETS[name] || '';
+}
+
 function showStrategyMsg(ok, text) {
   const el = document.getElementById('strategy-msg');
   el.style.display = 'block';
@@ -2261,20 +2289,49 @@ function showStrategyMsg(ok, text) {
   setTimeout(() => { el.style.display = 'none'; }, 8000);
 }
 
-async function createStrategy() {
+function renderDraft() {
+  const box = document.getElementById('strategy-draft');
+  if (!strategyDraft) { box.style.display = 'none'; return; }
+  const d = strategyDraft;
+  box.style.display = 'block';
+  document.getElementById('draft-name').textContent = (d.name || 'Strategy') + ' — ' + (d.tickers||[]).join(', ') + (d.bucket ? ` (${d.bucket} bucket)` : '');
+  document.getElementById('draft-summary').textContent = d.summary || '';
+  const entry = (d.entry||[]).map(c => `${c.indicator} ${c.op} ${c.value}`).join(' AND ');
+  const sz = d.sizing?.dollars ? `$${d.sizing.dollars}` : `${d.sizing?.qty??1} shares`;
+  const ex = d.exits || {};
+  document.getElementById('draft-detail').textContent =
+    `ENTRY: ${entry}  |  SIZE: ${sz}  |  STOP: ${ex.atr_mult}x ATR${ex.trail?' trailing':''}, tightens on RSI>${ex.tighten_rsi_above} / vol<${ex.tighten_volume_below}x${ex.tighten_on_high_anomaly?' / HIGH anomaly':''}  |  TP: +${ex.take_profit_pct}%`;
+}
+
+async function designStrategy() {
   const input = document.getElementById('strategy-input');
   const text = input.value.trim();
   if (!text) return;
   const btn = document.getElementById('strategy-create-btn');
-  btn.disabled = true; btn.innerHTML = 'PARSING<span class="spinner"></span>';
+  btn.disabled = true; btn.innerHTML = 'DESIGNING<span class="spinner"></span>';
   try {
-    const r = await fetch('/strategies', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({text})});
+    const body = {text};
+    if (strategyDraft) body.draft = strategyDraft;
+    const r = await fetch('/strategies/design', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
     const d = await r.json();
     if (d.error) showStrategyMsg(false, d.error);
-    else { showStrategyMsg(true, 'Strategy armed: ' + (d.rule?.summary || text)); input.value = ''; }
+    else { strategyDraft = d; renderDraft(); input.value = ''; }
+  } catch(e) { showStrategyMsg(false, 'Error: ' + e.message); }
+  btn.disabled = false; btn.textContent = 'DESIGN';
+}
+
+function discardDraft() { strategyDraft = null; renderDraft(); }
+
+async function armStrategy() {
+  if (!strategyDraft) return;
+  try {
+    const r = await fetch('/strategies', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({profile: strategyDraft})});
+    const d = await r.json();
+    if (d.error) { showStrategyMsg(false, d.error); return; }
+    showStrategyMsg(true, 'Armed: ' + (strategyDraft.summary || strategyDraft.name));
+    strategyDraft = null; renderDraft();
     await loadStrategies();
   } catch(e) { showStrategyMsg(false, 'Error: ' + e.message); }
-  btn.disabled = false; btn.textContent = 'CREATE';
 }
 
 async function loadStrategies() {
@@ -2283,37 +2340,43 @@ async function loadStrategies() {
     const r = await fetch('/strategies');
     const strategies = await r.json();
     if (!strategies.length) {
-      list.innerHTML = '<span style="color:var(--gray);font-size:11px">No strategies yet. Create one above.</span>';
+      list.innerHTML = '<span style="color:var(--gray);font-size:11px">No strategies yet. Design one above.</span>';
       return;
     }
     list.innerHTML = '';
     strategies.slice().reverse().forEach(s => {
-      const rule = s.rule || {};
-      const entry = rule.entry || {};
-      const action = rule.action || {};
-      const exit = rule.exit || {};
-      const lastLog = (s.log && s.log.length) ? s.log[s.log.length-1] : null;
-      const triggered = lastLog && String(lastLog.event||'').startsWith('TRIGGERED');
-      const statusColor = triggered ? 'var(--orange)' : s.active ? 'var(--green)' : 'var(--gray)';
-      const statusText = triggered ? 'TRIGGERED' : s.active ? 'ARMED' : 'PAUSED';
+      const p = s.profile || {};
+      const ex = p.exits || {};
+      const pos = s.position;
+      const inPos = s.status === 'in_position' && pos;
+      const statusColor = !s.active ? 'var(--gray)' : inPos ? 'var(--orange)' : 'var(--green)';
+      const statusText = !s.active ? 'PAUSED' : inPos ? 'IN POSITION' : 'SCANNING';
+      const entry = (p.entry||[]).map(c => `${c.indicator} ${c.op} ${c.value}`).join(' AND ');
+      const logs = (s.log||[]).slice(-3).reverse().map(l =>
+        `<div style="font-size:10.5px;color:var(--gray);margin-top:3px">${(l.time||'').replace('T',' ')} — ${l.event}</div>`).join('');
+      const posHtml = inPos ? `
+        <div style="display:flex;gap:18px;margin-top:8px;padding:8px 10px;background:var(--bg2);border-radius:7px;font-size:11.5px">
+          <span><span style="color:var(--gray)">Entry</span> <b style="color:var(--white)">$${Number(pos.entry_price).toFixed(2)}</b></span>
+          <span><span style="color:var(--gray)">Qty</span> <b style="color:var(--white)">${pos.qty}</b></span>
+          <span><span style="color:var(--gray)">Stop</span> <b style="color:var(--red)">$${Number(pos.stop).toFixed(2)}</b></span>
+          <span><span style="color:var(--gray)">High water</span> <b style="color:var(--green)">$${Number(pos.high_water).toFixed(2)}</b></span>
+        </div>` : '';
       const card = document.createElement('div');
-      card.style.cssText = 'background:var(--bg3);border:1px solid var(--border2);border-radius:12px;padding:10px 12px';
+      card.style.cssText = 'background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px';
       card.innerHTML = `
-        <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-weight:700;color:var(--purple2)">${rule.ticker||'?'}</span>
-          <span style="font-size:10px;font-weight:700;letter-spacing:1px;padding:2px 9px;border-radius:999px;border:1px solid ${statusColor};color:${statusColor}">${statusText}</span>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-weight:650;color:var(--white)">${p.name || (p.tickers||[]).join(', ')}</span>
+          <span style="font-size:10px;font-weight:600;padding:2px 9px;border-radius:5px;border:1px solid ${statusColor};color:${statusColor}">${statusText}</span>
+          <span style="font-size:11px;color:var(--gray)">${(p.tickers||[]).join(', ')}</span>
           <span style="margin-left:auto;display:flex;gap:6px">
             <button onclick="toggleStrategy('${s.id}')" style="font-size:10px">${s.active?'PAUSE':'RESUME'}</button>
             <button class="btn-red" onclick="deleteStrategy('${s.id}')" style="font-size:10px">DELETE</button>
           </span>
         </div>
-        <div style="font-size:12px;color:var(--white);margin-top:6px">${rule.summary || s.text}</div>
-        <div style="font-size:10px;color:var(--gray);margin-top:4px">
-          ${(action.side||'').toUpperCase()} ${action.qty??1} when ${entry.indicator} ${entry.op} ${entry.value}
-          ${exit.take_profit_pct!=null?` · TP +${exit.take_profit_pct}%`:''}${exit.stop_loss_pct!=null?` · SL -${exit.stop_loss_pct}%`:''}
-          · created ${s.created?.replace('T',' ')??''}
-        </div>
-        ${lastLog ? `<div style="font-size:10px;color:${triggered?'var(--orange)':'var(--gray)'};margin-top:4px">LAST: ${lastLog.time.replace('T',' ')} — ${lastLog.event}${lastLog.order?(' → '+(lastLog.order.error?('ERROR: '+lastLog.order.error):(lastLog.order.status||JSON.stringify(lastLog.order)))):''}</div>` : ''}
+        <div style="font-size:12px;color:var(--gray2);margin-top:6px">${p.summary || ''}</div>
+        <div style="font-size:10.5px;color:var(--gray);margin-top:4px">ENTRY ${entry} · STOP ${ex.atr_mult}x ATR${ex.trail?' trail':''} · TP +${ex.take_profit_pct}%</div>
+        ${posHtml}
+        ${logs}
       `;
       list.appendChild(card);
     });

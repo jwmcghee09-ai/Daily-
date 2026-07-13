@@ -484,6 +484,18 @@ def get_ticker_summary(ticker: str) -> dict:
             price_20d = float(close.iloc[-21])
             momentum_20d = (today_close - price_20d) / price_20d * 100 if price_20d else 0.0
 
+        # ATR(14) for volatility-scaled stops
+        atr_val = 0.0
+        try:
+            high, low = df["High"], df["Low"]
+            prev_c = close.shift(1)
+            tr = pd.concat([high - low, (high - prev_c).abs(), (low - prev_c).abs()], axis=1).max(axis=1)
+            atr_val = float(tr.rolling(14).mean().iloc[-1])
+            if pd.isna(atr_val):
+                atr_val = 0.0
+        except Exception:
+            atr_val = 0.0
+
         high_52w = float(close.max())
         low_52w = float(close.min())
         pct_from_high = (today_close - high_52w) / high_52w * 100 if high_52w else 0.0
@@ -504,6 +516,7 @@ def get_ticker_summary(ticker: str) -> dict:
             "bb_lower": round(bb_lower_val, 2),
             "momentum_5d": round(momentum_5d, 2),
             "momentum_20d": round(momentum_20d, 2),
+            "atr": round(atr_val, 4),
             "52w_high": round(high_52w, 2),
             "52w_low": round(low_52w, 2),
             "pct_from_52w_high": round(pct_from_high, 2),
