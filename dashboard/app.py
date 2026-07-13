@@ -61,7 +61,8 @@ SYSTEM_PROMPT = (
     "If they ask for analysis or recommendations, be specific: include ticker, BUY/SELL/HOLD, "
     "exact share count and dollar amount, stop-loss level, and which bucket (70% index or 30% alpha). "
     "When analyzing stocks factor in: PEG ratio (prefer <1.5), analyst targets, earnings dates, RSI, volume, news. "
-    "Be concise. Do not recalculate the full portfolio unprompted — only do so when the user asks for a full review."
+    "Be concise. Do not recalculate the full portfolio unprompted — only do so when the user asks for a full review. "
+    "Frame outputs as informational analysis of the data, not personalised financial advice; the user makes and confirms all trading decisions."
 )
 
 INDEX_ETFS = ["SPY", "QQQ", "EWJ", "VTI"]
