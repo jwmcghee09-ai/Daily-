@@ -317,6 +317,7 @@ export default function LandingPage({
           <div className={styles.navLinks}>
             <a href="#features">Features</a>
             <a href="#ai">AI Analysis</a>
+            <a href="#myrmidon">Myrmidon</a>
             <a href="#pricing">Pricing</a>
           </div>
 
@@ -450,9 +451,9 @@ export default function LandingPage({
               { val: "12+", label: "Risk Signals" },
               { val: "500", label: "Monte Carlo Paths" },
               { val: "3", label: "Quant · AI · Research" },
-            ].map(({ val, label }) => (
-              <div key={label} className={styles.statStat}>
-                <div className={styles.statStatVal}>{val}</div>
+            ].map(({ val, label }, index) => (
+              <div key={label} className={`${styles.statStat} ${styles.reveal}`} style={{ transitionDelay: `${index * 0.08}s` }}>
+                <StatCounter value={val} />
                 <div className={styles.statStatLabel}>{label}</div>
               </div>
             ))}
@@ -499,6 +500,62 @@ export default function LandingPage({
                 <Link href="/signin?mode=register&plan=free" className={`${styles.button} ${styles.primaryButton} ${styles.heroButton}`}>
                   Start Asking Free →
                 </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className={styles.myrmidonSection} id="myrmidon">
+        <div className={styles.container}>
+          <div className={styles.myrmidonInner}>
+            <div className={styles.myrmidonCopy}>
+              <div className={`${styles.myrmidonBadge} ${styles.reveal}`}>
+                <span className={styles.myrmidonDot} />
+                Coming Soon
+              </div>
+              <h2 className={`${styles.myrmidonTitle} ${styles.revealUp}`} style={{ transitionDelay: "0.06s" }}>
+                Meet Myrmidon.<br />
+                <span>Your autonomous trading agent.</span>
+              </h2>
+              <p className={`${styles.myrmidonSub} ${styles.reveal}`} style={{ transitionDelay: "0.12s" }}>
+                The next evolution of SPECTRE: an AI agent that watches the market, follows a strategy you
+                describe in plain English, and manages a live portfolio — with every safety limit enforced
+                in code, not left to the model.
+              </p>
+              <ul className={styles.myrmidonList}>
+                {[
+                  ["Strategy modes", "Dip buyer, momentum, index rotator — or write your own rules in a sentence."],
+                  ["Propose & confirm", "Trades queue with a veto window before they fire. Autopilot only when you say so."],
+                  ["Full decision log", "Every run, every reason, every rejected trade — recorded and reviewable."],
+                ].map(([title, copy], index) => (
+                  <li key={title} className={styles.reveal} style={{ transitionDelay: `${0.18 + index * 0.08}s` }}>
+                    <strong>{title}</strong> — {copy}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className={`${styles.myrmidonTerm} ${styles.revealScale}`} style={{ transitionDelay: "0.15s" }}>
+              <div className={styles.myrmidonTermBar}>MYRMIDON // AUTONOMOUS TRADING TERMINAL</div>
+              <div className={styles.myrmidonTermBody}>
+                <div className={`${styles.myrmidonTermLine} ${styles.reveal}`} style={{ transitionDelay: "0.35s" }}>
+                  <span className={styles.myrmidonArmed}>● BOT ARMED</span> dip buyer · balanced risk · confirm mode
+                </div>
+                <div className={`${styles.myrmidonTermLine} ${styles.reveal}`} style={{ transitionDelay: "0.55s" }}>
+                  › Scan complete — SPY 3.2% off recent highs, VIX 16.3 calm
+                </div>
+                <div className={`${styles.myrmidonTermLine} ${styles.myrmidonToolRow} ${styles.reveal}`} style={{ transitionDelay: "0.75s" }}>
+                  <span className={styles.myrmidonTool}>get positions ✓</span>
+                  <span className={styles.myrmidonTool}>get macro ✓</span>
+                  <span className={styles.myrmidonTool}>risk check ✓</span>
+                </div>
+                <div className={`${styles.myrmidonTermLine} ${styles.myrmidonTrade} ${styles.reveal}`} style={{ transitionDelay: "0.95s" }}>
+                  <span className={styles.myrmidonBuy}>▲ BUY 12 SPY</span> @ ~$735 · queued — fires in 5 min unless cancelled
+                </div>
+                <div className={`${styles.myrmidonTermLine} ${styles.reveal}`} style={{ transitionDelay: "1.15s" }}>
+                  09:42 decision logged · cash floor 20% respected · 2 proposals rejected by guardrails
+                </div>
               </div>
             </div>
           </div>
@@ -1009,6 +1066,44 @@ export default function LandingPage({
 
 function Divider() {
   return <hr className={styles.divider} />;
+}
+
+function StatCounter({ value }: { value: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const match = value.match(/^(\d+)(.*)$/);
+    if (!match) return;
+    const target = parseInt(match[1], 10);
+    const suffix = match[2] ?? "";
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries[0]?.isIntersecting) return;
+        observer.disconnect();
+        const started = performance.now();
+        const duration = 1200;
+        const tick = (now: number) => {
+          const p = Math.min((now - started) / duration, 1);
+          const eased = 1 - Math.pow(1 - p, 3);
+          el.textContent = String(Math.round(target * eased)) + suffix;
+          if (p < 1) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      },
+      { threshold: 0.6 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [value]);
+
+  return (
+    <div ref={ref} className={styles.statStatVal}>
+      {value}
+    </div>
+  );
 }
 
 function StatCard({
