@@ -5,7 +5,7 @@ const isProd = process.env.NODE_ENV === "production";
 const contentSecurityPolicy = [
   "default-src 'self'",
   "base-uri 'self'",
-  "frame-ancestors 'none'",
+  "frame-ancestors 'self'",
   "object-src 'none'",
   "form-action 'self' https://checkout.stripe.com",
   `script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com https://connect.facebook.net${isProd ? "" : " 'unsafe-eval'"}`,
@@ -15,13 +15,13 @@ const contentSecurityPolicy = [
   isProd
     ? "connect-src 'self' https://api.stripe.com https://checkout.stripe.com https://*.ingest.sentry.io https://*.sentry.io https://cloudflareinsights.com https://www.facebook.com https://connect.facebook.net"
     : "connect-src 'self' http: https: ws: wss:",
-  "frame-src https://checkout.stripe.com",
+  "frame-src 'self' https://checkout.stripe.com",
   "upgrade-insecure-requests",
 ].join("; ");
 
 const securityHeaders: Array<{ key: string; value: string }> = [
   { key: "Content-Security-Policy", value: contentSecurityPolicy },
-  { key: "X-Frame-Options", value: "DENY" },
+  { key: "X-Frame-Options", value: "SAMEORIGIN" },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
