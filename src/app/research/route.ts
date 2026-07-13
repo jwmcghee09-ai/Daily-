@@ -5,17 +5,33 @@ import { getAuthenticatedUser } from "@/lib/auth";
 
 export const runtime = "nodejs";
 
+const TRADER_EMAIL = "jwmcghee09@gmail.com";
+
 export async function GET(request: NextRequest) {
   const isDemo = request.nextUrl.searchParams.get("demo") === "1";
+  let isTrader = false;
   if (!isDemo) {
     const user = await getAuthenticatedUser();
     if (!user) {
       return NextResponse.redirect(buildRedirectUrl(request, "/signin"));
     }
+    isTrader = user.email === TRADER_EMAIL;
     // No hard gate — free/none users see a limited preview via client-side gating
   }
 
-  const html = await fs.readFile(path.join(process.cwd(), "public", "spectre-market-research-v1.html"), "utf8");
+  let html = await fs.readFile(path.join(process.cwd(), "public", "spectre-market-research-v1.html"), "utf8");
+
+  if (isTrader) {
+    // Keep the header identical to the dashboard for the trader:
+    // Quant / AI / Research / Analytics, with Myrmidon branding.
+    html = html.replace(
+      '<span class="nav-tab-link nav-tab-link-active">Research</span>',
+      () => '<span class="nav-tab-link nav-tab-link-active">Research</span>\n      <a href="/dashboard?tab=analytics" class="nav-tab-link">Analytics</a>',
+    );
+    html = html.replace("<title>SPECTRE — ASX Market Terminal</title>", "<title>Myrmidon — ASX Market Terminal</title>");
+    html = html.replace('id="nav-home-logo" style="text-decoration:none;">SPECTRE</a>', 'id="nav-home-logo" style="text-decoration:none;">Myrmidon</a>');
+  }
+
   return new NextResponse(html, {
     headers: {
       "Content-Type": "text/html; charset=utf-8",
