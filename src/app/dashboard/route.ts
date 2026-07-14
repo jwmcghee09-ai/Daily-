@@ -61,16 +61,15 @@ const MYRMIDON_ANALYTICS_HTML = `<!-- MYRMIDON ANALYTICS PAGE -->
       </div>
     </div>
 
-    <!-- Macro ticker -->
-    <div class="myrm-macro-bar" id="myrm-macro-bar">
-      <div class="myrm-mkt"><span class="myrm-mkt-sym">VIX</span><span class="myrm-mkt-val" id="ma-vix">—</span><span class="myrm-mkt-chg" id="ma-vix-c"></span></div>
-      <div class="myrm-mkt"><span class="myrm-mkt-sym">S&amp;P 500</span><span class="myrm-mkt-val" id="ma-spx">—</span><span class="myrm-mkt-chg" id="ma-spx-c"></span></div>
-      <div class="myrm-mkt"><span class="myrm-mkt-sym">Nasdaq</span><span class="myrm-mkt-val" id="ma-ndx">—</span><span class="myrm-mkt-chg" id="ma-ndx-c"></span></div>
-      <div class="myrm-mkt"><span class="myrm-mkt-sym">10Y</span><span class="myrm-mkt-val" id="ma-10y">—</span><span class="myrm-mkt-chg" id="ma-10y-c"></span></div>
-      <div class="myrm-mkt"><span class="myrm-mkt-sym">Gold</span><span class="myrm-mkt-val" id="ma-gld">—</span><span class="myrm-mkt-chg" id="ma-gld-c"></span></div>
-      <div class="myrm-mkt"><span class="myrm-mkt-sym">Oil WTI</span><span class="myrm-mkt-val" id="ma-oil">—</span><span class="myrm-mkt-chg" id="ma-oil-c"></span></div>
-      <div class="myrm-mkt"><span class="myrm-mkt-sym">BTC</span><span class="myrm-mkt-val" id="ma-btc">—</span><span class="myrm-mkt-chg" id="ma-btc-c"></span></div>
-      <div class="myrm-mkt"><span class="myrm-mkt-sym">AUD/USD</span><span class="myrm-mkt-val" id="ma-aud">—</span><span class="myrm-mkt-chg" id="ma-aud-c"></span></div>
+    <!-- Ticker search (macro ticker removed — duplicated the scrolling nav tape) -->
+    <div class="myrm-dark-card" style="margin-bottom:1rem">
+      <div class="myrm-section-label">Ticker Search — any US symbol</div>
+      <form onsubmit="myrmTickerSearch(event)" style="display:flex;gap:.6rem;margin-bottom:.4rem">
+        <input id="myrm-ticker-input" placeholder="e.g. NVDA, TSLA, SPY…" autocomplete="off"
+          style="flex:1;max-width:280px;background:rgba(255,255,255,.05);border:1px solid rgba(167,139,250,.25);border-radius:6px;color:#fff;font-family:monospace;font-size:.85rem;letter-spacing:.06em;text-transform:uppercase;padding:.5rem .8rem;outline:none" />
+        <button type="submit" id="myrm-ticker-btn" style="font-family:monospace;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:#a78bfa;background:rgba(167,139,250,.12);border:1px solid rgba(167,139,250,.3);border-radius:6px;padding:.5rem 1.1rem;cursor:pointer">Search</button>
+      </form>
+      <div id="myrm-ticker-result"><span style="font-family:monospace;font-size:.62rem;color:rgba(167,139,250,.4)">Search a ticker for a 90-day chart, live stats, RSI and trend read.</span></div>
     </div>
 
     <!-- Risk signals -->
@@ -566,6 +565,65 @@ window.addEventListener('error',function(ev){
   // Refresh button + programmatic access
   window.myrmLoadAnalytics = loadAnalytics;
   window.myrmRefreshAnalytics = function(){ loading=false; dataLoadedAt=0; loadAnalytics(); };
+
+  // ── Ticker search ──
+  var tickerBusy=false;
+  window.myrmTickerSearch=function(ev){
+    if(ev&&ev.preventDefault)ev.preventDefault();
+    if(tickerBusy)return;
+    var inp=document.getElementById('myrm-ticker-input');
+    var out=document.getElementById('myrm-ticker-result');
+    var btn=document.getElementById('myrm-ticker-btn');
+    if(!inp||!out)return;
+    var sym=String(inp.value||'').trim().toUpperCase().replace(/[^A-Z.]/g,'');
+    if(!sym){out.innerHTML='<span style="font-family:monospace;font-size:.62rem;color:#f87171">Enter a ticker symbol</span>';return;}
+    tickerBusy=true;if(btn){btn.disabled=true;btn.textContent='…';}
+    out.innerHTML='<span style="font-family:monospace;font-size:.62rem;color:rgba(167,139,250,.5)">Loading '+sym+'…</span>';
+    fetch('/api/trading/chart?symbol='+encodeURIComponent(sym)+'&days=90')
+      .then(function(r){return r.json();})
+      .then(function(d){
+        tickerBusy=false;if(btn){btn.disabled=false;btn.textContent='Search';}
+        var bars=(d&&d.bars)||[];
+        if(bars.length<5){out.innerHTML='<span style="font-family:monospace;font-size:.62rem;color:#f87171">No data for '+sym+' — check the symbol (US listings only)</span>';return;}
+        var last=bars[bars.length-1],first=bars[0];
+        var chg=first.close>0?(last.close-first.close)/first.close*100:0;
+        var dayChg=bars.length>1&&bars[bars.length-2].close>0?(last.close-bars[bars.length-2].close)/bars[bars.length-2].close*100:0;
+        var hi=Math.max.apply(null,bars.map(function(b){return b.high;}));
+        var lo=Math.min.apply(null,bars.map(function(b){return b.low;}));
+        var rsi=last.rsi,rsiCol=rsi==null?'#666':rsi>70?'#f87171':rsi<30?'#4ade80':'#a78bfa';
+        var trendUp=last.ema50!=null&&last.ema200!=null?last.ema50>last.ema200:null;
+        var cCol=chg>=0?'#4ade80':'#f87171';
+        function stat(l,v,c){return '<div style="min-width:100px"><div style="font-family:monospace;font-size:.5rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(167,139,250,.45);margin-bottom:.15rem">'+l+'</div><div style="font-family:monospace;font-size:.95rem;font-weight:600;color:'+(c||'#fff')+'">'+v+'</div></div>';}
+        var html='<div style="display:flex;flex-wrap:wrap;gap:1.2rem;align-items:flex-end;margin:.4rem 0 .8rem">'+
+          '<div><div style="font-family:monospace;font-size:1.5rem;font-weight:700;color:#fff">'+sym+' <span style="font-size:1.1rem">$'+last.close.toFixed(2)+'</span></div>'+
+          '<div style="font-family:monospace;font-size:.62rem;color:'+(dayChg>=0?'#4ade80':'#f87171')+'">'+(dayChg>=0?'+':'')+dayChg.toFixed(2)+'% today</div></div>'+
+          stat('90d change',(chg>=0?'+':'')+chg.toFixed(1)+'%',cCol)+
+          stat('90d range','$'+lo.toFixed(2)+' – $'+hi.toFixed(2))+
+          stat('RSI 14',rsi!=null?rsi.toFixed(1)+(rsi>70?' overbought':rsi<30?' oversold':''):'—',rsiCol)+
+          stat('Trend',trendUp==null?'—':trendUp?'EMA50 > EMA200 · uptrend':'EMA50 < EMA200 · downtrend',trendUp==null?'#666':trendUp?'#4ade80':'#f87171')+
+          '</div>';
+        // 90-day close sparkline
+        var W=800,H=140,PX=6,PY=10;
+        var vals=bars.map(function(b){return b.close;});
+        var vlo=Math.min.apply(null,vals)*0.998,vhi=Math.max.apply(null,vals)*1.002,rng=vhi-vlo||1;
+        var tx=function(i){return PX+(i/(vals.length-1))*(W-PX*2);};
+        var ty=function(v){return H-PY-((v-vlo)/rng)*(H-PY*2);};
+        var pts=vals.map(function(v,i){return tx(i)+','+ty(v);}).join(' L ');
+        var lc=chg>=0?'#4ade80':'#f87171';
+        html+='<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:140px;display:block" preserveAspectRatio="none">'+
+          '<defs><linearGradient id="tsg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+lc+'" stop-opacity="0.16"/><stop offset="100%" stop-color="'+lc+'" stop-opacity="0.01"/></linearGradient></defs>'+
+          '<path d="M '+pts+' L '+tx(vals.length-1)+','+(H-PY)+' L '+tx(0)+','+(H-PY)+' Z" fill="url(#tsg)"/>'+
+          '<path d="M '+pts+'" fill="none" stroke="'+lc+'" stroke-width="2" stroke-linejoin="round"/>'+
+          '<circle cx="'+tx(vals.length-1)+'" cy="'+ty(vals[vals.length-1])+'" r="3.5" fill="'+lc+'"/>'+
+          '<text x="'+PX+'" y="'+(H-2)+'" font-family="monospace" font-size="8" fill="rgba(167,139,250,.45)">'+String(first.date||'').slice(5)+'</text>'+
+          '<text x="'+(W-PX)+'" y="'+(H-2)+'" font-family="monospace" font-size="8" fill="rgba(167,139,250,.45)" text-anchor="end">'+String(last.date||'').slice(5)+'</text></svg>';
+        out.innerHTML=html;
+      })
+      .catch(function(e){
+        tickerBusy=false;if(btn){btn.disabled=false;btn.textContent='Search';}
+        out.innerHTML='<span style="font-family:monospace;font-size:.62rem;color:#f87171">Failed: '+String(e&&e.message||e)+'</span>';
+      });
+  };
 })();
 </script>`;
 
