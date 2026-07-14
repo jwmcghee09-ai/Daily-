@@ -14,8 +14,26 @@ const MYRMIDON_AI_TERMINAL = `<!-- MYRMIDON AI terminal (embeds /terminal) -->
     <span style="font-family:monospace;font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:#a78bfa">Myrmidon — Autonomous Trading Agent</span>
     <a href="/terminal" target="_blank" style="font-family:monospace;font-size:.56rem;letter-spacing:.1em;text-transform:uppercase;color:#a78bfa;background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.25);border-radius:5px;padding:.3rem .8rem;text-decoration:none">Open full screen ↗</a>
   </div>
-  <iframe src="/terminal" title="Myrmidon Terminal" style="width:100%;height:calc(100vh - 220px);min-height:540px;border:1px solid rgba(167,139,250,.25);border-radius:10px;background:#000;display:block"></iframe>
-</div>`;
+  <iframe id="myrm-terminal-frame" data-src="/terminal" title="Myrmidon Terminal" style="width:100%;height:calc(100vh - 220px);min-height:540px;border:1px solid rgba(167,139,250,.25);border-radius:10px;background:#000;display:block"></iframe>
+</div>
+<script>(function(){
+  // Lazy-load the terminal only when the AI tab is actually opened —
+  // otherwise every dashboard visit paid for a full Alpaca fetch it never showed.
+  var armed=false;
+  function arm(){
+    if(armed)return;armed=true;
+    var f=document.getElementById('myrm-terminal-frame');
+    if(f&&!f.src)f.src=f.getAttribute('data-src');
+  }
+  if(new URLSearchParams(location.search).get('tab')==='ai')arm();
+  document.addEventListener('click',function(e){
+    var t=e.target;
+    while(t&&t!==document){
+      if(t.getAttribute&&t.getAttribute('data-tab')==='ai'){arm();break;}
+      t=t.parentElement;
+    }
+  },true);
+})();</script>`;
 
 const MYRMIDON_ANALYTICS_HTML = `<!-- MYRMIDON ANALYTICS PAGE -->
 <style>

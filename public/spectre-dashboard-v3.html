@@ -434,8 +434,8 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;background:rgba(233,228,246,
 .window-tabs{display:flex;gap:2px;background:rgba(100,80,200,.06);border:1px solid var(--border);border-radius:8px;padding:3px}
 .wtab{font-family:var(--mono);font-size:.56rem;letter-spacing:.1em;text-transform:uppercase;padding:.28rem .7rem;border-radius:5px;cursor:pointer;color:var(--muted);transition:all .2s;border:none;background:none}
 .wtab.active{background:linear-gradient(135deg,var(--purple) 0%,var(--purple-hi) 46%,var(--orange) 100%);color:#fff;box-shadow:0 4px 14px rgba(255,122,48,.24)}
-.risk-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem}
-.risk-grid.starter-layout{grid-template-columns:repeat(3,1fr)}
+.risk-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.7rem}
+.risk-grid.starter-layout{grid-template-columns:repeat(3,minmax(0,1fr))}
 .risk-card{background:linear-gradient(180deg,#1e1836 0%,#160f2a 100%);padding:1.4rem 1.6rem;transition:all .24s;position:relative;border:1px solid rgba(255,255,255,.07);border-radius:var(--radius)}
 .risk-card:hover{background:linear-gradient(180deg,#231d3e,#1a1230)}
 .risk-lbl{font-family:var(--mono);font-size:.52rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted-dark,#9890b8);margin-bottom:.35rem;display:flex;align-items:center;justify-content:space-between}
@@ -513,8 +513,8 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;background:rgba(233,228,246,
   color:#b03010;
 }
 @media(max-width:860px){
-  .risk-grid{grid-template-columns:repeat(2,1fr)}
-  .risk-grid.starter-layout{grid-template-columns:repeat(2,1fr)}
+  .risk-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .risk-grid.starter-layout{grid-template-columns:repeat(2,minmax(0,1fr))}
   .risk-help-tip{left:0;right:auto;width:min(260px,84vw)}
 }
 
@@ -1191,6 +1191,8 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
   #export-csv-btn{display:none!important}
   .nav-user{display:none!important}
 }
+
+@media(max-width:900px){html,body{overflow-x:hidden}.risk-help-tip{max-width:calc(100vw - 48px)}}
 </style>
 </head>
 <body class="boot-pending">

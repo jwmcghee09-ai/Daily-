@@ -11,7 +11,8 @@ export async function GET(request: NextRequest) {
   if (!user || user.email !== TRADER_EMAIL) {
     return NextResponse.json({ error: "Not authorized" }, { status: 403 });
   }
-  const limit = Math.min(Number(request.nextUrl.searchParams.get("limit") ?? "50"), 200);
+  const raw = Number(request.nextUrl.searchParams.get("limit") ?? "50");
+  const limit = Number.isFinite(raw) ? Math.min(Math.max(Math.trunc(raw), 1), 200) : 50;
   const decisions = listTradingDecisions(limit);
   return NextResponse.json({ decisions });
 }

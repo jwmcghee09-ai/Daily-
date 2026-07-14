@@ -8,10 +8,10 @@ const contentSecurityPolicy = [
   "frame-ancestors 'self'",
   "object-src 'none'",
   "form-action 'self' https://checkout.stripe.com",
-  `script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com https://connect.facebook.net${isProd ? "" : " 'unsafe-eval'"}`,
-  "style-src 'self' 'unsafe-inline'",
+  `script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com https://connect.facebook.net https://cdn.jsdelivr.net${isProd ? "" : " 'unsafe-eval'"}`,
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "img-src 'self' data: blob: https:",
-  "font-src 'self' data:",
+  "font-src 'self' data: https://fonts.gstatic.com",
   isProd
     ? "connect-src 'self' https://api.stripe.com https://checkout.stripe.com https://*.ingest.sentry.io https://*.sentry.io https://cloudflareinsights.com https://www.facebook.com https://connect.facebook.net"
     : "connect-src 'self' http: https: ws: wss:",

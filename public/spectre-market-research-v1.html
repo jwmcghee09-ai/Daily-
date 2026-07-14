@@ -2846,7 +2846,8 @@ h3 { font-size: 1.15rem; }
 .hero-lock-overlay .lock-icon { font-size: 1.2rem; }
 .hero-lock-overlay .lock-label { font-size: .62rem; color: #a855f7; font-weight: 600; letter-spacing: .06em; }
 
-.table-blur-wrap { position: relative; }
+.table-blur-wrap { position: relative; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.table-blur-wrap table { min-width: 560px; }
 .table-blur-mask {
   display: none; position: absolute; bottom: 0; left: 0; right: 0; height: 160px;
   background: linear-gradient(transparent, var(--sl-bg) 80%);
@@ -3321,6 +3322,8 @@ html.starter-mode .hero-lock-wrap       { display: none !important; }
   #nav-market-status{font-size:.54rem!important;padding:2px 8px!important}
 }
 
+
+@media(max-width:900px){html,body{overflow-x:hidden}}
 </style>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 </head>
