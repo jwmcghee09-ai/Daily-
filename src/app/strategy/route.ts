@@ -120,10 +120,14 @@ a{color:inherit;text-decoration:none}
       <div class="card-b">
         <div id="banner" class="sbanner sbanner-off">Loading configuration…</div>
 
-        <div class="ssec"><span class="snum">1</span> Pick the strategy the AI follows</div>
-        <div class="mode-grid" id="mode-grid"></div>
-        <div id="custom-wrap">
-          <textarea id="custom-prompt" placeholder="Describe your strategy in plain english — e.g. Buy semiconductor stocks on dips of 4% or more. Take profit at +10%. Max 2 trades a day. Never buy anything that reported earnings this week."></textarea>
+        <div class="ssec"><span class="snum">1</span> Write your strategy — in your own words</div>
+        <div style="font-size:12px;color:#999;line-height:1.6;margin-bottom:10px">Myrmidon follows exactly what you write here, every run. Be as specific as you like — entries, exits, position sizes, symbols to avoid, when to sit out. <span style="color:#c4b5fd">You author it, the AI executes it.</span></div>
+        <div id="custom-wrap" style="display:block;margin-top:0">
+          <textarea id="custom-prompt" placeholder="e.g. Buy quality tech stocks when they fall 4% or more from their recent high. Sell any position that gains 10%. Keep positions under 5% of the account. Never trade in the first 30 minutes after open. If VIX is above 25, do nothing."></textarea>
+        </div>
+        <div style="margin-top:10px">
+          <div style="font-size:10px;color:#777;text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px">Need a starting point? Insert a template, then edit it until it's yours:</div>
+          <div class="seg" id="tpl-row"></div>
         </div>
 
         <div class="ssec"><span class="snum">2</span> Risk tolerance</div>
@@ -160,7 +164,7 @@ a{color:inherit;text-decoration:none}
         Each run, Myrmidon pulls your live account, positions, open orders and risk signals, then asks the AI what — if anything — your strategy calls for.
         Every proposal passes through the safety limits above <span style="color:#c4b5fd">in code</span>; anything that violates them is rejected and logged with the reason.
         With AUTOPILOT off, accepted trades queue for <span style="color:#c4b5fd">5 minutes</span> so you can cancel, then fire on the next run.
-        Schedule runs by pointing a cron at <span style="color:#38bdf8">/api/internal/ops/strategy-run</span> with your cron token, or press ▶ Run now anytime.
+        Schedule runs by pointing a cron at <span style="color:#38bdf8">/api/internal/ops/strategy-run</span> with your cron token, or press ▶ Run now anytime.<div style="margin-top:12px;border-top:1px solid #211f38;padding-top:10px;font-size:11px;color:#666;line-height:1.7">You write the strategy; Myrmidon executes your instructions within the hard safety limits. Nothing here is financial advice or a recommendation — strategy outcomes are your responsibility. This is a paper trading account.</div>
       </div>
     </div>
   </div>
@@ -184,11 +188,11 @@ a{color:inherit;text-decoration:none}
   function $(id){return document.getElementById(id);}
   function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
-  var MODES=[
-    {key:'dip_buyer',name:'DIP BUYER',desc:'Buys quality names on real pullbacks (3%+ off recent highs), takes profit into strength at +8-15%. Patient — proposes nothing when there is no dip.'},
-    {key:'momentum',name:'MOMENTUM',desc:'Buys strength and breakouts, cuts losers fast, adds to winners only. Stands aside entirely when VIX is elevated or the market is falling.'},
-    {key:'index_rotator',name:'INDEX ROTATOR',desc:'Only trades SPY / QQQ / VEA and broad ETFs. Rebalances toward your 40/20/15 core targets — trims what is over, adds what is under.'},
-    {key:'custom',name:'CUSTOM — YOUR RULES',desc:'Follows YOUR strategy exactly as you describe it, in plain english. The AI reads it every run and acts only on what you wrote.'}
+  var TEMPLATES=[
+    {name:'Dip buyer',text:'Buy quality large-cap names when they have pulled back 3% or more from their recent high. Take profit when a position is up 8-15%. Be patient — if nothing has genuinely dipped, do nothing this run. Never buy anything that is up strongly today.'},
+    {name:'Momentum',text:'Buy stocks showing strength — breaking out or trending strongly with the broad market supportive. Cut any loser quickly. Add to winners, never to losers. If VIX is above 20 or the S&P is down more than 1% today, sit out entirely.'},
+    {name:'Index rebalancer',text:'Only trade SPY, QQQ, VEA and broad sector ETFs. Rebalance toward these targets: SPY 40% of equity, QQQ 20%, VEA 15%. Trim whatever is more than 5% over its target and add to whatever is under, preferring to sell strength and buy weakness. Do not trade single stocks.'},
+    {name:'Cautious income',text:'Prioritise capital preservation. Only buy broad ETFs (SPY, VEA, XLV, XLP) on down days of 1.5% or more, in small sizes of 2-3% of equity. Take profit at +6%. If any position is down 8%, sell it. Hold at least 30% cash at all times.'}
   ];
   var RISKS=[
     {key:'conservative',name:'Conservative',note:'Small position sizes (1-3% of equity per trade), only high-conviction setups, prefers holding cash over marginal trades.'},
@@ -196,7 +200,7 @@ a{color:inherit;text-decoration:none}
     {key:'aggressive',name:'Aggressive',note:'Larger sizes up to the per-position cap, acts decisively — still respects every hard limit.'}
   ];
 
-  var state={mode:'dip_buyer',risk:'balanced',pending:[],runs:[]};
+  var state={risk:'balanced',pending:[],runs:[]};
   var busy=false;
 
   function pill(cfg){
@@ -213,14 +217,17 @@ a{color:inherit;text-decoration:none}
     else{b.className='sbanner sbanner-on';b.innerHTML='● <b>BOT ARMED</b> — every run the AI reviews your portfolio and queues trades for 5 minutes so you can cancel before they fire.';}
   }
 
-  function renderModes(){
-    $('mode-grid').innerHTML=MODES.map(function(m){
-      return '<div class="mode-card'+(state.mode===m.key?' sel':'')+'" onclick="pickMode(\\''+m.key+'\\')">'+
-        '<div class="mode-name">'+m.name+'</div><div class="mode-desc">'+m.desc+'</div></div>';
+  function renderTemplates(){
+    $('tpl-row').innerHTML=TEMPLATES.map(function(tp,i){
+      return '<button type="button" class="seg-btn" onclick="useTemplate('+i+')">'+tp.name+'</button>';
     }).join('');
-    $('custom-wrap').style.display=state.mode==='custom'?'block':'none';
   }
-  window.pickMode=function(k){state.mode=k;renderModes();};
+  window.useTemplate=function(i){
+    var tp=TEMPLATES[i];if(!tp)return;
+    var ta=$('custom-prompt');
+    if(ta.value.trim()&&!confirm('Replace your current strategy text with the \"'+tp.name+'\" template?'))return;
+    ta.value=tp.text;ta.focus();
+  };
 
   function renderRisk(){
     $('risk-seg').innerHTML=RISKS.map(function(r){
@@ -278,10 +285,12 @@ a{color:inherit;text-decoration:none}
     el.style.display='block';el.textContent=txt;
   };
 
+  var MODE_MIGRATE={dip_buyer:0,momentum:1,index_rotator:2};
   function fillForm(cfg){
-    state.mode=cfg.mode||'dip_buyer';
     state.risk=cfg.risk_tolerance||'balanced';
-    $('custom-prompt').value=cfg.custom_prompt||'';
+    var txt=cfg.custom_prompt||'';
+    if(!txt&&cfg.mode&&MODE_MIGRATE[cfg.mode]!=null)txt=TEMPLATES[MODE_MIGRATE[cfg.mode]].text;
+    $('custom-prompt').value=txt;
     $('f-maxpos').value=cfg.max_position_pct!=null?cfg.max_position_pct:10;
     $('f-maxtrades').value=cfg.max_trades_per_run!=null?cfg.max_trades_per_run:3;
     $('f-dailycap').value=cfg.max_daily_spend_usd!=null?cfg.max_daily_spend_usd:10000;
@@ -289,7 +298,7 @@ a{color:inherit;text-decoration:none}
     $('f-enabled').checked=!!cfg.enabled;
     $('f-autopilot').checked=!!cfg.autopilot;
     $('f-mkthrs').checked=cfg.market_hours_only!==false;
-    renderModes();renderRisk();banner(cfg);pill(cfg);autoWarn();
+    renderTemplates();renderRisk();banner(cfg);pill(cfg);autoWarn();
   }
 
   function autoWarn(){$('auto-warn').style.display=$('f-autopilot').checked?'block':'none';}
@@ -309,8 +318,11 @@ a{color:inherit;text-decoration:none}
   window.saveConfig=function(){
     if(busy)return;busy=true;
     var msg=$('save-msg');msg.textContent='saving…';
+    if($('f-enabled').checked&&!$('custom-prompt').value.trim()){
+      busy=false;msg.textContent='write your strategy first — the bot has nothing to follow';return;
+    }
     var body={
-      mode:state.mode,
+      mode:'custom',
       custom_prompt:$('custom-prompt').value,
       risk_tolerance:state.risk,
       max_position_pct:parseFloat($('f-maxpos').value)||10,

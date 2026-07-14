@@ -111,7 +111,8 @@ You buy quality names on meaningful pullbacks (down 3%+ from recent highs, or ov
 You buy strength — names breaking out or trending strongly with broad-market support — and you cut losers fast. You add to winners, never to losers. In a weak or fearful tape (VIX elevated, SPX down) you stand aside and propose nothing.`,
   index_rotator: `STRATEGY MODE: INDEX ROTATOR.
 You only trade the core index sleeve (SPY, QQQ, VEA and broad sector ETFs). Your job is rebalancing toward targets — SPY 40%, QQQ 20%, VEA 15% — trimming what is over target and adding what is under, ideally selling strength and buying weakness. You do not trade single stocks.`,
-  custom: `STRATEGY MODE: CUSTOM — follow the trader's own strategy description below exactly. If the description is empty, propose nothing.`,
+  custom: `STRATEGY MODE: TRADER-AUTHORED.
+The trader has written their own strategy below. Follow it exactly and strictly — do not act on anything it does not call for, and do not substitute your own ideas. If it says to do nothing in current conditions, do nothing.`,
 };
 
 const RISK_PROMPTS: Record<string, string> = {
@@ -338,6 +339,9 @@ export async function runStrategy(trigger: "cron" | "manual"): Promise<StrategyR
   }
   if (cfg.market_hours_only && !isUsMarketOpen()) {
     return { status: "skipped", summary: "US market closed (market-hours-only is on)", pending_processed: pendingProcessed };
+  }
+  if (cfg.mode === "custom" && !cfg.custom_prompt.trim()) {
+    return { status: "skipped", summary: "No strategy written yet — add one on /strategy", pending_processed: pendingProcessed };
   }
   const groqKey = process.env.GROQ_API_KEY;
   if (!groqKey) return { status: "error", summary: "GROQ_API_KEY not set", pending_processed: pendingProcessed };

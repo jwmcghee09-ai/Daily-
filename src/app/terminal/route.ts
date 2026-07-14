@@ -143,6 +143,7 @@ tr:hover td{background:#0e0d1c}
 <body>
 
 <div id="topbar">
+  <span class="fkey" onclick="toggleHelp()">F1</span><span class="flabel">HELP</span>
   <span class="fkey" onclick="doRefresh()">F2</span><span class="flabel">REFRESH</span>
   <span class="fkey" onclick="focusChat()">F8</span><span class="flabel">CHAT</span>
   <span class="fkey" onclick="toggleLog()">F9</span><span class="flabel">LOG</span>
@@ -217,25 +218,25 @@ tr:hover td{background:#0e0d1c}
 <div id="main">
   <!-- LEFT: positions split into two buckets -->
   <div id="left">
-    <div class="ph">■ CORE · INDEX SLEEVE <span style="float:right;color:#333;font-size:8px" id="core-pct"></span></div>
+    <div class="ph">■ CORE · INDEX SLEEVE<span style="color:#555;text-transform:none;letter-spacing:0;margin-left:8px;font-size:10px">— your long-term ETF base</span><span style="float:right;color:#333;font-size:9px" id="core-pct"></span></div>
     <div id="core-wrap" style="border-bottom:1px solid #211f38"><div class="placeholder">LOADING…</div></div>
-    <div class="ph" style="background:#030a04;border-color:#003300;color:#00e676">■ ALPHA · SATELLITE SLEEVE <span style="float:right;color:#003300;font-size:8px" id="alpha-pct"></span></div>
+    <div class="ph" style="background:#030a04;border-color:#003300;color:#00e676">■ ALPHA · SATELLITE SLEEVE<span style="color:#555;text-transform:none;letter-spacing:0;margin-left:8px;font-size:10px">— active stock picks</span><span style="float:right;color:#003300;font-size:9px" id="alpha-pct"></span></div>
     <div id="alpha-wrap" style="flex:1;overflow-y:auto;min-height:0"><div class="placeholder">LOADING…</div></div>
   </div>
 
   <!-- CENTER: chart + trades + open orders -->
   <div id="center">
-    <div class="ph">■ 30-DAY EQUITY CURVE <span style="float:right;color:#333;font-size:8px" id="curve-range"></span></div>
+    <div class="ph">■ 30-DAY EQUITY CURVE<span style="color:#555;text-transform:none;letter-spacing:0;margin-left:8px;font-size:10px">— your account value over the last month</span><span style="float:right;color:#333;font-size:9px" id="curve-range"></span></div>
     <div id="chart-area">
       <svg id="chart" preserveAspectRatio="none"><text x="50%" y="50%" text-anchor="middle" fill="#211f38" font-size="12" font-family="monospace">LOADING…</text></svg>
     </div>
     <div id="trades-area">
-      <div class="ph">■ RECENT FILLED TRADES</div>
+      <div class="ph">■ RECENT FILLED TRADES<span style="color:#555;text-transform:none;letter-spacing:0;margin-left:8px;font-size:10px">— orders that actually executed</span></div>
       <table><thead><tr><th>Symbol</th><th>Side</th><th style="text-align:right">Qty</th><th style="text-align:right">Fill $</th><th style="text-align:right">Total A$</th><th style="text-align:right">≈ USD</th><th style="text-align:right">Date</th></tr></thead>
       <tbody id="trades-tb"><tr><td colspan="7" class="placeholder">LOADING…</td></tr></tbody></table>
     </div>
     <div id="open-orders-area">
-      <div class="ph">■ OPEN ORDERS</div>
+      <div class="ph">■ OPEN ORDERS<span style="color:#555;text-transform:none;letter-spacing:0;margin-left:8px;font-size:10px">— submitted, waiting to execute</span></div>
       <table><thead><tr><th>Symbol</th><th>Side</th><th style="text-align:right">Qty</th><th>Type</th><th>Status</th><th style="text-align:right">Submitted</th></tr></thead>
       <tbody id="orders-tb"><tr><td colspan="6" class="placeholder">—</td></tr></tbody></table>
     </div>
@@ -243,7 +244,7 @@ tr:hover td{background:#0e0d1c}
 
   <!-- RIGHT: Myrmidon chat -->
   <div id="chat-panel">
-    <div class="ph">■ MYRMIDON · <span id="chat-model-lbl">LLAMA-3.1-8B</span> <span id="chat-model" style="float:right;color:#333;font-size:8px"></span></div>
+    <div class="ph">■ MYRMIDON AI<span style="color:#555;text-transform:none;letter-spacing:0;margin-left:8px;font-size:10px">— ask questions or give trade orders</span><span id="chat-model" style="float:right;color:#333;font-size:9px"></span></div>
     <div id="chat-msgs">
       <div class="cmsg-sys">Ask Myrmidon about positions, trades, market analysis…</div>
     </div>
@@ -258,6 +259,27 @@ tr:hover td{background:#0e0d1c}
     <div id="strategy-panel">
       <div class="ph" style="font-size:8px">■ AI STRATEGY ENGINE <a href="/strategy" style="color:#555;text-decoration:none;margin-left:8px;font-size:9px">FULL PAGE ↗</a> <button onclick="loadStrategy(true)" style="float:right;background:none;border:none;cursor:pointer;color:#555;font-family:'Courier New',monospace;font-size:8px;text-transform:uppercase;letter-spacing:.05em">↺ REFRESH</button></div>
       <div id="strategy-content"><span style="color:#333;font-style:italic;font-size:10px">Loading…</span></div>
+    </div>
+  </div>
+</div>
+
+<div id="help-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:100;overflow-y:auto" onclick="if(event.target===this)toggleHelp()">
+  <div style="max-width:760px;margin:5vh auto;background:#0d0c16;border:1px solid #a78bfa;border-radius:10px;overflow:hidden">
+    <div style="background:linear-gradient(90deg,#a855f7 0%,#d946ef 35%,#ff7a30 72%,#ffb347 100%);color:#fff;padding:12px 20px;font-weight:bold;font-size:15px;display:flex;justify-content:space-between;align-items:center">WHAT AM I LOOKING AT? <button onclick="toggleHelp()" style="background:none;border:1px solid rgba(255,255,255,.5);border-radius:4px;color:#fff;font-family:'Courier New',monospace;font-size:11px;padding:4px 10px;cursor:pointer">CLOSE (ESC)</button></div>
+    <div style="padding:20px 22px;font-size:13px;line-height:1.8;color:#bbb">
+      <p style="margin-bottom:14px">This is your <span style="color:#c4b5fd">paper trading terminal</span> — a practice account with fake money on the real US market, managed with the help of an AI called Myrmidon. No real dollars are at risk.</p>
+      <div style="color:#a78bfa;font-size:11px;letter-spacing:.1em;margin:16px 0 8px">THE NUMBERS UP TOP</div>
+      <p><span style="color:#e6e4f2">Portfolio equity</span> — everything you own, in AUD. <span style="color:#e6e4f2">Cash available</span> — uninvested money. <span style="color:#e6e4f2">Buying power</span> — what you could spend (includes broker margin, so it can exceed your cash). <span style="color:#e6e4f2">30-day return</span> — how the account moved this month.</p>
+      <div style="color:#a78bfa;font-size:11px;letter-spacing:.1em;margin:16px 0 8px">THE PANELS</div>
+      <p><span style="color:#e6e4f2">Core sleeve (left, purple)</span> — the boring long-term base: broad index ETFs like SPY. <span style="color:#00e676">Alpha sleeve (left, green)</span> — individual stock picks trying to beat the market. <span style="color:#e6e4f2">Equity curve (middle)</span> — your account value drawn over the last month; green means up. Below it: trades that executed, and orders still waiting.</p>
+      <div style="color:#a78bfa;font-size:11px;letter-spacing:.1em;margin:16px 0 8px">RISK ROW</div>
+      <p>Live warnings. <span style="color:#00e676">Green</span> = fine, <span style="color:#ff7a30">orange</span> = watch it, <span style="color:#ff4444">red</span> = rule being broken (e.g. a position fell 15% — the stop-loss line).</p>
+      <div style="color:#a78bfa;font-size:11px;letter-spacing:.1em;margin:16px 0 8px">MYRMIDON AI (RIGHT)</div>
+      <p>Chat with your AI trader. Ask anything ("why is ARM down?") or give orders ("sell 5 SPY"). The little badges that appear while it thinks show which live data it's checking. <span style="color:#e6e4f2">F9</span> opens the log of every decision it has ever made.</p>
+      <div style="color:#a78bfa;font-size:11px;letter-spacing:.1em;margin:16px 0 8px">THE STRATEGY BOT</div>
+      <p><span style="color:#e6e4f2">F10</span> (or the STRATEGY PAGE link) is where you write a trading strategy in plain english and let Myrmidon run it automatically. Trades it proposes wait 5 minutes so you can cancel — nothing fires instantly unless you switch AUTOPILOT on.</p>
+      <div style="color:#a78bfa;font-size:11px;letter-spacing:.1em;margin:16px 0 8px">KEYS</div>
+      <p><span style="color:#e6e4f2">F1</span> this help · <span style="color:#e6e4f2">F2</span> refresh data · <span style="color:#e6e4f2">F8</span> jump to chat · <span style="color:#e6e4f2">F9</span> decision log · <span style="color:#e6e4f2">F10</span> strategy bot</p>
     </div>
   </div>
 </div>
@@ -906,7 +928,13 @@ tr:hover td{background:#0e0d1c}
   fetch('/api/trading/strategy').then(function(r){return r.json();}).then(function(d){if(d&&d.config)stratPill(d.config);}).catch(function(){});
 
   // ── KEYBOARD ─────────────────────────────────────────────────────────────
+  window.toggleHelp=function(){
+    var o=$('help-overlay');if(!o)return;
+    o.style.display=o.style.display==='none'?'block':'none';
+  };
   document.addEventListener('keydown',function(e){
+    if(e.key==='F1'){e.preventDefault();window.toggleHelp();}
+    if(e.key==='Escape'){var o=$('help-overlay');if(o&&o.style.display!=='none')o.style.display='none';}
     if(e.key==='F2'||(e.key==='r'&&e.ctrlKey)){e.preventDefault();window.doRefresh();}
     if(e.key==='F8'){e.preventDefault();window.focusChat();}
     if(e.key==='F9'){e.preventDefault();window.toggleLog();}
