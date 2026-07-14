@@ -3326,7 +3326,7 @@ tbody tr:hover{ background:rgba(168,85,247,.04) !important }
     ctx.quadraticCurveTo(x, y, x + tl, y);
   }
 
-  function drawDonut(id, data) {
+  function drawDonut(id, data) { window.drawDonut = drawDonut;
     const canvas = document.getElementById(id);
     if (!canvas) return;
     const sized = dpr(canvas);
