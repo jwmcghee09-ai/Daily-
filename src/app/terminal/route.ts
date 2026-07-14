@@ -230,7 +230,7 @@ tr:hover td{background:#0e0d1c}
     </div>
     <div id="trades-area">
       <div class="ph">■ RECENT FILLED TRADES</div>
-      <table><thead><tr><th>Symbol</th><th>Side</th><th style="text-align:right">Qty</th><th style="text-align:right">Fill $</th><th style="text-align:right">Total USD</th><th style="text-align:right">≈ AUD</th><th style="text-align:right">Date</th></tr></thead>
+      <table><thead><tr><th>Symbol</th><th>Side</th><th style="text-align:right">Qty</th><th style="text-align:right">Fill $</th><th style="text-align:right">Total A$</th><th style="text-align:right">≈ USD</th><th style="text-align:right">Date</th></tr></thead>
       <tbody id="trades-tb"><tr><td colspan="7" class="placeholder">LOADING…</td></tr></tbody></table>
     </div>
     <div id="open-orders-area">
@@ -278,6 +278,8 @@ tr:hover td{background:#0e0d1c}
   function usd(n,dec){if(n==null||isNaN(parseFloat(n)))return'—';return'$'+(dec?parseFloat(n).toFixed(dec):Math.round(n).toLocaleString('en-US'));}
   function pct(n){if(n==null)return'—';return(n>=0?'+':'')+parseFloat(n).toFixed(2)+'%';}
   function aud(n,rate){return rate&&n!=null?'~$'+Math.round(n/rate).toLocaleString('en-AU')+' AUD':'—';}
+  var lastRate=0;
+  function audP(n,dec){var v=parseFloat(n);if(!lastRate||n==null||isNaN(v))return usd(n,dec);return'A$'+(dec?(v/lastRate).toFixed(dec):Math.round(v/lastRate).toLocaleString('en-AU'));}
   function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
   function conn(msg,ok){$('conn').textContent=msg;$('conn').style.color=ok===true?'#00e676':ok===false?'#ff4444':'#a78bfa';}
   function status(msg){$('st-msg').textContent=msg;}
@@ -286,16 +288,16 @@ tr:hover td{background:#0e0d1c}
   // metrics
   function renderMetrics(acct,hist,rate,positions){
     var eq=parseFloat(acct.equity)||0,cash=parseFloat(acct.cash)||0,bp=parseFloat(acct.buying_power)||0;
-    $('m-eq').textContent=usd(eq);$('m-eq2').textContent=aud(eq,rate);
+    $('m-eq').textContent=audP(eq);$('m-eq2').textContent=usd(eq)+' USD';
     $('acct-num').textContent='ACCT #'+acct.account_number;
     var retUsd=0,retPct=0;
     if(hist&&hist.equity&&hist.equity.length>1){var vals=hist.equity.filter(function(v){return v!=null&&v>0;});if(vals.length>1){var s0=vals[0];retUsd=eq-s0;retPct=s0>0?(retUsd/s0)*100:0;}}
     var rc=retUsd>=0?'pos':'neg';
     $('m-ret').textContent=pct(retPct);$('m-ret').className='mv '+rc;
-    $('m-ret2').textContent=(retUsd>=0?'+':'-')+usd(Math.abs(retUsd))+' USD';
-    $('m-cash').textContent=usd(cash);
+    $('m-ret2').textContent=(retUsd>=0?'+':'-')+audP(Math.abs(retUsd));
+    $('m-cash').textContent=audP(cash);
     $('m-cash2').textContent=eq>0?(cash/eq*100).toFixed(1)+'% of portfolio':'—';
-    $('m-bp').textContent=usd(bp);$('m-bp2').textContent=aud(bp,rate);
+    $('m-bp').textContent=audP(bp);$('m-bp2').textContent=usd(bp)+' USD';
     $('m-fx').textContent=rate?rate.toFixed(4):'unavailable';
     $('m-pos-ct').textContent=(positions&&positions.length||0)+' open position(s)';
   }
@@ -400,9 +402,10 @@ tr:hover td{background:#0e0d1c}
     // 6. Intraday portfolio P&L
     var dayPl=(positions||[]).reduce(function(s,p){return s+(parseFloat(p.unrealized_intraday_pl)||0);},0);
     var dayPct=eq>0?(dayPl/eq)*100:0;
-    if(dayPct<-3)sigs.push({c:'red',m:'TODAY '+(dayPct).toFixed(2)+'% ('+( dayPl>=0?'+':'')+Math.round(dayPl).toLocaleString()+')'});
-    else if(dayPct<-1)sigs.push({c:'amb',m:'TODAY '+(dayPct).toFixed(2)+'% ('+Math.round(dayPl).toLocaleString()+')'});
-    else if(dayPct>0.5)sigs.push({c:'ok',m:'TODAY +'+(dayPct).toFixed(2)+'% (+'+Math.round(dayPl).toLocaleString()+')'});
+    var fxR=lastRate||1;
+    if(dayPct<-3)sigs.push({c:'red',m:'TODAY '+(dayPct).toFixed(2)+'% ('+(dayPl>=0?'+':'')+'A$'+Math.round(dayPl/fxR).toLocaleString()+')'});
+    else if(dayPct<-1)sigs.push({c:'amb',m:'TODAY '+(dayPct).toFixed(2)+'% (A$'+Math.round(dayPl/fxR).toLocaleString()+')'});
+    else if(dayPct>0.5)sigs.push({c:'ok',m:'TODAY +'+(dayPct).toFixed(2)+'% (+A$'+Math.round(dayPl/fxR).toLocaleString()+')'});
 
     // 7. Buying power utilisation
     var invested=(positions||[]).reduce(function(s,p){return s+(parseFloat(p.market_value)||0);},0);
@@ -454,12 +457,12 @@ tr:hover td{background:#0e0d1c}
     return'<tr>'+sym+
       '<td style="text-align:right;color:#777;font-size:10px">'+qty.toFixed(qty%1?4:0)+'</td>'+
       '<td class="cyn" style="text-align:right">'+usd(price,2)+'</td>'+
-      '<td style="text-align:right">'+usd(mv)+'</td>'+
+      '<td style="text-align:right">'+audP(mv)+'</td>'+
       '<td class="'+dc+'" style="text-align:right;font-size:10px">'+(dayChg>=0?'+':'')+(dayChg*100).toFixed(2)+'%</td>'+
-      '<td class="'+c+'" style="text-align:right;font-size:10px">'+(dayPl>=0?'+':'')+usd(dayPl)+'</td>'+
+      '<td class="'+c+'" style="text-align:right;font-size:10px">'+(dayPl>=0?'+':'')+audP(dayPl)+'</td>'+
       '<td class="'+c+'" style="text-align:right;font-size:10px">'+pct(plpc*100)+'</td></tr>';
   }
-  var POS_HEAD='<table><thead><tr><th>Sym</th><th style="text-align:right">Qty</th><th style="text-align:right">Price</th><th style="text-align:right">Mkt Val</th><th style="text-align:right">Day%</th><th style="text-align:right">Day P&L</th><th style="text-align:right">Total%</th></tr></thead><tbody>';
+  var POS_HEAD='<table><thead><tr><th>Sym</th><th style="text-align:right">Qty</th><th style="text-align:right">Price $</th><th style="text-align:right">Mkt Val A$</th><th style="text-align:right">Day%</th><th style="text-align:right">Day P&L A$</th><th style="text-align:right">Total%</th></tr></thead><tbody>';
 
   function renderPositions(positions,equity){
     if(!positions){
@@ -505,7 +508,8 @@ tr:hover td{background:#0e0d1c}
     var svg=$('chart');
     if(!hist||!hist.equity){svg.innerHTML='<text x="50%" y="50%" text-anchor="middle" fill="#211f38" font-size="11" font-family="monospace">NO HISTORY DATA</text>';return;}
     var raw=hist.equity||[],ts=hist.timestamp||[],vals=[],tss=[];
-    for(var i=0;i<raw.length;i++){if(raw[i]!=null&&raw[i]>0){vals.push(raw[i]);tss.push(ts[i]||0);}}
+    var fx=lastRate||1;
+    for(var i=0;i<raw.length;i++){if(raw[i]!=null&&raw[i]>0){vals.push(raw[i]/fx);tss.push(ts[i]||0);}}
     if(vals.length<2){svg.innerHTML='<text x="50%" y="50%" text-anchor="middle" fill="#211f38" font-size="11" font-family="monospace">INSUFFICIENT DATA</text>';return;}
     var W=900,H=200,PX=10,PY=22;
     var lo=Math.min.apply(null,vals)*0.999,hi=Math.max.apply(null,vals)*1.001,rng=hi-lo;
@@ -513,7 +517,7 @@ tr:hover td{background:#0e0d1c}
     var ty=function(v){return H-PY-((v-lo)/rng)*(H-PY*2);};
     var start=vals[0],end=vals[vals.length-1],up=end>=start,lc=up?'#00e676':'#ff4444';
     var grid='';
-    for(var g=0;g<=3;g++){var gv=lo+(rng*g/3),gy=ty(gv);grid+='<line x1="'+PX+'" y1="'+gy+'" x2="'+(W-PX)+'" y2="'+gy+'" stroke="#12111f" stroke-width="1"/><text x="'+(W-PX+2)+'" y="'+(gy+3)+'" font-size="7" fill="#3c3760" font-family="monospace">$'+Math.round(gv/1000)+'K</text>';}
+    for(var g=0;g<=3;g++){var gv=lo+(rng*g/3),gy=ty(gv);grid+='<line x1="'+PX+'" y1="'+gy+'" x2="'+(W-PX)+'" y2="'+gy+'" stroke="#12111f" stroke-width="1"/><text x="'+(W-PX+2)+'" y="'+(gy+3)+'" font-size="7" fill="#3c3760" font-family="monospace">'+(lastRate?'A$':'$')+Math.round(gv/1000)+'K</text>';}
     var pts=vals.map(function(v,i){return tx(i)+','+ty(v);}).join(' L ');
     var path='M '+pts,fill=path+' L '+tx(vals.length-1)+','+(H-PY)+' L '+PX+','+(H-PY)+' Z';
     var fmtd=function(u){if(!u)return'';var d=new Date(u*1000);return(d.getMonth()+1)+'/'+(d.getDate());};
@@ -525,7 +529,7 @@ tr:hover td{background:#0e0d1c}
       '<circle cx="'+tx(vals.length-1)+'" cy="'+ty(end)+'" r="3" fill="'+lc+'"/>'+
       '<text x="'+PX+'" y="'+(H-4)+'" font-size="8" fill="#3c3760" font-family="monospace">'+fmtd(tss[0])+'</text>'+
       '<text x="'+(W-PX)+'" y="'+(H-4)+'" font-size="8" fill="#3c3760" font-family="monospace" text-anchor="end">'+fmtd(tss[tss.length-1])+'</text>'+
-      '<text x="'+(tx(vals.length-1)-6)+'" y="'+(ty(end)-6)+'" font-size="10" fill="'+lc+'" font-family="monospace" text-anchor="end">$'+Math.round(end).toLocaleString()+'</text>';
+      '<text x="'+(tx(vals.length-1)-6)+'" y="'+(ty(end)-6)+'" font-size="10" fill="'+lc+'" font-family="monospace" text-anchor="end">'+(lastRate?'A$':'$')+Math.round(end).toLocaleString()+'</text>';
   }
 
   // trades
@@ -539,7 +543,7 @@ tr:hover td{background:#0e0d1c}
       var dt=o.filled_at?new Date(o.filled_at).toLocaleString('en-AU',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
       return'<tr><td class="amb" style="font-weight:bold">'+o.symbol+'</td><td class="'+sc+'" style="font-weight:bold;font-size:10px">'+(buy?'▲ BUY':'▼ SELL')+'</td>'+
         '<td style="text-align:right;color:#aaa">'+qty+'</td><td class="cyn" style="text-align:right">'+usd(price,2)+'</td>'+
-        '<td style="text-align:right">'+usd(total)+'</td><td style="text-align:right;color:#555">'+aud(total,rate)+'</td>'+
+        '<td style="text-align:right">'+audP(total)+'</td><td style="text-align:right;color:#555">'+usd(total)+'</td>'+
         '<td style="text-align:right;color:#333;font-size:10px">'+dt+'</td></tr>';
     }).join('');
   }
@@ -568,6 +572,7 @@ tr:hover td{background:#0e0d1c}
       if(!r.ok){conn('ERROR',false);status('ERROR: '+(d.error||r.status));loading=false;return;}
       if(!d.account){conn('ERROR',false);status('ERROR: NO ACCOUNT DATA');loading=false;return;}
       var eq=parseFloat(d.account.equity)||0;
+      lastRate=parseFloat(d.rate)||0;
       renderMetrics(d.account,d.history,d.rate,d.positions);
       renderMacro(d.macro);
       renderRisk(d.account,d.positions||[],d.macro);
@@ -578,8 +583,9 @@ tr:hover td{background:#0e0d1c}
       renderOpenOrders(d.openOrders);
       conn('CONNECTED',true);ts();
       var dayPl=(d.positions||[]).reduce(function(s,p){return s+(parseFloat(p.unrealized_intraday_pl)||0);},0);
-      var dayStr=dayPl>=0?'+$'+Math.round(dayPl).toLocaleString():'-$'+Math.round(Math.abs(dayPl)).toLocaleString();
-      status('$'+Math.round(eq).toLocaleString()+' USD equity · '+(d.positions&&d.positions.length||0)+' positions · TODAY '+dayStr+' · '+(d.openOrders&&d.openOrders.length||0)+' open orders');
+      var fx2=lastRate||1;
+      var dayStr=dayPl>=0?'+A$'+Math.round(dayPl/fx2).toLocaleString():'-A$'+Math.round(Math.abs(dayPl)/fx2).toLocaleString();
+      status('A$'+Math.round(eq/fx2).toLocaleString()+' equity · '+(d.positions&&d.positions.length||0)+' positions · TODAY '+dayStr+' · '+(d.openOrders&&d.openOrders.length||0)+' open orders');
     }catch(e){conn('ERROR',false);status('ERROR: '+e.message);}
     loading=false;
   }

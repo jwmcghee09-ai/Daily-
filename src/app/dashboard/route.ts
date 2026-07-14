@@ -97,9 +97,9 @@ const MYRMIDON_ANALYTICS_HTML = `<!-- MYRMIDON ANALYTICS PAGE -->
       <div style="overflow-x:auto">
         <table class="myrm-table">
           <thead><tr>
-            <th>Symbol</th><th style="text-align:right">Qty</th><th style="text-align:right">Price</th>
-            <th style="text-align:right">Mkt Value</th><th style="text-align:right">Day %</th>
-            <th style="text-align:right">Day P&amp;L</th><th style="text-align:right">Total P&amp;L</th>
+            <th>Symbol</th><th style="text-align:right">Qty</th><th style="text-align:right">Price $</th>
+            <th style="text-align:right">Mkt Value A$</th><th style="text-align:right">Day %</th>
+            <th style="text-align:right">Day P&amp;L A$</th><th style="text-align:right">Total P&amp;L A$</th>
           </tr></thead>
           <tbody id="myrm-core-tbody"><tr><td colspan="7" style="text-align:center;color:rgba(167,139,250,.35);padding:1rem;font-family:monospace;font-size:.7rem">Loading…</td></tr></tbody>
         </table>
@@ -112,9 +112,9 @@ const MYRMIDON_ANALYTICS_HTML = `<!-- MYRMIDON ANALYTICS PAGE -->
       <div style="overflow-x:auto">
         <table class="myrm-table">
           <thead><tr>
-            <th>Symbol</th><th style="text-align:right">Qty</th><th style="text-align:right">Price</th>
-            <th style="text-align:right">Mkt Value</th><th style="text-align:right">Day %</th>
-            <th style="text-align:right">Day P&amp;L</th><th style="text-align:right">Total P&amp;L</th>
+            <th>Symbol</th><th style="text-align:right">Qty</th><th style="text-align:right">Price $</th>
+            <th style="text-align:right">Mkt Value A$</th><th style="text-align:right">Day %</th>
+            <th style="text-align:right">Day P&amp;L A$</th><th style="text-align:right">Total P&amp;L A$</th>
           </tr></thead>
           <tbody id="myrm-alpha-tbody"><tr><td colspan="7" style="text-align:center;color:rgba(167,139,250,.35);padding:1rem;font-family:monospace;font-size:.7rem">Loading…</td></tr></tbody>
         </table>
@@ -142,8 +142,8 @@ const MYRMIDON_ANALYTICS_HTML = `<!-- MYRMIDON ANALYTICS PAGE -->
         <table class="myrm-table">
           <thead><tr>
             <th>Symbol</th><th>Side</th><th style="text-align:right">Qty</th>
-            <th style="text-align:right">Fill Price</th><th style="text-align:right">Total (USD)</th>
-            <th style="text-align:right">Total (AUD)</th><th style="text-align:right">Date</th>
+            <th style="text-align:right">Fill Price $</th><th style="text-align:right">Total (A$)</th>
+            <th style="text-align:right">Total (USD)</th><th style="text-align:right">Date</th>
           </tr></thead>
           <tbody id="myrm-trades-tbody">
             <tr><td colspan="7" style="text-align:center;color:rgba(167,139,250,.35);padding:1.5rem;font-family:monospace;font-size:.7rem">Loading…</td></tr>
@@ -172,6 +172,7 @@ window.addEventListener('error',function(ev){
     'VNQ':1,'EFA':1,'EEM':1,'VWO':1,'VO':1,'VB':1,'SCHD':1,'JEPI':1,'JEPQ':1};
 
   function fmtUsd(n){return n==null?'—':'$'+Math.round(n).toLocaleString();}
+  function fmtAudP(n,rate){return(!rate||n==null)?fmtUsd(n):'A$'+Math.round(n/rate).toLocaleString();}
   function fmtAud(n,rate){return(!rate||n==null)?'—':'~A$'+Math.round(n/rate).toLocaleString();}
   function fmtPct(n){if(n==null)return'—';var s=n>=0?'+':'';return s+n.toFixed(2)+'%';}
 
@@ -221,7 +222,7 @@ window.addEventListener('error',function(ev){
       }
       var equity=parseFloat(d.account.equity)||0;
       renderMetrics(d.account,d.history,d.audUsdRate);
-      renderChart(d.history);
+      renderChart(d.history,d.audUsdRate);
       renderTrades(d.orders,d.audUsdRate);
       renderMacro(d.macro);
       renderRisk(d.account,d.positions,d.macro);
@@ -265,11 +266,11 @@ window.addEventListener('error',function(ev){
     var cashPct=equity>0?cash/equity*100:0;
     var cashCol=cashPct<3?'#f87171':cashPct<8?'#ff7a30':'#fff';
     g.innerHTML=[
-      card('Portfolio Equity',fmtUsd(equity),fmtAud(equity,rate),'#fff'),
-      card('30-Day Return',fmtPct(retPct),(pos?'+':'')+fmtUsd(Math.abs(retUsd)),col),
+      card('Portfolio Equity',fmtAudP(equity,rate),fmtUsd(equity)+' USD','#fff'),
+      card('30-Day Return',fmtPct(retPct),(pos?'+':'')+fmtAudP(Math.abs(retUsd),rate),col),
       card('Max Drawdown (30d)',maxDd>0?'-'+maxDd.toFixed(2)+'%':'0%','vs period start',maxDd>5?'#f87171':maxDd>2?'#ff7a30':'#4ade80'),
-      card('Uninvested Cash',fmtUsd(cash),cashPct.toFixed(1)+'% of equity',cashCol),
-      card('Buying Power',fmtUsd(bp),fmtAud(bp,rate),'#fff'),
+      card('Uninvested Cash',fmtAudP(cash,rate),cashPct.toFixed(1)+'% of equity',cashCol),
+      card('Buying Power',fmtAudP(bp,rate),fmtUsd(bp)+' USD','#fff'),
     ].join('');
   }
 
@@ -391,6 +392,7 @@ window.addEventListener('error',function(ev){
   }
 
   function renderPositions(positions,equity,rate){
+    var fxP=rate||1;
     var core=[],alpha=[];
     (positions||[]).forEach(function(p){
       if(CORE_ETFS[p.symbol]||BROAD_ETFS[p.symbol])core.push(p);else alpha.push(p);
@@ -403,10 +405,10 @@ window.addEventListener('error',function(ev){
         '<td style="font-weight:600;color:#fff">'+p.symbol+'</td>'+
         '<td style="text-align:right;font-family:monospace;color:rgba(167,139,250,.6)">'+qty.toFixed(qty%1?4:0)+'</td>'+
         '<td style="text-align:right;font-family:monospace;color:#38bdf8">$'+price.toFixed(2)+'</td>'+
-        '<td style="text-align:right;font-family:monospace">$'+Math.round(mv).toLocaleString()+'</td>'+
+        '<td style="text-align:right;font-family:monospace">A$'+Math.round(mv/fxP).toLocaleString()+'</td>'+
         '<td style="text-align:right;font-family:monospace;font-size:.7rem;color:'+dc+'">'+(dayChg>=0?'+':'')+(dayChg*100).toFixed(2)+'%</td>'+
-        '<td style="text-align:right;font-family:monospace;font-size:.7rem;color:'+dc+'">'+(dayPl>=0?'+':'')+'$'+Math.round(dayPl).toLocaleString()+'</td>'+
-        '<td style="text-align:right;font-family:monospace;font-size:.7rem;color:'+pc+'">'+(unrl>=0?'+':'')+'$'+Math.round(unrl).toLocaleString()+'</td>'+
+        '<td style="text-align:right;font-family:monospace;font-size:.7rem;color:'+dc+'">'+(dayPl>=0?'+':'')+'A$'+Math.round(dayPl/fxP).toLocaleString()+'</td>'+
+        '<td style="text-align:right;font-family:monospace;font-size:.7rem;color:'+pc+'">'+(unrl>=0?'+':'')+'A$'+Math.round(unrl/fxP).toLocaleString()+'</td>'+
       '</tr>';
     }
     var empty='<tr><td colspan="7" style="text-align:center;color:rgba(167,139,250,.35);padding:1rem;font-family:monospace;font-size:.7rem">';
@@ -450,11 +452,12 @@ window.addEventListener('error',function(ev){
     }).join('');
   }
 
-  function renderChart(hist){
+  function renderChart(hist,rate){
     var svg=document.getElementById('myrm-equity-chart');
     if(!svg)return;
     if(!hist||!hist.equity){svg.innerHTML='<text x="50%" y="50%" text-anchor="middle" fill="rgba(167,139,250,.35)" font-size="11" font-family="monospace">No history data from Alpaca</text>';return;}
-    var vals=hist.equity.filter(function(v){return v!=null&&v>0;});
+    var fx=rate||1;
+    var vals=hist.equity.filter(function(v){return v!=null&&v>0;}).map(function(v){return v/fx;});
     var ts=hist.timestamp||[];
     if(vals.length<2){svg.innerHTML='<text x="50%" y="50%" text-anchor="middle" fill="rgba(167,139,250,.35)" font-size="11" font-family="monospace">Not enough data</text>';return;}
     var W=800,H=160,PX=8,PY=14;
@@ -480,7 +483,7 @@ window.addEventListener('error',function(ev){
     '<circle cx="'+tx(vals.length-1)+'" cy="'+ty(end)+'" r="4" fill="'+col+'"/>'+
     '<text x="'+PX+'" y="'+(H-3)+'" font-family="monospace" font-size="8" fill="rgba(167,139,250,.45)">'+fmtD(ts[0])+'</text>'+
     '<text x="'+(W-PX)+'" y="'+(H-3)+'" font-family="monospace" font-size="8" fill="rgba(167,139,250,.45)" text-anchor="end">'+fmtD(ts[ts.length-1])+'</text>'+
-    '<text x="'+(tx(vals.length-1)-6)+'" y="'+(ty(end)-7)+'" font-family="monospace" font-size="10" fill="'+col+'" text-anchor="end">$'+Math.round(end).toLocaleString()+'</text>';
+    '<text x="'+(tx(vals.length-1)-6)+'" y="'+(ty(end)-7)+'" font-family="monospace" font-size="10" fill="'+col+'" text-anchor="end">'+(rate?'A$':'$')+Math.round(end).toLocaleString()+'</text>';
   }
 
   function renderTrades(orders,rate){
@@ -493,14 +496,14 @@ window.addEventListener('error',function(ev){
       var qty=parseFloat(o.filled_qty)||parseFloat(o.qty)||0;
       var total=price*qty;
       var dt=o.filled_at?new Date(o.filled_at).toLocaleDateString('en-AU',{month:'short',day:'numeric',year:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
-      var audVal=rate?'~A$'+Math.round(total/rate).toLocaleString():'—';
+      var audVal=rate?'A$'+Math.round(total/rate).toLocaleString():'$'+Math.round(total).toLocaleString();
       return'<tr>'+
         '<td style="font-weight:600;color:#fff">'+o.symbol+'</td>'+
         '<td style="color:'+sc+';font-family:monospace;font-size:.65rem;font-weight:700">'+(isBuy?'↑ BUY':'↓ SELL')+'</td>'+
         '<td style="text-align:right;font-family:monospace">'+qty.toLocaleString()+'</td>'+
         '<td style="text-align:right;font-family:monospace">$'+price.toFixed(2)+'</td>'+
-        '<td style="text-align:right;font-family:monospace">$'+Math.round(total).toLocaleString()+'</td>'+
-        '<td style="text-align:right;font-family:monospace;color:rgba(167,139,250,.7)">'+audVal+'</td>'+
+        '<td style="text-align:right;font-family:monospace">'+audVal+'</td>'+
+        '<td style="text-align:right;font-family:monospace;color:rgba(167,139,250,.7)">$'+Math.round(total).toLocaleString()+'</td>'+
         '<td style="text-align:right;color:rgba(167,139,250,.5);font-size:.68rem">'+dt+'</td>'+
       '</tr>';
     }).join('');
@@ -512,7 +515,7 @@ window.addEventListener('error',function(ev){
     if(!d||!d.account)return false;
     var eq=parseFloat(d.account.equity)||0;
     renderMetrics(d.account,d.history,d.audUsdRate);
-    renderChart(d.history);
+    renderChart(d.history,d.audUsdRate);
     renderTrades(d.orders,d.audUsdRate);
     renderMacro(d.macro);
     renderRisk(d.account,d.positions,d.macro);
