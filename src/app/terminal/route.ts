@@ -147,6 +147,7 @@ tr:hover td{background:#0e0d1c}
   <span class="fkey" onclick="focusChat()">F8</span><span class="flabel">CHAT</span>
   <span class="fkey" onclick="toggleLog()">F9</span><span class="flabel">LOG</span>
   <span class="fkey" onclick="toggleStrategy()">F10</span><span class="flabel">STRATEGY</span>
+  <a href="/strategy" style="color:#a78bfa;font-size:11px;letter-spacing:.05em;text-decoration:none;border:1px solid #2d2a4a;border-radius:3px;padding:2px 8px">STRATEGY PAGE ↗</a>
   <span id="strat-status-pill" class="spill spill-off" style="margin-left:4px">BOT OFF</span>
   <div class="right">
     <span id="conn">CONNECTING…</span>
@@ -255,7 +256,7 @@ tr:hover td{background:#0e0d1c}
       <div id="log-content"><span style="color:#333;font-style:italic;font-size:10px">Loading…</span></div>
     </div>
     <div id="strategy-panel">
-      <div class="ph" style="font-size:8px">■ AI STRATEGY ENGINE <button onclick="loadStrategy(true)" style="float:right;background:none;border:none;cursor:pointer;color:#555;font-family:'Courier New',monospace;font-size:8px;text-transform:uppercase;letter-spacing:.05em">↺ REFRESH</button></div>
+      <div class="ph" style="font-size:8px">■ AI STRATEGY ENGINE <a href="/strategy" style="color:#555;text-decoration:none;margin-left:8px;font-size:9px">FULL PAGE ↗</a> <button onclick="loadStrategy(true)" style="float:right;background:none;border:none;cursor:pointer;color:#555;font-family:'Courier New',monospace;font-size:8px;text-transform:uppercase;letter-spacing:.05em">↺ REFRESH</button></div>
       <div id="strategy-content"><span style="color:#333;font-style:italic;font-size:10px">Loading…</span></div>
     </div>
   </div>
