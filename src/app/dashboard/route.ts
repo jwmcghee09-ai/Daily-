@@ -19,15 +19,15 @@ const MYRMIDON_AI_TERMINAL = `<!-- MYRMIDON AI terminal (embeds /terminal) -->
 
 const MYRMIDON_ANALYTICS_HTML = `<!-- MYRMIDON ANALYTICS PAGE -->
 <style>
-.myrm-stat-card{background:rgba(10,10,18,.8);border:1px solid rgba(167,139,250,.15);border-radius:10px;padding:1.2rem}
-.myrm-stat-label{font-family:monospace;font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(167,139,250,.5);margin-bottom:.4rem}
+.myrm-stat-card{background:#131120;border:1px solid rgba(167,139,250,.22);border-radius:10px;padding:1.2rem}
+.myrm-stat-label{font-family:monospace;font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(196,181,253,.8);margin-bottom:.4rem}
 .myrm-stat-value{font-family:monospace;font-size:1.3rem;font-weight:600;color:#fff;margin-bottom:.2rem;line-height:1.2}
-.myrm-stat-sub{font-family:monospace;font-size:.62rem;color:rgba(167,139,250,.5)}
-.myrm-dark-card{background:rgba(10,10,18,.8);border:1px solid rgba(167,139,250,.15);border-radius:10px;padding:1.2rem;margin-bottom:1.2rem}
-.myrm-section-label{font-family:monospace;font-size:.55rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(167,139,250,.5);margin-bottom:.9rem;display:flex;align-items:center;gap:.5rem}
+.myrm-stat-sub{font-family:monospace;font-size:.62rem;color:rgba(196,181,253,.65)}
+.myrm-dark-card{background:#131120;border:1px solid rgba(167,139,250,.22);border-radius:10px;padding:1.2rem;margin-bottom:1.2rem}
+.myrm-section-label{font-family:monospace;font-size:.55rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(196,181,253,.85);margin-bottom:.9rem;display:flex;align-items:center;gap:.5rem}
 .myrm-section-label::before{content:'';display:block;width:14px;height:1px;background:linear-gradient(90deg,#ff7a30,#a78bfa);flex-shrink:0}
 .myrm-table{width:100%;border-collapse:collapse;font-size:.78rem}
-.myrm-table th{text-align:left;padding:.45rem .6rem;font-family:monospace;font-size:.52rem;letter-spacing:.1em;color:rgba(167,139,250,.45);font-weight:600;text-transform:uppercase;border-bottom:1px solid rgba(167,139,250,.12)}
+.myrm-table th{text-align:left;padding:.45rem .6rem;font-family:monospace;font-size:.52rem;letter-spacing:.1em;color:rgba(196,181,253,.7);font-weight:600;text-transform:uppercase;border-bottom:1px solid rgba(167,139,250,.12)}
 .myrm-table td{padding:.5rem .6rem;border-bottom:1px solid rgba(167,139,250,.06);vertical-align:middle}
 .myrm-table tr:last-child td{border-bottom:none}
 .myrm-table tr:hover td{background:rgba(167,139,250,.04)}
@@ -40,10 +40,10 @@ const MYRMIDON_ANALYTICS_HTML = `<!-- MYRMIDON ANALYTICS PAGE -->
 .myrm-mkt-val{font-family:monospace;font-size:.82rem;font-weight:600;color:#fff}
 .myrm-mkt-chg{font-family:monospace;font-size:.6rem}
 /* risk signals */
-.myrm-risk-bar{display:flex;flex-wrap:wrap;gap:.4rem;padding:.75rem 1rem;border:1px solid rgba(167,139,250,.15);border-radius:10px;margin-bottom:1rem;background:rgba(10,10,18,.8);align-items:center}
-.myrm-risk-lbl{font-family:monospace;font-size:.52rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(167,139,250,.35);flex-shrink:0;margin-right:.2rem}
+.myrm-risk-bar{display:flex;flex-wrap:wrap;gap:.4rem;padding:.75rem 1rem;border:1px solid rgba(167,139,250,.22);border-radius:10px;margin-bottom:1rem;background:#131120;align-items:center}
+.myrm-risk-lbl{font-family:monospace;font-size:.52rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(196,181,253,.6);flex-shrink:0;margin-right:.2rem}
 .myrm-sig{font-family:monospace;font-size:.6rem;padding:.2rem .7rem;border-radius:3px;border:1px solid;white-space:nowrap}
-.myrm-sig-ok{color:#166534;border-color:rgba(74,222,128,.25);background:rgba(74,222,128,.06)}
+.myrm-sig-ok{color:#4ade80;border-color:rgba(74,222,128,.35);background:rgba(74,222,128,.1)}
 .myrm-sig-amb{color:#ff7a30;border-color:rgba(255,122,48,.3);background:rgba(255,122,48,.06)}
 .myrm-sig-red{color:#f87171;border-color:rgba(248,113,113,.3);background:rgba(248,113,113,.06);font-weight:700}
 </style>
@@ -56,7 +56,7 @@ const MYRMIDON_ANALYTICS_HTML = `<!-- MYRMIDON ANALYTICS PAGE -->
         <div id="myrm-api-status" style="font-family:monospace;font-size:.58rem;color:#ff7a30;margin-top:.4rem;min-height:1em">⚙ Initialising…</div>
       </div>
       <div style="display:flex;align-items:center;gap:.6rem">
-        <span id="myrm-mkt-status" style="font-family:monospace;font-size:.58rem;letter-spacing:.08em;color:rgba(167,139,250,.4)">—</span>
+        <span id="myrm-mkt-status" style="font-family:monospace;font-size:.58rem;letter-spacing:.08em;color:#6d5aa8">—</span>
         <button onclick="window.myrmRefreshAnalytics&&window.myrmRefreshAnalytics()" style="font-family:monospace;font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;color:#a78bfa;background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.25);border-radius:6px;padding:.3rem .8rem;cursor:pointer">↺ Refresh</button>
       </div>
     </div>
