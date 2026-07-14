@@ -181,14 +181,46 @@ export default function LandingPage({
 }) {
   const [activeFaqIndex, setActiveFaqIndex] = useState(0);
   const heroProductRef = useRef<HTMLDivElement>(null);
+  const heroCardRef = useRef<HTMLDivElement>(null);
+  const orbsRef = useRef<HTMLDivElement>(null);
+  const progressRef = useRef<HTMLDivElement>(null);
   const stickySectionRef = useRef<HTMLElement>(null);
   const aiConsoleRef = useRef<HTMLDivElement>(null);
   const aiSectionRef = useRef<HTMLElement>(null);
   const [activeStickyPanel, setActiveStickyPanel] = useState(0);
 
+  // Mouse-tilt on the hero dashboard card (fine pointers only)
+  useEffect(() => {
+    const zone = heroProductRef.current;
+    const card = heroCardRef.current;
+    if (!zone || !card) return;
+    if (!window.matchMedia("(pointer: fine)").matches || window.innerWidth <= 960) return;
+    let raf = 0;
+    const onMove = (e: MouseEvent) => {
+      const rect = zone.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width - 0.5;
+      const y = (e.clientY - rect.top) / rect.height - 0.5;
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        card.style.transform = `perspective(1100px) rotateY(${(x * 4).toFixed(2)}deg) rotateX(${(-y * 3.2).toFixed(2)}deg)`;
+      });
+    };
+    const onLeave = () => {
+      cancelAnimationFrame(raf);
+      card.style.transform = "perspective(1100px) rotateY(0deg) rotateX(0deg)";
+    };
+    zone.addEventListener("mousemove", onMove);
+    zone.addEventListener("mouseleave", onLeave);
+    return () => {
+      cancelAnimationFrame(raf);
+      zone.removeEventListener("mousemove", onMove);
+      zone.removeEventListener("mouseleave", onLeave);
+    };
+  }, []);
+
   useEffect(() => {
     const reveals = document.querySelectorAll<HTMLElement>(
-      `.${styles.reveal}, .${styles.revealLeft}, .${styles.revealRight}, .${styles.revealScale}, .${styles.revealUp}`,
+      `.${styles.reveal}, .${styles.revealLeft}, .${styles.revealRight}, .${styles.revealScale}, .${styles.revealUp}, .${styles.revealTilt}`,
     );
     const compactMotion = typeof window !== "undefined" && window.innerWidth <= 960;
 
@@ -268,8 +300,18 @@ export default function LandingPage({
         const startOffset = compactMotion ? 24 : 60;
         const startOpacity = compactMotion ? 0.72 : 0.35;
         const opacityRange = compactMotion ? 0.28 : 0.65;
-        heroProduct.style.transform = `scale(${(startScale + e * scaleRange).toFixed(4)}) translateY(${((1 - e) * startOffset).toFixed(1)}px)`;
+        const startTilt = compactMotion ? 4 : 11;
+        heroProduct.style.transform = `perspective(1300px) rotateX(${((1 - e) * startTilt).toFixed(2)}deg) scale(${(startScale + e * scaleRange).toFixed(4)}) translateY(${((1 - e) * startOffset).toFixed(1)}px)`;
         heroProduct.style.opacity = (startOpacity + e * opacityRange).toFixed(3);
+      }
+      // Parallax orbs drift at different rates; progress bar tracks the page.
+      if (orbsRef.current) {
+        orbsRef.current.style.setProperty("--sy", String(window.scrollY));
+      }
+      if (progressRef.current) {
+        const doc = document.documentElement;
+        const max = doc.scrollHeight - doc.clientHeight;
+        progressRef.current.style.width = max > 0 ? `${((window.scrollY / max) * 100).toFixed(2)}%` : "0%";
       }
       const sticky = stickySectionRef.current;
       if (sticky) {
@@ -308,6 +350,12 @@ export default function LandingPage({
 
   return (
     <main className={styles.page}>
+      <div ref={progressRef} className={styles.scrollProgress} aria-hidden="true" />
+      <div ref={orbsRef} className={styles.orbLayer} aria-hidden="true">
+        <div className={`${styles.orb} ${styles.orbA}`} />
+        <div className={`${styles.orb} ${styles.orbB}`} />
+        <div className={`${styles.orb} ${styles.orbC}`} />
+      </div>
       <nav className={styles.nav}>
         <div className={styles.navInner}>
           <Link href="/" className={styles.brand}>
@@ -355,10 +403,11 @@ export default function LandingPage({
           <div className={styles.heroIntro}>
             <div className={`${styles.heroBadge} ${styles.reveal}`}>SPECTRE — AI Portfolio Intelligence</div>
             <h1 className={`${styles.heroTitle} ${styles.reveal}`}>
-              See your portfolio risk score<br /><span>in 60 seconds.</span>
+              Plan like an investor.<br /><span>Run it like a machine<span className={styles.caret} aria-hidden="true" /></span>
             </h1>
             <p className={`${styles.heroSub} ${styles.reveal}`}>
-              Import your broker, super, and crypto holdings. SPECTRE calculates your risk score, runs Monte Carlo simulations, and lets you ask AI questions about your own portfolio — free to start.
+              Import your broker, super, and crypto holdings. SPECTRE scores your real risk in 60 seconds
+              and answers questions in plain English — because it can actually see what you own.
             </p>
             <div className={`${styles.heroActions} ${styles.reveal}`}>
               <Link href="/signin?mode=register&plan=free" className={`${styles.button} ${styles.primaryButton} ${styles.heroButton}`}>
@@ -368,6 +417,14 @@ export default function LandingPage({
                 See Live Demo →
               </Link>
             </div>
+            <div className={`${styles.lifecycle} ${styles.reveal}`}>
+              {["Import", "Score", "Ask", "Watch", "Automate"].map((step, i) => (
+                <span key={step} className={styles.lifecycleStep}>
+                  <span className={styles.lifecycleChip} style={{ animationDelay: `${i * 0.9}s` }}>{step}</span>
+                  {i < 4 && <span className={styles.lifecycleArrow}>→</span>}
+                </span>
+              ))}
+            </div>
             <p className={`${styles.reveal}`} style={{ fontSize: "0.75rem", color: "rgba(80,60,130,0.65)", marginTop: "1rem", letterSpacing: "0.04em" }}>
               Built for Australian investors · No card required · Cancel anytime
             </p>
@@ -375,10 +432,12 @@ export default function LandingPage({
           </div>
 
           <div ref={heroProductRef} className={styles.heroProduct}>
-          <div className={styles.dashboardCard}>
+          <div ref={heroCardRef} className={`${styles.dashboardCard} ${styles.tiltCard}`}>
             <div className={styles.dashboardHeader}>
               <div className={styles.dashboardUrl}>spectre-assets.com / dashboard</div>
             </div>
+
+            <TypeCommandBar />
 
             <div className={styles.dashboardStats}>
               <StatCard label="Portfolio Value" value="$1.27M" sub="+2.1% MTD" tone="up" />
@@ -466,10 +525,10 @@ export default function LandingPage({
           <div className={styles.aiRevealHead}>
             <div className={`${styles.sectionLabel} ${styles.reveal}`}>AI Portfolio Analyst</div>
             <h2 className={`${styles.aiRevealTitle} ${styles.reveal}`} style={{ transitionDelay: "0.07s" }}>
-              Ask your portfolio<br /><span>with context.</span>
+              Ask your portfolio<br /><span>anything.</span>
             </h2>
             <p className={`${styles.aiRevealSub} ${styles.reveal}`} style={{ transitionDelay: "0.14s" }}>
-              Not generic finance chat. SPECTRE AI reads your holdings, live pricing, benchmark risk, research terminal data, and saved snapshots before it answers.
+              This isn’t generic finance chat. Before answering, SPECTRE reads your actual holdings, live prices, your risk numbers, and the research feed — so “why am I down today?” gets a real answer, with your tickers in it.
             </p>
           </div>
           <div ref={aiConsoleRef} className={styles.aiConsoleReveal}>
@@ -525,7 +584,7 @@ export default function LandingPage({
               </p>
               <ul className={styles.myrmidonList}>
                 {[
-                  ["Strategy modes", "Dip buyer, momentum, index rotator — or write your own rules in a sentence."],
+                  ["Your rules, your words", "Write the strategy in plain English. Myrmidon follows it exactly — nothing more."],
                   ["Propose & confirm", "Trades queue with a veto window before they fire. Autopilot only when you say so."],
                   ["Full decision log", "Every run, every reason, every rejected trade — recorded and reviewable."],
                 ].map(([title, copy], index) => (
@@ -540,11 +599,12 @@ export default function LandingPage({
               <div className={styles.myrmidonTermBar}>MYRMIDON // AUTONOMOUS TRADING TERMINAL</div>
               <div className={styles.myrmidonTermBody}>
                 <div className={`${styles.myrmidonTermLine} ${styles.reveal}`} style={{ transitionDelay: "0.35s" }}>
-                  <span className={styles.myrmidonArmed}>● BOT ARMED</span> dip buyer · balanced risk · confirm mode
+                  <span className={styles.myrmidonArmed}>● BOT ARMED</span> your strategy, in your words · confirm mode
                 </div>
-                <div className={`${styles.myrmidonTermLine} ${styles.reveal}`} style={{ transitionDelay: "0.55s" }}>
-                  › Scan complete — SPY 3.2% off recent highs, VIX 16.3 calm
-                </div>
+                <TypedLine
+                  className={`${styles.myrmidonTermLine} ${styles.myrmidonTyped}`}
+                  text="› Buy quality names when they dip 3%. Take profit at +10%. Never break the 20% cash floor."
+                />
                 <div className={`${styles.myrmidonTermLine} ${styles.myrmidonToolRow} ${styles.reveal}`} style={{ transitionDelay: "0.75s" }}>
                   <span className={styles.myrmidonTool}>get positions ✓</span>
                   <span className={styles.myrmidonTool}>get macro ✓</span>
@@ -567,9 +627,9 @@ export default function LandingPage({
       <section className={styles.section} id="research">
         <div className={styles.container}>
           <div className={`${styles.sectionLabel} ${styles.reveal}`}>Research Terminal</div>
-          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`} style={{ transitionDelay: "0.07s" }}>Live market context for every answer.</h2>
+          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`} style={{ transitionDelay: "0.07s" }}>The market data behind every answer.</h2>
           <p className={`${styles.sectionSub} ${styles.reveal}`} style={{ transitionDelay: "0.14s" }}>
-            The same research system feeding the product: ASX, macro, earnings, crypto, commodities, oil, gold, treasury curves, and FRED/CFTC signals in one place.
+            The same feeds the AI reads: ASX equities, macro, earnings, crypto, commodities, treasury curves, and positioning data — open to explore on your own.
           </p>
 
           <div className={styles.researchHighlights}>
@@ -706,7 +766,7 @@ export default function LandingPage({
       <section className={styles.section} id="features">
         <div className={styles.container}>
           <div className={`${styles.sectionLabel} ${styles.reveal}`}>Features</div>
-          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`} style={{ transitionDelay: "0.07s" }}>One AI-native workspace across quant, research, and monitoring.</h2>
+          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`} style={{ transitionDelay: "0.07s" }}>Six tools that actually talk to each other.</h2>
 
           <div className={styles.featureGrid}>
             {features.map((feature, index) => (
@@ -728,7 +788,7 @@ export default function LandingPage({
           <h2 className={`${styles.sectionTitle} ${styles.revealUp}`} style={{ transitionDelay: "0.07s" }}>What the live system actually tracks.</h2>
 
           <div className={styles.chartsGrid}>
-            <article className={`${styles.chartCard} ${styles.chartTall} ${styles.revealLeft}`}>
+            <article className={`${styles.chartCard} ${styles.chartTall} ${styles.revealTilt}`}>
               <div className={styles.chartCardHeader}>
                 <span className={styles.chartCardTitle}>Risk Engine Surface</span>
                 <span className={styles.chartBadge}>Quant Signals</span>
@@ -756,7 +816,7 @@ export default function LandingPage({
               </div>
             </article>
 
-            <article className={`${styles.chartCard} ${styles.chartTall} ${styles.revealRight}`}>
+            <article className={`${styles.chartCard} ${styles.chartTall} ${styles.revealTilt}`} style={{ transitionDelay: "0.08s" }}>
               <div className={styles.chartCardHeader}>
                 <span className={styles.chartCardTitle}>Portfolio Drawdown (12-Month)</span>
                 <span className={`${styles.chartBadge} ${styles.chartBadgeOrange}`}>Max -11%</span>
@@ -797,7 +857,7 @@ export default function LandingPage({
               </div>
             </article>
 
-            <article className={`${styles.chartCard} ${styles.reveal}`} style={{ transitionDelay: "0.1s" }}>
+            <article className={`${styles.chartCard} ${styles.revealTilt}`} style={{ transitionDelay: "0.14s" }}>
               <div className={styles.chartCardHeader}>
                 <span className={styles.chartCardTitle}>Portfolio Exposure Mix</span>
                 <span className={styles.chartBadge}>Cross-Source</span>
@@ -820,7 +880,7 @@ export default function LandingPage({
               </div>
             </article>
 
-            <article className={`${styles.chartCard} ${styles.reveal}`} style={{ transitionDelay: "0.18s" }}>
+            <article className={`${styles.chartCard} ${styles.revealTilt}`} style={{ transitionDelay: "0.2s" }}>
               <div className={styles.chartCardHeader}>
                 <span className={styles.chartCardTitle}>Monte Carlo Projection (1Y)</span>
                 <span className={`${styles.chartBadge} ${styles.chartBadgeOrange}`}>500 Paths</span>
@@ -879,11 +939,11 @@ export default function LandingPage({
       <section className={styles.section} id="pricing">
         <div className={styles.container}>
           <div className={`${styles.sectionLabel} ${styles.reveal}`}>Pricing</div>
-          <h2 className={`${styles.sectionTitle} ${styles.centered} ${styles.reveal}`} style={{ transitionDelay: "0.07s" }}>Start with the AI workspace you need.</h2>
-          <p className={`${styles.sectionSub} ${styles.centeredSub} ${styles.reveal}`} style={{ transitionDelay: "0.14s" }}>One private workspace per account. Upgrade from quant + AI basics to full research and pro analytics anytime.</p>
+          <h2 className={`${styles.sectionTitle} ${styles.centered} ${styles.reveal}`} style={{ transitionDelay: "0.07s" }}>Simple pricing. Free to start.</h2>
+          <p className={`${styles.sectionSub} ${styles.centeredSub} ${styles.reveal}`} style={{ transitionDelay: "0.14s" }}>One private workspace per account. Upgrade or cancel anytime — billing runs through Stripe, we never see your card.</p>
 
           <div className={styles.pricingGrid}>
-            <article className={`${styles.planCard} ${styles.reveal}`}>
+            <article className={`${styles.planCard} ${styles.revealTilt}`}>
               <div className={styles.planTier}>Free</div>
               <div className={styles.planPrice}>
                 <span>$0</span>
@@ -900,7 +960,7 @@ export default function LandingPage({
               </Link>
             </article>
 
-            <article className={`${styles.planCard} ${styles.featuredPlan} ${styles.reveal}`} style={{ transitionDelay: "0.1s" }}>
+            <article className={`${styles.planCard} ${styles.featuredPlan} ${styles.revealTilt}`} style={{ transitionDelay: "0.1s" }}>
               <div className={styles.featuredBadge}>Most Popular</div>
               <div className={styles.planTier}>Plus</div>
               <div className={styles.planPrice}>
@@ -919,7 +979,7 @@ export default function LandingPage({
               </Link>
             </article>
 
-            <article className={`${styles.planCard} ${styles.reveal}`} style={{ transitionDelay: "0.2s" }}>
+            <article className={`${styles.planCard} ${styles.revealTilt}`} style={{ transitionDelay: "0.2s" }}>
               <div className={styles.planTier}>Pro</div>
               <div className={styles.planPrice}>
                 <span>$9.99</span>
@@ -945,7 +1005,7 @@ export default function LandingPage({
       <section className={styles.section}>
         <div className={styles.container}>
           <div className={`${styles.sectionLabel} ${styles.reveal}`}>Why SPECTRE?</div>
-          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`} style={{ transitionDelay: "0.07s" }}>An AI company built around portfolio context.</h2>
+          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`} style={{ transitionDelay: "0.07s" }}>A spreadsheet can’t answer questions. A chatbot can’t see your money.</h2>
 
           <div className={styles.compareGrid}>
             <div className={`${styles.compareColumn} ${styles.revealLeft}`}>
@@ -1066,6 +1126,100 @@ export default function LandingPage({
 
 function Divider() {
   return <hr className={styles.divider} />;
+}
+
+const COMMAND_PHRASES = [
+  "Why is my portfolio down today?",
+  "Buy the dip when SPY falls 3% or more",
+  "How concentrated am I in banks?",
+  "Alert me if BHP drops 5% in a week",
+  "Take profit on anything up 10%",
+] as const;
+
+function TypeCommandBar() {
+  const textRef = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    const el = textRef.current;
+    if (!el) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      el.textContent = COMMAND_PHRASES[0];
+      return;
+    }
+    let phrase = 0;
+    let pos = 0;
+    let deleting = false;
+    let timer = 0;
+    const tick = () => {
+      const full = COMMAND_PHRASES[phrase % COMMAND_PHRASES.length];
+      if (!deleting) {
+        pos += 1;
+        el.textContent = full.slice(0, pos);
+        if (pos >= full.length) {
+          deleting = true;
+          timer = window.setTimeout(tick, 1700);
+          return;
+        }
+        timer = window.setTimeout(tick, 34 + Math.random() * 40);
+      } else {
+        pos -= 2;
+        el.textContent = full.slice(0, Math.max(pos, 0));
+        if (pos <= 0) {
+          deleting = false;
+          phrase += 1;
+          timer = window.setTimeout(tick, 420);
+          return;
+        }
+        timer = window.setTimeout(tick, 14);
+      }
+    };
+    timer = window.setTimeout(tick, 900);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  return (
+    <div className={styles.commandBar}>
+      <span className={styles.commandPrompt}>›</span>
+      <span ref={textRef} className={styles.commandText} />
+      <span className={styles.caretSm} aria-hidden="true" />
+      <span className={styles.commandHint}>ask anything</span>
+    </div>
+  );
+}
+
+function TypedLine({ text, className }: { text: string; className?: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      el.textContent = text;
+      return;
+    }
+    let timer = 0;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries[0]?.isIntersecting) return;
+        observer.disconnect();
+        let pos = 0;
+        const tick = () => {
+          pos += 1;
+          el.textContent = text.slice(0, pos);
+          if (pos < text.length) timer = window.setTimeout(tick, 22);
+        };
+        timer = window.setTimeout(tick, 500);
+      },
+      { threshold: 0.6 },
+    );
+    observer.observe(el);
+    return () => {
+      observer.disconnect();
+      window.clearTimeout(timer);
+    };
+  }, [text]);
+
+  return <div ref={ref} className={className} />;
 }
 
 function StatCounter({ value }: { value: string }) {
