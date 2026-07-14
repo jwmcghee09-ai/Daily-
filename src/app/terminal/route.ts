@@ -9,43 +9,49 @@ const HTML = `<!DOCTYPE html>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>MYRMIDON TERMINAL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;overflow:hidden}
-body{background:#000;color:#e6e4f2;font-family:'Courier New',Courier,monospace;font-size:14px;display:flex;flex-direction:column}
+body{background:#08070f;color:#e6e4f2;font-family:'DM Mono','Courier New',monospace;font-size:13.5px;display:flex;flex-direction:column}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse 50% 40% at 12% 0%,rgba(168,85,247,.10) 0%,transparent 65%),radial-gradient(ellipse 42% 45% at 95% 95%,rgba(255,122,48,.06) 0%,transparent 65%)}
+body>*{position:relative;z-index:1}
 
-#topbar{background:#0c0c16;border-bottom:2px solid #a78bfa;padding:8px 16px;display:flex;align-items:center;gap:18px;font-size:12px;color:#666;flex-shrink:0}
-.fkey{color:#000;background:#a78bfa;padding:3px 8px;border-radius:3px;font-weight:bold;font-size:11px;cursor:pointer}
+#topbar{background:rgba(13,12,22,.92);border-bottom:1px solid rgba(167,139,250,.22);padding:9px 18px;display:flex;align-items:center;gap:16px;font-size:11.5px;color:#777;flex-shrink:0;backdrop-filter:blur(10px)}
+.fkey{color:#0d0c16;background:#a78bfa;padding:3px 9px;border-radius:6px;font-weight:500;font-size:11px;cursor:pointer;font-family:'DM Mono',monospace}
 .fkey:hover{background:#c4b5fd}
 .flabel{color:#888}
 #topbar .right{margin-left:auto;display:flex;gap:16px;align-items:center}
 #clock{color:#a78bfa;font-size:13px;font-weight:bold;letter-spacing:.05em}
 #conn{font-size:12px;color:#a78bfa}
 
-#titlebar{background:linear-gradient(90deg,#a855f7 0%,#d946ef 35%,#ff7a30 72%,#ffb347 100%);color:#fff;padding:9px 16px;display:flex;justify-content:space-between;align-items:center;font-weight:bold;font-size:15px;letter-spacing:.06em;flex-shrink:0}
+#titlebar{background:linear-gradient(90deg,#a855f7 0%,#d946ef 35%,#ff7a30 72%,#ffb347 100%);color:#fff;padding:10px 18px;display:flex;justify-content:space-between;align-items:center;font-weight:600;font-size:15px;letter-spacing:.1em;flex-shrink:0;font-family:'Space Grotesk',sans-serif}
 
-#metrics{display:grid;grid-template-columns:repeat(5,1fr);border-bottom:1px solid #211f38;flex-shrink:0}
-.mc{padding:12px 16px;border-right:1px solid #111}
-.mc:last-child{border-right:none}
-.ml{font-size:10px;text-transform:uppercase;color:#555;letter-spacing:.08em;margin-bottom:4px}
+#metrics{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;padding:14px 18px 2px;flex-shrink:0}
+.mc{padding:13px 16px;background:#12101d;border:1px solid rgba(167,139,250,.18);border-radius:12px}
+.mc:last-child{border-right:1px solid rgba(167,139,250,.18)}
+.ml{font-size:9.5px;text-transform:uppercase;color:rgba(196,181,253,.55);letter-spacing:.12em;margin-bottom:5px}
 .mv{font-size:22px;font-weight:bold;color:#a78bfa;line-height:1.1}
 .ms{font-size:11px;color:#666;margin-top:3px}
 
 /* strategy banner */
-#strat-bar{background:#0a0a12;border-bottom:1px solid #211f38;padding:7px 16px;font-size:11px;color:#666;flex-shrink:0;display:flex;gap:12px;align-items:center;min-height:22px}
+#strat-bar{background:#12101d;border:1px solid rgba(167,139,250,.14);border-radius:10px;margin:10px 18px 0;padding:8px 15px;font-size:11px;color:#777;flex-shrink:0;display:flex;gap:12px;align-items:center;min-height:22px}
 #strat-bar .strat-label{color:#a78bfa;font-size:9px;text-transform:uppercase;letter-spacing:.1em;flex-shrink:0}
 #strat-text{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 #lessons-wrap{flex-shrink:0;color:#555;font-size:10px}
 
 /* main area */
-#main{display:grid;grid-template-columns:340px 1fr 400px;flex:1;min-height:0}
+#main{display:grid;grid-template-columns:340px 1fr 400px;flex:1;min-height:0;gap:14px;padding:14px 18px}
 
 /* panels */
-#left{border-right:1px solid #211f38;display:flex;flex-direction:column;min-height:0;overflow:hidden}
-#center{display:flex;flex-direction:column;min-height:0;border-right:1px solid #211f38}
-#chat-panel{display:flex;flex-direction:column;min-height:0}
+#left{display:flex;flex-direction:column;min-height:0;overflow:hidden;background:#0d0c16;border:1px solid rgba(167,139,250,.18);border-radius:14px}
+#center{display:flex;flex-direction:column;min-height:0;background:#0d0c16;border:1px solid rgba(167,139,250,.18);border-radius:14px;overflow:hidden}
+#chat-panel{display:flex;flex-direction:column;min-height:0;background:#0d0c16;border:1px solid rgba(167,139,250,.18);border-radius:14px;overflow:hidden}
 
-.ph{background:#0e0e1a;border-bottom:1px solid #211f38;padding:7px 12px;color:#a78bfa;font-size:10px;letter-spacing:.12em;text-transform:uppercase;flex-shrink:0}
+.ph{background:#12101f;border-bottom:1px solid rgba(167,139,250,.12);padding:9px 14px;color:rgba(196,181,253,.85);font-size:10px;letter-spacing:.14em;text-transform:uppercase;flex-shrink:0}
+.ph::before{content:'';display:inline-block;width:14px;height:1px;background:linear-gradient(90deg,#ff7a30,#a78bfa);margin-right:8px;vertical-align:middle}
 
 /* position buckets */
 #core-wrap{overflow-y:auto;max-height:44%}
@@ -59,13 +65,13 @@ body{background:#000;color:#e6e4f2;font-family:'Courier New',Courier,monospace;f
 
 /* chat */
 #chat-msgs{flex:1;overflow-y:auto;min-height:0;padding:14px 14px 8px;display:flex;flex-direction:column;gap:12px}
-.cmsg-u{align-self:flex-end;background:#181530;border:1px solid #3d3766;border-radius:6px;padding:9px 12px;max-width:92%;font-size:13px;color:#e6e4f2;white-space:pre-wrap;word-break:break-word}
-.cmsg-a{align-self:flex-start;background:#0a0a12;border:1px solid #211f38;border-radius:6px;padding:9px 12px;max-width:94%;font-size:13px;color:#e6e4f2;white-space:pre-wrap;word-break:break-word;line-height:1.5}
+.cmsg-u{align-self:flex-end;background:rgba(167,139,250,.12);border:1px solid rgba(167,139,250,.28);border-radius:12px 12px 3px 12px;padding:9px 13px;max-width:92%;font-size:12.5px;color:#e6e4f2;white-space:pre-wrap;word-break:break-word}
+.cmsg-a{align-self:flex-start;background:rgba(255,255,255,.03);border:1px solid rgba(167,139,250,.12);border-radius:3px 12px 12px 12px;padding:9px 13px;max-width:94%;font-size:12.5px;color:#e6e4f2;white-space:pre-wrap;word-break:break-word;line-height:1.5}
 .cmsg-sys{color:#555;font-size:12px;text-align:center;padding:2px 0;font-style:italic}
 #chat-input-row{display:flex;gap:8px;padding:12px;border-top:1px solid #211f38;flex-shrink:0}
-#chat-in{flex:1;background:#0a0a12;border:1px solid #2d2a4a;border-radius:5px;color:#e6e4f2;font-family:'Courier New',monospace;font-size:13px;padding:9px 11px;resize:none;min-height:44px;max-height:110px;overflow-y:auto;outline:none}
+#chat-in{flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(167,139,250,.25);border-radius:10px;color:#e6e4f2;font-family:'Courier New',monospace;font-size:13px;padding:9px 11px;resize:none;min-height:44px;max-height:110px;overflow-y:auto;outline:none}
 #chat-in:focus{border-color:#a78bfa}
-#chat-send{background:#181530;border:1px solid #a78bfa;border-radius:5px;color:#a78bfa;font-family:'Courier New',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:9px 16px;cursor:pointer;white-space:nowrap;align-self:flex-end}
+#chat-send{background:linear-gradient(135deg,rgba(168,85,247,.25),rgba(217,70,239,.2));border:1px solid rgba(167,139,250,.5);border-radius:10px;color:#a78bfa;font-family:'Courier New',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:9px 16px;cursor:pointer;white-space:nowrap;align-self:flex-end}
 #chat-send:hover{background:#232045}
 #chat-send:disabled{opacity:.4;cursor:default}
 /* tool badges */
@@ -113,30 +119,30 @@ body{background:#000;color:#e6e4f2;font-family:'Courier New',Courier,monospace;f
 
 /* tables */
 table{width:100%;border-collapse:collapse;font-size:12.5px}
-th{padding:7px 10px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#444;border-bottom:1px solid #111;position:sticky;top:0;background:#08080f}
-td{padding:7px 10px;border-bottom:1px solid #0e0d1c;vertical-align:middle}
-tr:hover td{background:#0e0d1c}
+th{padding:8px 12px;text-align:left;font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;color:rgba(196,181,253,.5);border-bottom:1px solid rgba(167,139,250,.12);position:sticky;top:0;background:#0d0c16}
+td{padding:8px 12px;border-bottom:1px solid rgba(167,139,250,.05);vertical-align:middle}
+tr:hover td{background:rgba(167,139,250,.05)}
 
-#statusbar{background:#08080f;border-top:1px solid #111;padding:7px 16px;display:flex;justify-content:space-between;font-size:11px;color:#444;flex-shrink:0}
+#statusbar{background:transparent;border-top:1px solid rgba(167,139,250,.1);padding:8px 18px;display:flex;justify-content:space-between;font-size:10.5px;color:#555;flex-shrink:0}
 
 /* macro ticker */
-#macro-bar{background:#0a0a12;border-bottom:1px solid #211f38;padding:7px 16px;display:flex;gap:0;align-items:stretch;flex-shrink:0;overflow-x:auto;min-height:38px}
-.mkt{display:flex;align-items:center;gap:7px;padding:0 14px;border-right:1px solid #211f38;font-size:11.5px;white-space:nowrap}
-.mkt:last-child{border-right:none}
+#macro-bar{background:transparent;padding:9px 18px 0;display:flex;gap:8px;align-items:stretch;flex-shrink:0;overflow-x:auto;min-height:38px}
+.mkt{display:flex;align-items:center;gap:7px;padding:5px 13px;border:1px solid rgba(167,139,250,.14);border-radius:999px;background:rgba(19,17,32,.7);font-size:11px;white-space:nowrap}
+.mkt:last-child{margin-left:auto;border:none;background:transparent}
 .mkt-sym{color:#555;font-size:10px;letter-spacing:.08em;text-transform:uppercase}
 .mkt-val{color:#e6e4f2;font-weight:bold}
 .mkt-chg{font-size:10px}
 
 /* risk signals */
-#risk-bar{background:#08080f;border-bottom:2px solid #211f38;padding:7px 16px;display:flex;gap:7px;align-items:center;flex-shrink:0;flex-wrap:wrap;min-height:34px}
+#risk-bar{background:transparent;padding:8px 18px 0;display:flex;gap:7px;align-items:center;flex-shrink:0;flex-wrap:wrap;min-height:34px}
 .risk-lbl{color:#333;font-size:10px;text-transform:uppercase;letter-spacing:.1em;flex-shrink:0}
-.sig{font-size:10.5px;padding:3px 10px;border-radius:3px;white-space:nowrap;border:1px solid}
+.sig{font-size:10.5px;padding:4px 12px;border-radius:999px;white-space:nowrap;border:1px solid}
 .sig-ok{color:#005500;border-color:#003300;background:#010800}
 .sig-amb{color:#ff7a30;border-color:#4a2e10;background:#150c02}
 .sig-red{color:#ff4444;border-color:#3a0000;background:#0d0000;font-weight:bold}
 
 .pos{color:#00e676}.neg{color:#ff4444}.amb{color:#a78bfa}.cyn{color:#38bdf8}.dim{color:#444}
-::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:#08080f}::-webkit-scrollbar-thumb{background:#211f38}
+::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(167,139,250,.25);border-radius:3px}
 .placeholder{padding:12px;color:#222;font-size:11px;text-align:center}
 </style>
 </head>
@@ -218,25 +224,25 @@ tr:hover td{background:#0e0d1c}
 <div id="main">
   <!-- LEFT: positions split into two buckets -->
   <div id="left">
-    <div class="ph">■ CORE · INDEX SLEEVE<span style="color:#555;text-transform:none;letter-spacing:0;margin-left:8px;font-size:10px">— your long-term ETF base</span><span style="float:right;color:#333;font-size:9px" id="core-pct"></span></div>
+    <div class="ph">CORE · INDEX SLEEVE<span style="color:#555;text-transform:none;letter-spacing:0;margin-left:8px;font-size:10px">— your long-term ETF base</span><span style="float:right;color:#333;font-size:9px" id="core-pct"></span></div>
     <div id="core-wrap" style="border-bottom:1px solid #211f38"><div class="placeholder">LOADING…</div></div>
-    <div class="ph" style="background:#030a04;border-color:#003300;color:#00e676">■ ALPHA · SATELLITE SLEEVE<span style="color:#555;text-transform:none;letter-spacing:0;margin-left:8px;font-size:10px">— active stock picks</span><span style="float:right;color:#003300;font-size:9px" id="alpha-pct"></span></div>
+    <div class="ph" style="background:#030a04;border-color:#003300;color:#00e676">ALPHA · SATELLITE SLEEVE<span style="color:#555;text-transform:none;letter-spacing:0;margin-left:8px;font-size:10px">— active stock picks</span><span style="float:right;color:#003300;font-size:9px" id="alpha-pct"></span></div>
     <div id="alpha-wrap" style="flex:1;overflow-y:auto;min-height:0"><div class="placeholder">LOADING…</div></div>
   </div>
 
   <!-- CENTER: chart + trades + open orders -->
   <div id="center">
-    <div class="ph">■ 30-DAY EQUITY CURVE<span style="color:#555;text-transform:none;letter-spacing:0;margin-left:8px;font-size:10px">— your account value over the last month</span><span style="float:right;color:#333;font-size:9px" id="curve-range"></span></div>
+    <div class="ph">30-DAY EQUITY CURVE<span style="color:#555;text-transform:none;letter-spacing:0;margin-left:8px;font-size:10px">— your account value over the last month</span><span style="float:right;color:#333;font-size:9px" id="curve-range"></span></div>
     <div id="chart-area">
       <svg id="chart" preserveAspectRatio="none"><text x="50%" y="50%" text-anchor="middle" fill="#211f38" font-size="12" font-family="monospace">LOADING…</text></svg>
     </div>
     <div id="trades-area">
-      <div class="ph">■ RECENT FILLED TRADES<span style="color:#555;text-transform:none;letter-spacing:0;margin-left:8px;font-size:10px">— orders that actually executed</span></div>
+      <div class="ph">RECENT FILLED TRADES<span style="color:#555;text-transform:none;letter-spacing:0;margin-left:8px;font-size:10px">— orders that actually executed</span></div>
       <table><thead><tr><th>Symbol</th><th>Side</th><th style="text-align:right">Qty</th><th style="text-align:right">Fill $</th><th style="text-align:right">Total A$</th><th style="text-align:right">≈ USD</th><th style="text-align:right">Date</th></tr></thead>
       <tbody id="trades-tb"><tr><td colspan="7" class="placeholder">LOADING…</td></tr></tbody></table>
     </div>
     <div id="open-orders-area">
-      <div class="ph">■ OPEN ORDERS<span style="color:#555;text-transform:none;letter-spacing:0;margin-left:8px;font-size:10px">— submitted, waiting to execute</span></div>
+      <div class="ph">OPEN ORDERS<span style="color:#555;text-transform:none;letter-spacing:0;margin-left:8px;font-size:10px">— submitted, waiting to execute</span></div>
       <table><thead><tr><th>Symbol</th><th>Side</th><th style="text-align:right">Qty</th><th>Type</th><th>Status</th><th style="text-align:right">Submitted</th></tr></thead>
       <tbody id="orders-tb"><tr><td colspan="6" class="placeholder">—</td></tr></tbody></table>
     </div>
@@ -244,7 +250,7 @@ tr:hover td{background:#0e0d1c}
 
   <!-- RIGHT: Myrmidon chat -->
   <div id="chat-panel">
-    <div class="ph">■ MYRMIDON AI<span style="color:#555;text-transform:none;letter-spacing:0;margin-left:8px;font-size:10px">— ask questions or give trade orders</span><span id="chat-model" style="float:right;color:#333;font-size:9px"></span></div>
+    <div class="ph">MYRMIDON AI<span style="color:#555;text-transform:none;letter-spacing:0;margin-left:8px;font-size:10px">— ask questions or give trade orders</span><span id="chat-model" style="float:right;color:#333;font-size:9px"></span></div>
     <div id="chat-msgs">
       <div class="cmsg-sys">Ask Myrmidon about positions, trades, market analysis…</div>
     </div>
@@ -253,11 +259,11 @@ tr:hover td{background:#0e0d1c}
       <button id="chat-send" onclick="chatSend()">Send</button>
     </div>
     <div id="log-panel">
-      <div class="ph" style="font-size:8px">■ DECISION LOG <button onclick="loadLog(true)" style="float:right;background:none;border:none;cursor:pointer;color:#555;font-family:'Courier New',monospace;font-size:8px;text-transform:uppercase;letter-spacing:.05em">↺ REFRESH</button></div>
+      <div class="ph" style="font-size:8px">DECISION LOG <button onclick="loadLog(true)" style="float:right;background:none;border:none;cursor:pointer;color:#555;font-family:'Courier New',monospace;font-size:8px;text-transform:uppercase;letter-spacing:.05em">↺ REFRESH</button></div>
       <div id="log-content"><span style="color:#333;font-style:italic;font-size:10px">Loading…</span></div>
     </div>
     <div id="strategy-panel">
-      <div class="ph" style="font-size:8px">■ AI STRATEGY ENGINE <a href="/strategy" style="color:#555;text-decoration:none;margin-left:8px;font-size:9px">FULL PAGE ↗</a> <button onclick="loadStrategy(true)" style="float:right;background:none;border:none;cursor:pointer;color:#555;font-family:'Courier New',monospace;font-size:8px;text-transform:uppercase;letter-spacing:.05em">↺ REFRESH</button></div>
+      <div class="ph" style="font-size:8px">AI STRATEGY ENGINE <a href="/strategy" style="color:#555;text-decoration:none;margin-left:8px;font-size:9px">FULL PAGE ↗</a> <button onclick="loadStrategy(true)" style="float:right;background:none;border:none;cursor:pointer;color:#555;font-family:'Courier New',monospace;font-size:8px;text-transform:uppercase;letter-spacing:.05em">↺ REFRESH</button></div>
       <div id="strategy-content"><span style="color:#333;font-style:italic;font-size:10px">Loading…</span></div>
     </div>
   </div>
@@ -826,7 +832,7 @@ tr:hover td{background:#0e0d1c}
     // pending trades
     var pend=(stratState.pending||[]).filter(function(t){return t.status==='pending';});
     var resolved=(stratState.pending||[]).filter(function(t){return t.status!=='pending';}).slice(0,5);
-    h+='<div class="ph" style="font-size:8px;background:none;padding:3px 0">■ PENDING TRADES ('+pend.length+')</div>';
+    h+='<div class="ph" style="font-size:8px;background:none;padding:3px 0">PENDING TRADES ('+pend.length+')</div>';
     if(!pend.length)h+='<div style="color:#333;font-style:italic;padding:2px 0 6px">None queued</div>';
     pend.forEach(function(t){
       var due=new Date(t.execute_after).getTime()-Date.now();
@@ -847,7 +853,7 @@ tr:hover td{background:#0e0d1c}
 
     // recent runs
     var runs=stratState.runs||[];
-    h+='<div class="ph" style="font-size:8px;background:none;padding:5px 0 3px">■ RUN HISTORY ('+runs.length+')</div>';
+    h+='<div class="ph" style="font-size:8px;background:none;padding:5px 0 3px">RUN HISTORY ('+runs.length+')</div>';
     if(!runs.length)h+='<div style="color:#333;font-style:italic;padding:2px 0">No runs yet — hit ▶ Run now</div>';
     runs.forEach(function(r,i){
       var dt=new Date(r.created_at).toLocaleString('en-AU',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
