@@ -19,23 +19,23 @@
   --brand-accent-faint:rgba(255,75,51,.07);
 
   /* ── Settings surface colours ── */
-  --bg:#ddd6f3;
+  --bg:#171514;
   --card:rgba(8,7,16,.92);
   --card2:rgba(12,10,22,.95);
-  --border:rgba(100,80,200,.13);
-  --border2:rgba(100,80,200,.22);
-  --text:#0f0d1e;
-  --muted:#5e5a78;
-  --muted2:#4a4665;
-  --purple:#a855f7;
-  --purple-hi:#d946ef;
+  --border:rgba(190,180,175,.13);
+  --border2:rgba(190,180,175,.22);
+  --text:#f2efeb;
+  --muted:#a8a099;
+  --muted2:#c6beb7;
+  --purple:#ff3f34;
+  --purple-hi:#ff7a30;
   --orange:#ff7a30;
   --orange-dk:#fb923c;
   --mono:'DM Mono',monospace;
   --disp:'Space Grotesk',sans-serif;
   --sans:'Space Grotesk',sans-serif;
   --max:1200px;
-  --shadow:0 18px 42px -28px rgba(100,80,200,.12);
+  --shadow:0 18px 42px -28px rgba(190,180,175,.12);
 }
 body{background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.7;overflow-x:hidden}
 body.boot-pending > *:not(#boot-splash):not(script){display:none!important}
@@ -45,23 +45,23 @@ body.page-transitioning > *:not(#boot-splash):not(script){visibility:hidden!impo
 body::before{
   content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   background:
-    radial-gradient(ellipse 75% 55% at 50% -8%,rgba(124,77,255,.32) 0%,transparent 100%),
-    radial-gradient(ellipse 55% 70% at -5% 55%,rgba(124,77,255,.22) 0%,transparent 60%),
-    radial-gradient(ellipse 45% 55% at 105% 80%,rgba(217,70,239,.12) 0%,transparent 55%),
-    #ddd6f3;
+    radial-gradient(ellipse 75% 55% at 50% -8%,rgba(255,63,52,.13) 0%,transparent 100%),
+    radial-gradient(ellipse 55% 70% at -5% 55%,rgba(255,63,52,.09) 0%,transparent 60%),
+    radial-gradient(ellipse 45% 55% at 105% 80%,rgba(255,122,48,.07) 0%,transparent 55%),
+    #171514;
 }
 body::after{
   content:'';position:fixed;inset:0;pointer-events:none;z-index:1;
-  background-image:radial-gradient(rgba(100,80,200,.075) .6px,transparent .6px);
+  background-image:radial-gradient(rgba(190,180,175,.075) .6px,transparent .6px);
   background-size:58px 58px;opacity:1;
 }
-nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(233,228,246,.94);backdrop-filter:blur(28px) saturate(1.4);-webkit-backdrop-filter:blur(28px) saturate(1.4);border-bottom:1px solid rgba(100,80,200,.13)}
+nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(24,22,21,.94);backdrop-filter:blur(28px) saturate(1.4);-webkit-backdrop-filter:blur(28px) saturate(1.4);border-bottom:1px solid rgba(190,180,175,.13)}
 .nav-inner{max-width:var(--max);margin:0 auto;padding:0 1.4rem;height:100%;display:flex;align-items:center;justify-content:space-between;gap:1rem}
 .nav-logo{font-family:var(--sans);font-size:1.1rem;font-weight:800;letter-spacing:.14em;text-decoration:none;background:linear-gradient(90deg,var(--purple) 0%,var(--purple-hi) 35%,var(--orange) 72%,#ffb347 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .nav-links{display:flex;gap:1.2rem;list-style:none}
 .nav-links a{position:relative;font-family:var(--mono);font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(94,90,120,.65);text-decoration:none}
 .nav-links a::after{content:'';position:absolute;left:0;right:100%;bottom:-4px;height:1.5px;background:linear-gradient(90deg,var(--purple),var(--orange));transition:right .25s ease}
-.nav-links a.active,.nav-links a:hover{color:#0f0d1e}
+.nav-links a.active,.nav-links a:hover{color:#f2efeb}
 .nav-links a.active::after,.nav-links a:hover::after{right:0}
 .nav-links a#nav-research-link{
   padding:.5rem .95rem;
@@ -69,23 +69,23 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
   font-size:.64rem;
   font-weight:700;
   letter-spacing:.16em;
-  color:#7c4dff;
-  background:linear-gradient(135deg,rgba(168,85,247,.12),rgba(255,122,48,.08));
-  border:1px solid rgba(168,85,247,.3);
-  box-shadow:0 4px 14px rgba(168,85,247,.12);
+  color:#ff3f34;
+  background:linear-gradient(135deg,rgba(255,63,52,.12),rgba(255,122,48,.08));
+  border:1px solid rgba(255,63,52,.3);
+  box-shadow:0 4px 14px rgba(255,63,52,.12);
 }
 .nav-links a#nav-research-link::after{display:none}
 .nav-links a#nav-research-link:hover,
 .nav-links a#nav-research-link.active{
-  color:#0f0d1e;
+  color:#f2efeb;
   border-color:rgba(255,122,48,.4);
-  background:linear-gradient(135deg,rgba(168,85,247,.2),rgba(255,122,48,.14));
+  background:linear-gradient(135deg,rgba(255,63,52,.2),rgba(255,122,48,.14));
   transform:translateY(-1px);
 }
 .nav-right{display:flex;align-items:center;gap:1rem}
-.nav-user{font-family:var(--mono);font-size:.56rem;letter-spacing:.1em;color:#5e5a78;text-transform:uppercase}
-.nav-btn{font-family:var(--mono);font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:#0f0d1e;background:transparent;border:1px solid rgba(100,80,200,.22);border-radius:999px;padding:.45rem .95rem;cursor:pointer;text-decoration:none;transition:all .2s}
-.nav-btn:hover{color:#0f0d1e;transform:translateY(-1px);border-color:rgba(124,77,255,.42)}
+.nav-user{font-family:var(--mono);font-size:.56rem;letter-spacing:.1em;color:#a8a099;text-transform:uppercase}
+.nav-btn{font-family:var(--mono);font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:#f2efeb;background:transparent;border:1px solid rgba(190,180,175,.22);border-radius:999px;padding:.45rem .95rem;cursor:pointer;text-decoration:none;transition:all .2s}
+.nav-btn:hover{color:#f2efeb;transform:translateY(-1px);border-color:rgba(255,63,52,.42)}
 .wrap{width:100%;max-width:var(--max);margin:0 auto;padding:0 1.4rem;position:relative;z-index:2}
 .settings-page{padding:96px 0 2.6rem}
 .page-head{display:flex;align-items:baseline;gap:1rem;margin-bottom:1.5rem}
@@ -95,7 +95,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
 .page-sub{font-family:var(--mono);font-size:.56rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
 .settings-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
 .settings-card{position:relative;overflow:hidden;background:linear-gradient(180deg,rgba(21,16,34,.96),rgba(14,11,24,.95));border:1px solid var(--border);border-radius:16px;padding:1.2rem 1.3rem;box-shadow:var(--shadow)}
-.settings-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,rgba(168,85,247,.72),rgba(255,122,48,.42))}
+.settings-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,rgba(255,63,52,.72),rgba(255,122,48,.42))}
 .settings-title{font-family:var(--mono);font-size:.56rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted2);margin-bottom:.75rem}
 .settings-rows{display:grid;gap:.45rem}
 .settings-row{display:flex;justify-content:space-between;align-items:center;gap:.6rem;border:1px solid var(--border);border-radius:10px;background:rgba(12,10,20,.56);padding:.56rem .78rem}
@@ -103,9 +103,9 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
 .settings-row strong{font-size:.76rem;color:var(--text);word-break:break-word;text-align:right}
 .settings-note{font-size:.8rem;color:var(--muted2);line-height:1.65}
 .settings-actions{margin-top:.8rem;display:flex;gap:.55rem;flex-wrap:wrap}
-.btn-primary{font-family:var(--mono);font-size:.62rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#fff;background:linear-gradient(135deg,var(--purple) 0%,var(--purple-hi) 54%,var(--orange) 100%);border:1px solid rgba(217,70,239,.2);border-radius:999px;padding:.8rem 1.3rem;cursor:pointer;box-shadow:0 10px 22px rgba(168,85,247,.18);transition:all .2s}
+.btn-primary{font-family:var(--mono);font-size:.62rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#fff;background:linear-gradient(135deg,var(--purple) 0%,var(--purple-hi) 54%,var(--orange) 100%);border:1px solid rgba(255,122,48,.2);border-radius:999px;padding:.8rem 1.3rem;cursor:pointer;box-shadow:0 10px 22px rgba(255,63,52,.18);transition:all .2s}
 .btn-primary:disabled{opacity:.6;cursor:not-allowed}
-.btn-pro{font-family:var(--mono);font-size:.62rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#fff;background:linear-gradient(135deg,var(--purple) 0%,var(--purple-hi) 100%);border:1px solid rgba(217,70,239,.24);border-radius:999px;padding:.8rem 1.3rem;cursor:pointer;box-shadow:0 10px 22px rgba(168,85,247,.18);transition:all .2s}
+.btn-pro{font-family:var(--mono);font-size:.62rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#fff;background:linear-gradient(135deg,var(--purple) 0%,var(--purple-hi) 100%);border:1px solid rgba(255,122,48,.24);border-radius:999px;padding:.8rem 1.3rem;cursor:pointer;box-shadow:0 10px 22px rgba(255,63,52,.18);transition:all .2s}
 .btn-pro:disabled{opacity:.6;cursor:not-allowed}
 .btn-ghost{font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text);background:transparent;border:1px solid var(--border2);border-radius:999px;padding:.8rem 1.3rem;cursor:pointer;text-decoration:none;transition:all .2s}
 .btn-primary:hover,.btn-pro:hover,.btn-ghost:hover{transform:translateY(-1px)}
@@ -140,11 +140,11 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
 /* Page-level (light bg) text overrides */
 .page-title,.page-sub,.page-head,.settings-page,.foot-disc,.foot-link,.footer{color:var(--text)}
 /* Settings card bg stays dark, shadow pops on light page */
-.settings-card{background:linear-gradient(180deg,rgba(14,11,26,.97),rgba(8,6,18,.96));box-shadow:0 24px 60px rgba(0,0,0,.38),0 4px 18px rgba(100,80,200,.08)}
+.settings-card{background:linear-gradient(180deg,rgba(14,11,26,.97),rgba(8,6,18,.96));box-shadow:0 24px 60px rgba(0,0,0,.38),0 4px 18px rgba(190,180,175,.08)}
 /* Rows inside dark cards keep dark row bg */
 .settings-row{background:rgba(255,255,255,.03);border-color:rgba(255,255,255,.06)}
 /* Footer on light bg */
-.footer{border-top-color:rgba(100,80,200,.13)}
+.footer{border-top-color:rgba(190,180,175,.13)}
 @media(max-width:860px){.settings-grid{grid-template-columns:1fr}.nav-links{display:none}.nav-user{max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}
 @media(max-width:480px){
   /* Nav */
@@ -252,8 +252,8 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
     <div class="modal-title">Choose a Plan</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin:.9rem 0 1rem">
       <div style="position:relative;overflow:hidden;background:rgba(255,255,255,.04);border:1px solid rgba(178,154,233,.16);border-radius:14px;padding:1.1rem 1.2rem">
-        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#a855f7,#d946ef 60%,#ff7a30)"></div>
-        <div style="font-family:var(--mono);font-size:.54rem;letter-spacing:.18em;text-transform:uppercase;color:#a855f7;margin-bottom:.4rem">Plus</div>
+        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#ff3f34,#ff7a30 60%,#ff7a30)"></div>
+        <div style="font-family:var(--mono);font-size:.54rem;letter-spacing:.18em;text-transform:uppercase;color:#ff3f34;margin-bottom:.4rem">Plus</div>
         <div style="font-size:1.7rem;font-weight:700;color:#f4f0ff;line-height:1">$2.99</div>
         <div style="font-family:var(--mono);font-size:.6rem;color:#9d97b7;margin-bottom:.9rem">per month</div>
         <ul style="list-style:none;display:flex;flex-direction:column;gap:.35rem;margin-bottom:1rem">
@@ -265,8 +265,8 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
         <button id="upgrade-plus-btn" class="btn-primary" style="width:100%;font-size:.6rem;padding:.65rem .9rem">Get Plus — $2.99/mo</button>
       </div>
       <div style="position:relative;overflow:hidden;background:rgba(255,255,255,.04);border:1px solid rgba(178,154,233,.16);border-radius:14px;padding:1.1rem 1.2rem">
-        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#a855f7,#d946ef 60%,#ff7a30)"></div>
-        <div style="font-family:var(--mono);font-size:.54rem;letter-spacing:.18em;text-transform:uppercase;color:#a855f7;margin-bottom:.4rem">Pro</div>
+        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#ff3f34,#ff7a30 60%,#ff7a30)"></div>
+        <div style="font-family:var(--mono);font-size:.54rem;letter-spacing:.18em;text-transform:uppercase;color:#ff3f34;margin-bottom:.4rem">Pro</div>
         <div style="font-size:1.7rem;font-weight:700;color:#f4f0ff;line-height:1">$9.99</div>
         <div style="font-family:var(--mono);font-size:.6rem;color:#9d97b7;margin-bottom:.9rem">per month</div>
         <ul style="list-style:none;display:flex;flex-direction:column;gap:.35rem;margin-bottom:1rem">

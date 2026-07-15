@@ -11,10 +11,10 @@ const TRADER_EMAIL = "jwmcghee09@gmail.com";
 const MYRMIDON_AI_TERMINAL = `<!-- MYRMIDON AI terminal (embeds /terminal) -->
 <div id="myrm-ai" style="padding:0 2.5rem 2rem;max-width:1400px;margin:0 auto;box-sizing:border-box">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem">
-    <span style="font-family:monospace;font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:#a78bfa">Myrmidon — Autonomous Trading Agent</span>
-    <a href="/terminal" target="_blank" style="font-family:monospace;font-size:.56rem;letter-spacing:.1em;text-transform:uppercase;color:#a78bfa;background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.25);border-radius:5px;padding:.3rem .8rem;text-decoration:none">Open full screen ↗</a>
+    <span style="font-family:monospace;font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:#ff6a52">Myrmidon — Autonomous Trading Agent</span>
+    <a href="/terminal" target="_blank" style="font-family:monospace;font-size:.56rem;letter-spacing:.1em;text-transform:uppercase;color:#ff6a52;background:rgba(255,106,82,.1);border:1px solid rgba(255,106,82,.25);border-radius:5px;padding:.3rem .8rem;text-decoration:none">Open full screen ↗</a>
   </div>
-  <iframe id="myrm-terminal-frame" data-src="/terminal" title="Myrmidon Terminal" style="width:100%;height:calc(100vh - 220px);min-height:540px;border:1px solid rgba(167,139,250,.25);border-radius:10px;background:#000;display:block"></iframe>
+  <iframe id="myrm-terminal-frame" data-src="/terminal" title="Myrmidon Terminal" style="width:100%;height:calc(100vh - 220px);min-height:540px;border:1px solid rgba(255,106,82,.25);border-radius:10px;background:#000;display:block"></iframe>
 </div>
 <script>(function(){
   // Lazy-load the terminal only when the AI tab is actually opened —
@@ -37,29 +37,29 @@ const MYRMIDON_AI_TERMINAL = `<!-- MYRMIDON AI terminal (embeds /terminal) -->
 
 const MYRMIDON_ANALYTICS_HTML = `<!-- MYRMIDON ANALYTICS PAGE -->
 <style>
-.myrm-stat-card{background:#131120;border:1px solid rgba(167,139,250,.22);border-radius:10px;padding:1.2rem}
-.myrm-stat-label{font-family:monospace;font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(196,181,253,.8);margin-bottom:.4rem}
+.myrm-stat-card{background:#201d1c;border:1px solid rgba(255,106,82,.22);border-radius:10px;padding:1.2rem}
+.myrm-stat-label{font-family:monospace;font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,157,138,.8);margin-bottom:.4rem}
 .myrm-stat-value{font-family:monospace;font-size:1.3rem;font-weight:600;color:#fff;margin-bottom:.2rem;line-height:1.2}
-.myrm-stat-sub{font-family:monospace;font-size:.62rem;color:rgba(196,181,253,.65)}
-.myrm-dark-card{background:#131120;border:1px solid rgba(167,139,250,.22);border-radius:10px;padding:1.2rem;margin-bottom:1.2rem}
-.myrm-section-label{font-family:monospace;font-size:.55rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(196,181,253,.85);margin-bottom:.9rem;display:flex;align-items:center;gap:.5rem}
-.myrm-section-label::before{content:'';display:block;width:14px;height:1px;background:linear-gradient(90deg,#ff7a30,#a78bfa);flex-shrink:0}
+.myrm-stat-sub{font-family:monospace;font-size:.62rem;color:rgba(255,157,138,.65)}
+.myrm-dark-card{background:#201d1c;border:1px solid rgba(255,106,82,.22);border-radius:10px;padding:1.2rem;margin-bottom:1.2rem}
+.myrm-section-label{font-family:monospace;font-size:.55rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,157,138,.85);margin-bottom:.9rem;display:flex;align-items:center;gap:.5rem}
+.myrm-section-label::before{content:'';display:block;width:14px;height:1px;background:linear-gradient(90deg,#ff7a30,#ff6a52);flex-shrink:0}
 .myrm-table{width:100%;border-collapse:collapse;font-size:.78rem}
-.myrm-table th{text-align:left;padding:.45rem .6rem;font-family:monospace;font-size:.52rem;letter-spacing:.1em;color:rgba(196,181,253,.7);font-weight:600;text-transform:uppercase;border-bottom:1px solid rgba(167,139,250,.12)}
-.myrm-table td{padding:.5rem .6rem;border-bottom:1px solid rgba(167,139,250,.06);vertical-align:middle}
+.myrm-table th{text-align:left;padding:.45rem .6rem;font-family:monospace;font-size:.52rem;letter-spacing:.1em;color:rgba(255,157,138,.7);font-weight:600;text-transform:uppercase;border-bottom:1px solid rgba(255,106,82,.12)}
+.myrm-table td{padding:.5rem .6rem;border-bottom:1px solid rgba(255,106,82,.06);vertical-align:middle}
 .myrm-table tr:last-child td{border-bottom:none}
-.myrm-table tr:hover td{background:rgba(167,139,250,.04)}
-.myrm-pos{color:#4ade80}.myrm-neg{color:#f87171}.myrm-amb{color:#a78bfa}.myrm-ora{color:#ff7a30}.myrm-cyn{color:#38bdf8}
+.myrm-table tr:hover td{background:rgba(255,106,82,.04)}
+.myrm-pos{color:#4ade80}.myrm-neg{color:#f87171}.myrm-amb{color:#ff6a52}.myrm-ora{color:#ff7a30}.myrm-cyn{color:#5fb8ff}
 /* macro ticker */
-.myrm-macro-bar{display:flex;flex-wrap:wrap;gap:0;border:1px solid rgba(167,139,250,.15);border-radius:10px;overflow:hidden;margin-bottom:1rem;background:rgba(10,10,18,.8)}
-.myrm-mkt{display:flex;align-items:center;gap:.5rem;padding:.6rem 1rem;border-right:1px solid rgba(167,139,250,.1);flex:1;min-width:90px}
+.myrm-macro-bar{display:flex;flex-wrap:wrap;gap:0;border:1px solid rgba(255,106,82,.15);border-radius:10px;overflow:hidden;margin-bottom:1rem;background:rgba(10,10,18,.8)}
+.myrm-mkt{display:flex;align-items:center;gap:.5rem;padding:.6rem 1rem;border-right:1px solid rgba(255,106,82,.1);flex:1;min-width:90px}
 .myrm-mkt:last-child{border-right:none}
-.myrm-mkt-sym{font-family:monospace;font-size:.52rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(167,139,250,.45)}
+.myrm-mkt-sym{font-family:monospace;font-size:.52rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,106,82,.45)}
 .myrm-mkt-val{font-family:monospace;font-size:.82rem;font-weight:600;color:#fff}
 .myrm-mkt-chg{font-family:monospace;font-size:.6rem}
 /* risk signals */
-.myrm-risk-bar{display:flex;flex-wrap:wrap;gap:.4rem;padding:.75rem 1rem;border:1px solid rgba(167,139,250,.22);border-radius:10px;margin-bottom:1rem;background:#131120;align-items:center}
-.myrm-risk-lbl{font-family:monospace;font-size:.52rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(196,181,253,.6);flex-shrink:0;margin-right:.2rem}
+.myrm-risk-bar{display:flex;flex-wrap:wrap;gap:.4rem;padding:.75rem 1rem;border:1px solid rgba(255,106,82,.22);border-radius:10px;margin-bottom:1rem;background:#201d1c;align-items:center}
+.myrm-risk-lbl{font-family:monospace;font-size:.52rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,157,138,.6);flex-shrink:0;margin-right:.2rem}
 .myrm-sig{font-family:monospace;font-size:.6rem;padding:.2rem .7rem;border-radius:3px;border:1px solid;white-space:nowrap}
 .myrm-sig-ok{color:#4ade80;border-color:rgba(74,222,128,.35);background:rgba(74,222,128,.1)}
 .myrm-sig-amb{color:#ff7a30;border-color:rgba(255,122,48,.3);background:rgba(255,122,48,.06)}
@@ -69,13 +69,13 @@ const MYRMIDON_ANALYTICS_HTML = `<!-- MYRMIDON ANALYTICS PAGE -->
   <section class="sec">
     <div style="padding:.5rem 0 1.5rem;display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:.8rem">
       <div>
-        <div style="font-family:monospace;font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:#a78bfa;margin-bottom:.4rem">Myrmidon · Alpaca Paper Trading</div>
-        <h2 style="font-family:var(--disp);font-size:clamp(1.6rem,3vw,2.6rem);margin:0;background:linear-gradient(120deg,#a855f7 0%,#d946ef 35%,#ff7a30 72%,#ffb347 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Analytics</h2>
+        <div style="font-family:monospace;font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:#ff6a52;margin-bottom:.4rem">Myrmidon · Alpaca Paper Trading</div>
+        <h2 style="font-family:var(--disp);font-size:clamp(1.6rem,3vw,2.6rem);margin:0;background:linear-gradient(120deg,#ff3f34 0%,#ff7a30 35%,#ff7a30 72%,#ffb347 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Analytics</h2>
         <div id="myrm-api-status" style="font-family:monospace;font-size:.58rem;color:#ff7a30;margin-top:.4rem;min-height:1em">⚙ Initialising…</div>
       </div>
       <div style="display:flex;align-items:center;gap:.6rem">
-        <span id="myrm-mkt-status" style="font-family:monospace;font-size:.58rem;letter-spacing:.08em;color:#6d5aa8">—</span>
-        <button onclick="window.myrmRefreshAnalytics&&window.myrmRefreshAnalytics()" style="font-family:monospace;font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;color:#a78bfa;background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.25);border-radius:6px;padding:.3rem .8rem;cursor:pointer">↺ Refresh</button>
+        <span id="myrm-mkt-status" style="font-family:monospace;font-size:.58rem;letter-spacing:.08em;color:#b0a8a1">—</span>
+        <button onclick="window.myrmRefreshAnalytics&&window.myrmRefreshAnalytics()" style="font-family:monospace;font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;color:#ff6a52;background:rgba(255,106,82,.1);border:1px solid rgba(255,106,82,.25);border-radius:6px;padding:.3rem .8rem;cursor:pointer">↺ Refresh</button>
       </div>
     </div>
 
@@ -84,10 +84,10 @@ const MYRMIDON_ANALYTICS_HTML = `<!-- MYRMIDON ANALYTICS PAGE -->
       <div class="myrm-section-label">Ticker Search — any US symbol</div>
       <form onsubmit="myrmTickerSearch(event)" style="display:flex;gap:.6rem;margin-bottom:.4rem">
         <input id="myrm-ticker-input" placeholder="e.g. NVDA, TSLA, SPY…" autocomplete="off"
-          style="flex:1;max-width:280px;background:rgba(255,255,255,.05);border:1px solid rgba(167,139,250,.25);border-radius:6px;color:#fff;font-family:monospace;font-size:.85rem;letter-spacing:.06em;text-transform:uppercase;padding:.5rem .8rem;outline:none" />
-        <button type="submit" id="myrm-ticker-btn" style="font-family:monospace;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:#a78bfa;background:rgba(167,139,250,.12);border:1px solid rgba(167,139,250,.3);border-radius:6px;padding:.5rem 1.1rem;cursor:pointer">Search</button>
+          style="flex:1;max-width:280px;background:rgba(255,255,255,.05);border:1px solid rgba(255,106,82,.25);border-radius:6px;color:#fff;font-family:monospace;font-size:.85rem;letter-spacing:.06em;text-transform:uppercase;padding:.5rem .8rem;outline:none" />
+        <button type="submit" id="myrm-ticker-btn" style="font-family:monospace;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:#ff6a52;background:rgba(255,106,82,.12);border:1px solid rgba(255,106,82,.3);border-radius:6px;padding:.5rem 1.1rem;cursor:pointer">Search</button>
       </form>
-      <div id="myrm-ticker-result"><span style="font-family:monospace;font-size:.62rem;color:rgba(167,139,250,.4)">Search a ticker for a 90-day chart, live stats, RSI and trend read.</span></div>
+      <div id="myrm-ticker-result"><span style="font-family:monospace;font-size:.62rem;color:rgba(255,106,82,.4)">Search a ticker for a 90-day chart, live stats, RSI and trend read.</span></div>
     </div>
 
     <!-- Risk signals -->
@@ -98,20 +98,20 @@ const MYRMIDON_ANALYTICS_HTML = `<!-- MYRMIDON ANALYTICS PAGE -->
 
     <!-- Metrics grid -->
     <div id="myrm-metrics-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:.8rem;margin-bottom:1.2rem">
-      <div class="myrm-stat-card"><div class="myrm-stat-label">Portfolio Equity</div><div class="myrm-stat-value" style="color:rgba(167,139,250,.4)">Loading…</div></div>
+      <div class="myrm-stat-card"><div class="myrm-stat-label">Portfolio Equity</div><div class="myrm-stat-value" style="color:rgba(255,106,82,.4)">Loading…</div></div>
     </div>
 
     <!-- Equity curve -->
     <div class="myrm-dark-card">
       <div class="myrm-section-label">30-Day Equity Curve</div>
       <svg id="myrm-equity-chart" style="width:100%;height:180px;display:block" preserveAspectRatio="none">
-        <text x="50%" y="50%" text-anchor="middle" fill="rgba(167,139,250,.35)" font-size="11" font-family="monospace">Loading…</text>
+        <text x="50%" y="50%" text-anchor="middle" fill="rgba(255,106,82,.35)" font-size="11" font-family="monospace">Loading…</text>
       </svg>
     </div>
 
     <!-- Positions: Core -->
     <div class="myrm-dark-card">
-      <div class="myrm-section-label">Core · Index Sleeve <span id="myrm-core-pct" style="color:rgba(167,139,250,.4);font-weight:normal;margin-left:.5rem"></span></div>
+      <div class="myrm-section-label">Core · Index Sleeve <span id="myrm-core-pct" style="color:rgba(255,106,82,.4);font-weight:normal;margin-left:.5rem"></span></div>
       <div style="overflow-x:auto">
         <table class="myrm-table">
           <thead><tr>
@@ -119,7 +119,7 @@ const MYRMIDON_ANALYTICS_HTML = `<!-- MYRMIDON ANALYTICS PAGE -->
             <th style="text-align:right">Mkt Value A$</th><th style="text-align:right">Day %</th>
             <th style="text-align:right">Day P&amp;L A$</th><th style="text-align:right">Total P&amp;L A$</th>
           </tr></thead>
-          <tbody id="myrm-core-tbody"><tr><td colspan="7" style="text-align:center;color:rgba(167,139,250,.35);padding:1rem;font-family:monospace;font-size:.7rem">Loading…</td></tr></tbody>
+          <tbody id="myrm-core-tbody"><tr><td colspan="7" style="text-align:center;color:rgba(255,106,82,.35);padding:1rem;font-family:monospace;font-size:.7rem">Loading…</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -134,7 +134,7 @@ const MYRMIDON_ANALYTICS_HTML = `<!-- MYRMIDON ANALYTICS PAGE -->
             <th style="text-align:right">Mkt Value A$</th><th style="text-align:right">Day %</th>
             <th style="text-align:right">Day P&amp;L A$</th><th style="text-align:right">Total P&amp;L A$</th>
           </tr></thead>
-          <tbody id="myrm-alpha-tbody"><tr><td colspan="7" style="text-align:center;color:rgba(167,139,250,.35);padding:1rem;font-family:monospace;font-size:.7rem">Loading…</td></tr></tbody>
+          <tbody id="myrm-alpha-tbody"><tr><td colspan="7" style="text-align:center;color:rgba(255,106,82,.35);padding:1rem;font-family:monospace;font-size:.7rem">Loading…</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -148,7 +148,7 @@ const MYRMIDON_ANALYTICS_HTML = `<!-- MYRMIDON ANALYTICS PAGE -->
             <th>Symbol</th><th>Side</th><th style="text-align:right">Qty</th>
             <th>Type</th><th>Status</th><th style="text-align:right">Submitted</th>
           </tr></thead>
-          <tbody id="myrm-orders-tbody"><tr><td colspan="6" style="text-align:center;color:rgba(167,139,250,.35);padding:1rem;font-family:monospace;font-size:.7rem">Loading…</td></tr></tbody>
+          <tbody id="myrm-orders-tbody"><tr><td colspan="6" style="text-align:center;color:rgba(255,106,82,.35);padding:1rem;font-family:monospace;font-size:.7rem">Loading…</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -164,7 +164,7 @@ const MYRMIDON_ANALYTICS_HTML = `<!-- MYRMIDON ANALYTICS PAGE -->
             <th style="text-align:right">Total (USD)</th><th style="text-align:right">Date</th>
           </tr></thead>
           <tbody id="myrm-trades-tbody">
-            <tr><td colspan="7" style="text-align:center;color:rgba(167,139,250,.35);padding:1.5rem;font-family:monospace;font-size:.7rem">Loading…</td></tr>
+            <tr><td colspan="7" style="text-align:center;color:rgba(255,106,82,.35);padding:1.5rem;font-family:monospace;font-size:.7rem">Loading…</td></tr>
           </tbody>
         </table>
       </div>
@@ -203,11 +203,11 @@ window.addEventListener('error',function(ev){
     var orders=document.getElementById('myrm-orders-tbody');
     var risk=document.getElementById('myrm-risk-sigs');
     if(g)g.innerHTML='<div style="color:#ff7a30;font-family:monospace;font-size:.72rem;padding:.5rem 0">'+msg+'</div>';
-    if(svg)svg.innerHTML='<text x="50%" y="50%" text-anchor="middle" fill="rgba(167,139,250,.35)" font-size="11" font-family="monospace">'+msg+'</text>';
-    if(tb)tb.innerHTML='<tr><td colspan="7" style="text-align:center;color:rgba(167,139,250,.35);padding:1.5rem;font-family:monospace;font-size:.7rem">'+msg+'</td></tr>';
-    if(core)core.innerHTML='<tr><td colspan="7" style="text-align:center;color:rgba(167,139,250,.35);padding:1rem;font-family:monospace;font-size:.7rem">'+msg+'</td></tr>';
-    if(alpha)alpha.innerHTML='<tr><td colspan="7" style="text-align:center;color:rgba(167,139,250,.35);padding:1rem;font-family:monospace;font-size:.7rem">'+msg+'</td></tr>';
-    if(orders)orders.innerHTML='<tr><td colspan="6" style="text-align:center;color:rgba(167,139,250,.35);padding:1rem;font-family:monospace;font-size:.7rem">'+msg+'</td></tr>';
+    if(svg)svg.innerHTML='<text x="50%" y="50%" text-anchor="middle" fill="rgba(255,106,82,.35)" font-size="11" font-family="monospace">'+msg+'</text>';
+    if(tb)tb.innerHTML='<tr><td colspan="7" style="text-align:center;color:rgba(255,106,82,.35);padding:1.5rem;font-family:monospace;font-size:.7rem">'+msg+'</td></tr>';
+    if(core)core.innerHTML='<tr><td colspan="7" style="text-align:center;color:rgba(255,106,82,.35);padding:1rem;font-family:monospace;font-size:.7rem">'+msg+'</td></tr>';
+    if(alpha)alpha.innerHTML='<tr><td colspan="7" style="text-align:center;color:rgba(255,106,82,.35);padding:1rem;font-family:monospace;font-size:.7rem">'+msg+'</td></tr>';
+    if(orders)orders.innerHTML='<tr><td colspan="6" style="text-align:center;color:rgba(255,106,82,.35);padding:1rem;font-family:monospace;font-size:.7rem">'+msg+'</td></tr>';
     if(risk)risk.innerHTML='<span class="myrm-sig myrm-sig-amb">'+msg+'</span>';
   }
 
@@ -320,7 +320,7 @@ window.addEventListener('error',function(ev){
       var mins=et.getHours()*60+et.getMinutes(),day=et.getDay();
       var isOpen=day>=1&&day<=5&&mins>=570&&mins<960;
       ms.textContent=isOpen?'● Market Open':'○ Market Closed';
-      ms.style.color=isOpen?'#4ade80':'rgba(167,139,250,.4)';
+      ms.style.color=isOpen?'#4ade80':'rgba(255,106,82,.4)';
     }
   }
 
@@ -421,15 +421,15 @@ window.addEventListener('error',function(ev){
       var dc=dayChg>=0?'#4ade80':'#f87171',pc=unrl>=0?'#4ade80':'#f87171';
       return'<tr>'+
         '<td style="font-weight:600;color:#fff">'+p.symbol+'</td>'+
-        '<td style="text-align:right;font-family:monospace;color:rgba(167,139,250,.6)">'+qty.toFixed(qty%1?4:0)+'</td>'+
-        '<td style="text-align:right;font-family:monospace;color:#38bdf8">$'+price.toFixed(2)+'</td>'+
+        '<td style="text-align:right;font-family:monospace;color:rgba(255,106,82,.6)">'+qty.toFixed(qty%1?4:0)+'</td>'+
+        '<td style="text-align:right;font-family:monospace;color:#5fb8ff">$'+price.toFixed(2)+'</td>'+
         '<td style="text-align:right;font-family:monospace">A$'+Math.round(mv/fxP).toLocaleString()+'</td>'+
         '<td style="text-align:right;font-family:monospace;font-size:.7rem;color:'+dc+'">'+(dayChg>=0?'+':'')+(dayChg*100).toFixed(2)+'%</td>'+
         '<td style="text-align:right;font-family:monospace;font-size:.7rem;color:'+dc+'">'+(dayPl>=0?'+':'')+'A$'+Math.round(dayPl/fxP).toLocaleString()+'</td>'+
         '<td style="text-align:right;font-family:monospace;font-size:.7rem;color:'+pc+'">'+(unrl>=0?'+':'')+'A$'+Math.round(unrl/fxP).toLocaleString()+'</td>'+
       '</tr>';
     }
-    var empty='<tr><td colspan="7" style="text-align:center;color:rgba(167,139,250,.35);padding:1rem;font-family:monospace;font-size:.7rem">';
+    var empty='<tr><td colspan="7" style="text-align:center;color:rgba(255,106,82,.35);padding:1rem;font-family:monospace;font-size:.7rem">';
     var coreTb=document.getElementById('myrm-core-tbody'),coreEl=document.getElementById('myrm-core-pct');
     if(coreTb){
       if(!core.length){coreTb.innerHTML=empty+'No core positions</td></tr>';}
@@ -453,7 +453,7 @@ window.addEventListener('error',function(ev){
   function renderOpenOrders(openOrders){
     var tb=document.getElementById('myrm-orders-tbody');if(!tb)return;
     if(!openOrders||!openOrders.length){
-      tb.innerHTML='<tr><td colspan="6" style="text-align:center;color:rgba(167,139,250,.35);padding:1rem;font-family:monospace;font-size:.7rem">No open orders</td></tr>';return;
+      tb.innerHTML='<tr><td colspan="6" style="text-align:center;color:rgba(255,106,82,.35);padding:1rem;font-family:monospace;font-size:.7rem">No open orders</td></tr>';return;
     }
     tb.innerHTML=openOrders.map(function(o){
       var isBuy=o.side==='buy';var sc=isBuy?'#4ade80':'#f87171';
@@ -463,9 +463,9 @@ window.addEventListener('error',function(ev){
         '<td style="font-weight:600;color:#fff">'+o.symbol+'</td>'+
         '<td style="color:'+sc+';font-family:monospace;font-size:.65rem;font-weight:700">'+(isBuy?'↑ BUY':'↓ SELL')+'</td>'+
         '<td style="text-align:right;font-family:monospace">'+qty.toLocaleString()+'</td>'+
-        '<td style="font-family:monospace;font-size:.68rem;color:rgba(167,139,250,.7)">'+o.type+'</td>'+
+        '<td style="font-family:monospace;font-size:.68rem;color:rgba(255,106,82,.7)">'+o.type+'</td>'+
         '<td style="font-family:monospace;font-size:.65rem;color:#ff7a30">'+o.status+'</td>'+
-        '<td style="text-align:right;color:rgba(167,139,250,.5);font-size:.68rem">'+dt+'</td>'+
+        '<td style="text-align:right;color:rgba(255,106,82,.5);font-size:.68rem">'+dt+'</td>'+
       '</tr>';
     }).join('');
   }
@@ -473,11 +473,11 @@ window.addEventListener('error',function(ev){
   function renderChart(hist,rate){
     var svg=document.getElementById('myrm-equity-chart');
     if(!svg)return;
-    if(!hist||!hist.equity){svg.innerHTML='<text x="50%" y="50%" text-anchor="middle" fill="rgba(167,139,250,.35)" font-size="11" font-family="monospace">No history data from Alpaca</text>';return;}
+    if(!hist||!hist.equity){svg.innerHTML='<text x="50%" y="50%" text-anchor="middle" fill="rgba(255,106,82,.35)" font-size="11" font-family="monospace">No history data from Alpaca</text>';return;}
     var fx=rate||1;
     var vals=hist.equity.filter(function(v){return v!=null&&v>0;}).map(function(v){return v/fx;});
     var ts=hist.timestamp||[];
-    if(vals.length<2){svg.innerHTML='<text x="50%" y="50%" text-anchor="middle" fill="rgba(167,139,250,.35)" font-size="11" font-family="monospace">Not enough data</text>';return;}
+    if(vals.length<2){svg.innerHTML='<text x="50%" y="50%" text-anchor="middle" fill="rgba(255,106,82,.35)" font-size="11" font-family="monospace">Not enough data</text>';return;}
     var W=800,H=160,PX=8,PY=14;
     var lo=Math.min.apply(null,vals)*0.999,hi=Math.max.apply(null,vals)*1.001,rng=hi-lo;
     var tx=function(i){return PX+(i/(vals.length-1))*(W-PX*2);};
@@ -499,15 +499,15 @@ window.addEventListener('error',function(ev){
     '<path d="'+path+'" fill="none" stroke="'+col+'" stroke-width="2" stroke-linejoin="round"/>'+
     '<circle cx="'+tx(0)+'" cy="'+ty(start)+'" r="3" fill="'+col+'" opacity="0.5"/>'+
     '<circle cx="'+tx(vals.length-1)+'" cy="'+ty(end)+'" r="4" fill="'+col+'"/>'+
-    '<text x="'+PX+'" y="'+(H-3)+'" font-family="monospace" font-size="8" fill="rgba(167,139,250,.45)">'+fmtD(ts[0])+'</text>'+
-    '<text x="'+(W-PX)+'" y="'+(H-3)+'" font-family="monospace" font-size="8" fill="rgba(167,139,250,.45)" text-anchor="end">'+fmtD(ts[ts.length-1])+'</text>'+
+    '<text x="'+PX+'" y="'+(H-3)+'" font-family="monospace" font-size="8" fill="rgba(255,106,82,.45)">'+fmtD(ts[0])+'</text>'+
+    '<text x="'+(W-PX)+'" y="'+(H-3)+'" font-family="monospace" font-size="8" fill="rgba(255,106,82,.45)" text-anchor="end">'+fmtD(ts[ts.length-1])+'</text>'+
     '<text x="'+(tx(vals.length-1)-6)+'" y="'+(ty(end)-7)+'" font-family="monospace" font-size="10" fill="'+col+'" text-anchor="end">'+(rate?'A$':'$')+Math.round(end).toLocaleString()+'</text>';
   }
 
   function renderTrades(orders,rate){
     var tb=document.getElementById('myrm-trades-tbody');if(!tb)return;
     var filled=(orders||[]).filter(function(o){return o.status==='filled'&&o.filled_avg_price;});
-    if(!filled.length){tb.innerHTML='<tr><td colspan="7" style="text-align:center;color:rgba(167,139,250,.35);padding:1.5rem;font-family:monospace;font-size:.7rem">No filled trades yet</td></tr>';return;}
+    if(!filled.length){tb.innerHTML='<tr><td colspan="7" style="text-align:center;color:rgba(255,106,82,.35);padding:1.5rem;font-family:monospace;font-size:.7rem">No filled trades yet</td></tr>';return;}
     tb.innerHTML=filled.slice(0,100).map(function(o){
       var isBuy=o.side==='buy';var sc=isBuy?'#4ade80':'#ff7a30';
       var price=parseFloat(o.filled_avg_price)||0;
@@ -521,8 +521,8 @@ window.addEventListener('error',function(ev){
         '<td style="text-align:right;font-family:monospace">'+qty.toLocaleString()+'</td>'+
         '<td style="text-align:right;font-family:monospace">$'+price.toFixed(2)+'</td>'+
         '<td style="text-align:right;font-family:monospace">'+audVal+'</td>'+
-        '<td style="text-align:right;font-family:monospace;color:rgba(167,139,250,.7)">$'+Math.round(total).toLocaleString()+'</td>'+
-        '<td style="text-align:right;color:rgba(167,139,250,.5);font-size:.68rem">'+dt+'</td>'+
+        '<td style="text-align:right;font-family:monospace;color:rgba(255,106,82,.7)">$'+Math.round(total).toLocaleString()+'</td>'+
+        '<td style="text-align:right;color:rgba(255,106,82,.5);font-size:.68rem">'+dt+'</td>'+
       '</tr>';
     }).join('');
   }
@@ -599,7 +599,7 @@ window.addEventListener('error',function(ev){
     var sym=String(inp.value||'').trim().toUpperCase().replace(/[^A-Z.]/g,'');
     if(!sym){out.innerHTML='<span style="font-family:monospace;font-size:.62rem;color:#f87171">Enter a ticker symbol</span>';return;}
     tickerBusy=true;if(btn){btn.disabled=true;btn.textContent='…';}
-    out.innerHTML='<span style="font-family:monospace;font-size:.62rem;color:rgba(167,139,250,.5)">Loading '+sym+'…</span>';
+    out.innerHTML='<span style="font-family:monospace;font-size:.62rem;color:rgba(255,106,82,.5)">Loading '+sym+'…</span>';
     fetch('/api/trading/chart?symbol='+encodeURIComponent(sym)+'&days=90')
       .then(function(r){return r.json();})
       .then(function(d){
@@ -611,10 +611,10 @@ window.addEventListener('error',function(ev){
         var dayChg=bars.length>1&&bars[bars.length-2].close>0?(last.close-bars[bars.length-2].close)/bars[bars.length-2].close*100:0;
         var hi=Math.max.apply(null,bars.map(function(b){return b.high;}));
         var lo=Math.min.apply(null,bars.map(function(b){return b.low;}));
-        var rsi=last.rsi,rsiCol=rsi==null?'#666':rsi>70?'#f87171':rsi<30?'#4ade80':'#a78bfa';
+        var rsi=last.rsi,rsiCol=rsi==null?'#666':rsi>70?'#f87171':rsi<30?'#4ade80':'#ff6a52';
         var trendUp=last.ema50!=null&&last.ema200!=null?last.ema50>last.ema200:null;
         var cCol=chg>=0?'#4ade80':'#f87171';
-        function stat(l,v,c){return '<div style="min-width:100px"><div style="font-family:monospace;font-size:.5rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(167,139,250,.45);margin-bottom:.15rem">'+l+'</div><div style="font-family:monospace;font-size:.95rem;font-weight:600;color:'+(c||'#fff')+'">'+v+'</div></div>';}
+        function stat(l,v,c){return '<div style="min-width:100px"><div style="font-family:monospace;font-size:.5rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,106,82,.45);margin-bottom:.15rem">'+l+'</div><div style="font-family:monospace;font-size:.95rem;font-weight:600;color:'+(c||'#fff')+'">'+v+'</div></div>';}
         var html='<div style="display:flex;flex-wrap:wrap;gap:1.2rem;align-items:flex-end;margin:.4rem 0 .8rem">'+
           '<div><div style="font-family:monospace;font-size:1.5rem;font-weight:700;color:#fff">'+sym+' <span style="font-size:1.1rem">$'+last.close.toFixed(2)+'</span></div>'+
           '<div style="font-family:monospace;font-size:.62rem;color:'+(dayChg>=0?'#4ade80':'#f87171')+'">'+(dayChg>=0?'+':'')+dayChg.toFixed(2)+'% today</div></div>'+
@@ -636,8 +636,8 @@ window.addEventListener('error',function(ev){
           '<path d="M '+pts+' L '+tx(vals.length-1)+','+(H-PY)+' L '+tx(0)+','+(H-PY)+' Z" fill="url(#tsg)"/>'+
           '<path d="M '+pts+'" fill="none" stroke="'+lc+'" stroke-width="2" stroke-linejoin="round"/>'+
           '<circle cx="'+tx(vals.length-1)+'" cy="'+ty(vals[vals.length-1])+'" r="3.5" fill="'+lc+'"/>'+
-          '<text x="'+PX+'" y="'+(H-2)+'" font-family="monospace" font-size="8" fill="rgba(167,139,250,.45)">'+String(first.date||'').slice(5)+'</text>'+
-          '<text x="'+(W-PX)+'" y="'+(H-2)+'" font-family="monospace" font-size="8" fill="rgba(167,139,250,.45)" text-anchor="end">'+String(last.date||'').slice(5)+'</text></svg>';
+          '<text x="'+PX+'" y="'+(H-2)+'" font-family="monospace" font-size="8" fill="rgba(255,106,82,.45)">'+String(first.date||'').slice(5)+'</text>'+
+          '<text x="'+(W-PX)+'" y="'+(H-2)+'" font-family="monospace" font-size="8" fill="rgba(255,106,82,.45)" text-anchor="end">'+String(last.date||'').slice(5)+'</text></svg>';
         out.innerHTML=html;
       })
       .catch(function(e){

@@ -11,70 +11,70 @@ const HTML = `<!DOCTYPE html>
 <title>MYRMIDON — STRATEGY ENGINE</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:#05050c;color:#e6e4f2;font-family:'Courier New',Courier,monospace;font-size:14px;min-height:100vh}
+body{background:#121110;color:#e6e4f2;font-family:'Courier New',Courier,monospace;font-size:14px;min-height:100vh}
 a{color:inherit;text-decoration:none}
 
-#topbar{background:#0c0c16;border-bottom:2px solid #a78bfa;padding:10px 22px;display:flex;align-items:center;gap:18px;font-size:12px;color:#666;position:sticky;top:0;z-index:10}
+#topbar{background:#1b1918;border-bottom:2px solid #ff6a52;padding:10px 22px;display:flex;align-items:center;gap:18px;font-size:12px;color:#666;position:sticky;top:0;z-index:10}
 #topbar .right{margin-left:auto;display:flex;gap:14px;align-items:center}
-.tblink{color:#a78bfa;border:1px solid #2d2a4a;border-radius:4px;padding:5px 12px;font-size:11px;letter-spacing:.06em;text-transform:uppercase}
-.tblink:hover{border-color:#a78bfa}
+.tblink{color:#ff6a52;border:1px solid #3a3532;border-radius:4px;padding:5px 12px;font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+.tblink:hover{border-color:#ff6a52}
 
-#titlebar{background:linear-gradient(90deg,#a855f7 0%,#d946ef 35%,#ff7a30 72%,#ffb347 100%);color:#fff;padding:10px 22px;font-weight:bold;font-size:16px;letter-spacing:.06em;display:flex;justify-content:space-between;align-items:center}
+#titlebar{background:linear-gradient(90deg,#ff3f34 0%,#ff7a30 35%,#ff7a30 72%,#ffb347 100%);color:#fff;padding:10px 22px;font-weight:bold;font-size:16px;letter-spacing:.06em;display:flex;justify-content:space-between;align-items:center}
 
 .spill{font-size:10px;padding:3px 10px;border-radius:3px;border:1px solid;text-transform:uppercase;letter-spacing:.05em;font-weight:bold}
 .spill-on{color:#00e676;border-color:#003300;background:#010800}
-.spill-off{color:#777;border-color:#333;background:#0a0a12}
+.spill-off{color:#777;border-color:#333;background:#171514}
 .spill-auto{color:#ff4444;border-color:#3a0000;background:#0d0000}
 
 #wrap{max-width:1280px;margin:0 auto;padding:26px 22px 60px;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:24px;align-items:start}
 @media(max-width:980px){#wrap{grid-template-columns:1fr}}
 
-.card{background:#0d0c16;border:1px solid #2d2a4a;border-radius:10px;overflow:hidden;margin-bottom:24px}
-.card-h{background:#12101f;border-bottom:1px solid #211f38;padding:12px 18px;color:#a78bfa;font-size:11px;letter-spacing:.14em;text-transform:uppercase;display:flex;align-items:center;justify-content:space-between}
+.card{background:#1b1918;border:1px solid #3a3532;border-radius:10px;overflow:hidden;margin-bottom:24px}
+.card-h{background:#201d1c;border-bottom:1px solid #2e2a28;padding:12px 18px;color:#ff6a52;font-size:11px;letter-spacing:.14em;text-transform:uppercase;display:flex;align-items:center;justify-content:space-between}
 .card-b{padding:18px}
 
 .sbanner{border:1px solid;border-radius:6px;padding:12px 15px;font-size:12.5px;line-height:1.65;margin-bottom:18px}
-.sbanner-off{border-color:#2d2a4a;background:#0e0d1c;color:#999}
+.sbanner-off{border-color:#3a3532;background:#1d1a19;color:#999}
 .sbanner-on{border-color:#003300;background:#010800;color:#00e676}
 .sbanner-auto{border-color:#3a0000;background:#0d0000;color:#ff4444}
 
-.ssec{color:#a78bfa;font-size:11px;text-transform:uppercase;letter-spacing:.12em;margin:22px 0 12px;display:flex;align-items:center;gap:8px}
+.ssec{color:#ff6a52;font-size:11px;text-transform:uppercase;letter-spacing:.12em;margin:22px 0 12px;display:flex;align-items:center;gap:8px}
 .ssec:first-child{margin-top:0}
-.snum{display:inline-flex;width:18px;height:18px;align-items:center;justify-content:center;border-radius:50%;background:#a78bfa;color:#000;font-size:10px;font-weight:bold;flex-shrink:0}
+.snum{display:inline-flex;width:18px;height:18px;align-items:center;justify-content:center;border-radius:50%;background:#ff6a52;color:#000;font-size:10px;font-weight:bold;flex-shrink:0}
 
 .mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 @media(max-width:560px){.mode-grid{grid-template-columns:1fr}}
-.mode-card{border:1px solid #2d2a4a;border-radius:8px;padding:13px 14px;cursor:pointer;background:#0a0a12;transition:border-color .12s}
+.mode-card{border:1px solid #3a3532;border-radius:8px;padding:13px 14px;cursor:pointer;background:#171514;transition:border-color .12s}
 .mode-card:hover{border-color:#4a4478}
-.mode-card.sel{border-color:#a78bfa;background:#14112a;box-shadow:0 0 0 1px #a78bfa inset}
+.mode-card.sel{border-color:#ff6a52;background:#2a201d;box-shadow:0 0 0 1px #ff6a52 inset}
 .mode-name{font-size:13px;font-weight:bold;color:#e6e4f2;margin-bottom:5px;letter-spacing:.04em}
-.mode-card.sel .mode-name{color:#c4b5fd}
+.mode-card.sel .mode-name{color:#ffb3a6}
 .mode-desc{font-size:11px;line-height:1.55;color:#888}
 
 #custom-wrap{display:none;margin-top:10px}
-#custom-prompt{width:100%;background:#0a0a12;border:1px solid #2d2a4a;border-radius:6px;color:#e6e4f2;font-family:'Courier New',monospace;font-size:13px;padding:11px 13px;resize:vertical;min-height:90px;outline:none;line-height:1.6}
-#custom-prompt:focus{border-color:#a78bfa}
+#custom-prompt{width:100%;background:#171514;border:1px solid #3a3532;border-radius:6px;color:#e6e4f2;font-family:'Courier New',monospace;font-size:13px;padding:11px 13px;resize:vertical;min-height:90px;outline:none;line-height:1.6}
+#custom-prompt:focus{border-color:#ff6a52}
 
 .seg{display:flex;gap:8px;flex-wrap:wrap}
-.seg-btn{border:1px solid #2d2a4a;border-radius:6px;background:#0a0a12;color:#999;font-family:'Courier New',monospace;font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;padding:9px 16px;cursor:pointer}
-.seg-btn.sel{border-color:#a78bfa;color:#c4b5fd;background:#14112a}
+.seg-btn{border:1px solid #3a3532;border-radius:6px;background:#171514;color:#999;font-family:'Courier New',monospace;font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;padding:9px 16px;cursor:pointer}
+.seg-btn.sel{border-color:#ff6a52;color:#ffb3a6;background:#2a201d}
 .seg-note{font-size:11px;color:#777;margin-top:8px;line-height:1.5}
 
 .lim-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
 .lim label{display:block;color:#777;font-size:10px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
-.lim input{width:100%;background:#0a0a12;border:1px solid #2d2a4a;border-radius:6px;color:#e6e4f2;font-family:'Courier New',monospace;font-size:13px;padding:9px 11px;outline:none}
-.lim input:focus{border-color:#a78bfa}
-.lim-note{font-size:11px;color:#666;margin-top:12px;line-height:1.6;border-top:1px solid #211f38;padding-top:10px}
+.lim input{width:100%;background:#171514;border:1px solid #3a3532;border-radius:6px;color:#e6e4f2;font-family:'Courier New',monospace;font-size:13px;padding:9px 11px;outline:none}
+.lim input:focus{border-color:#ff6a52}
+.lim-note{font-size:11px;color:#666;margin-top:12px;line-height:1.6;border-top:1px solid #2e2a28;padding-top:10px}
 .lim-note b{color:#999}
 
 .arm-row{display:flex;gap:22px;flex-wrap:wrap;margin-bottom:16px}
 .arm-toggle{display:flex;align-items:center;gap:9px;cursor:pointer;font-size:13px;letter-spacing:.04em}
-.arm-toggle input{width:18px;height:18px;accent-color:#a78bfa;cursor:pointer}
+.arm-toggle input{width:18px;height:18px;accent-color:#ff6a52;cursor:pointer}
 .arm-warn{font-size:11px;color:#ff4444;display:none;margin:-6px 0 12px}
 
 .btn{border-radius:6px;font-family:'Courier New',monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase;padding:11px 22px;cursor:pointer;border:1px solid}
-.btn-save{background:#181530;border-color:#a78bfa;color:#c4b5fd}
-.btn-save:hover{background:#232045}
+.btn-save{background:#2a2220;border-color:#ff6a52;color:#ffb3a6}
+.btn-save:hover{background:#332b28}
 .btn-run{background:#041505;border-color:#00e676;color:#00e676}
 .btn-run:hover{background:#0a2510}
 .btn:disabled{opacity:.4;cursor:default}
@@ -82,24 +82,24 @@ a{color:inherit;text-decoration:none}
 .btn-danger{background:#150404;border-color:#ff4444;color:#ff4444}
 #save-msg{font-size:12px;color:#888;align-self:center}
 
-.ptrade{border:1px solid #2d2a4a;border-radius:8px;padding:13px 15px;margin-bottom:12px;background:#0a0a12}
+.ptrade{border:1px solid #3a3532;border-radius:8px;padding:13px 15px;margin-bottom:12px;background:#171514}
 .ptrade-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
-.pos{color:#00e676}.neg{color:#ff4444}.cyn{color:#38bdf8}
+.pos{color:#00e676}.neg{color:#ff4444}.cyn{color:#5fb8ff}
 .ptrade-reason{color:#888;font-size:12px;line-height:1.55;margin-bottom:10px}
 
-.srun{border-bottom:1px solid #16152a;padding:11px 0;cursor:pointer;line-height:1.55;font-size:12.5px}
+.srun{border-bottom:1px solid #262322;padding:11px 0;cursor:pointer;line-height:1.55;font-size:12.5px}
 .srun:last-child{border-bottom:none}
-.srun:hover{background:#0e0d1c}
+.srun:hover{background:#1d1a19}
 .srun-exp{display:none;font-size:12px;color:#999;white-space:pre-wrap;word-break:break-word;padding:9px 4px 3px;line-height:1.6}
 .dim{color:#555}
 .empty{color:#444;font-style:italic;font-size:12px;padding:8px 0}
-::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:#08080f}::-webkit-scrollbar-thumb{background:#211f38}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:#151312}::-webkit-scrollbar-thumb{background:#2e2a28}
 </style>
 </head>
 <body>
 
 <div id="topbar">
-  <span style="color:#a78bfa;font-weight:bold;letter-spacing:.08em">MYRMIDON</span>
+  <span style="color:#ff6a52;font-weight:bold;letter-spacing:.08em">MYRMIDON</span>
   <span id="status-pill" class="spill spill-off">LOADING…</span>
   <div class="right">
     <a class="tblink" href="/terminal">← Terminal</a>
@@ -121,7 +121,7 @@ a{color:inherit;text-decoration:none}
         <div id="banner" class="sbanner sbanner-off">Loading configuration…</div>
 
         <div class="ssec"><span class="snum">1</span> Write your strategy — in your own words</div>
-        <div style="font-size:12px;color:#999;line-height:1.6;margin-bottom:10px">Myrmidon follows exactly what you write here, every run. Be as specific as you like — entries, exits, position sizes, symbols to avoid, when to sit out. <span style="color:#c4b5fd">You author it, the AI executes it.</span></div>
+        <div style="font-size:12px;color:#999;line-height:1.6;margin-bottom:10px">Myrmidon follows exactly what you write here, every run. Be as specific as you like — entries, exits, position sizes, symbols to avoid, when to sit out. <span style="color:#ffb3a6">You author it, the AI executes it.</span></div>
         <div id="custom-wrap" style="display:block;margin-top:0">
           <textarea id="custom-prompt" placeholder="e.g. Buy quality tech stocks when they fall 4% or more from their recent high. Sell any position that gains 10%. Keep positions under 5% of the account. Never trade in the first 30 minutes after open. If VIX is above 25, do nothing."></textarea>
         </div>
@@ -162,9 +162,9 @@ a{color:inherit;text-decoration:none}
       <div class="card-h">How it works</div>
       <div class="card-b" style="font-size:12.5px;line-height:1.75;color:#999">
         Each run, Myrmidon pulls your live account, positions, open orders and risk signals, then asks the AI what — if anything — your strategy calls for.
-        Every proposal passes through the safety limits above <span style="color:#c4b5fd">in code</span>; anything that violates them is rejected and logged with the reason.
-        With AUTOPILOT off, accepted trades queue for <span style="color:#c4b5fd">5 minutes</span> so you can cancel, then fire on the next run.
-        Schedule runs by pointing a cron at <span style="color:#38bdf8">/api/internal/ops/strategy-run</span> with your cron token, or press ▶ Run now anytime.<div style="margin-top:12px;border-top:1px solid #211f38;padding-top:10px;font-size:11px;color:#666;line-height:1.7">You write the strategy; Myrmidon executes your instructions within the hard safety limits. Nothing here is financial advice or a recommendation — strategy outcomes are your responsibility. This is a paper trading account.</div>
+        Every proposal passes through the safety limits above <span style="color:#ffb3a6">in code</span>; anything that violates them is rejected and logged with the reason.
+        With AUTOPILOT off, accepted trades queue for <span style="color:#ffb3a6">5 minutes</span> so you can cancel, then fire on the next run.
+        Schedule runs by pointing a cron at <span style="color:#5fb8ff">/api/internal/ops/strategy-run</span> with your cron token, or press ▶ Run now anytime.<div style="margin-top:12px;border-top:1px solid #2e2a28;padding-top:10px;font-size:11px;color:#666;line-height:1.7">You write the strategy; Myrmidon executes your instructions within the hard safety limits. Nothing here is financial advice or a recommendation — strategy outcomes are your responsibility. This is a paper trading account.</div>
       </div>
     </div>
   </div>

@@ -425,7 +425,7 @@ export default function LandingPage({
                 </span>
               ))}
             </div>
-            <p className={`${styles.reveal}`} style={{ fontSize: "0.75rem", color: "rgba(80,60,130,0.65)", marginTop: "1rem", letterSpacing: "0.04em" }}>
+            <p className={`${styles.reveal}`} style={{ fontSize: "0.75rem", color: "rgba(190,182,176,0.65)", marginTop: "1rem", letterSpacing: "0.04em" }}>
               Built for Australian investors · No card required · Cancel anytime
             </p>
 
@@ -452,11 +452,11 @@ export default function LandingPage({
                 <svg className={styles.sparkline} viewBox="0 0 400 60" aria-hidden="true">
                   <defs>
                     <linearGradient id="landingLineGrad" x1="0" y1="0" x2="1" y2="0">
-                      <stop offset="0%" stopColor="#a855f7" />
+                      <stop offset="0%" stopColor="#ff3f34" />
                       <stop offset="100%" stopColor="#ff7a30" />
                     </linearGradient>
                     <linearGradient id="landingFillGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#d946ef" stopOpacity="0.28" />
+                      <stop offset="0%" stopColor="#ff7a30" stopOpacity="0.28" />
                       <stop offset="100%" stopColor="#ff7a30" stopOpacity="0" />
                     </linearGradient>
                   </defs>
@@ -483,15 +483,15 @@ export default function LandingPage({
                 <div className={styles.donutWrap}>
                   <svg width="88" height="88" viewBox="0 0 80 80" aria-hidden="true">
                     <circle cx="40" cy="40" r="28" fill="none" stroke="#111318" strokeWidth="16" />
-                    <circle cx="40" cy="40" r="28" fill="none" stroke="#a855f7" strokeWidth="16" strokeDasharray="81 95" strokeDashoffset="24" transform="rotate(-90 40 40)" />
+                    <circle cx="40" cy="40" r="28" fill="none" stroke="#ff3f34" strokeWidth="16" strokeDasharray="81 95" strokeDashoffset="24" transform="rotate(-90 40 40)" />
                     <circle cx="40" cy="40" r="28" fill="none" stroke="#ff7a30" strokeWidth="16" strokeDasharray="50 95" strokeDashoffset="-57" transform="rotate(-90 40 40)" />
-                    <circle cx="40" cy="40" r="28" fill="none" stroke="#e879f9" strokeWidth="16" strokeDasharray="28 95" strokeDashoffset="-107" transform="rotate(-90 40 40)" />
+                    <circle cx="40" cy="40" r="28" fill="none" stroke="#ff8b6e" strokeWidth="16" strokeDasharray="28 95" strokeDashoffset="-107" transform="rotate(-90 40 40)" />
                     <circle cx="40" cy="40" r="28" fill="none" stroke="#fb923c" strokeWidth="16" strokeDasharray="18 95" strokeDashoffset="-135" transform="rotate(-90 40 40)" />
                   </svg>
                   <div className={styles.legend}>
-                    <LegendItem color="#a855f7" label="ASX Equities" value="32%" />
+                    <LegendItem color="#ff3f34" label="ASX Equities" value="32%" />
                     <LegendItem color="#ff7a30" label="Super" value="28%" />
-                    <LegendItem color="#e879f9" label="Funds / ETFs" value="16%" />
+                    <LegendItem color="#ff8b6e" label="Funds / ETFs" value="16%" />
                     <LegendItem color="#fb923c" label="Crypto + Bullion" value="24%" />
                   </div>
                 </div>

@@ -91,7 +91,7 @@ function lessonText(l: string | { lesson: string; date: string }): string {
 function PriceTooltip({ active, payload }: { active?: boolean; payload?: Array<{ payload: ChartBar }>; label?: string; }) {
   if (!active || !payload?.length) return null;
   const d = payload[0].payload;
-  const rsiColor = d.rsi == null ? "#666" : d.rsi > 70 ? "#ff4b33" : d.rsi < 30 ? "#00e676" : "#a1a1aa";
+  const rsiColor = d.rsi == null ? "#666" : d.rsi > 70 ? "#ff3f34" : d.rsi < 30 ? "#00e676" : "#a1a1aa";
   return (
     <div className={styles.tooltip}>
       <div>O <b>${d.open?.toFixed(2)}</b> H <b>${d.high?.toFixed(2)}</b> L <b>${d.low?.toFixed(2)}</b> C <b>${d.close?.toFixed(2)}</b></div>
@@ -331,7 +331,7 @@ export default function TradingClient() {
     equity: v,
   }));
   const fills = (analytics?.orders ?? []).filter(o => o.status === "filled" && o.filled_avg_price);
-  const perfReturnColor = perfReturn >= 0 ? "#00e676" : "#ff4b33";
+  const perfReturnColor = perfReturn >= 0 ? "#00e676" : "#ff3f34";
 
   // ── Splash ─────────────────────────────────────────────────────────────────
   if (dataLoading) {
@@ -358,15 +358,15 @@ export default function TradingClient() {
           </div>
           <div className={styles.card}>
             <span className={styles.cardLabel}>CASH {cashPct.toFixed(1)}%</span>
-            <span className={styles.cardVal} style={{ color: cashPct < 20 ? "#ff4b33" : "#00e676" }}>${f(cash)}</span>
+            <span className={styles.cardVal} style={{ color: cashPct < 20 ? "#ff3f34" : "#00e676" }}>${f(cash)}</span>
           </div>
           <div className={styles.card}>
             <span className={styles.cardLabel}>TODAY P&amp;L</span>
-            <span className={styles.cardVal} style={{ color: sign(dayPL) ? "#00e676" : "#ff4b33" }}>{usd(dayPL)}</span>
+            <span className={styles.cardVal} style={{ color: sign(dayPL) ? "#00e676" : "#ff3f34" }}>{usd(dayPL)}</span>
           </div>
           <div className={styles.card}>
             <span className={styles.cardLabel}>UNREALISED</span>
-            <span className={styles.cardVal} style={{ color: sign(totalUPL) ? "#00e676" : "#ff4b33" }}>{usd(totalUPL)}</span>
+            <span className={styles.cardVal} style={{ color: sign(totalUPL) ? "#00e676" : "#ff3f34" }}>{usd(totalUPL)}</span>
           </div>
           {latestClose && (
             <div className={styles.card}>
@@ -377,7 +377,7 @@ export default function TradingClient() {
           {latestRSI != null && (
             <div className={styles.card}>
               <span className={styles.cardLabel}>RSI</span>
-              <span className={styles.cardVal} style={{ color: latestRSI > 70 ? "#ff4b33" : latestRSI < 30 ? "#00e676" : "#a1a1aa" }}>
+              <span className={styles.cardVal} style={{ color: latestRSI > 70 ? "#ff3f34" : latestRSI < 30 ? "#00e676" : "#a1a1aa" }}>
                 {latestRSI.toFixed(1)}
               </span>
             </div>
@@ -417,8 +417,8 @@ export default function TradingClient() {
                 <ComposedChart data={chartData} margin={{ top: 4, right: 12, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="priceGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#ff4b33" stopOpacity={0.2} />
-                      <stop offset="100%" stopColor="#ff4b33" stopOpacity={0} />
+                      <stop offset="0%" stopColor="#ff3f34" stopOpacity={0.2} />
+                      <stop offset="100%" stopColor="#ff3f34" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="2 4" stroke="#1e1e26" vertical={false} />
@@ -431,7 +431,7 @@ export default function TradingClient() {
                   <Line type="monotone" dataKey="bb_lower" stroke="rgba(255,75,51,0.35)" strokeDasharray="3 2" dot={false} strokeWidth={1} legendType="none" />
                   <Line type="monotone" dataKey="ema50" stroke="#40c4ff" strokeWidth={1.5} dot={false} legendType="none" />
                   <Line type="monotone" dataKey="ema200" stroke="#ffd740" strokeWidth={1.5} dot={false} legendType="none" />
-                  <Area type="monotone" dataKey="close" fill="url(#priceGrad)" stroke="#ff4b33" strokeWidth={2} dot={false} />
+                  <Area type="monotone" dataKey="close" fill="url(#priceGrad)" stroke="#ff3f34" strokeWidth={2} dot={false} />
                 </ComposedChart>
               </ResponsiveContainer>
 
@@ -458,7 +458,7 @@ export default function TradingClient() {
                   <Tooltip formatter={(v: number | undefined) => v?.toFixed(4) ?? ""} labelFormatter={fmtDate} />
                   <ReferenceLine y={0} stroke="#333340" />
                   <Bar dataKey="histogram" maxBarSize={3}>
-                    {chartData.map((entry, i) => <Cell key={i} fill={(entry.histogram ?? 0) >= 0 ? "#00e676" : "#ff4b33"} />)}
+                    {chartData.map((entry, i) => <Cell key={i} fill={(entry.histogram ?? 0) >= 0 ? "#00e676" : "#ff3f34"} />)}
                   </Bar>
                   <Line type="monotone" dataKey="macd" stroke="#ff8c40" strokeWidth={1.5} dot={false} />
                   <Line type="monotone" dataKey="signal" stroke="#a1a1aa" strokeWidth={1} dot={false} strokeDasharray="2 2" />
@@ -466,7 +466,7 @@ export default function TradingClient() {
               </ResponsiveContainer>
 
               <div className={styles.legend}>
-                <span style={{ color: "#ff4b33" }}>── Price</span>
+                <span style={{ color: "#ff3f34" }}>── Price</span>
                 <span style={{ color: "#40c4ff" }}>── EMA50</span>
                 <span style={{ color: "#ffd740" }}>── EMA200</span>
                 <span style={{ color: "rgba(255,75,51,0.5)" }}>⋯ Bollinger</span>
@@ -514,8 +514,8 @@ export default function TradingClient() {
                             <td>{Number(p.qty).toFixed(0)}</td>
                             <td>${Number(p.avg_entry_price).toFixed(2)}</td>
                             <td>${Number(p.current_price).toFixed(2)}</td>
-                            <td style={{ color: pos ? "#00e676" : "#ff4b33" }}>{pos ? "+" : ""}{plpc.toFixed(2)}%</td>
-                            <td style={{ color: pos ? "#00e676" : "#ff4b33" }}>{pl >= 0 ? "+" : "-"}${Math.abs(pl).toLocaleString("en-US", { maximumFractionDigits: 0 })}</td>
+                            <td style={{ color: pos ? "#00e676" : "#ff3f34" }}>{pos ? "+" : ""}{plpc.toFixed(2)}%</td>
+                            <td style={{ color: pos ? "#00e676" : "#ff3f34" }}>{pl >= 0 ? "+" : "-"}${Math.abs(pl).toLocaleString("en-US", { maximumFractionDigits: 0 })}</td>
                             <td style={{ color: "#666" }}>{alloc.toFixed(1)}%</td>
                           </tr>
                         );
@@ -661,7 +661,7 @@ export default function TradingClient() {
                     </div>
                     <div className={styles.perfCard}>
                       <div className={styles.perfCardLabel}>MAX DRAWDOWN</div>
-                      <div className={styles.perfCardVal} style={{ color: perfMaxDd > 5 ? "#ff4b33" : perfMaxDd > 2 ? "#ff8c40" : "#00e676" }}>
+                      <div className={styles.perfCardVal} style={{ color: perfMaxDd > 5 ? "#ff3f34" : perfMaxDd > 2 ? "#ff8c40" : "#00e676" }}>
                         {perfMaxDd > 0 ? `-${perfMaxDd.toFixed(2)}%` : "0%"}
                       </div>
                       <div className={styles.perfCardSub}>30-day period</div>
