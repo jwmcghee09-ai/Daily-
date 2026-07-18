@@ -401,10 +401,15 @@ export default function LandingPage({
           ) : null}
 
           <div className={styles.heroIntro}>
-            <div className={`${styles.heroBadge} ${styles.reveal}`}>SPECTRE — AI Portfolio Intelligence</div>
-            <h1 className={`${styles.heroTitle} ${styles.reveal}`}>
-              Plan like an investor.<br /><span>Run it like a machine<span className={styles.caret} aria-hidden="true" /></span>
-            </h1>
+            <div className={`${styles.heroKicker} ${styles.reveal}`}>
+              <span>AI PORTFOLIO INTELLIGENCE</span>
+              <span className={styles.heroKickerDot} />
+              <span>AUSTRALIA</span>
+            </div>
+            <h1 className={`${styles.heroWordmark} ${styles.reveal}`}>SPECTRE</h1>
+            <p className={`${styles.heroTag} ${styles.reveal}`}>
+              Plan like an investor. Run it like a machine<span className={styles.caret} aria-hidden="true" />
+            </p>
             <p className={`${styles.heroSub} ${styles.reveal}`}>
               Import your broker, super, and crypto holdings. SPECTRE scores your real risk in 60 seconds
               and answers questions in plain English — because it can actually see what you own.

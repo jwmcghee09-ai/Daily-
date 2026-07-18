@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Unbounded:wght@400;500;700;900&family=Inter+Tight:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 .page {
   overflow-x: hidden; /* fallback */
   overflow-x: clip;  /* clip doesn't create a scroll container, so position:sticky keeps working */
@@ -2756,4 +2757,290 @@
   .orb, .lifecycleChip, .caret, .caretSm { animation: none !important; }
   .tiltCard { transition: none; }
   .revealTilt { opacity: 1; transform: none; transition: none; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   V3 — BRUTALIST EDITORIAL RESKIN
+   True black · giant orange wordmark · Unbounded / Inter Tight /
+   IBM Plex Mono · square shapes · hairline borders
+   (Appended last so it wins the cascade over everything above.)
+   ═══════════════════════════════════════════════════════════════ */
+
+.page {
+  background: #070706;
+  font-family: 'Inter Tight', system-ui, sans-serif;
+  color: #f0edea;
+}
+
+.page::before { background: #070706; }
+.page::after { opacity: 0.25; }
+
+/* ── New hero ── */
+.heroKicker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.34em;
+  color: #8f8a84;
+  margin-bottom: 26px;
+  text-transform: uppercase;
+}
+
+.heroKickerDot {
+  width: 6px;
+  height: 6px;
+  background: #ff7a30;
+  animation: myrmPulse 1.8s ease-in-out infinite;
+}
+
+.heroWordmark {
+  font-family: 'Unbounded', sans-serif;
+  font-weight: 900;
+  font-size: clamp(3.2rem, 12.5vw, 11.5rem);
+  line-height: 0.96;
+  letter-spacing: 0.005em;
+  margin: 0 0 20px;
+  text-align: center;
+  background: linear-gradient(180deg, #ffa14d 0%, #ff7a30 42%, #ff3f34 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  text-shadow: none;
+  filter: drop-shadow(0 12px 60px rgba(255, 106, 40, 0.22));
+}
+
+.heroTag {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: clamp(15px, 1.9vw, 21px);
+  color: #f0edea;
+  text-align: center;
+  letter-spacing: 0.02em;
+  margin: 0 0 18px;
+}
+
+.heroTag .caret,
+.heroTag > .caret {
+  background: #ff7a30;
+  height: 0.1em;
+  width: 0.6em;
+}
+
+.heroSub {
+  font-family: 'Inter Tight', sans-serif;
+  color: #a39d96;
+}
+
+/* ── Global type swap ── */
+.sectionTitle,
+.aiRevealTitle,
+.myrmidonTitle,
+.stickyPanelTitle,
+.ctaPanel h2 {
+  font-family: 'Unbounded', sans-serif !important;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.sectionTitle { font-size: clamp(24px, 3.4vw, 44px); line-height: 1.12; }
+.aiRevealTitle { font-size: clamp(26px, 4vw, 52px); line-height: 1.08; }
+.myrmidonTitle { font-size: clamp(24px, 3.2vw, 40px); line-height: 1.14; }
+
+.sectionLabel,
+.smallLabel,
+.chartBadge,
+.chartCardTitle,
+.statStatLabel,
+.planTier,
+.compareHead,
+.myrmidonBadge,
+.heroBadge,
+.footerTagline,
+.commandHint {
+  font-family: 'IBM Plex Mono', monospace !important;
+}
+
+.statStatVal {
+  font-family: 'Unbounded', sans-serif !important;
+  font-weight: 700;
+  font-size: clamp(30px, 4.2vw, 52px);
+  background: linear-gradient(180deg, #ffa14d, #ff3f34);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+/* ── Square everything ── */
+.nav,
+.button,
+.primaryButton,
+.outlineButton,
+.ghostButton,
+.heroBadge,
+.dashboardCard,
+.chartCard,
+.planCard,
+.featureItem,
+.securityCard,
+.researchTile,
+.researchTileIcon,
+.miniCard,
+.previewCard,
+.previewUploadZone,
+.aiConsoleRevealInner,
+.aiConsole,
+.myrmidonTerm,
+.myrmidonTermBar,
+.myrmidonTrade,
+.myrmidonBadge,
+.ctaPanel,
+.banner,
+.faqItem,
+.faqButton,
+.commandBar,
+.lifecycleChip,
+.iconWrap,
+.statCard,
+.chartBox,
+.donutWrap,
+.legend,
+.tickerItem,
+.compareColumn,
+.planCard ul,
+.myrmidonTool {
+  border-radius: 0 !important;
+}
+
+/* ── Blacker surfaces + hairline borders ── */
+.dashboardCard,
+.aiConsoleRevealInner,
+.myrmidonTerm,
+.ctaPanel {
+  background: #0c0b0a;
+  border: 1px solid #262320;
+}
+
+.chartCard,
+.planCard,
+.featureItem,
+.securityCard,
+.researchTile,
+.compareColumn {
+  background: #0c0b0a !important;
+  border: 1px solid #221f1d !important;
+}
+
+.chartCard:hover,
+.planCard:hover,
+.featureItem:hover,
+.securityCard:hover,
+.researchTile:hover {
+  border-color: #ff7a30 !important;
+  box-shadow: 0 0 0 1px #ff7a30 inset, 0 18px 50px rgba(255, 106, 40, 0.09);
+  transform: translateY(-4px);
+}
+
+.statsStrip,
+.statsGrid { background: #1c1a18; }
+.statStat { background: #0a0908; }
+
+.myrmidonSection {
+  background: #070706;
+  border-top: 1px solid #221f1d;
+  border-bottom: 1px solid #221f1d;
+}
+
+.featuredPlan {
+  border: 1px solid #ff7a30 !important;
+  box-shadow: 0 0 0 1px #ff7a30 inset;
+}
+
+/* Buttons: square, mono, loud */
+.button {
+  font-family: 'IBM Plex Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 600;
+}
+
+.primaryButton {
+  background: #ff5c1f;
+  color: #0a0908;
+  box-shadow: none;
+}
+
+.primaryButton:hover {
+  background: #ff7a30;
+  filter: none;
+  transform: translateY(-2px);
+}
+
+.outlineButton {
+  border: 1px solid #3a3532;
+  color: #f0edea;
+  background: transparent;
+}
+
+.outlineButton:hover { border-color: #ff7a30; color: #ffb387; }
+
+/* Nav: black bar, hairline bottom */
+.nav {
+  background: rgba(7, 7, 6, 0.92);
+  border-bottom: 1px solid #221f1d;
+}
+
+.brand {
+  font-family: 'Unbounded', sans-serif !important;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  background: linear-gradient(180deg, #ffa14d, #ff3f34);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+.navLinks a { font-family: 'IBM Plex Mono', monospace; }
+
+/* Ticker: black strip */
+.ticker { background: #0a0908; border-bottom: 1px solid #221f1d; }
+
+/* Orbs: dimmer on true black */
+.orbA { background: radial-gradient(circle, rgba(255, 92, 31, 0.10) 0%, transparent 65%); }
+.orbB { background: radial-gradient(circle, rgba(255, 63, 52, 0.07) 0%, transparent 65%); }
+.orbC { background: radial-gradient(circle, rgba(255, 122, 48, 0.06) 0%, transparent 65%); }
+
+/* Reveal-tilt cards land flat and sharp */
+.divider { border-color: #1c1a18; }
+
+/* Lifecycle chips: square mono tags */
+.lifecycleChip {
+  font-family: 'IBM Plex Mono', monospace;
+  border: 1px solid #2e2a27;
+  background: #0c0b0a;
+  color: #8f8a84;
+}
+
+@keyframes chipGlow {
+  0%, 22%, 100% { border-color: #2e2a27; color: #8f8a84; background: #0c0b0a; }
+  8% { border-color: #ff7a30; color: #ff9d5c; background: #171310; }
+}
+
+/* Command bar: square terminal strip */
+.commandBar {
+  border: 1px solid #33291f;
+  background: #0f0d0b;
+}
+
+/* FAQ + footer on black */
+.faqItem { border: 1px solid #221f1d; background: #0c0b0a; }
+.footer { background: #060605; border-top: 1px solid #221f1d; }
+
+@media (max-width: 640px) {
+  .heroWordmark { font-size: clamp(2.6rem, 16vw, 4.4rem); }
+  .heroKicker { letter-spacing: 0.2em; font-size: 9.5px; gap: 8px; }
 }
