@@ -3039,13 +3039,20 @@ export function markPriceDipAlertTriggered(userId: string, ticker: string, trigg
   `).run(triggeredAtIso, new Date().toISOString(), userId, normalizedTicker);
 }
 
+export function isFoundingFreeAccess(): boolean {
+  // Growth mode: every account gets the full product free. Flip off by setting
+  // FOUNDING_FREE_ACCESS=0 in the environment when paid tiers return.
+  const v = (process.env.FOUNDING_FREE_ACCESS || "").trim().toLowerCase();
+  return !["0", "false", "off"].includes(v);
+}
+
 export function readUserEntitlements(userId: string): UserEntitlements {
   const subscription = readBillingSubscription(userId);
   const userEmail = readUserEmailById(userId);
   const proAccessEmails = parseEmailList(process.env.PRO_ACCESS_EMAILS);
   const isAllowlistedForPro = userEmail ? proAccessEmails.has(userEmail) : false;
 
-  if (isAllowlistedForPro) {
+  if (isAllowlistedForPro || isFoundingFreeAccess()) {
     return { planTier: "pro", proEnabled: true, subscriptionStatus: subscription?.status || null };
   }
 

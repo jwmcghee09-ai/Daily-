@@ -158,7 +158,7 @@ const faqs = [
   {
     question: "How is AI analysis different on Pro vs Free?",
     answer:
-      "Every plan gets the same holdings-aware AI workflow, but usage limits differ. Starter includes 3 AI sessions per month, Plus includes 20 per month, and Pro unlocks unlimited AI plus the deepest quant analytics.",
+      "Right now, nothing — founding access gives every account the full Pro feature set free, including our strongest AI model and 100 AI sessions a month. When paid plans return, founding accounts keep generous limits and pricing stays honest: Starter free, Plus $2.99, Pro $9.99.",
   },
   {
     question: "What data does the research terminal include?",
@@ -947,6 +947,15 @@ export default function LandingPage({
           <h2 className={`${styles.sectionTitle} ${styles.centered} ${styles.reveal}`} style={{ transitionDelay: "0.07s" }}>Simple pricing. Free to start.</h2>
           <p className={`${styles.sectionSub} ${styles.centeredSub} ${styles.reveal}`} style={{ transitionDelay: "0.14s" }}>One private workspace per account. Upgrade or cancel anytime — billing runs through Stripe, we never see your card.</p>
 
+          <div className={`${styles.foundingBanner} ${styles.revealScale}`}>
+            <span className={styles.foundingBadge}>FOUNDING ACCESS</span>
+            <p>
+              While we grow, <strong>every feature below is free for everyone</strong> — the full research terminal,
+              all pro analytics, dip alerts, and our best AI model with 100 sessions a month.
+              Paid plans return later; founding accounts keep generous limits.
+            </p>
+          </div>
+
           <div className={styles.pricingGrid}>
             <article className={`${styles.planCard} ${styles.revealTilt}`}>
               <div className={styles.planTier}>Free</div>
@@ -979,8 +988,8 @@ export default function LandingPage({
                 <li>Market research terminal</li>
                 <li>Dip alerts and snapshot history</li>
               </ul>
-              <Link href="/signin?mode=register&plan=plus" className={`${styles.button} ${styles.primaryButton} ${styles.blockButton}`}>
-                Get Plus
+              <Link href="/signin?mode=register&plan=free" className={`${styles.button} ${styles.primaryButton} ${styles.blockButton}`}>
+                Free During Founding Access
               </Link>
             </article>
 
@@ -997,8 +1006,8 @@ export default function LandingPage({
                 <li>Monte Carlo simulation and stress projections</li>
                 <li>Expected Shortfall, beta, tracking error, and deeper benchmark analytics</li>
               </ul>
-              <Link href="/signin?mode=register&plan=pro" className={`${styles.button} ${styles.outlineButton} ${styles.blockButton}`}>
-                Get Pro
+              <Link href="/signin?mode=register&plan=free" className={`${styles.button} ${styles.outlineButton} ${styles.blockButton}`}>
+                Free During Founding Access
               </Link>
             </article>
           </div>

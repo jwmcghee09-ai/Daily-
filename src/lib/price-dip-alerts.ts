@@ -22,7 +22,7 @@ export async function refreshPricesAndTriggerDipAlertsForUser(
 ): Promise<PriceDipAlertScanResult> {
   const refreshedState = await refreshAsxPrices(user.id);
   const entitlements = readUserEntitlements(user.id);
-  const hasDipAlertAccess = entitlements.proEnabled || entitlements.planTier === "plus";
+  const hasDipAlertAccess = entitlements.proEnabled || entitlements.planTier === "plus" || entitlements.planTier === "free";
   const alerts = hasDipAlertAccess ? readPriceDipAlerts(user.id) : [];
 
   if (alerts.length === 0) {

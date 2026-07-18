@@ -2814,6 +2814,7 @@ tbody tr:hover{ background:rgba(255,63,52,.04) !important }
   function applyPlanVisibility() {
     const hasProAccess = Boolean(state.demoMode || state.sessionUser?.proEnabled);
     const hasPlusAccess = Boolean(state.demoMode || state.sessionUser?.proEnabled || state.sessionUser?.planTier === "plus");
+    const hasAlertsAccess = Boolean(state.demoMode || state.sessionUser?.proEnabled || ["free", "plus", "pro"].includes(String(state.sessionUser?.planTier)));
     const navAlertsLink = document.getElementById("nav-alerts-link");
     const alertsSection = document.getElementById("alerts");
     const stressPanel = document.getElementById("stress-panel");
@@ -2823,13 +2824,13 @@ tbody tr:hover{ background:rgba(255,63,52,.04) !important }
     const proRiskCards = Array.from(document.querySelectorAll(".pro-risk"));
     const plusRiskCards = Array.from(document.querySelectorAll(".plus-risk"));
 
-    if (navAlertsLink) navAlertsLink.style.display = hasProAccess ? "" : "none";
-    if (alertsSection) alertsSection.style.display = hasProAccess ? "" : "none";
+    if (navAlertsLink) navAlertsLink.style.display = hasAlertsAccess ? "" : "none";
+    if (alertsSection) alertsSection.style.display = hasAlertsAccess ? "" : "none";
     if (stressPanel) stressPanel.style.display = hasProAccess ? "" : "none";
     const monteCarloWrap = document.getElementById("monte-carlo-wrap");
-    if (monteCarloWrap && !hasProAccess) monteCarloWrap.style.display = "none";
+    if (monteCarloWrap && !hasPlusAccess) monteCarloWrap.style.display = "none";
     if (metricsPanelSplit) metricsPanelSplit.classList.toggle("starter-layout", !hasProAccess);
-    if (riskWindowTabs) riskWindowTabs.style.display = hasProAccess ? "" : "none";
+    if (riskWindowTabs) riskWindowTabs.style.display = hasPlusAccess ? "" : "none";
     if (riskGrid) riskGrid.classList.toggle("starter-layout", !hasProAccess);
     proRiskCards.forEach((card) => {
       card.style.display = hasProAccess ? "" : "none";

@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { clearSessionCookie, getAuthenticatedUser } from "@/lib/auth";
-import { getAiUsageThisMonth, readBillingSubscription, readUserEntitlements, upsertBillingSubscriptionForUser } from "@/lib/db";
+import { getAiUsageThisMonth, readBillingSubscription, readUserEntitlements, upsertBillingSubscriptionForUser, isFoundingFreeAccess } from "@/lib/db";
 import { getStripeClient } from "@/lib/stripe";
 import Stripe from "stripe";
 
-const AI_MONTHLY_LIMITS: Record<string, number> = { none: 3, free: 10, plus: 20, pro: -1 };
+const AI_MONTHLY_LIMITS: Record<string, number> = { none: 5, free: 25, plus: 100, pro: -1 };
 
 export const runtime = "nodejs";
 
@@ -25,7 +25,7 @@ export async function GET() {
     }
   }
   const aiUsed = getAiUsageThisMonth(sessionUser.id);
-  const aiLimit = AI_MONTHLY_LIMITS[entitlements.planTier] ?? 3;
+  const aiLimit = isFoundingFreeAccess() ? 100 : (AI_MONTHLY_LIMITS[entitlements.planTier] ?? 5);
 
   return NextResponse.json({
     authenticated: true,

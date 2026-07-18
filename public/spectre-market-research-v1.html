@@ -2872,9 +2872,9 @@ html.starter-mode .workspace-hero       { display: none !important; }
 html.starter-mode .market-pulse-strip   { display: none !important; }
 html.starter-mode #starter-banner       { display: none !important; }
 html.starter-mode .demo-preview-banner  { display: none !important; }
-html.starter-mode .rtab-panel:not(#rtab-overview) { display: none !important; }
-html.starter-mode .rtab:not([data-tab="overview"]) { opacity: .35 !important; pointer-events: none !important; }
-html.starter-mode .rtab:not([data-tab="overview"])::after { content: ' 🔒'; font-size: .6rem; vertical-align: middle; }
+html.starter-mode .rtab-panel:not(#rtab-overview):not(#rtab-equities):not(#rtab-macro) { display: none !important; }
+html.starter-mode .rtab:not([data-tab="overview"]):not([data-tab="equities"]):not([data-tab="macro"]) { opacity: .35 !important; pointer-events: none !important; }
+html.starter-mode .rtab:not([data-tab="overview"]):not([data-tab="equities"]):not([data-tab="macro"])::after { content: ' 🔒'; font-size: .6rem; vertical-align: middle; }
 html.starter-mode .main-grid            { display: none !important; }
 html.starter-mode .bottom-grid          { display: none !important; }
 html.starter-mode .bottom-grid ~ div,

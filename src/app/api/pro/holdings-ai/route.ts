@@ -14,6 +14,7 @@ import {
   appendAiMessage,
   AiConversationMessage,
   PlanTier,
+  isFoundingFreeAccess,
 } from "@/lib/db";
 import { computeMetrics } from "@/lib/portfolio";
 
@@ -26,9 +27,9 @@ const CONVERSATION_HISTORY_TURNS: Record<PlanTier, number> = {
 };
 
 const AI_MONTHLY_LIMITS: Record<PlanTier, number> = {
-  none: 3,
-  free: 10,
-  plus: 20,
+  none: 5,
+  free: 25,
+  plus: 100,
   pro: -1, // unlimited
 };
 
@@ -841,7 +842,8 @@ export async function POST(request: Request) {
   }
 
   const entitlements = readUserEntitlements(sessionUser.id);
-  const monthlyLimit = AI_MONTHLY_LIMITS[entitlements.planTier] ?? 3;
+  const foundingMode = isFoundingFreeAccess();
+  const monthlyLimit = foundingMode ? 100 : (AI_MONTHLY_LIMITS[entitlements.planTier] ?? 5);
   const usedThisMonth = getAiUsageThisMonth(sessionUser.id);
 
   if (monthlyLimit !== -1 && usedThisMonth >= monthlyLimit) {
