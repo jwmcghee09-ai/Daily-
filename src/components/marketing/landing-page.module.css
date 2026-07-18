@@ -1,5 +1,6 @@
 .page {
-  overflow-x: hidden;
+  overflow-x: hidden; /* fallback */
+  overflow-x: clip;  /* clip doesn't create a scroll container, so position:sticky keeps working */
   --bg: #171514;
   --surface: #232120;
   --surface2: #2a2726;
