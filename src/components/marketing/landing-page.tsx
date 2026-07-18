@@ -156,9 +156,9 @@ const faqs = [
       "The risk score is a 0 to 100 portfolio health signal built from concentration, drawdown, VaR and Expected Shortfall, benchmark sensitivity, volatility, and data quality confidence.",
   },
   {
-    question: "How is AI analysis different on Pro vs Free?",
+    question: "How much does it cost?",
     answer:
-      "Right now, nothing — founding access gives every account the full Pro feature set free, including our strongest AI model and 100 AI sessions a month. When paid plans return, founding accounts keep generous limits and pricing stays honest: Starter free, Plus $2.99, Pro $9.99.",
+      "Nothing. While SPECTRE grows, every account gets the entire product free — the full research terminal, all pro analytics, dip alerts, and our strongest AI model with 100 AI sessions a month. No card required.",
   },
   {
     question: "What data does the research terminal include?",
@@ -166,9 +166,9 @@ const faqs = [
       "The research terminal covers ASX equities, earnings, macro, crypto, commodities, oil, gold, central-bank rates, treasury curves, FRED macro signals, CFTC positioning, analyst targets, and live market news.",
   },
   {
-    question: "Can I cancel anytime?",
+    question: "What do I need to sign up?",
     answer:
-      "Yes. Subscriptions are managed through Stripe and can be cancelled at any time from your billing portal.",
+      "Just an email address. There is no card, no subscription, and no trial clock — create an account, import a CSV, and the whole workspace is yours.",
   },
 ] as const;
 
@@ -366,7 +366,7 @@ export default function LandingPage({
             <a href="#features">Features</a>
             <a href="#ai">AI Analysis</a>
             <a href="#myrmidon">Myrmidon</a>
-            <a href="#pricing">Pricing</a>
+            <a href="#start">Start Now</a>
           </div>
 
           <div className={styles.navActions}>
@@ -941,75 +941,23 @@ export default function LandingPage({
 
       <Divider />
 
-      <section className={styles.section} id="pricing">
+      <section className={styles.section} id="start">
         <div className={styles.container}>
-          <div className={`${styles.sectionLabel} ${styles.reveal}`}>Pricing</div>
-          <h2 className={`${styles.sectionTitle} ${styles.centered} ${styles.reveal}`} style={{ transitionDelay: "0.07s" }}>Simple pricing. Free to start.</h2>
-          <p className={`${styles.sectionSub} ${styles.centeredSub} ${styles.reveal}`} style={{ transitionDelay: "0.14s" }}>One private workspace per account. Upgrade or cancel anytime — billing runs through Stripe, we never see your card.</p>
-
-          <div className={`${styles.foundingBanner} ${styles.revealScale}`}>
-            <span className={styles.foundingBadge}>FOUNDING ACCESS</span>
-            <p>
-              While we grow, <strong>every feature below is free for everyone</strong> — the full research terminal,
-              all pro analytics, dip alerts, and our best AI model with 100 sessions a month.
-              Paid plans return later; founding accounts keep generous limits.
+          <div className={`${styles.startWrap} ${styles.revealScale}`}>
+            <div className={styles.startBadge}>FREE WHILE WE GROW</div>
+            <h2 className={styles.startTitle}>Start now.</h2>
+            <p className={styles.startSub}>
+              No plans, no tiers, no card. Every feature is unlocked for everyone — the full research
+              terminal, all pro analytics, dip alerts, and our best AI model. Just sign up and import.
             </p>
-          </div>
-
-          <div className={styles.pricingGrid}>
-            <article className={`${styles.planCard} ${styles.revealTilt}`}>
-              <div className={styles.planTier}>Free</div>
-              <div className={styles.planPrice}>
-                <span>$0</span>
-                <small>/month</small>
-              </div>
-              <p>Your private quant dashboard with foundational AI access.</p>
-              <ul>
-                <li>Multi-source CSV/XLSX import</li>
-                <li>Quant dashboard with risk score, VaR, drawdown, and exposure views</li>
-                <li>3 AI sessions per month</li>
-              </ul>
-              <Link href="/signin?mode=register&plan=free" className={`${styles.button} ${styles.outlineButton} ${styles.blockButton}`}>
-                Get Started Free
+            <div className={styles.heroActions}>
+              <Link href="/signin?mode=register&plan=free" className={`${styles.button} ${styles.primaryButton} ${styles.heroButton}`}>
+                Start Now — Free
               </Link>
-            </article>
-
-            <article className={`${styles.planCard} ${styles.featuredPlan} ${styles.revealTilt}`} style={{ transitionDelay: "0.1s" }}>
-              <div className={styles.featuredBadge}>Most Popular</div>
-              <div className={styles.planTier}>Plus</div>
-              <div className={styles.planPrice}>
-                <span>$2.99</span>
-                <small>/month</small>
-              </div>
-              <p>The full research stack plus more AI usage.</p>
-              <ul>
-                <li>Everything in Free</li>
-                <li>20 AI sessions per month</li>
-                <li>Market research terminal</li>
-                <li>Dip alerts and snapshot history</li>
-              </ul>
-              <Link href="/signin?mode=register&plan=free" className={`${styles.button} ${styles.primaryButton} ${styles.blockButton}`}>
-                Free During Founding Access
+              <Link href="/dashboard?demo=1" className={`${styles.button} ${styles.outlineButton} ${styles.heroButton}`}>
+                Try The Demo First
               </Link>
-            </article>
-
-            <article className={`${styles.planCard} ${styles.revealTilt}`} style={{ transitionDelay: "0.2s" }}>
-              <div className={styles.planTier}>Pro</div>
-              <div className={styles.planPrice}>
-                <span>$9.99</span>
-                <small>/month</small>
-              </div>
-              <p>The full AI analyst workflow with the deepest quant tooling.</p>
-              <ul>
-                <li>Everything in Plus</li>
-                <li>Unlimited AI queries</li>
-                <li>Monte Carlo simulation and stress projections</li>
-                <li>Expected Shortfall, beta, tracking error, and deeper benchmark analytics</li>
-              </ul>
-              <Link href="/signin?mode=register&plan=free" className={`${styles.button} ${styles.outlineButton} ${styles.blockButton}`}>
-                Free During Founding Access
-              </Link>
-            </article>
+            </div>
           </div>
         </div>
       </section>
@@ -1112,7 +1060,7 @@ export default function LandingPage({
                 <li><a href="#workflow">How It Works</a></li>
                 <li><a href="#features">Features</a></li>
                 <li><a href="#ai">AI Analysis</a></li>
-                <li><a href="#pricing">Pricing</a></li>
+                <li><a href="#start">Start Now</a></li>
                 <li><Link href="/dashboard?demo=1">Live Demo</Link></li>
               </ul>
             </div>
