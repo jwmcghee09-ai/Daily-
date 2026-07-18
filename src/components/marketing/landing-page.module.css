@@ -2811,7 +2811,7 @@
   color: transparent;
   -webkit-text-fill-color: transparent;
   text-shadow: none;
-  filter: drop-shadow(0 12px 60px rgba(255, 106, 40, 0.22));
+  filter: drop-shadow(0 16px 80px rgba(255, 106, 40, 0.32));
 }
 
 .heroTag {
@@ -2874,46 +2874,44 @@
   color: transparent;
 }
 
-/* ── Square everything ── */
-.nav,
-.button,
-.primaryButton,
-.outlineButton,
-.ghostButton,
-.heroBadge,
+/* ── Soft curves (fireart-style black & orange) ── */
 .dashboardCard,
+.aiConsoleRevealInner,
+.myrmidonTerm,
+.ctaPanel { border-radius: 28px !important; overflow: hidden; }
+
 .chartCard,
 .planCard,
 .featureItem,
 .securityCard,
 .researchTile,
-.researchTileIcon,
-.miniCard,
-.previewCard,
-.previewUploadZone,
-.aiConsoleRevealInner,
-.aiConsole,
-.myrmidonTerm,
-.myrmidonTermBar,
-.myrmidonTrade,
-.myrmidonBadge,
-.ctaPanel,
-.banner,
-.faqItem,
-.faqButton,
-.commandBar,
-.lifecycleChip,
-.iconWrap,
-.statCard,
-.chartBox,
-.donutWrap,
-.legend,
-.tickerItem,
 .compareColumn,
-.planCard ul,
-.myrmidonTool {
-  border-radius: 0 !important;
-}
+.previewCard,
+.miniCard,
+.aiConsole,
+.faqItem,
+.chartBox,
+.statCard { border-radius: 22px !important; }
+
+.previewUploadZone,
+.myrmidonTrade,
+.commandBar { border-radius: 16px !important; }
+
+.button,
+.primaryButton,
+.outlineButton,
+.ghostButton,
+.heroBadge,
+.myrmidonBadge,
+.lifecycleChip,
+.chartBadge,
+.myrmidonTool,
+.tickerItem { border-radius: 999px !important; }
+
+.iconWrap,
+.researchTileIcon { border-radius: 16px !important; }
+
+.myrmidonTermBar { border-radius: 0 !important; }
 
 /* ── Blacker surfaces + hairline borders ── */
 .dashboardCard,
@@ -2939,9 +2937,9 @@
 .featureItem:hover,
 .securityCard:hover,
 .researchTile:hover {
-  border-color: #ff7a30 !important;
-  box-shadow: 0 0 0 1px #ff7a30 inset, 0 18px 50px rgba(255, 106, 40, 0.09);
-  transform: translateY(-4px);
+  border-color: rgba(255, 122, 48, 0.55) !important;
+  box-shadow: 0 24px 70px rgba(255, 92, 31, 0.16), 0 6px 22px rgba(0, 0, 0, 0.5);
+  transform: translateY(-5px);
 }
 
 .statsStrip,
@@ -2955,8 +2953,8 @@
 }
 
 .featuredPlan {
-  border: 1px solid #ff7a30 !important;
-  box-shadow: 0 0 0 1px #ff7a30 inset;
+  border: 1px solid rgba(255, 122, 48, 0.7) !important;
+  box-shadow: 0 20px 70px rgba(255, 92, 31, 0.14);
 }
 
 /* Buttons: square, mono, loud */
@@ -2968,14 +2966,14 @@
 }
 
 .primaryButton {
-  background: #ff5c1f;
-  color: #0a0908;
-  box-shadow: none;
+  background: linear-gradient(135deg, #ff7a30, #ff3f34);
+  color: #fff;
+  box-shadow: 0 12px 40px rgba(255, 92, 31, 0.35);
 }
 
 .primaryButton:hover {
-  background: #ff7a30;
-  filter: none;
+  box-shadow: 0 16px 52px rgba(255, 92, 31, 0.5);
+  filter: brightness(1.06);
   transform: translateY(-2px);
 }
 
@@ -3010,8 +3008,8 @@
 .ticker { background: #0a0908; border-bottom: 1px solid #221f1d; }
 
 /* Orbs: dimmer on true black */
-.orbA { background: radial-gradient(circle, rgba(255, 92, 31, 0.10) 0%, transparent 65%); }
-.orbB { background: radial-gradient(circle, rgba(255, 63, 52, 0.07) 0%, transparent 65%); }
+.orbA { background: radial-gradient(circle, rgba(255, 92, 31, 0.16) 0%, transparent 65%); }
+.orbB { background: radial-gradient(circle, rgba(255, 63, 52, 0.11) 0%, transparent 65%); }
 .orbC { background: radial-gradient(circle, rgba(255, 122, 48, 0.06) 0%, transparent 65%); }
 
 /* Reveal-tilt cards land flat and sharp */
