@@ -67,8 +67,31 @@ const spaceGrotesk = localFont({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://spectre-assets.com"),
   title: "SPECTRE — AI Portfolio Intelligence for Australian Investors",
-  description: "SPECTRE — AI portfolio intelligence for Australian investors. Risk scoring, Monte Carlo simulation, and AI analysis in one dashboard.",
+  description:
+    "Import your broker, super, and crypto holdings. SPECTRE scores your real risk in 60 seconds and answers questions in plain English. Free while we grow — no card.",
+  keywords: [
+    "portfolio tracker australia", "asx portfolio", "ai portfolio analysis",
+    "risk score", "commsec import", "super tracking", "monte carlo portfolio",
+  ],
+  openGraph: {
+    type: "website",
+    url: "https://spectre-assets.com",
+    siteName: "SPECTRE",
+    title: "SPECTRE — Plan like an investor. Run it like a machine.",
+    description:
+      "AI portfolio intelligence for Australian investors. Risk scoring, live research, and an AI that can actually see what you own. Free while we grow.",
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "SPECTRE — AI Portfolio Intelligence" }],
+    locale: "en_AU",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "SPECTRE — Plan like an investor. Run it like a machine.",
+    description:
+      "AI portfolio intelligence for Australian investors. Free while we grow — no card required.",
+    images: ["/og-image.png"],
+  },
 };
 
 export const viewport: Viewport = {
