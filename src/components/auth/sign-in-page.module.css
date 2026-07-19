@@ -763,3 +763,30 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ── Founding free-access note (replaces the plan picker) ── */
+.allFreeNote {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 18px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 122, 48, 0.45);
+  background: linear-gradient(135deg, rgba(255, 92, 31, 0.10), rgba(255, 63, 52, 0.04));
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: #b3aca5;
+  margin: 4px 0 2px;
+}
+
+.allFreeBadge {
+  align-self: flex-start;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ff7a30, #ff3f34);
+  color: #fff;
+}

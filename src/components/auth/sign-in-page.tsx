@@ -49,8 +49,13 @@ export default function SignInPage({
   const router = useRouter();
   const [authMode, setAuthMode] = useState<AuthMode>(initialMode);
   const [subMode, setSubMode] = useState<SubMode>(initialSubMode === "reset" || initialSubMode === "forgot" ? initialSubMode : "default");
-  const [selectedPlan, setSelectedPlan] = useState<CheckoutPlan>(initialPlan ?? "free");
-  const [hasRequestedCheckout, setHasRequestedCheckout] = useState(Boolean(initialPlan));
+  // Founding free access: every sign-up is the free (full-featured) plan —
+  // old ?plan=plus/pro links must not push anyone into Stripe checkout.
+  const [selectedPlan, setSelectedPlan] = useState<CheckoutPlan>("free");
+  const [hasRequestedCheckout, setHasRequestedCheckout] = useState(false);
+  void initialPlan;
+  void setSelectedPlan;
+  void setHasRequestedCheckout;
   const [email, setEmail] = useState(authenticatedUser?.email ?? "");
   const [password, setPassword] = useState("");
   const [acceptTerms, setAcceptTerms] = useState(false);
@@ -594,42 +599,13 @@ export default function SignInPage({
 
                       {authMode === "register" ? (
                         <>
-                          <fieldset className={styles.planPicker}>
-                            <legend>Choose your plan</legend>
-                            {(["free", "plus", "pro"] as CheckoutPlan[]).map((plan) => (
-                              <label
-                                key={plan}
-                                className={`${styles.planOption} ${selectedPlan === plan ? styles.planOptionActive : ""}`}
-                              >
-                                <input
-                                  type="radio"
-                                  name="register-plan"
-                                  checked={selectedPlan === plan}
-                                  onChange={() => {
-                                    setSelectedPlan(plan);
-                                    setHasRequestedCheckout(plan !== "free");
-                                  }}
-                                />
-                                <div className={styles.planOptionInner}>
-                                  <span className={styles.planOptionName}>
-                                    {plan === "free" ? "Free" : plan === "plus" ? "Plus" : "Pro"}
-                                  </span>
-                                  <span className={styles.planOptionPrice}>
-                                    {plan === "free" ? "No cost" : plan === "plus" ? "$2.99 / mo" : "$9.99 / mo"}
-                                  </span>
-                                </div>
-                                <div className={styles.planOptionFeatures}>
-                                  {plan === "free" ? (
-                                    <span>3 AI queries/month · Full dashboard</span>
-                                  ) : plan === "plus" ? (
-                                    <span>20 AI queries/month · Dip alerts · Full risk analytics</span>
-                                  ) : (
-                                    <span>Unlimited AI · Advanced quant console · Priority support</span>
-                                  )}
-                                </div>
-                              </label>
-                            ))}
-                          </fieldset>
+                          <div className={styles.allFreeNote}>
+                            <span className={styles.allFreeBadge}>FREE WHILE WE GROW</span>
+                            <span>
+                              Every feature is included — full dashboard, research terminal, pro analytics,
+                              dip alerts, and our best AI model. No plans, no card.
+                            </span>
+                          </div>
 
                           <label className={styles.termsRow}>
                             <input
