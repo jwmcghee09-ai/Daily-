@@ -106,8 +106,18 @@ export async function GET(request: NextRequest) {
   const vol10 = stdev(rets.slice(-10));
   const vol60 = stdev(rets.slice(-60));
   const drawdownPct = hi52 > 0 ? ((price - hi52) / hi52) * 100 : 0;
-  const ret30 = closes.length > 21 && closes[closes.length - 22] > 0
-    ? ((price - closes[closes.length - 22]) / closes[closes.length - 22]) * 100 : null;
+  const retFrom = (daysBack: number) => {
+    const base = closes[closes.length - 1 - daysBack];
+    return base != null && base > 0 ? ((price - base) / base) * 100 : null;
+  };
+  const ret30 = closes.length > 21 ? retFrom(21) : null;
+  const ret90 = closes.length > 63 ? retFrom(63) : null;
+  const ret1y = closes[0] > 0 ? ((price - closes[0]) / closes[0]) * 100 : null;
+  const pos52w = hi52 > lo52 ? ((price - lo52) / (hi52 - lo52)) * 100 : null;
+  const volXNorm = vol60 > 0 ? vol10 / vol60 : null;
+  const annVolPct = vol60 > 0 ? vol60 * Math.sqrt(252) * 100 : null;
+  const ma50DistPct = ma50 != null && ma50 > 0 ? ((price - ma50) / ma50) * 100 : null;
+  const ma200DistPct = ma200 != null && ma200 > 0 ? ((price - ma200) / ma200) * 100 : null;
 
   const anomalies: Anomaly[] = [];
   const add = (severity: Anomaly["severity"], title: string, detail: string) => anomalies.push({ severity, title, detail });
@@ -142,13 +152,27 @@ export async function GET(request: NextRequest) {
     exchange: res.meta?.exchangeName || "",
     price,
     dayPct,
+    open: last.o,
+    high: last.h,
+    low: last.l,
+    prevClose: prev.c,
+    gapPct,
     ret30,
+    ret90,
+    ret1y,
     rsi,
     ma50,
     ma200,
+    ma50DistPct,
+    ma200DistPct,
     hi52,
     lo52,
+    pos52w,
     volRatio,
+    lastVol: last.v || null,
+    avgVol20,
+    volXNorm,
+    annVolPct,
     drawdownPct,
     spark: closes.slice(-90),
     anomalies,
