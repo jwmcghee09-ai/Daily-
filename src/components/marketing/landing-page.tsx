@@ -166,6 +166,11 @@ const faqs = [
       "The research terminal covers ASX equities, earnings, macro, crypto, commodities, oil, gold, central-bank rates, treasury curves, FRED macro signals, CFTC positioning, analyst targets, and live market news.",
   },
   {
+    question: "Can I scan individual stocks?",
+    answer:
+      "Yes — the Myrmidon Scanner is free for every account. Search any ASX, US, or global ticker and it flags possible anomalies: RSI extremes, volume spikes, price gaps, 52-week levels, trend breaks, and volatility bursts. It's statistical context only, never advice — you always have the final say.",
+  },
+  {
     question: "What do I need to sign up?",
     answer:
       "Just an email address. There is no card, no subscription, and no trial clock — create an account, import a CSV, and the whole workspace is yours.",
@@ -367,6 +372,8 @@ export default function LandingPage({
           <div className={styles.navLinks}>
             <a href="#features">Features</a>
             <a href="#ai">AI Analysis</a>
+            <a href="#scanner">Scanner</a>
+            <a href="#research">Research</a>
             <a href="#myrmidon">Myrmidon</a>
             <a href="#start">Start Now</a>
           </div>
@@ -631,6 +638,94 @@ export default function LandingPage({
 
       <Divider />
 
+      <section className={styles.scannerSection} id="scanner">
+        <div className={styles.container}>
+          <div className={styles.scannerInner}>
+            <div className={`${styles.scannerCard} ${styles.revealScale}`} style={{ transitionDelay: "0.12s" }}>
+              <div className={styles.myrmidonTermBar}>MYRMIDON // SCANNER — LIVE FOR EVERY ACCOUNT</div>
+              <div className={styles.scannerCardBody}>
+                <div className={styles.scanHead}>
+                  <span className={styles.scanSym}>PLS.AX</span>
+                  <span className={styles.scanName}>Pilbara Minerals</span>
+                  <span className={styles.scanPx}>3.42 AUD</span>
+                  <span className={styles.scanDeltaUp}>+6.8% today</span>
+                </div>
+                <svg className={styles.scanSpark} viewBox="0 0 400 64" preserveAspectRatio="none" aria-hidden="true">
+                  <path
+                    d="M0,44 L30,47 L60,42 L90,49 L120,45 L150,50 L180,44 L210,40 L240,42 L270,36 L300,38 L330,30 L360,24 L385,16 L400,10"
+                    fill="none" stroke="#4ade80" strokeWidth="2.4" strokeLinecap="round"
+                  />
+                </svg>
+                <div className={styles.scanStats}>
+                  {[
+                    ["RSI 14", "71"],
+                    ["30D CHANGE", "+18.4%"],
+                    ["VS 52W HIGH", "-3.1%"],
+                    ["VOLUME", "3.2× avg"],
+                  ].map(([label, val]) => (
+                    <div key={label} className={styles.scanStat}>
+                      <span className={styles.scanStatLabel}>{label}</span>
+                      <span className={styles.scanStatVal}>{val}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className={`${styles.scanFlag} ${styles.scanFlagAlert} ${styles.reveal}`} style={{ transitionDelay: "0.4s" }}>
+                  <span className={styles.scanFlagTag}>ALERT</span>
+                  <div>
+                    <strong>Volume 3.2× the 20-day average</strong>
+                    <p>Unusual activity — something moved the crowd today. Check announcements before acting.</p>
+                  </div>
+                </div>
+                <div className={`${styles.scanFlag} ${styles.scanFlagWatch} ${styles.reveal}`} style={{ transitionDelay: "0.55s" }}>
+                  <span className={styles.scanFlagTag}>WATCH</span>
+                  <div>
+                    <strong>RSI 71 — running hot</strong>
+                    <p>Approaching overbought territory. Watch for exhaustion.</p>
+                  </div>
+                </div>
+                <div className={styles.scanDisclaimer}>
+                  Possible anomalies only — not advice. Myrmidon surfaces; you decide.
+                </div>
+              </div>
+            </div>
+
+            <div className={styles.scannerCopy}>
+              <div className={`${styles.scannerBadge} ${styles.reveal}`}>
+                <span className={styles.scannerLiveDot} />
+                Live Now · Free For Everyone
+              </div>
+              <h2 className={`${styles.myrmidonTitle} ${styles.revealUp}`} style={{ transitionDelay: "0.06s" }}>
+                Myrmidon&rsquo;s scanner.<br />
+                <span>In your hands today.</span>
+              </h2>
+              <p className={`${styles.myrmidonSub} ${styles.reveal}`} style={{ transitionDelay: "0.12s" }}>
+                While the full trading agent is in development, its anomaly engine is already live for
+                every account. Search any stock and it checks a year of price, volume, momentum, and
+                volatility history — then flags what looks unusual.
+              </p>
+              <ul className={styles.myrmidonList}>
+                {[
+                  ["Search any stock", "Type BHP, CBA, NVDA — ASX tickers resolve first, and US or global markets work too."],
+                  ["Possible anomalies only", "RSI extremes, volume spikes, price gaps, 52-week levels, trend breaks, and volatility bursts. Flags, not orders."],
+                  ["You have the final say", "The scanner never trades and never tells you what to do. It surfaces the signal; you make the call."],
+                ].map(([title, copy], index) => (
+                  <li key={title} className={styles.reveal} style={{ transitionDelay: `${0.18 + index * 0.08}s` }}>
+                    <strong>{title}</strong> — {copy}
+                  </li>
+                ))}
+              </ul>
+              <div className={`${styles.scannerCtaRow} ${styles.reveal}`} style={{ transitionDelay: "0.42s" }}>
+                <Link href="/signin?mode=register&plan=free" className={`${styles.button} ${styles.primaryButton}`}>
+                  Scan Your First Stock Free →
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <Divider />
+
       <section className={styles.section} id="research">
         <div className={styles.container}>
           <div className={`${styles.sectionLabel} ${styles.reveal}`}>Research Terminal</div>
@@ -638,6 +733,76 @@ export default function LandingPage({
           <p className={`${styles.sectionSub} ${styles.reveal}`} style={{ transitionDelay: "0.14s" }}>
             The same feeds the AI reads: ASX equities, macro, earnings, crypto, commodities, treasury curves, and positioning data — open to explore on your own.
           </p>
+
+          <div className={`${styles.researchWindow} ${styles.revealScale}`} style={{ transitionDelay: "0.18s" }}>
+            <div className={styles.researchWindowBar}>spectre-assets.com / research</div>
+            <div className={styles.researchTape}>
+              {[
+                ["ASX 200", "8,214", "+0.6%", true],
+                ["AUD/USD", "0.629", "+0.2%", true],
+                ["VIX", "21.4", "-6.1%", false],
+                ["GOLD", "3,112", "+0.8%", true],
+                ["WTI", "69.86", "-1.9%", false],
+                ["BTC", "84.2k", "+1.4%", true],
+              ].map(([label, val, delta, up]) => (
+                <div key={label as string} className={styles.researchTapeCard}>
+                  <span className={styles.researchTapeLabel}>{label}</span>
+                  <span className={styles.researchTapeVal}>{val}</span>
+                  <span className={up ? styles.up : styles.down}>{delta}</span>
+                </div>
+              ))}
+            </div>
+            <div className={styles.researchWindowBody}>
+              <div className={styles.researchPane}>
+                <div className={styles.researchPaneTitle}>ASX Top Constituents</div>
+                {[
+                  ["BHP", "57.54", "-2.7%", false],
+                  ["CBA", "131.44", "+0.4%", true],
+                  ["CSL", "288.10", "+0.7%", true],
+                  ["MQG", "218.75", "+1.4%", true],
+                  ["FMG", "18.44", "-2.1%", false],
+                ].map(([sym, px, delta, up]) => (
+                  <div key={sym as string} className={styles.researchPaneRow}>
+                    <span className={styles.researchPaneSym}>{sym}</span>
+                    <span className={styles.researchPaneVal}>{px}</span>
+                    <span className={up ? styles.up : styles.down}>{delta}</span>
+                  </div>
+                ))}
+              </div>
+              <div className={styles.researchPane}>
+                <div className={styles.researchPaneTitle}>Macro Snapshot</div>
+                {[
+                  ["RBA Cash Rate", "3.60%"],
+                  ["US 10Y Yield", "4.21%"],
+                  ["AU-US 10Y Spread", "-0.42%"],
+                  ["Copper", "+1.1%"],
+                  ["Brent Crude", "74.20"],
+                ].map(([label, val]) => (
+                  <div key={label} className={styles.researchPaneRow}>
+                    <span className={styles.researchPaneSym}>{label}</span>
+                    <span className={styles.researchPaneVal}>{val}</span>
+                  </div>
+                ))}
+              </div>
+              <div className={styles.researchPane}>
+                <div className={styles.researchPaneTitle}>Live Headlines</div>
+                {[
+                  "RBA holds cash rate, flags patient path on cuts",
+                  "Iron ore slips as China stimulus hopes fade",
+                  "CSL upgraded — analyst targets lifted to $315",
+                  "US CPI in line; treasury curve steepens",
+                ].map((headline) => (
+                  <div key={headline} className={styles.researchNewsRow}>
+                    <span className={styles.researchNewsDot} />
+                    <span>{headline}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className={styles.researchWindowFoot}>
+              Live view of the actual research page — every card above is a real feed inside SPECTRE.
+            </div>
+          </div>
 
           <div className={styles.researchHighlights}>
             {[
@@ -664,8 +829,8 @@ export default function LandingPage({
             <a href="/research?demo=1" className={`${styles.button} ${styles.primaryButton}`}>
               See Research Demo
             </a>
-            <Link href="/signin?mode=register&plan=plus" className={`${styles.button} ${styles.outlineButton}`}>
-              Included in Plus
+            <Link href="/signin?mode=register&plan=free" className={`${styles.button} ${styles.outlineButton}`}>
+              Free While We Grow
             </Link>
           </div>
         </div>
