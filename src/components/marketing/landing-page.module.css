@@ -3158,3 +3158,16 @@
 @media (max-width: 640px) {
   .startWrap { padding: 44px 22px 40px; }
 }
+
+/* ── Brand lockup in nav ── */
+.brandRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  text-decoration: none;
+}
+
+.brandMark {
+  display: block;
+  border-radius: 8px;
+}

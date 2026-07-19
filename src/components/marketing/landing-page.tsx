@@ -358,8 +358,10 @@ export default function LandingPage({
       </div>
       <nav className={styles.nav}>
         <div className={styles.navInner}>
-          <Link href="/" className={styles.brand}>
-            SPECTRE
+          <Link href="/" className={styles.brandRow}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/spectre-mark.svg" alt="" width={30} height={30} className={styles.brandMark} />
+            <span className={styles.brand}>SPECTRE</span>
           </Link>
 
           <div className={styles.navLinks}>
