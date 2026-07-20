@@ -363,10 +363,9 @@ export default function LandingPage({
       </div>
       <nav className={styles.nav}>
         <div className={styles.navInner}>
-          <Link href="/" className={styles.brandRow}>
+          <Link href="/" className={styles.brandRow} aria-label="SPECTRE home">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/spectre-mark.svg" alt="" width={30} height={30} className={styles.brandMark} />
-            <span className={styles.brand}>SPECTRE</span>
+            <img src="/spectre-wordmark.svg" alt="SPECTRE" height={20} className={styles.brandWordmark} />
           </Link>
 
           <div className={styles.navLinks}>
@@ -415,7 +414,10 @@ export default function LandingPage({
               <span className={styles.heroKickerDot} />
               <span>AUSTRALIA</span>
             </div>
-            <h1 className={`${styles.heroWordmark} ${styles.reveal}`}>SPECTRE</h1>
+            <h1 className={`${styles.heroWordmark} ${styles.reveal}`} aria-label="SPECTRE">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/spectre-wordmark.svg" alt="SPECTRE" className={styles.heroWordmarkImg} />
+            </h1>
             <p className={`${styles.heroTag} ${styles.reveal}`}>
               Plan like an investor. Run it like a machine<span className={styles.caret} aria-hidden="true" />
             </p>

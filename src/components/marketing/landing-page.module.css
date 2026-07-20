@@ -3559,3 +3559,121 @@
     scroll-margin-top: 235px;
   }
 }
+
+/* ── Worm wordmark brand ── */
+.brandWordmark {
+  display: block;
+  height: 20px;
+  width: auto;
+}
+
+.heroWordmarkImg {
+  display: block;
+  width: min(88vw, 980px);
+  height: auto;
+  margin: 0 auto;
+  filter: drop-shadow(0 12px 60px rgba(255, 63, 52, 0.28));
+}
+
+/* ── Breathing room pass: generous vertical rhythm, calmer density ── */
+.section {
+  padding: 170px 0;
+}
+
+.myrmidonSection,
+.scannerSection {
+  padding: 160px 0;
+}
+
+.aiRevealSection {
+  padding: 170px 0 150px;
+}
+
+.sectionTitle {
+  margin-bottom: 22px;
+}
+
+.sectionSub {
+  margin-bottom: 10px;
+  line-height: 1.75;
+}
+
+.steps,
+.beforeAfter,
+.securityGrid,
+.compareGrid {
+  margin-top: 72px;
+  gap: 26px;
+}
+
+.featureGrid {
+  margin-top: 72px;
+  gap: 14px;
+}
+
+.researchHighlights {
+  margin-top: 64px;
+  gap: 18px;
+}
+
+.researchWindow {
+  margin-top: 64px;
+}
+
+.researchCtaRow {
+  margin-top: 56px;
+}
+
+.myrmidonInner,
+.scannerInner {
+  gap: 96px;
+}
+
+.statsStrip {
+  padding: 34px 0;
+}
+
+.heroSub {
+  margin-bottom: 40px;
+  line-height: 1.8;
+}
+
+.heroActions {
+  margin-bottom: 44px;
+}
+
+.lifecycle {
+  margin-top: 10px;
+}
+
+.faqList {
+  margin-top: 64px;
+}
+
+.ctaSection {
+  padding: 150px 0 130px;
+}
+
+@media (max-width: 960px) {
+  .section {
+    padding: 110px 0;
+  }
+  .myrmidonSection,
+  .scannerSection {
+    padding: 100px 0;
+  }
+  .aiRevealSection {
+    padding: 110px 0 96px;
+  }
+  .steps,
+  .beforeAfter,
+  .securityGrid,
+  .compareGrid,
+  .featureGrid {
+    margin-top: 52px;
+  }
+  .myrmidonInner,
+  .scannerInner {
+    gap: 48px;
+  }
+}
