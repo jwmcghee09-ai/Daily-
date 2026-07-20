@@ -42,6 +42,11 @@ const OPENAI_MODELS: Record<PlanTier, string> = {
   plus: "gpt-4.1-mini",
   pro: "gpt-4.1",
 };
+// Groq (OpenAI-compatible API, generous free tier) is tried first when a key
+// exists so Ask AI costs nothing per request; OpenAI remains the fallback.
+// ASK_AI_PROVIDER=openai or =groq pins a single provider.
+const GROQ_AI_MODEL = String(process.env.GROQ_AI_MODEL || "").trim() || "llama-3.3-70b-versatile";
+const ASK_AI_PROVIDER = String(process.env.ASK_AI_PROVIDER || "auto").trim().toLowerCase();
 const HOLDINGS_AI_TIMEOUT_MS = clampInteger(process.env.PRO_HOLDINGS_AI_TIMEOUT_MS, 90000, 10000, 180000);
 const DEFAULT_QUESTION = "What is most likely influencing the value of my current holdings right now?";
 
@@ -912,12 +917,23 @@ export async function POST(request: Request) {
       ? getAiConversation(sessionUser.id, conversationId, historyTurns * 2)
       : [];
 
-  const apiKey = String(process.env.OPENAI_API_KEY || "").trim();
-  if (!apiKey) {
-    return NextResponse.json({ error: "OPENAI_API_KEY is not configured." }, { status: 503 });
-  }
-
+  const openAiKey = String(process.env.OPENAI_API_KEY || "").trim();
+  const groqKey = String(process.env.GROQ_API_KEY || "").trim();
   const openAiModel = OPENAI_MODELS[entitlements.planTier] ?? "gpt-4o-mini";
+
+  const providers: { name: string; url: string; key: string; model: string }[] = [];
+  if (groqKey && ASK_AI_PROVIDER !== "openai") {
+    providers.push({ name: "Groq", url: "https://api.groq.com/openai/v1/chat/completions", key: groqKey, model: GROQ_AI_MODEL });
+  }
+  if (openAiKey && ASK_AI_PROVIDER !== "groq") {
+    providers.push({ name: "OpenAI", url: "https://api.openai.com/v1/chat/completions", key: openAiKey, model: openAiModel });
+  }
+  if (providers.length === 0) {
+    return NextResponse.json(
+      { error: "No AI provider configured — set GROQ_API_KEY or OPENAI_API_KEY." },
+      { status: 503 },
+    );
+  }
 
   // Fetch live market data in parallel with no extra latency
   const marketSnapshot = await fetchMarketSnapshot();
@@ -932,53 +948,55 @@ export async function POST(request: Request) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), HOLDINGS_AI_TIMEOUT_MS);
 
-  let openAiRes: Response;
-  try {
-    openAiRes = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      signal: controller.signal,
-      headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: openAiModel,
-        max_tokens: 4096,
-        stream: true,
-        temperature: 0.1,
-        response_format: { type: "json_object" },
-        messages: [
-          { role: "system", content: buildSystemPrompt() },
-          { role: "user", content: JSON.stringify(context) },
-        ],
-      }),
-    });
-  } catch (error) {
-    clearTimeout(timeoutId);
-    if (reservation.allowed && monthlyLimit !== -1) {
-      releaseReservedAiUsage(sessionUser.id);
+  // Try providers in order (Groq free tier first); fall back on any failure —
+  // e.g. a Groq 429 rate limit rolls over to OpenAI without the user noticing.
+  let openAiRes: Response | null = null;
+  let lastFailure = "";
+  for (const provider of providers) {
+    let res: Response;
+    try {
+      res = await fetch(provider.url, {
+        method: "POST",
+        signal: controller.signal,
+        headers: {
+          "Authorization": `Bearer ${provider.key}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: provider.model,
+          max_tokens: 4096,
+          stream: true,
+          temperature: 0.1,
+          response_format: { type: "json_object" },
+          messages: [
+            { role: "system", content: buildSystemPrompt() },
+            { role: "user", content: JSON.stringify(context) },
+          ],
+        }),
+      });
+    } catch (error) {
+      lastFailure = `${provider.name}: ${error instanceof Error ? error.message : "network error"}`;
+      if (controller.signal.aborted) break;
+      continue;
     }
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to reach OpenAI." },
-      { status: 502 },
-    );
-  }
-
-  if (!openAiRes.ok) {
-    clearTimeout(timeoutId);
-    if (reservation.allowed && monthlyLimit !== -1) {
-      releaseReservedAiUsage(sessionUser.id);
+    if (res.ok) {
+      openAiRes = res;
+      break;
     }
     let detail = "";
     try {
-      const payload = (await openAiRes.json()) as { error?: { message?: string } };
+      const payload = (await res.json()) as { error?: { message?: string } };
       detail = String(payload.error?.message || "").trim();
     } catch {}
-    const suffix = detail ? `: ${detail}` : "";
-    return NextResponse.json(
-      { error: `OpenAI request failed (${openAiRes.status})${suffix}` },
-      { status: 502 },
-    );
+    lastFailure = `${provider.name} request failed (${res.status})${detail ? `: ${detail}` : ""}`;
+  }
+
+  if (!openAiRes) {
+    clearTimeout(timeoutId);
+    if (reservation.allowed && monthlyLimit !== -1) {
+      releaseReservedAiUsage(sessionUser.id);
+    }
+    return NextResponse.json({ error: lastFailure || "All AI providers failed." }, { status: 502 });
   }
 
   // Transform OpenAI SSE → our SSE format:
