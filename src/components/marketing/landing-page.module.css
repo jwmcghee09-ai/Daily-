@@ -605,17 +605,9 @@
   margin-top: 48px;
 }
 
-.steps {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
 .beforeAfter,
 .compareGrid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.pricingGrid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .stepCard,
@@ -1075,11 +1067,6 @@
   content: "→";
 }
 
-.planCard li::before {
-  content: "✓";
-  color: var(--accent);
-}
-
 .aiConsole,
 .miniCard {
   border: 1px solid var(--border);
@@ -1141,19 +1128,6 @@
   text-align: center;
 }
 
-.planCard {
-  background: var(--surface);
-}
-
-.featuredPlan {
-  position: relative;
-  overflow: visible;
-  padding-top: 44px;
-  border-color: rgba(255, 63, 52, 0.2);
-  background: rgba(255, 63, 52, 0.04);
-  box-shadow: 0 0 40px rgba(255, 63, 52, 0.05) inset;
-}
-
 .featuredBadge {
   position: absolute;
   top: -14px;
@@ -1168,24 +1142,6 @@
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-}
-
-.planPrice {
-  display: flex;
-  gap: 6px;
-  align-items: baseline;
-  margin: 8px 0 12px;
-}
-
-.planPrice span {
-  font-family: var(--font-geist-mono), monospace;
-  font-size: 52px;
-  font-weight: 700;
-}
-
-.planPrice small {
-  color: var(--muted);
-  font-size: 14px;
 }
 
 .blockButton {
@@ -2973,11 +2929,6 @@
   border-bottom: 1px solid #221f1d;
 }
 
-.featuredPlan {
-  border: 1px solid rgba(255, 122, 48, 0.7) !important;
-  box-shadow: 0 20px 70px rgba(255, 92, 31, 0.14);
-}
-
 /* Buttons: square, mono, loud */
 .button {
   font-family: 'IBM Plex Mono', monospace;
@@ -3676,4 +3627,8 @@
   .scannerInner {
     gap: 48px;
   }
+}
+
+.myrmidonCopy {
+  min-width: 0;
 }
