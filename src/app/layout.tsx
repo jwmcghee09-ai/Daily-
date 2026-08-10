@@ -27,35 +27,6 @@ const geistMono = localFont({
   ],
 });
 
-const dmSans = localFont({
-  variable: "--font-dm-sans",
-  display: "swap",
-  src: [
-    { path: "../../public/fonts/DMSans-latin.woff2", weight: "100 900", style: "normal" },
-    { path: "../../public/fonts/DMSans-latin-ext.woff2", weight: "100 900", style: "normal" },
-  ],
-});
-
-const dmMono = localFont({
-  variable: "--font-dm-mono",
-  display: "swap",
-  src: [
-    { path: "../../public/fonts/DMMono-Regular-latin.woff2", weight: "400", style: "normal" },
-    { path: "../../public/fonts/DMMono-Regular-latin-ext.woff2", weight: "400", style: "normal" },
-    { path: "../../public/fonts/DMMono-Medium-latin.woff2", weight: "500", style: "normal" },
-    { path: "../../public/fonts/DMMono-Medium-latin-ext.woff2", weight: "500", style: "normal" },
-  ],
-});
-
-const sora = localFont({
-  variable: "--font-sora",
-  display: "swap",
-  src: [
-    { path: "../../public/fonts/Sora-latin.woff2", weight: "100 800", style: "normal" },
-    { path: "../../public/fonts/Sora-latin-ext.woff2", weight: "100 800", style: "normal" },
-  ],
-});
-
 const spaceGrotesk = localFont({
   variable: "--font-space-grotesk",
   display: "swap",
@@ -145,7 +116,7 @@ export default function RootLayout({
         </noscript>
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${dmSans.variable} ${dmMono.variable} ${sora.variable} ${spaceGrotesk.variable}`}
+        className={`${geistSans.variable} ${geistMono.variable} ${spaceGrotesk.variable}`}
       >
         <Suspense fallback={null}>
           <NavigationProgress />
