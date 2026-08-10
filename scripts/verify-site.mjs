@@ -33,6 +33,16 @@ for (const page of staticPages) {
   if (!bad) ok(`${page}: ${scripts.length} script blocks parse cleanly`);
 }
 
+// ── 1b. Parse-check standalone client scripts ──
+import { readdirSync } from "node:fs";
+const jsDir = join(root, "public/js");
+if (existsSync(jsDir)) {
+  for (const f of readdirSync(jsDir).filter((f) => f.endsWith(".js"))) {
+    try { new Function(readFileSync(join(jsDir, f), "utf8")); ok(`public/js/${f} parses cleanly`); }
+    catch (e) { fail(`public/js/${f}: ${e.message}`); }
+  }
+}
+
 // ── 2. Trader email must never change ──
 const TRADER_EMAIL = "jwmcghee09@gmail.com";
 const traderFiles = [
