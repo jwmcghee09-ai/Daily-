@@ -13,18 +13,18 @@
 .page {
   overflow-x: hidden; /* fallback */
   overflow-x: clip;  /* clip doesn't create a scroll container, so position:sticky keeps working */
-  --bg: #171514;
+  --bg: #141416;
   --surface: #232120;
   --surface2: #2a2726;
-  --surface3: rgba(190, 180, 175, 0.05);
-  --border: rgba(190, 180, 175, 0.13);
-  --borderStrong: rgba(190, 180, 175, 0.22);
-  --text: #f2efeb;
-  --muted: #a8a099;
+  --surface3: rgba(190, 190, 198, 0.05);
+  --border: rgba(190, 190, 198, 0.13);
+  --borderStrong: rgba(190, 190, 198, 0.22);
+  --text: #f2f2f5;
+  --muted: #a2a2ab;
   --accent: #ff3f34;
-  --accent2: #ff7a30;
+  --accent2: #ff4a26;
   --accentDim: rgba(255, 63, 52, 0.10);
-  --accent2Dim: rgba(255, 122, 48, 0.10);
+  --accent2Dim: rgba(255, 74, 38, 0.10);
   --danger: #dc2626;
   --dangerDim: rgba(220, 38, 38, 0.09);
   --radius: 14px;
@@ -36,8 +36,8 @@
   color: var(--text);
   background:
     radial-gradient(ellipse 70% 50% at 50% -10%, rgba(255, 63, 52, 0.07) 0%, transparent 100%),
-    radial-gradient(ellipse 40% 60% at 100% 80%, rgba(255, 122, 48, 0.05) 0%, transparent 60%),
-    #171514;
+    radial-gradient(ellipse 40% 60% at 100% 80%, rgba(255, 74, 38, 0.05) 0%, transparent 60%),
+    #141416;
   font-family: var(--font-geist-sans), "Avenir Next", sans-serif;
 }
 
@@ -61,7 +61,7 @@
 .navScrolled {
   height: 48px;
   background: rgba(238, 235, 250, 0.98);
-  box-shadow: 0 8px 32px rgba(190, 180, 175, 0.07);
+  box-shadow: 0 8px 32px rgba(190, 190, 198, 0.07);
 }
 
 .navInner {
@@ -92,7 +92,7 @@
   font-weight: 700;
   letter-spacing: 0.14em;
   text-decoration: none;
-  background: linear-gradient(90deg, #ff3f34 0%, #ff7a30 35%, #ff7a30 72%, #ffb347 100%);
+  background: linear-gradient(90deg, #ff3f34 0%, #ff4a26 35%, #ff4a26 72%, #ff6a45 100%);
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
@@ -170,12 +170,12 @@
 
 .primaryButton {
   color: #fff;
-  background: linear-gradient(135deg, #ff3f34 0%, #ff7a30 45%, #ff7a30 100%);
-  box-shadow: 0 4px 28px rgba(255, 122, 48, 0.45), 0 1px 0 rgba(255, 255, 255, 0.12) inset;
+  background: linear-gradient(135deg, #ff3f34 0%, #ff4a26 45%, #ff4a26 100%);
+  box-shadow: 0 4px 28px rgba(255, 74, 38, 0.45), 0 1px 0 rgba(255, 255, 255, 0.12) inset;
 }
 
 .primaryButton:hover {
-  box-shadow: 0 6px 36px rgba(255, 122, 48, 0.65), 0 1px 0 rgba(255, 255, 255, 0.15) inset;
+  box-shadow: 0 6px 36px rgba(255, 74, 38, 0.65), 0 1px 0 rgba(255, 255, 255, 0.15) inset;
   filter: brightness(1.1);
 }
 
@@ -193,9 +193,9 @@
 }
 
 .demoButton {
-  border-color: rgba(255, 122, 48, 0.35);
+  border-color: rgba(255, 74, 38, 0.35);
   color: var(--accent2);
-  background: rgba(255, 122, 48, 0.1);
+  background: rgba(255, 74, 38, 0.1);
 }
 
 .heroButton {
@@ -211,7 +211,7 @@
   height: 7px;
   border-radius: 999px;
   background: var(--accent2);
-  box-shadow: 0 0 0 0 rgba(255, 122, 48, 0.6);
+  box-shadow: 0 0 0 0 rgba(255, 74, 38, 0.6);
   animation: pulseDot 1.8s infinite;
 }
 
@@ -303,7 +303,7 @@
   border-radius: 999px;
   background:
     radial-gradient(ellipse at 38% 50%, rgba(255, 63, 52, 0.13) 0%, transparent 55%),
-    radial-gradient(ellipse at 62% 50%, rgba(255, 122, 48, 0.08) 0%, transparent 50%);
+    radial-gradient(ellipse at 62% 50%, rgba(255, 74, 38, 0.08) 0%, transparent 50%);
   pointer-events: none;
 }
 
@@ -338,7 +338,7 @@
 }
 
 .bannerInfo {
-  background: rgba(255, 122, 48, 0.08);
+  background: rgba(255, 74, 38, 0.08);
 }
 
 .heroBadge,
@@ -382,7 +382,7 @@
 }
 
 .heroTitle span {
-  background: linear-gradient(90deg, #ff3f34, #ff7a30 42%, #ff7a30 82%, #ffb347);
+  background: linear-gradient(90deg, #ff3f34, #ff4a26 42%, #ff4a26 82%, #ff6a45);
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
@@ -642,7 +642,7 @@
   right: 0;
   top: 0;
   height: 1px;
-  background: linear-gradient(90deg, rgba(255, 63, 52, 0.6), rgba(255, 122, 48, 0.4), transparent 80%);
+  background: linear-gradient(90deg, rgba(255, 63, 52, 0.6), rgba(255, 74, 38, 0.4), transparent 80%);
 }
 
 .stepCard:hover,
@@ -824,7 +824,7 @@
   position: absolute;
   inset: 0 0 auto;
   height: 1px;
-  background: linear-gradient(90deg, rgba(255, 63, 52, 0.55), rgba(255, 122, 48, 0.35), transparent 80%);
+  background: linear-gradient(90deg, rgba(255, 63, 52, 0.55), rgba(255, 74, 38, 0.35), transparent 80%);
 }
 
 .chartCard:hover {
@@ -867,7 +867,7 @@
 }
 
 .chartBadgeOrange {
-  background: rgba(255, 122, 48, 0.12);
+  background: rgba(255, 74, 38, 0.12);
   color: var(--accent2);
 }
 
@@ -913,11 +913,11 @@
 }
 
 .pink {
-  background: linear-gradient(90deg, rgba(255, 122, 48, 0.85), rgba(255, 122, 48, 0.55));
+  background: linear-gradient(90deg, rgba(255, 74, 38, 0.85), rgba(255, 74, 38, 0.55));
 }
 
 .orange {
-  background: linear-gradient(90deg, rgba(255, 122, 48, 0.85), rgba(255, 122, 48, 0.55));
+  background: linear-gradient(90deg, rgba(255, 74, 38, 0.85), rgba(255, 74, 38, 0.55));
 }
 
 .amber {
@@ -1001,7 +1001,7 @@
 }
 
 .moverUp {
-  background: linear-gradient(90deg, var(--accent), #ff7a30);
+  background: linear-gradient(90deg, var(--accent), #ff4a26);
 }
 
 .moverDown {
@@ -1036,7 +1036,7 @@
   margin-bottom: 16px;
   padding: 4px 12px;
   border-radius: 999px;
-  background: rgba(255, 122, 48, 0.14);
+  background: rgba(255, 74, 38, 0.14);
   color: var(--accent2);
   font-family: var(--font-geist-mono), monospace;
   font-size: 11px;
@@ -1136,7 +1136,7 @@
   transform: translateX(-50%);
   padding: 4px 14px;
   border-radius: 999px;
-  background: linear-gradient(90deg, #ff7a30, #ff7a30, #ffb347);
+  background: linear-gradient(90deg, #ff4a26, #ff4a26, #ff6a45);
   color: #fff;
   font-size: 11px;
   font-weight: 700;
@@ -1157,7 +1157,7 @@
   padding: 14px 16px;
   border: 1px solid var(--borderStrong);
   border-radius: 14px;
-  background: linear-gradient(180deg, rgba(190, 180, 175, 0.04), rgba(255, 63, 52, 0.07));
+  background: linear-gradient(180deg, rgba(190, 190, 198, 0.04), rgba(255, 63, 52, 0.07));
 }
 
 .planResearchCallout strong {
@@ -1262,7 +1262,7 @@
 }
 
 .faqButton:hover {
-  background: rgba(190, 180, 175, 0.04);
+  background: rgba(190, 190, 198, 0.04);
 }
 
 .faqChevron {
@@ -1287,8 +1287,8 @@
 }
 
 .faqOpen {
-  border-left: 1px solid rgba(255, 122, 48, 0.45);
-  background: rgba(255, 122, 48, 0.03);
+  border-left: 1px solid rgba(255, 74, 38, 0.45);
+  background: rgba(255, 74, 38, 0.03);
 }
 
 .faqOpen .faqChevron {
@@ -1307,7 +1307,7 @@
   border-bottom: 1px solid var(--border);
   background:
     radial-gradient(ellipse at 40% 50%, rgba(255, 63, 52, 0.05) 0%, transparent 55%),
-    radial-gradient(ellipse at 60% 50%, rgba(255, 122, 48, 0.04) 0%, transparent 55%);
+    radial-gradient(ellipse at 60% 50%, rgba(255, 74, 38, 0.04) 0%, transparent 55%);
 }
 
 .ctaPanel {
@@ -1427,8 +1427,8 @@
 .ctaPanel,
 .aiTeaser,
 .aiConsoleRevealInner {
-  --text: #f2efeb;
-  --muted: #a8a099;
+  --text: #f2f2f5;
+  --muted: #a2a2ab;
   --muted2: #c0bcd8;
   --border: rgba(255, 255, 255, 0.08);
   --borderStrong: rgba(255, 255, 255, 0.14);
@@ -1460,9 +1460,9 @@
 }
 
 @keyframes pulseDot {
-  0% { box-shadow: 0 0 0 0 rgba(255, 122, 48, 0.7); }
-  60% { box-shadow: 0 0 0 6px rgba(255, 122, 48, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(255, 122, 48, 0); }
+  0% { box-shadow: 0 0 0 0 rgba(255, 74, 38, 0.7); }
+  60% { box-shadow: 0 0 0 6px rgba(255, 74, 38, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 74, 38, 0); }
 }
 
 @keyframes blink {
@@ -1901,7 +1901,7 @@
   overflow: hidden;
   box-shadow:
     0 0 0 1px var(--borderStrong) inset,
-    0 24px 60px rgba(190, 180, 175, 0.1);
+    0 24px 60px rgba(190, 190, 198, 0.1);
 }
 
 .previewHeader {
@@ -1910,7 +1910,7 @@
   justify-content: space-between;
   padding: 13px 18px;
   border-bottom: 1px solid var(--border);
-  background: rgba(190, 180, 175, 0.03);
+  background: rgba(190, 190, 198, 0.03);
 }
 
 .previewTitle {
@@ -1993,7 +1993,7 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  background: rgba(190, 180, 175, 0.03);
+  background: rgba(190, 190, 198, 0.03);
 }
 
 .previewTableRow {
@@ -2214,7 +2214,7 @@
   inset: 0;
   background:
     radial-gradient(ellipse 60% 50% at 50% 0%, rgba(255, 63, 52, 0.09) 0%, transparent 70%),
-    radial-gradient(ellipse 40% 40% at 50% 100%, rgba(255, 122, 48, 0.05) 0%, transparent 70%);
+    radial-gradient(ellipse 40% 40% at 50% 100%, rgba(255, 74, 38, 0.05) 0%, transparent 70%);
   pointer-events: none;
 }
 
@@ -2234,7 +2234,7 @@
 }
 
 .aiRevealTitle span {
-  background: linear-gradient(90deg, #ff3f34, #ff7a30 40%, #ff7a30 80%, #ffb347);
+  background: linear-gradient(90deg, #ff3f34, #ff4a26 40%, #ff4a26 80%, #ff6a45);
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
@@ -2329,7 +2329,7 @@
   pointer-events: none;
   background:
     radial-gradient(ellipse 55% 60% at 18% 20%, rgba(255, 63, 52, 0.14) 0%, transparent 70%),
-    radial-gradient(ellipse 45% 55% at 85% 85%, rgba(255, 122, 48, 0.09) 0%, transparent 70%);
+    radial-gradient(ellipse 45% 55% at 85% 85%, rgba(255, 74, 38, 0.09) 0%, transparent 70%);
 }
 
 .myrmidonInner {
@@ -2349,9 +2349,9 @@
   font-weight: 600;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: #ffb347;
-  border: 1px solid rgba(255, 179, 71, 0.35);
-  background: rgba(255, 122, 48, 0.08);
+  color: #ff6a45;
+  border: 1px solid rgba(255, 106, 69, 0.35);
+  background: rgba(255, 74, 38, 0.08);
   border-radius: 999px;
   padding: 6px 14px;
   margin-bottom: 20px;
@@ -2361,13 +2361,13 @@
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #ffb347;
+  background: #ff6a45;
   animation: myrmPulse 1.6s ease-in-out infinite;
 }
 
 @keyframes myrmPulse {
-  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(255, 179, 71, 0.45); }
-  50% { opacity: 0.55; box-shadow: 0 0 0 6px rgba(255, 179, 71, 0); }
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(255, 106, 69, 0.45); }
+  50% { opacity: 0.55; box-shadow: 0 0 0 6px rgba(255, 106, 69, 0); }
 }
 
 .myrmidonTitle {
@@ -2375,12 +2375,12 @@
   font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 1.08;
-  color: #f2efeb;
+  color: #f2f2f5;
   margin: 0 0 18px;
 }
 
 .myrmidonTitle span {
-  background: linear-gradient(90deg, #ff3f34 0%, #ff7a30 40%, #ff7a30 85%);
+  background: linear-gradient(90deg, #ff3f34 0%, #ff4a26 40%, #ff4a26 85%);
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
@@ -2389,7 +2389,7 @@
 .myrmidonSub {
   font-size: 16px;
   line-height: 1.65;
-  color: #a8a099;
+  color: #a2a2ab;
   max-width: 46ch;
   margin: 0 0 26px;
 }
@@ -2406,7 +2406,7 @@
 .myrmidonList li {
   font-size: 14px;
   line-height: 1.55;
-  color: #a8a099;
+  color: #a2a2ab;
   padding-left: 22px;
   position: relative;
 }
@@ -2419,7 +2419,7 @@
 }
 
 .myrmidonList li strong {
-  color: #f2efeb;
+  color: #f2f2f5;
   font-weight: 600;
 }
 
@@ -2427,7 +2427,7 @@
   border: 1px solid rgba(255, 63, 52, 0.3);
   border-radius: 12px;
   overflow: hidden;
-  background: #121110;
+  background: #0f0f12;
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5), 0 0 40px rgba(255, 63, 52, 0.12);
 }
 
@@ -2438,7 +2438,7 @@
   letter-spacing: 0.12em;
   color: #fff;
   padding: 10px 16px;
-  background: linear-gradient(90deg, #ff3f34 0%, #ff7a30 35%, #ff7a30 72%, #ffb347 100%);
+  background: linear-gradient(90deg, #ff3f34 0%, #ff4a26 35%, #ff4a26 72%, #ff6a45 100%);
 }
 
 .myrmidonTermBody {
@@ -2482,7 +2482,7 @@
   background: rgba(255, 63, 52, 0.07);
   border-radius: 8px;
   padding: 10px 12px;
-  color: #d4cdf0;
+  color: #d5d5de;
 }
 
 .myrmidonBuy {
@@ -2511,7 +2511,7 @@
   height: 3px;
   width: 0;
   z-index: 1200;
-  background: linear-gradient(90deg, #ff3f34 0%, #ff7a30 40%, #ff7a30 80%, #ffb347 100%);
+  background: linear-gradient(90deg, #ff3f34 0%, #ff4a26 40%, #ff4a26 80%, #ff6a45 100%);
   box-shadow: 0 0 12px rgba(255, 63, 52, 0.5);
   pointer-events: none;
 }
@@ -2546,7 +2546,7 @@
   height: 460px;
   top: 46%;
   right: -140px;
-  background: radial-gradient(circle, rgba(255, 122, 48, 0.11) 0%, transparent 65%);
+  background: radial-gradient(circle, rgba(255, 74, 38, 0.11) 0%, transparent 65%);
   transform: translate3d(0, calc(var(--sy, 0) * -0.11px), 0);
 }
 
@@ -2555,7 +2555,7 @@
   height: 380px;
   top: 88%;
   left: 32%;
-  background: radial-gradient(circle, rgba(255, 122, 48, 0.10) 0%, transparent 65%);
+  background: radial-gradient(circle, rgba(255, 74, 38, 0.10) 0%, transparent 65%);
   transform: translate3d(0, calc(var(--sy, 0) * -0.17px), 0);
 }
 
@@ -2581,7 +2581,7 @@
   width: 0.55em;
   height: 0.078em;
   margin-left: 0.12em;
-  background: linear-gradient(90deg, #ff7a30, #ff7a30);
+  background: linear-gradient(90deg, #ff4a26, #ff4a26);
   vertical-align: baseline;
   animation: caretBlink 1.1s step-end infinite;
 }
@@ -2612,7 +2612,7 @@
   font-weight: 600;
   letter-spacing: 0.09em;
   text-transform: uppercase;
-  color: #b0a8a1;
+  color: #a9a9b2;
   border: 1px solid rgba(255, 63, 52, 0.22);
   background: rgba(255, 63, 52, 0.05);
   border-radius: 999px;
@@ -2621,7 +2621,7 @@
 }
 
 @keyframes chipGlow {
-  0%, 22%, 100% { border-color: rgba(255, 63, 52, 0.22); color: #b0a8a1; background: rgba(255, 63, 52, 0.05); }
+  0%, 22%, 100% { border-color: rgba(255, 63, 52, 0.22); color: #a9a9b2; background: rgba(255, 63, 52, 0.05); }
   8% { border-color: rgba(255, 63, 52, 0.75); color: #ff3f34; background: rgba(255, 63, 52, 0.12); }
 }
 
@@ -2651,7 +2651,7 @@
 }
 
 .commandPrompt {
-  color: #ff9d8a;
+  color: #ff8578;
   font-family: var(--font-geist-mono), monospace;
   font-weight: 700;
   font-size: 15px;
@@ -2661,7 +2661,7 @@
 .commandText {
   font-family: var(--font-geist-mono), monospace;
   font-size: 13.5px;
-  color: #f2efeb;
+  color: #f2f2f5;
   white-space: nowrap;
   overflow: hidden;
 }
@@ -2670,7 +2670,7 @@
   display: inline-block;
   width: 8px;
   height: 16px;
-  background: #ff9d8a;
+  background: #ff8578;
   flex-shrink: 0;
   animation: caretBlink 1s step-end infinite;
 }
@@ -2726,7 +2726,7 @@
 /* Myrmidon typed strategy line — reserve space so typing doesn't reflow */
 .myrmidonTyped {
   min-height: 2.6em;
-  color: #d8d2f2;
+  color: #d5d5de;
 }
 
 /* Reduced motion: kill the theatrics, keep the content */
@@ -2744,12 +2744,12 @@
    ═══════════════════════════════════════════════════════════════ */
 
 .page {
-  background: #070706;
+  background: #050506;
   font-family: 'Inter Tight', system-ui, sans-serif;
-  color: #f0edea;
+  color: #eeeef2;
 }
 
-.page::before { background: #070706; }
+.page::before { background: #050506; }
 .page::after { opacity: 0.25; }
 
 /* ── New hero ── */
@@ -2762,7 +2762,7 @@
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.34em;
-  color: #8f8a84;
+  color: #8b8b93;
   margin-bottom: 26px;
   text-transform: uppercase;
 }
@@ -2770,7 +2770,7 @@
 .heroKickerDot {
   width: 6px;
   height: 6px;
-  background: #ff7a30;
+  background: #ff4a26;
   animation: myrmPulse 1.8s ease-in-out infinite;
 }
 
@@ -2782,19 +2782,19 @@
   letter-spacing: 0.045em;
   margin: 0 0 20px;
   text-align: center;
-  background: linear-gradient(180deg, #ffa14d 0%, #ff7a30 42%, #ff3f34 100%);
+  background: linear-gradient(180deg, #ff5c38 0%, #ff4a26 42%, #ff3f34 100%);
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
   -webkit-text-fill-color: transparent;
   text-shadow: none;
-  filter: drop-shadow(0 16px 80px rgba(255, 106, 40, 0.32));
+  filter: drop-shadow(0 16px 80px rgba(255, 63, 38, 0.2));
 }
 
 .heroTag {
   font-family: 'IBM Plex Mono', monospace;
   font-size: clamp(15px, 1.9vw, 21px);
-  color: #f0edea;
+  color: #eeeef2;
   text-align: center;
   letter-spacing: 0.02em;
   margin: 0 0 18px;
@@ -2802,7 +2802,7 @@
 
 .heroTag .caret,
 .heroTag > .caret {
-  background: #ff7a30;
+  background: #ff4a26;
   height: 0.1em;
   width: 0.6em;
 }
@@ -2845,7 +2845,7 @@
   font-family: 'Unbounded', sans-serif !important;
   font-weight: 700;
   font-size: clamp(30px, 4.2vw, 52px);
-  background: linear-gradient(180deg, #ffa14d, #ff3f34);
+  background: linear-gradient(180deg, #ff5c38, #ff3f34);
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
@@ -2895,7 +2895,7 @@
 .aiConsoleRevealInner,
 .myrmidonTerm,
 .ctaPanel {
-  background: #0c0b0a;
+  background: #0a0a0c;
   border: 1px solid #262320;
 }
 
@@ -2905,8 +2905,8 @@
 .securityCard,
 .researchTile,
 .compareColumn {
-  background: #0c0b0a !important;
-  border: 1px solid #221f1d !important;
+  background: #0a0a0c !important;
+  border: 1px solid #202024 !important;
 }
 
 .chartCard:hover,
@@ -2914,19 +2914,19 @@
 .featureItem:hover,
 .securityCard:hover,
 .researchTile:hover {
-  border-color: rgba(255, 122, 48, 0.55) !important;
+  border-color: rgba(255, 74, 38, 0.55) !important;
   box-shadow: 0 24px 70px rgba(255, 92, 31, 0.16), 0 6px 22px rgba(0, 0, 0, 0.5);
   transform: translateY(-5px);
 }
 
 .statsStrip,
-.statsGrid { background: #1c1a18; }
-.statStat { background: #0a0908; }
+.statsGrid { background: #18181b; }
+.statStat { background: #08080a; }
 
 .myrmidonSection {
-  background: #070706;
-  border-top: 1px solid #221f1d;
-  border-bottom: 1px solid #221f1d;
+  background: #050506;
+  border-top: 1px solid #202024;
+  border-bottom: 1px solid #202024;
 }
 
 /* Buttons: square, mono, loud */
@@ -2938,7 +2938,7 @@
 }
 
 .primaryButton {
-  background: linear-gradient(135deg, #ff7a30, #ff3f34);
+  background: linear-gradient(135deg, #ff4a26, #ff3f34);
   color: #fff;
   box-shadow: 0 12px 40px rgba(255, 92, 31, 0.35);
 }
@@ -2951,16 +2951,16 @@
 
 .outlineButton {
   border: 1px solid #3a3532;
-  color: #f0edea;
+  color: #eeeef2;
   background: transparent;
 }
 
-.outlineButton:hover { border-color: #ff7a30; color: #ffb387; }
+.outlineButton:hover { border-color: #ff4a26; color: #ff8a72; }
 
 /* Nav: black bar, hairline bottom */
 .nav {
   background: rgba(7, 7, 6, 0.92);
-  border-bottom: 1px solid #221f1d;
+  border-bottom: 1px solid #202024;
 }
 
 .brand {
@@ -2968,7 +2968,7 @@
   font-weight: 400;
   font-size: 24px;
   letter-spacing: 0.08em;
-  background: linear-gradient(180deg, #ffa14d, #ff3f34);
+  background: linear-gradient(180deg, #ff5c38, #ff3f34);
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
@@ -2978,27 +2978,27 @@
 .navLinks a { font-family: 'IBM Plex Mono', monospace; }
 
 /* Ticker: black strip */
-.ticker { background: #0a0908; border-bottom: 1px solid #221f1d; }
+.ticker { background: #08080a; border-bottom: 1px solid #202024; }
 
 /* Orbs: dimmer on true black */
-.orbA { background: radial-gradient(circle, rgba(255, 92, 31, 0.16) 0%, transparent 65%); }
-.orbB { background: radial-gradient(circle, rgba(255, 63, 52, 0.11) 0%, transparent 65%); }
-.orbC { background: radial-gradient(circle, rgba(255, 122, 48, 0.06) 0%, transparent 65%); }
+.orbA { background: radial-gradient(circle, rgba(255, 63, 38, 0.09) 0%, transparent 65%); }
+.orbB { background: radial-gradient(circle, rgba(255, 63, 52, 0.06) 0%, transparent 65%); }
+.orbC { background: radial-gradient(circle, rgba(255, 74, 38, 0.04) 0%, transparent 65%); }
 
 /* Reveal-tilt cards land flat and sharp */
-.divider { border-color: #1c1a18; }
+.divider { border-color: #18181b; }
 
 /* Lifecycle chips: square mono tags */
 .lifecycleChip {
   font-family: 'IBM Plex Mono', monospace;
-  border: 1px solid #2e2a27;
-  background: #0c0b0a;
-  color: #8f8a84;
+  border: 1px solid #2b2b30;
+  background: #0a0a0c;
+  color: #8b8b93;
 }
 
 @keyframes chipGlow {
-  0%, 22%, 100% { border-color: #2e2a27; color: #8f8a84; background: #0c0b0a; }
-  8% { border-color: #ff7a30; color: #ff9d5c; background: #171310; }
+  0%, 22%, 100% { border-color: #2b2b30; color: #8b8b93; background: #0a0a0c; }
+  8% { border-color: #ff4a26; color: #ff6b4a; background: #171310; }
 }
 
 /* Command bar: square terminal strip */
@@ -3008,8 +3008,8 @@
 }
 
 /* FAQ + footer on black */
-.faqItem { border: 1px solid #221f1d; background: #0c0b0a; }
-.footer { background: #060605; border-top: 1px solid #221f1d; }
+.faqItem { border: 1px solid #202024; background: #0a0a0c; }
+.footer { background: #060605; border-top: 1px solid #202024; }
 
 @media (max-width: 640px) {
   .heroWordmark { font-size: clamp(3rem, 19vw, 5.2rem); }
@@ -3025,7 +3025,7 @@
   max-width: 760px;
   padding: 18px 24px;
   border-radius: 22px;
-  border: 1px solid rgba(255, 122, 48, 0.5);
+  border: 1px solid rgba(255, 74, 38, 0.5);
   background: linear-gradient(135deg, rgba(255, 92, 31, 0.12), rgba(255, 63, 52, 0.05));
   box-shadow: 0 18px 60px rgba(255, 92, 31, 0.12);
 }
@@ -3038,7 +3038,7 @@
   letter-spacing: 0.16em;
   padding: 8px 16px;
   border-radius: 999px;
-  background: linear-gradient(135deg, #ff7a30, #ff3f34);
+  background: linear-gradient(135deg, #ff4a26, #ff3f34);
   color: #fff;
 }
 
@@ -3049,7 +3049,7 @@
   color: #c9c2bb;
 }
 
-.foundingBanner strong { color: #f0edea; }
+.foundingBanner strong { color: #eeeef2; }
 
 @media (max-width: 640px) {
   .foundingBanner { flex-direction: column; align-items: flex-start; gap: 10px; }
@@ -3062,10 +3062,10 @@
   text-align: center;
   padding: 64px 40px 58px;
   border-radius: 28px;
-  border: 1px solid rgba(255, 122, 48, 0.4);
+  border: 1px solid rgba(255, 74, 38, 0.4);
   background:
     radial-gradient(ellipse 70% 90% at 50% 0%, rgba(255, 92, 31, 0.13) 0%, transparent 70%),
-    #0c0b0a;
+    #0a0a0c;
   box-shadow: 0 30px 90px rgba(255, 92, 31, 0.10);
 }
 
@@ -3077,7 +3077,7 @@
   letter-spacing: 0.2em;
   padding: 8px 18px;
   border-radius: 999px;
-  background: linear-gradient(135deg, #ff7a30, #ff3f34);
+  background: linear-gradient(135deg, #ff4a26, #ff3f34);
   color: #fff;
   margin-bottom: 26px;
 }
@@ -3089,7 +3089,7 @@
   letter-spacing: 0.03em;
   line-height: 1;
   margin: 0 0 20px;
-  background: linear-gradient(180deg, #ffa14d, #ff3f34);
+  background: linear-gradient(180deg, #ff5c38, #ff3f34);
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
@@ -3099,7 +3099,7 @@
 .startSub {
   font-size: 16.5px;
   line-height: 1.7;
-  color: #b3aca5;
+  color: #aeaeb6;
   max-width: 56ch;
   margin: 0 auto 30px;
 }
@@ -3128,7 +3128,7 @@
   position: relative;
   padding: 110px 0;
   overflow: hidden;
-  background: #0a0908;
+  background: #08080a;
 }
 
 .scannerSection::before {
@@ -3138,7 +3138,7 @@
   pointer-events: none;
   background:
     radial-gradient(ellipse 50% 60% at 82% 18%, rgba(255, 63, 52, 0.1) 0%, transparent 70%),
-    radial-gradient(ellipse 45% 55% at 12% 88%, rgba(255, 122, 48, 0.07) 0%, transparent 70%);
+    radial-gradient(ellipse 45% 55% at 12% 88%, rgba(255, 74, 38, 0.07) 0%, transparent 70%);
 }
 
 .scannerInner {
@@ -3182,7 +3182,7 @@
   border: 1px solid rgba(255, 63, 52, 0.3);
   border-radius: 22px;
   overflow: hidden;
-  background: #121110;
+  background: #0f0f12;
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5), 0 0 40px rgba(255, 63, 52, 0.1);
 }
 
@@ -3205,19 +3205,19 @@
   font-size: 22px;
   font-weight: 700;
   letter-spacing: 0.02em;
-  color: #f2efeb;
+  color: #f2f2f5;
 }
 
 .scanName {
   font-size: 13px;
-  color: #a8a099;
+  color: #a2a2ab;
 }
 
 .scanPx {
   font-family: var(--font-geist-mono), monospace;
   font-size: 19px;
   font-weight: 600;
-  color: #f2efeb;
+  color: #f2f2f5;
   margin-left: auto;
 }
 
@@ -3243,9 +3243,9 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  border: 1px solid #262220;
+  border: 1px solid #242428;
   border-radius: 12px;
-  background: #0c0b0a;
+  background: #0a0a0c;
   padding: 10px 12px;
 }
 
@@ -3253,14 +3253,14 @@
   font-family: var(--font-geist-mono), monospace;
   font-size: 9.5px;
   letter-spacing: 0.14em;
-  color: #8a827b;
+  color: #85858e;
 }
 
 .scanStatVal {
   font-family: var(--font-geist-mono), monospace;
   font-size: 16px;
   font-weight: 700;
-  color: #f2efeb;
+  color: #f2f2f5;
 }
 
 .scanFlag {
@@ -3277,8 +3277,8 @@
 }
 
 .scanFlagWatch {
-  border: 1px solid rgba(255, 122, 48, 0.35);
-  background: rgba(255, 122, 48, 0.06);
+  border: 1px solid rgba(255, 74, 38, 0.35);
+  background: rgba(255, 74, 38, 0.06);
 }
 
 .scanFlagTag {
@@ -3298,14 +3298,14 @@
 }
 
 .scanFlagWatch .scanFlagTag {
-  color: #ffb347;
-  background: rgba(255, 122, 48, 0.14);
+  color: #ff6a45;
+  background: rgba(255, 74, 38, 0.14);
 }
 
 .scanFlag strong {
   display: block;
   font-size: 13.5px;
-  color: #f2efeb;
+  color: #f2f2f5;
   margin-bottom: 2px;
 }
 
@@ -3313,15 +3313,15 @@
   margin: 0;
   font-size: 12.5px;
   line-height: 1.5;
-  color: #a8a099;
+  color: #a2a2ab;
 }
 
 .scanDisclaimer {
   font-family: var(--font-geist-mono), monospace;
   font-size: 10.5px;
   letter-spacing: 0.05em;
-  color: #8a827b;
-  border-top: 1px solid #262220;
+  color: #85858e;
+  border-top: 1px solid #242428;
   padding-top: 12px;
 }
 
@@ -3347,10 +3347,10 @@
 /* ── Research terminal preview window ── */
 .researchWindow {
   margin-top: 44px;
-  border: 1px solid #2a2624;
+  border: 1px solid #28282d;
   border-radius: 22px;
   overflow: hidden;
-  background: #121110;
+  background: #0f0f12;
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45), 0 0 40px rgba(255, 63, 52, 0.06);
 }
 
@@ -3358,10 +3358,10 @@
   font-family: var(--font-geist-mono), monospace;
   font-size: 11px;
   letter-spacing: 0.1em;
-  color: #8a827b;
+  color: #85858e;
   padding: 11px 18px;
-  border-bottom: 1px solid #262220;
-  background: #0c0b0a;
+  border-bottom: 1px solid #242428;
+  background: #0a0a0c;
 }
 
 .researchTape {
@@ -3375,9 +3375,9 @@
   display: flex;
   flex-direction: column;
   gap: 3px;
-  border: 1px solid #262220;
+  border: 1px solid #242428;
   border-radius: 12px;
-  background: #0c0b0a;
+  background: #0a0a0c;
   padding: 10px 12px;
 }
 
@@ -3385,14 +3385,14 @@
   font-family: var(--font-geist-mono), monospace;
   font-size: 9.5px;
   letter-spacing: 0.13em;
-  color: #8a827b;
+  color: #85858e;
 }
 
 .researchTapeVal {
   font-family: var(--font-geist-mono), monospace;
   font-size: 15px;
   font-weight: 700;
-  color: #f2efeb;
+  color: #f2f2f5;
 }
 
 .researchTapeCard .up,
@@ -3416,9 +3416,9 @@
 }
 
 .researchPane {
-  border: 1px solid #262220;
+  border: 1px solid #242428;
   border-radius: 14px;
-  background: #0c0b0a;
+  background: #0a0a0c;
   padding: 14px 15px;
 }
 
@@ -3428,7 +3428,7 @@
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: #ff7a30;
+  color: #ff4a26;
   margin-bottom: 11px;
 }
 
@@ -3446,13 +3446,13 @@
 }
 
 .researchPaneSym {
-  color: #cfc8c1;
+  color: #c9c9d1;
   font-size: 12.5px;
 }
 
 .researchPaneVal {
   font-family: var(--font-geist-mono), monospace;
-  color: #f2efeb;
+  color: #f2f2f5;
   margin-left: auto;
 }
 
@@ -3463,7 +3463,7 @@
   padding: 6px 0;
   font-size: 12px;
   line-height: 1.45;
-  color: #b3aca5;
+  color: #aeaeb6;
 }
 
 .researchNewsDot {
@@ -3479,10 +3479,10 @@
   font-family: var(--font-geist-mono), monospace;
   font-size: 10.5px;
   letter-spacing: 0.05em;
-  color: #8a827b;
+  color: #85858e;
   padding: 11px 18px;
-  border-top: 1px solid #262220;
-  background: #0c0b0a;
+  border-top: 1px solid #242428;
+  background: #0a0a0c;
 }
 
 @media (max-width: 960px) {
@@ -3523,7 +3523,7 @@
   width: min(92vw, 1150px);
   height: auto;
   margin: 0 auto;
-  filter: drop-shadow(0 12px 60px rgba(255, 63, 52, 0.28));
+  filter: drop-shadow(0 12px 60px rgba(255, 63, 52, 0.18));
 }
 
 /* ── Breathing room pass: generous vertical rhythm, calmer density ── */

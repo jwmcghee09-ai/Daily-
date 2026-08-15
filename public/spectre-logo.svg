@@ -1,9 +1,9 @@
 <svg width="541" height="69" viewBox="0 -68.8 540.6 68.8" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="SPECTRE">
   <defs>
     <linearGradient id="wg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#FFA14D"/>
-      <stop offset="0.45" stop-color="#FF7A30"/>
-      <stop offset="1" stop-color="#FF3F34"/>
+      <stop offset="0" stop-color="#FF6242"/>
+      <stop offset="0.45" stop-color="#FF4123"/>
+      <stop offset="1" stop-color="#E8291B"/>
     </linearGradient>
   </defs>
   <g fill="url(#wg)">
