@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Contact Nodal Systems</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders:opsz,wght@10..72,500;10..72,600;10..72,700&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+</head>
+<body>
+<style>
+  /* ── Nodal Systems — Huemint brand palette, committed single theme ── */
+  :root{
+    --ground:#030303;
+    --panel:#241B1B;
+    --panel-2:#2E2222;
+    --line:#523D3D;
+    --line-soft:#362828;
+    --ink:#F5F0EE;
+    --muted:#C9B8B4;
+    --faint:#92807C;
+    --violet:#880FEB;
+    --violet-bright:#A855F7;
+    --violet-dim:#6E0CBE;
+    --steel:#EF537A;
+    --crimson:#DF3158;
+    --display:"Big Shoulders", "Arial Narrow", sans-serif;
+    --body:"Archivo", "Helvetica Neue", Arial, sans-serif;
+    --mono:"IBM Plex Mono", "Courier New", monospace;
+  }
+
+  *{ box-sizing:border-box; margin:0; padding:0; }
+
+  html{ scroll-behavior:smooth; }
+  @media (prefers-reduced-motion: reduce){
+    html{ scroll-behavior:auto; }
+    *, *::before, *::after{ animation:none !important; transition:none !important; }
+  }
+
+  body{
+    background:var(--ground);
+    color:var(--ink);
+    font-family:var(--body);
+    font-size:16px;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  a{ color:inherit; }
+  a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible{
+    outline:2px solid var(--violet);
+    outline-offset:2px;
+  }
+
+  .wrap{ max-width:1120px; margin:0 auto; padding:0 24px; }
+
+  .eyebrow{
+    font-family:var(--mono);
+    font-size:12px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    color:var(--violet);
+    display:flex; align-items:center; gap:12px;
+  }
+  .eyebrow::before{
+    content:"";
+    width:22px; height:1px;
+    background:var(--violet-dim);
+    display:inline-block;
+  }
+
+  h1,h2,h3{ font-family:var(--display); text-wrap:balance; line-height:1.02; }
+  h1{
+    font-size:clamp(48px, 7vw, 84px);
+    font-weight:700;
+    text-transform:uppercase;
+    margin:16px 0 22px;
+  }
+  h1 .accent{ color:var(--violet); }
+  h2{
+    font-size:clamp(30px, 4vw, 46px);
+    font-weight:600;
+    text-transform:uppercase;
+    margin:14px 0 18px;
+  }
+  .lede{ color:var(--muted); max-width:60ch; }
+
+  section{ padding:80px 0; border-top:1px solid var(--line-soft); }
+
+  .centered > .wrap > .eyebrow{ justify-content:center; }
+  .centered .eyebrow::after{
+    content:"";
+    width:22px; height:1px;
+    background:var(--violet-dim);
+    display:inline-block;
+  }
+  .centered > .wrap > h2{ text-align:center; }
+  .centered > .wrap > .lede{ text-align:center; margin-left:auto; margin-right:auto; }
+
+  /* ── nav ── */
+  nav{
+    position:sticky; top:0; z-index:20;
+    background:rgba(3,3,3,.88);
+    backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line-soft);
+  }
+  .nav-inner{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 24px; max-width:1120px; margin:0 auto;
+  }
+  .logo{
+    font-family:var(--display);
+    font-weight:700; font-size:22px;
+    letter-spacing:.04em; text-transform:uppercase;
+    text-decoration:none;
+    display:flex; align-items:center; gap:10px;
+  }
+  .logo-mark{
+    width:14px; height:14px;
+    border:2px solid var(--violet);
+    border-radius:50%;
+    position:relative;
+  }
+  .logo-mark::after{
+    content:"";
+    position:absolute; inset:3px;
+    background:var(--violet);
+    border-radius:50%;
+  }
+  .nav-links{ display:flex; gap:28px; align-items:center; }
+  .nav-links a{
+    font-family:var(--mono); font-size:13px;
+    color:var(--muted); text-decoration:none;
+  }
+  .nav-links a:hover{ color:var(--ink); }
+  .nav-cta{
+    border:1px solid var(--violet-dim);
+    color:var(--violet-bright) !important;
+    padding:8px 16px;
+  }
+  .nav-cta:hover{ background:var(--violet); color:var(--ink) !important; }
+  @media (max-width:720px){ .nav-links a:not(.nav-cta){ display:none; } }
+
+  .btn{
+    font-family:var(--mono); font-size:14px;
+    text-decoration:none;
+    padding:14px 26px;
+    display:inline-block;
+    cursor:pointer;
+  }
+  .btn-primary{
+    background:var(--crimson); color:#FFFFFF;
+    border:1px solid var(--crimson);
+  }
+  .btn-primary:hover{ background:#E85179; border-color:#E85179; }
+
+  /* ── page hero ── */
+  header.page-hero{
+    padding:80px 0 56px;
+    border-top:none;
+    text-align:center;
+    background:
+      radial-gradient(ellipse 60% 50% at 50% 0%, rgba(136,15,235,.14), transparent 70%),
+      var(--ground);
+  }
+  header.page-hero .eyebrow{ justify-content:center; }
+  header.page-hero .eyebrow::after{
+    content:"";
+    width:22px; height:1px;
+    background:var(--violet-dim);
+    display:inline-block;
+  }
+  header.page-hero .lede{ margin-left:auto; margin-right:auto; }
+  .crumb{
+    font-family:var(--mono); font-size:12px;
+    color:var(--faint);
+    margin-bottom:26px;
+  }
+  .crumb a{ color:var(--faint); text-decoration:none; }
+  .crumb a:hover{ color:var(--ink); }
+
+  /* ── contact layout ── */
+  .contact-grid{
+    display:grid;
+    grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);
+    gap:24px;
+    align-items:start;
+  }
+  @media (max-width:860px){ .contact-grid{ grid-template-columns:1fr; } }
+
+  .contact-card{
+    border:1px solid var(--line);
+    background:var(--panel);
+    padding:34px 32px;
+  }
+  .contact-card h2{ font-size:28px; margin-top:0; }
+  .contact-card p{ color:var(--muted); font-size:15px; }
+  .c-rows{ display:flex; flex-direction:column; gap:22px; margin-top:26px; }
+  .c-row .c-label{
+    font-family:var(--mono); font-size:11px;
+    letter-spacing:.14em; text-transform:uppercase;
+    color:var(--faint);
+    margin-bottom:4px;
+  }
+  .c-row .c-value{
+    font-family:var(--mono); font-size:15px;
+    color:var(--ink);
+  }
+  .c-row .c-value a{ color:var(--violet-bright); text-decoration:none; }
+  .c-row .c-value a:hover{ color:var(--steel); }
+  .c-row .c-sub{ color:var(--faint); font-size:13px; }
+
+  form.contact-form{
+    border:1px solid var(--violet-dim);
+    background:var(--panel-2);
+    padding:34px 32px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:18px;
+  }
+  @media (max-width:560px){ form.contact-form{ grid-template-columns:1fr; } }
+  .field{ display:flex; flex-direction:column; gap:6px; }
+  .field.full{ grid-column:1 / -1; }
+  .field label{
+    font-family:var(--mono); font-size:11px;
+    letter-spacing:.14em; text-transform:uppercase;
+    color:var(--faint);
+  }
+  .field input, .field select, .field textarea{
+    background:var(--ground);
+    border:1px solid var(--line);
+    color:var(--ink);
+    font-family:var(--body);
+    font-size:15px;
+    padding:12px 14px;
+    border-radius:0;
+    width:100%;
+  }
+  .field textarea{ min-height:120px; resize:vertical; }
+  .field select{ appearance:none; }
+  .field input::placeholder, .field textarea::placeholder{ color:var(--faint); }
+  .form-foot{
+    grid-column:1 / -1;
+    display:flex; flex-wrap:wrap;
+    align-items:center; justify-content:space-between;
+    gap:16px;
+  }
+  .form-note{
+    font-family:var(--mono); font-size:12px;
+    color:var(--faint);
+    max-width:38ch;
+  }
+
+  /* ── what happens next ── */
+  .steps{
+    counter-reset:step;
+    display:grid;
+    grid-template-columns:repeat(4, 1fr);
+    gap:1px;
+    background:var(--line-soft);
+    border:1px solid var(--line-soft);
+    margin-top:44px;
+  }
+  @media (max-width:920px){ .steps{ grid-template-columns:repeat(2,1fr); } }
+  @media (max-width:560px){ .steps{ grid-template-columns:1fr; } }
+  .step{
+    background:var(--panel);
+    padding:28px 26px 32px;
+    counter-increment:step;
+    text-align:center;
+  }
+  .step::before{
+    content:"0" counter(step);
+    font-family:var(--mono);
+    font-size:13px;
+    color:var(--violet-bright);
+    display:block;
+    margin-bottom:18px;
+  }
+  .step h3{
+    font-size:22px; font-weight:600;
+    text-transform:uppercase; margin-bottom:10px;
+  }
+  .step p{ color:var(--muted); font-size:14.5px; }
+
+  footer{
+    border-top:1px solid var(--line-soft);
+    padding:36px 0 48px;
+  }
+  .foot-inner{
+    display:flex; flex-wrap:wrap;
+    justify-content:space-between; gap:20px;
+    align-items:center;
+  }
+  .foot-inner p, .foot-inner a{
+    font-family:var(--mono); font-size:12.5px;
+    color:var(--faint);
+  }
+  .foot-inner a{ text-decoration:none; }
+  .foot-inner a:hover{ color:var(--ink); }
+</style>
+
+<nav>
+  <div class="nav-inner">
+    <a class="logo" href="index.html"><span class="logo-mark" aria-hidden="true"></span>Nodal Systems</a>
+    <div class="nav-links">
+      <a href="machines.html">Systems</a>
+      <a href="software.html">Software</a>
+      <a href="index.html#security">Security</a>
+      <a href="index.html#pricing">Pricing</a>
+      <a class="nav-cta" href="contact.html">Contact us</a>
+    </div>
+  </div>
+</nav>
+
+<header class="page-hero">
+  <div class="wrap">
+    <p class="crumb"><a href="index.html">Nodal Systems</a> / contact</p>
+    <p class="eyebrow">Contact</p>
+    <h1>Talk to <span class="accent">a human.</span></h1>
+    <p class="lede">
+      No sales funnel, no chatbot gatekeeper. Tell us what your team does all
+      day and we'll tell you which machine fits, what it costs, and what it
+      will take off your plate — no obligation.
+    </p>
+  </div>
+</header>
+
+<section style="border-top:none; padding-top:24px;">
+  <div class="wrap contact-grid">
+    <div class="contact-card">
+      <h2>Reach us directly</h2>
+      <p>Prefer to just email or call? Go right ahead — a person answers both.</p>
+      <div class="c-rows">
+        <div class="c-row">
+          <p class="c-label">Email</p>
+          <p class="c-value"><a href="mailto:hello@nodalsystems.example">hello@nodalsystems.example</a></p>
+          <p class="c-sub">We reply within one business day.</p>
+        </div>
+        <div class="c-row">
+          <p class="c-label">Phone</p>
+          <p class="c-value"><a href="tel:+10000000000">(000) 000-0000</a></p>
+          <p class="c-sub">Mon–Fri, 9am–5pm.</p>
+        </div>
+        <div class="c-row">
+          <p class="c-label">Service area</p>
+          <p class="c-value">On-site installs, region-wide</p>
+          <p class="c-sub">We deliver, install, and train in person. Ask if you're unsure whether we cover your area.</p>
+        </div>
+        <div class="c-row">
+          <p class="c-label">Bring to a demo</p>
+          <p class="c-value">A contract, a price list, a hard question</p>
+          <p class="c-sub">The best way to judge a Nodal server is watching it answer from your own documents.</p>
+        </div>
+      </div>
+    </div>
+
+    <form class="contact-form" id="consultForm">
+      <div class="field">
+        <label for="cf-name">Your name</label>
+        <input id="cf-name" name="name" type="text" placeholder="Alex Rivera" required>
+      </div>
+      <div class="field">
+        <label for="cf-business">Business</label>
+        <input id="cf-business" name="business" type="text" placeholder="Rivera & Co Conveyancing" required>
+      </div>
+      <div class="field">
+        <label for="cf-email">Your email</label>
+        <input id="cf-email" name="email" type="email" placeholder="alex@riveraco.example" required>
+      </div>
+      <div class="field">
+        <label for="cf-size">Team size</label>
+        <select id="cf-size" name="size">
+          <option>Just me</option>
+          <option selected>2–5 people</option>
+          <option>5–20 people</option>
+          <option>20+ people</option>
+        </select>
+      </div>
+      <div class="field full">
+        <label for="cf-message">What eats your team's hours?</label>
+        <textarea id="cf-message" name="message" placeholder="e.g. We answer the same contract questions daily, quotes take an hour each, and our archive is impossible to search…"></textarea>
+      </div>
+      <div class="form-foot">
+        <p class="form-note">Sending opens your email app with this filled in — nothing is stored on this page.</p>
+        <button class="btn btn-primary" type="submit">Send request →</button>
+      </div>
+    </form>
+  </div>
+</section>
+
+<section id="next" class="centered">
+  <div class="wrap">
+    <p class="eyebrow">What happens next</p>
+    <h2>From hello to installed</h2>
+    <div class="steps">
+      <div class="step">
+        <h3>Consult</h3>
+        <p>We sit down with you and map the work: what your team writes, reads, quotes, and answers every day — and where the hours go.</p>
+      </div>
+      <div class="step">
+        <h3>Tailor</h3>
+        <p>We pick your platform — Core, Forge, or Atlas — and build the model library around your actual tasks, industry, and documents.</p>
+      </div>
+      <div class="step">
+        <h3>Install</h3>
+        <p>We deliver the machine, wire it into your network, index your files, and train your team on it — usually inside a single day.</p>
+      </div>
+      <div class="step">
+        <h3>Maintain</h3>
+        <p>The ongoing subscription keeps it sharp: monthly model updates, health monitoring, and a human on the phone when you want one.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot-inner">
+    <p>© 2026 Nodal Systems — local AI servers, built to order.</p>
+    <p><a href="index.html">Home</a> · <a href="machines.html">Systems</a> · <a href="software.html">Software</a> · <a href="index.html#security">Security</a></p>
+  </div>
+</footer>
+
+<script>
+  document.getElementById("consultForm").addEventListener("submit", function(e){
+    e.preventDefault();
+    var f = e.target;
+    var subject = "Consult request — " + f.business.value;
+    var body = [
+      "Name: " + f.name.value,
+      "Business: " + f.business.value,
+      "Email: " + f.email.value,
+      "Team size: " + f.size.value,
+      "",
+      "What eats our hours:",
+      f.message.value
+    ].join("\n");
+    window.location.href = "mailto:hello@nodalsystems.example?subject=" +
+      encodeURIComponent(subject) + "&body=" + encodeURIComponent(body);
+  });
+</script>
+</body>
+</html>
