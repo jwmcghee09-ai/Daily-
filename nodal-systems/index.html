@@ -6,23 +6,23 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders:opsz,wght@10..72,500;10..72,600;10..72,700&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-
 </head>
 <body>
 <style>
-  /* ── Nodal Systems: machine-room palette, committed single theme ── */
+  /* ── Nodal Systems: violet machine-room palette, committed single theme ── */
   :root{
-    --ground:#0F151C;
-    --panel:#151D26;
-    --panel-2:#1A242F;
-    --line:#26303E;
-    --line-soft:#1E2833;
-    --ink:#E9EEF3;
-    --muted:#8FA0B0;
-    --faint:#5E6E7E;
-    --amber:#F0A33F;
-    --amber-dim:#C97F1E;
-    --steel:#6E8BA6;
+    --ground:#0E0A17;
+    --panel:#161022;
+    --panel-2:#1C1530;
+    --line:#332853;
+    --line-soft:#251C3C;
+    --ink:#EDE9F8;
+    --muted:#A69DC2;
+    --faint:#6E6390;
+    --violet:#A879FF;
+    --violet-bright:#BC97FF;
+    --violet-dim:#7C4FE0;
+    --steel:#8E7BC0;
     --display:"Big Shoulders", "Arial Narrow", sans-serif;
     --body:"Archivo", "Helvetica Neue", Arial, sans-serif;
     --mono:"IBM Plex Mono", "Courier New", monospace;
@@ -47,19 +47,18 @@
 
   a{ color:inherit; }
   a:focus-visible, button:focus-visible{
-    outline:2px solid var(--amber);
+    outline:2px solid var(--violet);
     outline-offset:3px;
   }
 
   .wrap{ max-width:1120px; margin:0 auto; padding:0 24px; }
 
-  /* ── eyebrow / section labels ── */
   .eyebrow{
     font-family:var(--mono);
     font-size:12px;
     letter-spacing:.18em;
     text-transform:uppercase;
-    color:var(--amber);
+    color:var(--violet);
     display:flex;
     align-items:center;
     gap:12px;
@@ -67,7 +66,7 @@
   .eyebrow::before{
     content:"";
     width:22px; height:1px;
-    background:var(--amber-dim);
+    background:var(--violet-dim);
     display:inline-block;
   }
 
@@ -86,7 +85,7 @@
   /* ── nav ── */
   nav{
     position:sticky; top:0; z-index:20;
-    background:rgba(15,21,28,.88);
+    background:rgba(14,10,23,.88);
     backdrop-filter:blur(8px);
     border-bottom:1px solid var(--line-soft);
   }
@@ -103,14 +102,14 @@
   }
   .logo-mark{
     width:14px; height:14px;
-    border:2px solid var(--amber);
+    border:2px solid var(--violet);
     border-radius:50%;
     position:relative;
   }
   .logo-mark::after{
     content:"";
     position:absolute; inset:3px;
-    background:var(--amber);
+    background:var(--violet);
     border-radius:50%;
   }
   .nav-links{ display:flex; gap:28px; align-items:center; }
@@ -120,17 +119,20 @@
   }
   .nav-links a:hover{ color:var(--ink); }
   .nav-cta{
-    border:1px solid var(--amber-dim);
-    color:var(--amber) !important;
+    border:1px solid var(--violet-dim);
+    color:var(--violet) !important;
     padding:8px 16px;
   }
-  .nav-cta:hover{ background:var(--amber); color:var(--ground) !important; }
+  .nav-cta:hover{ background:var(--violet); color:var(--ground) !important; }
   @media (max-width:720px){ .nav-links a:not(.nav-cta){ display:none; } }
 
   /* ── hero ── */
   header.hero{
     padding:96px 0 88px;
     border-top:none;
+    background:
+      radial-gradient(ellipse 60% 50% at 75% 10%, rgba(124,79,224,.16), transparent 70%),
+      var(--ground);
   }
   .hero-grid{
     display:grid;
@@ -145,7 +147,7 @@
     text-transform:uppercase;
     margin:16px 0 22px;
   }
-  h1 .amber{ color:var(--amber); }
+  h1 .accent{ color:var(--violet); }
   .hero-sub{ color:var(--muted); max-width:52ch; margin-bottom:34px; }
   .hero-ctas{ display:flex; gap:16px; flex-wrap:wrap; }
   .btn{
@@ -155,10 +157,10 @@
     display:inline-block;
   }
   .btn-primary{
-    background:var(--amber); color:var(--ground);
-    border:1px solid var(--amber);
+    background:var(--violet); color:var(--ground);
+    border:1px solid var(--violet);
   }
-  .btn-primary:hover{ background:#F7B65F; border-color:#F7B65F; }
+  .btn-primary:hover{ background:var(--violet-bright); border-color:var(--violet-bright); }
   .btn-ghost{
     border:1px solid var(--line);
     color:var(--ink);
@@ -191,7 +193,7 @@
     display:flex; justify-content:space-between;
     margin-bottom:10px;
   }
-  .frame-label .live{ color:var(--amber); }
+  .frame-label .live{ color:var(--violet); }
   .diagram-frame svg{ width:100%; height:auto; display:block; }
 
   /* ── why local strip ── */
@@ -213,7 +215,7 @@
   }
   .strip-cell p{ color:var(--muted); font-size:15px; }
   .strip-cell .cell-icon{
-    color:var(--amber);
+    color:var(--violet);
     margin-bottom:16px;
   }
   .strip-cell svg{ display:block; }
@@ -242,8 +244,8 @@
   .pipeline-row:last-child{ border-bottom:none; }
   .pipeline-num{
     font-family:var(--mono); font-size:13px;
-    color:var(--amber);
-    border:1px solid var(--amber-dim);
+    color:var(--violet);
+    border:1px solid var(--violet-dim);
     width:34px; height:34px;
     display:flex; align-items:center; justify-content:center;
     margin-top:2px;
@@ -260,89 +262,55 @@
 
   .soft-points{ display:flex; flex-direction:column; gap:22px; margin-top:26px; }
   .soft-point{ display:grid; grid-template-columns:18px 1fr; gap:14px; }
-  .soft-point .tick{ color:var(--amber); font-family:var(--mono); }
+  .soft-point .tick{ color:var(--violet); font-family:var(--mono); }
   .soft-point p{ color:var(--muted); font-size:15px; }
   .soft-point strong{ color:var(--ink); font-weight:600; }
 
-  /* ── tiers ── */
-  .tiers{
+  /* ── machines teaser ── */
+  .teasers{
     display:grid;
     grid-template-columns:repeat(3, 1fr);
     gap:24px;
     margin-top:44px;
-    align-items:stretch;
   }
-  @media (max-width:920px){ .tiers{ grid-template-columns:1fr; max-width:520px; } }
-  .tier{
+  @media (max-width:920px){ .teasers{ grid-template-columns:1fr; max-width:520px; } }
+  .teaser{
     border:1px solid var(--line);
     background:var(--panel);
-    display:flex; flex-direction:column;
+    padding:28px 26px;
+    text-decoration:none;
+    display:flex; flex-direction:column; gap:14px;
+    transition:border-color .2s ease, transform .2s ease;
   }
-  .tier.featured{ border-color:var(--amber-dim); position:relative; }
-  .tier.featured .flag{
-    position:absolute; top:-1px; right:-1px;
-    background:var(--amber); color:var(--ground);
-    font-family:var(--mono); font-size:10px;
-    letter-spacing:.14em; text-transform:uppercase;
-    padding:5px 10px;
-  }
-  .tier-head{
-    padding:28px 26px 22px;
-    border-bottom:1px solid var(--line-soft);
-  }
-  .tier-code{
+  .teaser:hover{ border-color:var(--violet-dim); transform:translateY(-3px); }
+  .teaser-code{
     font-family:var(--mono); font-size:11px;
     letter-spacing:.16em; text-transform:uppercase;
     color:var(--faint);
   }
-  .tier-name{
+  .teaser-name{
     font-family:var(--display);
-    font-size:42px; font-weight:700;
+    font-size:40px; font-weight:700;
     text-transform:uppercase;
-    color:var(--amber);
+    color:var(--violet);
     line-height:1;
-    margin:6px 0 10px;
   }
-  .tier-tag{ color:var(--muted); font-size:14px; }
-  .tier-specs{
-    padding:10px 26px;
-    flex:1;
-  }
-  .tier-specs dl{
-    display:grid;
-    grid-template-columns:auto 1fr;
-    column-gap:18px;
-  }
-  .tier-specs dt, .tier-specs dd{
-    padding:11px 0;
-    border-bottom:1px solid var(--line-soft);
-    font-size:13.5px;
-  }
-  .tier-specs dt{
-    font-family:var(--mono); font-size:11px;
-    letter-spacing:.1em; text-transform:uppercase;
-    color:var(--faint);
-    align-self:center;
-  }
-  .tier-specs dd{ color:var(--ink); font-variant-numeric:tabular-nums; }
-  .tier-specs dt:nth-last-of-type(1), .tier-specs dd:last-of-type{ border-bottom:none; }
-  .tier-fit{
-    padding:0 26px 22px;
-    color:var(--muted); font-size:14px;
-  }
-  .tier-fit strong{ color:var(--ink); font-weight:600; }
-  .tier-foot{
+  .teaser-tag{ color:var(--muted); font-size:14px; flex:1; }
+  .teaser-stats{
+    font-family:var(--mono); font-size:12px;
+    color:var(--steel);
+    display:flex; flex-direction:column; gap:6px;
     border-top:1px solid var(--line-soft);
-    padding:22px 26px;
-  }
-  .tier-price{
-    font-family:var(--mono);
-    font-size:15px;
-    margin-bottom:14px;
+    padding-top:14px;
     font-variant-numeric:tabular-nums;
   }
-  .tier-price .from{ color:var(--faint); font-size:12px; }
-  .tier-foot .btn{ width:100%; text-align:center; }
+  .teaser-go{
+    font-family:var(--mono); font-size:13px;
+    color:var(--violet);
+  }
+  .teaser:hover .teaser-go{ color:var(--violet-bright); }
+  .teaser-price{ color:var(--ink); }
+  .machines-cta{ margin-top:32px; }
 
   /* ── process ── */
   .steps{
@@ -365,7 +333,7 @@
     content:"0" counter(step);
     font-family:var(--mono);
     font-size:13px;
-    color:var(--amber);
+    color:var(--violet);
     display:block;
     margin-bottom:18px;
   }
@@ -388,6 +356,7 @@
     background:var(--panel);
     padding:34px 32px;
   }
+  .price-card.sub{ border-color:var(--violet-dim); background:var(--panel-2); }
   .price-card .kind{
     font-family:var(--mono); font-size:11px;
     letter-spacing:.16em; text-transform:uppercase;
@@ -401,8 +370,9 @@
   }
   .price-card .figure{
     font-family:var(--mono); font-size:15px;
-    color:var(--amber);
+    color:var(--violet);
     margin-bottom:18px;
+    font-variant-numeric:tabular-nums;
   }
   .price-card p{ color:var(--muted); font-size:15px; }
   .price-card ul{
@@ -416,15 +386,13 @@
   }
   .price-card li::before{
     content:"+";
-    color:var(--amber);
+    color:var(--violet);
     font-family:var(--mono);
   }
 
   /* ── FAQ ── */
   .faq{ margin-top:40px; max-width:760px; }
-  details{
-    border-bottom:1px solid var(--line-soft);
-  }
+  details{ border-bottom:1px solid var(--line-soft); }
   details:first-of-type{ border-top:1px solid var(--line-soft); }
   summary{
     cursor:pointer;
@@ -437,7 +405,7 @@
   summary::after{
     content:"+";
     font-family:var(--mono);
-    color:var(--amber);
+    color:var(--violet);
     flex-shrink:0;
   }
   details[open] summary::after{ content:"–"; }
@@ -449,8 +417,7 @@
 
   /* ── CTA / footer ── */
   .cta-block{
-    text-align:left;
-    border:1px solid var(--amber-dim);
+    border:1px solid var(--violet-dim);
     background:linear-gradient(180deg, var(--panel-2), var(--panel));
     padding:56px 48px;
     display:flex; flex-wrap:wrap;
@@ -494,7 +461,7 @@
     <a class="logo" href="#top"><span class="logo-mark" aria-hidden="true"></span>Nodal Systems</a>
     <div class="nav-links">
       <a href="#software">Software</a>
-      <a href="#hardware">Hardware</a>
+      <a href="machines.html">Machines</a>
       <a href="#process">Process</a>
       <a href="#pricing">Pricing</a>
       <a class="nav-cta" href="#contact">Book a consult</a>
@@ -506,7 +473,7 @@
   <div class="wrap hero-grid">
     <div>
       <p class="eyebrow">Local AI infrastructure, built to order</p>
-      <h1>Your AI.<br>Your building.<br><span class="amber">Your data.</span></h1>
+      <h1>Your AI.<br>Your building.<br><span class="accent">Your data.</span></h1>
       <p class="hero-sub">
         Nodal Systems builds, tailors, and installs local AI servers for small
         businesses. A library of AI models lives on fast NVMe storage inside
@@ -515,7 +482,7 @@
       </p>
       <div class="hero-ctas">
         <a class="btn btn-primary" href="#contact">Book a free consult</a>
-        <a class="btn btn-ghost" href="#hardware">See the machines</a>
+        <a class="btn btn-ghost" href="machines.html">See the machines →</a>
       </div>
       <div class="hero-stats">
         <div class="stat">
@@ -536,46 +503,40 @@
     <div class="diagram-frame" role="img" aria-label="Diagram: an incoming task goes to the Nodal router, which selects one model from the NVMe model library and loads it to answer the task.">
       <div class="frame-label"><span>Nodal Router — task flow</span><span class="live">● live</span></div>
       <svg viewBox="0 0 460 340" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <!-- incoming task -->
-        <rect x="20" y="140" width="110" height="56" stroke="#6E8BA6" stroke-width="1.5"/>
-        <text x="75" y="164" text-anchor="middle" fill="#E9EEF3" font-family="IBM Plex Mono, monospace" font-size="11">TASK IN</text>
-        <text x="75" y="182" text-anchor="middle" fill="#5E6E7E" font-family="IBM Plex Mono, monospace" font-size="9">"draft this quote"</text>
+        <rect x="20" y="140" width="110" height="56" stroke="#8E7BC0" stroke-width="1.5"/>
+        <text x="75" y="164" text-anchor="middle" fill="#EDE9F8" font-family="IBM Plex Mono, monospace" font-size="11">TASK IN</text>
+        <text x="75" y="182" text-anchor="middle" fill="#6E6390" font-family="IBM Plex Mono, monospace" font-size="9">"draft this quote"</text>
 
-        <!-- router -->
-        <rect x="185" y="128" width="110" height="80" stroke="#F0A33F" stroke-width="1.5"/>
-        <text x="240" y="158" text-anchor="middle" fill="#F0A33F" font-family="IBM Plex Mono, monospace" font-size="11">NODAL</text>
-        <text x="240" y="174" text-anchor="middle" fill="#F0A33F" font-family="IBM Plex Mono, monospace" font-size="11">ROUTER</text>
-        <text x="240" y="194" text-anchor="middle" fill="#5E6E7E" font-family="IBM Plex Mono, monospace" font-size="9">selects model</text>
+        <rect x="185" y="128" width="110" height="80" stroke="#A879FF" stroke-width="1.5"/>
+        <text x="240" y="158" text-anchor="middle" fill="#A879FF" font-family="IBM Plex Mono, monospace" font-size="11">NODAL</text>
+        <text x="240" y="174" text-anchor="middle" fill="#A879FF" font-family="IBM Plex Mono, monospace" font-size="11">ROUTER</text>
+        <text x="240" y="194" text-anchor="middle" fill="#6E6390" font-family="IBM Plex Mono, monospace" font-size="9">selects model</text>
 
-        <!-- model library -->
         <g>
-          <rect x="350" y="30"  width="90" height="40" stroke="#26303E" stroke-width="1.5"/>
-          <rect x="350" y="90"  width="90" height="40" stroke="#F0A33F" stroke-width="1.5"/>
-          <rect x="350" y="150" width="90" height="40" stroke="#26303E" stroke-width="1.5"/>
-          <rect x="350" y="210" width="90" height="40" stroke="#26303E" stroke-width="1.5"/>
-          <rect x="350" y="270" width="90" height="40" stroke="#26303E" stroke-width="1.5"/>
-          <text x="395" y="54"  text-anchor="middle" fill="#8FA0B0" font-family="IBM Plex Mono, monospace" font-size="9">CHAT · 8B</text>
-          <text x="395" y="114" text-anchor="middle" fill="#F0A33F" font-family="IBM Plex Mono, monospace" font-size="9">WRITER · 14B</text>
-          <text x="395" y="174" text-anchor="middle" fill="#8FA0B0" font-family="IBM Plex Mono, monospace" font-size="9">CODE · 32B</text>
-          <text x="395" y="234" text-anchor="middle" fill="#8FA0B0" font-family="IBM Plex Mono, monospace" font-size="9">VISION · 11B</text>
-          <text x="395" y="294" text-anchor="middle" fill="#8FA0B0" font-family="IBM Plex Mono, monospace" font-size="9">DOCS-QA · 24B</text>
+          <rect x="350" y="30"  width="90" height="40" stroke="#332853" stroke-width="1.5"/>
+          <rect x="350" y="90"  width="90" height="40" stroke="#A879FF" stroke-width="1.5"/>
+          <rect x="350" y="150" width="90" height="40" stroke="#332853" stroke-width="1.5"/>
+          <rect x="350" y="210" width="90" height="40" stroke="#332853" stroke-width="1.5"/>
+          <rect x="350" y="270" width="90" height="40" stroke="#332853" stroke-width="1.5"/>
+          <text x="395" y="54"  text-anchor="middle" fill="#A69DC2" font-family="IBM Plex Mono, monospace" font-size="9">CHAT · 8B</text>
+          <text x="395" y="114" text-anchor="middle" fill="#A879FF" font-family="IBM Plex Mono, monospace" font-size="9">WRITER · 14B</text>
+          <text x="395" y="174" text-anchor="middle" fill="#A69DC2" font-family="IBM Plex Mono, monospace" font-size="9">CODE · 32B</text>
+          <text x="395" y="234" text-anchor="middle" fill="#A69DC2" font-family="IBM Plex Mono, monospace" font-size="9">VISION · 11B</text>
+          <text x="395" y="294" text-anchor="middle" fill="#A69DC2" font-family="IBM Plex Mono, monospace" font-size="9">DOCS-QA · 24B</text>
         </g>
-        <text x="395" y="330" text-anchor="middle" fill="#5E6E7E" font-family="IBM Plex Mono, monospace" font-size="9">NVMe MODEL LIBRARY</text>
+        <text x="395" y="330" text-anchor="middle" fill="#6E6390" font-family="IBM Plex Mono, monospace" font-size="9">NVMe MODEL LIBRARY</text>
 
-        <!-- connectors -->
-        <line x1="130" y1="168" x2="185" y2="168" stroke="#26303E" stroke-width="1.5"/>
-        <line x1="295" y1="150" x2="350" y2="50"  stroke="#26303E" stroke-width="1"/>
-        <line x1="295" y1="160" x2="350" y2="110" stroke="#F0A33F" stroke-width="1.5"/>
-        <line x1="295" y1="176" x2="350" y2="170" stroke="#26303E" stroke-width="1"/>
-        <line x1="295" y1="186" x2="350" y2="230" stroke="#26303E" stroke-width="1"/>
-        <line x1="295" y1="196" x2="350" y2="290" stroke="#26303E" stroke-width="1"/>
+        <line x1="130" y1="168" x2="185" y2="168" stroke="#332853" stroke-width="1.5"/>
+        <line x1="295" y1="150" x2="350" y2="50"  stroke="#332853" stroke-width="1"/>
+        <line x1="295" y1="160" x2="350" y2="110" stroke="#A879FF" stroke-width="1.5"/>
+        <line x1="295" y1="176" x2="350" y2="170" stroke="#332853" stroke-width="1"/>
+        <line x1="295" y1="186" x2="350" y2="230" stroke="#332853" stroke-width="1"/>
+        <line x1="295" y1="196" x2="350" y2="290" stroke="#332853" stroke-width="1"/>
 
-        <!-- status LEDs -->
-        <circle cx="200" cy="140" r="3" fill="#F0A33F" class="blink"/>
-        <circle cx="212" cy="140" r="3" fill="#6E8BA6"/>
+        <circle cx="200" cy="140" r="3" fill="#A879FF" class="blink"/>
+        <circle cx="212" cy="140" r="3" fill="#8E7BC0"/>
 
-        <!-- travelling packet -->
-        <circle r="4" fill="#F0A33F" class="pulse-dot" style="offset-path:path('M 130 168 L 185 168 L 295 160 L 350 110'); offset-rotate:0deg;"/>
+        <circle r="4" fill="#A879FF" class="pulse-dot" style="offset-path:path('M 130 168 L 185 168 L 295 160 L 350 110'); offset-rotate:0deg;"/>
       </svg>
     </div>
   </div>
@@ -609,7 +570,7 @@
           </svg>
         </div>
         <h3>Flat, predictable cost</h3>
-        <p>No per-token metering, no seat licenses that creep up. One machine, one software fee, unlimited use by your whole team.</p>
+        <p>No per-token metering, no seat licenses that creep up. One machine, one flat software fee, unlimited use by your whole team.</p>
       </div>
       <div class="strip-cell">
         <div class="cell-icon" aria-hidden="true">
@@ -651,7 +612,7 @@
         </div>
         <div class="soft-point">
           <span class="tick" aria-hidden="true">▸</span>
-          <p><strong>Monthly library updates.</strong> The subscription keeps your model library current — new and improved models arrive as they're released, tuned and tested by us first.</p>
+          <p><strong>Always current, via subscription.</strong> The ongoing Nodal OS fee keeps your model library alive — new and improved models arrive monthly, tuned and tested by us before they reach your drive.</p>
         </div>
       </div>
     </div>
@@ -689,80 +650,53 @@
   </div>
 </section>
 
-<section id="hardware">
+<section id="machines">
   <div class="wrap">
     <p class="eyebrow">The hardware</p>
     <h2>Three machines.<br>Fitted to your business.</h2>
     <p class="lede">
-      Every build starts from one of three platforms, then we tailor the
-      configuration — storage, memory, model library — to the work your
-      business actually does.
+      Every build starts from one of three platforms — Core, Forge, or Atlas —
+      then we tailor the configuration to the work your business actually does.
+      Full spec sheets live on the machines page.
     </p>
 
-    <div class="tiers">
-      <article class="tier">
-        <div class="tier-head">
-          <div class="tier-code">NS-01</div>
-          <div class="tier-name">Core</div>
-          <p class="tier-tag">The essentials, done privately.</p>
-        </div>
-        <div class="tier-specs">
-          <dl>
-            <dt>Models</dt><dd>Up to 14B parameters</dd>
-            <dt>Library</dt><dd>2 TB NVMe</dd>
-            <dt>Team</dt><dd>1–5 concurrent users</dd>
-            <dt>Form</dt><dd>Compact desktop, whisper-quiet</dd>
-          </dl>
-        </div>
-        <p class="tier-fit"><strong>Fits:</strong> sole traders and small offices — email drafting, chat assistance, document summaries, meeting notes.</p>
-        <div class="tier-foot">
-          <p class="tier-price"><span class="from">from</span> $3,450 <span class="from">one-time</span></p>
-          <a class="btn btn-ghost" href="#contact">Spec a Core</a>
-        </div>
-      </article>
-
-      <article class="tier featured">
-        <span class="flag">Most fitted</span>
-        <div class="tier-head">
-          <div class="tier-code">NS-02</div>
-          <div class="tier-name">Forge</div>
-          <p class="tier-tag">Serious throughput for a working team.</p>
-        </div>
-        <div class="tier-specs">
-          <dl>
-            <dt>Models</dt><dd>Up to 70B parameters</dd>
-            <dt>Library</dt><dd>4 TB NVMe</dd>
-            <dt>Team</dt><dd>5–20 concurrent users</dd>
-            <dt>Form</dt><dd>Tower or short rack</dd>
-          </dl>
-        </div>
-        <p class="tier-fit"><strong>Fits:</strong> agencies, clinics, firms, and trades offices — document Q&amp;A over your whole archive, quoting, reporting, multilingual work.</p>
-        <div class="tier-foot">
-          <p class="tier-price"><span class="from">from</span> $7,900 <span class="from">one-time</span></p>
-          <a class="btn btn-primary" href="#contact">Spec a Forge</a>
-        </div>
-      </article>
-
-      <article class="tier">
-        <div class="tier-head">
-          <div class="tier-code">NS-03</div>
-          <div class="tier-name">Atlas</div>
-          <p class="tier-tag">Carries everything, all at once.</p>
-        </div>
-        <div class="tier-specs">
-          <dl>
-            <dt>Models</dt><dd>Frontier-class, multi-model</dd>
-            <dt>Library</dt><dd>8 TB+ NVMe</dd>
-            <dt>Team</dt><dd>20+ concurrent users</dd>
-            <dt>Form</dt><dd>Rack-mount, dual-GPU</dd>
-          </dl>
-        </div>
-        <p class="tier-fit"><strong>Fits:</strong> businesses running AI all day — vision inspection, custom fine-tunes, several departments hitting the box at once.</p>
-        <div class="tier-foot">
-          <p class="tier-price"><span class="from">from</span> $16,500 <span class="from">one-time</span></p>
-          <a class="btn btn-ghost" href="#contact">Spec an Atlas</a>
-        </div>
-      </article>
+    <div class="teasers">
+      <a class="teaser" href="machines.html#core">
+        <span class="teaser-code">NS-01</span>
+        <span class="teaser-name">Core</span>
+        <span class="teaser-tag">The essentials, done privately. For sole traders and small offices.</span>
+        <span class="teaser-stats">
+          <span>MODELS — up to 14B</span>
+          <span>LIBRARY — 2 TB NVMe</span>
+          <span class="teaser-price">FROM $3,450 + software</span>
+        </span>
+        <span class="teaser-go">Full spec →</span>
+      </a>
+      <a class="teaser" href="machines.html#forge">
+        <span class="teaser-code">NS-02</span>
+        <span class="teaser-name">Forge</span>
+        <span class="teaser-tag">Serious throughput for a working team of five to twenty.</span>
+        <span class="teaser-stats">
+          <span>MODELS — up to 70B</span>
+          <span>LIBRARY — 4 TB NVMe</span>
+          <span class="teaser-price">FROM $7,900 + software</span>
+        </span>
+        <span class="teaser-go">Full spec →</span>
+      </a>
+      <a class="teaser" href="machines.html#atlas">
+        <span class="teaser-code">NS-03</span>
+        <span class="teaser-name">Atlas</span>
+        <span class="teaser-tag">Carries everything, all at once. For businesses running AI all day.</span>
+        <span class="teaser-stats">
+          <span>MODELS — frontier-class</span>
+          <span>LIBRARY — 8 TB+ NVMe</span>
+          <span class="teaser-price">FROM $16,500 + software</span>
+        </span>
+        <span class="teaser-go">Full spec →</span>
+      </a>
+    </div>
+    <div class="machines-cta">
+      <a class="btn btn-ghost" href="machines.html">Compare all three machines →</a>
     </div>
   </div>
 </section>
@@ -790,7 +724,7 @@
       </div>
       <div class="step">
         <h3>Maintain</h3>
-        <p>The subscription keeps it sharp: monthly model updates, health monitoring, and a human on the phone when you want one.</p>
+        <p>The ongoing subscription keeps it sharp: monthly model updates, health monitoring, and a human on the phone when you want one.</p>
       </div>
     </div>
   </div>
@@ -801,14 +735,15 @@
     <p class="eyebrow">Pricing model</p>
     <h2>Buy the machine once.<br>Keep it smart monthly.</h2>
     <p class="lede">
-      Two simple parts: the hardware is yours outright, and the Nodal OS
-      subscription keeps the intelligence on it current.
+      Two parts, always: a one-time price for the hardware, and the ongoing
+      Nodal OS subscription that keeps the intelligence on it current. The
+      machine is yours; the software fee is what keeps it getting smarter.
     </p>
     <div class="price-split">
       <div class="price-card">
         <p class="kind">One-time</p>
         <h3>The machine</h3>
-        <p class="figure">from $3,450 — Core · $7,900 — Forge · $16,500 — Atlas</p>
+        <p class="figure">$3,450 Core · $7,900 Forge · $16,500 Atlas</p>
         <p>Built to your spec, delivered, and installed on site. You own it — no lease, no lock-in on the hardware.</p>
         <ul>
           <li>Consultation and tailored configuration</li>
@@ -817,11 +752,11 @@
           <li>3-year hardware warranty</li>
         </ul>
       </div>
-      <div class="price-card">
-        <p class="kind">Monthly</p>
+      <div class="price-card sub">
+        <p class="kind">Ongoing — monthly</p>
         <h3>Nodal OS</h3>
         <p class="figure">from $149 / month</p>
-        <p>The routing software and the living model library on your NVMe drives. Unlimited use, whole team, one flat fee.</p>
+        <p>The routing software and the living model library on your NVMe drives. Unlimited use, whole team, one flat ongoing fee.</p>
         <ul>
           <li>Task-aware model routing, unlimited requests</li>
           <li>Monthly model library updates, tested by us</li>
@@ -845,6 +780,10 @@
       <details>
         <summary>Why store many models instead of running one big one?</summary>
         <p>A single giant model needs giant hardware. A library of specialists on NVMe gets you better answers per dollar: the router loads a writing model for writing, a vision model for photos, a document model for your archive — each one the right tool, loaded in seconds.</p>
+      </details>
+      <details>
+        <summary>What does the ongoing fee cover, exactly?</summary>
+        <p>The Nodal OS subscription is the living part of the system: the routing software licence, monthly model library updates delivered to your NVMe drives, remote health monitoring, security patches, and priority support. The hardware is a one-time purchase; the subscription is what keeps it current.</p>
       </details>
       <details>
         <summary>What happens if we cancel the subscription?</summary>
@@ -878,7 +817,7 @@
 <footer>
   <div class="wrap foot-inner">
     <p>© 2026 Nodal Systems — local AI servers, built to order.</p>
-    <p><a href="#software">Software</a> · <a href="#hardware">Hardware</a> · <a href="#process">Process</a> · <a href="#pricing">Pricing</a></p>
+    <p><a href="#software">Software</a> · <a href="machines.html">Machines</a> · <a href="#process">Process</a> · <a href="#pricing">Pricing</a></p>
   </div>
 </footer>
 </body>
