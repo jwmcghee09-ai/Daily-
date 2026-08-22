@@ -11,18 +11,18 @@
 <style>
   /* ── Nodal Systems: violet machine-room palette, committed single theme ── */
   :root{
-    --ground:#3F3734;
-    --panel:#452F35;
-    --panel-2:#4C343B;
-    --line:#614E50;
-    --line-soft:#544245;
-    --ink:#F6F0EC;
-    --muted:#CFBEB9;
-    --faint:#9C8B86;
-    --violet:#A64DFF;
-    --violet-bright:#BD7DFF;
-    --violet-dim:#8318E0;
-    --steel:#F2688B;
+    --ground:#030303;
+    --panel:#241B1B;
+    --panel-2:#2E2222;
+    --line:#523D3D;
+    --line-soft:#362828;
+    --ink:#F5F0EE;
+    --muted:#C9B8B4;
+    --faint:#92807C;
+    --violet:#880FEB;
+    --violet-bright:#A855F7;
+    --violet-dim:#6E0CBE;
+    --steel:#EF537A;
     --display:"Big Shoulders", "Arial Narrow", sans-serif;
     --body:"Archivo", "Helvetica Neue", Arial, sans-serif;
     --mono:"IBM Plex Mono", "Courier New", monospace;
@@ -86,7 +86,7 @@
   /* ── nav ── */
   nav{
     position:sticky; top:0; z-index:20;
-    background:rgba(63,55,52,.88);
+    background:rgba(3,3,3,.88);
     backdrop-filter:blur(8px);
     border-bottom:1px solid var(--line-soft);
   }
@@ -134,10 +134,10 @@
     display:inline-block;
   }
   .btn-primary{
-    background:#E62A5B; color:#FFFFFF;
-    border:1px solid #E62A5B;
+    background:#DF3158; color:#FFFFFF;
+    border:1px solid #DF3158;
   }
-  .btn-primary:hover{ background:#F04C74; border-color:#F04C74; }
+  .btn-primary:hover{ background:#E85179; border-color:#E85179; }
   .btn-ghost{ border:1px solid var(--line); color:var(--ink); }
   .btn-ghost:hover{ border-color:var(--steel); }
 
@@ -146,7 +146,7 @@
     padding:80px 0 64px;
     border-top:none;
     background:
-      radial-gradient(ellipse 60% 50% at 70% 0%, rgba(139,22,247,.14), transparent 70%),
+      radial-gradient(ellipse 60% 50% at 70% 0%, rgba(136,15,235,.14), transparent 70%),
       var(--ground);
   }
   .crumb{
@@ -184,7 +184,7 @@
   .sheet.featured{ border-color:var(--violet-dim); position:relative; }
   .sheet.featured .flag{
     position:absolute; top:-1px; right:-1px;
-    background:#E62A5B; color:#FFFFFF;
+    background:#DF3158; color:#FFFFFF;
     font-family:var(--mono); font-size:10px;
     letter-spacing:.14em; text-transform:uppercase;
     padding:5px 10px;
@@ -206,7 +206,7 @@
     font-size:clamp(52px, 6vw, 72px);
     font-weight:700;
     text-transform:uppercase;
-    color:var(--violet);
+    color:var(--violet-bright);
     line-height:1;
     margin:8px 0 12px;
   }
@@ -283,7 +283,7 @@
     font-family:var(--display);
     font-size:24px; font-weight:600;
     text-transform:uppercase;
-    color:var(--violet);
+    color:var(--violet-bright);
     border-bottom:1px solid var(--line);
   }
   thead th:first-child{ color:var(--faint); font-family:var(--mono); font-size:11px; letter-spacing:.16em; font-weight:400; vertical-align:bottom; padding-bottom:18px; }
@@ -295,12 +295,12 @@
   }
   tbody td{ color:var(--ink); font-variant-numeric:tabular-nums; }
   tbody tr:last-child th, tbody tr:last-child td{ border-bottom:none; }
-  td.hl{ color:var(--violet); font-family:var(--mono); font-size:13px; }
+  td.hl{ color:var(--violet-bright); font-family:var(--mono); font-size:13px; }
 
   .tailor-note{
     margin-top:28px;
     border:1px solid var(--line);
-    border-left:2px solid var(--violet);
+    border-left:2px solid var(--violet-bright);
     background:var(--panel);
     padding:22px 26px;
     color:var(--muted);
