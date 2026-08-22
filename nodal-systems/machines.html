@@ -11,18 +11,18 @@
 <style>
   /* ── Nodal Systems: violet machine-room palette, committed single theme ── */
   :root{
-    --ground:#0E0A17;
-    --panel:#161022;
-    --panel-2:#1C1530;
-    --line:#332853;
-    --line-soft:#251C3C;
-    --ink:#EDE9F8;
-    --muted:#A69DC2;
-    --faint:#6E6390;
-    --violet:#A879FF;
-    --violet-bright:#BC97FF;
-    --violet-dim:#7C4FE0;
-    --steel:#8E7BC0;
+    --ground:#3F3734;
+    --panel:#452F35;
+    --panel-2:#4C343B;
+    --line:#614E50;
+    --line-soft:#544245;
+    --ink:#F6F0EC;
+    --muted:#CFBEB9;
+    --faint:#9C8B86;
+    --violet:#A64DFF;
+    --violet-bright:#BD7DFF;
+    --violet-dim:#8318E0;
+    --steel:#F2688B;
     --display:"Big Shoulders", "Arial Narrow", sans-serif;
     --body:"Archivo", "Helvetica Neue", Arial, sans-serif;
     --mono:"IBM Plex Mono", "Courier New", monospace;
@@ -86,7 +86,7 @@
   /* ── nav ── */
   nav{
     position:sticky; top:0; z-index:20;
-    background:rgba(14,10,23,.88);
+    background:rgba(63,55,52,.88);
     backdrop-filter:blur(8px);
     border-bottom:1px solid var(--line-soft);
   }
@@ -134,10 +134,10 @@
     display:inline-block;
   }
   .btn-primary{
-    background:var(--violet); color:var(--ground);
-    border:1px solid var(--violet);
+    background:#E62A5B; color:#FFFFFF;
+    border:1px solid #E62A5B;
   }
-  .btn-primary:hover{ background:var(--violet-bright); border-color:var(--violet-bright); }
+  .btn-primary:hover{ background:#F04C74; border-color:#F04C74; }
   .btn-ghost{ border:1px solid var(--line); color:var(--ink); }
   .btn-ghost:hover{ border-color:var(--steel); }
 
@@ -146,7 +146,7 @@
     padding:80px 0 64px;
     border-top:none;
     background:
-      radial-gradient(ellipse 60% 50% at 70% 0%, rgba(124,79,224,.16), transparent 70%),
+      radial-gradient(ellipse 60% 50% at 70% 0%, rgba(139,22,247,.14), transparent 70%),
       var(--ground);
   }
   .crumb{
@@ -184,7 +184,7 @@
   .sheet.featured{ border-color:var(--violet-dim); position:relative; }
   .sheet.featured .flag{
     position:absolute; top:-1px; right:-1px;
-    background:var(--violet); color:var(--ground);
+    background:#E62A5B; color:#FFFFFF;
     font-family:var(--mono); font-size:10px;
     letter-spacing:.14em; text-transform:uppercase;
     padding:5px 10px;

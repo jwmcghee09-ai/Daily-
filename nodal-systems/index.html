@@ -11,18 +11,18 @@
 <style>
   /* ── Nodal Systems: violet machine-room palette, committed single theme ── */
   :root{
-    --ground:#0E0A17;
-    --panel:#161022;
-    --panel-2:#1C1530;
-    --line:#332853;
-    --line-soft:#251C3C;
-    --ink:#EDE9F8;
-    --muted:#A69DC2;
-    --faint:#6E6390;
-    --violet:#A879FF;
-    --violet-bright:#BC97FF;
-    --violet-dim:#7C4FE0;
-    --steel:#8E7BC0;
+    --ground:#3F3734;
+    --panel:#452F35;
+    --panel-2:#4C343B;
+    --line:#614E50;
+    --line-soft:#544245;
+    --ink:#F6F0EC;
+    --muted:#CFBEB9;
+    --faint:#9C8B86;
+    --violet:#A64DFF;
+    --violet-bright:#BD7DFF;
+    --violet-dim:#8318E0;
+    --steel:#F2688B;
     --display:"Big Shoulders", "Arial Narrow", sans-serif;
     --body:"Archivo", "Helvetica Neue", Arial, sans-serif;
     --mono:"IBM Plex Mono", "Courier New", monospace;
@@ -85,7 +85,7 @@
   /* ── nav ── */
   nav{
     position:sticky; top:0; z-index:20;
-    background:rgba(14,10,23,.88);
+    background:rgba(63,55,52,.88);
     backdrop-filter:blur(8px);
     border-bottom:1px solid var(--line-soft);
   }
@@ -131,7 +131,7 @@
     padding:96px 0 88px;
     border-top:none;
     background:
-      radial-gradient(ellipse 60% 50% at 75% 10%, rgba(124,79,224,.16), transparent 70%),
+      radial-gradient(ellipse 60% 50% at 75% 10%, rgba(139,22,247,.14), transparent 70%),
       var(--ground);
   }
   .hero-grid{
@@ -157,10 +157,10 @@
     display:inline-block;
   }
   .btn-primary{
-    background:var(--violet); color:var(--ground);
-    border:1px solid var(--violet);
+    background:#E62A5B; color:#FFFFFF;
+    border:1px solid #E62A5B;
   }
-  .btn-primary:hover{ background:var(--violet-bright); border-color:var(--violet-bright); }
+  .btn-primary:hover{ background:#F04C74; border-color:#F04C74; }
   .btn-ghost{
     border:1px solid var(--line);
     color:var(--ink);
@@ -193,7 +193,7 @@
     display:flex; justify-content:space-between;
     margin-bottom:10px;
   }
-  .frame-label .live{ color:var(--violet); }
+  .frame-label .live{ color:var(--steel); }
   .diagram-frame svg{ width:100%; height:auto; display:block; }
 
   /* ── why local strip ── */
@@ -503,40 +503,40 @@
     <div class="diagram-frame" role="img" aria-label="Diagram: an incoming task goes to the Nodal router, which selects one model from the NVMe model library and loads it to answer the task.">
       <div class="frame-label"><span>Nodal Router — task flow</span><span class="live">● live</span></div>
       <svg viewBox="0 0 460 340" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <rect x="20" y="140" width="110" height="56" stroke="#8E7BC0" stroke-width="1.5"/>
-        <text x="75" y="164" text-anchor="middle" fill="#EDE9F8" font-family="IBM Plex Mono, monospace" font-size="11">TASK IN</text>
-        <text x="75" y="182" text-anchor="middle" fill="#6E6390" font-family="IBM Plex Mono, monospace" font-size="9">"draft this quote"</text>
+        <rect x="20" y="140" width="110" height="56" stroke="#F2688B" stroke-width="1.5"/>
+        <text x="75" y="164" text-anchor="middle" fill="#F6F0EC" font-family="IBM Plex Mono, monospace" font-size="11">TASK IN</text>
+        <text x="75" y="182" text-anchor="middle" fill="#9C8B86" font-family="IBM Plex Mono, monospace" font-size="9">"draft this quote"</text>
 
-        <rect x="185" y="128" width="110" height="80" stroke="#A879FF" stroke-width="1.5"/>
-        <text x="240" y="158" text-anchor="middle" fill="#A879FF" font-family="IBM Plex Mono, monospace" font-size="11">NODAL</text>
-        <text x="240" y="174" text-anchor="middle" fill="#A879FF" font-family="IBM Plex Mono, monospace" font-size="11">ROUTER</text>
-        <text x="240" y="194" text-anchor="middle" fill="#6E6390" font-family="IBM Plex Mono, monospace" font-size="9">selects model</text>
+        <rect x="185" y="128" width="110" height="80" stroke="#A64DFF" stroke-width="1.5"/>
+        <text x="240" y="158" text-anchor="middle" fill="#A64DFF" font-family="IBM Plex Mono, monospace" font-size="11">NODAL</text>
+        <text x="240" y="174" text-anchor="middle" fill="#A64DFF" font-family="IBM Plex Mono, monospace" font-size="11">ROUTER</text>
+        <text x="240" y="194" text-anchor="middle" fill="#9C8B86" font-family="IBM Plex Mono, monospace" font-size="9">selects model</text>
 
         <g>
-          <rect x="350" y="30"  width="90" height="40" stroke="#332853" stroke-width="1.5"/>
-          <rect x="350" y="90"  width="90" height="40" stroke="#A879FF" stroke-width="1.5"/>
-          <rect x="350" y="150" width="90" height="40" stroke="#332853" stroke-width="1.5"/>
-          <rect x="350" y="210" width="90" height="40" stroke="#332853" stroke-width="1.5"/>
-          <rect x="350" y="270" width="90" height="40" stroke="#332853" stroke-width="1.5"/>
-          <text x="395" y="54"  text-anchor="middle" fill="#A69DC2" font-family="IBM Plex Mono, monospace" font-size="9">CHAT · 8B</text>
-          <text x="395" y="114" text-anchor="middle" fill="#A879FF" font-family="IBM Plex Mono, monospace" font-size="9">WRITER · 14B</text>
-          <text x="395" y="174" text-anchor="middle" fill="#A69DC2" font-family="IBM Plex Mono, monospace" font-size="9">CODE · 32B</text>
-          <text x="395" y="234" text-anchor="middle" fill="#A69DC2" font-family="IBM Plex Mono, monospace" font-size="9">VISION · 11B</text>
-          <text x="395" y="294" text-anchor="middle" fill="#A69DC2" font-family="IBM Plex Mono, monospace" font-size="9">DOCS-QA · 24B</text>
+          <rect x="350" y="30"  width="90" height="40" stroke="#614E50" stroke-width="1.5"/>
+          <rect x="350" y="90"  width="90" height="40" stroke="#A64DFF" stroke-width="1.5"/>
+          <rect x="350" y="150" width="90" height="40" stroke="#614E50" stroke-width="1.5"/>
+          <rect x="350" y="210" width="90" height="40" stroke="#614E50" stroke-width="1.5"/>
+          <rect x="350" y="270" width="90" height="40" stroke="#614E50" stroke-width="1.5"/>
+          <text x="395" y="54"  text-anchor="middle" fill="#CFBEB9" font-family="IBM Plex Mono, monospace" font-size="9">CHAT · 8B</text>
+          <text x="395" y="114" text-anchor="middle" fill="#A64DFF" font-family="IBM Plex Mono, monospace" font-size="9">WRITER · 14B</text>
+          <text x="395" y="174" text-anchor="middle" fill="#CFBEB9" font-family="IBM Plex Mono, monospace" font-size="9">CODE · 32B</text>
+          <text x="395" y="234" text-anchor="middle" fill="#CFBEB9" font-family="IBM Plex Mono, monospace" font-size="9">VISION · 11B</text>
+          <text x="395" y="294" text-anchor="middle" fill="#CFBEB9" font-family="IBM Plex Mono, monospace" font-size="9">DOCS-QA · 24B</text>
         </g>
-        <text x="395" y="330" text-anchor="middle" fill="#6E6390" font-family="IBM Plex Mono, monospace" font-size="9">NVMe MODEL LIBRARY</text>
+        <text x="395" y="330" text-anchor="middle" fill="#9C8B86" font-family="IBM Plex Mono, monospace" font-size="9">NVMe MODEL LIBRARY</text>
 
-        <line x1="130" y1="168" x2="185" y2="168" stroke="#332853" stroke-width="1.5"/>
-        <line x1="295" y1="150" x2="350" y2="50"  stroke="#332853" stroke-width="1"/>
-        <line x1="295" y1="160" x2="350" y2="110" stroke="#A879FF" stroke-width="1.5"/>
-        <line x1="295" y1="176" x2="350" y2="170" stroke="#332853" stroke-width="1"/>
-        <line x1="295" y1="186" x2="350" y2="230" stroke="#332853" stroke-width="1"/>
-        <line x1="295" y1="196" x2="350" y2="290" stroke="#332853" stroke-width="1"/>
+        <line x1="130" y1="168" x2="185" y2="168" stroke="#614E50" stroke-width="1.5"/>
+        <line x1="295" y1="150" x2="350" y2="50"  stroke="#614E50" stroke-width="1"/>
+        <line x1="295" y1="160" x2="350" y2="110" stroke="#A64DFF" stroke-width="1.5"/>
+        <line x1="295" y1="176" x2="350" y2="170" stroke="#614E50" stroke-width="1"/>
+        <line x1="295" y1="186" x2="350" y2="230" stroke="#614E50" stroke-width="1"/>
+        <line x1="295" y1="196" x2="350" y2="290" stroke="#614E50" stroke-width="1"/>
 
-        <circle cx="200" cy="140" r="3" fill="#A879FF" class="blink"/>
-        <circle cx="212" cy="140" r="3" fill="#8E7BC0"/>
+        <circle cx="200" cy="140" r="3" fill="#A64DFF" class="blink"/>
+        <circle cx="212" cy="140" r="3" fill="#F2688B"/>
 
-        <circle r="4" fill="#A879FF" class="pulse-dot" style="offset-path:path('M 130 168 L 185 168 L 295 160 L 350 110'); offset-rotate:0deg;"/>
+        <circle r="4" fill="#A64DFF" class="pulse-dot" style="offset-path:path('M 130 168 L 185 168 L 295 160 L 350 110'); offset-rotate:0deg;"/>
       </svg>
     </div>
   </div>

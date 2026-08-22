@@ -1,12 +1,14 @@
 # Nodal Systems — design tokens
 
-Dark + purple identity, shared by `index.html` and `machines.html`.
+Huemint-derived brand palette (dark warm charcoal + electric purple +
+maroon-brown + crimson), shared by `index.html` and `machines.html`.
 
-- Ground `#0E0A17` (violet-black) · Panel `#161022` · Lines `#332853` / `#251C3C`
-- Ink `#EDE9F8` · Muted `#A69DC2` · Faint `#6E6390`
-- Accent `#A879FF` (violet) · Accent dim `#7C4FE0` · Secondary lavender `#8E7BC0`
+- Ground `#3F3734` (dark warm charcoal) · Panel `#452F35` / `#4C343B` (maroon-brown)
+- Lines `#614E50` / `#544245`
+- Ink `#F6F0EC` · Muted `#CFBEB9` · Faint `#9C8B86`
+- Accent purple `#A64DFF` (bright `#BD7DFF`, dim `#8318E0`) — structure: eyebrows, tier names, borders, diagram
+- Accent crimson `#E62A5B` (hover `#F04C74`, small-text `#F2688B`) — action: primary buttons, flags, live dot
 - Type: Big Shoulders (display) · Archivo (body) · IBM Plex Mono (labels/specs)
 
 Pricing model: hardware one-time (Core $3,450 / Forge $7,900 / Atlas $16,500)
-plus the ongoing Nodal OS subscription from $149/mo (routing software +
-model library updates + monitoring + support).
+plus the ongoing Nodal OS subscription (Core $149 / Forge $199 / Atlas $299 per month).
