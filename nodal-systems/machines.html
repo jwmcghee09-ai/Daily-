@@ -309,6 +309,37 @@
   }
   .tailor-note strong{ color:var(--ink); }
 
+
+  /* ── centered treatment ── */
+  header.page-hero{ text-align:center; }
+  header.page-hero .eyebrow{ justify-content:center; }
+  header.page-hero .eyebrow::after{
+    content:"";
+    width:22px; height:1px;
+    background:var(--violet-dim);
+    display:inline-block;
+  }
+  header.page-hero .lede{ margin-left:auto; margin-right:auto; }
+  .jump{ justify-content:center; }
+
+  #compare > .wrap > .eyebrow{ justify-content:center; }
+  #compare > .wrap > .eyebrow::after{
+    content:"";
+    width:22px; height:1px;
+    background:var(--violet-dim);
+    display:inline-block;
+  }
+  #compare > .wrap > h2{ text-align:center; }
+  .tailor-note{ margin-left:auto; margin-right:auto; text-align:center; border-left:1px solid var(--line); border-top:2px solid var(--violet-bright); }
+
+  .cta-block{
+    flex-direction:column;
+    text-align:center;
+    align-items:center;
+  }
+  .cta-block .eyebrow{ justify-content:center; }
+  .cta-block p{ margin-left:auto; margin-right:auto; }
+
   /* ── CTA / footer ── */
   .cta-block{
     border:1px solid var(--violet-dim);

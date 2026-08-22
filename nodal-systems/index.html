@@ -444,6 +444,32 @@
   .foot-inner a{ text-decoration:none; }
   .foot-inner a:hover{ color:var(--ink); }
 
+
+  /* ── centered section treatment ── */
+  .centered > .wrap > .eyebrow{ justify-content:center; }
+  .centered .eyebrow::after{
+    content:"";
+    width:22px; height:1px;
+    background:var(--violet-dim);
+    display:inline-block;
+  }
+  .centered > .wrap > h2{ text-align:center; }
+  .centered > .wrap > .lede{ text-align:center; margin-left:auto; margin-right:auto; }
+
+  .strip-cell{ text-align:center; }
+  .strip-cell .cell-icon svg{ margin:0 auto; }
+  .step{ text-align:center; }
+  .faq{ margin-left:auto; margin-right:auto; }
+  .machines-cta{ text-align:center; }
+
+  .cta-block{
+    flex-direction:column;
+    text-align:center;
+    align-items:center;
+  }
+  .cta-block .eyebrow{ justify-content:center; }
+  .cta-block p{ margin-left:auto; margin-right:auto; }
+
   /* diagram animation */
   .pulse-dot{ animation:travel 4s linear infinite; }
   @keyframes travel{
@@ -542,7 +568,7 @@
   </div>
 </header>
 
-<section id="why">
+<section id="why" class="centered">
   <div class="wrap">
     <p class="eyebrow">Why local</p>
     <h2>The cloud reads your mail.<br>Your server doesn't.</h2>
@@ -650,7 +676,7 @@
   </div>
 </section>
 
-<section id="machines">
+<section id="machines" class="centered">
   <div class="wrap">
     <p class="eyebrow">The hardware</p>
     <h2>Three machines.<br>Fitted to your business.</h2>
@@ -701,7 +727,7 @@
   </div>
 </section>
 
-<section id="process">
+<section id="process" class="centered">
   <div class="wrap">
     <p class="eyebrow">The process</p>
     <h2>Tailored, then installed.<br>By us, in person.</h2>
@@ -730,7 +756,7 @@
   </div>
 </section>
 
-<section id="pricing">
+<section id="pricing" class="centered">
   <div class="wrap">
     <p class="eyebrow">Pricing model</p>
     <h2>Buy the machine once.<br>Keep it smart monthly.</h2>
@@ -768,7 +794,7 @@
   </div>
 </section>
 
-<section id="faq">
+<section id="faq" class="centered">
   <div class="wrap">
     <p class="eyebrow">Questions</p>
     <h2>Asked often</h2>
