@@ -42,7 +42,7 @@
     color:var(--ink);
     font-family:var(--body);
     font-size:16px;
-    line-height:1.6;
+    line-height:1.7;
     -webkit-font-smoothing:antialiased;
   }
 
@@ -77,11 +77,11 @@
     font-weight:600;
     text-transform:uppercase;
     letter-spacing:.01em;
-    margin:14px 0 18px;
+    margin:20px 0 26px;
   }
   .lede{ color:var(--muted); max-width:60ch; }
 
-  section{ padding:88px 0; border-top:1px solid var(--line-soft); }
+  section{ padding:130px 0; border-top:1px solid var(--line-soft); }
 
   /* centered section treatment */
   .centered > .wrap > .eyebrow{ justify-content:center; }
@@ -93,7 +93,7 @@
   }
   .centered > .wrap > h2{ text-align:center; }
   .centered > .wrap > .lede{ text-align:center; margin-left:auto; margin-right:auto; }
-  .section-go{ text-align:center; margin-top:36px; }
+  .section-go{ text-align:center; margin-top:52px; }
 
   /* ── nav ── */
   nav{
@@ -141,11 +141,13 @@
 
   /* ── hero ── */
   header.hero{
-    padding:96px 0 88px;
+    padding:130px 0 120px;
     border-top:none;
     background:
-      radial-gradient(ellipse 60% 50% at 75% 10%, rgba(136,15,235,.14), transparent 70%),
+      radial-gradient(ellipse 60% 50% at 75% 10%, rgba(136,15,235,.16), transparent 70%),
+      radial-gradient(rgba(136,15,235,.10) 1px, transparent 1.6px),
       var(--ground);
+    background-size:auto, 28px 28px, auto;
   }
   .hero-grid{
     display:grid;
@@ -181,7 +183,7 @@
   .btn-ghost:hover{ border-color:var(--steel); }
 
   .hero-stats{
-    display:flex; gap:36px; margin-top:44px; flex-wrap:wrap;
+    display:flex; gap:36px; margin-top:60px; flex-wrap:wrap;
   }
   .stat .num{
     font-family:var(--display); font-weight:600;
@@ -216,12 +218,12 @@
     gap:1px;
     background:var(--line-soft);
     border:1px solid var(--line-soft);
-    margin-top:44px;
+    margin-top:60px;
   }
   @media (max-width:820px){ .strip{ grid-template-columns:1fr; } }
   .strip-cell{
     background:var(--panel);
-    padding:30px 28px;
+    padding:44px 34px;
     text-align:center;
   }
   .strip-cell h3{
@@ -239,14 +241,14 @@
   .soft-grid{
     display:grid;
     grid-template-columns:repeat(2, 1fr);
-    gap:24px;
-    margin-top:44px;
+    gap:32px;
+    margin-top:60px;
   }
   @media (max-width:820px){ .soft-grid{ grid-template-columns:1fr; } }
   .soft-card{
     border:1px solid var(--line);
     background:var(--panel);
-    padding:28px 26px;
+    padding:38px 32px;
   }
   .soft-card .sc-tag{
     font-family:var(--mono); font-size:11px;
@@ -264,14 +266,14 @@
   .teasers{
     display:grid;
     grid-template-columns:repeat(3, 1fr);
-    gap:24px;
-    margin-top:44px;
+    gap:32px;
+    margin-top:60px;
   }
   @media (max-width:920px){ .teasers{ grid-template-columns:1fr; max-width:520px; margin-left:auto; margin-right:auto; } }
   .teaser{
     border:1px solid var(--line);
     background:var(--panel);
-    padding:28px 26px;
+    padding:38px 32px;
     text-decoration:none;
     display:flex; flex-direction:column; gap:14px;
     transition:border-color .2s ease, transform .2s ease;
@@ -309,14 +311,14 @@
   .price-split{
     display:grid;
     grid-template-columns:1fr 1fr;
-    gap:24px;
-    margin-top:44px;
+    gap:32px;
+    margin-top:60px;
   }
   @media (max-width:820px){ .price-split{ grid-template-columns:1fr; } }
   .price-card{
     border:1px solid var(--line);
     background:var(--panel);
-    padding:34px 32px;
+    padding:44px 40px;
   }
   .price-card.sub{ border-color:var(--violet-dim); background:var(--panel-2); }
   .price-card .kind{
@@ -386,6 +388,11 @@
   .foot-inner a{ text-decoration:none; }
   .foot-inner a:hover{ color:var(--ink); }
 
+  .t-glyph{ color:var(--violet-bright); }
+  .t-glyph svg{ display:block; }
+  .soft-card .sc-icon{ color:var(--violet-bright); margin-bottom:16px; }
+  .soft-card .sc-icon svg{ display:block; }
+
   /* diagram animation */
   .pulse-dot{ animation:travel 4s linear infinite; }
   @keyframes travel{
@@ -417,10 +424,9 @@
       <p class="eyebrow">Local AI infrastructure, built to order</p>
       <h1>Your AI.<br>Your building.<br><span class="accent">Your data.</span></h1>
       <p class="hero-sub">
-        Nodal Systems builds, tailors, and installs local AI servers for small
-        businesses. A library of AI models lives on fast NVMe storage inside
-        your own machine — our routing software picks the right one for each
-        task and loads it in seconds. Nothing leaves your walls.
+        We build and install private AI servers, tailored to your business.
+        A library of AI models lives inside your machine — our software loads
+        the right one for each task. Nothing leaves your walls.
       </p>
       <div class="hero-ctas">
         <a class="btn btn-primary" href="contact.html">Book a free consult</a>
@@ -489,9 +495,8 @@
     <p class="eyebrow">Security</p>
     <h2>Security isn't a feature here.<br>It's the architecture.</h2>
     <p class="lede">
-      Cloud AI means sending customer records, contracts, and pricing to
-      someone else's computer. A Nodal server removes that risk at the root:
-      the intelligence lives in your building, and your data never leaves it.
+      Cloud AI runs on someone else's computer. A Nodal server keeps the
+      intelligence — and your data — inside your building.
     </p>
     <div class="strip">
       <div class="strip-cell">
@@ -502,7 +507,7 @@
           </svg>
         </div>
         <h3>Private by physics</h3>
-        <p>Prompts, documents, and answers never cross the internet. There is no vendor to trust and no transit to intercept — the data simply doesn't leave.</p>
+        <p>Your documents and questions never cross the internet — there's nothing to intercept.</p>
       </div>
       <div class="strip-cell">
         <div class="cell-icon" aria-hidden="true">
@@ -512,7 +517,7 @@
           </svg>
         </div>
         <h3>No third-party eyes</h3>
-        <p>No cloud provider logs your usage, no AI company trains on your files, no subpoena to a data centre can touch what's stored on your own machine.</p>
+        <p>No provider logs your usage. No AI company trains on your files.</p>
       </div>
       <div class="strip-cell">
         <div class="cell-icon" aria-hidden="true">
@@ -522,7 +527,7 @@
           </svg>
         </div>
         <h3>Works offline</h3>
-        <p>The system runs with the network cable unplugged. Internet outages, provider downtime, and model deprecations can't stop your team working.</p>
+        <p>Runs with the network cable unplugged. Outages can't stop your team.</p>
       </div>
       <div class="strip-cell">
         <div class="cell-icon" aria-hidden="true">
@@ -531,7 +536,7 @@
           </svg>
         </div>
         <h3>Encrypted at rest</h3>
-        <p>The NVMe drives holding your models and indexed documents are fully encrypted. A stolen drive is a brick, not a breach.</p>
+        <p>Fully encrypted drives. A stolen drive is a brick, not a breach.</p>
       </div>
       <div class="strip-cell">
         <div class="cell-icon" aria-hidden="true">
@@ -541,7 +546,7 @@
           </svg>
         </div>
         <h3>Per-user access</h3>
-        <p>Local accounts for each staff member, with controls over who can query which documents. Payroll stays with the people who should see payroll.</p>
+        <p>Each staff member sees only the documents they should.</p>
       </div>
       <div class="strip-cell">
         <div class="cell-icon" aria-hidden="true">
@@ -553,7 +558,7 @@
           </svg>
         </div>
         <h3>Compliance-friendly</h3>
-        <p>Client confidentiality, health records, financial data — keeping processing on-premise makes the privacy conversation with your regulator a short one.</p>
+        <p>On-premise processing keeps confidential records where the rules expect them.</p>
       </div>
     </div>
   </div>
@@ -564,31 +569,33 @@
     <p class="eyebrow">The software</p>
     <h2>One box. Many minds.</h2>
     <p class="lede">
-      Nodal OS keeps a library of specialised AI models parked on NVMe drives
-      inside your server. When a task comes in, it picks the model built for
-      that job and loads it in seconds — your team just asks, and the right
-      specialist answers.
+      A library of specialist AI models lives on your server. Nodal OS
+      loads the right one for each task, in seconds.
     </p>
     <div class="soft-grid">
       <div class="soft-card">
+        <div class="sc-icon" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="9" width="22" height="9"/><path d="M7 18v4M11 18v4M15 18v4M19 18v4"/><circle cx="21.5" cy="13.5" r="1.3" fill="currentColor" stroke="none"/></svg></div>
         <p class="sc-tag">01 · Library</p>
         <h3>Models on NVMe</h3>
-        <p>Chat, writing, document Q&amp;A, code, vision, translation — a curated set of local models stored at full speed on your drives, sized to your machine.</p>
+        <p>Chat, writing, documents, code, vision — a curated set of specialists stored on your drives.</p>
       </div>
       <div class="soft-card">
+        <div class="sc-icon" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 14h8M11 14L24 5M11 14h13M11 14L24 23"/><circle cx="11" cy="14" r="2"/></svg></div>
         <p class="sc-tag">02 · Router</p>
         <h3>Task-aware routing</h3>
-        <p>The router reads each request, classifies the kind of work, and hot-loads the best model from the library. Nobody on your team ever picks a model.</p>
+        <p>Every request is matched to the best model automatically. Nobody picks a model.</p>
       </div>
       <div class="soft-card">
+        <div class="sc-icon" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="6" y="3" width="16" height="22"/><path d="M10 9h8M10 13h8"/><path d="M10 19l2.5 2.5L18 16"/></svg></div>
         <p class="sc-tag">03 · Your data</p>
         <h3>Tuned to your business</h3>
-        <p>During install we index your documents, price lists, and templates on the machine itself — answers come back in your voice, with your facts.</p>
+        <p>We index your documents at install — answers come back with your facts, in your voice.</p>
       </div>
       <div class="soft-card">
+        <div class="sc-icon" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22.5 14a8.5 8.5 0 1 1-2.5-6"/><path d="M22.5 3.5v5h-5"/></svg></div>
         <p class="sc-tag">04 · Ongoing</p>
         <h3>Alive via subscription</h3>
-        <p>The ongoing Nodal OS fee keeps the library current: new and improved models arrive monthly, tested and tuned by us before they reach your drive.</p>
+        <p>New models arrive monthly with the subscription, tested by us first.</p>
       </div>
     </div>
     <div class="section-go">
@@ -602,13 +609,12 @@
     <p class="eyebrow">The systems</p>
     <h2>Three machines.<br>Fitted to your business.</h2>
     <p class="lede">
-      Every build starts from one of three platforms — Core, Forge, or Atlas —
-      then we tailor storage, memory, and the model library to the work your
-      business actually does. Full spec sheets live on the systems page.
+      Three platforms — tailored to your team's size and work.
     </p>
 
     <div class="teasers">
       <a class="teaser" href="machines.html#core">
+        <span class="t-glyph" aria-hidden="true"><svg width="44" height="44" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="6" y="13" width="28" height="14"/><path d="M10 17h9M10 20h9M10 23h9"/><circle cx="29" cy="20" r="1.6" fill="currentColor" stroke="none"/></svg></span>
         <span class="teaser-code">NS-01</span>
         <span class="teaser-name">Core</span>
         <span class="teaser-tag">The essentials, done privately. For sole traders and small offices.</span>
@@ -620,6 +626,7 @@
         <span class="teaser-go">Full spec →</span>
       </a>
       <a class="teaser" href="machines.html#forge">
+        <span class="t-glyph" aria-hidden="true"><svg width="44" height="44" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="13" y="5" width="14" height="30"/><path d="M16 10h8M16 13h8M16 16h8"/><circle cx="20" cy="29" r="1.6" fill="currentColor" stroke="none"/></svg></span>
         <span class="teaser-code">NS-02</span>
         <span class="teaser-name">Forge</span>
         <span class="teaser-tag">Serious throughput for a working team of five to twenty.</span>
@@ -631,6 +638,7 @@
         <span class="teaser-go">Full spec →</span>
       </a>
       <a class="teaser" href="machines.html#atlas">
+        <span class="t-glyph" aria-hidden="true"><svg width="44" height="44" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="9" width="30" height="10"/><rect x="5" y="21" width="30" height="10"/><path d="M9 14h11M9 26h11"/><circle cx="30" cy="14" r="1.6" fill="currentColor" stroke="none"/><circle cx="30" cy="26" r="1.6" fill="currentColor" stroke="none"/></svg></span>
         <span class="teaser-code">NS-03</span>
         <span class="teaser-name">Atlas</span>
         <span class="teaser-tag">Carries everything, all at once. For businesses running AI all day.</span>
@@ -653,16 +661,15 @@
     <p class="eyebrow">Pricing model</p>
     <h2>Buy the machine once.<br>Keep it smart monthly.</h2>
     <p class="lede">
-      Two parts, always: a one-time price for the hardware, and the ongoing
-      Nodal OS subscription that keeps the intelligence on it current. The
-      machine is yours; the software fee is what keeps it getting smarter.
+      Own the hardware outright. The ongoing Nodal OS subscription keeps it
+      getting smarter.
     </p>
     <div class="price-split">
       <div class="price-card">
         <p class="kind">One-time</p>
         <h3>The machine</h3>
         <p class="figure">$3,450 Core · $7,900 Forge · $16,500 Atlas</p>
-        <p>Built to your spec, delivered, and installed on site. You own it — no lease, no lock-in on the hardware.</p>
+        <p>Built to your spec, delivered, installed. Yours outright.</p>
         <ul>
           <li>Consultation and tailored configuration</li>
           <li>On-site installation and network setup</li>
@@ -674,7 +681,7 @@
         <p class="kind">Ongoing — monthly</p>
         <h3>Nodal OS</h3>
         <p class="figure">$149 Core · $199 Forge · $299 Atlas</p>
-        <p>The routing software and the living model library on your NVMe drives. Unlimited use, whole team, one flat ongoing fee.</p>
+        <p>The routing software and living model library. Whole team, flat fee.</p>
         <ul>
           <li>Task-aware model routing, unlimited requests</li>
           <li>Monthly model library updates, tested by us</li>
@@ -692,7 +699,7 @@
       <div>
         <p class="eyebrow">Get started</p>
         <h2>Talk to a human</h2>
-        <p>Tell us what your team does all day. We'll tell you which machine fits, what it costs, and what it will take off your plate — no obligation.</p>
+        <p>Tell us what your team does all day. We'll tell you which machine fits — no obligation.</p>
       </div>
       <a class="btn btn-primary" href="contact.html">Contact us →</a>
     </div>
