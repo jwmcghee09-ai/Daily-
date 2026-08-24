@@ -300,6 +300,50 @@
   }
   .foot-inner a{ text-decoration:none; }
   .foot-inner a:hover{ color:var(--ink); }
+
+  /* ── scroll reveal ── */
+  .reveal{
+    opacity:0;
+    transform:translateY(26px);
+    transition:opacity .7s cubic-bezier(.22,.61,.36,1), transform .7s cubic-bezier(.22,.61,.36,1);
+    will-change:opacity, transform;
+  }
+  .reveal.seen{ opacity:1; transform:none; }
+  .reveal.d1{ transition-delay:.08s; }
+  .reveal.d2{ transition-delay:.16s; }
+  .reveal.d3{ transition-delay:.24s; }
+  .reveal.d4{ transition-delay:.32s; }
+  .reveal.d5{ transition-delay:.40s; }
+  html.no-motion .reveal{ opacity:1; transform:none; transition:none; }
+  @media (prefers-reduced-motion: reduce){
+    .reveal{ opacity:1 !important; transform:none !important; transition:none !important; }
+  }
+
+  /* ── hero entrance ── */
+  @keyframes riseIn{ from{ opacity:0; transform:translateY(22px);} to{ opacity:1; transform:none; } }
+  html.no-motion .hero-anim{ animation:none !important; opacity:1 !important; }
+  .hero-anim{ animation:riseIn .8s cubic-bezier(.22,.61,.36,1) both; }
+  .hero-anim.h1{ animation-delay:.05s; }
+  .hero-anim.h2{ animation-delay:.15s; }
+  .hero-anim.h3{ animation-delay:.25s; }
+  .hero-anim.h4{ animation-delay:.35s; }
+  .hero-anim.h5{ animation-delay:.45s; }
+  @media (prefers-reduced-motion: reduce){ .hero-anim{ animation:none !important; opacity:1 !important; } }
+
+  /* ── photo slots (see images/README.md) ── */
+  .photo{
+    display:block;
+    width:100%;
+    height:auto;
+    border:1px solid var(--line);
+    margin-top:56px;
+  }
+  .photo-cap{
+    text-align:center;
+    font-family:var(--mono); font-size:11.5px;
+    color:var(--faint);
+    margin-top:14px;
+  }
 </style>
 
 <nav>
@@ -318,9 +362,9 @@
 <header class="page-hero">
   <div class="wrap">
     <p class="crumb"><a href="index.html">Nodal Systems</a> / contact</p>
-    <p class="eyebrow">Contact</p>
-    <h1>Talk to <span class="accent">a human.</span></h1>
-    <p class="lede">
+    <p class="eyebrow hero-anim h1">Contact</p>
+    <h1 class="hero-anim h2">Talk to <span class="accent">a human.</span></h1>
+    <p class="lede hero-anim h3">
       No sales funnel, no chatbot gatekeeper. Tell us what your team does —
       we'll tell you which machine fits.
     </p>
@@ -439,6 +483,52 @@
     window.location.href = "mailto:hello@nodalsystems.example?subject=" +
       encodeURIComponent(subject) + "&body=" + encodeURIComponent(body);
   });
+</script>
+
+<script>
+(function(){
+  var root = document.documentElement;
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduce || !("IntersectionObserver" in window)) { root.classList.add("no-motion"); return; }
+
+  // Elements that animate in, with staggered delays inside each group.
+  var groups = [
+    ".cap", ".strip-cell", ".soft-card", ".teaser", ".step",
+    ".price-card", ".sub-card", ".lib-cell", ".ground-card",
+    ".own", ".road", ".layer", ".pipeline-row", ".sheet",
+    ".contact-card", "form.contact-form", ".cta-block",
+    "section > .wrap > .eyebrow", "section > .wrap > h2",
+    "section > .wrap > .lede", ".compare-scroll", ".tailor-note", ".faq"
+  ];
+  var seen = new Set();
+  groups.forEach(function(sel){
+    var nodes = document.querySelectorAll(sel);
+    var i = 0;
+    nodes.forEach(function(el){
+      if (seen.has(el)) return;
+      seen.add(el);
+      el.classList.add("reveal");
+      var d = (i % 5) + 1;
+      if (el.parentElement && el.parentElement.children.length > 1) el.classList.add("d" + d);
+      i++;
+    });
+  });
+
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if (e.isIntersecting){ e.target.classList.add("seen"); io.unobserve(e.target); }
+    });
+  }, { rootMargin: "0px 0px -8% 0px", threshold: 0.06 });
+
+  document.querySelectorAll(".reveal").forEach(function(el){ io.observe(el); });
+
+  // Anything already in view on load reveals immediately.
+  requestAnimationFrame(function(){
+    document.querySelectorAll(".reveal").forEach(function(el){
+      if (el.getBoundingClientRect().top < window.innerHeight) el.classList.add("seen");
+    });
+  });
+})();
 </script>
 </body>
 </html>

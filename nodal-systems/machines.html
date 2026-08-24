@@ -208,8 +208,8 @@
     display:flex; flex-direction:column;
   }
   @media (max-width:860px){ .sheet-intro{ border-right:none; border-bottom:1px solid var(--line-soft); } }
-  .sheet-glyph{ color:var(--violet-bright); margin-bottom:18px; }
-  .sheet-glyph svg{ display:block; }
+  .sheet-glyph{ margin:0 0 20px; }
+  .sheet-glyph svg.render{ display:block; width:100%; max-width:300px; height:auto; }
   .sheet-code{
     font-family:var(--mono); font-size:11px;
     letter-spacing:.16em; text-transform:uppercase;
@@ -400,6 +400,50 @@
   }
   .foot-inner a{ text-decoration:none; }
   .foot-inner a:hover{ color:var(--ink); }
+
+  /* ── scroll reveal ── */
+  .reveal{
+    opacity:0;
+    transform:translateY(26px);
+    transition:opacity .7s cubic-bezier(.22,.61,.36,1), transform .7s cubic-bezier(.22,.61,.36,1);
+    will-change:opacity, transform;
+  }
+  .reveal.seen{ opacity:1; transform:none; }
+  .reveal.d1{ transition-delay:.08s; }
+  .reveal.d2{ transition-delay:.16s; }
+  .reveal.d3{ transition-delay:.24s; }
+  .reveal.d4{ transition-delay:.32s; }
+  .reveal.d5{ transition-delay:.40s; }
+  html.no-motion .reveal{ opacity:1; transform:none; transition:none; }
+  @media (prefers-reduced-motion: reduce){
+    .reveal{ opacity:1 !important; transform:none !important; transition:none !important; }
+  }
+
+  /* ── hero entrance ── */
+  @keyframes riseIn{ from{ opacity:0; transform:translateY(22px);} to{ opacity:1; transform:none; } }
+  html.no-motion .hero-anim{ animation:none !important; opacity:1 !important; }
+  .hero-anim{ animation:riseIn .8s cubic-bezier(.22,.61,.36,1) both; }
+  .hero-anim.h1{ animation-delay:.05s; }
+  .hero-anim.h2{ animation-delay:.15s; }
+  .hero-anim.h3{ animation-delay:.25s; }
+  .hero-anim.h4{ animation-delay:.35s; }
+  .hero-anim.h5{ animation-delay:.45s; }
+  @media (prefers-reduced-motion: reduce){ .hero-anim{ animation:none !important; opacity:1 !important; } }
+
+  /* ── photo slots (see images/README.md) ── */
+  .photo{
+    display:block;
+    width:100%;
+    height:auto;
+    border:1px solid var(--line);
+    margin-top:56px;
+  }
+  .photo-cap{
+    text-align:center;
+    font-family:var(--mono); font-size:11.5px;
+    color:var(--faint);
+    margin-top:14px;
+  }
 </style>
 
 <nav>
@@ -419,14 +463,14 @@
 <header class="page-hero">
   <div class="wrap">
     <p class="crumb"><a href="index.html">Nodal Systems</a> / machines</p>
-    <p class="eyebrow">The hardware</p>
-    <h1>Three machines.<br><span class="accent">One of them is yours.</span></h1>
-    <p class="lede">
+    <p class="eyebrow hero-anim h1">The hardware</p>
+    <h1 class="hero-anim h2">Three machines.<br><span class="accent">One of them is yours.</span></h1>
+    <p class="lede hero-anim h3">
       Every server starts from one of three platforms, then gets tailored
       to your business. Price is the machine once, plus the ongoing
       Nodal OS subscription.
     </p>
-    <div class="jump">
+    <div class="jump hero-anim h4">
       <a href="#core"><b>Core</b> — NS-01</a>
       <a href="#forge"><b>Forge</b> — NS-02</a>
       <a href="#atlas"><b>Atlas</b> — NS-03</a>
@@ -440,7 +484,7 @@
   <div class="wrap">
     <article class="sheet">
       <div class="sheet-intro">
-        <span class="sheet-glyph" aria-hidden="true"><svg width="56" height="56" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="6" y="13" width="28" height="14"/><path d="M10 17h9M10 20h9M10 23h9"/><circle cx="29" cy="20" r="1.6" fill="currentColor" stroke="none"/></svg></span>
+        <span class="sheet-glyph" aria-hidden="true"><svg viewBox="0 0 300 230" fill="none" xmlns="http://www.w3.org/2000/svg" class="render" aria-hidden="true"><defs><radialGradient id="g_core" cx="50%" cy="45%" r="60%"><stop offset="0" stop-color="#880FEB" stop-opacity=".26"/><stop offset="1" stop-color="#880FEB" stop-opacity="0"/></radialGradient><linearGradient id="f_core" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2E2222"/><stop offset="1" stop-color="#1A1313"/></linearGradient></defs><rect width="300" height="230" fill="url(#g_core)"/><polygon points="48,72 78,52 228,52 198,72" fill="#3A2B2B" stroke="#523D3D" stroke-width="1.2"/><polygon points="198,72 228,52 228,144 198,164" fill="#241B1B" stroke="#523D3D" stroke-width="1.2"/><polygon points="48,72 198,72 198,164 48,164" fill="url(#f_core)" stroke="#6B5252" stroke-width="1.4"/><line x1="62" y1="108" x2="184" y2="108" stroke="#4A3838" stroke-width="2" stroke-linecap="round"/><line x1="62" y1="115" x2="184" y2="115" stroke="#4A3838" stroke-width="2" stroke-linecap="round"/><line x1="62" y1="122" x2="184" y2="122" stroke="#4A3838" stroke-width="2" stroke-linecap="round"/><line x1="62" y1="129" x2="184" y2="129" stroke="#4A3838" stroke-width="2" stroke-linecap="round"/><line x1="62" y1="136" x2="184" y2="136" stroke="#4A3838" stroke-width="2" stroke-linecap="round"/><line x1="62" y1="143" x2="184" y2="143" stroke="#4A3838" stroke-width="2" stroke-linecap="round"/><circle cx="176" cy="92" r="8.84" fill="#A855F7" opacity=".18"/><circle cx="176" cy="92" r="3.4" fill="#A855F7"/><rect x="60" y="80" width="34" height="9" fill="none" stroke="#6B5252" stroke-width="1.2"/></svg></span>
         <span class="sheet-code">NS-01 · Compact desktop</span>
         <h2 class="sheet-name">Core</h2>
         <p class="sheet-tag">The essentials, done privately. A whisper-quiet box that sits under a desk and quietly takes the busywork.</p>
@@ -483,7 +527,7 @@
     <article class="sheet featured">
       <span class="flag">Most fitted</span>
       <div class="sheet-intro">
-        <span class="sheet-glyph" aria-hidden="true"><svg width="56" height="56" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="13" y="5" width="14" height="30"/><path d="M16 10h8M16 13h8M16 16h8"/><circle cx="20" cy="29" r="1.6" fill="currentColor" stroke="none"/></svg></span>
+        <span class="sheet-glyph" aria-hidden="true"><svg viewBox="0 0 300 230" fill="none" xmlns="http://www.w3.org/2000/svg" class="render" aria-hidden="true"><defs><radialGradient id="g_forge" cx="50%" cy="45%" r="60%"><stop offset="0" stop-color="#880FEB" stop-opacity=".26"/><stop offset="1" stop-color="#880FEB" stop-opacity="0"/></radialGradient><linearGradient id="f_forge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2E2222"/><stop offset="1" stop-color="#1A1313"/></linearGradient></defs><rect width="300" height="230" fill="url(#g_forge)"/><polygon points="72,46 102,26 198,26 168,46" fill="#3A2B2B" stroke="#523D3D" stroke-width="1.2"/><polygon points="168,46 198,26 198,176 168,196" fill="#241B1B" stroke="#523D3D" stroke-width="1.2"/><polygon points="72,46 168,46 168,196 72,196" fill="url(#f_forge)" stroke="#6B5252" stroke-width="1.4"/><line x1="86" y1="74" x2="154" y2="74" stroke="#4A3838" stroke-width="2" stroke-linecap="round"/><line x1="86" y1="82" x2="154" y2="82" stroke="#4A3838" stroke-width="2" stroke-linecap="round"/><line x1="86" y1="90" x2="154" y2="90" stroke="#4A3838" stroke-width="2" stroke-linecap="round"/><line x1="86" y1="98" x2="154" y2="98" stroke="#4A3838" stroke-width="2" stroke-linecap="round"/><line x1="86" y1="106" x2="154" y2="106" stroke="#4A3838" stroke-width="2" stroke-linecap="round"/><line x1="86" y1="114" x2="154" y2="114" stroke="#4A3838" stroke-width="2" stroke-linecap="round"/><line x1="86" y1="122" x2="154" y2="122" stroke="#4A3838" stroke-width="2" stroke-linecap="round"/><line x1="86" y1="130" x2="154" y2="130" stroke="#4A3838" stroke-width="2" stroke-linecap="round"/><line x1="86" y1="138" x2="154" y2="138" stroke="#4A3838" stroke-width="2" stroke-linecap="round"/><line x1="86" y1="150" x2="154" y2="150" stroke="#4A3838" stroke-width="2" stroke-linecap="round"/><line x1="86" y1="158" x2="154" y2="158" stroke="#4A3838" stroke-width="2" stroke-linecap="round"/><line x1="86" y1="166" x2="154" y2="166" stroke="#4A3838" stroke-width="2" stroke-linecap="round"/><line x1="86" y1="174" x2="154" y2="174" stroke="#4A3838" stroke-width="2" stroke-linecap="round"/><line x1="86" y1="182" x2="154" y2="182" stroke="#4A3838" stroke-width="2" stroke-linecap="round"/><circle cx="150" cy="60" r="8.84" fill="#A855F7" opacity=".18"/><circle cx="150" cy="60" r="3.4" fill="#A855F7"/><circle cx="140" cy="60" r="6.760000000000001" fill="#EF537A" opacity=".18"/><circle cx="140" cy="60" r="2.6" fill="#EF537A"/><rect x="84" y="126" width="42" height="10" fill="none" stroke="#6B5252" stroke-width="1.2"/></svg></span>
         <span class="sheet-code">NS-02 · Tower or short rack</span>
         <h2 class="sheet-name">Forge</h2>
         <p class="sheet-tag">Serious throughput for a working team. Big enough for your whole document archive, fast enough that nobody waits.</p>
@@ -525,7 +569,7 @@
   <div class="wrap">
     <article class="sheet">
       <div class="sheet-intro">
-        <span class="sheet-glyph" aria-hidden="true"><svg width="56" height="56" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="9" width="30" height="10"/><rect x="5" y="21" width="30" height="10"/><path d="M9 14h11M9 26h11"/><circle cx="30" cy="14" r="1.6" fill="currentColor" stroke="none"/><circle cx="30" cy="26" r="1.6" fill="currentColor" stroke="none"/></svg></span>
+        <span class="sheet-glyph" aria-hidden="true"><svg viewBox="0 0 300 230" fill="none" xmlns="http://www.w3.org/2000/svg" class="render" aria-hidden="true"><defs><radialGradient id="g_atlas" cx="50%" cy="45%" r="60%"><stop offset="0" stop-color="#880FEB" stop-opacity=".26"/><stop offset="1" stop-color="#880FEB" stop-opacity="0"/></radialGradient><linearGradient id="f_atlas" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2E2222"/><stop offset="1" stop-color="#1A1313"/></linearGradient></defs><rect width="300" height="230" fill="url(#g_atlas)"/><polygon points="48,76 78,56 238,56 208,76" fill="#3A2B2B" stroke="#523D3D" stroke-width="1.2"/><polygon points="208,76 238,56 238,114 208,134" fill="#241B1B" stroke="#523D3D" stroke-width="1.2"/><polygon points="48,76 208,76 208,134 48,134" fill="url(#f_atlas)" stroke="#6B5252" stroke-width="1.4"/><polygon points="48,146 78,126 238,126 208,146" fill="#3A2B2B" stroke="#523D3D" stroke-width="1.2"/><polygon points="208,146 238,126 238,184 208,204" fill="#241B1B" stroke="#523D3D" stroke-width="1.2"/><polygon points="48,146 208,146 208,204 48,204" fill="url(#f_atlas)" stroke="#6B5252" stroke-width="1.4"/><rect x="62" y="88" width="22" height="30" fill="none" stroke="#6B5252" stroke-width="1.2"/><rect x="88" y="88" width="22" height="30" fill="none" stroke="#6B5252" stroke-width="1.2"/><rect x="114" y="88" width="22" height="30" fill="none" stroke="#6B5252" stroke-width="1.2"/><rect x="140" y="88" width="22" height="30" fill="none" stroke="#6B5252" stroke-width="1.2"/><rect x="166" y="88" width="22" height="30" fill="none" stroke="#6B5252" stroke-width="1.2"/><circle cx="196" cy="92" r="8.84" fill="#A855F7" opacity=".18"/><circle cx="196" cy="92" r="3.4" fill="#A855F7"/><line x1="56" y1="103" x2="66" y2="103" stroke="#4A3838" stroke-width="3" stroke-linecap="round"/><rect x="62" y="158" width="22" height="30" fill="none" stroke="#6B5252" stroke-width="1.2"/><rect x="88" y="158" width="22" height="30" fill="none" stroke="#6B5252" stroke-width="1.2"/><rect x="114" y="158" width="22" height="30" fill="none" stroke="#6B5252" stroke-width="1.2"/><rect x="140" y="158" width="22" height="30" fill="none" stroke="#6B5252" stroke-width="1.2"/><rect x="166" y="158" width="22" height="30" fill="none" stroke="#6B5252" stroke-width="1.2"/><circle cx="196" cy="162" r="8.84" fill="#A855F7" opacity=".18"/><circle cx="196" cy="162" r="3.4" fill="#A855F7"/><line x1="56" y1="173" x2="66" y2="173" stroke="#4A3838" stroke-width="3" stroke-linecap="round"/></svg></span>
         <span class="sheet-code">NS-03 · Rack-mount, dual GPU</span>
         <h2 class="sheet-name">Atlas</h2>
         <p class="sheet-tag">Carries everything, all at once. Two GPUs means one model can stay hot while another loads — no queue, ever.</p>
@@ -654,5 +698,51 @@
     <p><a href="index.html">Home</a> · <a href="software.html">Software</a> · <a href="#compare">Compare</a> · <a href="contact.html">Contact</a></p>
   </div>
 </footer>
+
+<script>
+(function(){
+  var root = document.documentElement;
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduce || !("IntersectionObserver" in window)) { root.classList.add("no-motion"); return; }
+
+  // Elements that animate in, with staggered delays inside each group.
+  var groups = [
+    ".cap", ".strip-cell", ".soft-card", ".teaser", ".step",
+    ".price-card", ".sub-card", ".lib-cell", ".ground-card",
+    ".own", ".road", ".layer", ".pipeline-row", ".sheet",
+    ".contact-card", "form.contact-form", ".cta-block",
+    "section > .wrap > .eyebrow", "section > .wrap > h2",
+    "section > .wrap > .lede", ".compare-scroll", ".tailor-note", ".faq"
+  ];
+  var seen = new Set();
+  groups.forEach(function(sel){
+    var nodes = document.querySelectorAll(sel);
+    var i = 0;
+    nodes.forEach(function(el){
+      if (seen.has(el)) return;
+      seen.add(el);
+      el.classList.add("reveal");
+      var d = (i % 5) + 1;
+      if (el.parentElement && el.parentElement.children.length > 1) el.classList.add("d" + d);
+      i++;
+    });
+  });
+
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if (e.isIntersecting){ e.target.classList.add("seen"); io.unobserve(e.target); }
+    });
+  }, { rootMargin: "0px 0px -8% 0px", threshold: 0.06 });
+
+  document.querySelectorAll(".reveal").forEach(function(el){ io.observe(el); });
+
+  // Anything already in view on load reveals immediately.
+  requestAnimationFrame(function(){
+    document.querySelectorAll(".reveal").forEach(function(el){
+      if (el.getBoundingClientRect().top < window.innerHeight) el.classList.add("seen");
+    });
+  });
+})();
+</script>
 </body>
 </html>

@@ -351,6 +351,80 @@
   }
 
 
+
+  /* ── product UI mockup ── */
+  .ui-shot{
+    max-width:660px;
+    margin:56px auto 0;
+    border:1px solid var(--line);
+    background:var(--panel);
+    text-align:left;
+    box-shadow:0 30px 70px -30px rgba(136,15,235,.45);
+  }
+  .ui-chrome{
+    display:flex; align-items:center; gap:8px;
+    padding:12px 16px;
+    border-bottom:1px solid var(--line-soft);
+    background:var(--panel-2);
+  }
+  .ui-chrome .dot{
+    width:9px; height:9px; border-radius:50%;
+    background:var(--line); display:inline-block;
+  }
+  .ui-url{
+    font-family:var(--mono); font-size:11.5px;
+    color:var(--faint);
+    border:1px solid var(--line-soft);
+    padding:4px 14px;
+    margin-left:10px;
+    flex:1;
+  }
+  .ui-badge{
+    font-family:var(--mono); font-size:10px;
+    letter-spacing:.12em; text-transform:uppercase;
+    color:var(--violet-bright);
+  }
+  .ui-body{ padding:28px 26px; display:flex; flex-direction:column; gap:18px; }
+  .ui-who{
+    font-family:var(--mono); font-size:10px;
+    letter-spacing:.14em; text-transform:uppercase;
+    color:var(--faint);
+    display:block; margin-bottom:8px;
+  }
+  .ui-who-ai{ color:var(--violet-bright); }
+  .ui-ask{
+    border-left:2px solid var(--line);
+    padding:2px 0 2px 16px;
+  }
+  .ui-ask p{ color:var(--ink); font-size:15.5px; }
+  .ui-route{ display:flex; gap:8px; flex-wrap:wrap; }
+  .ui-chip{
+    font-family:var(--mono); font-size:10.5px;
+    letter-spacing:.06em;
+    color:var(--steel);
+    border:1px solid var(--line-soft);
+    padding:4px 10px;
+  }
+  .ui-answer{
+    border-left:2px solid var(--violet-dim);
+    padding:2px 0 2px 16px;
+  }
+  .ui-answer p{ color:var(--muted); font-size:15px; }
+  .ui-answer strong{ color:var(--ink); font-weight:600; }
+  .ui-sources{ display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; }
+  .ui-src{
+    font-family:var(--mono); font-size:10.5px;
+    color:var(--violet-bright);
+    border:1px solid var(--violet-dim);
+    padding:5px 10px;
+  }
+  .ui-cap{
+    text-align:center;
+    font-family:var(--mono); font-size:11.5px;
+    color:var(--faint);
+    margin-top:18px;
+  }
+
   /* ── stack diagram ── */
   .stack{
     max-width:620px;
@@ -473,6 +547,50 @@
   }
   .foot-inner a{ text-decoration:none; }
   .foot-inner a:hover{ color:var(--ink); }
+
+  /* ── scroll reveal ── */
+  .reveal{
+    opacity:0;
+    transform:translateY(26px);
+    transition:opacity .7s cubic-bezier(.22,.61,.36,1), transform .7s cubic-bezier(.22,.61,.36,1);
+    will-change:opacity, transform;
+  }
+  .reveal.seen{ opacity:1; transform:none; }
+  .reveal.d1{ transition-delay:.08s; }
+  .reveal.d2{ transition-delay:.16s; }
+  .reveal.d3{ transition-delay:.24s; }
+  .reveal.d4{ transition-delay:.32s; }
+  .reveal.d5{ transition-delay:.40s; }
+  html.no-motion .reveal{ opacity:1; transform:none; transition:none; }
+  @media (prefers-reduced-motion: reduce){
+    .reveal{ opacity:1 !important; transform:none !important; transition:none !important; }
+  }
+
+  /* ── hero entrance ── */
+  @keyframes riseIn{ from{ opacity:0; transform:translateY(22px);} to{ opacity:1; transform:none; } }
+  html.no-motion .hero-anim{ animation:none !important; opacity:1 !important; }
+  .hero-anim{ animation:riseIn .8s cubic-bezier(.22,.61,.36,1) both; }
+  .hero-anim.h1{ animation-delay:.05s; }
+  .hero-anim.h2{ animation-delay:.15s; }
+  .hero-anim.h3{ animation-delay:.25s; }
+  .hero-anim.h4{ animation-delay:.35s; }
+  .hero-anim.h5{ animation-delay:.45s; }
+  @media (prefers-reduced-motion: reduce){ .hero-anim{ animation:none !important; opacity:1 !important; } }
+
+  /* ── photo slots (see images/README.md) ── */
+  .photo{
+    display:block;
+    width:100%;
+    height:auto;
+    border:1px solid var(--line);
+    margin-top:56px;
+  }
+  .photo-cap{
+    text-align:center;
+    font-family:var(--mono); font-size:11.5px;
+    color:var(--faint);
+    margin-top:14px;
+  }
 </style>
 
 <nav>
@@ -492,13 +610,13 @@
 <header class="page-hero">
   <div class="wrap">
     <p class="crumb"><a href="index.html">Nodal Systems</a> / software</p>
-    <p class="eyebrow">The software</p>
-    <h1>Nodal OS.<br><span class="accent">One box, many minds.</span></h1>
-    <p class="lede">
+    <p class="eyebrow hero-anim h1">The software</p>
+    <h1 class="hero-anim h2">Nodal OS.<br><span class="accent">One box, many minds.</span></h1>
+    <p class="lede hero-anim h3">
       No single AI model is best at everything — so Nodal OS runs a library
       of specialists and loads the right one for each task. Here's how.
     </p>
-    <div class="jump">
+    <div class="jump hero-anim h4">
       <a href="#routing"><b>Routing</b> — how a task flows</a>
       <a href="#library"><b>Library</b> — what's on the drive</a>
       <a href="#stack"><b>Stack</b> — what's inside</a>
@@ -629,6 +747,35 @@
       At install we index your documents onto the machine. From then on the
       assistant answers out of your business, not out of the internet.
     </p>
+    <div class="ui-shot" role="img" aria-label="Mockup of the Nodal browser interface: a staff member asks about warranty terms and the assistant answers, citing the source document and showing which local model handled the task.">
+      <div class="ui-chrome">
+        <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        <span class="ui-url">nodal.local</span>
+        <span class="ui-badge">● on-premise</span>
+      </div>
+      <div class="ui-body">
+        <div class="ui-ask">
+          <span class="ui-who">Priya · Operations</span>
+          <p>What warranty did we agree on the Henderson job?</p>
+        </div>
+        <div class="ui-route">
+          <span class="ui-chip">routed → docs-qa · 24B</span>
+          <span class="ui-chip">loaded in 4.1s</span>
+        </div>
+        <div class="ui-answer">
+          <span class="ui-who ui-who-ai">Nodal</span>
+          <p>The Henderson contract specifies a <strong>24-month warranty</strong> on workmanship
+             and <strong>12 months</strong> on supplied fittings, starting from practical completion
+             on 14 March.</p>
+          <div class="ui-sources">
+            <span class="ui-src">Henderson_Contract_2026.pdf · p.4</span>
+            <span class="ui-src">Standard_Terms_v9.docx · §7.2</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="ui-cap">Interface illustration — your build is branded and laid out for your team.</p>
+
     <div class="ground-grid">
       <div class="ground-card">
         <h3>Show the source</h3>
@@ -797,5 +944,51 @@
     <p><a href="index.html">Home</a> · <a href="machines.html">Systems</a> · <a href="#routing">Routing</a> · <a href="#subscription">Subscription</a> · <a href="contact.html">Contact</a></p>
   </div>
 </footer>
+
+<script>
+(function(){
+  var root = document.documentElement;
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduce || !("IntersectionObserver" in window)) { root.classList.add("no-motion"); return; }
+
+  // Elements that animate in, with staggered delays inside each group.
+  var groups = [
+    ".cap", ".strip-cell", ".soft-card", ".teaser", ".step",
+    ".price-card", ".sub-card", ".lib-cell", ".ground-card",
+    ".own", ".road", ".layer", ".pipeline-row", ".sheet",
+    ".contact-card", "form.contact-form", ".cta-block",
+    "section > .wrap > .eyebrow", "section > .wrap > h2",
+    "section > .wrap > .lede", ".compare-scroll", ".tailor-note", ".faq"
+  ];
+  var seen = new Set();
+  groups.forEach(function(sel){
+    var nodes = document.querySelectorAll(sel);
+    var i = 0;
+    nodes.forEach(function(el){
+      if (seen.has(el)) return;
+      seen.add(el);
+      el.classList.add("reveal");
+      var d = (i % 5) + 1;
+      if (el.parentElement && el.parentElement.children.length > 1) el.classList.add("d" + d);
+      i++;
+    });
+  });
+
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if (e.isIntersecting){ e.target.classList.add("seen"); io.unobserve(e.target); }
+    });
+  }, { rootMargin: "0px 0px -8% 0px", threshold: 0.06 });
+
+  document.querySelectorAll(".reveal").forEach(function(el){ io.observe(el); });
+
+  // Anything already in view on load reveals immediately.
+  requestAnimationFrame(function(){
+    document.querySelectorAll(".reveal").forEach(function(el){
+      if (el.getBoundingClientRect().top < window.innerHeight) el.classList.add("seen");
+    });
+  });
+})();
+</script>
 </body>
 </html>
