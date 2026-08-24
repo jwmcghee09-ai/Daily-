@@ -350,6 +350,98 @@
     text-align:left;
   }
 
+
+  /* ── stack diagram ── */
+  .stack{
+    max-width:620px;
+    margin:60px auto 0;
+    display:flex; flex-direction:column;
+    gap:6px;
+  }
+  .layer{
+    border:1px solid var(--line);
+    background:var(--panel);
+    padding:18px 24px;
+    display:flex; align-items:center; gap:18px;
+    position:relative;
+  }
+  .layer.hl{ border-color:var(--violet-dim); background:var(--panel-2); }
+  .layer .ln{
+    font-family:var(--mono); font-size:11px;
+    color:var(--faint);
+    min-width:26px;
+  }
+  .layer .lname{
+    font-family:var(--mono); font-size:13.5px;
+    color:var(--ink);
+    flex:1;
+  }
+  .layer.hl .lname{ color:var(--violet-bright); }
+  .layer .lnote{
+    font-size:12.5px; color:var(--faint);
+    text-align:right;
+    max-width:44%;
+  }
+  @media (max-width:560px){
+    .layer{ flex-wrap:wrap; gap:6px 14px; padding:14px 18px; }
+    .layer .lnote{ text-align:left; max-width:100%; flex-basis:100%; }
+  }
+  .stack-arrow{
+    text-align:center;
+    color:var(--violet-dim);
+    font-family:var(--mono); font-size:13px;
+    line-height:1;
+  }
+
+  /* ── grounding split ── */
+  .ground-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:32px;
+    margin-top:60px;
+    text-align:left;
+  }
+  @media (max-width:860px){ .ground-grid{ grid-template-columns:1fr; } }
+  .ground-card{
+    border-top:2px solid var(--violet-dim);
+    padding-top:26px;
+  }
+  .ground-card h3{
+    font-size:23px; font-weight:600;
+    text-transform:uppercase; margin-bottom:10px;
+  }
+  .ground-card p{ color:var(--muted); font-size:15px; }
+
+  /* ── roadmap ── */
+  .road-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:1px;
+    background:var(--line-soft);
+    border:1px solid var(--line-soft);
+    margin-top:60px;
+    text-align:left;
+  }
+  @media (max-width:760px){ .road-grid{ grid-template-columns:1fr; } }
+  .road{
+    background:var(--panel);
+    padding:32px 30px;
+  }
+  .road .status{
+    font-family:var(--mono); font-size:10px;
+    letter-spacing:.16em; text-transform:uppercase;
+    color:var(--steel);
+    border:1px solid var(--line);
+    padding:4px 9px;
+    display:inline-block;
+    margin-bottom:14px;
+  }
+  .road h3{
+    font-size:22px; font-weight:600;
+    text-transform:uppercase; margin-bottom:10px;
+  }
+  .road p{ color:var(--muted); font-size:14.5px; }
+
   /* ── CTA / footer ── */
   .cta-block{
     border:1px solid var(--violet-dim);
@@ -390,6 +482,7 @@
       <a href="machines.html">Systems</a>
       <a href="#routing">Routing</a>
       <a href="#library">Library</a>
+      <a href="#stack">Stack</a>
       <a href="#subscription">Subscription</a>
       <a class="nav-cta" href="contact.html">Contact us</a>
     </div>
@@ -408,6 +501,7 @@
     <div class="jump">
       <a href="#routing"><b>Routing</b> — how a task flows</a>
       <a href="#library"><b>Library</b> — what's on the drive</a>
+      <a href="#stack"><b>Stack</b> — what's inside</a>
       <a href="#subscription"><b>Subscription</b> — the ongoing fee</a>
       <a href="#faq"><b>FAQ</b></a>
     </div>
@@ -524,6 +618,93 @@
       </div>
     </div>
     <p class="lib-note">Library sizes: Core ≈ 12–20 models · Forge ≈ 25–40 · Atlas carries the full catalogue.</p>
+  </div>
+</section>
+
+<section id="grounding" class="centered">
+  <div class="wrap">
+    <p class="eyebrow">Company knowledge</p>
+    <h2>It answers from<br>your filing cabinet.</h2>
+    <p class="lede">
+      At install we index your documents onto the machine. From then on the
+      assistant answers out of your business, not out of the internet.
+    </p>
+    <div class="ground-grid">
+      <div class="ground-card">
+        <h3>Show the source</h3>
+        <p>Every answer drawn from your archive names the documents behind it, so staff can check the original instead of trusting a guess.</p>
+      </div>
+      <div class="ground-card">
+        <h3>Only what you may see</h3>
+        <p>The assistant inherits your existing permissions. If someone can't open a file today, they can't reach it through Nodal either.</p>
+      </div>
+      <div class="ground-card">
+        <h3>Yours to change</h3>
+        <p>Models, prompts, permissions, and workflows are all tailored to your business — and re-tuned as the way you work changes.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="stack" class="centered">
+  <div class="wrap">
+    <p class="eyebrow">What's inside</p>
+    <h2>The stack</h2>
+    <p class="lede">
+      Nodal is a full appliance, not a chatbot in a box. Every layer is
+      built, hardened, and maintained by us.
+    </p>
+    <div class="stack" role="img" aria-label="The Nodal stack from hardware up to the browser interface: Nodal hardware, Ubuntu Server LTS, NVIDIA drivers and CUDA, containers, Nodal backend services, model server, RAG and databases, browser interface.">
+      <div class="layer"><span class="ln">08</span><span class="lname">Browser interface</span><span class="lnote">What your team actually opens</span></div>
+      <div class="stack-arrow" aria-hidden="true">▲</div>
+      <div class="layer hl"><span class="ln">07</span><span class="lname">RAG · databases · integrations</span><span class="lnote">Your documents and business data</span></div>
+      <div class="stack-arrow" aria-hidden="true">▲</div>
+      <div class="layer hl"><span class="ln">06</span><span class="lname">Model server</span><span class="lnote">Loads and runs the chosen model</span></div>
+      <div class="stack-arrow" aria-hidden="true">▲</div>
+      <div class="layer hl"><span class="ln">05</span><span class="lname">Nodal backend services</span><span class="lnote">Routing, accounts, permissions</span></div>
+      <div class="stack-arrow" aria-hidden="true">▲</div>
+      <div class="layer"><span class="ln">04</span><span class="lname">Containers</span><span class="lnote">Isolated, updatable services</span></div>
+      <div class="stack-arrow" aria-hidden="true">▲</div>
+      <div class="layer"><span class="ln">03</span><span class="lname">NVIDIA drivers + CUDA</span><span class="lnote">GPU acceleration</span></div>
+      <div class="stack-arrow" aria-hidden="true">▲</div>
+      <div class="layer"><span class="ln">02</span><span class="lname">Ubuntu Server LTS</span><span class="lnote">Long-term supported base</span></div>
+      <div class="stack-arrow" aria-hidden="true">▲</div>
+      <div class="layer"><span class="ln">01</span><span class="lname">Nodal hardware</span><span class="lnote">Core, Forge, or Atlas</span></div>
+    </div>
+    <p class="lib-note">No lock-in: the model server layer is swappable, so your machine can adopt better local models as they appear.</p>
+  </div>
+</section>
+
+<section id="roadmap" class="centered">
+  <div class="wrap">
+    <p class="eyebrow">On the roadmap</p>
+    <h2>Where it's heading</h2>
+    <p class="lede">
+      Here's what we're building next. We list it as roadmap rather than
+      features, because you should only pay for what your machine does today.
+    </p>
+    <div class="road-grid">
+      <div class="road">
+        <span class="status">In development</span>
+        <h3>Live system connections</h3>
+        <p>Email, calendar, CRM, ERP, inventory, and sales databases — so the assistant can answer from live business data, not just documents.</p>
+      </div>
+      <div class="road">
+        <span class="status">In development</span>
+        <h3>Multi-step tasks</h3>
+        <p>Moving from answering questions to completing jobs: pull the figures, draft the quote, prepare the email — end to end.</p>
+      </div>
+      <div class="road">
+        <span class="status">Planned</span>
+        <h3>Approval before action</h3>
+        <p>Anything that writes, sends, or changes data stops for a human to approve first. The AI proposes; a person signs off.</p>
+      </div>
+      <div class="road">
+        <span class="status">Planned</span>
+        <h3>Full audit trail</h3>
+        <p>A record of questions asked, sources used, and actions taken — so the system can be accounted for, not just trusted.</p>
+      </div>
+    </div>
   </div>
 </section>
 

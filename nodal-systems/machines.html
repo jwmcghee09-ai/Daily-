@@ -83,6 +83,16 @@
 
   section{ padding:130px 0; border-top:1px solid var(--line-soft); }
 
+  .centered > .wrap > .eyebrow{ justify-content:center; }
+  .centered .eyebrow::after{
+    content:"";
+    width:22px; height:1px;
+    background:var(--violet-dim);
+    display:inline-block;
+  }
+  .centered > .wrap > h2{ text-align:center; }
+  .centered > .wrap > .lede{ text-align:center; margin-left:auto; margin-right:auto; }
+
   /* ── nav ── */
   nav{
     position:sticky; top:0; z-index:20;
@@ -301,6 +311,24 @@
   tbody tr:last-child th, tbody tr:last-child td{ border-bottom:none; }
   td.hl{ color:var(--violet-bright); font-family:var(--mono); font-size:13px; }
 
+
+  .own-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:32px;
+    margin-top:60px;
+  }
+  @media (max-width:860px){ .own-grid{ grid-template-columns:1fr; } }
+  .own{
+    border-top:2px solid var(--violet-dim);
+    padding-top:26px;
+  }
+  .own h3{
+    font-size:23px; font-weight:600;
+    text-transform:uppercase; margin-bottom:10px;
+  }
+  .own p{ color:var(--muted); font-size:15px; }
+
   .tailor-note{
     margin-top:28px;
     border:1px solid var(--line);
@@ -402,6 +430,7 @@
       <a href="#core"><b>Core</b> — NS-01</a>
       <a href="#forge"><b>Forge</b> — NS-02</a>
       <a href="#atlas"><b>Atlas</b> — NS-03</a>
+      <a href="#ownership"><b>Ownership</b> — why buy</a>
       <a href="#compare"><b>Compare</b> — side by side</a>
     </div>
   </div>
@@ -531,6 +560,43 @@
         </dl>
       </div>
     </article>
+  </div>
+</section>
+
+<section id="ownership" class="centered">
+  <div class="wrap">
+    <p class="eyebrow">Owning the compute</p>
+    <h2>Buy capacity,<br>not permission to use it.</h2>
+    <p class="lede">
+      A cloud subscription rents you a share of someone else's machine, on
+      their terms. A Nodal server is capacity you own outright.
+    </p>
+    <div class="own-grid">
+      <div class="own">
+        <h3>Predictable capacity</h3>
+        <p>No rate limits, no throttling at busy times, no surprise change to what your plan includes. The machine performs the same on Monday as it does at end of quarter.</p>
+      </div>
+      <div class="own">
+        <h3>Upgradeable, not disposable</h3>
+        <p>GPUs, memory, and storage can be lifted as your needs grow. You expand the machine you own instead of buying the whole service again.</p>
+      </div>
+      <div class="own">
+        <h3>Shared across everyone</h3>
+        <p>One machine serves the whole team. Compared with a per-seat AI subscription for every employee, utilisation goes up and cost per person goes down.</p>
+      </div>
+      <div class="own">
+        <h3>One thing to manage</h3>
+        <p>A single appliance to update, secure, monitor, and back up — far simpler for whoever handles your IT than AI installed on every desk.</p>
+      </div>
+      <div class="own">
+        <h3>Sized to your workload</h3>
+        <p>More VRAM for bigger models, more storage for deep archives, more GPUs for concurrency. We spec against what you actually do.</p>
+      </div>
+      <div class="own">
+        <h3>Keeps working offline</h3>
+        <p>Core functions don't need the internet. If the line drops, your team keeps working.</p>
+      </div>
+    </div>
   </div>
 </section>
 
