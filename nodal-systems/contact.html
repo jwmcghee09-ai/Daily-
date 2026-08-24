@@ -352,6 +352,7 @@
     <div class="nav-links">
       <a href="machines.html">Systems</a>
       <a href="software.html">Software</a>
+      <a href="index.html#pilot">Pilot</a>
       <a href="index.html#security">Security</a>
       <a href="index.html#pricing">Pricing</a>
       <a class="nav-cta" href="contact.html">Contact us</a>
@@ -366,7 +367,8 @@
     <h1 class="hero-anim h2">Talk to <span class="accent">a human.</span></h1>
     <p class="lede hero-anim h3">
       No sales funnel, no chatbot gatekeeper. Tell us what your team does —
-      we'll tell you which machine fits.
+      we'll tell you which machine fits. Or skip ahead and ask for a free
+      60-day pilot in your office.
     </p>
   </div>
 </header>
@@ -412,6 +414,15 @@
       <div class="field">
         <label for="cf-email">Your email</label>
         <input id="cf-email" name="email" type="email" placeholder="alex@riveraco.example" required>
+      </div>
+      <div class="field full">
+        <label for="cf-type">What are you after?</label>
+        <select id="cf-type" name="type">
+          <option selected>A free 60-day pilot in our office</option>
+          <option>A demo on our own documents</option>
+          <option>A quote for a specific machine</option>
+          <option>Just have some questions</option>
+        </select>
       </div>
       <div class="field">
         <label for="cf-size">Team size</label>
@@ -470,11 +481,14 @@
   document.getElementById("consultForm").addEventListener("submit", function(e){
     e.preventDefault();
     var f = e.target;
-    var subject = "Consult request — " + f.business.value;
+    var subject = f.type.value.indexOf("pilot") > -1
+      ? "Pilot request — " + f.business.value
+      : "Consult request — " + f.business.value;
     var body = [
       "Name: " + f.name.value,
       "Business: " + f.business.value,
       "Email: " + f.email.value,
+      "Enquiry: " + f.type.value,
       "Team size: " + f.size.value,
       "",
       "What eats our hours:",

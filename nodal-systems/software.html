@@ -591,6 +591,34 @@
     color:var(--faint);
     margin-top:14px;
   }
+
+  /* ── pilot callout ── */
+  .pilot-callout{
+    border:1px solid var(--violet-dim);
+    background:linear-gradient(180deg, var(--panel-2), var(--panel));
+    padding:38px 40px;
+    margin-top:60px;
+    display:flex; flex-wrap:wrap;
+    align-items:center; justify-content:space-between;
+    gap:26px;
+    text-align:left;
+  }
+  @media (max-width:640px){ .pilot-callout{ padding:30px 26px; } }
+  .pilot-callout .pc-tag{
+    font-family:var(--mono); font-size:10px;
+    letter-spacing:.16em; text-transform:uppercase;
+    background:var(--crimson); color:#fff;
+    padding:5px 11px; display:inline-block;
+    margin-bottom:12px;
+  }
+  .pilot-callout h3{
+    font-family:var(--display);
+    font-size:30px; font-weight:700;
+    text-transform:uppercase; line-height:1.05;
+    margin-bottom:8px;
+  }
+  .pilot-callout h3 .accent{ color:var(--violet-bright); }
+  .pilot-callout p{ color:var(--muted); font-size:15px; max-width:46ch; }
 </style>
 
 <nav>
@@ -598,6 +626,7 @@
     <a class="logo" href="index.html"><span class="logo-mark" aria-hidden="true"></span>Nodal Systems</a>
     <div class="nav-links">
       <a href="machines.html">Systems</a>
+      <a href="index.html#pilot">Pilot</a>
       <a href="#routing">Routing</a>
       <a href="#library">Library</a>
       <a href="#stack">Stack</a>
@@ -898,6 +927,10 @@
     <h2>Asked often</h2>
     <div class="faq">
       <details>
+        <summary>Can we try one before committing?</summary>
+        <p>Yes — that's the 60-day pilot. We install a Core in your office, load it with your documents, train your team, and leave it with you for two months at no cost. At the end you keep it, size up to a Forge or Atlas, or hand it back owing nothing. One pilot per business, subject to a machine being available.</p>
+      </details>
+      <details>
         <summary>Is a local model actually good enough for real work?</summary>
         <p>For the tasks small businesses run daily — drafting, summarising, answering from your own documents, translating, classifying — modern open models are excellent, and because they're tuned to your business and your files, they're often more useful than a generic cloud chatbot. We'll demo on your real documents before you buy anything.</p>
       </details>
@@ -931,7 +964,7 @@
       <div>
         <p class="eyebrow">See it on your documents</p>
         <h2>Book a live demo</h2>
-        <p>Watch it answer from your own files. Bring a contract and a hard question.</p>
+        <p>Watch it answer from your own files. Bring a contract and a hard question — or skip straight to a free 60-day pilot in your office.</p>
       </div>
       <a class="btn btn-primary" href="contact.html">Contact us →</a>
     </div>

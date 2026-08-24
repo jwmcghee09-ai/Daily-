@@ -470,12 +470,84 @@
     color:var(--faint);
     margin-top:14px;
   }
+
+  /* ── pilot band ── */
+  .pilot-band{
+    border:1px solid var(--violet-dim);
+    background:
+      radial-gradient(ellipse 70% 120% at 15% 0%, rgba(136,15,235,.20), transparent 70%),
+      linear-gradient(180deg, var(--panel-2), var(--panel));
+    padding:60px 52px;
+    margin-top:60px;
+  }
+  @media (max-width:640px){ .pilot-band{ padding:40px 28px; } }
+  .pilot-head{
+    display:flex; flex-wrap:wrap;
+    align-items:flex-end; justify-content:space-between;
+    gap:28px;
+    padding-bottom:34px;
+    border-bottom:1px solid var(--line-soft);
+    text-align:left;
+  }
+  .pilot-head h3{
+    font-family:var(--display);
+    font-size:clamp(34px,4.6vw,54px);
+    font-weight:700; text-transform:uppercase;
+    line-height:1;
+  }
+  .pilot-head h3 .accent{ color:var(--violet-bright); }
+  .pilot-head p{ color:var(--muted); max-width:44ch; font-size:15.5px; }
+  .pilot-tag{
+    font-family:var(--mono); font-size:10px;
+    letter-spacing:.16em; text-transform:uppercase;
+    background:var(--crimson); color:#fff;
+    padding:6px 12px; display:inline-block;
+    margin-bottom:16px;
+  }
+  .pilot-steps{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:32px;
+    margin-top:34px;
+    counter-reset:pstep;
+    text-align:left;
+  }
+  @media (max-width:860px){ .pilot-steps{ grid-template-columns:repeat(2,1fr); } }
+  @media (max-width:520px){ .pilot-steps{ grid-template-columns:1fr; } }
+  .pstep{ counter-increment:pstep; }
+  .pstep::before{
+    content:"0" counter(pstep);
+    font-family:var(--mono); font-size:12px;
+    color:var(--violet-bright);
+    display:block; margin-bottom:14px;
+  }
+  .pstep h4{
+    font-family:var(--display);
+    font-size:21px; font-weight:600;
+    text-transform:uppercase; margin-bottom:8px;
+  }
+  .pstep p{ color:var(--muted); font-size:14px; }
+  .pilot-foot{
+    display:flex; flex-wrap:wrap;
+    align-items:center; justify-content:space-between;
+    gap:22px;
+    margin-top:40px;
+    padding-top:30px;
+    border-top:1px solid var(--line-soft);
+    text-align:left;
+  }
+  .pilot-terms{
+    font-family:var(--mono); font-size:12px;
+    color:var(--faint);
+    max-width:52ch; line-height:1.8;
+  }
 </style>
 
 <nav>
   <div class="nav-inner">
     <a class="logo" href="index.html"><span class="logo-mark" aria-hidden="true"></span>Nodal Systems</a>
     <div class="nav-links">
+      <a href="#pilot">Pilot</a>
       <a href="machines.html">Systems</a>
       <a href="software.html">Software</a>
       <a href="#security">Security</a>
@@ -497,7 +569,7 @@
       </p>
       <div class="hero-ctas hero-anim h4">
         <a class="btn btn-primary" href="contact.html">Book a free consult</a>
-        <a class="btn btn-ghost" href="machines.html">See the systems →</a>
+        <a class="btn btn-ghost" href="#pilot">Try it free for 60 days →</a>
       </div>
       <div class="hero-stats hero-anim h5">
         <div class="stat">
@@ -714,6 +786,60 @@
     </div>
     <div class="section-go">
       <a class="btn btn-ghost" href="software.html">Explore the software in depth →</a>
+    </div>
+  </div>
+</section>
+
+<section id="pilot" class="centered">
+  <div class="wrap">
+    <p class="eyebrow">Try before you buy</p>
+    <h2>Put one in your office.<br>Free for two months.</h2>
+    <p class="lede">
+      You shouldn't have to take our word for it. We install a Nodal Core in
+      your business, set it up on your real documents, and leave it with you
+      for 60 days at no cost.
+    </p>
+
+    <div class="pilot-band">
+      <div class="pilot-head">
+        <div>
+          <span class="pilot-tag">The 60-day pilot</span>
+          <h3>Two months.<br><span class="accent">No invoice.</span></h3>
+        </div>
+        <p>
+          Most businesses know within a fortnight whether it's earning its
+          keep. We give you sixty days, because the honest answer only shows
+          up in real work.
+        </p>
+      </div>
+
+      <div class="pilot-steps">
+        <div class="pstep">
+          <h4>We install</h4>
+          <p>A Core arrives, goes onto your network, gets loaded with your documents, and your team gets shown how to use it.</p>
+        </div>
+        <div class="pstep">
+          <h4>You use it</h4>
+          <p>Sixty days of real work — quotes, contracts, drafting, whatever eats your hours. Unlimited use, whole team.</p>
+        </div>
+        <div class="pstep">
+          <h4>We check in</h4>
+          <p>We visit at week two and week six to tune the model library around what your team actually asks it.</p>
+        </div>
+        <div class="pstep">
+          <h4>You decide</h4>
+          <p>Keep the Core, size up to a Forge or Atlas, or hand it back. If it goes back, you owe nothing.</p>
+        </div>
+      </div>
+
+      <div class="pilot-foot">
+        <p class="pilot-terms">
+          What we ask: a power point, a network port, and someone to point us
+          at the documents that matter. Pilots run one per business, subject
+          to a machine being free.
+        </p>
+        <a class="btn btn-primary" href="contact.html">Apply for a pilot →</a>
+      </div>
     </div>
   </div>
 </section>

@@ -444,6 +444,34 @@
     color:var(--faint);
     margin-top:14px;
   }
+
+  /* ── pilot callout ── */
+  .pilot-callout{
+    border:1px solid var(--violet-dim);
+    background:linear-gradient(180deg, var(--panel-2), var(--panel));
+    padding:38px 40px;
+    margin-top:60px;
+    display:flex; flex-wrap:wrap;
+    align-items:center; justify-content:space-between;
+    gap:26px;
+    text-align:left;
+  }
+  @media (max-width:640px){ .pilot-callout{ padding:30px 26px; } }
+  .pilot-callout .pc-tag{
+    font-family:var(--mono); font-size:10px;
+    letter-spacing:.16em; text-transform:uppercase;
+    background:var(--crimson); color:#fff;
+    padding:5px 11px; display:inline-block;
+    margin-bottom:12px;
+  }
+  .pilot-callout h3{
+    font-family:var(--display);
+    font-size:30px; font-weight:700;
+    text-transform:uppercase; line-height:1.05;
+    margin-bottom:8px;
+  }
+  .pilot-callout h3 .accent{ color:var(--violet-bright); }
+  .pilot-callout p{ color:var(--muted); font-size:15px; max-width:46ch; }
 </style>
 
 <nav>
@@ -452,6 +480,7 @@
     <div class="nav-links">
       <a href="index.html">Home</a>
       <a href="software.html">Software</a>
+      <a href="index.html#pilot">Pilot</a>
       <a href="#core">Core</a>
       <a href="#forge">Forge</a>
       <a href="#atlas">Atlas</a>
@@ -671,6 +700,18 @@
         </tbody>
       </table>
     </div>
+
+    <div class="pilot-callout">
+      <div>
+        <span class="pc-tag">The 60-day pilot</span>
+        <h3>Not sure which one?<br><span class="accent">Trial a Core, free.</span></h3>
+        <p>We install a Core in your office for two months at no cost. Most
+           businesses discover their real size by using one — then step up
+           to the machine that fits.</p>
+      </div>
+      <a class="btn btn-primary" href="contact.html">Apply for a pilot →</a>
+    </div>
+
     <p class="tailor-note">
       <strong>Every machine is a starting point, not a fixed SKU.</strong>
       Base specs shown — final configuration is tailored and quoted after
