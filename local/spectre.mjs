@@ -8,10 +8,12 @@
 // The statistics are computed locally by code. A local Ollama model writes the
 // explanation. Your holdings never leave the machine.
 
+import { createInterface } from "node:readline/promises";
 import { analyse, analysePortfolio } from "./lib/engine.mjs";
 import { loadBars } from "./lib/quotes.mjs";
 import { readPortfolio } from "./lib/portfolio.mjs";
 import { chat, ensureModel, OllamaUnavailable, OllamaModelMissing, DEFAULT_HOST } from "./lib/ollama.mjs";
+import { login, readConfig, clearConfig, fetchAccountPortfolio, CONFIG_PATH, DEFAULT_BASE_URL } from "./lib/account.mjs";
 
 const C = {
   reset: "\x1b[0m", bold: "\x1b[1m", dim: "\x1b[2m",
@@ -21,8 +23,11 @@ const C = {
 const DISCLAIMER = "Possible anomalies only — statistical flags, not financial advice. You have the final say.";
 
 function parseArgs(argv) {
-  const opts = { command: argv[0], target: argv[1], ai: true, model: "spectre", host: DEFAULT_HOST, json: false };
-  for (let i = 2; i < argv.length; i++) {
+  // A flag in the target slot is a flag, not a filename — `portfolio --no-ai`
+  // must still mean "my account", not a file called --no-ai.
+  const target = argv[1] && !argv[1].startsWith("-") ? argv[1] : undefined;
+  const opts = { command: argv[0], target, ai: true, model: "spectre", host: DEFAULT_HOST, json: false };
+  for (let i = target ? 2 : 1; i < argv.length; i++) {
     const a = argv[i];
     if (a === "--no-ai") opts.ai = false;
     else if (a === "--json") { opts.json = true; opts.ai = false; }
@@ -143,10 +148,54 @@ async function cmdScan(opts) {
   console.log(`\n${C.dim}${DISCLAIMER}${C.reset}`);
 }
 
+async function cmdLogin() {
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+  try {
+    const email = (await rl.question("SPECTRE email: ")).trim();
+    // Node has no portable no-echo prompt; warn rather than pretend it is hidden.
+    console.log(`${C.grey}(password will be visible as you type)${C.reset}`);
+    const password = await rl.question("Password: ");
+    rl.close();
+    const result = await login(email, password);
+    console.log(`\n${C.green}Signed in as ${result.email}${C.reset}`);
+    console.log(`${C.grey}Token saved to ${result.path} (owner-only). Valid for 30 days.${C.reset}`);
+    console.log(`${C.grey}Your AI can now read your live portfolio — try: node spectre.mjs portfolio${C.reset}`);
+  } finally {
+    rl.close();
+  }
+}
+
+async function cmdWhoami() {
+  const config = await readConfig();
+  if (!config?.token) {
+    console.log(`${C.grey}Not signed in. Run: node spectre.mjs login${C.reset}`);
+    return;
+  }
+  console.log(`${C.white}${config.email}${C.reset} ${C.grey}on ${config.baseUrl || DEFAULT_BASE_URL}${C.reset}`);
+  console.log(`${C.grey}Token saved ${config.savedAt || "unknown"} · ${CONFIG_PATH}${C.reset}`);
+}
+
+async function cmdLogout() {
+  await clearConfig();
+  console.log(`${C.grey}Signed out — token cleared from ${CONFIG_PATH}${C.reset}`);
+}
+
 async function cmdPortfolio(opts) {
-  if (!opts.target) throw new Error("Usage: spectre portfolio <holdings.csv>");
-  const holdings = await readPortfolio(opts.target);
-  console.log(`${C.grey}Analysing ${holdings.length} holdings locally…${C.reset}`);
+  // No file given → use the live portfolio from the signed-in SPECTRE account.
+  let holdings;
+  if (opts.target) {
+    holdings = await readPortfolio(opts.target);
+    console.log(`${C.grey}Analysing ${holdings.length} holdings from ${opts.target}…${C.reset}`);
+  } else {
+    const account = await fetchAccountPortfolio();
+    holdings = account.holdings.map((h) => ({ ticker: h.ticker, units: h.units, costBase: h.costBase }));
+    if (!holdings.length) {
+      console.log(`\n${C.orange}Your SPECTRE account has no holdings imported yet.${C.reset}`);
+      console.log(`${C.grey}Import a broker, super or crypto export on spectre-assets.com, then run this again.${C.reset}`);
+      return;
+    }
+    console.log(`${C.grey}Analysing ${holdings.length} live holdings from your SPECTRE account…${C.reset}`);
+  }
 
   const positions = [];
   const missing = [];
@@ -203,7 +252,10 @@ function usage() {
 ${C.bold}${C.orange}SPECTRE Local${C.reset} ${C.grey}— portfolio intelligence on your own machine${C.reset}
 
   ${C.bold}scan${C.reset} <TICKER>            Scan one stock (ASX tickers resolve first)
-  ${C.bold}portfolio${C.reset} <file.csv>     Analyse a whole holdings file
+  ${C.bold}portfolio${C.reset}              Analyse your live SPECTRE account holdings
+  ${C.bold}portfolio${C.reset} <file.csv>     Analyse a holdings CSV instead
+  ${C.bold}login${C.reset}                  Connect this machine to your SPECTRE account
+  ${C.bold}whoami${C.reset} / ${C.bold}logout${C.reset}        Show or clear the signed-in account
 
 ${C.grey}Options${C.reset}
   --no-ai              Statistics and flags only; no local model needed
@@ -225,6 +277,9 @@ const opts = parseArgs(process.argv.slice(2));
 try {
   if (opts.command === "scan") await cmdScan(opts);
   else if (opts.command === "portfolio") await cmdPortfolio(opts);
+  else if (opts.command === "login") await cmdLogin();
+  else if (opts.command === "whoami") await cmdWhoami();
+  else if (opts.command === "logout") await cmdLogout();
   else usage();
 } catch (err) {
   console.error(`\n${C.red}${err.message}${C.reset}\n`);

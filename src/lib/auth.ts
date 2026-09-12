@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { AuthSessionUser, createAuthSession, deleteAuthSession, findAuthSessionUserByTokenHash } from "@/lib/db";
 
@@ -131,7 +131,18 @@ export function destroySessionToken(token: string): void {
 
 export async function getAuthenticatedUser(): Promise<AuthSessionUser | null> {
   const cookieStore = await cookies();
-  const token = cookieStore.get(SESSION_COOKIE_NAME)?.value || "";
+  let token = cookieStore.get(SESSION_COOKIE_NAME)?.value || "";
+
+  // Non-browser clients (the local MCP server, CLI tooling) present the same
+  // session token as a bearer header instead of a cookie. Same token, same
+  // hash, same lookup — and unlike a cookie it is never sent automatically by
+  // a browser, so it carries no CSRF exposure of its own.
+  if (!token) {
+    const authorization = (await headers()).get("authorization") || "";
+    if (authorization.startsWith("Bearer ")) {
+      token = authorization.slice(7).trim();
+    }
+  }
 
   if (!token) {
     return null;

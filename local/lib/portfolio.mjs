@@ -3,6 +3,20 @@
 // without editing. Nothing here leaves the machine.
 
 import { readFile } from "node:fs/promises";
+import { homedir } from "node:os";
+import { join, resolve } from "node:path";
+
+/**
+ * A shell expands "~" before a command ever runs, but an AI passing a path
+ * through a tool call does not — so "~/holdings.csv" would arrive literally
+ * and always miss. Expand it here.
+ */
+export function resolvePath(input) {
+  const raw = String(input).trim().replace(/^["']|["']$/g, "");
+  if (raw === "~") return homedir();
+  if (raw.startsWith("~/")) return join(homedir(), raw.slice(2));
+  return resolve(raw);
+}
 
 const TICKER_KEYS = ["ticker", "code", "symbol", "asx code", "security", "instrument"];
 const UNIT_KEYS = ["units", "quantity", "qty", "shares", "holding", "amount"];
@@ -46,11 +60,12 @@ function toNumber(raw) {
 
 /** @returns {{ticker:string,units:number,costBase:number|null}[]} */
 export async function readPortfolio(filePath) {
+  const resolved = resolvePath(filePath);
   let text;
   try {
-    text = await readFile(filePath, "utf8");
+    text = await readFile(resolved, "utf8");
   } catch (err) {
-    if (err.code === "ENOENT") throw new Error(`No such file: ${filePath}`);
+    if (err.code === "ENOENT") throw new Error(`No such file: ${resolved}`);
     throw err;
   }
   const lines = text.split(/\r?\n/).filter((l) => l.trim().length > 0);

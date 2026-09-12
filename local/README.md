@@ -110,19 +110,49 @@ code rather than trusted to the model.
 
 ---
 
+## Connect it to your SPECTRE account
+
+So your AI reads the portfolio you actually maintain — not a CSV you keep in
+sync by hand — sign this machine in once:
+
+```bash
+node spectre.mjs login
+```
+
+It swaps your email and password for a session token and stores **only the
+token** in `~/.spectre/config.json`, owner-readable only. Your password is never
+written to disk. Tokens last 30 days; run `login` again after that.
+
+```bash
+node spectre.mjs whoami     # which account is connected
+node spectre.mjs logout     # clear the token
+node spectre.mjs portfolio  # analyse your live holdings
+```
+
+Every call re-reads the account, so anything you import or change on
+spectre-assets.com shows up immediately — no syncing, no re-export.
+
+To point at a local dev server instead, set `SPECTRE_URL=http://localhost:3000`.
+
+---
+
 ## Connect your own AI (MCP)
 
 `mcp-server.mjs` exposes SPECTRE's engine over the **Model Context Protocol**, so
 you can point any MCP-capable AI at your portfolio and ask it questions directly.
 One server covers every client — there's nothing platform-specific to install.
 
-It gives the AI three tools:
+It gives the AI four tools:
 
 | Tool | What it does |
 |---|---|
+| `get_portfolio` | Your **live** SPECTRE holdings, re-read every call, with full analysis |
 | `scan_stock` | Full statistics and anomaly flags for one ticker |
 | `compare_stocks` | Several tickers analysed side by side |
-| `analyse_portfolio` | Prices a holdings CSV and adds concentration/risk analysis |
+| `analyse_portfolio` | Same analysis for a holdings CSV on disk (supports `~/` paths) |
+
+Once you've run `login`, you can just ask *"how's my portfolio looking?"* and it
+pulls your current holdings without you naming a file.
 
 Because the figures are computed in code before the model ever sees them, a
 connected AI reasons over correct numbers instead of guessing at a chart. The

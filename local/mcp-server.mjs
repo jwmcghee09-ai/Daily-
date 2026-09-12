@@ -13,6 +13,7 @@
 import { analyse, analysePortfolio } from "./lib/engine.mjs";
 import { loadBars } from "./lib/quotes.mjs";
 import { readPortfolio } from "./lib/portfolio.mjs";
+import { fetchAccountPortfolio, readConfig } from "./lib/account.mjs";
 
 const SERVER_INFO = { name: "spectre", version: "1.0.0" };
 const SUPPORTED_PROTOCOLS = ["2025-06-18", "2025-03-26", "2024-11-05"];
@@ -61,9 +62,23 @@ const TOOLS = [
     },
   },
   {
+    name: "get_portfolio",
+    description:
+      "Read the user's CURRENT portfolio straight from their signed-in SPECTRE account and analyse it. " +
+      "This is the live portfolio they maintain on spectre-assets.com — it reflects whatever they have " +
+      "imported or changed, re-read fresh every time this is called, so it is always up to date. " +
+      "Prefer this over analyse_portfolio whenever the user refers to 'my portfolio' or 'my holdings' " +
+      "without naming a file. Returns per-holding statistics and anomaly flags plus portfolio-level " +
+      "concentration and risk analysis. Requires the user to have run `node spectre.mjs login` once.",
+    inputSchema: { type: "object", properties: {} },
+  },
+  {
     name: "analyse_portfolio",
     description:
-      "Read a holdings CSV from the local machine, price every position live, and return per-holding " +
+      "Analyse a holdings CSV FILE on disk, for a portfolio that is not in the user's SPECTRE account " +
+      "(a what-if, an old export, someone else's book). For the user's own current holdings use " +
+      "get_portfolio instead. Paths may use ~ for the home directory. " +
+      "Prices every position live and returns per-holding " +
       "statistics plus portfolio-level concentration and risk analysis (weights, top-3 share, effective " +
       "number of positions, weighted volatility, per-holding anomaly flags). " +
       "The CSV needs a ticker column and a units column; a cost column adds profit/loss. " +
@@ -109,9 +124,8 @@ async function compareStocks({ tickers }) {
   return { compared: results, unavailable: failed, disclaimer: DISCLAIMER };
 }
 
-async function analysePortfolioTool({ csv_path: csvPath }) {
-  if (!csvPath || typeof csvPath !== "string") throw new Error("csv_path is required");
-  const holdings = await readPortfolio(csvPath);
+/** Price and analyse a set of {ticker, units, costBase} holdings. */
+async function priceHoldings(holdings) {
   const positions = [];
   const unavailable = [];
   for (const h of holdings) {
@@ -119,25 +133,46 @@ async function analysePortfolioTool({ csv_path: csvPath }) {
     if (!bars) { unavailable.push(h.ticker); continue; }
     const r = analyse(bars.rows, bars.meta);
     if (r.error) { unavailable.push(h.ticker); continue; }
-    const value = r.stats.price * h.units;
     positions.push({
       ...r.stats,
       units: h.units,
       costBase: h.costBase,
-      value,
+      value: r.stats.price * h.units,
       pnlPct: h.costBase > 0 ? ((r.stats.price - h.costBase) / h.costBase) * 100 : null,
       anomalies: r.anomalies,
     });
   }
-  if (!positions.length) throw new Error("Could not price any holdings — check the tickers in the CSV");
+  if (!positions.length) throw new Error("Could not price any holdings — check the ticker symbols");
   const summary = analysePortfolio(positions);
   if (summary.error) throw new Error(summary.error);
   return { ...summary, unavailable, disclaimer: DISCLAIMER };
 }
 
+async function getPortfolioTool() {
+  const account = await fetchAccountPortfolio();
+  if (!account.holdings.length) {
+    return {
+      holdings: [],
+      message:
+        "The SPECTRE account is signed in but has no holdings imported yet. " +
+        "Import a broker, super or crypto export on spectre-assets.com, then ask again.",
+      disclaimer: DISCLAIMER,
+    };
+  }
+  const result = await priceHoldings(account.holdings);
+  return { source: "spectre-account", fetchedAt: new Date().toISOString(), ...result };
+}
+
+async function analysePortfolioTool({ csv_path: csvPath }) {
+  if (!csvPath || typeof csvPath !== "string") throw new Error("csv_path is required");
+  const holdings = await readPortfolio(csvPath);
+  return { source: csvPath, ...(await priceHoldings(holdings)) };
+}
+
 const HANDLERS = {
   scan_stock: scanStock,
   compare_stocks: compareStocks,
+  get_portfolio: getPortfolioTool,
   analyse_portfolio: analysePortfolioTool,
 };
 
@@ -173,7 +208,9 @@ async function handleRequest(msg) {
           "SPECTRE computes portfolio and market statistics deterministically. " +
           "Every figure these tools return was calculated in code — cite them exactly and never " +
           "recompute or estimate them. Surface what is statistically unusual and what it has " +
-          "historically implied, but never tell the user to buy, sell or hold: they decide.",
+          "historically implied, but never tell the user to buy, sell or hold: they decide. " +
+          "When the user mentions 'my portfolio' or 'my holdings', call get_portfolio — it reads " +
+          "their live SPECTRE account and is always current. Do not ask them for a file path first.",
       });
       return;
     }

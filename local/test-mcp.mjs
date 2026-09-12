@@ -58,7 +58,7 @@ check("notification drew no response", pending.size === 0);
 
 const list = await rpc("tools/list");
 const names = (list.result?.tools ?? []).map((t) => t.name);
-check("tools/list", names.length === 3, names.join(", "));
+check("tools/list", names.length === 4, names.join(", "));
 check("every tool has an inputSchema", (list.result?.tools ?? []).every((t) => t.inputSchema?.type === "object"));
 
 const scan = await rpc("tools/call", { name: "scan_stock", arguments: { ticker: "BHP" } });
@@ -85,6 +85,17 @@ check("unknown tool → JSON-RPC error", missing.error?.code === -32602);
 
 const badFile = await rpc("tools/call", { name: "analyse_portfolio", arguments: { csv_path: "/nope.csv" } });
 check("missing CSV → isError", badFile.result?.isError === true);
+
+const acct = await rpc("tools/call", { name: "get_portfolio", arguments: {} });
+const acctData = JSON.parse(acct.result.content[0].text);
+if (acctData.positions) {
+  check("get_portfolio reads live account", acctData.positions.length > 0,
+    `${acctData.positions.length} positions, source=${acctData.source}`);
+  check("get_portfolio stamps fetch time", !!acctData.fetchedAt);
+} else {
+  check("get_portfolio responds sensibly when signed out or empty", !!acctData.message || acct.result.isError === true,
+    (acctData.message || acct.result.content[0].text).slice(0, 70));
+}
 
 const pong = await rpc("ping");
 check("ping", pong.result && Object.keys(pong.result).length === 0);
