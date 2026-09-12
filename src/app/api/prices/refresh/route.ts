@@ -3,6 +3,7 @@ import { getAuthenticatedUser } from "@/lib/auth";
 import { refreshPricesAndTriggerDipAlertsForUser } from "@/lib/price-dip-alerts";
 import { saveImport, readPortfolioState } from "@/lib/db";
 import type { PortfolioHolding } from "@/lib/portfolio";
+import { brokerCredentials } from "@/lib/broker";
 
 export const runtime = "nodejs";
 
@@ -41,8 +42,9 @@ async function fetchAudUsdRate(): Promise<number> {
 }
 
 async function syncAlpacaPrices(userId: string): Promise<boolean> {
-  const apiKey = process.env.ALPACA_API_KEY;
-  const apiSecret = process.env.ALPACA_API_SECRET;
+  const credentials = brokerCredentials();
+  const apiKey = credentials?.key;
+  const apiSecret = credentials?.secret;
   if (!apiKey || !apiSecret) return false;
 
   const headers = {

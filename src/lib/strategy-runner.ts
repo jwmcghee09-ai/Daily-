@@ -5,6 +5,7 @@ import {
   getPendingTrade, sumExecutedBuyNotionalToday,
   readTradingMemory, PendingTrade,
 } from "@/lib/db";
+import { brokerHeaders, isBrokerConnected, BROKER_DISCONNECTED_MESSAGE } from "@/lib/broker";
 
 const ALPACA_BASE = "https://paper-api.alpaca.markets/v2";
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
@@ -15,8 +16,7 @@ const CONFIRM_WINDOW_MIN = 5;
 
 function alpacaHeaders() {
   return {
-    "APCA-API-KEY-ID": process.env.ALPACA_API_KEY ?? "",
-    "APCA-API-SECRET-KEY": process.env.ALPACA_API_SECRET ?? "",
+    ...(brokerHeaders() ?? {}),
     "Content-Type": "application/json",
   };
 }
@@ -239,6 +239,11 @@ async function validateActions(
 // ── Execution ─────────────────────────────────────────────────────────────────
 
 async function placeOrder(symbol: string, qty: number, side: "buy" | "sell"): Promise<{ ok: boolean; orderId: string | null; note: string }> {
+  // Hard stop: with no broker connected there is nothing to trade against, and
+  // an order must never be attempted with empty credentials.
+  if (!isBrokerConnected()) {
+    return { ok: false, orderId: null, note: "no broker connected — order not placed" };
+  }
   try {
     const res = await fetch(`${ALPACA_BASE}/orders`, {
       method: "POST",
@@ -330,6 +335,12 @@ export interface StrategyRunResult {
 }
 
 export async function runStrategy(trigger: "cron" | "manual"): Promise<StrategyRunResult> {
+  // With no broker connected there is no account to read or trade against.
+  // Stop here rather than letting every downstream fetch fail one by one.
+  if (!isBrokerConnected()) {
+    return { status: "skipped", summary: BROKER_DISCONNECTED_MESSAGE };
+  }
+
   // Always process the confirm queue first, even if strategy is off.
   const pendingProcessed = await processDuePendingTrades();
 

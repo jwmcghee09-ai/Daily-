@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
+import { brokerHeaders, BROKER_DISCONNECTED_MESSAGE } from "@/lib/broker";
 
 // SECURITY: trader-only, and hard-wired to the PAPER endpoint. This route
 // liquidates positions, so it must never be pointed at a live Alpaca host.
@@ -15,10 +16,7 @@ interface AlpacaPosition {
 }
 
 function alpacaHeaders() {
-  const key = String(process.env.ALPACA_API_KEY || "").trim();
-  const secret = String(process.env.ALPACA_API_SECRET || "").trim();
-  if (!key || !secret) return null;
-  return { "APCA-API-KEY-ID": key, "APCA-API-SECRET-KEY": secret };
+  return brokerHeaders();
 }
 
 /**
@@ -47,7 +45,7 @@ export async function POST(request: NextRequest) {
 
   const headers = alpacaHeaders();
   if (!headers) {
-    return NextResponse.json({ error: "Alpaca keys are not configured." }, { status: 503 });
+    return NextResponse.json({ error: BROKER_DISCONNECTED_MESSAGE, brokerConnected: false }, { status: 503 });
   }
 
   // Record what is about to be closed so the response can report it.

@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { readTradingMemory, insertTradingDecision } from "@/lib/db";
+import { brokerHeaders, isBrokerConnected } from "@/lib/broker";
 
 const TRADER_EMAIL = "jwmcghee09@gmail.com";
 const ALPACA_BASE = "https://paper-api.alpaca.markets/v2";
@@ -40,8 +41,7 @@ interface AnthropicMessage {
 
 function alpacaHeaders() {
   return {
-    "APCA-API-KEY-ID": process.env.ALPACA_API_KEY ?? "",
-    "APCA-API-SECRET-KEY": process.env.ALPACA_API_SECRET ?? "",
+    ...(brokerHeaders() ?? {}),
     "Content-Type": "application/json",
   };
 }
@@ -355,7 +355,7 @@ export async function POST(request: NextRequest) {
           let equityUsd: string | null = null;
           let cashUsd: string | null = null;
           const acctTc = toolCallsLog.find(t => t.name === "get_account");
-          if (!acctTc && process.env.ALPACA_API_KEY) {
+          if (!acctTc && isBrokerConnected()) {
             // Quick account fetch for snapshot
             try {
               const acct = await alpacaGet("/account") as Record<string, string>;

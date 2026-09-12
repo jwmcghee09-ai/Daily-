@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { readTradingMemory, writeTradingMemory, insertTradingDecision } from "@/lib/db";
 import { isTerminalRequestAuthorized } from "@/lib/terminal-auth";
+import { brokerHeaders } from "@/lib/broker";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -14,8 +15,7 @@ const MAX_TURNS = 10;
 
 function alpacaHeaders() {
   return {
-    "APCA-API-KEY-ID": process.env.ALPACA_API_KEY ?? "",
-    "APCA-API-SECRET-KEY": process.env.ALPACA_API_SECRET ?? "",
+    ...(brokerHeaders() ?? {}),
     "Content-Type": "application/json",
   };
 }

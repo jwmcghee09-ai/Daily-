@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
+import { brokerCredentials, isBrokerConnected } from "@/lib/broker";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -196,8 +197,9 @@ async function dashYahooQuote(symbol: string): Promise<MqData | null> {
 }
 
 async function fetchTraderAnalytics(): Promise<Record<string, unknown> | null> {
-  const apiKey = process.env.ALPACA_API_KEY;
-  const apiSecret = process.env.ALPACA_API_SECRET;
+  const credentials = brokerCredentials();
+  const apiKey = credentials?.key;
+  const apiSecret = credentials?.secret;
   if (!apiKey || !apiSecret) return null;
   try {
     const h = { "APCA-API-KEY-ID": apiKey, "APCA-API-SECRET-KEY": apiSecret };
@@ -266,8 +268,7 @@ export async function GET(request: NextRequest) {
     // Server-side preload: fetch analytics data now so the page renders instantly.
     // Hard 4.5s cap — a slow Alpaca/Yahoo must never stall the whole dashboard;
     // the client falls back to fetching /api/trading/analytics itself.
-    const hasKey = !!process.env.ALPACA_API_KEY;
-    const hasSec = !!process.env.ALPACA_API_SECRET;
+    const brokerConnected = isBrokerConnected();
     const preload = await Promise.race([
       fetchTraderAnalytics(),
       new Promise<null>(resolve => setTimeout(() => resolve(null), 4500)),
@@ -277,8 +278,8 @@ export async function GET(request: NextRequest) {
       : "";
     // Inject server-side status immediately (no JS async needed — text set synchronously).
     let srvStatus: string;
-    if (!hasKey || !hasSec) {
-      srvStatus = `SERVER: ALPACA_API_KEY ${hasKey ? "OK" : "MISSING"} | ALPACA_API_SECRET ${hasSec ? "OK" : "MISSING"} — add in Render → Environment`;
+    if (!brokerConnected) {
+      srvStatus = "NO BROKER CONNECTED — the strategy engine and decision log are intact, but there is no account to trade against.";
     } else if (preload) {
       srvStatus = `SERVER: keys OK, preloaded ${preload.account ? "account data" : "but account null — check key validity"}`;
     } else {

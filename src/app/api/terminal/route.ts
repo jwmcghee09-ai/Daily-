@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readTradingMemory } from "@/lib/db";
 import { isTerminalRequestAuthorized } from "@/lib/terminal-auth";
+import { brokerHeaders, isBrokerConnected, BROKER_DISCONNECTED_MESSAGE } from "@/lib/broker";
 
 export const runtime = "nodejs";
 
@@ -8,8 +9,7 @@ const ALPACA_BASE = "https://paper-api.alpaca.markets/v2";
 
 function headers() {
   return {
-    "APCA-API-KEY-ID": process.env.ALPACA_API_KEY ?? "",
-    "APCA-API-SECRET-KEY": process.env.ALPACA_API_SECRET ?? "",
+    ...(brokerHeaders() ?? {}),
   };
 }
 
@@ -50,8 +50,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Not authorized — sign in at /signin first" }, { status: 403 });
   }
 
-  if (!process.env.ALPACA_API_KEY || !process.env.ALPACA_API_SECRET) {
-    return NextResponse.json({ error: "ALPACA_API_KEY / ALPACA_API_SECRET not set in .env.local" }, { status: 503 });
+  if (!isBrokerConnected()) {
+    return NextResponse.json({ error: BROKER_DISCONNECTED_MESSAGE, brokerConnected: false }, { status: 503 });
   }
 
   const h = headers();

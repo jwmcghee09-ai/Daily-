@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { saveImport } from "@/lib/db";
 import { PortfolioHolding } from "@/lib/portfolio";
+import { brokerCredentials } from "@/lib/broker";
 
 const TRADER_EMAIL = "jwmcghee09@gmail.com";
 const ALPACA_BASE = "https://paper-api.alpaca.markets/v2";
@@ -45,8 +46,9 @@ export async function POST() {
     return NextResponse.json({ error: "Not authorized" }, { status: 403 });
   }
 
-  const apiKey = process.env.ALPACA_API_KEY;
-  const apiSecret = process.env.ALPACA_API_SECRET;
+  const credentials = brokerCredentials();
+  const apiKey = credentials?.key;
+  const apiSecret = credentials?.secret;
   if (!apiKey || !apiSecret) {
     return NextResponse.json({ error: "Trading credentials not configured" }, { status: 503 });
   }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
+import { brokerCredentials } from "@/lib/broker";
 
 const TRADER_EMAIL = "jwmcghee09@gmail.com";
 const ALPACA_DATA = "https://data.alpaca.markets/v2";
@@ -72,7 +73,9 @@ export async function GET(request: NextRequest) {
   const symbol = (searchParams.get("symbol") ?? "SPY").toUpperCase().replace(/[^A-Z]/g, "");
   const days = Math.min(Math.max(Number(searchParams.get("days") ?? 90), 30), 365);
 
-  const { ALPACA_API_KEY: key, ALPACA_API_SECRET: secret } = process.env;
+  const credentials = brokerCredentials();
+  const key = credentials?.key;
+  const secret = credentials?.secret;
   if (!key || !secret) return NextResponse.json({ error: "Not configured" }, { status: 503 });
 
   // Extra warmup bars for EMA200 calculation

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { assertCronTokenAuthorized } from "@/lib/internal-cron-auth";
+import { brokerHeaders, isBrokerConnected, BROKER_DISCONNECTED_MESSAGE } from "@/lib/broker";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -9,8 +10,7 @@ const ALPACA_BASE = "https://paper-api.alpaca.markets/v2";
 async function af(path: string) {
   const res = await fetch(`${ALPACA_BASE}${path}`, {
     headers: {
-      "APCA-API-KEY-ID": process.env.ALPACA_API_KEY ?? "",
-      "APCA-API-SECRET-KEY": process.env.ALPACA_API_SECRET ?? "",
+      ...(brokerHeaders() ?? {}),
     },
     cache: "no-store",
     signal: AbortSignal.timeout(15000),
@@ -42,8 +42,8 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  if (!process.env.ALPACA_API_KEY || !process.env.ALPACA_API_SECRET) {
-    return NextResponse.json({ error: "ALPACA_API_KEY or ALPACA_API_SECRET not configured" }, { status: 503 });
+  if (!isBrokerConnected()) {
+    return NextResponse.json({ error: BROKER_DISCONNECTED_MESSAGE, brokerConnected: false }, { status: 503 });
   }
 
   const [account, positions, openOrders, closedOrders, history] = await Promise.all([
