@@ -14,48 +14,84 @@ export const maxDuration = 30;
 /**
  * Inbound webhook for forwarded broker confirmations.
  *
+ * Supports both common inbound providers, because they differ in two ways:
+ *  - Mailgun posts multipart form fields and signs each request (HMAC over
+ *    timestamp + token).
+ *  - Postmark posts JSON and does NOT sign; it authenticates by letting you put
+ *    HTTP Basic credentials in the webhook URL.
+ * Whichever is configured, a request that proves neither is rejected.
+ *
  * Threat model: this endpoint is reachable by anyone who can send email, so
- * nothing it receives is trusted.
- *  - The request itself must carry a valid provider signature, so only our
- *    mail provider can post here at all.
- *  - The recipient alias identifies the account. It is random, unguessable and
- *    rotatable, and an unknown alias is discarded without revealing anything.
- *  - Parsed trades are stored as PENDING. Nothing reaches a portfolio until
- *    the user reviews and applies it, so a forged email cannot silently alter
- *    someone's holdings.
+ * nothing it receives is trusted. The alias identifying the account is random
+ * and rotatable, an unknown alias is discarded without acknowledgement, and
+ * parsed trades are stored as PENDING — nothing reaches a portfolio until the
+ * user reviews it, so a forged email cannot silently alter holdings.
  */
 
 const MAX_BODY_BYTES = 512 * 1024;
 
-function timingSafeEqual(a: string, b: string): boolean {
+function safeEqual(a: string, b: string): boolean {
   const bufA = Buffer.from(a);
   const bufB = Buffer.from(b);
   if (bufA.length !== bufB.length) return false;
   return crypto.timingSafeEqual(bufA, bufB);
 }
 
-/**
- * Mailgun signs each post with timestamp + token + HMAC. Verifying it is what
- * stops anyone from POSTing a fake "email" straight at this endpoint.
- */
-function verifyMailgun(fields: Record<string, string>, signingKey: string): boolean {
-  const timestamp = fields.timestamp ?? "";
-  const token = fields.token ?? "";
-  const signature = fields.signature ?? "";
+/** Mailgun: HMAC over timestamp + token, with a window against replays. */
+function verifyMailgunSignature(fields: Record<string, string>, signingKey: string): boolean {
+  const { timestamp = "", token = "", signature = "" } = fields;
   if (!timestamp || !token || !signature) return false;
 
-  // Reject replays of an old, previously-valid signature.
   const age = Math.abs(Date.now() / 1000 - Number(timestamp));
   if (!Number.isFinite(age) || age > 300) return false;
 
   const expected = crypto.createHmac("sha256", signingKey).update(timestamp + token).digest("hex");
-  return timingSafeEqual(expected, signature);
+  return safeEqual(expected, signature);
 }
 
-/** Pull the alias token out of whichever recipient field the provider sent. */
-function extractToken(fields: Record<string, string>): string | null {
-  const candidates = [fields.recipient, fields.to, fields.To, fields["envelope-to"]].filter(Boolean);
-  for (const candidate of candidates) {
+/** Postmark: HTTP Basic credentials carried in the webhook URL. */
+function verifyBasicAuth(header: string | null, expected: string): boolean {
+  if (!header?.startsWith("Basic ")) return false;
+  const supplied = Buffer.from(header.slice(6).trim(), "base64").toString("utf8");
+  return safeEqual(supplied, expected);
+}
+
+/** Normalise either provider's payload into one flat shape. */
+interface InboundEmail {
+  recipients: string[];
+  from: string;
+  subject: string;
+  text: string;
+  html: string;
+}
+
+function fromMailgun(fields: Record<string, string>): InboundEmail {
+  return {
+    recipients: [fields.recipient, fields.to, fields.To, fields["envelope-to"]].filter(Boolean) as string[],
+    from: String(fields.from ?? fields.sender ?? fields.From ?? ""),
+    subject: String(fields.subject ?? fields.Subject ?? ""),
+    text: String(fields["body-plain"] ?? fields["stripped-text"] ?? fields.text ?? ""),
+    html: String(fields["body-html"] ?? fields["stripped-html"] ?? fields.html ?? ""),
+  };
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function fromPostmark(payload: any): InboundEmail {
+  const toFull: string[] = Array.isArray(payload?.ToFull)
+    ? payload.ToFull.map((entry: { Email?: string }) => entry?.Email).filter(Boolean)
+    : [];
+  return {
+    recipients: [payload?.OriginalRecipient, payload?.To, ...toFull].filter(Boolean),
+    from: String(payload?.From ?? payload?.FromFull?.Email ?? ""),
+    subject: String(payload?.Subject ?? ""),
+    text: String(payload?.TextBody ?? payload?.StrippedTextReply ?? ""),
+    html: String(payload?.HtmlBody ?? ""),
+  };
+}
+
+/** Find the alias token in whichever recipient field carried it. */
+function extractToken(recipients: string[]): string | null {
+  for (const candidate of recipients) {
     for (const match of String(candidate).matchAll(/([a-z0-9]{8,40})@/gi)) {
       const token = match[1].toLowerCase();
       if (findUserIdByIngestToken(token)) return token;
@@ -66,7 +102,8 @@ function extractToken(fields: Record<string, string>): string | null {
 
 export async function POST(request: NextRequest) {
   const signingKey = String(process.env.INBOUND_EMAIL_SIGNING_KEY || "").trim();
-  if (!signingKey) {
+  const basicAuth = String(process.env.INBOUND_EMAIL_BASIC_AUTH || "").trim();
+  if (!signingKey && !basicAuth) {
     return NextResponse.json({ error: "Inbound email is not configured." }, { status: 503 });
   }
 
@@ -75,40 +112,53 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Payload too large." }, { status: 413 });
   }
 
-  // Providers post either multipart/form-data or urlencoded; both arrive as FormData.
-  let fields: Record<string, string> = {};
-  try {
-    const form = await request.formData();
-    for (const [key, value] of form.entries()) {
-      if (typeof value === "string") fields[key] = value;
-    }
-  } catch {
+  const contentType = request.headers.get("content-type") ?? "";
+  let email: InboundEmail;
+  let authed = false;
+
+  if (contentType.includes("application/json")) {
+    // Postmark. There is no signature to check, so Basic auth must be set up.
+    let payload: unknown;
     try {
-      fields = (await request.json()) as Record<string, string>;
+      payload = await request.json();
     } catch {
       return NextResponse.json({ error: "Unreadable payload." }, { status: 400 });
     }
+    authed = Boolean(basicAuth) && verifyBasicAuth(request.headers.get("authorization"), basicAuth);
+    email = fromPostmark(payload);
+  } else {
+    // Mailgun (multipart or urlencoded).
+    const fields: Record<string, string> = {};
+    try {
+      const form = await request.formData();
+      for (const [key, value] of form.entries()) {
+        if (typeof value === "string") fields[key] = value;
+      }
+    } catch {
+      return NextResponse.json({ error: "Unreadable payload." }, { status: 400 });
+    }
+    authed =
+      (Boolean(signingKey) && verifyMailgunSignature(fields, signingKey)) ||
+      (Boolean(basicAuth) && verifyBasicAuth(request.headers.get("authorization"), basicAuth));
+    email = fromMailgun(fields);
   }
 
-  if (!verifyMailgun(fields, signingKey)) {
-    // Deliberately terse: never confirm which part failed.
-    return NextResponse.json({ error: "Invalid signature." }, { status: 401 });
+  if (!authed) {
+    // Deliberately terse: never reveal which check failed.
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
-  const token = extractToken(fields);
-  if (!token) {
-    // Accepted so the provider does not retry, but nothing is stored — we have
+  const token = extractToken(email.recipients);
+  const userId = token ? findUserIdByIngestToken(token) : null;
+  if (!userId) {
+    // Accepted so the provider stops retrying, but nothing is stored — there is
     // no account to attribute it to.
     return NextResponse.json({ ok: true, ignored: "unknown recipient" });
   }
-  const userId = findUserIdByIngestToken(token);
-  if (!userId) return NextResponse.json({ ok: true, ignored: "unknown recipient" });
 
-  const subject = String(fields.subject ?? fields.Subject ?? "").slice(0, 500);
-  const from = String(fields.from ?? fields.sender ?? fields.From ?? "").slice(0, 320);
-  const plain = String(fields["body-plain"] ?? fields["stripped-text"] ?? fields.text ?? "");
-  const html = String(fields["body-html"] ?? fields["stripped-html"] ?? fields.html ?? "");
-  const body = (plain.trim() ? plain : htmlToText(html)).slice(0, 200_000);
+  const subject = email.subject.slice(0, 500);
+  const from = email.from.slice(0, 320);
+  const body = (email.text.trim() ? email.text : htmlToText(email.html)).slice(0, 200_000);
 
   const bodyHash = crypto.createHash("sha256").update(`${subject}\n${body}`).digest("hex");
   const messageId = crypto.randomUUID();
