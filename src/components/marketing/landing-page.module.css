@@ -2311,9 +2311,9 @@
   }
 }
 
-/* ─── Myrmidon — coming soon ─────────────────────────────────── */
+/* ─── Scanner section ────────────────────────────────────────── */
 
-.myrmidonSection {
+.scanSection {
   position: relative;
   padding: 110px 0;
   overflow: hidden;
@@ -2322,7 +2322,7 @@
   border-bottom: 1px solid rgba(255, 63, 52, 0.18);
 }
 
-.myrmidonSection::before {
+.scanSection::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -2332,7 +2332,7 @@
     radial-gradient(ellipse 45% 55% at 85% 85%, rgba(255, 74, 38, 0.09) 0%, transparent 70%);
 }
 
-.myrmidonInner {
+.scanInner {
   position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -2340,7 +2340,7 @@
   align-items: center;
 }
 
-.myrmidonBadge {
+.scanBadge {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -2357,7 +2357,7 @@
   margin-bottom: 20px;
 }
 
-.myrmidonDot {
+.scanDot {
   width: 7px;
   height: 7px;
   border-radius: 50%;
@@ -2370,7 +2370,7 @@
   50% { opacity: 0.55; box-shadow: 0 0 0 6px rgba(255, 106, 69, 0); }
 }
 
-.myrmidonTitle {
+.scanTitle {
   font-size: clamp(30px, 4vw, 46px);
   font-weight: 700;
   letter-spacing: -0.03em;
@@ -2379,14 +2379,14 @@
   margin: 0 0 18px;
 }
 
-.myrmidonTitle span {
+.scanTitle span {
   background: linear-gradient(90deg, #ff3f34 0%, #ff4a26 40%, #ff4a26 85%);
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
 }
 
-.myrmidonSub {
+.scanSub {
   font-size: 16px;
   line-height: 1.65;
   color: #a2a2ab;
@@ -2394,7 +2394,7 @@
   margin: 0 0 26px;
 }
 
-.myrmidonList {
+.scanList {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -2403,7 +2403,7 @@
   gap: 12px;
 }
 
-.myrmidonList li {
+.scanList li {
   font-size: 14px;
   line-height: 1.55;
   color: #a2a2ab;
@@ -2411,19 +2411,19 @@
   position: relative;
 }
 
-.myrmidonList li::before {
+.scanList li::before {
   content: "▸";
   position: absolute;
   left: 0;
   color: #ff3f34;
 }
 
-.myrmidonList li strong {
+.scanList li strong {
   color: #f2f2f5;
   font-weight: 600;
 }
 
-.myrmidonTerm {
+.scanTerm {
   border: 1px solid rgba(255, 63, 52, 0.3);
   border-radius: 12px;
   overflow: hidden;
@@ -2431,7 +2431,7 @@
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5), 0 0 40px rgba(255, 63, 52, 0.12);
 }
 
-.myrmidonTermBar {
+.scanTermBar {
   font-family: var(--font-geist-mono), monospace;
   font-size: 11px;
   font-weight: 700;
@@ -2441,33 +2441,33 @@
   background: linear-gradient(90deg, #ff3f34 0%, #ff4a26 35%, #ff4a26 72%, #ff6a45 100%);
 }
 
-.myrmidonTermBody {
+.scanTermBody {
   padding: 18px 16px 20px;
   display: flex;
   flex-direction: column;
   gap: 13px;
 }
 
-.myrmidonTermLine {
+.scanTermLine {
   font-family: var(--font-geist-mono), monospace;
   font-size: 12.5px;
   line-height: 1.55;
   color: #b7b0d4;
 }
 
-.myrmidonArmed {
+.scanArmed {
   color: #00e676;
   font-weight: 700;
   margin-right: 8px;
 }
 
-.myrmidonToolRow {
+.scanToolRow {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
 }
 
-.myrmidonTool {
+.scanTool {
   font-size: 10.5px;
   padding: 3px 9px;
   border-radius: 4px;
@@ -2477,7 +2477,7 @@
   white-space: nowrap;
 }
 
-.myrmidonTrade {
+.scanTrade {
   border: 1px solid rgba(255, 63, 52, 0.35);
   background: rgba(255, 63, 52, 0.07);
   border-radius: 8px;
@@ -2485,17 +2485,17 @@
   color: #d5d5de;
 }
 
-.myrmidonBuy {
+.scanBuy {
   color: #00e676;
   font-weight: 700;
   margin-right: 6px;
 }
 
 @media (max-width: 960px) {
-  .myrmidonSection {
+  .scanSection {
     padding: 72px 0;
   }
-  .myrmidonInner {
+  .scanInner {
     grid-template-columns: 1fr;
     gap: 36px;
   }
@@ -2723,8 +2723,8 @@
     0 30px 70px rgba(100, 60, 220, 0.09);
 }
 
-/* Myrmidon typed strategy line — reserve space so typing doesn't reflow */
-.myrmidonTyped {
+/* Typed line — reserve space so typing does not reflow the layout */
+.scanTyped {
   min-height: 2.6em;
   color: #d5d5de;
 }
@@ -2815,7 +2815,7 @@
 /* ── Global type swap ── */
 .sectionTitle,
 .aiRevealTitle,
-.myrmidonTitle,
+.scanTitle,
 .stickyPanelTitle,
 .ctaPanel h2 {
   font-family: 'Unbounded', sans-serif !important;
@@ -2825,7 +2825,7 @@
 
 .sectionTitle { font-size: clamp(24px, 3.4vw, 44px); line-height: 1.12; }
 .aiRevealTitle { font-size: clamp(26px, 4vw, 52px); line-height: 1.08; }
-.myrmidonTitle { font-size: clamp(24px, 3.2vw, 40px); line-height: 1.14; }
+.scanTitle { font-size: clamp(24px, 3.2vw, 40px); line-height: 1.14; }
 
 .sectionLabel,
 .smallLabel,
@@ -2834,7 +2834,7 @@
 .statStatLabel,
 .planTier,
 .compareHead,
-.myrmidonBadge,
+.scanBadge,
 .heroBadge,
 .footerTagline,
 .commandHint {
@@ -2854,7 +2854,7 @@
 /* ── Soft curves (fireart-style black & orange) ── */
 .dashboardCard,
 .aiConsoleRevealInner,
-.myrmidonTerm,
+.scanTerm,
 .ctaPanel { border-radius: 28px !important; overflow: hidden; }
 
 .chartCard,
@@ -2871,7 +2871,7 @@
 .statCard { border-radius: 22px !important; }
 
 .previewUploadZone,
-.myrmidonTrade,
+.scanTrade,
 .commandBar { border-radius: 16px !important; }
 
 .button,
@@ -2879,21 +2879,21 @@
 .outlineButton,
 .ghostButton,
 .heroBadge,
-.myrmidonBadge,
+.scanBadge,
 .lifecycleChip,
 .chartBadge,
-.myrmidonTool,
+.scanTool,
 .tickerItem { border-radius: 999px !important; }
 
 .iconWrap,
 .researchTileIcon { border-radius: 16px !important; }
 
-.myrmidonTermBar { border-radius: 0 !important; }
+.scanTermBar { border-radius: 0 !important; }
 
 /* ── Blacker surfaces + hairline borders ── */
 .dashboardCard,
 .aiConsoleRevealInner,
-.myrmidonTerm,
+.scanTerm,
 .ctaPanel {
   background: #0a0a0c;
   border: 1px solid #262320;
@@ -2923,7 +2923,7 @@
 .statsGrid { background: #18181b; }
 .statStat { background: #08080a; }
 
-.myrmidonSection {
+.scanSection {
   background: #050506;
   border-top: 1px solid #202024;
   border-bottom: 1px solid #202024;
@@ -3123,7 +3123,7 @@
   border-radius: 8px;
 }
 
-/* ── Myrmidon Scanner — live for everyone ── */
+/* ── Scanner — live for everyone ── */
 .scannerSection {
   position: relative;
   padding: 110px 0;
@@ -3531,7 +3531,7 @@
   padding: 170px 0;
 }
 
-.myrmidonSection,
+.scanSection,
 .scannerSection {
   padding: 160px 0;
 }
@@ -3575,7 +3575,7 @@
   margin-top: 56px;
 }
 
-.myrmidonInner,
+.scanInner,
 .scannerInner {
   gap: 96px;
 }
@@ -3609,7 +3609,7 @@
   .section {
     padding: 110px 0;
   }
-  .myrmidonSection,
+  .scanSection,
   .scannerSection {
     padding: 100px 0;
   }
@@ -3623,13 +3623,13 @@
   .featureGrid {
     margin-top: 52px;
   }
-  .myrmidonInner,
+  .scanInner,
   .scannerInner {
     gap: 48px;
   }
 }
 
-.myrmidonCopy {
+.scanCopy {
   min-width: 0;
 }
 

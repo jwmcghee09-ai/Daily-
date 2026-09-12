@@ -168,7 +168,7 @@ const faqs = [
   {
     question: "Can I scan individual stocks?",
     answer:
-      "Yes — the Myrmidon Scanner is free for every account. Search any ASX, US, or global ticker and it flags possible anomalies: RSI extremes, volume spikes, price gaps, 52-week levels, trend breaks, and volatility bursts. It's statistical context only, never advice — you always have the final say.",
+      "Yes — the SPECTRE Scanner is free for every account. Search any ASX, US, or global ticker and it flags possible anomalies: RSI extremes, volume spikes, price gaps, 52-week levels, trend breaks, and volatility bursts. It's statistical context only, never advice — you always have the final say.",
   },
   {
     question: "What do I need to sign up?",
@@ -586,7 +586,7 @@ export default function LandingPage({
         <div className={styles.container}>
           <div className={styles.scannerInner}>
             <div className={`${styles.scannerCard} ${styles.revealScale}`} style={{ transitionDelay: "0.12s" }}>
-              <div className={styles.myrmidonTermBar}>MYRMIDON // SCANNER — LIVE FOR EVERY ACCOUNT</div>
+              <div className={styles.scanTermBar}>SPECTRE // SCANNER — LIVE FOR EVERY ACCOUNT</div>
               <div className={styles.scannerCardBody}>
                 <div className={styles.scanHead}>
                   <span className={styles.scanSym}>PLS.AX</span>
@@ -628,7 +628,7 @@ export default function LandingPage({
                   </div>
                 </div>
                 <div className={styles.scanDisclaimer}>
-                  Possible anomalies only — not advice. Myrmidon surfaces; you decide.
+                  Possible anomalies only — not advice. SPECTRE surfaces; you decide.
                 </div>
               </div>
             </div>
@@ -638,15 +638,15 @@ export default function LandingPage({
                 <span className={styles.scannerLiveDot} />
                 Live Now · Free For Everyone
               </div>
-              <h2 className={`${styles.myrmidonTitle} ${styles.revealUp}`} style={{ transitionDelay: "0.06s" }}>
-                Myrmidon&rsquo;s scanner.<br />
-                <span>In your hands today.</span>
+              <h2 className={`${styles.scanTitle} ${styles.revealUp}`} style={{ transitionDelay: "0.06s" }}>
+                Scan any stock.<br />
+                <span>Free, for everyone.</span>
               </h2>
-              <p className={`${styles.myrmidonSub} ${styles.reveal}`} style={{ transitionDelay: "0.12s" }}>
-                Free on every account. Search any stock and Myrmidon checks a year of price, volume,
+              <p className={`${styles.scanSub} ${styles.reveal}`} style={{ transitionDelay: "0.12s" }}>
+                Free on every account. Search any stock and SPECTRE checks a year of price, volume,
                 momentum, and volatility history — then flags what looks unusual.
               </p>
-              <ul className={styles.myrmidonList}>
+              <ul className={styles.scanList}>
                 {[
                   ["Search any stock", "Type BHP, CBA, NVDA — ASX tickers resolve first, and US or global markets work too."],
                   ["Possible anomalies only", "RSI extremes, volume spikes, price gaps, 52-week levels, trend breaks, and volatility bursts. Flags, not orders."],
@@ -699,7 +699,7 @@ export default function LandingPage({
 
           <div className={styles.connectSplit}>
             <div className={`${styles.connectTerm} ${styles.revealScale}`} style={{ transitionDelay: "0.12s" }}>
-              <div className={styles.myrmidonTermBar}>YOUR AI // CONNECTED TO SPECTRE</div>
+              <div className={styles.scanTermBar}>YOUR AI // CONNECTED TO SPECTRE</div>
               <div className={styles.connectTermBody}>
                 <div className={styles.connectAsk}>› How is my portfolio positioned right now?</div>
                 <div className={styles.connectToolRow}>
