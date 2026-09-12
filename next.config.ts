@@ -8,7 +8,7 @@ const contentSecurityPolicy = [
   "frame-ancestors 'self'",
   "object-src 'none'",
   "form-action 'self' https://checkout.stripe.com",
-  `script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com https://connect.facebook.net https://cdn.jsdelivr.net${isProd ? "" : " 'unsafe-eval'"}`,
+  `script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com https://connect.facebook.net${isProd ? "" : " 'unsafe-eval'"}`,
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data: https://fonts.gstatic.com",

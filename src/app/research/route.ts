@@ -7,8 +7,21 @@ export const runtime = "nodejs";
 
 const TRADER_EMAIL = "jwmcghee09@gmail.com";
 
+// Chrome the dashboard already draws around the iframe: the research page's own
+// top nav would be a second, redundant header inside the embed.
+const EMBED_STYLE = `<style id="spectre-embed">
+  /* The dashboard already draws the nav, and its header + KPI strip already
+     show the account, plan and holdings that the workspace hero repeats. */
+  nav.nav { display: none !important; }
+  section.workspace-hero { display: none !important; }
+  body { padding-top: 0 !important; }
+  .container#terminal { padding-top: 0 !important; }
+  .page-header { margin-top: 0 !important; }
+</style>`;
+
 export async function GET(request: NextRequest) {
   const isDemo = request.nextUrl.searchParams.get("demo") === "1";
+  const isEmbed = request.nextUrl.searchParams.get("embed") === "1";
   let isTrader = false;
   if (!isDemo) {
     const user = await getAuthenticatedUser();
@@ -30,6 +43,10 @@ export async function GET(request: NextRequest) {
     );
     html = html.replace("<title>SPECTRE — ASX Market Terminal</title>", "<title>Myrmidon — ASX Market Terminal</title>");
     html = html.replace('id="nav-home-logo" style="text-decoration:none;">SPECTRE</a>', 'id="nav-home-logo" style="text-decoration:none;">Myrmidon</a>');
+  }
+
+  if (isEmbed) {
+    html = html.replace("</head>", () => `${EMBED_STYLE}\n</head>`);
   }
 
   return new NextResponse(html, {

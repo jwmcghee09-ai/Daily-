@@ -110,6 +110,67 @@ code rather than trusted to the model.
 
 ---
 
+## Connect your own AI (MCP)
+
+`mcp-server.mjs` exposes SPECTRE's engine over the **Model Context Protocol**, so
+you can point any MCP-capable AI at your portfolio and ask it questions directly.
+One server covers every client — there's nothing platform-specific to install.
+
+It gives the AI three tools:
+
+| Tool | What it does |
+|---|---|
+| `scan_stock` | Full statistics and anomaly flags for one ticker |
+| `compare_stocks` | Several tickers analysed side by side |
+| `analyse_portfolio` | Prices a holdings CSV and adds concentration/risk analysis |
+
+Because the figures are computed in code before the model ever sees them, a
+connected AI reasons over correct numbers instead of guessing at a chart. The
+server also sends the model standing instructions: cite the figures exactly,
+never recompute them, and never tell the user to buy or sell.
+
+Check it works:
+
+```bash
+node test-mcp.mjs
+```
+
+### Claude Desktop
+
+Add this to `claude_desktop_config.json` (Settings → Developer → Edit Config):
+
+```json
+{
+  "mcpServers": {
+    "spectre": {
+      "command": "node",
+      "args": ["/absolute/path/to/local/mcp-server.mjs"]
+    }
+  }
+}
+```
+
+Restart Claude Desktop and SPECTRE appears in the tools menu. Then just ask:
+*"Scan BHP and tell me what's unusual"* or *"Analyse my portfolio at
+~/holdings.csv — where is my risk concentrated?"*
+
+### LM Studio, Cursor, Zed, Open WebUI
+
+Same server, same shape. Each client has its own config file but they all take a
+command and args — point them at `mcp-server.mjs` exactly as above. Open WebUI is
+the usual route if you want an **Ollama** model driving the tools, since Ollama
+is a model server rather than a chat client and can't consume MCP by itself.
+
+### Which AI should drive it?
+
+A frontier model (Claude, GPT) reasons about a portfolio far better than anything
+that runs locally, and costs you nothing extra if you already pay for it — the
+data stays local either way, since these tools run on your machine and only
+return the figures you asked for. Use the local Ollama path when you want the
+whole loop offline and are happy to trade some reasoning quality for it.
+
+---
+
 ## What it will not do
 
 It does not tell you what to buy or sell. It surfaces what is statistically
