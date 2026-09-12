@@ -12,6 +12,7 @@
         "start": "next start -H 0.0.0.0 -p ${PORT:-10000} --keepAliveTimeout 120000",
         "lint": "eslint",
         "verify:site": "node scripts/verify-site.mjs",
+        "test:parser": "node --experimental-strip-types scripts/test-contract-notes.mjs",
         "load:test": "node scripts/load-test.mjs",
         "load:soak": "node scripts/load-test.mjs --profile=soak",
         "backup:db": "node scripts/backup-db.mjs",

@@ -522,6 +522,57 @@ function initSchema(db: DatabaseSync): void {
   `);
 
   db.exec(`
+    -- Per-user inbound alias. Users forward broker confirmations to
+    -- <token>@<inbound domain>; the token is the only thing tying an inbound
+    -- email to an account, so it is random and rotatable.
+    CREATE TABLE IF NOT EXISTS email_ingest_aliases (
+      user_id TEXT PRIMARY KEY,
+      token TEXT NOT NULL UNIQUE,
+      created_at TEXT NOT NULL,
+      rotated_at TEXT
+    );
+
+    -- Every inbound email, parsed or not. Kept so a user can see why a
+    -- forward did not turn into a trade, and so duplicates are detectable.
+    CREATE TABLE IF NOT EXISTS email_ingest_messages (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      received_at TEXT NOT NULL,
+      from_address TEXT NOT NULL DEFAULT '',
+      subject TEXT NOT NULL DEFAULT '',
+      broker TEXT,
+      status TEXT NOT NULL,
+      reason TEXT NOT NULL DEFAULT '',
+      body_hash TEXT NOT NULL DEFAULT ''
+    );
+
+    -- Parsed trades awaiting the user's confirmation. Nothing here touches
+    -- holdings until it is explicitly applied.
+    CREATE TABLE IF NOT EXISTS email_ingest_trades (
+      id TEXT PRIMARY KEY,
+      message_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending',
+      broker TEXT NOT NULL DEFAULT '',
+      side TEXT NOT NULL,
+      ticker TEXT NOT NULL,
+      units REAL NOT NULL,
+      unit_price REAL NOT NULL,
+      total REAL,
+      brokerage REAL,
+      trade_date TEXT,
+      currency TEXT NOT NULL DEFAULT 'AUD',
+      confirmation TEXT,
+      confidence REAL NOT NULL DEFAULT 1,
+      notes TEXT NOT NULL DEFAULT '[]'
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_ingest_trades_user ON email_ingest_trades(user_id, status);
+    CREATE INDEX IF NOT EXISTS idx_ingest_messages_user ON email_ingest_messages(user_id, received_at);
+  `);
+
+  db.exec(`
     CREATE TABLE IF NOT EXISTS trading_memory (
       id TEXT PRIMARY KEY,
       strategy TEXT NOT NULL DEFAULT '',
@@ -4003,4 +4054,187 @@ export function sumExecutedBuyNotionalToday(): number {
     "SELECT COALESCE(SUM(qty * COALESCE(est_price, 0)), 0) AS total FROM pending_trades WHERE side = 'buy' AND status = 'executed' AND resolved_at >= ?"
   ).get(today + "T00:00:00.000Z") as { total: number };
   return row.total;
+}
+
+// ── Email ingestion ──────────────────────────────────────────────────────────
+
+export interface IngestTradeRow {
+  id: string;
+  messageId: string;
+  userId: string;
+  createdAt: string;
+  status: "pending" | "applied" | "rejected";
+  broker: string;
+  side: "buy" | "sell";
+  ticker: string;
+  units: number;
+  unitPrice: number;
+  total: number | null;
+  brokerage: number | null;
+  tradeDate: string | null;
+  currency: string;
+  confirmation: string | null;
+  confidence: number;
+  notes: string[];
+}
+
+/** The user's inbound alias token, created on first use. */
+export function getOrCreateIngestToken(userId: string): string {
+  const db = getDb();
+  const existing = db.prepare("SELECT token FROM email_ingest_aliases WHERE user_id = ?").get(userId) as
+    | { token: string }
+    | undefined;
+  if (existing) return existing.token;
+
+  const token = crypto.randomBytes(16).toString("base64url").toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 20);
+  db.prepare("INSERT INTO email_ingest_aliases (user_id, token, created_at) VALUES (?, ?, ?)").run(
+    userId,
+    token,
+    new Date().toISOString(),
+  );
+  return token;
+}
+
+/** Replace the alias, invalidating the old address. */
+export function rotateIngestToken(userId: string): string {
+  const db = getDb();
+  const token = crypto.randomBytes(16).toString("base64url").toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 20);
+  const now = new Date().toISOString();
+  db.prepare(
+    `INSERT INTO email_ingest_aliases (user_id, token, created_at, rotated_at) VALUES (?, ?, ?, ?)
+     ON CONFLICT(user_id) DO UPDATE SET token = excluded.token, rotated_at = excluded.rotated_at`,
+  ).run(userId, token, now, now);
+  return token;
+}
+
+export function findUserIdByIngestToken(token: string): string | null {
+  const db = getDb();
+  const row = db.prepare("SELECT user_id FROM email_ingest_aliases WHERE token = ?").get(token) as
+    | { user_id: string }
+    | undefined;
+  return row?.user_id ?? null;
+}
+
+/** True when this exact body has already been ingested for this user. */
+export function hasIngestedBody(userId: string, bodyHash: string): boolean {
+  const db = getDb();
+  const row = db
+    .prepare("SELECT 1 AS hit FROM email_ingest_messages WHERE user_id = ? AND body_hash = ? LIMIT 1")
+    .get(userId, bodyHash) as { hit: number } | undefined;
+  return Boolean(row);
+}
+
+export function recordIngestMessage(input: {
+  id: string;
+  userId: string;
+  fromAddress: string;
+  subject: string;
+  broker: string | null;
+  status: string;
+  reason: string;
+  bodyHash: string;
+}): void {
+  getDb()
+    .prepare(
+      `INSERT INTO email_ingest_messages (id, user_id, received_at, from_address, subject, broker, status, reason, body_hash)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    )
+    .run(
+      input.id,
+      input.userId,
+      new Date().toISOString(),
+      input.fromAddress.slice(0, 320),
+      input.subject.slice(0, 500),
+      input.broker,
+      input.status,
+      input.reason.slice(0, 500),
+      input.bodyHash,
+    );
+}
+
+export function insertIngestTrades(
+  messageId: string,
+  userId: string,
+  trades: Array<Omit<IngestTradeRow, "id" | "messageId" | "userId" | "createdAt" | "status">>,
+): number {
+  const db = getDb();
+  const stmt = db.prepare(
+    `INSERT INTO email_ingest_trades
+       (id, message_id, user_id, created_at, status, broker, side, ticker, units, unit_price, total, brokerage, trade_date, currency, confirmation, confidence, notes)
+     VALUES (?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+  );
+  const now = new Date().toISOString();
+  let inserted = 0;
+  db.exec("BEGIN IMMEDIATE");
+  try {
+    for (const t of trades) {
+      stmt.run(
+        crypto.randomUUID(), messageId, userId, now,
+        t.broker, t.side, t.ticker, t.units, t.unitPrice,
+        t.total, t.brokerage, t.tradeDate, t.currency, t.confirmation,
+        t.confidence, JSON.stringify(t.notes ?? []),
+      );
+      inserted++;
+    }
+    db.exec("COMMIT");
+  } catch (error) {
+    db.exec("ROLLBACK");
+    throw error;
+  }
+  return inserted;
+}
+
+function mapIngestTrade(r: Record<string, unknown>): IngestTradeRow {
+  let notes: string[] = [];
+  try { notes = JSON.parse(String(r.notes ?? "[]")) as string[]; } catch { notes = []; }
+  return {
+    id: String(r.id), messageId: String(r.message_id), userId: String(r.user_id),
+    createdAt: String(r.created_at), status: String(r.status) as IngestTradeRow["status"],
+    broker: String(r.broker ?? ""), side: String(r.side) as "buy" | "sell",
+    ticker: String(r.ticker), units: Number(r.units), unitPrice: Number(r.unit_price),
+    total: r.total == null ? null : Number(r.total),
+    brokerage: r.brokerage == null ? null : Number(r.brokerage),
+    tradeDate: r.trade_date == null ? null : String(r.trade_date),
+    currency: String(r.currency ?? "AUD"),
+    confirmation: r.confirmation == null ? null : String(r.confirmation),
+    confidence: Number(r.confidence ?? 1), notes,
+  };
+}
+
+export function listIngestTrades(userId: string, status = "pending", limit = 100): IngestTradeRow[] {
+  const capped = Math.min(Math.max(Math.trunc(limit) || 100, 1), 500);
+  const rows = getDb()
+    .prepare(
+      `SELECT * FROM email_ingest_trades WHERE user_id = ? AND status = ?
+       ORDER BY COALESCE(trade_date, created_at) DESC, created_at DESC LIMIT ?`,
+    )
+    .all(userId, status, capped) as Array<Record<string, unknown>>;
+  return rows.map(mapIngestTrade);
+}
+
+export function getIngestTrades(userId: string, ids: string[]): IngestTradeRow[] {
+  if (!ids.length) return [];
+  const placeholders = ids.map(() => "?").join(",");
+  const rows = getDb()
+    .prepare(`SELECT * FROM email_ingest_trades WHERE user_id = ? AND id IN (${placeholders})`)
+    .all(userId, ...ids) as Array<Record<string, unknown>>;
+  return rows.map(mapIngestTrade);
+}
+
+export function setIngestTradeStatus(userId: string, ids: string[], status: "applied" | "rejected"): number {
+  if (!ids.length) return 0;
+  const placeholders = ids.map(() => "?").join(",");
+  const result = getDb()
+    .prepare(
+      `UPDATE email_ingest_trades SET status = ? WHERE user_id = ? AND status = 'pending' AND id IN (${placeholders})`,
+    )
+    .run(status, userId, ...ids) as { changes?: number | bigint };
+  return Number(result.changes ?? 0);
+}
+
+export function listIngestMessages(userId: string, limit = 25): Array<Record<string, unknown>> {
+  const capped = Math.min(Math.max(Math.trunc(limit) || 25, 1), 100);
+  return getDb()
+    .prepare("SELECT * FROM email_ingest_messages WHERE user_id = ? ORDER BY received_at DESC LIMIT ?")
+    .all(userId, capped) as Array<Record<string, unknown>>;
 }

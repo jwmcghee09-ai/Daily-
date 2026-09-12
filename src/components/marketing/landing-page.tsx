@@ -374,7 +374,6 @@ export default function LandingPage({
             <a href="#ai">AI</a>
             <a href="#scanner">Scanner</a>
             <a href="#connect">Connect</a>
-            <a href="#myrmidon">Myrmidon</a>
             <a href="#features">Features</a>
             <a href="#start">Start</a>
           </div>
@@ -583,65 +582,6 @@ export default function LandingPage({
         </div>
       </section>
 
-      <section className={styles.myrmidonSection} id="myrmidon">
-        <div className={styles.container}>
-          <div className={styles.myrmidonInner}>
-            <div className={styles.myrmidonCopy}>
-              <div className={`${styles.myrmidonBadge} ${styles.reveal}`}>
-                <span className={styles.myrmidonDot} />
-                Coming Soon
-              </div>
-              <h2 className={`${styles.myrmidonTitle} ${styles.revealUp}`} style={{ transitionDelay: "0.06s" }}>
-                Meet Myrmidon.<br />
-                <span>Your autonomous trading agent.</span>
-              </h2>
-              <p className={`${styles.myrmidonSub} ${styles.reveal}`} style={{ transitionDelay: "0.12s" }}>
-                The next evolution of SPECTRE: an AI agent that watches the market, follows a strategy you
-                describe in plain English, and manages a live portfolio — with every safety limit enforced
-                in code, not left to the model.
-              </p>
-              <ul className={styles.myrmidonList}>
-                {[
-                  ["Your rules, your words", "Write the strategy in plain English. Myrmidon follows it exactly — nothing more."],
-                  ["Propose & confirm", "Trades queue with a veto window before they fire. Autopilot only when you say so."],
-                  ["Full decision log", "Every run, every reason, every rejected trade — recorded and reviewable."],
-                ].map(([title, copy], index) => (
-                  <li key={title} className={styles.reveal} style={{ transitionDelay: `${0.18 + index * 0.08}s` }}>
-                    <strong>{title}</strong> — {copy}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className={`${styles.myrmidonTerm} ${styles.revealScale}`} style={{ transitionDelay: "0.15s" }}>
-              <div className={styles.myrmidonTermBar}>MYRMIDON // AUTONOMOUS TRADING TERMINAL</div>
-              <div className={styles.myrmidonTermBody}>
-                <div className={`${styles.myrmidonTermLine} ${styles.reveal}`} style={{ transitionDelay: "0.35s" }}>
-                  <span className={styles.myrmidonArmed}>● BOT ARMED</span> your strategy, in your words · confirm mode
-                </div>
-                <TypedLine
-                  className={`${styles.myrmidonTermLine} ${styles.myrmidonTyped}`}
-                  text="› Buy quality names when they dip 3%. Take profit at +10%. Never break the 20% cash floor."
-                />
-                <div className={`${styles.myrmidonTermLine} ${styles.myrmidonToolRow} ${styles.reveal}`} style={{ transitionDelay: "0.75s" }}>
-                  <span className={styles.myrmidonTool}>get positions ✓</span>
-                  <span className={styles.myrmidonTool}>get macro ✓</span>
-                  <span className={styles.myrmidonTool}>risk check ✓</span>
-                </div>
-                <div className={`${styles.myrmidonTermLine} ${styles.myrmidonTrade} ${styles.reveal}`} style={{ transitionDelay: "0.95s" }}>
-                  <span className={styles.myrmidonBuy}>▲ BUY 12 SPY</span> @ ~$735 · queued — fires in 5 min unless cancelled
-                </div>
-                <div className={`${styles.myrmidonTermLine} ${styles.reveal}`} style={{ transitionDelay: "1.15s" }}>
-                  09:42 decision logged · cash floor 20% respected · 2 proposals rejected by guardrails
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <Divider />
-
       <section className={styles.scannerSection} id="scanner">
         <div className={styles.container}>
           <div className={styles.scannerInner}>
@@ -703,9 +643,8 @@ export default function LandingPage({
                 <span>In your hands today.</span>
               </h2>
               <p className={`${styles.myrmidonSub} ${styles.reveal}`} style={{ transitionDelay: "0.12s" }}>
-                While the full trading agent is in development, its anomaly engine is already live for
-                every account. Search any stock and it checks a year of price, volume, momentum, and
-                volatility history — then flags what looks unusual.
+                Free on every account. Search any stock and Myrmidon checks a year of price, volume,
+                momentum, and volatility history — then flags what looks unusual.
               </p>
               <ul className={styles.myrmidonList}>
                 {[
