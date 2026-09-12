@@ -3771,3 +3771,14 @@
     margin-top: 40px;
   }
 }
+
+.brandKnot {
+  display: block;
+  height: 27px;
+  width: 27px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 560px) {
+  .brandKnot { height: 23px; width: 23px; }
+}

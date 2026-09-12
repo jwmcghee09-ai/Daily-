@@ -2403,6 +2403,28 @@ export async function estimateHistoricalRiskFromYahoo(
   };
 }
 
+/**
+ * Remove only the holdings imported from one source, leaving every other
+ * source untouched. Used to clear broker-synced positions (e.g. the Alpaca
+ * paper book) without wiping real broker, super or crypto imports.
+ */
+export function clearPortfolioSource(userId: string, source: DataSource): PortfolioState {
+  const db = getDb();
+  const normalizedSource: DataSource = normalizeSource(source);
+  const scopedPattern = userLikePattern(userId);
+
+  db.exec("BEGIN IMMEDIATE");
+  try {
+    db.prepare("DELETE FROM holdings WHERE source = ? AND id LIKE ?").run(normalizedSource, scopedPattern);
+    db.exec("COMMIT");
+  } catch (error) {
+    db.exec("ROLLBACK");
+    throw error;
+  }
+
+  return readPortfolioState(userId);
+}
+
 export function clearPortfolioData(userId: string): PortfolioState {
   const db = getDb();
   const scopedPattern = userLikePattern(userId);

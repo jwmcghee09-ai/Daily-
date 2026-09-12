@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
-import { clearPortfolioData, readPortfolioState } from "@/lib/db";
+import { clearPortfolioData, clearPortfolioSource, readPortfolioState } from "@/lib/db";
 import { clearDemoGuestCookie, clearDemoGuestWorkspace, getDemoGuestContext, resetDemoGuestPortfolio } from "@/lib/demo-guest";
 
 export const runtime = "nodejs";
@@ -61,6 +61,21 @@ export async function DELETE(request: Request) {
 
     if (!sessionUser) {
       return NextResponse.json({ error: "Please sign in first." }, { status: 401 });
+    }
+
+    // ?source=us clears just that import (e.g. broker-synced positions),
+    // leaving every other source intact. Without it, everything is cleared.
+    const source = new URL(request.url).searchParams.get("source");
+    if (source) {
+      const allowed = ["super", "asx", "us", "gold", "index", "fund", "crypto", "tax", "savings"];
+      if (!allowed.includes(source)) {
+        return NextResponse.json(
+          { error: `Unknown source "${source}". Expected one of: ${allowed.join(", ")}` },
+          { status: 400 },
+        );
+      }
+      const scoped = clearPortfolioSource(sessionUser.id, source as Parameters<typeof clearPortfolioSource>[1]);
+      return NextResponse.json(scoped);
     }
 
     const state = clearPortfolioData(sessionUser.id);

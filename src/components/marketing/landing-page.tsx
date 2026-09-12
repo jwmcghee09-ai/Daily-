@@ -365,6 +365,8 @@ export default function LandingPage({
         <div className={styles.navInner}>
           <Link href="/" className={styles.brandRow} aria-label="SPECTRE home">
             {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/spectre-mark.svg" alt="" aria-hidden="true" className={styles.brandKnot} />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/spectre-wordmark.svg" alt="SPECTRE" height={20} className={styles.brandWordmark} />
           </Link>
 
