@@ -12,6 +12,22 @@ const CONFIG_DIR = join(homedir(), ".spectre");
 const CONFIG_PATH = join(CONFIG_DIR, "config.json");
 const DEFAULT_BASE_URL = process.env.SPECTRE_URL?.replace(/\/$/, "") || "https://spectre-assets.com";
 
+export class SessionExpired extends Error {
+  constructor() {
+    super("Your SPECTRE session has expired or been revoked.\n  Run:  node spectre.mjs login");
+  }
+}
+
+export class NotPermitted extends Error {
+  constructor(path) {
+    super(
+      `The signed-in SPECTRE account isn't permitted to use ${path}.\n` +
+        "  Myrmidon endpoints are restricted to the trader account — sign in as that account:\n" +
+        "    node spectre.mjs login",
+    );
+  }
+}
+
 export class NotSignedIn extends Error {
   constructor() {
     super(
@@ -84,10 +100,14 @@ export async function apiGet(path, { timeoutMs = 20000 } = {}) {
     signal: AbortSignal.timeout(timeoutMs),
   });
 
-  if (res.status === 401 || res.status === 403) {
-    throw new Error(
-      "Your SPECTRE session has expired or been revoked.\n  Run:  node spectre.mjs login",
-    );
+  // 401 means the token is no longer good; 403 means this account is signed in
+  // but isn't allowed at this endpoint. Conflating them sends people off to
+  // re-login when the real problem is that they're on the wrong account.
+  if (res.status === 401) {
+    throw new SessionExpired();
+  }
+  if (res.status === 403) {
+    throw new NotPermitted(path);
   }
   if (!res.ok) throw new Error(`SPECTRE API returned ${res.status} for ${path}`);
   return res.json();

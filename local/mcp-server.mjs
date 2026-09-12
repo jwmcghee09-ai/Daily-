@@ -13,7 +13,7 @@
 import { analyse, analysePortfolio } from "./lib/engine.mjs";
 import { loadBars } from "./lib/quotes.mjs";
 import { readPortfolio } from "./lib/portfolio.mjs";
-import { fetchAccountPortfolio, readConfig } from "./lib/account.mjs";
+import { fetchAccountPortfolio, readConfig, apiGet } from "./lib/account.mjs";
 
 const SERVER_INFO = { name: "spectre", version: "1.0.0" };
 const SUPPORTED_PROTOCOLS = ["2025-06-18", "2025-03-26", "2024-11-05"];
@@ -70,6 +70,36 @@ const TOOLS = [
       "Prefer this over analyse_portfolio whenever the user refers to 'my portfolio' or 'my holdings' " +
       "without naming a file. Returns per-holding statistics and anomaly flags plus portfolio-level " +
       "concentration and risk analysis. Requires the user to have run `node spectre.mjs login` once.",
+    inputSchema: { type: "object", properties: {} },
+  },
+  {
+    name: "myrmidon_status",
+    description:
+      "Read the current state of Myrmidon, the autonomous paper-trading agent: account equity, cash, " +
+      "buying power, open positions with unrealised P/L, and whether the strategy is running or in " +
+      "autopilot. Myrmidon trades a PAPER account — simulated money, not real funds. " +
+      "Only available on the trader's own account.",
+    inputSchema: { type: "object", properties: {} },
+  },
+  {
+    name: "myrmidon_decisions",
+    description:
+      "Read Myrmidon's decision log: what it did on each run, why, which trades it proposed or executed, " +
+      "and which its guardrails rejected. Use this to review or audit the agent's behaviour over time. " +
+      "Only available on the trader's own account.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        limit: { type: "number", description: "How many recent decisions to return (default 20, max 100)" },
+      },
+    },
+  },
+  {
+    name: "myrmidon_strategy",
+    description:
+      "Read the plain-English strategy Myrmidon is currently following, plus its configured guardrails " +
+      "(cash floor, position caps, daily trade cap, confirm window). Read-only — this tool cannot change " +
+      "the strategy or place trades. Only available on the trader's own account.",
     inputSchema: { type: "object", properties: {} },
   },
   {
@@ -169,10 +199,55 @@ async function analysePortfolioTool({ csv_path: csvPath }) {
   return { source: csvPath, ...(await priceHoldings(holdings)) };
 }
 
+// Myrmidon tools are read-only by design. The agent's order path stays behind
+// its own guardrails and confirm window — an AI assistant can inspect and
+// critique what it did, but cannot place or approve a trade through here.
+const PAPER_NOTE =
+  "Myrmidon trades a PAPER account — simulated money, not real funds. " +
+  "These figures are not a real brokerage balance.";
+
+async function myrmidonStatus() {
+  // Fetch the account first: if the caller isn't permitted, fail the whole tool
+  // rather than returning a success payload with an error buried inside it.
+  const account = await apiGet("/api/trading/account");
+  const [positions, strategy] = await Promise.all([
+    apiGet("/api/trading/positions").catch((e) => ({ error: e.message })),
+    apiGet("/api/trading/strategy").catch(() => null),
+  ]);
+  return {
+    account,
+    positions,
+    strategyRunning: strategy?.enabled ?? null,
+    autopilot: strategy?.autopilot ?? null,
+    accountType: "paper",
+    note: PAPER_NOTE,
+    disclaimer: DISCLAIMER,
+  };
+}
+
+async function myrmidonDecisions({ limit }) {
+  const n = Math.min(Math.max(Number(limit) || 20, 1), 100);
+  const data = await apiGet(`/api/trading/decisions?limit=${n}`);
+  return { ...data, accountType: "paper", note: PAPER_NOTE, disclaimer: DISCLAIMER };
+}
+
+async function myrmidonStrategy() {
+  const data = await apiGet("/api/trading/strategy");
+  return {
+    ...data,
+    readOnly: true,
+    note: PAPER_NOTE + " This tool cannot modify the strategy or place trades.",
+    disclaimer: DISCLAIMER,
+  };
+}
+
 const HANDLERS = {
   scan_stock: scanStock,
   compare_stocks: compareStocks,
   get_portfolio: getPortfolioTool,
+  myrmidon_status: myrmidonStatus,
+  myrmidon_decisions: myrmidonDecisions,
+  myrmidon_strategy: myrmidonStrategy,
   analyse_portfolio: analysePortfolioTool,
 };
 
@@ -210,7 +285,10 @@ async function handleRequest(msg) {
           "recompute or estimate them. Surface what is statistically unusual and what it has " +
           "historically implied, but never tell the user to buy, sell or hold: they decide. " +
           "When the user mentions 'my portfolio' or 'my holdings', call get_portfolio — it reads " +
-          "their live SPECTRE account and is always current. Do not ask them for a file path first.",
+          "their live SPECTRE account and is always current. Do not ask them for a file path first. " +
+          "The myrmidon_* tools cover the autonomous trading agent, which runs on a PAPER account: " +
+          "always say so rather than presenting its equity as real money, and note that these tools " +
+          "are read-only — you cannot place, approve or cancel a trade.",
       });
       return;
     }

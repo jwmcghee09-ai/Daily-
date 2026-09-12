@@ -58,7 +58,7 @@ check("notification drew no response", pending.size === 0);
 
 const list = await rpc("tools/list");
 const names = (list.result?.tools ?? []).map((t) => t.name);
-check("tools/list", names.length === 4, names.join(", "));
+check("tools/list", names.length === 7, names.join(", "));
 check("every tool has an inputSchema", (list.result?.tools ?? []).every((t) => t.inputSchema?.type === "object"));
 
 const scan = await rpc("tools/call", { name: "scan_stock", arguments: { ticker: "BHP" } });

@@ -3632,3 +3632,142 @@
 .myrmidonCopy {
   min-width: 0;
 }
+
+/* ── Bring your own AI (MCP) ── */
+.connectGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin-top: 56px;
+}
+
+.connectChip {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px 18px;
+  border: 1px solid #242428;
+  border-radius: 16px;
+  background: #0a0a0c;
+  transition: border-color 0.25s ease, transform 0.25s ease;
+}
+
+.connectChip:hover {
+  border-color: rgba(255, 74, 38, 0.4);
+  transform: translateY(-2px);
+}
+
+.connectChipName {
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: #f2f2f5;
+}
+
+.connectChipNote {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #85858e;
+}
+
+.connectSplit {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  gap: 56px;
+  align-items: center;
+  margin-top: 56px;
+}
+
+.connectTerm {
+  border: 1px solid rgba(255, 74, 38, 0.28);
+  border-radius: 22px;
+  overflow: hidden;
+  background: #0f0f12;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5), 0 0 40px rgba(255, 74, 38, 0.08);
+}
+
+.connectTermBody {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.connectAsk {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 13px;
+  line-height: 1.55;
+  color: #c9c9d1;
+}
+
+.connectToolRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.connectTool {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 10.5px;
+  padding: 3px 9px;
+  border-radius: 6px;
+  border: 1px solid rgba(74, 222, 128, 0.3);
+  background: rgba(74, 222, 128, 0.06);
+  color: #4ade80;
+  white-space: nowrap;
+}
+
+.connectReply {
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: #a2a2ab;
+  border-top: 1px solid #242428;
+  padding-top: 14px;
+}
+
+.connectReply strong {
+  color: #f2f2f5;
+  font-weight: 600;
+}
+
+.connectList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+.connectList li {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #a2a2ab;
+  padding-left: 22px;
+  position: relative;
+}
+
+.connectList li::before {
+  content: "▸";
+  position: absolute;
+  left: 0;
+  color: #ff4a26;
+}
+
+.connectList li strong {
+  color: #f2f2f5;
+  font-weight: 600;
+}
+
+@media (max-width: 960px) {
+  .connectSplit {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+  .connectGrid {
+    margin-top: 40px;
+  }
+}

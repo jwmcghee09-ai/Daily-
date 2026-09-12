@@ -369,12 +369,12 @@ export default function LandingPage({
           </Link>
 
           <div className={styles.navLinks}>
-            <a href="#features">Features</a>
-            <a href="#ai">AI Analysis</a>
+            <a href="#ai">AI</a>
             <a href="#scanner">Scanner</a>
-            <a href="#research">Research</a>
+            <a href="#connect">Connect</a>
             <a href="#myrmidon">Myrmidon</a>
-            <a href="#start">Start Now</a>
+            <a href="#features">Features</a>
+            <a href="#start">Start</a>
           </div>
 
           <div className={styles.navActions}>
@@ -722,6 +722,69 @@ export default function LandingPage({
                 </Link>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <Divider />
+
+      <section className={styles.section} id="connect">
+        <div className={styles.container}>
+          <div className={`${styles.sectionLabel} ${styles.reveal}`}>Bring Your Own AI</div>
+          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`} style={{ transitionDelay: "0.07s" }}>
+            Connect your favourite frontier model.
+          </h2>
+          <p className={`${styles.sectionSub} ${styles.reveal}`} style={{ transitionDelay: "0.14s" }}>
+            SPECTRE speaks the Model Context Protocol, so you can plug Claude, ChatGPT or a model running
+            on your own machine straight into your portfolio. Your AI reads the real numbers — computed by
+            us, never guessed by it — and you keep using the assistant you already pay for.
+          </p>
+
+          <div className={styles.connectGrid}>
+            {[
+              { name: "Claude", note: "Desktop app" },
+              { name: "ChatGPT", note: "Connectors" },
+              { name: "Cursor", note: "Editor" },
+              { name: "LM Studio", note: "Local models" },
+              { name: "Ollama", note: "Fully offline" },
+              { name: "Zed", note: "Editor" },
+            ].map((client, index) => (
+              <div key={client.name} className={`${styles.connectChip} ${styles.reveal}`} style={{ transitionDelay: `${index * 0.06}s` }}>
+                <span className={styles.connectChipName}>{client.name}</span>
+                <span className={styles.connectChipNote}>{client.note}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className={styles.connectSplit}>
+            <div className={`${styles.connectTerm} ${styles.revealScale}`} style={{ transitionDelay: "0.12s" }}>
+              <div className={styles.myrmidonTermBar}>YOUR AI // CONNECTED TO SPECTRE</div>
+              <div className={styles.connectTermBody}>
+                <div className={styles.connectAsk}>› How is my portfolio positioned right now?</div>
+                <div className={styles.connectToolRow}>
+                  <span className={styles.connectTool}>get_portfolio ✓</span>
+                  <span className={styles.connectTool}>scan_stock ✓</span>
+                </div>
+                <div className={styles.connectReply}>
+                  Your book is <strong>$54,428</strong>, down <strong>1.5%</strong> today. It&rsquo;s concentrated —
+                  BHP alone is <strong>33.6%</strong>, and the top three are <strong>76%</strong>. BHP also gapped
+                  down <strong>4.6%</strong> and sits at RSI 30&hellip;
+                </div>
+              </div>
+            </div>
+
+            <ul className={styles.connectList}>
+              {[
+                ["Your numbers, not its guesses", "Risk, momentum and concentration are computed in code before your model ever sees them."],
+                ["Always current", "It reads your live holdings every time you ask, so imports and edits show up immediately."],
+                ["Stays on your machine", "The connector runs locally. Your holdings are never handed to a third party."],
+                ["No extra AI bill", "You bring your own model, so there's nothing metered on our side."],
+              ].map(([title, copy], index) => (
+                <li key={title} className={styles.reveal} style={{ transitionDelay: `${0.18 + index * 0.07}s` }}>
+                  <strong>{title}</strong> — {copy}
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       </section>
