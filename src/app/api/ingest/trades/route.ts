@@ -15,6 +15,16 @@ import type { PortfolioHolding } from "@/lib/portfolio";
 export const runtime = "nodejs";
 
 const INBOUND_DOMAIN = String(process.env.INBOUND_EMAIL_DOMAIN || "").trim() || "in.spectre-assets.com";
+// Postmark's default server address is a single mailbox for the whole server,
+// so the per-user token rides in the "+" part. With a custom inbound domain the
+// token is the whole local part and this stays unset.
+const INBOUND_MAILBOX = String(process.env.INBOUND_EMAIL_MAILBOX || "").trim();
+
+function forwardingAddress(token: string): string {
+  return INBOUND_MAILBOX
+    ? `${INBOUND_MAILBOX}+${token}@${INBOUND_DOMAIN}`
+    : `${token}@${INBOUND_DOMAIN}`;
+}
 
 /** The user's forwarding address, their pending trades, and recent activity. */
 export async function GET() {
@@ -23,7 +33,7 @@ export async function GET() {
 
   const token = getOrCreateIngestToken(user.id);
   return NextResponse.json({
-    forwardingAddress: `${token}@${INBOUND_DOMAIN}`,
+    forwardingAddress: forwardingAddress(token),
     pending: listIngestTrades(user.id, "pending"),
     recent: listIngestMessages(user.id, 15).map((m) => ({
       receivedAt: m.received_at,
@@ -61,7 +71,7 @@ export async function POST(request: NextRequest) {
   if (action === "rotate") {
     const token = rotateIngestToken(user.id);
     return NextResponse.json({
-      forwardingAddress: `${token}@${INBOUND_DOMAIN}`,
+      forwardingAddress: forwardingAddress(token),
       note: "The old address stops working immediately.",
     });
   }

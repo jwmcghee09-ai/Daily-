@@ -12,8 +12,11 @@ const check = (l, ok, extra = "") => { console.log(`${ok ? "✓" : "✗"} ${l}${
 const alias = (await (await fetch(`${BASE}/api/ingest/trades`, { headers: { Cookie: COOKIE } })).json()).forwardingAddress;
 check("alias available", !!alias, alias);
 
+// A unique confirmation per run, so re-running the suite is not mistaken for
+// someone forwarding the same email twice.
+const RUN = crypto.randomBytes(4).toString("hex").toUpperCase();
 const NOTE = (units, code, price) =>
-  `You bought ${units} ${code} at $${price}\nTrade Date: 12/05/2026\nBrokerage: $19.95`;
+  `You bought ${units} ${code} at $${price}\nTrade Date: 12/05/2026\nBrokerage: $19.95\nConfirmation Number: R${RUN}${units}`;
 
 // ── Postmark (JSON + Basic auth) ──
 async function postmark({ auth = BASIC, to = alias, body = NOTE(10, "BHP", "40.00"), subject = "CommSec Trade Confirmation" } = {}) {
@@ -56,7 +59,7 @@ res = await fetch(`${BASE}/api/ingest/email`, {
   body: JSON.stringify({
     From: "no-reply@commsec.com.au", To: alias, ToFull: [{ Email: alias }],
     Subject: "Confirmation", TextBody: "",
-    HtmlBody: "<html><body><p>You bought <b>555</b> RIO at <b>$112.60</b></p></body></html>",
+    HtmlBody: `<html><body><p>You bought <b>555</b> RIO at <b>$112.60</b></p><p>Confirmation Number: H${RUN}</p></body></html>`,
   }),
 });
 data = await res.json();

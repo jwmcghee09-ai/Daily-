@@ -59,6 +59,10 @@ function verifyBasicAuth(header: string | null, expected: string): boolean {
 /** Normalise either provider's payload into one flat shape. */
 interface InboundEmail {
   recipients: string[];
+  /** Postmark's per-recipient tag: the part after "+", or the whole local part
+   *  on a custom inbound domain. This is how one server address serves many
+   *  users, so it is checked before falling back to scanning the address. */
+  mailboxHash: string;
   from: string;
   subject: string;
   text: string;
@@ -68,6 +72,7 @@ interface InboundEmail {
 function fromMailgun(fields: Record<string, string>): InboundEmail {
   return {
     recipients: [fields.recipient, fields.to, fields.To, fields["envelope-to"]].filter(Boolean) as string[],
+    mailboxHash: "",
     from: String(fields.from ?? fields.sender ?? fields.From ?? ""),
     subject: String(fields.subject ?? fields.Subject ?? ""),
     text: String(fields["body-plain"] ?? fields["stripped-text"] ?? fields.text ?? ""),
@@ -80,8 +85,12 @@ function fromPostmark(payload: any): InboundEmail {
   const toFull: string[] = Array.isArray(payload?.ToFull)
     ? payload.ToFull.map((entry: { Email?: string }) => entry?.Email).filter(Boolean)
     : [];
+  const hash =
+    String(payload?.MailboxHash ?? "") ||
+    (Array.isArray(payload?.ToFull) ? String(payload.ToFull[0]?.MailboxHash ?? "") : "");
   return {
     recipients: [payload?.OriginalRecipient, payload?.To, ...toFull].filter(Boolean),
+    mailboxHash: hash,
     from: String(payload?.From ?? payload?.FromFull?.Email ?? ""),
     subject: String(payload?.Subject ?? ""),
     text: String(payload?.TextBody ?? payload?.StrippedTextReply ?? ""),
@@ -89,8 +98,11 @@ function fromPostmark(payload: any): InboundEmail {
   };
 }
 
-/** Find the alias token in whichever recipient field carried it. */
-function extractToken(recipients: string[]): string | null {
+/** Find the alias token: the mailbox hash first, then the address itself. */
+function extractToken(recipients: string[], mailboxHash = ""): string | null {
+  const hash = mailboxHash.trim().toLowerCase();
+  if (hash && findUserIdByIngestToken(hash)) return hash;
+
   for (const candidate of recipients) {
     for (const match of String(candidate).matchAll(/([a-z0-9]{8,40})@/gi)) {
       const token = match[1].toLowerCase();
@@ -148,7 +160,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
-  const token = extractToken(email.recipients);
+  const token = extractToken(email.recipients, email.mailboxHash);
   const userId = token ? findUserIdByIngestToken(token) : null;
   if (!userId) {
     // Accepted so the provider stops retrying, but nothing is stored — there is
