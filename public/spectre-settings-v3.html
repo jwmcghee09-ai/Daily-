@@ -59,7 +59,20 @@ body::after{
   background-size:58px 58px;opacity:1;
 }
 nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(24,22,21,.94);backdrop-filter:blur(28px) saturate(1.4);-webkit-backdrop-filter:blur(28px) saturate(1.4);border-bottom:1px solid rgba(190,190,198,.13)}
-.nav-inner{max-width:var(--max);margin:0 auto;padding:0 1.4rem;height:100%;display:flex;align-items:center;justify-content:space-between;gap:1rem}
+/* ── NAV: same component as the dashboard, lifted verbatim so the two
+   headers cannot drift into lookalikes ── */
+.nav-tabs{display:flex;align-items:center;gap:0;background:none;border:none;border-radius:0;padding:0;justify-self:center}
+.nav-tab{font-family:var(--mono);font-size:.62rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:rgba(150,142,134,.7);background:none;border:none;border-bottom:1.5px solid transparent;border-radius:0;padding:.2rem 1.1rem;cursor:pointer;transition:all .2s;line-height:56px;height:56px}
+.nav-tab:hover{background:linear-gradient(90deg,#ff3f34 0%,#ff4a26 35%,#ff4a26 72%,#ff6a45 100%);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:brandSlide 4s linear infinite}
+.nav-tab-active{background:linear-gradient(90deg,#ff3f34 0%,#ff4a26 35%,#ff4a26 72%,#ff6a45 100%)!important;background-size:200% auto!important;-webkit-background-clip:text!important;-webkit-text-fill-color:transparent!important;background-clip:text!important;animation:brandSlide 4s linear infinite!important;border-bottom-color:#ff3f34!important}
+.nav-settings-btn{display:flex;align-items:center;justify-content:center;width:32px;height:32px;background:transparent;border:1px solid rgba(190,190,198,.22);border-radius:999px;color:rgba(150,142,134,.75);text-decoration:none;transition:color .2s,border-color .2s,background .2s;flex-shrink:0}
+.nav-settings-btn:hover{color:#f2f2f5;border-color:rgba(190,190,198,.42);background:rgba(190,190,198,.05)}
+.nav-btn{font-family:var(--sans);font-size:.75rem;font-weight:600;color:#f2f2f5;background:transparent;border:1px solid rgba(190,190,198,.22);border-radius:999px;padding:.34rem 1rem;cursor:pointer;transition:all .2s;text-decoration:none;white-space:nowrap}
+.nav-btn:hover{border-color:rgba(190,190,198,.42);background:rgba(190,190,198,.05);transform:translateY(-1px)}
+.nav-btn-primary{color:#fff;background:linear-gradient(135deg,#ff3f34 0%,#ff6a30 46%,#ff4a26 100%);border-color:transparent;box-shadow:0 4px 18px rgba(255,63,52,.28),0 1px 0 rgba(255,255,255,.1) inset}
+.nav-btn-primary:hover{filter:brightness(1.08);border-color:transparent}
+.nav-inner{max-width:var(--max);margin:0 auto;padding:0 2.5rem;height:56px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:2rem}
+.nav-tab{text-decoration:none;display:inline-flex;align-items:center}
 /* Brand lockup — the mark travels with the wordmark on every page. The
    gradient stays on the text span: background-clip:text on a flex row
    would swallow the mark. */
@@ -67,34 +80,8 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
 .nav-logo{display:inline-flex;align-items:center;gap:.55rem;text-decoration:none;flex-shrink:0}
 .nav-logo .brand-mark{height:24px;width:24px}
 .nav-logo .brand-text{font-family:var(--sans);font-size:1.1rem;font-weight:800;letter-spacing:.14em;white-space:nowrap;background:linear-gradient(90deg,var(--purple) 0%,var(--purple-hi) 35%,var(--orange) 72%,#ff6a45 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.nav-links{display:flex;gap:1.2rem;list-style:none}
-.nav-links a{position:relative;font-family:var(--mono);font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(94,90,120,.65);text-decoration:none}
-.nav-links a::after{content:'';position:absolute;left:0;right:100%;bottom:-4px;height:1.5px;background:linear-gradient(90deg,var(--purple),var(--orange));transition:right .25s ease}
-.nav-links a.active,.nav-links a:hover{color:#f2f2f5}
-.nav-links a.active::after,.nav-links a:hover::after{right:0}
-.nav-links a#nav-research-link{
-  padding:.5rem .95rem;
-  border-radius:999px;
-  font-size:.64rem;
-  font-weight:700;
-  letter-spacing:.16em;
-  color:#ff3f34;
-  background:linear-gradient(135deg,rgba(255,63,52,.12),rgba(255,122,48,.08));
-  border:1px solid rgba(255,63,52,.3);
-  box-shadow:0 4px 14px rgba(255,63,52,.12);
-}
-.nav-links a#nav-research-link::after{display:none}
-.nav-links a#nav-research-link:hover,
-.nav-links a#nav-research-link.active{
-  color:#f2f2f5;
-  border-color:rgba(255,122,48,.4);
-  background:linear-gradient(135deg,rgba(255,63,52,.2),rgba(255,122,48,.14));
-  transform:translateY(-1px);
-}
 .nav-right{display:flex;align-items:center;gap:1rem}
 .nav-user{font-family:var(--mono);font-size:.56rem;letter-spacing:.1em;color:#a2a2ab;text-transform:uppercase}
-.nav-btn{font-family:var(--mono);font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:#f2f2f5;background:transparent;border:1px solid rgba(190,190,198,.22);border-radius:999px;padding:.45rem .95rem;cursor:pointer;text-decoration:none;transition:all .2s}
-.nav-btn:hover{color:#f2f2f5;transform:translateY(-1px);border-color:rgba(255,63,52,.42)}
 .wrap{width:100%;max-width:var(--max);margin:0 auto;padding:0 1.4rem;position:relative;z-index:2}
 .settings-page{padding:96px 0 2.6rem}
 .page-head{display:flex;align-items:baseline;gap:1rem;margin-bottom:1.5rem}
@@ -137,6 +124,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
 .boot-label{display:block;font-family:var(--sans);font-size:1.15rem;font-weight:800;letter-spacing:.2em;text-transform:uppercase;background:linear-gradient(90deg,var(--purple) 0%,var(--purple-hi) 35%,var(--orange) 72%,#ff6a45 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.5rem}
 .boot-copy{font-size:.82rem;color:var(--muted2)}
 .settings-card--danger::before{background:linear-gradient(90deg,rgba(255,75,51,.72),rgba(255,45,20,.42))!important}
+.settings-code{display:block;margin-top:.8rem;padding:.6rem .8rem;border-radius:8px;background:rgba(190,190,198,.06);border:1px solid var(--border);font-family:var(--mono);font-size:.68rem;letter-spacing:.02em;color:#f2f2f5;overflow-x:auto;white-space:nowrap}
 .settings-title--danger{color:rgba(255,140,130,.9)}
 .btn-danger{font-family:var(--mono);font-size:.62rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#fff;background:linear-gradient(135deg,#c0392b 0%,#e74c3c 100%);border:1px solid rgba(255,75,51,.35);border-radius:999px;padding:.8rem 1.3rem;cursor:pointer;box-shadow:0 8px 20px rgba(255,75,51,.22);transition:all .2s}
 .btn-danger:hover{transform:translateY(-1px);box-shadow:0 12px 26px rgba(255,75,51,.32)}
@@ -159,7 +147,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
 .settings-row{background:rgba(255,255,255,.03);border-color:rgba(255,255,255,.06)}
 /* Footer on light bg */
 .footer{border-top-color:rgba(190,190,198,.13)}
-@media(max-width:860px){.settings-grid{grid-template-columns:1fr}.nav-links{display:none}.nav-user{max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}
+@media(max-width:860px){.settings-grid{grid-template-columns:1fr}.nav-tabs{display:none}.nav-user{max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}
 @media(max-width:480px){
   /* Nav */
   .nav-inner{padding:0 .85rem;height:52px}
@@ -202,15 +190,19 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
 <nav>
   <div class="nav-inner">
     <a href="/dashboard?mode=account" class="nav-logo"><img src="/spectre-mark.svg" alt="" aria-hidden="true" class="brand-mark"><span class="brand-text">SPECTRE</span></a>
-    <ul class="nav-links">
-      <li><a href="/dashboard?mode=account" id="nav-dashboard-link">Dashboard</a></li>
-      <li><a href="/research" id="nav-research-link">Research</a></li>
-      <li id="nav-platinum-link" style="display:none"><a href="/spectre-platinum">Platinum</a></li>
-      <li><a href="/settings" class="active">Settings</a></li>
-    </ul>
+    <div class="nav-tabs">
+      <a class="nav-tab" href="/dashboard?mode=account" id="nav-dashboard-link">Quant</a>
+      <a class="nav-tab" href="/dashboard?tab=ai">AI</a>
+      <a class="nav-tab" href="/dashboard?tab=research" id="nav-research-link">Research</a>
+      <a class="nav-tab nav-tab-active" href="/settings">Settings</a>
+    </div>
     <div class="nav-right">
+      <a href="/" class="nav-settings-btn" title="Home">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      </a>
+      <a href="/api/export/csv" class="nav-btn" title="Export CSV">Export CSV</a>
       <span class="nav-user" id="nav-user-email">—</span>
-      <a href="#" class="nav-btn" id="sign-out-btn">Sign Out</a>
+      <a href="#" class="nav-btn nav-btn-primary" id="sign-out-btn">Sign Out</a>
     </div>
   </div>
 </nav>
@@ -245,9 +237,30 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
         <div class="settings-title">Contact Us</div>
         <p class="settings-note">Need help with account access, imports, billing, or alerts?</p>
         <a class="settings-email" id="settings-contact-email" href="mailto:admin@spectre-assets.com">admin@spectre-assets.com</a>
-        <p class="settings-note" style="margin-top:.9rem">
-          Data Security: Clear Data removes imported holdings, snapshots, and dip alerts from server storage. Your sign-in email and password stay active for account access.
-        </p>
+      </article>
+      <article class="settings-card">
+        <div class="settings-title">Your Data</div>
+        <p class="settings-note">Clear every imported holding, snapshot and dip alert from server storage. Your account, sign-in and subscription are untouched — you can import again at any time.</p>
+        <div class="settings-actions" style="margin-top:1rem">
+          <button class="btn-ghost" id="settings-clear-data-btn">Clear Portfolio Data</button>
+          <button class="btn-danger" id="settings-clear-confirm-btn" hidden>Yes, clear everything</button>
+          <button class="btn-ghost" id="settings-clear-cancel-btn" hidden>Cancel</button>
+        </div>
+        <p class="settings-note" id="settings-clear-status" style="margin-top:.7rem" hidden></p>
+      </article>
+      <article class="settings-card">
+        <div class="settings-title">Connect Your AI</div>
+        <p class="settings-note">Let Claude, or any assistant that speaks the Model Context Protocol, read this portfolio and its risk analysis directly. Runs on your machine; your holdings are not sent anywhere new.</p>
+        <ol class="settings-note" style="margin:.9rem 0 0;padding-left:1.1rem;line-height:1.9">
+          <li>Install <a class="settings-email" href="https://nodejs.org" target="_blank" rel="noreferrer noopener">Node 18+</a> if you do not have it.</li>
+          <li>Download SPECTRE Local and run one command:</li>
+        </ol>
+        <code class="settings-code" id="settings-mcp-cmd">node spectre.mjs setup</code>
+        <p class="settings-note" style="margin-top:.7rem">That signs you in and writes the config for you — it leaves any other connections you have alone. Then fully quit your AI app and reopen it.</p>
+        <div class="settings-actions" style="margin-top:1rem">
+          <a class="btn-ghost" href="https://github.com/jwmcghee09-ai/Daily-/tree/main/local#connect-your-own-ai-mcp" target="_blank" rel="noreferrer noopener">Setup guide</a>
+          <button class="btn-ghost" id="settings-copy-cmd-btn">Copy command</button>
+        </div>
       </article>
       <article class="settings-card settings-card--danger">
         <div class="settings-title settings-title--danger">Danger Zone</div>
@@ -675,6 +688,72 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
   function bindEvents() {
     document.getElementById("settings-billing-btn")?.addEventListener("click", openBillingPortal);
     document.getElementById("sign-out-btn")?.addEventListener("click", signOut);
+    // ── Clear portfolio data ──
+    // Two-step rather than a native confirm(): the first click reveals the
+    // real button, so the destructive action can never be the one already
+    // under the cursor.
+    const clearBtn = document.getElementById("settings-clear-data-btn");
+    const clearYes = document.getElementById("settings-clear-confirm-btn");
+    const clearNo = document.getElementById("settings-clear-cancel-btn");
+    const clearStatus = document.getElementById("settings-clear-status");
+
+    function clearArmed(armed) {
+      if (clearBtn) clearBtn.hidden = armed;
+      if (clearYes) clearYes.hidden = !armed;
+      if (clearNo) clearNo.hidden = !armed;
+    }
+    function clearMessage(text, tone) {
+      if (!clearStatus) return;
+      clearStatus.hidden = !text;
+      clearStatus.textContent = text || "";
+      clearStatus.style.color = tone === "error" ? "rgba(255,140,130,.9)" : "";
+    }
+
+    clearBtn?.addEventListener("click", () => { clearMessage(""); clearArmed(true); });
+    clearNo?.addEventListener("click", () => clearArmed(false));
+    clearYes?.addEventListener("click", async () => {
+      clearYes.disabled = true;
+      clearYes.textContent = "Clearing…";
+      try {
+        const res = await fetch("/api/portfolio", { method: "DELETE" });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+        clearArmed(false);
+        clearMessage("Portfolio data cleared. Import again whenever you like.");
+        showToast("Portfolio data cleared");
+      } catch (err) {
+        clearArmed(false);
+        clearMessage(err.message || "Could not clear portfolio data.", "error");
+        showToast("Could not clear portfolio data", "error");
+      } finally {
+        clearYes.disabled = false;
+        clearYes.textContent = "Yes, clear everything";
+      }
+    });
+
+    // ── Copy the MCP setup command ──
+    document.getElementById("settings-copy-cmd-btn")?.addEventListener("click", async (event) => {
+      const button = event.currentTarget;
+      const text = document.getElementById("settings-mcp-cmd")?.textContent?.trim() || "";
+      try {
+        await navigator.clipboard.writeText(text);
+        button.textContent = "Copied";
+      } catch {
+        // Clipboard access is refused in some contexts; select it instead so
+        // the command can still be copied by hand.
+        const node = document.getElementById("settings-mcp-cmd");
+        if (node) {
+          const range = document.createRange();
+          range.selectNodeContents(node);
+          const sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+        }
+        button.textContent = "Select and copy";
+      }
+      setTimeout(() => { button.textContent = "Copy command"; }, 2000);
+    });
+
     document.getElementById("settings-cancel-account-btn")?.addEventListener("click", openCancelModal);
     document.getElementById("modal-dismiss-btn")?.addEventListener("click", closeCancelModal);
     document.getElementById("modal-confirm-btn")?.addEventListener("click", confirmCancelAccount);
