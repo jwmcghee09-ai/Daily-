@@ -142,11 +142,12 @@ To point at a local dev server instead, set `SPECTRE_URL=http://localhost:3000`.
 you can point any MCP-capable AI at your portfolio and ask it questions directly.
 One server covers every client — there's nothing platform-specific to install.
 
-It gives the AI four tools:
+It gives the AI these tools:
 
 | Tool | What it does |
 |---|---|
 | `get_portfolio` | Your **live** SPECTRE holdings, re-read every call, with full analysis |
+| `portfolio_risk` | SPECTRE's own full risk analysis — the Quant tab, as data |
 | `scan_stock` | Full statistics and anomaly flags for one ticker |
 | `compare_stocks` | Several tickers analysed side by side |
 | `analyse_portfolio` | Same analysis for a holdings CSV on disk (supports `~/` paths) |
@@ -161,6 +162,10 @@ managed funds have no public quote, so they keep the valuation your account
 already holds and are listed under `statsUnavailable` — they still count toward
 the total and toward every weight, they simply have no RSI or volatility behind
 them. Only holdings under `unvalued` are genuinely unknown.
+
+`portfolio_risk` is the other half. Rather than recomputing anything locally, it reads the analysis SPECTRE already runs for the Quant tab: concentration (top-3 share, HHI, largest account, index-fund share), allocation by sector and account, then two independent risk reads — `snapshotRisk` from your own recorded portfolio values, and `historicalRisk` rebuilt from market price history, which adds annualised volatility, max drawdown, VaR 95, CVaR 95, Cornish-Fisher VaR, beta and correlation to the benchmark, tracking error, Sharpe, Sortino, skewness, RSI, stochastic, OBV, a correlation matrix across your holdings, factor exposure and the current volatility regime.
+
+Because it is a passthrough, it cannot drift from what the website shows, and a measure added to SPECTRE reaches your AI without you updating anything here. Monte Carlo is the exception: it runs in the browser on the Quant tab, so `monteCarlo` comes back null until that moves server-side.
 
 Because the figures are computed in code before the model ever sees them, a
 connected AI reasons over correct numbers instead of guessing at a chart. The

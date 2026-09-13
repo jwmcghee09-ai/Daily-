@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
-import { DataSource, PortfolioHolding, PortfolioState, RiskWindow } from "@/lib/portfolio";
+import { DataSource, isSyntheticTicker, PortfolioHolding, PortfolioState, RiskWindow } from "@/lib/portfolio";
 
 const DEFAULT_DB_FILE = path.join(process.cwd(), "data", "aladdin.sqlite");
 const RENDER_DISK_DIR = "/var/data";
@@ -241,7 +241,14 @@ export interface HistoricalRiskEstimateResult {
   returnsCount: number;
   benchmarkPointsUsed: number;
   usedTickers: string[];
+  /** Queried against market data and genuinely failed — worth reporting. */
   failedTickers: string[];
+  /**
+   * Holdings with no live quote by design (super, unlisted funds, gold).
+   * Excluding them is expected, not a failure, and calling them "failed" led an
+   * AI to tell the user their own fund's ticker did not exist.
+   */
+  notPriced: string[];
   volatilityAnnualPct: number | null;
   maxDrawdownPct: number | null;
   var95Pct: number | null;
@@ -2089,6 +2096,7 @@ export async function estimateHistoricalRiskFromYahoo(
       benchmarkPointsUsed: 0,
       usedTickers: [],
       failedTickers: [],
+      notPriced: [],
       volatilityAnnualPct: null,
       maxDrawdownPct: null,
       var95Pct: null,
@@ -2130,7 +2138,15 @@ export async function estimateHistoricalRiskFromYahoo(
     }
 
     if (pricing.mode !== "live") {
-      nonLiveLabels.add(sanitizeString(row.ticker, sanitizeString(row.name, source)).toUpperCase());
+      // A placeholder the importer invented (FUND-1, GOLD-2) is not a symbol;
+      // naming the holding is both true and more useful to a reader.
+      const rawTicker = sanitizeString(row.ticker, "").toUpperCase();
+      const holdingName = sanitizeString(row.name, "");
+      nonLiveLabels.add(
+        isSyntheticTicker(rawTicker) && holdingName
+          ? holdingName
+          : (rawTicker || holdingName || String(source)).toUpperCase(),
+      );
       continue;
     }
 
@@ -2145,7 +2161,7 @@ export async function estimateHistoricalRiskFromYahoo(
   }
 
   const returnsByTicker = new Map<string, Map<string, number>>();
-  const failedTickers: string[] = Array.from(nonLiveLabels);
+  const failedTickers: string[] = [];
   let outlierReturnsRemoved = 0;
 
   for (const [key, holding] of valueByTicker.entries()) {
@@ -2191,6 +2207,7 @@ export async function estimateHistoricalRiskFromYahoo(
       benchmarkPointsUsed: 0,
       usedTickers: [],
       failedTickers,
+      notPriced: Array.from(nonLiveLabels),
       volatilityAnnualPct: null,
       maxDrawdownPct: null,
       var95Pct: null,
@@ -2238,6 +2255,7 @@ export async function estimateHistoricalRiskFromYahoo(
       benchmarkPointsUsed: 0,
       usedTickers,
       failedTickers,
+      notPriced: Array.from(nonLiveLabels),
       volatilityAnnualPct: null,
       maxDrawdownPct: null,
       var95Pct: null,
@@ -2429,6 +2447,7 @@ export async function estimateHistoricalRiskFromYahoo(
     benchmarkPointsUsed,
     usedTickers,
     failedTickers,
+    notPriced: Array.from(nonLiveLabels),
     volatilityAnnualPct,
     maxDrawdownPct,
     var95Pct,

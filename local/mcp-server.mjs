@@ -131,6 +131,31 @@ const TOOLS = [
       required: ["csv_path"],
     },
   },
+  {
+    name: "portfolio_risk",
+    description:
+      "The user's FULL risk analysis, computed by SPECTRE itself rather than by this tool — every " +
+      "measure the Quant tab on spectre-assets.com shows. Returns concentration (top-3 share, HHI, " +
+      "largest account, index-fund share), allocation by sector and by account, and two independent " +
+      "risk reads: `snapshotRisk` from the user's own recorded portfolio values, and `historicalRisk` " +
+      "rebuilt from market price history, which adds annualised volatility, max drawdown, VaR 95, " +
+      "CVaR 95, Cornish-Fisher VaR, beta and correlation to benchmark, tracking error, Sharpe, " +
+      "Sortino, return skewness, RSI, stochastic, OBV, a full correlation matrix across holdings, " +
+      "factor exposure (market and size beta) and the current volatility regime. " +
+      "Use this whenever the user asks about risk, volatility, drawdown, correlation, diversification, " +
+      "beta or how exposed they are — get_portfolio covers holdings and per-stock anomalies, this " +
+      "covers portfolio risk. Requires `node spectre.mjs login`.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        window: {
+          type: "string",
+          enum: ["1M", "3M", "1Y"],
+          description: "Look-back window for the risk measures (default 3M)",
+        },
+      },
+    },
+  },
 ];
 
 // ── Tool implementations ────────────────────────────────────────────────────
@@ -193,6 +218,21 @@ async function getPortfolioTool() {
   };
 }
 
+/**
+ * Risk straight from SPECTRE.
+ *
+ * Deliberately a thin passthrough: the numbers are computed on the server that
+ * already holds the portfolio, so this tool cannot drift from what the website
+ * shows, and a measure added there reaches connected AIs without anyone
+ * updating files on their own machine.
+ */
+async function portfolioRiskTool({ window } = {}) {
+  const allowed = new Set(["1M", "3M", "1Y"]);
+  const riskWindow = allowed.has(String(window)) ? String(window) : "3M";
+  const data = await apiGet(`/api/portfolio/metrics?window=${riskWindow}`);
+  return { ...data, spectreToolVersion: SERVER_VERSION, disclaimer: DISCLAIMER };
+}
+
 async function analysePortfolioTool({ csv_path: csvPath }) {
   if (!csvPath || typeof csvPath !== "string") throw new Error("csv_path is required");
   const holdings = await readPortfolio(csvPath);
@@ -249,6 +289,7 @@ const HANDLERS = {
   myrmidon_decisions: myrmidonDecisions,
   myrmidon_strategy: myrmidonStrategy,
   analyse_portfolio: analysePortfolioTool,
+  portfolio_risk: portfolioRiskTool,
 };
 
 // ── JSON-RPC over stdio ─────────────────────────────────────────────────────
@@ -291,7 +332,7 @@ async function handleRequest(msg) {
           "reason. Those are part of the portfolio and are already counted in totalValue and in every " +
           "weight — report them as holdings, never as unavailable or missing. Only say a figure is " +
           "unavailable when it appears under `unvalued`. " +
-          "The myrmidon_* tools cover the autonomous trading agent, which runs on a PAPER account: " +
+          "For anything about risk, volatility, drawdown, correlation, diversification or beta, call portfolio_risk — it returns SPECTRE's own full analysis rather than a local approximation of it. The myrmidon_* tools cover the autonomous trading agent, which runs on a PAPER account: " +
           "always say so rather than presenting its equity as real money, and note that these tools " +
           "are read-only — you cannot place, approve or cancel a trade.",
       });

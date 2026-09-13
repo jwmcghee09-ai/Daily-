@@ -15,7 +15,7 @@
  * the rate only when one is present, which keeps the broker path unchanged.
  */
 import { listIngestTrades, readPortfolioState } from "@/lib/db";
-import type { PortfolioHolding, PortfolioState } from "@/lib/portfolio";
+import { displayHoldingLabel, type PortfolioHolding, type PortfolioState } from "@/lib/portfolio";
 
 /** Sources that behave like a long-term base rather than an active pick. */
 const CORE_SOURCES = new Set(["index", "fund", "super"]);
@@ -100,19 +100,8 @@ function money(value: number): string {
   return value.toFixed(2);
 }
 
-/**
- * Placeholders the importer invents when a row has a name but no ticker column
- * (FUND-1, GOLD-2 …). They are not symbols, so they must never be shown as one
- * — the fund's own name is both true and more useful.
- */
-const SYNTHETIC_TICKER = /^(GOLD|INDEX|FUND|SAVINGS|TAX|CRYPTO)-\d+$/;
-
 function holdingSymbol(holding: PortfolioHolding): string {
-  const ticker = String(holding.ticker || "").trim().toUpperCase();
-  const name = String(holding.name || "").trim();
-  if (ticker && !SYNTHETIC_TICKER.test(ticker)) return ticker;
-  if (name) return name.slice(0, 24);
-  return ticker || "—";
+  return displayHoldingLabel(holding.ticker, holding.name).slice(0, 24);
 }
 
 function toPosition(holding: PortfolioHolding): FeedPosition {

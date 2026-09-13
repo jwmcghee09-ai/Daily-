@@ -58,7 +58,15 @@ check("notification drew no response", pending.size === 0);
 
 const list = await rpc("tools/list");
 const names = (list.result?.tools ?? []).map((t) => t.name);
-check("tools/list", names.length === 7, names.join(", "));
+// Name the tools rather than counting them: a count says nothing about which
+// one went missing, and it fails for the wrong reason when one is added.
+const EXPECTED_TOOLS = [
+  "scan_stock", "compare_stocks", "get_portfolio", "myrmidon_status",
+  "myrmidon_decisions", "myrmidon_strategy", "analyse_portfolio", "portfolio_risk",
+];
+const missingTools = EXPECTED_TOOLS.filter((t) => !names.includes(t));
+check("tools/list", missingTools.length === 0,
+  missingTools.length ? `MISSING: ${missingTools.join(", ")}` : names.join(", "));
 check("every tool has an inputSchema", (list.result?.tools ?? []).every((t) => t.inputSchema?.type === "object"));
 
 const scan = await rpc("tools/call", { name: "scan_stock", arguments: { ticker: "BHP" } });
@@ -111,6 +119,29 @@ if (acctData?.positions) {
     !!acctData?.message || acct.result.isError === true,
     (acctData?.message || acctText).slice(0, 70));
   console.log("  (sign in with `node spectre.mjs login` to test the live account path)");
+}
+
+// portfolio_risk is a passthrough to the website's own analysis, so the check
+// that matters is that SPECTRE's figures actually arrive — not that the local
+// engine recomputed something resembling them.
+const risk = await rpc("tools/call", { name: "portfolio_risk", arguments: { window: "3M" } });
+let riskData = null;
+try { riskData = JSON.parse(risk.result.content[0].text); } catch { /* plain-text error */ }
+if (riskData?.portfolio) {
+  check("portfolio_risk returns SPECTRE's concentration figures",
+    typeof riskData.portfolio.hhi === "number" && Array.isArray(riskData.portfolio.sectorAllocation),
+    `top3 ${riskData.portfolio.top3ConcentrationPct?.toFixed(1)}%, hhi ${riskData.portfolio.hhi?.toFixed(0)}`);
+  const h = riskData.historicalRisk;
+  check("portfolio_risk returns the full risk surface",
+    !!h && "betaToBenchmark" in h && "sharpeRatioAnnual" in h && "correlationMatrix" in h,
+    h ? `vol ${h.volatilityAnnualPct?.toFixed(1)}%, beta ${h.betaToBenchmark?.toFixed(2)}` : String(riskData.historicalRiskError));
+  check("portfolio_risk never labels a holding with an import placeholder",
+    (riskData.portfolio.topHoldings ?? []).every((x) => !/^(GOLD|INDEX|FUND|SAVINGS|TAX|CRYPTO)-\d+$/.test(x.label)),
+    (riskData.portfolio.topHoldings ?? []).map((x) => x.label).join(", "));
+} else {
+  check("portfolio_risk responds sensibly when signed out",
+    risk.result.isError === true || !!riskData?.error,
+    (riskData?.error || risk.result.content[0].text).slice(0, 70));
 }
 
 const pong = await rpc("ping");

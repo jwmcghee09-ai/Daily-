@@ -72,6 +72,30 @@ export interface PortfolioMetrics {
 
 export type RiskWindow = "1M" | "3M" | "1Y";
 
+/**
+ * Identifiers the importer invents when a row has a name but no ticker column
+ * (FUND-1, GOLD-2, SAVINGS-1). They keep a holding addressable, but they are
+ * not tradeable symbols: showing one as a ticker sends the reader looking for
+ * a listing that does not exist, and asking a price feed about one only
+ * confirms that SPECTRE's own placeholder is not a real security.
+ */
+export const SYNTHETIC_TICKER_PATTERN = /^(GOLD|INDEX|FUND|SAVINGS|TAX|CRYPTO)-\d+$/;
+
+export function isSyntheticTicker(ticker: string | null | undefined): boolean {
+  return SYNTHETIC_TICKER_PATTERN.test(String(ticker || "").trim().toUpperCase());
+}
+
+/** What to call a holding in any output a person or a model will read. */
+export function displayHoldingLabel(
+  ticker: string | null | undefined,
+  name: string | null | undefined,
+): string {
+  const cleanTicker = String(ticker || "").trim().toUpperCase();
+  const cleanName = String(name || "").trim();
+  if (cleanTicker && !isSyntheticTicker(cleanTicker)) return cleanTicker;
+  return cleanName || cleanTicker || "—";
+}
+
 const RISK_WINDOW_DAYS: Record<RiskWindow, number> = {
   "1M": 31,
   "3M": 92,
@@ -587,6 +611,9 @@ function toHolding(
     return null;
   }
 
+  // When a row has no ticker column, a placeholder is invented below so the
+  // holding still has a stable identifier. It is NOT a symbol — see
+  // SYNTHETIC_TICKER_PATTERN and displayHoldingLabel for reading it back out.
   const name = nameRaw || tickerRaw || "Unnamed Holding";
   const tickerCandidate =
     tickerRaw ||
