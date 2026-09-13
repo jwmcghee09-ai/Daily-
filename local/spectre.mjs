@@ -15,6 +15,7 @@ import { loadBars } from "./lib/quotes.mjs";
 import { readPortfolio } from "./lib/portfolio.mjs";
 import { chat, ensureModel, OllamaUnavailable, OllamaModelMissing, DEFAULT_HOST } from "./lib/ollama.mjs";
 import { login, readConfig, clearConfig, fetchAccountPortfolio, CONFIG_PATH, DEFAULT_BASE_URL } from "./lib/account.mjs";
+import { installMcpConfig } from "./lib/setup.mjs";
 
 const C = {
   reset: "\x1b[0m", bold: "\x1b[1m", dim: "\x1b[2m",
@@ -180,6 +181,68 @@ async function cmdLogin() {
   }
 }
 
+/**
+ * The whole install, in one command.
+ *
+ * Everything this does by hand is a step someone can silently get wrong:
+ * finding the config file, editing JSON, typing an absolute path, knowing to
+ * fully quit the app rather than close the window. It does them, reports each
+ * one, and ends by stating the single manual step that remains.
+ */
+async function cmdSetup() {
+  console.log(`\n${C.bold}${C.orange}Setting up SPECTRE for Claude Desktop${C.reset}\n`);
+
+  // 1. Sign in, unless this machine already is.
+  const existing = await readConfig();
+  if (existing?.token) {
+    console.log(`  ${C.green}✓${C.reset} Already signed in as ${C.white}${existing.email}${C.reset}`);
+  } else {
+    console.log(`  ${C.grey}Sign in to your SPECTRE account so your AI can read your live portfolio.${C.reset}`);
+    const rl = createInterface({ input: process.stdin, output: process.stdout });
+    try {
+      const email = (await rl.question("  Email: ")).trim();
+      console.log(`  ${C.grey}(password will be visible as you type)${C.reset}`);
+      const password = await rl.question("  Password: ");
+      rl.close();
+      const result = await login(email, password);
+      console.log(`  ${C.green}✓${C.reset} Signed in as ${C.white}${result.email}${C.reset}`);
+    } catch (err) {
+      rl.close();
+      console.log(`  ${C.red}✗${C.reset} ${err.message}`);
+      console.log(`  ${C.grey}No account yet? Create one at ${DEFAULT_BASE_URL} then run setup again.${C.reset}\n`);
+      return;
+    }
+  }
+
+  // 2. Write the client config, merging rather than replacing.
+  let result;
+  try {
+    result = await installMcpConfig({ client: "claude" });
+  } catch (err) {
+    console.log(`  ${C.red}✗${C.reset} ${err.message}\n`);
+    return;
+  }
+
+  if (result.unchanged) console.log(`  ${C.green}✓${C.reset} Claude Desktop was already pointed at this copy`);
+  else if (result.created) console.log(`  ${C.green}✓${C.reset} Created ${C.grey}${result.path}${C.reset}`);
+  else if (result.replaced) console.log(`  ${C.green}✓${C.reset} Updated the spectre entry in ${C.grey}${result.path}${C.reset}`);
+  else console.log(`  ${C.green}✓${C.reset} Added spectre to ${C.grey}${result.path}${C.reset}`);
+
+  if (result.otherServers.length) {
+    console.log(`  ${C.green}✓${C.reset} Left your other connections alone: ${result.otherServers.join(", ")}`);
+  }
+  if (result.backup) console.log(`  ${C.grey}  (previous config backed up to ${result.backup})${C.reset}`);
+  console.log(`  ${C.grey}  launching via ${result.launch.kind}${C.reset}`);
+
+  // 3. The one step that cannot be automated.
+  console.log(
+    `\n${C.bold}One thing left:${C.reset} fully quit Claude Desktop and open it again.\n` +
+    `${C.grey}${process.platform === "darwin" ? "Cmd+Q, not just closing the window" : "Quit from the tray/menu, not just closing the window"} — ` +
+    `connections are only started when the app launches.${C.reset}\n\n` +
+    `${C.grey}Then ask it: ${C.white}"what's in my portfolio?"${C.reset}\n`,
+  );
+}
+
 async function cmdWhoami() {
   const config = await readConfig();
   if (!config?.token) {
@@ -324,6 +387,7 @@ function usage() {
   console.log(`
 ${C.bold}${C.orange}SPECTRE Local${C.reset} ${C.grey}— portfolio intelligence on your own machine${C.reset}
 
+  ${C.bold}setup${C.reset}                  Connect SPECTRE to Claude Desktop — does everything
   ${C.bold}scan${C.reset} <TICKER>            Scan one stock (ASX tickers resolve first)
   ${C.bold}portfolio${C.reset}              Analyse your live SPECTRE account holdings
   ${C.bold}portfolio${C.reset} <file.csv>     Analyse a holdings CSV instead
@@ -349,7 +413,8 @@ ${C.dim}${DISCLAIMER}${C.reset}
 
 const opts = parseArgs(process.argv.slice(2));
 try {
-  if (opts.command === "scan") await cmdScan(opts);
+  if (opts.command === "setup") await cmdSetup();
+  else if (opts.command === "scan") await cmdScan(opts);
   else if (opts.command === "portfolio") await cmdPortfolio(opts);
   else if (opts.command === "login") await cmdLogin();
   else if (opts.command === "whoami") await cmdWhoami();

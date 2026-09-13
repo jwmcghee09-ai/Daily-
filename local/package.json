@@ -1,0 +1,37 @@
+{
+  "name": "spectre-mcp",
+  "version": "1.2.0",
+  "description": "Connect your AI to your SPECTRE portfolio — holdings, risk analysis and projections over the Model Context Protocol.",
+  "type": "module",
+  "license": "MIT",
+  "bin": {
+    "spectre": "./spectre.mjs",
+    "spectre-mcp": "./mcp-server.mjs"
+  },
+  "main": "./mcp-server.mjs",
+  "files": [
+    "spectre.mjs",
+    "mcp-server.mjs",
+    "lib/",
+    "Modelfile",
+    "sample-portfolio.csv",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node test-mcp.mjs",
+    "setup": "node spectre.mjs setup"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "portfolio",
+    "investing",
+    "asx",
+    "risk",
+    "spectre"
+  ],
+  "homepage": "https://spectre-assets.com"
+}

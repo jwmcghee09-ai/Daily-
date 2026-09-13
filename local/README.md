@@ -204,9 +204,30 @@ git fetch origin && git checkout -B live origin/claude/review-spectre-repo-ezHA3
 Then **fully quit Claude Desktop (⌘Q)** — MCP servers are only started when the
 app launches, so closing the window leaves the old one running.
 
-### Claude Desktop
+### Setup
 
-Add this to `claude_desktop_config.json` (Settings → Developer → Edit Config):
+```bash
+node spectre.mjs setup
+```
+
+That is the whole thing. It signs you in, writes the Claude Desktop config
+itself, and tells you the one step it cannot do for you (fully quitting the app
+so it picks up the new connection).
+
+It **merges** into your config rather than replacing it — if you already have
+Notion, GitHub or anything else connected, they are left exactly as they were,
+and the previous file is copied to `claude_desktop_config.json.spectre-backup`
+first. If that file contains invalid JSON it stops and says so rather than
+overwriting what you had.
+
+Once installed, ask your AI: *"what's in my portfolio?"* or *"where is my risk
+concentrated?"*
+
+<details>
+<summary>Doing it by hand instead</summary>
+
+Add this to `claude_desktop_config.json` (Settings → Developer → Edit Config),
+keeping any servers already listed:
 
 ```json
 {
@@ -219,9 +240,12 @@ Add this to `claude_desktop_config.json` (Settings → Developer → Edit Config
 }
 ```
 
-Restart Claude Desktop and SPECTRE appears in the tools menu. Then just ask:
-*"Scan BHP and tell me what's unusual"* or *"Analyse my portfolio at
-~/holdings.csv — where is my risk concentrated?"*
+Then quit and reopen the app. `setup` exists because every part of this — the
+file's location, the JSON, the absolute path, knowing to fully quit — is a place
+to silently get it wrong, and a mistake here looks identical to broken software:
+the tools just never appear.
+
+</details>
 
 ### LM Studio, Cursor, Zed, Open WebUI
 
