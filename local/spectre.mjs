@@ -296,9 +296,28 @@ async function cmdVersion() {
   const config = await readConfig();
   console.log(
     config?.email
-      ? `  ${C.green}✓${C.reset} Signed in as ${config.email} ${C.grey}(${config.baseUrl || DEFAULT_BASE_URL})${C.reset}\n`
-      : `  ${C.orange}○${C.reset} Not signed in — run ${C.white}node spectre.mjs login${C.reset}\n`,
+      ? `  ${C.green}✓${C.reset} Signed in as ${config.email} ${C.grey}(${config.baseUrl || DEFAULT_BASE_URL})${C.reset}`
+      : `  ${C.orange}○${C.reset} Not signed in — run ${C.white}node spectre.mjs login${C.reset}`,
   );
+
+  // A checkout on a detached HEAD silently refuses every `git pull` — the copy
+  // then sits frozen at whatever commit it was pinned to while looking like a
+  // normal clone, which is indistinguishable from the tools being broken.
+  // Diagnose it here rather than leaving it to be discovered.
+  try {
+    const { execFile } = await import("node:child_process");
+    const { promisify } = await import("node:util");
+    const run = promisify(execFile);
+    const dir = new URL(".", import.meta.url).pathname;
+    const { stdout } = await run("git", ["-C", dir, "symbolic-ref", "--quiet", "HEAD"]);
+    const branch = stdout.trim().replace("refs/heads/", "");
+    console.log(`  ${C.green}✓${C.reset} On branch ${branch} ${C.grey}— \`git pull\` will update this copy${C.reset}\n`);
+  } catch {
+    console.log(
+      `  ${C.red}✗${C.reset} Detached HEAD — ${C.white}git pull does nothing here${C.reset}, this copy is frozen.\n` +
+      `    ${C.grey}Fix: git fetch origin && git checkout -B live origin/claude/review-spectre-repo-ezHA3${C.reset}\n`,
+    );
+  }
 }
 
 function usage() {

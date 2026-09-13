@@ -178,6 +178,30 @@ Check it works:
 node test-mcp.mjs
 ```
 
+### If your AI is reporting stale figures
+
+The MCP server runs from these files on your own machine, so a fix in the
+repository changes nothing until this copy is updated — and a stale copy
+behaves exactly like a bug.
+
+```bash
+node spectre.mjs version
+```
+
+It reports the version, whether cash and unquoted holdings are included, which
+account is signed in, and whether `git pull` can actually update this copy. That
+last one matters: a checkout left on a **detached HEAD** refuses every `git
+pull` with "You are not currently on a branch" and then sits frozen forever
+while looking like a normal clone. If `version` reports that, put it back on a
+branch:
+
+```bash
+git fetch origin && git checkout -B live origin/claude/review-spectre-repo-ezHA3
+```
+
+Then **fully quit Claude Desktop (⌘Q)** — MCP servers are only started when the
+app launches, so closing the window leaves the old one running.
+
 ### Claude Desktop
 
 Add this to `claude_desktop_config.json` (Settings → Developer → Edit Config):
