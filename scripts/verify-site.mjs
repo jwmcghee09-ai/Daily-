@@ -94,6 +94,29 @@ for (const surface of MARK_SURFACES) {
   else fail(`${surface}: no brand mark — the logo has fallen off this page`);
 }
 
+// ── 3c. Brand gradients must use the deep ramp, not the old light orange ──
+// #ff7a30 still has a legitimate job as the "watch" severity colour on risk
+// chips, so this checks gradients only: a flat colour:#ff7a30 is amber and
+// fine, the same hex inside a linear-gradient is the old brand orange and is
+// not. Keeping the two apart is what stops amber drifting into red.
+const PALETTE_SURFACES = [
+  "public/spectre-dashboard-v3.html",
+  "public/spectre-settings-v3.html",
+  "public/spectre-market-research-v1.html",
+  "src/app/terminal/route.ts",
+  "src/app/strategy/route.ts",
+  "src/app/dashboard/route.ts",
+  "src/components/auth/sign-in-page.module.css",
+];
+const LIGHT_ORANGE = /linear-gradient\([^)]*(?:#ff7a30|#ffb347|#f97316|#fb923c)[^)]*\)/gi;
+for (const surface of PALETTE_SURFACES) {
+  const path = join(root, surface);
+  if (!existsSync(path)) { fail(`${surface} missing`); continue; }
+  const hits = readFileSync(path, "utf8").match(LIGHT_ORANGE) ?? [];
+  if (hits.length === 0) ok(`${surface}: brand gradients on the deep ramp`);
+  else fail(`${surface}: ${hits.length} gradient(s) still on the old light orange — ${hits[0].slice(0, 70)}`);
+}
+
 // ── 4. Landing page must not reference CSS classes that don't exist ──
 const cssModule = readFileSync(join(root, "src/components/marketing/landing-page.module.css"), "utf8");
 const definedClasses = new Set([...cssModule.matchAll(/\.([A-Za-z0-9_-]+)/g)].map((m) => m[1]));

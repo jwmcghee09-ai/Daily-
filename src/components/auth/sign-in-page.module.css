@@ -8,8 +8,8 @@
   background:
     radial-gradient(ellipse 70% 50% at 50% -10%, rgba(255, 63, 52, 0.08) 0%, transparent 100%),
     radial-gradient(ellipse 40% 60% at 100% 80%, rgba(255, 122, 48, 0.05) 0%, transparent 60%),
-    #171514;
-  color: #f2efeb;
+    #141416;
+  color: #f2f2f5;
   font-family: var(--font-geist-sans), "Avenir Next", sans-serif;
 }
 
@@ -19,7 +19,7 @@
   top: 0;
   z-index: 20;
   height: 56px;
-  border-bottom: 1px solid rgba(190, 180, 175, 0.13);
+  border-bottom: 1px solid rgba(190, 190, 198, 0.13);
   background: rgba(23, 21, 20, 0.94);
   backdrop-filter: blur(28px) saturate(1.4);
   -webkit-backdrop-filter: blur(28px) saturate(1.4);
@@ -67,7 +67,7 @@
   font-size: 18px;
   font-weight: 700;
   letter-spacing: 0.14em;
-  background: linear-gradient(90deg, #ff3f34 0%, #ff7a30 35%, #ff7a30 72%, #ffb347 100%);
+  background: linear-gradient(90deg, #ff3f34 0%, #ff4a26 35%, #ff4a26 72%, #ff6a45 100%);
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
@@ -109,7 +109,7 @@
   background: rgba(10, 7, 22, 0.94);
   overflow: hidden;
   padding: 36px;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.18), 0 4px 16px rgba(190, 180, 175, 0.1);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.18), 0 4px 16px rgba(190, 190, 198, 0.1);
 }
 
 .sideCard::before {
@@ -117,17 +117,17 @@
   position: absolute;
   inset: 0 0 auto;
   height: 2px;
-  background: linear-gradient(90deg, #ff3f34, #ff7a30 40%, #ff7a30 70%, transparent);
+  background: linear-gradient(90deg, #ff3f34, #ff4a26 40%, #ff4a26 70%, transparent);
 }
 
 /* ── Form card: dark, clean ── */
 .formCard {
   position: relative;
-  border: 1px solid rgba(190, 180, 175, 0.18);
+  border: 1px solid rgba(190, 190, 198, 0.18);
   border-radius: 20px;
-  background: #201d1c;
+  background: #1e1e22;
   overflow: hidden;
-  box-shadow: 0 8px 40px rgba(190, 180, 175, 0.09), 0 1px 0 rgba(190, 180, 175, 0.08);
+  box-shadow: 0 8px 40px rgba(190, 190, 198, 0.09), 0 1px 0 rgba(190, 190, 198, 0.08);
 }
 
 .formCard::before {
@@ -135,7 +135,7 @@
   position: absolute;
   inset: 0 0 auto;
   height: 2px;
-  background: linear-gradient(90deg, transparent, #ff3f34, #ff7a30 50%, #ff7a30, transparent);
+  background: linear-gradient(90deg, transparent, #ff3f34, #ff4a26 50%, #ff4a26, transparent);
 }
 
 /* ── Side card content (dark text on dark bg = light text) ── */
@@ -148,7 +148,7 @@
   border: 1px solid transparent;
   background:
     linear-gradient(rgba(13, 10, 20, 1), rgba(13, 10, 20, 1)) padding-box,
-    linear-gradient(90deg, #ff3f34, #ff7a30) border-box;
+    linear-gradient(90deg, #ff3f34, #ff4a26) border-box;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-size: 11px;
@@ -161,7 +161,7 @@
   width: 5px;
   height: 5px;
   border-radius: 999px;
-  background: linear-gradient(135deg, #ff3f34, #ff7a30);
+  background: linear-gradient(135deg, #ff3f34, #ff4a26);
   flex-shrink: 0;
 }
 
@@ -172,18 +172,18 @@
   font-weight: 700;
   line-height: 1.1;
   letter-spacing: -0.03em;
-  color: #f2efeb;
+  color: #f2f2f5;
 }
 
 .sideCard h1 span {
-  background: linear-gradient(90deg, #ff3f34, #ff7a30 42%, #ff7a30 82%, #ffb347);
+  background: linear-gradient(90deg, #ff3f34, #ff4a26 42%, #ff4a26 82%, #ff6a45);
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
 }
 
 .sideCard > p {
-  color: #a8a099;
+  color: #a2a2ab;
   font-size: 14px;
   line-height: 1.7;
   margin-bottom: 0;
@@ -201,7 +201,7 @@
   gap: 10px;
   padding: 9px 0;
   border-bottom: 1px solid rgba(160, 100, 255, 0.1);
-  color: #a8a099;
+  color: #a2a2ab;
   font-size: 13.5px;
   line-height: 1.5;
 }
@@ -238,14 +238,14 @@
 }
 
 .sideMeta a {
-  color: #a8a099;
+  color: #a2a2ab;
   text-decoration: none;
   font-size: 12.5px;
   transition: color 0.15s;
 }
 
 .sideMeta a:hover {
-  color: #f2efeb;
+  color: #f2f2f5;
 }
 
 /* ── Form card URL bar ── */
@@ -255,7 +255,7 @@
   justify-content: center;
   padding: 11px 20px;
   background: #faf9ff;
-  border-bottom: 1px solid rgba(190, 180, 175, 0.09);
+  border-bottom: 1px solid rgba(190, 190, 198, 0.09);
 }
 
 .cardUrl {
@@ -279,13 +279,13 @@
   border-radius: 999px;
   border: 1px solid transparent;
   background:
-    linear-gradient(#171514, #171514) padding-box,
-    linear-gradient(90deg, #ff3f34, #ff7a30) border-box;
+    linear-gradient(#141416, #141416) padding-box,
+    linear-gradient(90deg, #ff3f34, #ff4a26) border-box;
   text-transform: uppercase;
   letter-spacing: 0.09em;
   font-size: 10.5px;
   font-weight: 700;
-  color: #a8a099;
+  color: #a2a2ab;
 }
 
 .sectionLabel::before {
@@ -293,7 +293,7 @@
   width: 5px;
   height: 5px;
   border-radius: 999px;
-  background: linear-gradient(135deg, #ff3f34, #ff7a30);
+  background: linear-gradient(135deg, #ff3f34, #ff4a26);
   flex-shrink: 0;
 }
 
@@ -303,12 +303,12 @@
   font-size: 24px;
   font-weight: 700;
   letter-spacing: -0.02em;
-  color: #f2efeb;
+  color: #f2f2f5;
 }
 
 .cardBody > p,
 .cardBody p {
-  color: #a8a099;
+  color: #a2a2ab;
   font-size: 14px;
   line-height: 1.6;
 }
@@ -353,7 +353,7 @@
 }
 
 .formGrid span {
-  color: #a8a099;
+  color: #a2a2ab;
   font-size: 13px;
   font-weight: 600;
 }
@@ -362,10 +362,10 @@
   width: 100%;
   height: 46px;
   padding: 0 14px;
-  border: 1px solid rgba(190, 180, 175, 0.2);
+  border: 1px solid rgba(190, 190, 198, 0.2);
   border-radius: 10px;
-  background: #201d1c;
-  color: #f2efeb;
+  background: #1e1e22;
+  color: #f2f2f5;
   font-size: 15px;
   font-family: inherit;
   transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
@@ -377,7 +377,7 @@
 
 .formGrid input:focus {
   outline: 0;
-  background: #201d1c;
+  background: #1e1e22;
   border-color: rgba(255, 63, 52, 0.5);
   box-shadow: 0 0 0 3px rgba(255, 63, 52, 0.1);
 }
@@ -390,10 +390,10 @@
 
 .toggleButton {
   padding: 0 16px;
-  border: 1px solid rgba(190, 180, 175, 0.2);
+  border: 1px solid rgba(190, 190, 198, 0.2);
   border-radius: 10px;
-  background: #201d1c;
-  color: #a8a099;
+  background: #1e1e22;
+  color: #a2a2ab;
   font-size: 13px;
   font-weight: 600;
   font-family: inherit;
@@ -403,8 +403,8 @@
 
 .toggleButton:hover {
   border-color: rgba(255, 63, 52, 0.4);
-  color: #f2efeb;
-  background: #201d1c;
+  color: #f2f2f5;
+  background: #1e1e22;
 }
 
 /* ── Buttons ── */
@@ -432,7 +432,7 @@
 
 .primaryButton {
   color: #fff;
-  background: linear-gradient(135deg, #ff3f34 0%, #ff7a30 45%, #ff7a30 100%);
+  background: linear-gradient(135deg, #ff3f34 0%, #ff4a26 45%, #ff4a26 100%);
   box-shadow: 0 4px 24px rgba(255, 122, 48, 0.35), 0 1px 0 rgba(255, 255, 255, 0.12) inset;
   border: none;
 }
@@ -443,19 +443,19 @@
 }
 
 .ghostButton {
-  border-color: rgba(190, 180, 175, 0.22);
-  color: #f2efeb;
+  border-color: rgba(190, 190, 198, 0.22);
+  color: #f2f2f5;
   background: transparent;
 }
 
 .ghostButton:hover {
-  background: rgba(190, 180, 175, 0.05);
-  border-color: rgba(190, 180, 175, 0.36);
+  background: rgba(190, 190, 198, 0.05);
+  border-color: rgba(190, 190, 198, 0.36);
 }
 
 .outlineButton {
-  border-color: rgba(190, 180, 175, 0.22);
-  color: #f2efeb;
+  border-color: rgba(190, 190, 198, 0.22);
+  color: #f2f2f5;
   background: transparent;
 }
 
@@ -513,13 +513,13 @@
   justify-content: center;
   margin-top: 16px;
   padding-top: 16px;
-  border-top: 1px solid rgba(190, 180, 175, 0.09);
+  border-top: 1px solid rgba(190, 190, 198, 0.09);
 }
 
 .textButton {
   border: 0;
   background: transparent;
-  color: #a8a099;
+  color: #a2a2ab;
   font-size: 13.5px;
   font-weight: 500;
   font-family: inherit;
@@ -530,7 +530,7 @@
 
 .textButton:hover,
 .textButton:focus-visible {
-  color: #f2efeb;
+  color: #f2f2f5;
   transform: translateY(-1px);
   outline: 0;
 }
@@ -540,13 +540,13 @@
   display: grid;
   gap: 8px;
   padding: 14px;
-  border: 1px solid rgba(190, 180, 175, 0.13);
+  border: 1px solid rgba(190, 190, 198, 0.13);
   border-radius: 14px;
   background: #faf9ff;
 }
 
 .planPicker legend {
-  color: #a8a099;
+  color: #a2a2ab;
   font-size: 13px;
   font-weight: 600;
   padding: 0;
@@ -564,9 +564,9 @@
   column-gap: 10px;
   row-gap: 4px;
   padding: 11px 13px;
-  border: 1px solid rgba(190, 180, 175, 0.13);
+  border: 1px solid rgba(190, 190, 198, 0.13);
   border-radius: 10px;
-  background: #201d1c;
+  background: #1e1e22;
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
 }
@@ -593,13 +593,13 @@
 .planOptionName {
   font-size: 13.5px;
   font-weight: 700;
-  color: #f2efeb;
+  color: #f2f2f5;
 }
 
 .planOptionPrice {
   font-size: 11.5px;
   font-weight: 500;
-  color: #a8a099;
+  color: #a2a2ab;
   font-family: var(--font-geist-mono), monospace;
   white-space: nowrap;
 }
@@ -612,7 +612,7 @@
   width: 100%;
   padding-left: 26px;
   font-size: 11.5px;
-  color: #a8a099;
+  color: #a2a2ab;
   line-height: 1.5;
 }
 
@@ -625,7 +625,7 @@
   width: 15px;
   height: 15px;
   border-radius: 50%;
-  border: 2px solid rgba(190, 180, 175, 0.22);
+  border: 2px solid rgba(190, 190, 198, 0.22);
   flex-shrink: 0;
   transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
 }
@@ -649,7 +649,7 @@
   margin-top: 3px;
   flex-shrink: 0;
   accent-color: #ff3f34;
-  border: 1px solid rgba(190, 180, 175, 0.3);
+  border: 1px solid rgba(190, 190, 198, 0.3);
   border-radius: 4px;
   cursor: pointer;
 }
@@ -657,7 +657,7 @@
 .termsRow span {
   font-size: 13px;
   line-height: 1.6;
-  color: #a8a099;
+  color: #a2a2ab;
 }
 
 .termsRow a {
@@ -692,7 +692,7 @@
 }
 
 .resetStepDivider {
-  color: rgba(190, 180, 175, 0.18);
+  color: rgba(190, 190, 198, 0.18);
   font-size: 10px;
 }
 
@@ -713,14 +713,14 @@
 .modeCard {
   margin-top: 14px;
   padding: 13px 15px;
-  border: 1px solid rgba(190, 180, 175, 0.12);
+  border: 1px solid rgba(190, 190, 198, 0.12);
   border-radius: 12px;
-  background: #201d1c;
+  background: #1e1e22;
 }
 
 .modeCardTitle {
   margin-bottom: 8px;
-  color: #f2efeb;
+  color: #f2f2f5;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.1em;
@@ -738,7 +738,7 @@
 .modeCardList li {
   position: relative;
   padding-left: 16px;
-  color: #a8a099;
+  color: #a2a2ab;
   font-size: 13px;
   line-height: 1.6;
 }
@@ -751,7 +751,7 @@
   width: 6px;
   height: 6px;
   border-radius: 999px;
-  background: linear-gradient(135deg, #ff3f34, #ff7a30);
+  background: linear-gradient(135deg, #ff3f34, #ff4a26);
 }
 
 /* ── Responsive ── */
@@ -813,6 +813,6 @@
   letter-spacing: 0.16em;
   padding: 5px 12px;
   border-radius: 999px;
-  background: linear-gradient(135deg, #ff7a30, #ff3f34);
+  background: linear-gradient(135deg, #ff4a26, #ff3f34);
   color: #fff;
 }
