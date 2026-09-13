@@ -141,7 +141,11 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;background:rgba(24,22,21,0.9
   color:var(--text);
 }
 .hero-sub{font-size:.92rem;color:var(--muted2);max-width:720px;line-height:1.8;margin-bottom:2.8rem}
-.hero-lockup{display:flex;align-items:center;justify-content:center;gap:clamp(.7rem,2vw,1.4rem);margin:0 0 1.75rem;flex-wrap:nowrap}
+/* inline-flex, so the lockup inherits the hero's text-align instead of
+   setting its own: left beside the tagline on desktop, and centred on mobile
+   where .hero-left switches to text-align:center. A block-level flex row with
+   justify-content would have to fight that media query in both directions. */
+.hero-lockup{display:inline-flex;align-items:center;gap:clamp(.7rem,2vw,1.4rem);margin:0 0 1.75rem;flex-wrap:nowrap;vertical-align:middle}
 .hero-lockup .brand-mark{height:clamp(2.6rem,5.4vw,4.5rem);width:clamp(2.6rem,5.4vw,4.5rem);filter:drop-shadow(0 8px 34px rgba(255,63,52,.28))}
 .hero-brand{
   display:block;
