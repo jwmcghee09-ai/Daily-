@@ -16,7 +16,12 @@ import { valueHoldings } from "./lib/holdings.mjs";
 import { readPortfolio } from "./lib/portfolio.mjs";
 import { fetchAccountPortfolio, readConfig, apiGet } from "./lib/account.mjs";
 
-const SERVER_INFO = { name: "spectre", version: "1.0.0" };
+// Bump this whenever the shape of what a tool returns changes. It is stamped
+// onto get_portfolio's result so you can tell, from the AI's own answer,
+// whether the machine running this server is on current code — a stale copy
+// is otherwise indistinguishable from a bug.
+const SERVER_VERSION = "1.1.0";
+const SERVER_INFO = { name: "spectre", version: SERVER_VERSION };
 const SUPPORTED_PROTOCOLS = ["2025-06-18", "2025-03-26", "2024-11-05"];
 const DEFAULT_PROTOCOL = "2025-06-18";
 const DISCLAIMER =
@@ -177,6 +182,7 @@ async function getPortfolioTool() {
   const result = await priceHoldings(account.holdings);
   return {
     source: "spectre-account",
+    spectreToolVersion: SERVER_VERSION,
     fetchedAt: new Date().toISOString(),
     holdingCount: account.holdings.length,
     ...result,

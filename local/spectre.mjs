@@ -21,6 +21,7 @@ const C = {
   red: "\x1b[38;5;203m", orange: "\x1b[38;5;209m",
   green: "\x1b[38;5;114m", grey: "\x1b[38;5;245m", white: "\x1b[97m",
 };
+const LOCAL_VERSION = "1.1.0";
 const DISCLAIMER = "Possible anomalies only — statistical flags, not financial advice. You have the final say.";
 
 function parseArgs(argv) {
@@ -266,6 +267,40 @@ async function cmdPortfolio(opts) {
   console.log(`\n${C.dim}${DISCLAIMER}${C.reset}`);
 }
 
+/**
+ * Which copy of the code this machine is actually running.
+ *
+ * The MCP server and this CLI run from files on your own computer, so a fix
+ * pushed to the repository changes nothing here until those files are updated.
+ * A stale copy behaves exactly like a bug, so make the version checkable.
+ */
+async function cmdVersion() {
+  console.log(`\n${C.bold}${C.orange}SPECTRE Local${C.reset} ${C.bold}v${LOCAL_VERSION}${C.reset}`);
+  console.log(`${C.grey}Running from: ${new URL(".", import.meta.url).pathname}${C.reset}`);
+  console.log(`${C.grey}Node ${process.version}${C.reset}`);
+
+  // v1.1.0 is the first release that keeps cash and unquoted holdings in the
+  // book, so it is the thing worth confirming.
+  let holdingsModule = false;
+  try {
+    await import("./lib/holdings.mjs");
+    holdingsModule = true;
+  } catch { /* older copy */ }
+  console.log(
+    holdingsModule
+      ? `\n  ${C.green}✓${C.reset} Cash and unquoted holdings are included in your portfolio total`
+      : `\n  ${C.red}✗${C.reset} This copy is out of date — cash and unlisted funds will be missing.\n` +
+        `    ${C.grey}Update it with: git pull${C.reset}`,
+  );
+
+  const config = await readConfig();
+  console.log(
+    config?.email
+      ? `  ${C.green}✓${C.reset} Signed in as ${config.email} ${C.grey}(${config.baseUrl || DEFAULT_BASE_URL})${C.reset}\n`
+      : `  ${C.orange}○${C.reset} Not signed in — run ${C.white}node spectre.mjs login${C.reset}\n`,
+  );
+}
+
 function usage() {
   console.log(`
 ${C.bold}${C.orange}SPECTRE Local${C.reset} ${C.grey}— portfolio intelligence on your own machine${C.reset}
@@ -275,6 +310,7 @@ ${C.bold}${C.orange}SPECTRE Local${C.reset} ${C.grey}— portfolio intelligence 
   ${C.bold}portfolio${C.reset} <file.csv>     Analyse a holdings CSV instead
   ${C.bold}login${C.reset}                  Connect this machine to your SPECTRE account
   ${C.bold}whoami${C.reset} / ${C.bold}logout${C.reset}        Show or clear the signed-in account
+  ${C.bold}version${C.reset}                Which copy of SPECTRE Local this machine is running
 
 ${C.grey}Options${C.reset}
   --no-ai              Statistics and flags only; no local model needed
@@ -299,6 +335,7 @@ try {
   else if (opts.command === "login") await cmdLogin();
   else if (opts.command === "whoami") await cmdWhoami();
   else if (opts.command === "logout") await cmdLogout();
+  else if (opts.command === "version" || opts.command === "--version") await cmdVersion();
   else usage();
 } catch (err) {
   console.error(`\n${C.red}${err.message}${C.reset}\n`);

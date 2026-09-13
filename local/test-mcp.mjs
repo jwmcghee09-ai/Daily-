@@ -87,14 +87,30 @@ const badFile = await rpc("tools/call", { name: "analyse_portfolio", arguments: 
 check("missing CSV → isError", badFile.result?.isError === true);
 
 const acct = await rpc("tools/call", { name: "get_portfolio", arguments: {} });
-const acctData = JSON.parse(acct.result.content[0].text);
-if (acctData.positions) {
+const acctText = acct.result.content[0].text;
+// Signed out, the tool answers with a plain-text error rather than JSON —
+// a normal state for anyone running this before `spectre.mjs login`, so the
+// harness must report it instead of dying on JSON.parse.
+let acctData = null;
+try { acctData = JSON.parse(acctText); } catch { /* plain-text error */ }
+
+if (acctData?.positions) {
   check("get_portfolio reads live account", acctData.positions.length > 0,
     `${acctData.positions.length} positions, source=${acctData.source}`);
   check("get_portfolio stamps fetch time", !!acctData.fetchedAt);
+  check("get_portfolio stamps its version", !!acctData.spectreToolVersion,
+    `v${acctData.spectreToolVersion}`);
+  // The whole point of v1.1.0: cash and unquoted holdings stay in the book.
+  check("get_portfolio totals the whole book",
+    typeof acctData.totalValue === "number" && typeof acctData.cashValue === "number"
+      && Array.isArray(acctData.cashHoldings) && Array.isArray(acctData.statsUnavailable),
+    `total=${Math.round(acctData.totalValue)}, cash=${Math.round(acctData.cashValue)}, ` +
+      `${acctData.statsUnavailable.length} without stats`);
 } else {
-  check("get_portfolio responds sensibly when signed out or empty", !!acctData.message || acct.result.isError === true,
-    (acctData.message || acct.result.content[0].text).slice(0, 70));
+  check("get_portfolio responds sensibly when signed out or empty",
+    !!acctData?.message || acct.result.isError === true,
+    (acctData?.message || acctText).slice(0, 70));
+  console.log("  (sign in with `node spectre.mjs login` to test the live account path)");
 }
 
 const pong = await rpc("ping");
