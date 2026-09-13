@@ -11,14 +11,16 @@
  * approximation of them, and a metric added to the site shows up for connected
  * AIs without anyone updating files on their own machine.
  *
- * Monte Carlo is deliberately absent: it runs in the browser on the Quant tab,
- * so there is nothing to read here yet. Saying so is better than implying the
- * absence is an error.
+ * Monte Carlo and the stress scenarios used to run only in the browser and were
+ * passed to the AI as `clientQuantContext`, so anything that was not rendering
+ * that page could not see them. They now come from lib/quant.ts, which both the
+ * page and this endpoint read.
  */
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { estimateHistoricalRiskFromYahoo, readPortfolioState } from "@/lib/db";
 import { computeMetrics, displayHoldingLabel, type PortfolioHolding, type RiskWindow } from "@/lib/portfolio";
+import { runMonteCarlo, stressScenarios } from "@/lib/quant";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -55,6 +57,7 @@ export async function GET(request: NextRequest) {
   }
 
   const riskWindow = toRiskWindow(request.nextUrl.searchParams.get("window"));
+  const horizonDays = Math.min(Math.max(Number(request.nextUrl.searchParams.get("horizon")) || 30, 1), 365);
   const state = readPortfolioState(user.id);
 
   if (!state.holdings.length) {
@@ -68,6 +71,13 @@ export async function GET(request: NextRequest) {
   }
 
   const metrics = computeMetrics(state.holdings, state.snapshots, riskWindow);
+  const wantBands = request.nextUrl.searchParams.get("bands") === "1";
+  const simulated = runMonteCarlo(state.snapshots, { horizonDays });
+  // The per-day fan is ~1,800 numbers at a 365-day horizon — what a chart needs
+  // and pure token cost to a model, so it ships only on request.
+  const monteCarlo = simulated && !wantBands
+    ? { ...simulated, bands: undefined, bandsNote: "Add ?bands=1 for the per-day percentile fan." }
+    : simulated;
 
   // Snapshot-derived risk needs a history the account may not have yet; the
   // Yahoo estimate rebuilds it from real price series instead. It is the slower
@@ -132,11 +142,18 @@ export async function GET(request: NextRequest) {
     // Last 90 value points, oldest first — enough to describe a trend.
     history: metrics.history.slice(-90),
 
-    monteCarlo: null,
+    // Forward-looking projections, seeded so the same portfolio always gives
+    // the same answer — an assistant quoting a p50 should get the same p50 twice.
+    monteCarlo,
+    stressScenarios: stressScenarios(metrics.totalValue),
+
     notes: [
       "Every figure here is computed by SPECTRE, not estimated — cite them exactly.",
       "snapshotRisk comes from your recorded portfolio values; historicalRisk rebuilds the same measures from market price history and adds beta, Sharpe, Sortino, correlations and regime. They will not match exactly, and neither is wrong.",
-      "monteCarlo is null because that simulation currently runs in the browser on the Quant tab, not on the server. It is not an error.",
+      monteCarlo
+        ? `monteCarlo projects ${monteCarlo.horizonDays} days over ${monteCarlo.paths} simulated paths. It describes the spread of outcomes implied by past volatility, not a forecast — p90 is not a target and p10 is not a worst case.`
+        : "monteCarlo is null because the portfolio has fewer than two recorded value snapshots, so there is no return history to project from. Import again on another day and it will populate.",
+      "stressScenarios are single-day shocks applied to the whole book, not predictions of likelihood.",
       "In historicalRisk, `notPriced` lists holdings that have no market quote by design (super, unlisted funds, gold) — they are still part of the portfolio and are counted in every value and weight above. Only `failedTickers` means a lookup actually failed.",
     ],
   });

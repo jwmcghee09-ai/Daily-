@@ -142,6 +142,9 @@ const TOOLS = [
       "CVaR 95, Cornish-Fisher VaR, beta and correlation to benchmark, tracking error, Sharpe, " +
       "Sortino, return skewness, RSI, stochastic, OBV, a full correlation matrix across holdings, " +
       "factor exposure (market and size beta) and the current volatility regime. " +
+      "Also returns `monteCarlo` — a seeded projection of the portfolio forward over `horizon` days, "  +
+      "giving p10/p25/p50/p75/p90 outcomes fitted to the portfolio's own daily returns — and "  +
+      "`stressScenarios`, the effect of a GFC-style crash, a correction, a flash crash and a rally. " +
       "Use this whenever the user asks about risk, volatility, drawdown, correlation, diversification, " +
       "beta or how exposed they are — get_portfolio covers holdings and per-stock anomalies, this " +
       "covers portfolio risk. Requires `node spectre.mjs login`.",
@@ -152,6 +155,10 @@ const TOOLS = [
           type: "string",
           enum: ["1M", "3M", "1Y"],
           description: "Look-back window for the risk measures (default 3M)",
+        },
+        horizon: {
+          type: "number",
+          description: "Days to project the Monte Carlo forward (default 30, max 365)",
         },
       },
     },
@@ -226,10 +233,11 @@ async function getPortfolioTool() {
  * shows, and a measure added there reaches connected AIs without anyone
  * updating files on their own machine.
  */
-async function portfolioRiskTool({ window } = {}) {
+async function portfolioRiskTool({ window, horizon } = {}) {
   const allowed = new Set(["1M", "3M", "1Y"]);
   const riskWindow = allowed.has(String(window)) ? String(window) : "3M";
-  const data = await apiGet(`/api/portfolio/metrics?window=${riskWindow}`);
+  const days = Math.min(Math.max(Number(horizon) || 30, 1), 365);
+  const data = await apiGet(`/api/portfolio/metrics?window=${riskWindow}&horizon=${days}`);
   return { ...data, spectreToolVersion: SERVER_VERSION, disclaimer: DISCLAIMER };
 }
 

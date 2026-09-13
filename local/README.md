@@ -165,7 +165,9 @@ them. Only holdings under `unvalued` are genuinely unknown.
 
 `portfolio_risk` is the other half. Rather than recomputing anything locally, it reads the analysis SPECTRE already runs for the Quant tab: concentration (top-3 share, HHI, largest account, index-fund share), allocation by sector and account, then two independent risk reads — `snapshotRisk` from your own recorded portfolio values, and `historicalRisk` rebuilt from market price history, which adds annualised volatility, max drawdown, VaR 95, CVaR 95, Cornish-Fisher VaR, beta and correlation to the benchmark, tracking error, Sharpe, Sortino, skewness, RSI, stochastic, OBV, a correlation matrix across your holdings, factor exposure and the current volatility regime.
 
-Because it is a passthrough, it cannot drift from what the website shows, and a measure added to SPECTRE reaches your AI without you updating anything here. Monte Carlo is the exception: it runs in the browser on the Quant tab, so `monteCarlo` comes back null until that moves server-side.
+It also returns the forward-looking half of the Quant tab: `monteCarlo` projects the portfolio over `horizon` days (default 30) and gives p10/p25/p50/p75/p90 outcomes fitted to your own daily returns, and `stressScenarios` shows what a GFC-style crash, a correction, a flash crash and a rally would do to the book. The simulation is **seeded from the inputs**, so asking twice gives the same answer — a projection an assistant quotes back should not change between questions.
+
+Because it is a passthrough, it cannot drift from what the website shows, and a measure added to SPECTRE reaches your AI without you updating anything here.
 
 Because the figures are computed in code before the model ever sees them, a
 connected AI reasons over correct numbers instead of guessing at a chart. The
