@@ -65,14 +65,26 @@ body::after{
 /* ── NAV ── */
 nav{position:fixed;top:0;left:0;right:0;z-index:900;background:rgba(24,22,21,0.94);backdrop-filter:blur(28px) saturate(1.4);-webkit-backdrop-filter:blur(28px) saturate(1.4);border-bottom:1px solid rgba(190,180,175,.13)}
 .nav-inner{max-width:var(--max);margin:0 auto;padding:0 2.5rem;height:56px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:2rem}
+/* ── Brand lockup ──
+   The mark travels with the wordmark on every page, so the product is
+   recognisable from any screen rather than only the landing page. The
+   gradient lives on the text span, not the link, because the link is now a
+   flex row and background-clip:text would otherwise swallow the mark. */
+.brand-mark{display:block;width:auto;flex-shrink:0}
 .nav-logo{
+  display:inline-flex;
+  align-items:center;
+  gap:.55rem;
+  text-decoration:none;
+  flex-shrink:0;
+}
+.nav-logo .brand-mark{height:24px;width:24px}
+.nav-logo .brand-text{
   font-family:var(--disp);
   font-size:1.1rem;
   font-weight:700;
   letter-spacing:.14em;
-  text-decoration:none;
   white-space:nowrap;
-  flex-shrink:0;
   background:linear-gradient(90deg,#ff3f34 0%,#ff7a30 35%,#ff7a30 72%,#ffb347 100%);
   background-size:200% auto;
   -webkit-background-clip:text;
@@ -129,9 +141,11 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;background:rgba(24,22,21,0.9
   color:var(--text);
 }
 .hero-sub{font-size:.92rem;color:var(--muted2);max-width:720px;line-height:1.8;margin-bottom:2.8rem}
+.hero-lockup{display:flex;align-items:center;justify-content:center;gap:clamp(.7rem,2vw,1.4rem);margin:0 0 1.75rem;flex-wrap:nowrap}
+.hero-lockup .brand-mark{height:clamp(2.6rem,5.4vw,4.5rem);width:clamp(2.6rem,5.4vw,4.5rem);filter:drop-shadow(0 8px 34px rgba(255,63,52,.28))}
 .hero-brand{
   display:block;
-  margin:0 0 1.75rem;
+  margin:0;
   font-family:var(--disp);
   font-size:clamp(2.8rem,6vw,5rem);
   font-weight:700;
@@ -668,6 +682,8 @@ td.val-neg{color:var(--danger);font-family:var(--mono)}
 /* ── FOOTER ── */
 footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-index:2;margin-top:2rem}
 .foot-inner{display:flex;flex-direction:column;align-items:center;text-align:center;gap:.55rem}
+.foot-lockup{display:inline-flex;align-items:center;gap:.5rem}
+.foot-lockup .brand-mark{height:20px;width:20px}
 .foot-logo{font-family:var(--disp);font-size:1.1rem;letter-spacing:.14em;background:linear-gradient(120deg,var(--purple-hi),var(--orange));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .foot-disc{font-family:var(--mono);font-size:.53rem;color:rgba(100,80,160,.5);text-align:center;line-height:1.65;max-width:560px}
 .foot-link{font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-decoration:none}
@@ -718,14 +734,27 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
   box-shadow:var(--shadow-lg);
   padding:1rem 1.2rem;
 }
+.boot-mark{
+  display:block;
+  width:54px;
+  height:54px;
+  margin:0 auto .9rem;
+  animation:bootMarkIn .6s ease-out both;
+}
+@keyframes bootMarkIn{from{opacity:0;transform:scale(.82)}to{opacity:1;transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){.boot-mark{animation:none}}
 .boot-label{
   display:block;
-  font-family:var(--mono);
-  font-size:.56rem;
-  letter-spacing:.18em;
+  font-family:var(--disp);
+  font-size:1.15rem;
+  font-weight:700;
+  letter-spacing:.2em;
   text-transform:uppercase;
-  color:var(--orange);
-  margin-bottom:.35rem;
+  background:linear-gradient(90deg,#ff3f34 0%,#ff7a30 35%,#ff7a30 72%,#ffb347 100%);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+  margin-bottom:.5rem;
 }
 .boot-copy{
   font-size:.82rem;
@@ -1199,6 +1228,7 @@ tbody tr:hover{ background:rgba(255,63,52,.04) !important }
 
 <div id="boot-splash" role="status" aria-live="polite">
   <div class="boot-shell">
+    <img src="/spectre-mark.svg" alt="" aria-hidden="true" class="brand-mark boot-mark">
     <span class="boot-label">SPECTRE</span>
     <p class="boot-copy">Loading workspace...</p>
   </div>
@@ -1207,7 +1237,7 @@ tbody tr:hover{ background:rgba(255,63,52,.04) !important }
 <!-- NAV -->
 <nav>
   <div class="nav-inner">
-    <a href="/dashboard" class="nav-logo" id="nav-dashboard-logo">SPECTRE</a>
+    <a href="/dashboard" class="nav-logo" id="nav-dashboard-logo"><img src="/spectre-mark.svg" alt="" aria-hidden="true" class="brand-mark"><span class="brand-text">SPECTRE</span></a>
     <div class="nav-tabs">
       <button type="button" class="nav-tab nav-tab-active" data-tab="quant">Quant</button>
       <button type="button" class="nav-tab" data-tab="ai">AI</button>
@@ -1251,7 +1281,7 @@ tbody tr:hover{ background:rgba(255,63,52,.04) !important }
         <span class="hero-kicker-sep">·</span>
         <span id="hero-kicker-holdings">0 positions</span>
       </div>
-      <div class="hero-brand">SPECTRE</div>
+      <div class="hero-lockup"><img src="/spectre-mark.svg" alt="" aria-hidden="true" class="brand-mark"><div class="hero-brand">SPECTRE</div></div>
       <p class="hero-sub">Private AI portfolio intelligence for broker, super, crypto, fund, and bullion imports.</p>
       <div class="hero-actions">
         <button type="button" class="btn-primary hero-primary" id="hero-refresh-prices-btn">Refresh Prices</button>
@@ -2246,7 +2276,7 @@ tbody tr:hover{ background:rgba(255,63,52,.04) !important }
 <div class="wrap" data-page="always">
   <footer>
     <div class="foot-inner">
-      <span class="foot-logo">SPECTRE</span>
+      <span class="foot-lockup"><img src="/spectre-mark.svg" alt="" aria-hidden="true" class="brand-mark"><span class="foot-logo">SPECTRE</span></span>
       <span class="foot-disc">For informational purposes only. Not financial advice. Always verify with your financial institution.</span>
       <span class="foot-email"><a href="mailto:admin@spectre-assets.com">admin@spectre-assets.com</a></span>
     </div>

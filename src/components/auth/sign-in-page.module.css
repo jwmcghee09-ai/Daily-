@@ -35,12 +35,38 @@
   gap: 16px;
 }
 
+/* Brand lockup — the mark travels with the wordmark on every page. The
+   gradient lives on the text span, because background-clip:text on the
+   flex row would swallow the mark. */
 .brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  text-decoration: none;
+}
+
+.brandMark {
+  display: block;
+  height: 24px;
+  width: 24px;
+  flex-shrink: 0;
+}
+
+/* The signed-out hero is where most people first meet the product, so the
+   mark gets real size here rather than a nav-sized token. */
+.sideMark {
+  display: block;
+  height: 56px;
+  width: 56px;
+  margin-bottom: 1.25rem;
+  filter: drop-shadow(0 8px 28px rgba(255, 63, 52, 0.26));
+}
+
+.brandText {
   font-family: var(--font-space-grotesk), sans-serif;
   font-size: 18px;
   font-weight: 700;
   letter-spacing: 0.14em;
-  text-decoration: none;
   background: linear-gradient(90deg, #ff3f34 0%, #ff7a30 35%, #ff7a30 72%, #ffb347 100%);
   background-clip: text;
   -webkit-background-clip: text;

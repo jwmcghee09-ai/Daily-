@@ -3103,6 +3103,19 @@ html.starter-mode .hero-lock-wrap       { display: none !important; }
   gap: 0 !important;
 }
 .logo .status-dot { display: none; }
+/* Brand lockup — the mark travels with the wordmark on every page.
+   The gradient sits on the text span; margin (not gap) spaces the mark,
+   because the rule above pins gap to 0 with !important. */
+.brand-mark { display: block; width: auto; flex-shrink: 0; }
+.logo .brand-mark { height: 24px; width: 24px; margin-right: .55rem; }
+.logo .brand-text {
+  background: linear-gradient(90deg,#ff3f34 0%,#ff7a30 35%,#ff7a30 72%,#ffb347 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: brandSlide 4s linear infinite;
+}
 .nav-links { display: none !important; }
 .nav-tab-group {
   display: flex;
@@ -3332,7 +3345,7 @@ html.starter-mode .hero-lock-wrap       { display: none !important; }
 <!-- ===== STICKY NAV ===== -->
 <nav class="nav">
   <div class="nav-inner">
-    <a href="/" class="logo" id="nav-home-logo" style="text-decoration:none;">SPECTRE</a>
+    <a href="/" class="logo" id="nav-home-logo" style="text-decoration:none;"><img src="/spectre-mark.svg" alt="" aria-hidden="true" class="brand-mark"><span class="brand-text">SPECTRE</span></a>
     <div class="nav-tab-group">
       <a href="/dashboard?tab=quant" class="nav-tab-link">Quant</a>
       <a href="/dashboard?tab=ai" class="nav-tab-link">AI</a>

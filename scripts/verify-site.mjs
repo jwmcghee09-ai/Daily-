@@ -72,6 +72,28 @@ for (const a of assets) {
   else fail(`${a} missing`);
 }
 
+// ── 3b. The mark must appear on every surface, not just the landing page ──
+// A logo that quietly falls off a page is the kind of regression nobody
+// notices until the product looks unbranded in a screenshot.
+const MARK_SURFACES = [
+  "public/spectre-dashboard-v3.html",
+  "public/spectre-settings-v3.html",
+  "public/spectre-market-research-v1.html",
+  "src/components/marketing/landing-page.tsx",
+  "src/components/auth/sign-in-page.tsx",
+  "src/app/terminal/route.ts",
+  "src/app/strategy/route.ts",
+  "src/app/privacy/page.tsx",
+  "src/app/terms/page.tsx",
+];
+for (const surface of MARK_SURFACES) {
+  const path = join(root, surface);
+  if (!existsSync(path)) { fail(`${surface} missing`); continue; }
+  const count = (readFileSync(path, "utf8").match(/spectre-mark\.svg/g) ?? []).length;
+  if (count > 0) ok(`${surface}: brand mark present (${count}×)`);
+  else fail(`${surface}: no brand mark — the logo has fallen off this page`);
+}
+
 // ── 4. Landing page must not reference CSS classes that don't exist ──
 const cssModule = readFileSync(join(root, "src/components/marketing/landing-page.module.css"), "utf8");
 const definedClasses = new Set([...cssModule.matchAll(/\.([A-Za-z0-9_-]+)/g)].map((m) => m[1]));

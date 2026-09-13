@@ -19,6 +19,9 @@ body{background:#151312;color:#e6e4f2;font-family:'DM Mono','Courier New',monosp
 body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse 50% 40% at 12% 0%,rgba(255,63,52,.10) 0%,transparent 65%),radial-gradient(ellipse 42% 45% at 95% 95%,rgba(255,122,48,.06) 0%,transparent 65%)}
 body>*{position:relative;z-index:1}
 
+/* Brand mark on the dark topbar — the titlebar below is an orange
+   gradient, where an orange mark would vanish. */
+.brand-mark{display:block;width:20px;height:20px;flex-shrink:0}
 #topbar{background:rgba(13,12,22,.92);border-bottom:1px solid rgba(255,106,82,.22);padding:9px 18px;display:flex;align-items:center;gap:16px;font-size:11.5px;color:#777;flex-shrink:0;backdrop-filter:blur(10px)}
 .fkey{color:#1b1918;background:#ff6a52;padding:3px 9px;border-radius:6px;font-weight:500;font-size:11px;cursor:pointer;font-family:'DM Mono',monospace}
 .fkey:hover{background:#ffb3a6}
@@ -149,6 +152,7 @@ tr:hover td{background:rgba(255,106,82,.05)}
 <body>
 
 <div id="topbar">
+  <a href="/dashboard" title="SPECTRE" style="display:flex;align-items:center;flex-shrink:0;margin-right:2px"><img src="/spectre-mark.svg" alt="" aria-hidden="true" class="brand-mark"></a>
   <span class="fkey" onclick="toggleHelp()">F1</span><span class="flabel">HELP</span>
   <span class="fkey" onclick="doRefresh()">F2</span><span class="flabel">REFRESH</span>
   <span class="fkey" onclick="focusChat()">F8</span><span class="flabel">CHAT</span>

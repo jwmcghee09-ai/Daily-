@@ -57,7 +57,13 @@ body::after{
 }
 nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(24,22,21,.94);backdrop-filter:blur(28px) saturate(1.4);-webkit-backdrop-filter:blur(28px) saturate(1.4);border-bottom:1px solid rgba(190,180,175,.13)}
 .nav-inner{max-width:var(--max);margin:0 auto;padding:0 1.4rem;height:100%;display:flex;align-items:center;justify-content:space-between;gap:1rem}
-.nav-logo{font-family:var(--sans);font-size:1.1rem;font-weight:800;letter-spacing:.14em;text-decoration:none;background:linear-gradient(90deg,var(--purple) 0%,var(--purple-hi) 35%,var(--orange) 72%,#ffb347 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+/* Brand lockup — the mark travels with the wordmark on every page. The
+   gradient stays on the text span: background-clip:text on a flex row
+   would swallow the mark. */
+.brand-mark{display:block;width:auto;flex-shrink:0}
+.nav-logo{display:inline-flex;align-items:center;gap:.55rem;text-decoration:none;flex-shrink:0}
+.nav-logo .brand-mark{height:24px;width:24px}
+.nav-logo .brand-text{font-family:var(--sans);font-size:1.1rem;font-weight:800;letter-spacing:.14em;white-space:nowrap;background:linear-gradient(90deg,var(--purple) 0%,var(--purple-hi) 35%,var(--orange) 72%,#ffb347 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .nav-links{display:flex;gap:1.2rem;list-style:none}
 .nav-links a{position:relative;font-family:var(--mono);font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(94,90,120,.65);text-decoration:none}
 .nav-links a::after{content:'';position:absolute;left:0;right:100%;bottom:-4px;height:1.5px;background:linear-gradient(90deg,var(--purple),var(--orange));transition:right .25s ease}
@@ -112,6 +118,8 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
 .settings-email{display:inline-block;margin-top:.55rem;font-family:var(--mono);font-size:.7rem;letter-spacing:.04em;color:var(--orange);text-decoration:none;border-bottom:1px solid rgba(255,122,48,.42)}
 .footer{padding:2.2rem 0;border-top:1px solid var(--border);margin-top:2rem}
 .foot-inner{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.foot-lockup{display:inline-flex;align-items:center;gap:.5rem}
+.foot-lockup .brand-mark{height:20px;width:20px}
 .foot-logo{font-family:var(--sans);font-size:1.05rem;font-weight:800;letter-spacing:.12em;background:linear-gradient(90deg,var(--purple) 0%,var(--purple-hi) 35%,var(--orange) 72%,#ffb347 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .foot-disc{font-size:.72rem;color:var(--muted);max-width:740px}
 .foot-link{font-family:var(--mono);font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted2);text-decoration:none}
@@ -120,7 +128,10 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
 .system-toast.error{border-color:rgba(255,77,26,.45);color:#ffd9d2}
 #boot-splash{position:fixed;inset:0;z-index:1600;display:grid;place-items:center;padding:1rem;transition:opacity .22s ease}
 .boot-shell{min-width:220px;text-align:center;border:1px solid var(--border2);border-radius:12px;background:linear-gradient(160deg,rgba(15,10,28,.97) 0%,rgba(10,7,18,.96) 100%);box-shadow:var(--shadow);padding:1rem 1.2rem}
-.boot-label{display:block;font-family:var(--mono);font-size:.56rem;letter-spacing:.18em;text-transform:uppercase;color:var(--orange);margin-bottom:.35rem}
+.boot-mark{display:block;width:54px;height:54px;margin:0 auto .9rem;animation:bootMarkIn .6s ease-out both}
+@keyframes bootMarkIn{from{opacity:0;transform:scale(.82)}to{opacity:1;transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){.boot-mark{animation:none}}
+.boot-label{display:block;font-family:var(--sans);font-size:1.15rem;font-weight:800;letter-spacing:.2em;text-transform:uppercase;background:linear-gradient(90deg,var(--purple) 0%,var(--purple-hi) 35%,var(--orange) 72%,#ffb347 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.5rem}
 .boot-copy{font-size:.82rem;color:var(--muted2)}
 .settings-card--danger::before{background:linear-gradient(90deg,rgba(255,75,51,.72),rgba(255,45,20,.42))!important}
 .settings-title--danger{color:rgba(255,140,130,.9)}
@@ -180,13 +191,14 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
 <body class="boot-pending">
 <div id="boot-splash" role="status" aria-live="polite">
   <div class="boot-shell">
+    <img src="/spectre-mark.svg" alt="" aria-hidden="true" class="brand-mark boot-mark">
     <span class="boot-label">SPECTRE</span>
     <p class="boot-copy">Loading settings...</p>
   </div>
 </div>
 <nav>
   <div class="nav-inner">
-    <a href="/dashboard?mode=account" class="nav-logo">SPECTRE</a>
+    <a href="/dashboard?mode=account" class="nav-logo"><img src="/spectre-mark.svg" alt="" aria-hidden="true" class="brand-mark"><span class="brand-text">SPECTRE</span></a>
     <ul class="nav-links">
       <li><a href="/dashboard?mode=account" id="nav-dashboard-link">Dashboard</a></li>
       <li><a href="/research" id="nav-research-link">Research</a></li>
@@ -302,7 +314,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
 <div class="wrap">
   <footer class="footer">
     <div class="foot-inner">
-      <span class="foot-logo">SPECTRE</span>
+      <span class="foot-lockup"><img src="/spectre-mark.svg" alt="" aria-hidden="true" class="brand-mark"><span class="foot-logo">SPECTRE</span></span>
       <span class="foot-disc">For informational purposes only. Not financial advice. Data sourced from user-uploaded files and live price feeds.</span>
       <a href="mailto:admin@spectre-assets.com" class="foot-link">Contact</a>
     </div>

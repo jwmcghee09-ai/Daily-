@@ -11,7 +11,11 @@ export default async function TermsPage() {
 
   return (
     <main style={{ maxWidth: 840, margin: "0 auto", padding: "64px 24px 80px", lineHeight: 1.7 }}>
-      <p><Link href={backHref}>← Back to SPECTRE</Link></p>
+      <p style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 28 }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/spectre-mark.svg" alt="" aria-hidden="true" width={26} height={26} style={{ display: "block" }} />
+        <Link href={backHref} style={{ fontWeight: 600, letterSpacing: "0.02em" }}>← Back to SPECTRE</Link>
+      </p>
       <h1>Terms of Service</h1>
       <p style={{ color: "#888", fontSize: "0.85rem" }}>Last updated: May 2026</p>
 

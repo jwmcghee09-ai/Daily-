@@ -351,8 +351,10 @@ export default function SignInPage({
     <main className={styles.page}>
       <header className={styles.topbar}>
         <div className={styles.topbarInner}>
-          <Link href="/" className={styles.brand}>
-            SPECTRE
+          <Link href="/" className={styles.brand} aria-label="SPECTRE home">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/spectre-mark.svg" alt="" aria-hidden="true" className={styles.brandMark} />
+            <span className={styles.brandText}>SPECTRE</span>
           </Link>
           <div className={styles.topbarActions}>
             <Link href="/" className={`${styles.button} ${styles.ghostButton}`}>
@@ -368,6 +370,8 @@ export default function SignInPage({
       <div className={styles.shell}>
         <div className={styles.grid}>
           <aside className={styles.sideCard}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/spectre-mark.svg" alt="" aria-hidden="true" className={styles.sideMark} />
             <div className={styles.pill}>Portfolio Intelligence</div>
             <h1>
               Know your real risk <span>before the market does.</span>

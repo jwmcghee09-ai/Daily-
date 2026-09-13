@@ -19,6 +19,7 @@ a{color:inherit;text-decoration:none}
 .tblink{color:#ff6a52;border:1px solid #3a3532;border-radius:4px;padding:5px 12px;font-size:11px;letter-spacing:.06em;text-transform:uppercase}
 .tblink:hover{border-color:#ff6a52}
 
+.brand-mark{display:block;width:20px;height:20px;flex-shrink:0}
 #titlebar{background:linear-gradient(90deg,#ff3f34 0%,#ff7a30 35%,#ff7a30 72%,#ffb347 100%);color:#fff;padding:10px 22px;font-weight:bold;font-size:16px;letter-spacing:.06em;display:flex;justify-content:space-between;align-items:center}
 
 .spill{font-size:10px;padding:3px 10px;border-radius:3px;border:1px solid;text-transform:uppercase;letter-spacing:.05em;font-weight:bold}
@@ -99,6 +100,7 @@ a{color:inherit;text-decoration:none}
 <body>
 
 <div id="topbar">
+  <a href="/dashboard" title="SPECTRE" style="display:flex;align-items:center;flex-shrink:0"><img src="/spectre-mark.svg" alt="" aria-hidden="true" class="brand-mark"></a>
   <span style="color:#ff6a52;font-weight:bold;letter-spacing:.08em">MYRMIDON</span>
   <span id="status-pill" class="spill spill-off">LOADING…</span>
   <div class="right">
