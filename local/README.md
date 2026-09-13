@@ -154,6 +154,14 @@ It gives the AI four tools:
 Once you've run `login`, you can just ask *"how's my portfolio looking?"* and it
 pulls your current holdings without you naming a file.
 
+`get_portfolio` returns the **whole** book, not only the listed securities. Cash
+balances come back separately (`cashValue`, `cashPct`, `cashHoldings`), so
+"how much am I holding in cash?" has an answer. Super balances and unlisted
+managed funds have no public quote, so they keep the valuation your account
+already holds and are listed under `statsUnavailable` — they still count toward
+the total and toward every weight, they simply have no RSI or volatility behind
+them. Only holdings under `unvalued` are genuinely unknown.
+
 Because the figures are computed in code before the model ever sees them, a
 connected AI reasons over correct numbers instead of guessing at a chart. The
 server also sends the model standing instructions: cite the figures exactly,

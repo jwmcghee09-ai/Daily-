@@ -9,7 +9,8 @@
 // explanation. Your holdings never leave the machine.
 
 import { createInterface } from "node:readline/promises";
-import { analyse, analysePortfolio } from "./lib/engine.mjs";
+import { analyse } from "./lib/engine.mjs";
+import { valueHoldings } from "./lib/holdings.mjs";
 import { loadBars } from "./lib/quotes.mjs";
 import { readPortfolio } from "./lib/portfolio.mjs";
 import { chat, ensureModel, OllamaUnavailable, OllamaModelMissing, DEFAULT_HOST } from "./lib/ollama.mjs";
@@ -84,11 +85,20 @@ function buildScanPrompt({ stats, anomalies }) {
 
 function buildPortfolioPrompt(summary) {
   const slim = summary.positions.map((p) => ({
-    symbol: p.symbol, name: p.name, weightPct: Number(p.weight.toFixed(2)),
+    symbol: p.symbol || p.label, name: p.name, weightPct: Number(p.weight.toFixed(2)),
     value: Math.round(p.value), dayPct: p.dayPct, ret30: p.ret30,
     rsi: p.rsi, drawdownPct: p.drawdownPct, annVolPct: p.annVolPct,
-    pnlPct: p.pnlPct, alerts: p.anomalies.filter((a) => a.severity !== "info").map((a) => a.title),
+    pnlPct: p.pnlPct,
+    alerts: (p.anomalies ?? []).filter((a) => a.severity !== "info").map((a) => a.title),
+    ...(p.statsUnavailable ? { statsUnavailable: p.statsUnavailable } : {}),
   }));
+  for (const c of summary.cashHoldings) {
+    slim.push({
+      symbol: c.label, name: c.name || "Cash", kind: "cash",
+      weightPct: summary.totalValue > 0 ? Number(((c.value / summary.totalValue) * 100).toFixed(2)) : 0,
+      value: Math.round(c.value), alerts: [],
+    });
+  }
   return [
     "Explain what this portfolio's data shows. Use only the figures below.",
     "Cover: what is driving today, where risk is concentrated, and which holdings the flags point at.",
@@ -97,10 +107,14 @@ function buildPortfolioPrompt(summary) {
     JSON.stringify(
       {
         totalValue: Math.round(summary.totalValue),
+        investedValue: Math.round(summary.investedValue),
+        cashValue: Math.round(summary.cashValue),
+        cashPct: summary.cashPct,
         weightedDayPct: summary.weightedDayPct,
         top3Pct: summary.top3Pct,
         effectiveNames: summary.effectiveNames,
         weightedAnnVolPct: summary.weightedAnnVolPct,
+        statsCoveragePct: summary.statsCoveragePct,
       },
       null, 1,
     ),
@@ -188,7 +202,9 @@ async function cmdPortfolio(opts) {
     console.log(`${C.grey}Analysing ${holdings.length} holdings from ${opts.target}…${C.reset}`);
   } else {
     const account = await fetchAccountPortfolio();
-    holdings = account.holdings.map((h) => ({ ticker: h.ticker, units: h.units, costBase: h.costBase }));
+    // Pass the whole holding through — cash balances and unquoted funds carry
+    // their value from the account and must stay in the book.
+    holdings = account.holdings;
     if (!holdings.length) {
       console.log(`\n${C.orange}Your SPECTRE account has no holdings imported yet.${C.reset}`);
       console.log(`${C.grey}Import a broker, super or crypto export on spectre-assets.com, then run this again.${C.reset}`);
@@ -197,36 +213,30 @@ async function cmdPortfolio(opts) {
     console.log(`${C.grey}Analysing ${holdings.length} live holdings from your SPECTRE account…${C.reset}`);
   }
 
-  const positions = [];
-  const missing = [];
-  for (const h of holdings) {
-    const bars = await loadBars(h.ticker);
-    if (!bars) { missing.push(h.ticker); continue; }
-    const res = analyse(bars.rows, bars.meta);
-    if (res.error) { missing.push(h.ticker); continue; }
-    const value = res.stats.price * h.units;
-    const pnlPct = h.costBase && h.costBase > 0 ? ((res.stats.price - h.costBase) / h.costBase) * 100 : null;
-    positions.push({ ...res.stats, units: h.units, costBase: h.costBase, value, pnlPct, anomalies: res.anomalies });
-  }
-  if (!positions.length) throw new Error("Could not price any holdings — check the tickers in your CSV");
-
-  const summary = analysePortfolio(positions);
-  if (summary.error) throw new Error(summary.error);
+  const summary = await valueHoldings(holdings);
 
   if (opts.json) { console.log(JSON.stringify(summary, null, 2)); return; }
 
+  const cashNote = summary.cashValue > 0
+    ? `, ${money(summary.cashValue)} cash (${fmt(summary.cashPct, 0)}%)`
+    : "";
   console.log(
     `\n${C.bold}${C.white}Portfolio${C.reset}  ${C.bold}${money(summary.totalValue)}${C.reset}` +
       `   ${tone(summary.weightedDayPct)}${pct(summary.weightedDayPct, 2)} today${C.reset}` +
-      `   ${C.grey}${positions.length} priced${missing.length ? `, ${missing.length} skipped` : ""}${C.reset}\n`,
+      `   ${C.grey}${summary.positions.length} holding${summary.positions.length === 1 ? "" : "s"}${cashNote}${C.reset}\n`,
   );
   console.log(
     `  ${C.grey}${"SYMBOL".padEnd(10)}${"WEIGHT".padStart(8)}${"VALUE".padStart(12)}` +
       `${"TODAY".padStart(9)}${"30D".padStart(9)}${"P/L".padStart(9)}${"RSI".padStart(6)}${C.reset}`,
   );
-  for (const p of summary.positions) {
+  const rows = [...summary.positions, ...summary.cashHoldings.map((c) => ({
+    ...c, weight: summary.totalValue > 0 ? (c.value / summary.totalValue) * 100 : 0,
+  }))];
+  for (const p of rows) {
+    // Cash and unquoted holdings have a value and a weight but no market
+    // statistics — show them in the book with dashes rather than hiding them.
     console.log(
-      `  ${C.white}${p.symbol.padEnd(10)}${C.reset}${String(fmt(p.weight, 1) + "%").padStart(8)}` +
+      `  ${C.white}${String(p.symbol || p.label).slice(0, 10).padEnd(10)}${C.reset}${String(fmt(p.weight, 1) + "%").padStart(8)}` +
         `${money(p.value).padStart(12)}` +
         `${tone(p.dayPct)}${pct(p.dayPct).padStart(9)}${C.reset}` +
         `${tone(p.ret30)}${pct(p.ret30).padStart(9)}${C.reset}` +
@@ -234,12 +244,21 @@ async function cmdPortfolio(opts) {
         `${String(fmt(p.rsi, 0)).padStart(6)}`,
     );
   }
-  if (missing.length) console.log(`\n  ${C.grey}Skipped (no price data): ${missing.join(", ")}${C.reset}`);
+  if (summary.statsUnavailable.length) {
+    console.log(
+      `\n  ${C.grey}Counted in the total, but no market statistics: ` +
+        `${summary.statsUnavailable.map((u) => u.label).join(", ")}${C.reset}`,
+    );
+  }
+  if (summary.unvalued.length) {
+    console.log(`  ${C.grey}Could not value: ${summary.unvalued.map((u) => u.label).join(", ")}${C.reset}`);
+  }
 
   console.log(`\n${C.bold}Flags${C.reset}`);
   printFlags(summary.flags);
   const holdingAlerts = summary.positions.flatMap((p) =>
-    p.anomalies.filter((a) => a.severity !== "info").map((a) => ({ ...a, title: `${p.symbol}: ${a.title}` })),
+    (p.anomalies ?? []).filter((a) => a.severity !== "info")
+      .map((a) => ({ ...a, title: `${p.symbol || p.label}: ${a.title}` })),
   );
   if (holdingAlerts.length) { console.log(`\n${C.bold}Holding-level flags${C.reset}`); printFlags(holdingAlerts); }
 

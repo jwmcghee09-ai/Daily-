@@ -113,9 +113,29 @@ export async function apiGet(path, { timeoutMs = 20000 } = {}) {
   return res.json();
 }
 
+/** Sources the account uses for money sitting in an account rather than invested. */
+const CASH_SOURCES = new Set(["savings"]);
+/** Tickers brokers use for the uninvested balance inside a trading account. */
+const CASH_TICKERS = /^(.*CASH|CUR:[A-Z]{3}|[A-Z]{3}:CASH)$/;
+
+/** Cash, a listed security, or something held but not publicly quoted. */
+function classify(holding) {
+  const ticker = String(holding.ticker || "").toUpperCase();
+  const source = String(holding.source || "").toLowerCase();
+  if (CASH_SOURCES.has(source) || CASH_TICKERS.test(ticker)) return "cash";
+  // Super balances and unlisted managed funds have a real value but no quote.
+  if (source === "super" || source === "fund") return "unquoted";
+  return "security";
+}
+
 /**
  * Live holdings from the signed-in account. Read fresh on every call, so
  * anything imported or changed on the website shows up immediately.
+ *
+ * Every holding is returned, including cash balances and anything without a
+ * public quote. The account already knows what each one is worth — dropping
+ * the ones a market data feed cannot price would understate the portfolio and
+ * leave questions like "how much do I have in cash" unanswerable.
  */
 export async function fetchAccountPortfolio() {
   const state = await apiGet("/api/portfolio");
@@ -125,9 +145,13 @@ export async function fetchAccountPortfolio() {
     // everything downstream works in per-unit terms (as a CSV "cost" column
     // does). Normalise here so profit/loss is not off by the unit count.
     const totalCost = Number(h.costBase ?? h.cost_base) || null;
-    return {
-      ticker: String(h.ticker || "").toUpperCase(),
-      name: h.name || "",
+    const ticker = String(h.ticker || "").toUpperCase();
+    const name = h.name || "";
+    const holding = {
+      ticker,
+      name,
+      // What to call it in prose — some holdings are named but have no code.
+      label: ticker || name || "Unnamed holding",
       source: h.source || "",
       account: h.account || "",
       sector: h.sector || "",
@@ -137,7 +161,8 @@ export async function fetchAccountPortfolio() {
       totalCostBase: totalCost,
       costBase: totalCost && units > 0 ? totalCost / units : null,
     };
-  }).filter((h) => h.ticker && h.units > 0);
+    return { ...holding, kind: classify(holding) };
+  }).filter((h) => h.value > 0 || h.units > 0);
 
   return {
     holdings,

@@ -10,8 +10,9 @@
 //
 // Setup: see README.md → "Connect your own AI"
 
-import { analyse, analysePortfolio } from "./lib/engine.mjs";
+import { analyse } from "./lib/engine.mjs";
 import { loadBars } from "./lib/quotes.mjs";
+import { valueHoldings } from "./lib/holdings.mjs";
 import { readPortfolio } from "./lib/portfolio.mjs";
 import { fetchAccountPortfolio, readConfig, apiGet } from "./lib/account.mjs";
 
@@ -68,8 +69,12 @@ const TOOLS = [
       "This is the live portfolio they maintain on spectre-assets.com — it reflects whatever they have " +
       "imported or changed, re-read fresh every time this is called, so it is always up to date. " +
       "Prefer this over analyse_portfolio whenever the user refers to 'my portfolio' or 'my holdings' " +
-      "without naming a file. Returns per-holding statistics and anomaly flags plus portfolio-level " +
-      "concentration and risk analysis. Requires the user to have run `node spectre.mjs login` once.",
+      "without naming a file. Returns EVERY holding in the account — listed securities with full " +
+      "statistics and anomaly flags, plus cash balances (`cashHoldings`, `cashValue`, `cashPct`) and " +
+      "anything without a public quote such as super or unlisted funds, which carry their value from " +
+      "the account and appear under `statsUnavailable`. `totalValue` and every weight cover all of it. " +
+      "Also returns portfolio-level concentration and risk analysis. " +
+      "Requires the user to have run `node spectre.mjs login` once.",
     inputSchema: { type: "object", properties: {} },
   },
   {
@@ -154,28 +159,8 @@ async function compareStocks({ tickers }) {
   return { compared: results, unavailable: failed, disclaimer: DISCLAIMER };
 }
 
-/** Price and analyse a set of {ticker, units, costBase} holdings. */
 async function priceHoldings(holdings) {
-  const positions = [];
-  const unavailable = [];
-  for (const h of holdings) {
-    const bars = await loadBars(h.ticker);
-    if (!bars) { unavailable.push(h.ticker); continue; }
-    const r = analyse(bars.rows, bars.meta);
-    if (r.error) { unavailable.push(h.ticker); continue; }
-    positions.push({
-      ...r.stats,
-      units: h.units,
-      costBase: h.costBase,
-      value: r.stats.price * h.units,
-      pnlPct: h.costBase > 0 ? ((r.stats.price - h.costBase) / h.costBase) * 100 : null,
-      anomalies: r.anomalies,
-    });
-  }
-  if (!positions.length) throw new Error("Could not price any holdings — check the ticker symbols");
-  const summary = analysePortfolio(positions);
-  if (summary.error) throw new Error(summary.error);
-  return { ...summary, unavailable, disclaimer: DISCLAIMER };
+  return { ...(await valueHoldings(holdings)), disclaimer: DISCLAIMER };
 }
 
 async function getPortfolioTool() {
@@ -190,7 +175,16 @@ async function getPortfolioTool() {
     };
   }
   const result = await priceHoldings(account.holdings);
-  return { source: "spectre-account", fetchedAt: new Date().toISOString(), ...result };
+  return {
+    source: "spectre-account",
+    fetchedAt: new Date().toISOString(),
+    holdingCount: account.holdings.length,
+    ...result,
+    coverageNote:
+      "totalValue covers every holding in the account, including cash and anything without a " +
+      "public quote. Holdings listed under statsUnavailable are part of the portfolio and are " +
+      "counted in totalValue and in every weight — report them, do not describe them as missing.",
+  };
 }
 
 async function analysePortfolioTool({ csv_path: csvPath }) {
@@ -286,6 +280,11 @@ async function handleRequest(msg) {
           "historically implied, but never tell the user to buy, sell or hold: they decide. " +
           "When the user mentions 'my portfolio' or 'my holdings', call get_portfolio — it reads " +
           "their live SPECTRE account and is always current. Do not ask them for a file path first. " +
+          "get_portfolio returns the whole book: cash sits in cashHoldings/cashValue, and holdings " +
+          "without a public quote (super, unlisted funds) appear in positions with a statsUnavailable " +
+          "reason. Those are part of the portfolio and are already counted in totalValue and in every " +
+          "weight — report them as holdings, never as unavailable or missing. Only say a figure is " +
+          "unavailable when it appears under `unvalued`. " +
           "The myrmidon_* tools cover the autonomous trading agent, which runs on a PAPER account: " +
           "always say so rather than presenting its equity as real money, and note that these tools " +
           "are read-only — you cannot place, approve or cancel a trade.",

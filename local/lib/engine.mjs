@@ -123,41 +123,77 @@ export function analyse(rows, meta = {}) {
 }
 
 /** Portfolio-level concentration and risk signals across analysed holdings. */
-export function analysePortfolio(positions) {
+/**
+ * Portfolio-level concentration and risk signals across the WHOLE book.
+ *
+ * Positions may or may not carry market statistics: cash, super and unlisted
+ * funds have a real value but no quote, so they still count toward the total
+ * and every weight, and are simply skipped by the statistics that need a price
+ * history. Measuring concentration over only the quoted names would report a
+ * far more concentrated book than the user actually holds.
+ *
+ * @param positions every holding, each with at least `value`
+ * @param options.cash cash already separated out by the caller, if any
+ */
+export function analysePortfolio(positions, { cash = 0 } = {}) {
   const valued = positions.filter((p) => p.value > 0);
-  const total = valued.reduce((s, p) => s + p.value, 0);
-  if (total <= 0) return { error: "No positions with a market value" };
+  const invested = valued.reduce((s, p) => s + p.value, 0);
+  const total = invested + cash;
+  if (total <= 0) return { error: "No holdings with a value" };
 
   const weighted = valued
     .map((p) => ({ ...p, weight: (p.value / total) * 100 }))
     .sort((a, b) => b.weight - a.weight);
 
   const top3 = weighted.slice(0, 3).reduce((s, p) => s + p.weight, 0);
-  const herfindahl = weighted.reduce((s, p) => s + (p.weight / 100) ** 2, 0);
+  const cashPct = (cash / total) * 100;
+  // Cash counts as one perfectly uncorrelated "name" for concentration maths.
+  const herfindahl = weighted.reduce((s, p) => s + (p.weight / 100) ** 2, 0) + (cashPct / 100) ** 2;
   const effectiveNames = herfindahl > 0 ? 1 / herfindahl : 0;
+
+  // Volatility and day moves are only defined for holdings with price history.
+  const measurable = weighted.filter((p) => p.annVolPct != null || p.dayPct != null);
+  const measuredValue = measurable.reduce((s, p) => s + p.value, 0);
+  const statsCoveragePct = (measuredValue / total) * 100;
   const portfolioVol = weighted.reduce((s, p) => s + (p.annVolPct ?? 0) * (p.weight / 100), 0);
   const dayMove = weighted.reduce((s, p) => s + (p.dayPct ?? 0) * (p.weight / 100), 0);
 
   const flags = [];
   const add = (severity, title, detail) => flags.push({ severity, title, detail });
 
-  if (weighted[0] && weighted[0].weight >= 30) add("alert", `${weighted[0].symbol} is ${weighted[0].weight.toFixed(0)}% of the book`, "A single position this large drives most of your outcome, good or bad.");
+  if (weighted[0] && weighted[0].weight >= 30) add("alert", `${weighted[0].symbol || weighted[0].label} is ${weighted[0].weight.toFixed(0)}% of the book`, "A single position this large drives most of your outcome, good or bad.");
   if (top3 >= 60) add("watch", `Top 3 positions are ${top3.toFixed(0)}% of the book`, "Concentrated. Diversification benefits fall away quickly past this point.");
   if (effectiveNames < 5) add("watch", `Effectively ${effectiveNames.toFixed(1)} independent positions`, "You hold more tickers than that, but weighting means only a few actually matter.");
   if (portfolioVol >= 35) add("watch", `Weighted annual volatility ${portfolioVol.toFixed(0)}%`, "High-volatility book — expect wide swings in normal conditions.");
 
   const alerting = weighted.filter((p) => p.anomalies?.some((a) => a.severity === "alert"));
-  if (alerting.length) add("alert", `${alerting.length} holding${alerting.length > 1 ? "s" : ""} flagged an alert today`, alerting.map((p) => p.symbol).join(", "));
+  if (alerting.length) add("alert", `${alerting.length} holding${alerting.length > 1 ? "s" : ""} flagged an alert today`, alerting.map((p) => p.symbol || p.label).join(", "));
+
+  // Say so plainly when part of the book has no price history behind it,
+  // rather than letting the volatility figure look like it covers everything.
+  if (statsCoveragePct < 99.5) {
+    const unmeasured = weighted.filter((p) => p.annVolPct == null && p.dayPct == null);
+    const names = unmeasured.map((p) => p.symbol || p.label).filter(Boolean);
+    add(
+      "info",
+      `Market statistics cover ${statsCoveragePct.toFixed(0)}% of the book`,
+      `${cash > 0 ? `Cash (${cashPct.toFixed(0)}%)` : "Some holdings"}${names.length ? ` and ${names.join(", ")}` : ""} have a value but no price history, so volatility and momentum figures are measured over the rest. Their value is still counted in every total and weight.`,
+    );
+  }
 
   if (flags.length === 0) add("info", "No portfolio-level flags", "Concentration, volatility and per-holding signals all look unremarkable.");
 
   return {
     totalValue: total,
+    investedValue: invested,
+    cashValue: cash,
+    cashPct,
     positions: weighted,
     top3Pct: top3,
     effectiveNames,
     weightedAnnVolPct: portfolioVol,
     weightedDayPct: dayMove,
+    statsCoveragePct,
     flags,
   };
 }
