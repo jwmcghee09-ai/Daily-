@@ -100,11 +100,19 @@ function money(value: number): string {
   return value.toFixed(2);
 }
 
+/**
+ * Placeholders the importer invents when a row has a name but no ticker column
+ * (FUND-1, GOLD-2 …). They are not symbols, so they must never be shown as one
+ * — the fund's own name is both true and more useful.
+ */
+const SYNTHETIC_TICKER = /^(GOLD|INDEX|FUND|SAVINGS|TAX|CRYPTO)-\d+$/;
+
 function holdingSymbol(holding: PortfolioHolding): string {
-  const ticker = String(holding.ticker || "").trim();
-  if (ticker) return ticker.toUpperCase();
+  const ticker = String(holding.ticker || "").trim().toUpperCase();
   const name = String(holding.name || "").trim();
-  return name ? name.slice(0, 24) : "—";
+  if (ticker && !SYNTHETIC_TICKER.test(ticker)) return ticker;
+  if (name) return name.slice(0, 24);
+  return ticker || "—";
 }
 
 function toPosition(holding: PortfolioHolding): FeedPosition {

@@ -118,13 +118,29 @@ const CASH_SOURCES = new Set(["savings"]);
 /** Tickers brokers use for the uninvested balance inside a trading account. */
 const CASH_TICKERS = /^(.*CASH|CUR:[A-Z]{3}|[A-Z]{3}:CASH)$/;
 
+/**
+ * Placeholders the importer invents when a row has a name but no ticker column
+ * (FUND-1, GOLD-2, SAVINGS-1 …). They are not symbols and never will be, so
+ * asking a price feed about them only produces a confusing "this ticker does
+ * not exist" answer about an identifier SPECTRE made up itself.
+ */
+const SYNTHETIC_TICKER = /^(GOLD|INDEX|FUND|SAVINGS|TAX|CRYPTO)-\d+$/;
+
+export function isSyntheticTicker(ticker) {
+  return SYNTHETIC_TICKER.test(String(ticker || "").toUpperCase());
+}
+
 /** Cash, a listed security, or something held but not publicly quoted. */
 function classify(holding) {
   const ticker = String(holding.ticker || "").toUpperCase();
   const source = String(holding.source || "").toLowerCase();
-  if (CASH_SOURCES.has(source) || CASH_TICKERS.test(ticker)) return "cash";
+  if (CASH_SOURCES.has(source) || CASH_TICKERS.test(ticker) || /^SAVINGS-\d+$/.test(ticker)) {
+    return "cash";
+  }
   // Super balances and unlisted managed funds have a real value but no quote.
   if (source === "super" || source === "fund") return "unquoted";
+  // A made-up identifier cannot be looked up, whatever the source says.
+  if (isSyntheticTicker(ticker)) return "unquoted";
   return "security";
 }
 
@@ -150,8 +166,11 @@ export async function fetchAccountPortfolio() {
     const holding = {
       ticker,
       name,
-      // What to call it in prose — some holdings are named but have no code.
-      label: ticker || name || "Unnamed holding",
+      // What to call it in prose. A synthetic placeholder is worse than
+      // useless as a label: "FUND-1" tells the reader nothing and invites them
+      // to go looking for a ticker that does not exist, so the fund's real
+      // name wins whenever there is one.
+      label: (isSyntheticTicker(ticker) ? name : ticker) || name || ticker || "Unnamed holding",
       source: h.source || "",
       account: h.account || "",
       sector: h.sector || "",

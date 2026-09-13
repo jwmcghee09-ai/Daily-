@@ -12,6 +12,7 @@
 // genuinely need a price history.
 
 import { analyse, analysePortfolio } from "./engine.mjs";
+import { isSyntheticTicker } from "./account.mjs";
 import { loadBars } from "./quotes.mjs";
 
 function labelOf(holding) {
@@ -19,8 +20,12 @@ function labelOf(holding) {
 }
 
 function baseFields(holding) {
+  const synthetic = isSyntheticTicker(holding.ticker);
   return {
-    symbol: holding.ticker || "",
+    // Never present a placeholder as a symbol — a reader shown "FUND-1" will
+    // reasonably assume it is a ticker and go looking for one.
+    symbol: synthetic ? "" : (holding.ticker || ""),
+    ...(synthetic ? { importPlaceholder: holding.ticker } : {}),
     label: labelOf(holding),
     name: holding.name || "",
     units: holding.units,
@@ -72,11 +77,13 @@ export async function valueHoldings(holdings) {
       continue;
     }
 
-    const reason = !quotable
-      ? (holding.kind === "unquoted" ? "Not publicly quoted — valued from your account" : "No ticker to price")
-      : bars
-        ? "Not enough price history to compute statistics"
-        : "No market data found for this symbol";
+    const reason = isSyntheticTicker(holding.ticker)
+      ? `Imported without a ticker (SPECTRE labelled the row ${holding.ticker}), so there is nothing to look up — valued from your account`
+      : !quotable
+        ? (holding.kind === "unquoted" ? "Not publicly quoted — valued from your account" : "No ticker to price")
+        : bars
+          ? "Not enough price history to compute statistics"
+          : "No market data found for this symbol";
 
     const value = Number(holding.value)
       || (holding.lastPrice != null ? holding.lastPrice * holding.units : 0);
