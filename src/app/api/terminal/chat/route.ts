@@ -1,7 +1,10 @@
 import { NextRequest } from "next/server";
 import { readTradingMemory, writeTradingMemory, insertTradingDecision } from "@/lib/db";
+import { getAuthenticatedUser } from "@/lib/auth";
 import { isTerminalRequestAuthorized } from "@/lib/terminal-auth";
-import { brokerHeaders } from "@/lib/broker";
+import { brokerHeaders, isBrokerConnected, BROKER_DISCONNECTED_MESSAGE } from "@/lib/broker";
+import { ingestedTradesForAi, portfolioSnapshotForAi } from "@/lib/portfolio-feed";
+import { normaliseSymbol, yahooDailyBars } from "@/lib/market-data";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -64,7 +67,65 @@ function previewResult(result: string): string {
   }
 }
 
-async function executeTool(name: string, args: Record<string, unknown>): Promise<string> {
+/**
+ * With no broker connected, the account-shaped tools answer from the user's
+ * imported portfolio instead of Alpaca, and order placement is refused rather
+ * than silently failing against a dead endpoint.
+ */
+async function executeTool(
+  name: string,
+  args: Record<string, unknown>,
+  ctx: { brokerConnected: boolean; userId: string | null },
+): Promise<string> {
+  if (!ctx.brokerConnected) {
+    try {
+      if (name === "get_account" || name === "get_positions" || name === "get_portfolio") {
+        if (!ctx.userId) return JSON.stringify({ error: "No signed-in user to read a portfolio for." });
+        return JSON.stringify(portfolioSnapshotForAi(ctx.userId));
+      }
+      if (name === "get_orders") {
+        if (!ctx.userId) return JSON.stringify({ error: "No signed-in user." });
+        const status = String(args.status ?? "open") === "open" ? "pending" : "applied";
+        return JSON.stringify(ingestedTradesForAi(ctx.userId, status));
+      }
+      if (name === "place_order") {
+        return JSON.stringify({ error: BROKER_DISCONNECTED_MESSAGE });
+      }
+      if (name === "get_quote" || name === "get_bars") {
+        // Alpaca's data feed came with the broker credentials; Yahoo covers the
+        // same ground and handles ASX symbols too.
+        const sym = normaliseSymbol(args.symbol);
+        if (!sym) return JSON.stringify({ error: "symbol required" });
+        const wanted = name === "get_quote" ? 5 : Math.min(Math.max(Number(args.days ?? 5), 1), 90);
+        const bars = await yahooDailyBars(sym, wanted);
+        if (!bars.length) return JSON.stringify({ error: `No price data for ${sym}. ASX symbols need a .AX suffix.` });
+        const tail = bars.slice(-wanted);
+        if (name === "get_quote") {
+          const last = bars[bars.length - 1];
+          const prev = bars[bars.length - 2] ?? last;
+          return JSON.stringify({
+            symbol: sym,
+            price: last.c,
+            previousClose: prev.c,
+            changePct: prev.c > 0 ? Number((((last.c - prev.c) / prev.c) * 100).toFixed(2)) : 0,
+            asOf: last.t.slice(0, 10),
+          });
+        }
+        return JSON.stringify({
+          symbol: sym,
+          bars: tail.map((b) => ({ date: b.t.slice(0, 10), open: b.o, high: b.h, low: b.l, close: b.c, volume: b.v })),
+        });
+      }
+      if (name === "get_news") {
+        return JSON.stringify({ error: "News came from the broker feed and is unavailable while no broker is connected. get_macro still works." });
+      }
+    } catch (e) {
+      return JSON.stringify({ error: e instanceof Error ? e.message : String(e) });
+    }
+    // Everything else (macro, memory) is broker-independent and falls through
+    // to the normal handler below.
+  }
+
   try {
     if (name === "get_account") {
       return JSON.stringify(await (await fetch(`${ALPACA_BASE}/account`, { headers: alpacaHeaders(), cache: "no-store" })).json());
@@ -165,7 +226,13 @@ async function executeTool(name: string, args: Record<string, unknown>): Promise
   }
 }
 
-const TOOLS = [
+const MACRO_TOOLS = [
+  { type: "function", function: { name: "get_macro", description: "Get live macro indicators: VIX, S&P500, NASDAQ, 10Y yield, Gold, Oil, BTC, AUD/USD, DXY.", parameters: { type: "object", properties: {}, required: [] } } },
+  { type: "function", function: { name: "save_memory", description: "Persist strategy update or lesson to long-term memory.", parameters: { type: "object", properties: { strategy: { type: "string" }, lesson: { type: "string" } }, required: [] } } },
+  { type: "function", function: { name: "get_memory", description: "Read saved strategy and lessons.", parameters: { type: "object", properties: {}, required: [] } } },
+];
+
+const BROKER_TOOLS = [
   { type: "function", function: { name: "get_account", description: "Get Alpaca paper account equity, cash, buying power.", parameters: { type: "object", properties: {}, required: [] } } },
   { type: "function", function: { name: "get_positions", description: "Get all open positions with P&L.", parameters: { type: "object", properties: {}, required: [] } } },
   { type: "function", function: { name: "get_quote", description: "Get live price snapshot for a US stock.", parameters: { type: "object", properties: { symbol: { type: "string" } }, required: ["symbol"] } } },
@@ -173,9 +240,16 @@ const TOOLS = [
   { type: "function", function: { name: "place_order", description: "Place a market order.", parameters: { type: "object", properties: { symbol: { type: "string" }, qty: { type: "number" }, side: { type: "string", enum: ["buy", "sell"] } }, required: ["symbol", "qty", "side"] } } },
   { type: "function", function: { name: "get_orders", description: "Get recent orders.", parameters: { type: "object", properties: { status: { type: "string", enum: ["open", "closed", "all"] } }, required: [] } } },
   { type: "function", function: { name: "get_news", description: "Get market news.", parameters: { type: "object", properties: { symbol: { type: "string" }, limit: { type: "number" } }, required: [] } } },
-  { type: "function", function: { name: "get_macro", description: "Get live macro indicators: VIX, S&P500, NASDAQ, 10Y yield, Gold, Oil, BTC, AUD/USD, DXY.", parameters: { type: "object", properties: {}, required: [] } } },
-  { type: "function", function: { name: "save_memory", description: "Persist strategy update or lesson to long-term memory.", parameters: { type: "object", properties: { strategy: { type: "string" }, lesson: { type: "string" } }, required: [] } } },
-  { type: "function", function: { name: "get_memory", description: "Read saved strategy and lessons.", parameters: { type: "object", properties: {}, required: [] } } },
+  ...MACRO_TOOLS,
+];
+
+/** With no broker, the tools describe the imported portfolio and cannot trade. */
+const PORTFOLIO_TOOLS = [
+  { type: "function", function: { name: "get_portfolio", description: "Get the user's imported portfolio: every holding with units, price, value, cost base, gain, sector and account, plus cash and sector weights. All figures are AUD.", parameters: { type: "object", properties: {}, required: [] } } },
+  { type: "function", function: { name: "get_quote", description: "Get the latest close for a symbol. ASX listings need a .AX suffix (e.g. BHP.AX).", parameters: { type: "object", properties: { symbol: { type: "string" } }, required: ["symbol"] } } },
+  { type: "function", function: { name: "get_bars", description: "Get daily OHLCV bars (max 90 days). ASX listings need a .AX suffix.", parameters: { type: "object", properties: { symbol: { type: "string" }, days: { type: "number" } }, required: ["symbol"] } } },
+  { type: "function", function: { name: "get_orders", description: "Get trades parsed from forwarded broker confirmation emails. status 'open' returns those awaiting review, anything else returns those already applied.", parameters: { type: "object", properties: { status: { type: "string", enum: ["open", "closed", "all"] } }, required: [] } } },
+  ...MACRO_TOOLS,
 ];
 
 export async function POST(req: NextRequest) {
@@ -190,21 +264,42 @@ export async function POST(req: NextRequest) {
   try { body = await req.json(); } catch { return new Response(JSON.stringify({ error: "Invalid JSON" }), { status: 400 }); }
   if (!Array.isArray(body.messages) || !body.messages.length) return new Response(JSON.stringify({ error: "messages required" }), { status: 400 });
 
-  const [audUsd, memory] = await Promise.all([
+  const brokerConnected = isBrokerConnected();
+  const [audUsd, memory, sessionUser] = await Promise.all([
     fetchAudUsd(),
     (async () => { try { return readTradingMemory(); } catch { return null; } })(),
+    (async () => { try { return await getAuthenticatedUser(); } catch { return null; } })(),
   ]);
+  const toolCtx = { brokerConnected, userId: sessionUser?.id ?? null };
+  const tools = brokerConnected ? BROKER_TOOLS : PORTFOLIO_TOOLS;
 
   const contextLines: string[] = [];
   if (audUsd) contextLines.push(`Current AUD/USD rate: ${audUsd.toFixed(4)}`);
   if (memory?.strategy) contextLines.push(`\nSaved strategy memory:\n${memory.strategy}`);
   if (memory?.lessons?.length) contextLines.push(`\nLessons learned:\n${memory.lessons.slice(-5).map((l, i) => `${i + 1}. ${l}`).join("\n")}`);
 
-  const SYSTEM = `You are Myrmidon — SPECTRE's autonomous trading agent managing a US equities paper account on Alpaca.
+  // Two very different jobs depending on whether a broker is attached: running
+  // a paper account, or advising on a portfolio the user actually owns.
+  const BROKER_SYSTEM = `You are Myrmidon — SPECTRE's autonomous trading agent managing a US equities paper account on Alpaca.
 
 PORTFOLIO RULES: Core sleeve (70%): SPY 40%, QQQ 20%, VEA 15%. Satellite sleeve (30%): active trades max 10% each. Always ≥20% cash. Stop-loss at -15% unrealised. Never chase >30% in 2 weeks.
 
-Always check account and positions before recommending trades. Use get_macro for market context. Use get_news for stock-specific or market news. Use save_memory to persist important decisions and lessons. Be decisive and explain your reasoning clearly.${contextLines.length ? "\n\n" + contextLines.join("\n") : ""}`;
+Always check account and positions before recommending trades. Use get_macro for market context. Use get_news for stock-specific or market news. Use save_memory to persist important decisions and lessons. Be decisive and explain your reasoning clearly.`;
+
+  const PORTFOLIO_SYSTEM = `You are Myrmidon — SPECTRE's portfolio analyst for an Australian investor.
+
+No broker is connected, so you cannot place orders and must never claim to have done so. What you can see is the user's real portfolio, imported from holdings files they upload and from broker confirmation emails they forward to their SPECTRE address (CommSec, Selfwealth, Stake).
+
+DATA:
+- get_portfolio returns every holding with units, price, value, cost base, gain, sector and account, plus cash and sector weights. All figures are AUD.
+- get_quote and get_bars cover any listed symbol; ASX listings need a .AX suffix (BHP.AX).
+- get_orders returns trades parsed from forwarded confirmations — 'open' means awaiting the user's review.
+- get_macro gives market context. save_memory persists lessons worth keeping.
+
+APPROACH: Read the portfolio before answering anything about it. Talk in AUD. Be concrete about concentration, sector tilt, cost base and what a position has actually done. When you suggest a change, say what the user would have to do at their broker — you cannot do it for them.`;
+
+  const SYSTEM = (brokerConnected ? BROKER_SYSTEM : PORTFOLIO_SYSTEM) +
+    (contextLines.length ? "\n\n" + contextLines.join("\n") : "");
 
   interface OAIMessage {
     role: "user" | "assistant" | "tool";
@@ -238,7 +333,7 @@ Always check account and positions before recommending trades. Use get_macro for
             body: JSON.stringify({
               model: GROQ_MODEL,
               messages: [{ role: "system", content: SYSTEM }, ...messages],
-              tools: TOOLS,
+              tools,
               tool_choice: "auto",
               max_tokens: 1200,
             }),
@@ -292,7 +387,7 @@ Always check account and positions before recommending trades. Use get_macro for
             emit({ type: "tool_call", name: tc.function.name });
             let args: Record<string, unknown> = {};
             try { args = JSON.parse(tc.function.arguments); } catch { /* ok */ }
-            const result = await executeTool(tc.function.name, args);
+            const result = await executeTool(tc.function.name, args, toolCtx);
             const preview = previewResult(result);
             toolCallsLog.push({ name: tc.function.name, input: args, output_preview: preview });
             emit({ type: "tool_result", name: tc.function.name, preview });

@@ -163,7 +163,7 @@ tr:hover td{background:rgba(255,106,82,.05)}
 </div>
 
 <div id="titlebar">
-  <span>MYRMIDON // ALPACA PAPER TRADING TERMINAL</span>
+  <span id="term-title">MYRMIDON // TRADING TERMINAL</span>
   <span id="acct-num" style="font-size:11px;font-weight:normal;opacity:.7"></span>
 </div>
 
@@ -187,11 +187,11 @@ tr:hover td{background:rgba(255,106,82,.05)}
 </div>
 
 <div id="metrics">
-  <div class="mc"><div class="ml">Portfolio Equity</div><div class="mv" id="m-eq">—</div><div class="ms" id="m-eq2">—</div></div>
-  <div class="mc"><div class="ml">30-Day Return</div><div class="mv" id="m-ret">—</div><div class="ms" id="m-ret2">—</div></div>
-  <div class="mc"><div class="ml">Cash Available</div><div class="mv cyn" id="m-cash">—</div><div class="ms" id="m-cash2">—</div></div>
-  <div class="mc"><div class="ml">Buying Power</div><div class="mv" id="m-bp">—</div><div class="ms" id="m-bp2">—</div></div>
-  <div class="mc"><div class="ml">AUD/USD · Positions</div><div class="mv cyn" id="m-fx">—</div><div class="ms" id="m-pos-ct">—</div></div>
+  <div class="mc"><div class="ml" id="ml-eq">Portfolio Equity</div><div class="mv" id="m-eq">—</div><div class="ms" id="m-eq2">—</div></div>
+  <div class="mc"><div class="ml" id="ml-ret">30-Day Return</div><div class="mv" id="m-ret">—</div><div class="ms" id="m-ret2">—</div></div>
+  <div class="mc"><div class="ml" id="ml-cash">Cash Available</div><div class="mv cyn" id="m-cash">—</div><div class="ms" id="m-cash2">—</div></div>
+  <div class="mc"><div class="ml" id="ml-bp">Buying Power</div><div class="mv" id="m-bp">—</div><div class="ms" id="m-bp2">—</div></div>
+  <div class="mc"><div class="ml" id="ml-fx">AUD/USD · Positions</div><div class="mv cyn" id="m-fx">—</div><div class="ms" id="m-pos-ct">—</div></div>
 </div>
 
 <div id="strat-bar" onclick="toggleStrat()" style="cursor:pointer">
@@ -224,25 +224,25 @@ tr:hover td{background:rgba(255,106,82,.05)}
 <div id="main">
   <!-- LEFT: positions split into two buckets -->
   <div id="left">
-    <div class="ph">CORE · INDEX SLEEVE<span style="color:#555;text-transform:none;letter-spacing:0;margin-left:8px;font-size:10px">— your long-term ETF base</span><span style="float:right;color:#333;font-size:9px" id="core-pct"></span></div>
+    <div class="ph"><span id="core-label">CORE · INDEX SLEEVE</span><span style="color:#555;text-transform:none;letter-spacing:0;margin-left:8px;font-size:10px" id="core-sub">— your long-term ETF base</span><span style="float:right;color:#333;font-size:9px" id="core-pct"></span></div>
     <div id="core-wrap" style="border-bottom:1px solid #2e2a28"><div class="placeholder">LOADING…</div></div>
-    <div class="ph" style="background:#030a04;border-color:#003300;color:#00e676">ALPHA · SATELLITE SLEEVE<span style="color:#555;text-transform:none;letter-spacing:0;margin-left:8px;font-size:10px">— active stock picks</span><span style="float:right;color:#003300;font-size:9px" id="alpha-pct"></span></div>
+    <div class="ph" style="background:#030a04;border-color:#003300;color:#00e676"><span id="alpha-label">ALPHA · SATELLITE SLEEVE</span><span style="color:#555;text-transform:none;letter-spacing:0;margin-left:8px;font-size:10px" id="alpha-sub">— active stock picks</span><span style="float:right;color:#003300;font-size:9px" id="alpha-pct"></span></div>
     <div id="alpha-wrap" style="flex:1;overflow-y:auto;min-height:0"><div class="placeholder">LOADING…</div></div>
   </div>
 
   <!-- CENTER: chart + trades + open orders -->
   <div id="center">
-    <div class="ph">30-DAY EQUITY CURVE<span style="color:#555;text-transform:none;letter-spacing:0;margin-left:8px;font-size:10px">— your account value over the last month</span><span style="float:right;color:#333;font-size:9px" id="curve-range"></span></div>
+    <div class="ph"><span id="curve-label">30-DAY EQUITY CURVE</span><span style="color:#555;text-transform:none;letter-spacing:0;margin-left:8px;font-size:10px" id="curve-sub">— your account value over the last month</span><span style="float:right;color:#333;font-size:9px" id="curve-range"></span></div>
     <div id="chart-area">
       <svg id="chart" preserveAspectRatio="none"><text x="50%" y="50%" text-anchor="middle" fill="#2e2a28" font-size="12" font-family="monospace">LOADING…</text></svg>
     </div>
     <div id="trades-area">
-      <div class="ph">RECENT FILLED TRADES<span style="color:#555;text-transform:none;letter-spacing:0;margin-left:8px;font-size:10px">— orders that actually executed</span></div>
-      <table><thead><tr><th>Symbol</th><th>Side</th><th style="text-align:right">Qty</th><th style="text-align:right">Fill $</th><th style="text-align:right">Total A$</th><th style="text-align:right">≈ USD</th><th style="text-align:right">Date</th></tr></thead>
+      <div class="ph"><span id="trades-label">RECENT FILLED TRADES</span><span style="color:#555;text-transform:none;letter-spacing:0;margin-left:8px;font-size:10px" id="trades-sub">— orders that actually executed</span></div>
+      <table><thead><tr><th>Symbol</th><th>Side</th><th style="text-align:right">Qty</th><th style="text-align:right" id="th-fill">Fill $</th><th style="text-align:right">Total A$</th><th style="text-align:right" id="th-alt">≈ USD</th><th style="text-align:right">Date</th></tr></thead>
       <tbody id="trades-tb"><tr><td colspan="7" class="placeholder">LOADING…</td></tr></tbody></table>
     </div>
     <div id="open-orders-area">
-      <div class="ph">OPEN ORDERS<span style="color:#555;text-transform:none;letter-spacing:0;margin-left:8px;font-size:10px">— submitted, waiting to execute</span></div>
+      <div class="ph"><span id="orders-label">OPEN ORDERS</span><span style="color:#555;text-transform:none;letter-spacing:0;margin-left:8px;font-size:10px" id="orders-sub">— submitted, waiting to execute</span></div>
       <table><thead><tr><th>Symbol</th><th>Side</th><th style="text-align:right">Qty</th><th>Type</th><th>Status</th><th style="text-align:right">Submitted</th></tr></thead>
       <tbody id="orders-tb"><tr><td colspan="6" class="placeholder">—</td></tr></tbody></table>
     </div>
@@ -250,7 +250,7 @@ tr:hover td{background:rgba(255,106,82,.05)}
 
   <!-- RIGHT: Myrmidon chat -->
   <div id="chat-panel">
-    <div class="ph">MYRMIDON AI<span style="color:#555;text-transform:none;letter-spacing:0;margin-left:8px;font-size:10px">— ask questions or give trade orders</span><span id="chat-model" style="float:right;color:#333;font-size:9px"></span></div>
+    <div class="ph">MYRMIDON AI<span style="color:#555;text-transform:none;letter-spacing:0;margin-left:8px;font-size:10px" id="ai-sub">— ask questions or give trade orders</span><span id="chat-model" style="float:right;color:#333;font-size:9px"></span></div>
     <div id="chat-msgs">
       <div class="cmsg-sys">Ask Myrmidon about positions, trades, market analysis…</div>
     </div>
@@ -308,17 +308,55 @@ tr:hover td{background:rgba(255,106,82,.05)}
   function pct(n){if(n==null)return'—';return(n>=0?'+':'')+parseFloat(n).toFixed(2)+'%';}
   function aud(n,rate){return rate&&n!=null?'~$'+Math.round(n/rate).toLocaleString('en-AU')+' AUD':'—';}
   var lastRate=0;
-  function audP(n,dec){var v=parseFloat(n);if(!lastRate||n==null||isNaN(v))return usd(n,dec);return'A$'+(dec?(v/lastRate).toFixed(dec):Math.round(v/lastRate).toLocaleString('en-AU'));}
+  // Two feeds land here: the broker account (USD, converted with lastRate) and
+  // the user's imported portfolio (already AUD, so no conversion and no
+  // order-placing — it is a record of holdings, not an account to trade).
+  var isPortfolio=false;
+  function audP(n,dec){
+    var v=parseFloat(n);
+    if(n==null||isNaN(v))return usd(n,dec);
+    if(isPortfolio)return'A$'+(dec?v.toFixed(dec):Math.round(v).toLocaleString('en-AU'));
+    if(!lastRate)return usd(n,dec);
+    return'A$'+(dec?(v/lastRate).toFixed(dec):Math.round(v/lastRate).toLocaleString('en-AU'));
+  }
+  function nat(n,dec){var v=parseFloat(n);if(n==null||isNaN(v))return'—';return(isPortfolio?'A$':'$')+(dec?v.toFixed(dec):Math.round(v).toLocaleString());}
+  // The sign belongs in front of the currency symbol, not the digits.
+  function signedAud(n){var v=parseFloat(n);if(n==null||isNaN(v))return'—';return(v>=0?'+':'-')+audP(Math.abs(v));}
   function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
   function conn(msg,ok){$('conn').textContent=msg;$('conn').style.color=ok===true?'#00e676':ok===false?'#ff4444':'#ff6a52';}
+  function setTxt(id,txt){var e=$(id);if(e)e.textContent=txt;}
+  /** Rewrite the headings that name a broker concept when showing a portfolio. */
+  function applyFeedLabels(d){
+    var sl=(d&&d.sleeves)||null;
+    if(sl&&sl.core&&sl.core.label)setTxt('core-label',String(sl.core.label).toUpperCase());
+    if(sl&&sl.alpha&&sl.alpha.label)setTxt('alpha-label',String(sl.alpha.label).toUpperCase());
+    if(!isPortfolio)return;
+    setTxt('core-sub','— index funds, managed funds and super');
+    setTxt('alpha-sub','— shares, crypto and metals you hold directly');
+    setTxt('curve-label','PORTFOLIO VALUE');
+    setTxt('curve-sub','— recorded each time you import a holdings file');
+    setTxt('trades-label','TRADES FROM FORWARDED CONTRACT NOTES');
+    setTxt('trades-sub','— '+((d&&d.sourceLabel)||'imported portfolio'));
+    setTxt('orders-label','AWAITING REVIEW');
+    setTxt('orders-sub','— parsed from forwarded emails, not yet applied');
+    setTxt('term-title','MYRMIDON // PORTFOLIO TERMINAL');
+    setTxt('ml-eq','Portfolio Value');
+    setTxt('ml-ret','Return Since First Snapshot');
+    setTxt('ml-cash','Cash & Savings');
+    setTxt('ml-bp','Uninvested');
+    setTxt('ml-fx','Total Gain / Loss');
+    setTxt('th-fill','Fill A$');
+    setTxt('th-alt','Broker');
+    setTxt('ai-sub','— ask about your holdings; no broker is connected, so it cannot trade');
+  }
   function status(msg){$('st-msg').textContent=msg;}
   function ts(){$('st-ts').textContent='Updated: '+new Date().toLocaleTimeString('en-AU')+' · Auto-refresh 30s';}
 
   // metrics
   function renderMetrics(acct,hist,rate,positions){
     var eq=parseFloat(acct.equity)||0,cash=parseFloat(acct.cash)||0,bp=parseFloat(acct.buying_power)||0;
-    $('m-eq').textContent=audP(eq);$('m-eq2').textContent=usd(eq)+' USD';
-    $('acct-num').textContent='ACCT #'+acct.account_number;
+    $('m-eq').textContent=audP(eq);$('m-eq2').textContent=isPortfolio?'AUD':usd(eq)+' USD';
+    $('acct-num').textContent=isPortfolio?'IMPORTED PORTFOLIO':'ACCT #'+acct.account_number;
     var retUsd=0,retPct=0;
     if(hist&&hist.equity&&hist.equity.length>1){var vals=hist.equity.filter(function(v){return v!=null&&v>0;});if(vals.length>1){var s0=vals[0];retUsd=eq-s0;retPct=s0>0?(retUsd/s0)*100:0;}}
     var rc=retUsd>=0?'pos':'neg';
@@ -326,9 +364,22 @@ tr:hover td{background:rgba(255,106,82,.05)}
     $('m-ret2').textContent=(retUsd>=0?'+':'-')+audP(Math.abs(retUsd));
     $('m-cash').textContent=audP(cash);
     $('m-cash2').textContent=eq>0?(cash/eq*100).toFixed(1)+'% of portfolio':'—';
-    $('m-bp').textContent=audP(bp);$('m-bp2').textContent=usd(bp)+' USD';
-    $('m-fx').textContent=rate?rate.toFixed(4):'unavailable';
-    $('m-pos-ct').textContent=(positions&&positions.length||0)+' open position(s)';
+    $('m-bp').textContent=audP(bp);$('m-bp2').textContent=isPortfolio?'cash and savings':usd(bp)+' USD';
+    if(isPortfolio){
+      // The FX card is meaningless when every figure is already AUD, so it
+      // carries the overall gain on cost base instead.
+      var totPl=0,totCost=0;
+      (positions||[]).forEach(function(p){
+        totPl+=parseFloat(p.unrealized_pl)||0;
+        totCost+=parseFloat(p.cost_basis)||0;
+      });
+      $('m-fx').textContent=signedAud(totPl);
+      $('m-fx').className='mv '+(totPl>=0?'pos':'neg');
+      $('m-pos-ct').textContent=(totCost>0?pct(totPl/totCost*100)+' on cost base · ':'')+(positions&&positions.length||0)+' holding(s)';
+    }else{
+      $('m-fx').textContent=rate?rate.toFixed(4):'unavailable';
+      $('m-pos-ct').textContent=(positions&&positions.length||0)+' open position(s)';
+    }
   }
 
   // strategy
@@ -340,7 +391,9 @@ tr:hover td{background:rgba(255,106,82,.05)}
   };
   function renderStrategy(memory){
     if(!memory||!memory.strategy){
-      $('strat-text').textContent='Portfolio rules: SPY 40% · QQQ 20% · VEA 15% core · ≥20% cash · −15% stop-loss · Click to expand';
+      $('strat-text').textContent=isPortfolio
+        ? 'No strategy saved yet — ask Myrmidon about your holdings and it will remember what matters · Click to expand'
+        : 'Portfolio rules: SPY 40% · QQQ 20% · VEA 15% core · ≥20% cash · −15% stop-loss · Click to expand';
       return;
     }
     $('strat-text').textContent=memory.strategy.slice(0,200)+(memory.strategy.length>200?'…':'')+' — Click to expand';
@@ -394,52 +447,84 @@ tr:hover td{background:rgba(255,106,82,.05)}
     var eq=parseFloat(acct.equity)||0,cash=parseFloat(acct.cash)||0,bp=parseFloat(acct.buying_power)||0;
     var sigs=[];
 
-    // 1. Cash floor
+    // 1. Cash floor. A trading account has a mandated buffer; an imported
+    // portfolio with no cash just means no savings file was uploaded.
     var cashPct=eq>0?cash/eq:0;
-    if(cashPct<0.20)sigs.push({c:'red',m:'CASH '+(cashPct*100).toFixed(1)+'% — BELOW 20% FLOOR'});
+    if(isPortfolio)sigs.push({c:'ok',m:'Cash and savings '+(cashPct*100).toFixed(1)+'%'});
+    else if(cashPct<0.20)sigs.push({c:'red',m:'CASH '+(cashPct*100).toFixed(1)+'% — BELOW 20% FLOOR'});
     else if(cashPct<0.25)sigs.push({c:'amb',m:'Cash '+(cashPct*100).toFixed(1)+'% — near floor'});
     else sigs.push({c:'ok',m:'Cash OK ('+(cashPct*100).toFixed(1)+'%)'});
 
-    // 2. Stop-loss proximity
-    var stopHit=false;
+    // 2. Worst drawdowns. Stop-loss language only applies to a live account.
     (positions||[]).forEach(function(p){
       var plpc=parseFloat(p.unrealized_plpc)||0;
-      if(plpc<-0.15){sigs.push({c:'red',m:p.symbol+' '+(plpc*100).toFixed(1)+'% — STOP-LOSS'});stopHit=true;}
-      else if(plpc<-0.12)sigs.push({c:'amb',m:p.symbol+' '+(plpc*100).toFixed(1)+'% — near stop'});
+      if(plpc<-0.15)sigs.push({c:'red',m:p.symbol+' '+(plpc*100).toFixed(1)+'%'+(isPortfolio?'':' — STOP-LOSS')});
+      else if(plpc<-0.12)sigs.push({c:'amb',m:p.symbol+' '+(plpc*100).toFixed(1)+'%'+(isPortfolio?'':' — near stop')});
     });
 
-    // 3. Concentration >10%
-    (positions||[]).forEach(function(p){
-      var posPct=eq>0?(parseFloat(p.market_value)||0)/eq:0;
-      if(posPct>0.10)sigs.push({c:'red',m:p.symbol+' '+(posPct*100).toFixed(1)+'% — exceeds 10% limit'});
-    });
-
-    // 4. Core target deviation
+    // 3. Concentration. The 10% cap is a Myrmidon trading rule; an imported
+    // portfolio is measured against ordinary diversification thresholds.
     var bySymbol={};
     (positions||[]).forEach(function(p){bySymbol[p.symbol]=parseFloat(p.market_value)||0;});
-    var TARGETS={SPY:0.40,QQQ:0.20,VEA:0.15};
-    Object.keys(TARGETS).forEach(function(sym){
-      var target=TARGETS[sym],actual=eq>0?(bySymbol[sym]||0)/eq:0,diff=Math.abs(actual-target);
-      if(diff>0.08)sigs.push({c:'amb',m:sym+' '+(actual*100).toFixed(0)+'% vs '+(target*100)+'% target'});
-    });
+    if(isPortfolio){
+      var mvSorted=(positions||[]).map(function(p){return parseFloat(p.market_value)||0;}).sort(function(a,b){return b-a;});
+      var top1=eq>0?(mvSorted[0]||0)/eq:0;
+      var top3=eq>0?mvSorted.slice(0,3).reduce(function(s,v){return s+v;},0)/eq:0;
+      if(top1>0.30)sigs.push({c:'red',m:'Largest holding '+(top1*100).toFixed(0)+'% of portfolio'});
+      else if(top1>0.20)sigs.push({c:'amb',m:'Largest holding '+(top1*100).toFixed(0)+'%'});
+      if(top3>0.70)sigs.push({c:'red',m:'Top 3 = '+(top3*100).toFixed(0)+'% — highly concentrated'});
+      else if(top3>0.50)sigs.push({c:'amb',m:'Top 3 = '+(top3*100).toFixed(0)+'%'});
+      else sigs.push({c:'ok',m:'Top 3 = '+(top3*100).toFixed(0)+'%'});
 
-    // 5. SPY+QQQ overlap (both core = US large-cap concentration)
-    var spyPct=eq>0?(bySymbol.SPY||0)/eq:0;
-    var qqqPct=eq>0?(bySymbol.QQQ||0)/eq:0;
-    if(spyPct+qqqPct>0.65)sigs.push({c:'amb',m:'SPY+QQQ '+(( spyPct+qqqPct)*100).toFixed(0)+'% — US large-cap heavy'});
+      // Sector concentration is measured over directly held positions only:
+      // index funds and super are spread by construction, so counting them
+      // reports "Diversified 60% — sector heavy", the opposite of the truth.
+      var bySector={},directMv=0;
+      (positions||[]).forEach(function(p){
+        if(p.sleeve==='core')return;
+        var s=p.sector||'—',mv=parseFloat(p.market_value)||0;
+        bySector[s]=(bySector[s]||0)+mv;directMv+=mv;
+      });
+      var topSector='',topSectorMv=0;
+      Object.keys(bySector).forEach(function(s){if(bySector[s]>topSectorMv){topSectorMv=bySector[s];topSector=s;}});
+      if(topSector&&topSector!=='—'&&directMv>0){
+        var sPct=topSectorMv/directMv;
+        var sLbl=topSector+' '+(sPct*100).toFixed(0)+'% of direct holdings';
+        if(sPct>0.45)sigs.push({c:'red',m:sLbl+' — sector heavy'});
+        else if(sPct>0.30)sigs.push({c:'amb',m:sLbl});
+        else sigs.push({c:'ok',m:'Top sector: '+sLbl});
+      }
+    }else{
+      (positions||[]).forEach(function(p){
+        var posPct=eq>0?(parseFloat(p.market_value)||0)/eq:0;
+        if(posPct>0.10)sigs.push({c:'red',m:p.symbol+' '+(posPct*100).toFixed(1)+'% — exceeds 10% limit'});
+      });
+
+      // 4. Core target deviation
+      var TARGETS={SPY:0.40,QQQ:0.20,VEA:0.15};
+      Object.keys(TARGETS).forEach(function(sym){
+        var target=TARGETS[sym],actual=eq>0?(bySymbol[sym]||0)/eq:0,diff=Math.abs(actual-target);
+        if(diff>0.08)sigs.push({c:'amb',m:sym+' '+(actual*100).toFixed(0)+'% vs '+(target*100)+'% target'});
+      });
+
+      // 5. SPY+QQQ overlap (both core = US large-cap concentration)
+      var spyPct=eq>0?(bySymbol.SPY||0)/eq:0;
+      var qqqPct=eq>0?(bySymbol.QQQ||0)/eq:0;
+      if(spyPct+qqqPct>0.65)sigs.push({c:'amb',m:'SPY+QQQ '+(( spyPct+qqqPct)*100).toFixed(0)+'% — US large-cap heavy'});
+    }
 
     // 6. Intraday portfolio P&L
     var dayPl=(positions||[]).reduce(function(s,p){return s+(parseFloat(p.unrealized_intraday_pl)||0);},0);
     var dayPct=eq>0?(dayPl/eq)*100:0;
-    var fxR=lastRate||1;
-    if(dayPct<-3)sigs.push({c:'red',m:'TODAY '+(dayPct).toFixed(2)+'% ('+(dayPl>=0?'+':'')+'A$'+Math.round(dayPl/fxR).toLocaleString()+')'});
-    else if(dayPct<-1)sigs.push({c:'amb',m:'TODAY '+(dayPct).toFixed(2)+'% (A$'+Math.round(dayPl/fxR).toLocaleString()+')'});
-    else if(dayPct>0.5)sigs.push({c:'ok',m:'TODAY +'+(dayPct).toFixed(2)+'% (+A$'+Math.round(dayPl/fxR).toLocaleString()+')'});
+    var dayStr='TODAY '+(dayPct>=0?'+':'')+dayPct.toFixed(2)+'% ('+signedAud(dayPl)+')';
+    if(dayPct<-3)sigs.push({c:'red',m:dayStr});
+    else if(dayPct<-1)sigs.push({c:'amb',m:dayStr});
+    else if(dayPct>0.5)sigs.push({c:'ok',m:dayStr});
 
     // 7. Buying power utilisation
     var invested=(positions||[]).reduce(function(s,p){return s+(parseFloat(p.market_value)||0);},0);
     var bpUtil=eq>0?invested/eq:0;
-    if(bpUtil>0.90)sigs.push({c:'amb',m:'Invested '+(bpUtil*100).toFixed(0)+'% — very little room'});
+    if(!isPortfolio&&bpUtil>0.90)sigs.push({c:'amb',m:'Invested '+(bpUtil*100).toFixed(0)+'% — very little room'});
 
     // 8. VIX regime (from macro)
     if(macro&&macro.vix){
@@ -482,16 +567,20 @@ tr:hover td{background:rgba(255,106,82,.05)}
     var dayPl=parseFloat(p.unrealized_intraday_pl)||0;
     var c=unrl>=0?'pos':'neg';
     var dc=dayChg>=0?'pos':'neg';
-    var sym='<td class="'+(colorClass||'amb')+'" style="font-weight:bold">'+p.symbol+'</td>';
+    var ttl=p.name&&p.name!==p.symbol?' title="'+String(p.name).replace(/"/g,'&quot;')+'"':'';
+    var sym='<td class="'+(colorClass||'amb')+'" style="font-weight:bold"'+ttl+'>'+p.symbol+'</td>';
     return'<tr>'+sym+
       '<td style="text-align:right;color:#777;font-size:10px">'+qty.toFixed(qty%1?4:0)+'</td>'+
-      '<td class="cyn" style="text-align:right">'+usd(price,2)+'</td>'+
+      '<td class="cyn" style="text-align:right">'+nat(price,2)+'</td>'+
       '<td style="text-align:right">'+audP(mv)+'</td>'+
       '<td class="'+dc+'" style="text-align:right;font-size:10px">'+(dayChg>=0?'+':'')+(dayChg*100).toFixed(2)+'%</td>'+
-      '<td class="'+c+'" style="text-align:right;font-size:10px">'+(dayPl>=0?'+':'')+audP(dayPl)+'</td>'+
+      '<td class="'+c+'" style="text-align:right;font-size:10px">'+signedAud(dayPl)+'</td>'+
       '<td class="'+c+'" style="text-align:right;font-size:10px">'+pct(plpc*100)+'</td></tr>';
   }
-  var POS_HEAD='<table><thead><tr><th>Sym</th><th style="text-align:right">Qty</th><th style="text-align:right">Price $</th><th style="text-align:right">Mkt Val A$</th><th style="text-align:right">Day%</th><th style="text-align:right">Day P&L A$</th><th style="text-align:right">Total%</th></tr></thead><tbody>';
+  function posHead(){
+    var cur=isPortfolio?'A$':'$';
+    return'<table><thead><tr><th>Sym</th><th style="text-align:right">Qty</th><th style="text-align:right">Price '+cur+'</th><th style="text-align:right">Mkt Val A$</th><th style="text-align:right">Day%</th><th style="text-align:right">Day P&L A$</th><th style="text-align:right">Total%</th></tr></thead><tbody>';
+  }
 
   function renderPositions(positions,equity){
     if(!positions){
@@ -501,34 +590,38 @@ tr:hover td{background:rgba(255,106,82,.05)}
     }
     var core=[],alpha=[];
     positions.forEach(function(p){
-      if(CORE_ETFS[p.symbol]||BROAD_ETFS[p.symbol])core.push(p);else alpha.push(p);
+      // The portfolio feed labels each holding's sleeve server-side; the broker
+      // feed falls back to the ETF lists.
+      var isCore=p.sleeve?p.sleeve==='core':!!(CORE_ETFS[p.symbol]||BROAD_ETFS[p.symbol]);
+      if(isCore)core.push(p);else alpha.push(p);
     });
-    var totalMv=positions.reduce(function(s,p){return s+(parseFloat(p.market_value)||0);},0);
+    var base=isPortfolio?'portfolio':'equity';
 
     // Core bucket with target % indicators
     if(!core.length){
-      $('core-wrap').innerHTML='<div class="placeholder dim">No core positions yet · SPY/QQQ/VEA targets unmet</div>';
+      $('core-wrap').innerHTML='<div class="placeholder dim">'+(isPortfolio?'No index, fund or super holdings imported':'No core positions yet · SPY/QQQ/VEA targets unmet')+'</div>';
+      $('core-pct').textContent='';
     }else{
       var crows=core.map(function(p){
         var mv=parseFloat(p.market_value)||0;
         var actual=equity>0?(mv/equity*100):0;
-        var target=CORE_ETFS[p.symbol]?CORE_ETFS[p.symbol]*100:null;
+        var target=(!isPortfolio&&CORE_ETFS[p.symbol])?CORE_ETFS[p.symbol]*100:null;
         var tgtStr=target?'<span style="color:#444;font-size:9px"> ('+actual.toFixed(0)+'%↔'+target+'%)</span>':'';
         return posRow(p,'amb')+tgtStr;
       }).join('');
       var coreMv=core.reduce(function(s,p){return s+(parseFloat(p.market_value)||0);},0);
-      $('core-wrap').innerHTML=POS_HEAD+crows+'</tbody></table>';
-      $('core-pct').textContent=equity>0?(coreMv/equity*100).toFixed(1)+'% of equity · target 70%':'';
+      $('core-wrap').innerHTML=posHead()+crows+'</tbody></table>';
+      $('core-pct').textContent=equity>0?(coreMv/equity*100).toFixed(1)+'% of '+base+(isPortfolio?'':' · target 70%'):'';
     }
 
     // Alpha bucket
     if(!alpha.length){
-      $('alpha-wrap').innerHTML='<div class="placeholder" style="color:#003300">No alpha positions · capital available for high-conviction picks</div>';
-      $('alpha-pct').textContent='0% · target 30%';
+      $('alpha-wrap').innerHTML='<div class="placeholder" style="color:#003300">'+(isPortfolio?'No direct share, crypto or metal holdings imported':'No alpha positions · capital available for high-conviction picks')+'</div>';
+      $('alpha-pct').textContent=isPortfolio?'':'0% · target 30%';
     }else{
       var alphaMv=alpha.reduce(function(s,p){return s+(parseFloat(p.market_value)||0);},0);
-      $('alpha-wrap').innerHTML=POS_HEAD+alpha.map(function(p){return posRow(p,'pos');}).join('')+'</tbody></table>';
-      $('alpha-pct').textContent=equity>0?(alphaMv/equity*100).toFixed(1)+'% of equity · target 30%':'';
+      $('alpha-wrap').innerHTML=posHead()+alpha.map(function(p){return posRow(p,'pos');}).join('')+'</tbody></table>';
+      $('alpha-pct').textContent=equity>0?(alphaMv/equity*100).toFixed(1)+'% of '+base+(isPortfolio?'':' · target 30%'):'';
     }
   }
 
@@ -546,7 +639,7 @@ tr:hover td{background:rgba(255,106,82,.05)}
     var ty=function(v){return H-PY-((v-lo)/rng)*(H-PY*2);};
     var start=vals[0],end=vals[vals.length-1],up=end>=start,lc=up?'#00e676':'#ff4444';
     var grid='';
-    for(var g=0;g<=3;g++){var gv=lo+(rng*g/3),gy=ty(gv);grid+='<line x1="'+PX+'" y1="'+gy+'" x2="'+(W-PX)+'" y2="'+gy+'" stroke="#12111f" stroke-width="1"/><text x="'+(W-PX+2)+'" y="'+(gy+3)+'" font-size="7" fill="#3c3760" font-family="monospace">'+(lastRate?'A$':'$')+Math.round(gv/1000)+'K</text>';}
+    for(var g=0;g<=3;g++){var gv=lo+(rng*g/3),gy=ty(gv);grid+='<line x1="'+PX+'" y1="'+gy+'" x2="'+(W-PX)+'" y2="'+gy+'" stroke="#12111f" stroke-width="1"/><text x="'+(W-PX+2)+'" y="'+(gy+3)+'" font-size="7" fill="#3c3760" font-family="monospace">'+((isPortfolio||lastRate)?'A$':'$')+Math.round(gv/1000)+'K</text>';}
     var pts=vals.map(function(v,i){return tx(i)+','+ty(v);}).join(' L ');
     var path='M '+pts,fill=path+' L '+tx(vals.length-1)+','+(H-PY)+' L '+PX+','+(H-PY)+' Z';
     var fmtd=function(u){if(!u)return'';var d=new Date(u*1000);return(d.getMonth()+1)+'/'+(d.getDate());};
@@ -558,21 +651,25 @@ tr:hover td{background:rgba(255,106,82,.05)}
       '<circle cx="'+tx(vals.length-1)+'" cy="'+ty(end)+'" r="3" fill="'+lc+'"/>'+
       '<text x="'+PX+'" y="'+(H-4)+'" font-size="8" fill="#3c3760" font-family="monospace">'+fmtd(tss[0])+'</text>'+
       '<text x="'+(W-PX)+'" y="'+(H-4)+'" font-size="8" fill="#3c3760" font-family="monospace" text-anchor="end">'+fmtd(tss[tss.length-1])+'</text>'+
-      '<text x="'+(tx(vals.length-1)-6)+'" y="'+(ty(end)-6)+'" font-size="10" fill="'+lc+'" font-family="monospace" text-anchor="end">'+(lastRate?'A$':'$')+Math.round(end).toLocaleString()+'</text>';
+      '<text x="'+(tx(vals.length-1)-6)+'" y="'+(ty(end)-6)+'" font-size="10" fill="'+lc+'" font-family="monospace" text-anchor="end">'+((isPortfolio||lastRate)?'A$':'$')+Math.round(end).toLocaleString()+'</text>';
   }
 
   // trades
   function renderTrades(orders,rate){
     var tb=$('trades-tb');
     var filled=(orders||[]).filter(function(o){return o.status==='filled'&&o.filled_avg_price;});
-    if(!filled.length){tb.innerHTML='<tr><td colspan="7" class="placeholder">NO FILLED TRADES</td></tr>';return;}
+    if(!filled.length){tb.innerHTML='<tr><td colspan="7" class="placeholder">'+
+      (isPortfolio?'NO TRADES — FORWARD A BROKER CONFIRMATION EMAIL TO ADD THEM':'NO FILLED TRADES')+'</td></tr>';return;}
     tb.innerHTML=filled.slice(0,80).map(function(o){
       var buy=o.side==='buy',sc=buy?'pos':'neg';
       var price=parseFloat(o.filled_avg_price)||0,qty=parseFloat(o.filled_qty)||parseFloat(o.qty)||0,total=price*qty;
       var dt=o.filled_at?new Date(o.filled_at).toLocaleString('en-AU',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
+      // Last column: the broker the contract note came from, or the USD total
+      // when the figures are a US broker account's.
+      var alt=isPortfolio?String(o.broker||o.type||'—'):usd(total);
       return'<tr><td class="amb" style="font-weight:bold">'+o.symbol+'</td><td class="'+sc+'" style="font-weight:bold;font-size:10px">'+(buy?'▲ BUY':'▼ SELL')+'</td>'+
-        '<td style="text-align:right;color:#aaa">'+qty+'</td><td class="cyn" style="text-align:right">'+usd(price,2)+'</td>'+
-        '<td style="text-align:right">'+audP(total)+'</td><td style="text-align:right;color:#555">'+usd(total)+'</td>'+
+        '<td style="text-align:right;color:#aaa">'+qty+'</td><td class="cyn" style="text-align:right">'+nat(price,2)+'</td>'+
+        '<td style="text-align:right">'+audP(total)+'</td><td style="text-align:right;color:#555">'+esc(alt)+'</td>'+
         '<td style="text-align:right;color:#333;font-size:10px">'+dt+'</td></tr>';
     }).join('');
   }
@@ -594,7 +691,7 @@ tr:hover td{background:rgba(255,106,82,.05)}
   var loading=false;
   async function load(){
     if(loading)return;loading=true;
-    conn('FETCHING…',null);status('REQUESTING DATA FROM ALPACA…');
+    conn('FETCHING…',null);status('REQUESTING DATA…');
     try{
       var r=await fetch('/api/terminal',{headers:{'x-terminal-key':''},cache:'no-store'});
       var d=await r.json();
@@ -602,6 +699,8 @@ tr:hover td{background:rgba(255,106,82,.05)}
       if(!d.account){conn('ERROR',false);status('ERROR: NO ACCOUNT DATA');loading=false;return;}
       var eq=parseFloat(d.account.equity)||0;
       lastRate=parseFloat(d.rate)||0;
+      isPortfolio=d.source==='portfolio';
+      applyFeedLabels(d);
       renderMetrics(d.account,d.history,d.rate,d.positions);
       renderMacro(d.macro);
       renderRisk(d.account,d.positions||[],d.macro);
@@ -610,11 +709,13 @@ tr:hover td{background:rgba(255,106,82,.05)}
       renderChart(d.history);
       renderTrades(d.orders,d.rate);
       renderOpenOrders(d.openOrders);
-      conn('CONNECTED',true);ts();
+      conn(isPortfolio?'PORTFOLIO':'CONNECTED',true);ts();
       var dayPl=(d.positions||[]).reduce(function(s,p){return s+(parseFloat(p.unrealized_intraday_pl)||0);},0);
       var fx2=lastRate||1;
       var dayStr=dayPl>=0?'+A$'+Math.round(dayPl/fx2).toLocaleString():'-A$'+Math.round(Math.abs(dayPl)/fx2).toLocaleString();
-      status('A$'+Math.round(eq/fx2).toLocaleString()+' equity · '+(d.positions&&d.positions.length||0)+' positions · TODAY '+dayStr+' · '+(d.openOrders&&d.openOrders.length||0)+' open orders');
+      var openCt=(d.openOrders&&d.openOrders.length)||0;
+      status('A$'+Math.round(eq/fx2).toLocaleString()+(isPortfolio?' portfolio · ':' equity · ')+(d.positions&&d.positions.length||0)+
+        (isPortfolio?' holdings · TODAY ':' positions · TODAY ')+dayStr+' · '+openCt+(isPortfolio?' trade(s) awaiting review':' open orders'));
     }catch(e){conn('ERROR',false);status('ERROR: '+e.message);}
     loading=false;
   }

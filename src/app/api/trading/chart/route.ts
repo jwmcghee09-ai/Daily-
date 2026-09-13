@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { brokerCredentials } from "@/lib/broker";
+import { normaliseSymbol, yahooDailyBars, type DailyBar } from "@/lib/market-data";
 
 const TRADER_EMAIL = "jwmcghee09@gmail.com";
 const ALPACA_DATA = "https://data.alpaca.markets/v2";
@@ -70,35 +71,45 @@ export async function GET(request: NextRequest) {
   }
 
   const { searchParams } = new URL(request.url);
-  const symbol = (searchParams.get("symbol") ?? "SPY").toUpperCase().replace(/[^A-Z]/g, "");
+  // Dots are kept so Yahoo suffixes (BHP.AX) survive; everything else is stripped.
+  const symbol = normaliseSymbol(searchParams.get("symbol"), "SPY");
   const days = Math.min(Math.max(Number(searchParams.get("days") ?? 90), 30), 365);
 
   const credentials = brokerCredentials();
   const key = credentials?.key;
   const secret = credentials?.secret;
-  if (!key || !secret) return NextResponse.json({ error: "Not configured" }, { status: 503 });
 
-  // Extra warmup bars for EMA200 calculation
-  const end = new Date();
-  const start = new Date(end.getTime() - (days + 280) * 864e5);
+  let bars: DailyBar[];
+  if (key && secret) {
+    // Extra warmup bars for EMA200 calculation
+    const end = new Date();
+    const start = new Date(end.getTime() - (days + 280) * 864e5);
 
-  const params = new URLSearchParams({
-    timeframe: "1Day",
-    start: start.toISOString().slice(0, 10),
-    end: end.toISOString().slice(0, 10),
-    limit: String(days + 280),
-    feed: "iex",
-  });
+    const params = new URLSearchParams({
+      timeframe: "1Day",
+      start: start.toISOString().slice(0, 10),
+      end: end.toISOString().slice(0, 10),
+      limit: String(days + 280),
+      feed: "iex",
+    });
 
-  const res = await fetch(`${ALPACA_DATA}/stocks/${symbol}/bars?${params}`, {
-    headers: { "APCA-API-KEY-ID": key, "APCA-API-SECRET-KEY": secret },
-    cache: "no-store",
-  });
+    const res = await fetch(`${ALPACA_DATA}/stocks/${symbol}/bars?${params}`, {
+      headers: { "APCA-API-KEY-ID": key, "APCA-API-SECRET-KEY": secret },
+      cache: "no-store",
+    });
 
-  if (!res.ok) return NextResponse.json({ error: "Alpaca fetch failed" }, { status: 502 });
+    if (!res.ok) return NextResponse.json({ error: "Alpaca fetch failed" }, { status: 502 });
 
-  const raw = await res.json() as { bars?: Array<{ t: string; o: number; h: number; l: number; c: number; v: number }> };
-  const bars = raw.bars ?? [];
+    const raw = await res.json() as { bars?: DailyBar[] };
+    bars = raw.bars ?? [];
+  } else {
+    try {
+      bars = await yahooDailyBars(symbol, days);
+    } catch {
+      return NextResponse.json({ error: "Price data unavailable" }, { status: 502 });
+    }
+  }
+
   if (bars.length < 20) return NextResponse.json({ bars: [], symbol });
 
   const closes = bars.map(b => b.c);

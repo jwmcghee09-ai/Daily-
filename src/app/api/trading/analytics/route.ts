@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { brokerCredentials } from "@/lib/broker";
+import { buildPortfolioFeed } from "@/lib/portfolio-feed";
 
 const TRADER_EMAIL = "jwmcghee09@gmail.com";
 const ALPACA_BASE = "https://paper-api.alpaca.markets/v2";
@@ -44,7 +45,27 @@ export async function GET() {
   const apiKey = credentials?.key;
   const apiSecret = credentials?.secret;
   if (!apiKey || !apiSecret) {
-    return NextResponse.json({ error: "Trading credentials not configured" }, { status: 503 });
+    // No broker — fall back to the portfolio the user has uploaded, projected
+    // into the same shape so the Analytics page renders it unchanged.
+    const feed = buildPortfolioFeed(user.id);
+    if (!feed) {
+      return NextResponse.json(
+        {
+          error: "No portfolio imported yet — upload a holdings file on the Quant tab first.",
+          source: "portfolio",
+          brokerConnected: false,
+        },
+        { status: 404 },
+      );
+    }
+    const macroQuotes = await Promise.all(
+      ["AUDUSD=X", "^VIX", "^GSPC", "^IXIC", "^TNX", "GC=F", "CL=F", "BTC-USD"].map(yahooQuote),
+    );
+    const [audUsd, vix, spx, nasdaq, treasury10y, gold, oil, btc] = macroQuotes;
+    return NextResponse.json({
+      ...feed,
+      macro: { audUsd, vix, spx, nasdaq, treasury10y, gold, oil, btc },
+    });
   }
 
   const h = { "APCA-API-KEY-ID": apiKey, "APCA-API-SECRET-KEY": apiSecret };
@@ -78,6 +99,14 @@ export async function GET() {
   const [audUsd, vix, spx, nasdaq, treasury10y, gold, oil, btc] = macro;
 
   return NextResponse.json({
+    source: "broker",
+    brokerConnected: true,
+    currency: "USD",
+    sourceLabel: "Alpaca paper account",
+    sleeves: {
+      core: { label: "Core · Index Sleeve", targetPct: 70 },
+      alpha: { label: "Alpha · Satellite Sleeve", targetPct: 30 },
+    },
     history,
     orders,
     account,

@@ -3,6 +3,7 @@ import path from "node:path";
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { brokerCredentials, isBrokerConnected } from "@/lib/broker";
+import { buildPortfolioFeed } from "@/lib/portfolio-feed";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -12,7 +13,7 @@ const TRADER_EMAIL = "jwmcghee09@gmail.com";
 const MYRMIDON_AI_TERMINAL = `<!-- MYRMIDON AI terminal (embeds /terminal) -->
 <div id="myrm-ai" style="padding:0 2.5rem 2rem;max-width:1400px;margin:0 auto;box-sizing:border-box">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem">
-    <span style="font-family:monospace;font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:#ff6a52">Myrmidon — Autonomous Trading Agent</span>
+    <span style="font-family:monospace;font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:#ff6a52">Myrmidon — Portfolio Terminal</span>
     <a href="/terminal" target="_blank" style="font-family:monospace;font-size:.56rem;letter-spacing:.1em;text-transform:uppercase;color:#ff6a52;background:rgba(255,106,82,.1);border:1px solid rgba(255,106,82,.25);border-radius:5px;padding:.3rem .8rem;text-decoration:none">Open full screen ↗</a>
   </div>
   <iframe id="myrm-terminal-frame" data-src="/terminal" title="Myrmidon Terminal" style="width:100%;height:calc(100vh - 220px);min-height:540px;border:1px solid rgba(255,106,82,.25);border-radius:10px;background:#000;display:block"></iframe>
@@ -70,7 +71,7 @@ const MYRMIDON_ANALYTICS_HTML = `<!-- MYRMIDON ANALYTICS PAGE -->
   <section class="sec">
     <div style="padding:.5rem 0 1.5rem;display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:.8rem">
       <div>
-        <div style="font-family:monospace;font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:#ff6a52;margin-bottom:.4rem">Myrmidon · Alpaca Paper Trading</div>
+        <div id="myrm-feed-label" style="font-family:monospace;font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:#ff6a52;margin-bottom:.4rem">Myrmidon · Portfolio Analytics</div>
         <h2 style="font-family:var(--disp);font-size:clamp(1.6rem,3vw,2.6rem);margin:0;background:linear-gradient(120deg,#ff3f34 0%,#ff7a30 35%,#ff7a30 72%,#ffb347 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Analytics</h2>
         <div id="myrm-api-status" style="font-family:monospace;font-size:.58rem;color:#ff7a30;margin-top:.4rem;min-height:1em">⚙ Initialising…</div>
       </div>
@@ -82,13 +83,13 @@ const MYRMIDON_ANALYTICS_HTML = `<!-- MYRMIDON ANALYTICS PAGE -->
 
     <!-- Ticker search (macro ticker removed — duplicated the scrolling nav tape) -->
     <div class="myrm-dark-card" style="margin-bottom:1rem">
-      <div class="myrm-section-label">Ticker Search — any US symbol</div>
+      <div class="myrm-section-label">Ticker Search — US symbols, or ASX with a .AX suffix</div>
       <form onsubmit="myrmTickerSearch(event)" style="display:flex;gap:.6rem;margin-bottom:.4rem">
-        <input id="myrm-ticker-input" placeholder="e.g. NVDA, TSLA, SPY…" autocomplete="off"
+        <input id="myrm-ticker-input" placeholder="e.g. NVDA, SPY, BHP.AX…" autocomplete="off"
           style="flex:1;max-width:280px;background:rgba(255,255,255,.05);border:1px solid rgba(255,106,82,.25);border-radius:6px;color:#fff;font-family:monospace;font-size:.85rem;letter-spacing:.06em;text-transform:uppercase;padding:.5rem .8rem;outline:none" />
         <button type="submit" id="myrm-ticker-btn" style="font-family:monospace;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:#ff6a52;background:rgba(255,106,82,.12);border:1px solid rgba(255,106,82,.3);border-radius:6px;padding:.5rem 1.1rem;cursor:pointer">Search</button>
       </form>
-      <div id="myrm-ticker-result"><span style="font-family:monospace;font-size:.62rem;color:rgba(255,106,82,.4)">Search a ticker for a 90-day chart, live stats, RSI and trend read.</span></div>
+      <div id="myrm-ticker-result"><span style="font-family:monospace;font-size:.62rem;color:rgba(255,106,82,.4)">Search a ticker for a 90-day chart, live stats, RSI and trend read. ASX codes need .AX (BHP.AX).</span></div>
     </div>
 
     <!-- Risk signals -->
@@ -104,7 +105,7 @@ const MYRMIDON_ANALYTICS_HTML = `<!-- MYRMIDON ANALYTICS PAGE -->
 
     <!-- Equity curve -->
     <div class="myrm-dark-card">
-      <div class="myrm-section-label">30-Day Equity Curve</div>
+      <div class="myrm-section-label"><span id="myrm-curve-label">30-Day Equity Curve</span></div>
       <svg id="myrm-equity-chart" style="width:100%;height:180px;display:block" preserveAspectRatio="none">
         <text x="50%" y="50%" text-anchor="middle" fill="rgba(255,106,82,.35)" font-size="11" font-family="monospace">Loading…</text>
       </svg>
@@ -112,11 +113,11 @@ const MYRMIDON_ANALYTICS_HTML = `<!-- MYRMIDON ANALYTICS PAGE -->
 
     <!-- Positions: Core -->
     <div class="myrm-dark-card">
-      <div class="myrm-section-label">Core · Index Sleeve <span id="myrm-core-pct" style="color:rgba(255,106,82,.4);font-weight:normal;margin-left:.5rem"></span></div>
+      <div class="myrm-section-label"><span id="myrm-core-label">Core · Index Sleeve</span> <span id="myrm-core-pct" style="color:rgba(255,106,82,.4);font-weight:normal;margin-left:.5rem"></span></div>
       <div style="overflow-x:auto">
         <table class="myrm-table">
           <thead><tr>
-            <th>Symbol</th><th style="text-align:right">Qty</th><th style="text-align:right">Price $</th>
+            <th>Symbol</th><th style="text-align:right">Qty</th><th class="myrm-th-price" style="text-align:right">Price $</th>
             <th style="text-align:right">Mkt Value A$</th><th style="text-align:right">Day %</th>
             <th style="text-align:right">Day P&amp;L A$</th><th style="text-align:right">Total P&amp;L A$</th>
           </tr></thead>
@@ -127,11 +128,11 @@ const MYRMIDON_ANALYTICS_HTML = `<!-- MYRMIDON ANALYTICS PAGE -->
 
     <!-- Positions: Alpha -->
     <div class="myrm-dark-card">
-      <div class="myrm-section-label" style="color:#4ade80">Alpha · Satellite Sleeve <span id="myrm-alpha-pct" style="color:rgba(74,222,128,.4);font-weight:normal;margin-left:.5rem"></span></div>
+      <div class="myrm-section-label" style="color:#4ade80"><span id="myrm-alpha-label">Alpha · Satellite Sleeve</span> <span id="myrm-alpha-pct" style="color:rgba(74,222,128,.4);font-weight:normal;margin-left:.5rem"></span></div>
       <div style="overflow-x:auto">
         <table class="myrm-table">
           <thead><tr>
-            <th>Symbol</th><th style="text-align:right">Qty</th><th style="text-align:right">Price $</th>
+            <th>Symbol</th><th style="text-align:right">Qty</th><th class="myrm-th-price" style="text-align:right">Price $</th>
             <th style="text-align:right">Mkt Value A$</th><th style="text-align:right">Day %</th>
             <th style="text-align:right">Day P&amp;L A$</th><th style="text-align:right">Total P&amp;L A$</th>
           </tr></thead>
@@ -142,7 +143,7 @@ const MYRMIDON_ANALYTICS_HTML = `<!-- MYRMIDON ANALYTICS PAGE -->
 
     <!-- Open orders -->
     <div class="myrm-dark-card">
-      <div class="myrm-section-label">Open Orders</div>
+      <div class="myrm-section-label"><span id="myrm-orders-label">Open Orders</span></div>
       <div style="overflow-x:auto">
         <table class="myrm-table">
           <thead><tr>
@@ -156,13 +157,13 @@ const MYRMIDON_ANALYTICS_HTML = `<!-- MYRMIDON ANALYTICS PAGE -->
 
     <!-- Trade history -->
     <div class="myrm-dark-card">
-      <div class="myrm-section-label">Recent Filled Trades</div>
+      <div class="myrm-section-label"><span id="myrm-trades-label">Recent Filled Trades</span></div>
       <div style="overflow-x:auto">
         <table class="myrm-table">
           <thead><tr>
             <th>Symbol</th><th>Side</th><th style="text-align:right">Qty</th>
-            <th style="text-align:right">Fill Price $</th><th style="text-align:right">Total (A$)</th>
-            <th style="text-align:right">Total (USD)</th><th style="text-align:right">Date</th>
+            <th id="myrm-trades-th-price" style="text-align:right">Fill Price $</th><th style="text-align:right">Total (A$)</th>
+            <th id="myrm-trades-th-alt" style="text-align:right">Total (USD)</th><th style="text-align:right">Date</th>
           </tr></thead>
           <tbody id="myrm-trades-tbody">
             <tr><td colspan="7" style="text-align:center;color:rgba(255,106,82,.35);padding:1.5rem;font-family:monospace;font-size:.7rem">Loading…</td></tr>
@@ -196,11 +197,18 @@ async function dashYahooQuote(symbol: string): Promise<MqData | null> {
   } catch { return null; }
 }
 
-async function fetchTraderAnalytics(): Promise<Record<string, unknown> | null> {
+async function fetchTraderAnalytics(userId: string): Promise<Record<string, unknown> | null> {
   const credentials = brokerCredentials();
   const apiKey = credentials?.key;
   const apiSecret = credentials?.secret;
-  if (!apiKey || !apiSecret) return null;
+  if (!apiKey || !apiSecret) {
+    // No broker: preload the uploaded portfolio instead, in the same shape.
+    const feed = buildPortfolioFeed(userId);
+    if (!feed) return null;
+    const macro = await Promise.all(["AUDUSD=X", "^VIX", "^GSPC", "^IXIC", "^TNX", "GC=F", "CL=F", "BTC-USD"].map(dashYahooQuote));
+    const [audUsd, vix, spx, nasdaq, treasury10y, gold, oil, btc] = macro;
+    return { ...feed, macro: { audUsd, vix, spx, nasdaq, treasury10y, gold, oil, btc } };
+  }
   try {
     const h = { "APCA-API-KEY-ID": apiKey, "APCA-API-SECRET-KEY": apiSecret };
     const BASE = "https://paper-api.alpaca.markets/v2";
@@ -222,13 +230,19 @@ async function fetchTraderAnalytics(): Promise<Record<string, unknown> | null> {
     ]);
     const macro = await Promise.all(["AUDUSD=X", "^VIX", "^GSPC", "^IXIC", "^TNX", "GC=F", "CL=F", "BTC-USD"].map(dashYahooQuote));
     const [audUsd, vix, spx, nasdaq, treasury10y, gold, oil, btc] = macro;
-    return { history, orders, account, positions, openOrders, audUsdRate: audUsd?.price ?? null, macro: { audUsd, vix, spx, nasdaq, treasury10y, gold, oil, btc } };
+    return {
+      source: "broker", brokerConnected: true, currency: "USD", sourceLabel: "Alpaca paper account",
+      sleeves: { core: { label: "Core · Index Sleeve", targetPct: 70 }, alpha: { label: "Alpha · Satellite Sleeve", targetPct: 30 } },
+      history, orders, account, positions, openOrders, audUsdRate: audUsd?.price ?? null,
+      macro: { audUsd, vix, spx, nasdaq, treasury10y, gold, oil, btc },
+    };
   } catch { return null; }
 }
 
 export async function GET(request: NextRequest) {
   const isDemo = request.nextUrl.searchParams.get("demo") === "1";
   let isTrader = false;
+  let traderUserId = "";
 
   if (!isDemo) {
     const user = await getAuthenticatedUser();
@@ -236,6 +250,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(buildRedirectUrl(request, "/signin"));
     }
     isTrader = user.email === TRADER_EMAIL;
+    traderUserId = user.id;
   }
 
   let html = await fs.readFile(path.join(process.cwd(), "public", "spectre-dashboard-v3.html"), "utf8");
@@ -270,7 +285,7 @@ export async function GET(request: NextRequest) {
     // the client falls back to fetching /api/trading/analytics itself.
     const brokerConnected = isBrokerConnected();
     const preload = await Promise.race([
-      fetchTraderAnalytics(),
+      fetchTraderAnalytics(traderUserId),
       new Promise<null>(resolve => setTimeout(() => resolve(null), 4500)),
     ]);
     const preloadScript = preload
@@ -278,12 +293,12 @@ export async function GET(request: NextRequest) {
       : "";
     // Inject server-side status immediately (no JS async needed — text set synchronously).
     let srvStatus: string;
-    if (!brokerConnected) {
-      srvStatus = "NO BROKER CONNECTED — the strategy engine and decision log are intact, but there is no account to trade against.";
-    } else if (preload) {
-      srvStatus = `SERVER: keys OK, preloaded ${preload.account ? "account data" : "but account null — check key validity"}`;
+    if (preload) {
+      srvStatus = String(preload.sourceLabel || (brokerConnected ? "Broker account loaded" : "Imported portfolio loaded"));
+    } else if (!brokerConnected) {
+      srvStatus = "No broker is connected and no portfolio has been imported — upload a holdings file on the Quant tab to fill this page.";
     } else {
-      srvStatus = `SERVER: preload skipped (slow upstream) — loading live in browser…`;
+      srvStatus = "Preload skipped (slow upstream) — loading live in the browser…";
     }
     const srvStatusScript = `<script>(function(){var e=document.getElementById('myrm-api-status');if(e)e.textContent=${JSON.stringify(srvStatus)};})();</script>`;
     html = html.replace("</body>", () => preloadScript + "\n" + srvStatusScript + "\n" + MYRMIDON_ANALYTICS_SCRIPT + "\n</body>");

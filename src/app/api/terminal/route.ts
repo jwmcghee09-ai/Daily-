@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readTradingMemory } from "@/lib/db";
+import { getAuthenticatedUser } from "@/lib/auth";
 import { isTerminalRequestAuthorized } from "@/lib/terminal-auth";
 import { brokerHeaders, isBrokerConnected, BROKER_DISCONNECTED_MESSAGE } from "@/lib/broker";
+import { buildPortfolioFeed } from "@/lib/portfolio-feed";
 
 export const runtime = "nodejs";
 
@@ -51,7 +53,38 @@ export async function GET(req: NextRequest) {
   }
 
   if (!isBrokerConnected()) {
-    return NextResponse.json({ error: BROKER_DISCONNECTED_MESSAGE, brokerConnected: false }, { status: 503 });
+    // No broker to read from — serve the uploaded portfolio in the same shape.
+    // The terminal's trade-placing controls stay disabled: this is a read-only
+    // view of holdings the user imported, not an account Myrmidon can act on.
+    const user = await getAuthenticatedUser();
+    const feed = user ? buildPortfolioFeed(user.id) : null;
+    if (!feed) {
+      return NextResponse.json(
+        {
+          error: user
+            ? `${BROKER_DISCONNECTED_MESSAGE} No portfolio has been imported either — upload a holdings file on the dashboard.`
+            : BROKER_DISCONNECTED_MESSAGE,
+          brokerConnected: false,
+        },
+        { status: 503 },
+      );
+    }
+
+    const [macroQuotes, memory] = await Promise.all([
+      Promise.all(["AUDUSD=X", "^VIX", "^GSPC", "^IXIC", "^TNX", "GC=F", "CL=F", "BTC-USD"].map(yahooQuote)),
+      (async () => { try { return readTradingMemory(); } catch { return null; } })(),
+    ]);
+    const [audUsd, vix, spx, nasdaq, treasury10y, gold, oil, btc] = macroQuotes;
+
+    return NextResponse.json({
+      ...feed,
+      memory,
+      // The broker path reports the AUD/USD rate here because its figures are
+      // USD. The portfolio feed is already AUD, so rate stays null and the
+      // clients skip conversion.
+      rate: null,
+      macro: { audUsd, vix, spx, nasdaq, treasury10y, gold, oil, btc },
+    });
   }
 
   const h = headers();
@@ -87,6 +120,10 @@ export async function GET(req: NextRequest) {
   const [audUsd, vix, spx, nasdaq, treasury10y, gold, oil, btc] = macro;
 
   return NextResponse.json({
+    source: "broker",
+    brokerConnected: true,
+    currency: "USD",
+    sourceLabel: "Alpaca paper account",
     account,
     positions,
     history,
