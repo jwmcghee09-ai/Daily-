@@ -66,6 +66,7 @@ const assets = [
   "public/og-image.png",
   "src/app/icon.svg",
   "src/app/favicon.ico",
+  "public/apple-touch-icon.png",
 ];
 for (const a of assets) {
   if (existsSync(join(root, a))) ok(`${a} present`);
@@ -92,6 +93,26 @@ for (const surface of MARK_SURFACES) {
   const count = (readFileSync(path, "utf8").match(/spectre-mark\.svg/g) ?? []).length;
   if (count > 0) ok(`${surface}: brand mark present (${count}×)`);
   else fail(`${surface}: no brand mark — the logo has fallen off this page`);
+}
+
+// ── 3bb. Route-served pages must declare their own favicon ──
+// Pages returned as raw HTML by a route handler never pass through Next's
+// metadata system, so they declare no icon unless it is written in by hand —
+// and then the browser falls back to whatever it cached for /favicon.ico,
+// which is how a stale icon survives a rebrand.
+const FAVICON_SURFACES = [
+  "public/spectre-dashboard-v3.html",
+  "public/spectre-settings-v3.html",
+  "public/spectre-market-research-v1.html",
+  "src/app/terminal/route.ts",
+  "src/app/strategy/route.ts",
+];
+for (const surface of FAVICON_SURFACES) {
+  const path = join(root, surface);
+  if (!existsSync(path)) { fail(`${surface} missing`); continue; }
+  const html = readFileSync(path, "utf8");
+  if (/rel="icon"/.test(html)) ok(`${surface}: declares a favicon`);
+  else fail(`${surface}: no <link rel="icon"> — the browser will use a cached one`);
 }
 
 // ── 3c. Brand gradients must use the deep ramp, not the old light orange ──

@@ -9,6 +9,9 @@ const HTML = `<!DOCTYPE html>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>MYRMIDON — STRATEGY ENGINE</title>
+  <link rel="icon" type="image/svg+xml" href="/spectre-mark.svg?v=2">
+  <link rel="alternate icon" type="image/x-icon" href="/favicon.ico?v=2">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:#121214;color:#e6e4f2;font-family:'Courier New',Courier,monospace;font-size:14px;min-height:100vh}
