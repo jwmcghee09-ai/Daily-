@@ -26,6 +26,13 @@ export interface PortfolioHolding {
 export interface PortfolioSnapshot {
   date: string;
   value: number;
+  /**
+   * The set of holdings this value describes, as source:ticker pairs. Two
+   * snapshots are only comparable as a market return when it matches — a
+   * different composition means the value moved because the book changed,
+   * not because prices did. Empty on rows written before this existed.
+   */
+  composition?: string;
 }
 
 export interface PortfolioState {
@@ -933,11 +940,14 @@ export function computeMetrics(
 
   const dailyHistory = Array.from(latestSnapshotByDay.values()).sort((a, b) => a.date.localeCompare(b.date));
   const riskHistory = applyRiskWindow(dailyHistory, riskWindow);
-  const rawDailyReturns = calculateReturns(riskHistory.map((item) => item.value));
+  const rawDailyReturns = calculateReturns(riskHistory);
   const dailyReturns = cleanReturnsForRisk(rawDailyReturns);
   const returnOutliersRemoved = Math.max(0, rawDailyReturns.length - dailyReturns.length);
   const volatilityAnnualPct = dailyReturns.length >= 2 ? stdDev(dailyReturns) * Math.sqrt(252) * 100 : null;
-  const maxDrawdownPct = riskHistory.length >= 2 ? calcMaxDrawdown(riskHistory.map((item) => item.value)) * 100 : null;
+  // Drawdown measures peak-to-trough of the SAME book; spanning a
+  // composition change would report the change itself as a drawdown.
+  const drawdownHistory = latestComparableRun(riskHistory);
+  const maxDrawdownPct = drawdownHistory.length >= 2 ? calcMaxDrawdown(drawdownHistory.map((item) => item.value)) * 100 : null;
 
   const var95Raw = dailyReturns.length >= 20 ? percentile(dailyReturns, 0.05) : null;
   const var95Pct = var95Raw != null ? Math.max(0, -var95Raw * 100) : null;
@@ -1052,18 +1062,48 @@ function buildAllocation(
     .sort((a, b) => b.value - a.value);
 }
 
-function calculateReturns(values: number[]): number[] {
+/**
+ * Day-over-day returns, skipping any step where the portfolio's composition
+ * changed.
+ *
+ * Clearing a source or importing a different file moves the total for reasons
+ * that have nothing to do with the market. Treating that as a return is how a
+ * re-imported portfolio came to report a 76% loss. Where the composition is
+ * unknown — snapshots written before it was recorded — the step is kept, so
+ * existing history still produces figures.
+ */
+function calculateReturns(points: Array<{ value: number; composition?: string }>): number[] {
   const returns: number[] = [];
 
-  for (let i = 1; i < values.length; i += 1) {
-    const prev = values[i - 1];
-    const current = values[i];
-    if (prev > 0 && Number.isFinite(prev) && Number.isFinite(current)) {
-      returns.push(current / prev - 1);
-    }
+  for (let i = 1; i < points.length; i += 1) {
+    const prev = points[i - 1];
+    const current = points[i];
+    if (!(prev.value > 0 && Number.isFinite(prev.value) && Number.isFinite(current.value))) continue;
+    const prevComp = prev.composition ?? "";
+    const currComp = current.composition ?? "";
+    if (prevComp && currComp && prevComp !== currComp) continue;
+    returns.push(current.value / prev.value - 1);
   }
 
   return returns;
+}
+
+/**
+ * The longest run of snapshots that all describe the same holdings, ending at
+ * the most recent. Levels — drawdown, "return since first snapshot" — are only
+ * meaningful across a stretch where the book did not change underneath them.
+ */
+export function latestComparableRun<T extends { composition?: string }>(points: T[]): T[] {
+  if (points.length < 2) return points;
+  const latest = points[points.length - 1].composition ?? "";
+  if (!latest) return points;
+  let start = points.length - 1;
+  while (start > 0) {
+    const previous = points[start - 1].composition ?? "";
+    if (previous && previous !== latest) break;
+    start -= 1;
+  }
+  return points.slice(start);
 }
 
 function cleanReturnsForRisk(returns: number[]): number[] {

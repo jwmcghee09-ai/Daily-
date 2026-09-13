@@ -128,21 +128,30 @@ export function runMonteCarlo(
 
   // One point per day, oldest first — the browser de-duplicates the same way,
   // because several imports on one day would otherwise read as daily moves.
-  const byDay = new Map<string, number>();
+  const byDay = new Map<string, { value: number; composition: string }>();
   for (const snapshot of snapshots) {
     const day = String(snapshot.date).slice(0, 10);
     const value = Number(snapshot.value);
-    if (Number.isFinite(value) && value > 0) byDay.set(day, value);
+    if (Number.isFinite(value) && value > 0) {
+      byDay.set(day, { value, composition: snapshot.composition ?? "" });
+    }
   }
-  const values = Array.from(byDay.entries())
+  const points = Array.from(byDay.entries())
     .sort((a, b) => a[0].localeCompare(b[0]))
-    .map(([, value]) => value);
+    .map(([, point]) => point);
 
-  if (values.length < 2) return null;
+  if (points.length < 2) return null;
+  const values = points.map((point) => point.value);
 
   const returns: number[] = [];
-  for (let i = 1; i < values.length; i += 1) {
-    const r = values[i] / values[i - 1] - 1;
+  for (let i = 1; i < points.length; i += 1) {
+    // A value move across a composition change is the book changing, not the
+    // market. Fitting drift to it projects a crash or a boom that never
+    // happened, and every percentile inherits it.
+    const before = points[i - 1].composition;
+    const after = points[i].composition;
+    if (before && after && before !== after) continue;
+    const r = points[i].value / points[i - 1].value - 1;
     // A >50% daily move is an import artefact, not a market move.
     if (Number.isFinite(r) && Math.abs(r) < 0.5) returns.push(r);
   }

@@ -67,6 +67,7 @@ interface HoldingRow {
 interface SnapshotRow {
   date: string;
   value: number;
+  composition: string | null;
 }
 
 interface HoldingTickerRow {
@@ -407,6 +408,20 @@ function initSchema(db: DatabaseSync): void {
 
   if (!hasSessionOpenColumn) {
     db.exec("ALTER TABLE holdings ADD COLUMN session_open REAL NOT NULL DEFAULT 0;");
+  }
+
+  // A snapshot records the portfolio's value on a day. Comparing two of them
+  // only means something if they describe the SAME set of holdings: clear a
+  // source, or import a different file, and the value jumps for reasons that
+  // have nothing to do with the market. Without this, that jump was read as a
+  // daily return and reported as a crash — a portfolio that had simply been
+  // re-imported showed "return since first snapshot -76%".
+  const hasCompositionColumn = db
+    .prepare("SELECT 1 AS ok FROM pragma_table_info('snapshots') WHERE name = 'composition'")
+    .get() as { ok: number } | undefined;
+
+  if (!hasCompositionColumn) {
+    db.exec("ALTER TABLE snapshots ADD COLUMN composition TEXT NOT NULL DEFAULT '';");
   }
 
   const hasSessionDateColumn = db
@@ -1612,7 +1627,7 @@ export function readPortfolioState(userId = LOCAL_USER_ID): PortfolioState {
 
   const snapshotRows = db
     .prepare(`
-      SELECT date, value
+      SELECT date, value, composition
       FROM snapshots
       WHERE date LIKE ?
       ORDER BY date ASC
@@ -1650,10 +1665,27 @@ export function readPortfolioState(userId = LOCAL_USER_ID): PortfolioState {
     snapshots: snapshotRows.map((row) => ({
       date: unscopeValue(userId, row.date),
       value: sanitizeNumber(row.value),
+      composition: row.composition || "",
     })),
     updatedAt: getScopedMetaValue(db, userId, UPDATED_AT_KEY),
     lastPriceRefreshAt: getScopedMetaValue(db, userId, LAST_PRICE_REFRESH_KEY),
   };
+}
+
+/**
+ * What the portfolio was made of when a snapshot was taken.
+ *
+ * Two snapshots are only comparable as a market return if they describe the
+ * same holdings. This is the cheap way to know: a sorted list of every
+ * source:ticker in the book. Change the composition — clear a source, import a
+ * different file, add an account — and the fingerprint changes, so the value
+ * jump between them can be skipped rather than reported as a day's performance.
+ */
+function compositionFingerprint(db: DatabaseSync, userId: string): string {
+  const rows = db
+    .prepare("SELECT source, ticker FROM holdings WHERE id LIKE ? ORDER BY source, ticker")
+    .all(userLikePattern(userId)) as Array<{ source: string; ticker: string }>;
+  return rows.map((row) => `${row.source}:${row.ticker}`).join("|");
 }
 
 export function saveImport(userId: string, source: DataSource, holdings: PortfolioHolding[]): PortfolioState {
@@ -1709,10 +1741,14 @@ export function saveImport(userId: string, source: DataSource, holdings: Portfol
       .get(scopedPattern) as { total_value: number };
 
     db.prepare(`
-      INSERT INTO snapshots (date, value)
-      VALUES (?, ?)
-      ON CONFLICT(date) DO UPDATE SET value = excluded.value
-    `).run(scopedSnapshotAt, sanitizeNumber(totalRow.total_value));
+      INSERT INTO snapshots (date, value, composition)
+      VALUES (?, ?, ?)
+      ON CONFLICT(date) DO UPDATE SET value = excluded.value, composition = excluded.composition
+    `).run(
+      scopedSnapshotAt,
+      sanitizeNumber(totalRow.total_value),
+      compositionFingerprint(db, userId),
+    );
 
     pruneSnapshotsForUser(db, userId, SNAPSHOT_RETENTION_DAYS);
 
@@ -2486,6 +2522,21 @@ export function clearPortfolioSource(userId: string, source: DataSource): Portfo
   db.exec("BEGIN IMMEDIATE");
   try {
     db.prepare("DELETE FROM holdings WHERE source = ? AND id LIKE ?").run(normalizedSource, scopedPattern);
+
+    // Record where the book changed. Every snapshot up to here describes a
+    // portfolio that included this source, so none of them is comparable to
+    // what comes next — without this marker the drop in total value reads as
+    // a market loss the user never took.
+    const remaining = db
+      .prepare("SELECT COALESCE(SUM(value), 0) AS total FROM holdings WHERE id LIKE ?")
+      .get(scopedPattern) as { total: number };
+    const nowIso = new Date().toISOString();
+    db.prepare(`
+      INSERT INTO snapshots (date, value, composition)
+      VALUES (?, ?, ?)
+      ON CONFLICT(date) DO UPDATE SET value = excluded.value, composition = excluded.composition
+    `).run(scopeId(userId, nowIso), sanitizeNumber(remaining.total), compositionFingerprint(db, userId));
+
     db.exec("COMMIT");
   } catch (error) {
     db.exec("ROLLBACK");

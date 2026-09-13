@@ -15,7 +15,7 @@
  * the rate only when one is present, which keeps the broker path unchanged.
  */
 import { listIngestTrades, readPortfolioState } from "@/lib/db";
-import { displayHoldingLabel, type PortfolioHolding, type PortfolioState } from "@/lib/portfolio";
+import { displayHoldingLabel, latestComparableRun, type PortfolioHolding, type PortfolioState } from "@/lib/portfolio";
 
 /** Sources that behave like a long-term base rather than an active pick. */
 const CORE_SOURCES = new Set(["index", "fund", "super"]);
@@ -138,11 +138,20 @@ function toPosition(holding: PortfolioHolding): FeedPosition {
 }
 
 function buildHistory(state: PortfolioState): PortfolioFeed["history"] {
-  const points = state.snapshots
-    .map((snapshot) => ({ at: Date.parse(snapshot.date), value: num(snapshot.value) }))
-    .filter((point) => Number.isFinite(point.at) && point.value > 0)
-    .sort((a, b) => a.at - b.at)
-    .slice(-90);
+  // Only the latest stretch that describes the same holdings. The terminal
+  // reads first-to-last off this as "return since first snapshot", and
+  // spanning an import that changed the book reported the change itself as
+  // performance — a re-imported portfolio showed a 76% loss it never had.
+  const points = latestComparableRun(
+    state.snapshots
+      .map((snapshot) => ({
+        at: Date.parse(snapshot.date),
+        value: num(snapshot.value),
+        composition: snapshot.composition,
+      }))
+      .filter((point) => Number.isFinite(point.at) && point.value > 0)
+      .sort((a, b) => a.at - b.at),
+  ).slice(-90);
 
   if (points.length < 2) return null;
 
