@@ -1081,7 +1081,9 @@ function calculateReturns(points: Array<{ value: number; composition?: string }>
     if (!(prev.value > 0 && Number.isFinite(prev.value) && Number.isFinite(current.value))) continue;
     const prevComp = prev.composition ?? "";
     const currComp = current.composition ?? "";
-    if (prevComp && currComp && prevComp !== currComp) continue;
+    // Both sides must be known AND identical. An unverifiable step is skipped
+    // rather than assumed to be a market move.
+    if (!prevComp || !currComp || prevComp !== currComp) continue;
     returns.push(current.value / prev.value - 1);
   }
 
@@ -1100,7 +1102,13 @@ export function latestComparableRun<T extends { composition?: string }>(points: 
   let start = points.length - 1;
   while (start > 0) {
     const previous = points[start - 1].composition ?? "";
-    if (previous && previous !== latest) break;
+    // An UNKNOWN fingerprint is not known to be comparable, and treating it as
+    // comparable is what let a contribution through: a portfolio that went from
+    // $6,714 to $17,621 because a holding was added reported "+162% return"
+    // against a snapshot predating the fingerprint. Stop at anything
+    // unverifiable — a missing number is better than a fabricated one, and it
+    // self-heals on the next import.
+    if (!previous || previous !== latest) break;
     start -= 1;
   }
   return points.slice(start);

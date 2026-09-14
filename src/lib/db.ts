@@ -1683,9 +1683,15 @@ export function readPortfolioState(userId = LOCAL_USER_ID): PortfolioState {
  */
 function compositionFingerprint(db: DatabaseSync, userId: string): string {
   const rows = db
-    .prepare("SELECT source, ticker FROM holdings WHERE id LIKE ? ORDER BY source, ticker")
-    .all(userLikePattern(userId)) as Array<{ source: string; ticker: string }>;
-  return rows.map((row) => `${row.source}:${row.ticker}`).join("|");
+    .prepare("SELECT source, ticker, units FROM holdings WHERE id LIKE ? ORDER BY source, ticker")
+    .all(userLikePattern(userId)) as Array<{ source: string; ticker: string; units: number }>;
+  // Units are part of the fingerprint, not just the ticker set. Buying more of
+  // something already held leaves the tickers identical while the value jumps,
+  // and that jump is a contribution, not performance. A price move changes the
+  // value and leaves units alone, so genuine returns still compare cleanly.
+  return rows
+    .map((row) => `${row.source}:${row.ticker}:${sanitizeNumber(row.units, 0)}`)
+    .join("|");
 }
 
 export function saveImport(userId: string, source: DataSource, holdings: PortfolioHolding[]): PortfolioState {

@@ -364,11 +364,20 @@ tr:hover td{background:rgba(255,106,82,.05)}
     var eq=parseFloat(acct.equity)||0,cash=parseFloat(acct.cash)||0,bp=parseFloat(acct.buying_power)||0;
     $('m-eq').textContent=audP(eq);$('m-eq2').textContent=isPortfolio?'AUD':usd(eq)+' USD';
     $('acct-num').textContent=isPortfolio?'IMPORTED PORTFOLIO':'ACCT #'+acct.account_number;
-    var retUsd=0,retPct=0;
+    // No comparable history is NOT a zero return. The server only sends
+    // snapshots describing the same holdings, so after adding or topping up a
+    // position there may be nothing to compare against yet — say so rather
+    // than printing +0.00%, which reads as a real, flat result.
+    var retUsd=null,retPct=null;
     if(hist&&hist.equity&&hist.equity.length>1){var vals=hist.equity.filter(function(v){return v!=null&&v>0;});if(vals.length>1){var s0=vals[0];retUsd=eq-s0;retPct=s0>0?(retUsd/s0)*100:0;}}
-    var rc=retUsd>=0?'pos':'neg';
-    $('m-ret').textContent=pct(retPct);$('m-ret').className='mv '+rc;
-    $('m-ret2').textContent=(retUsd>=0?'+':'-')+audP(Math.abs(retUsd));
+    if(retPct===null){
+      $('m-ret').textContent='—';$('m-ret').className='mv';
+      $('m-ret2').textContent=isPortfolio?'no comparable history yet':'—';
+    }else{
+      var rc=retUsd>=0?'pos':'neg';
+      $('m-ret').textContent=pct(retPct);$('m-ret').className='mv '+rc;
+      $('m-ret2').textContent=(retUsd>=0?'+':'-')+audP(Math.abs(retUsd));
+    }
     $('m-cash').textContent=audP(cash);
     $('m-cash2').textContent=eq>0?(cash/eq*100).toFixed(1)+'% of portfolio':'—';
     $('m-bp').textContent=audP(bp);$('m-bp2').textContent=isPortfolio?'cash and savings':usd(bp)+' USD';

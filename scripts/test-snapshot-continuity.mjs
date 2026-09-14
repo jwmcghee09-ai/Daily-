@@ -30,7 +30,7 @@ function calculateReturns(points) {
     if (!(prev.value > 0)) continue;
     const a = prev.composition ?? "";
     const b = curr.composition ?? "";
-    if (a && b && a !== b) continue;
+    if (!a || !b || a !== b) continue;
     out.push(curr.value / prev.value - 1);
   }
   return out;
@@ -42,7 +42,7 @@ function latestComparableRun(points) {
   let start = points.length - 1;
   while (start > 0) {
     const prev = points[start - 1].composition ?? "";
-    if (prev && prev !== latest) break;
+    if (!prev || prev !== latest) break;
     start -= 1;
   }
   return points.slice(start);
@@ -82,10 +82,61 @@ const sinceFirst = (run[run.length - 1].value / run[0].value - 1) * 100;
 check("return since first snapshot is sane", sinceFirst > -50 && sinceFirst < 50,
   `${sinceFirst.toFixed(2)}% (was -76% across the import)`);
 
+// ── The reported case: adding a holding must not read as a return ──
+// A$6,714 -> A$17,621 because a fund was added. Total gain on cost base was
+// +12.4%; the terminal reported "+162.44% return since first snapshot".
+{
+  const before = "asx:BHP.AX:16|index:IHVV.AX:86";
+  const after = "asx:BHP.AX:16|fund:VHG:4748|index:IHVV.AX:86";
+  const added = [
+    { value: 6714, composition: before },
+    { value: 6740, composition: before },
+    { value: 17621, composition: after },
+  ];
+  const naive = (added.at(-1).value / added[0].value - 1) * 100;
+  check("reproduces the reported +162%", naive > 160, `${naive.toFixed(2)}%`);
+
+  const run = latestComparableRun(added);
+  const honest = run.length > 1 ? (run.at(-1).value / run[0].value - 1) * 100 : null;
+  check("adding a holding is no longer counted as return",
+    honest === null || Math.abs(honest) < 5,
+    honest === null ? "run too short to report a return" : `${honest.toFixed(2)}%`);
+  check("the contribution step is dropped from returns",
+    calculateReturns(added).every((r) => Math.abs(r) < 0.5),
+    `${calculateReturns(added).length} of 2 steps kept`);
+}
+
+// ── Buying MORE of something already held ──
+// The ticker set is unchanged, so a fingerprint without units would call this
+// a market return. Units are what a transaction moves.
+{
+  const topUp = [
+    { value: 10000, composition: "asx:BHP.AX:100" },
+    { value: 20000, composition: "asx:BHP.AX:200" },
+  ];
+  check("topping up an existing holding is not a return",
+    calculateReturns(topUp).length === 0,
+    "value doubled, units doubled");
+
+  // …while the same holdings at a higher price still count.
+  const priceMove = [
+    { value: 10000, composition: "asx:BHP.AX:100" },
+    { value: 10800, composition: "asx:BHP.AX:100" },
+  ];
+  const moves = calculateReturns(priceMove);
+  check("a genuine price move on unchanged units still counts",
+    moves.length === 1 && Math.abs(moves[0] - 0.08) < 1e-9, `${(moves[0] * 100).toFixed(1)}%`);
+}
+
 // ── Unknown composition (rows written before this existed) still works ──
+// Deliberately conservative: a step we cannot verify is skipped rather than
+// assumed to be a market move. It self-heals on the next import.
 const legacy = [{ value: 100, composition: "" }, { value: 110, composition: "" }];
-check("legacy snapshots without composition still produce returns",
-  calculateReturns(legacy).length === 1);
+check("unverifiable steps are skipped, not assumed comparable",
+  calculateReturns(legacy).length === 0);
+const mixed = [{ value: 6714, composition: "" }, { value: 17621, composition: "asx:BHP:16|fund:VHG:4748" }];
+check("a legacy snapshot cannot anchor a return against a fingerprinted one",
+  latestComparableRun(mixed).length === 1, "the pre-fingerprint row is excluded");
 
 // ── And the real database path: does saveImport stamp it? ──
 const { saveImport, clearPortfolioData, readPortfolioState } = await import("../src/lib/db.ts")

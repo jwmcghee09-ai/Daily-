@@ -150,7 +150,7 @@ export function runMonteCarlo(
     // happened, and every percentile inherits it.
     const before = points[i - 1].composition;
     const after = points[i].composition;
-    if (before && after && before !== after) continue;
+    if (!before || !after || before !== after) continue;
     const r = points[i].value / points[i - 1].value - 1;
     // A >50% daily move is an import artefact, not a market move.
     if (Number.isFinite(r) && Math.abs(r) < 0.5) returns.push(r);
