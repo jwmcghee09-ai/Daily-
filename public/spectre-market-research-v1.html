@@ -40,15 +40,15 @@
   --accent-strong: #ff2f14;
   --accent-mid: #ff7a68;
   --accent-soft: #ff4b3324;
-  --sl-bg: #141416;
+  --sl-bg: #050405;
   --sl-card: #1e1b1aeb;
   --sl-border: rgba(255,63,52,.14);
   --sl-border2: rgba(255,63,52,.09);
-  --sl-text: #f2f2f5;
-  --sl-page-text: #f2f2f5;
-  --sl-page-muted: #a2a2ab;
-  --sl-muted: #a2a2ab;
-  --sl-purple: #ff3f34;
+  --sl-text: #f4f4f5;
+  --sl-page-text: #f4f4f5;
+  --sl-page-muted: #a1a1aa;
+  --sl-muted: #a1a1aa;
+  --sl-purple: #ee2f1d;
   --sl-purple-hi: #ff9d8a;
   --sl-orange: #ff4d1a;
   --sl-amber: #ffb547;
@@ -86,7 +86,7 @@ body::before {
   content: '';
   position: fixed;
   inset: 0;
-  background-image: radial-gradient(rgba(190,190,198,.13) 1px, transparent 1px);
+  background-image: radial-gradient(rgba(255,255,255,.08) 1px, transparent 1px);
   background-size: 28px 28px;
   opacity: 0.7;
   pointer-events: none;
@@ -133,7 +133,7 @@ h3 { font-size: 1.15rem; }
   background: rgba(24,22,21,.94);
   backdrop-filter: blur(28px) saturate(1.4);
   -webkit-backdrop-filter: blur(28px) saturate(1.4);
-  border-bottom: 1px solid rgba(190,190,198,.13);
+  border-bottom: 1px solid rgba(255,255,255,.08);
 }
 
 .nav-inner {
@@ -151,7 +151,7 @@ h3 { font-size: 1.15rem; }
   font-weight: 800;
   font-size: 1.15rem;
   letter-spacing: 0.08em;
-  background: linear-gradient(90deg, #ff3f34 0%, #ff4a26 35%, #ff4a26 72%, #ff6a45 100%);
+  background: linear-gradient(90deg, #ee2f1d 0%, #ff4b33 35%, #ff4b33 72%, #ff5334 100%);
   background-size: 200% auto;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -202,7 +202,7 @@ h3 { font-size: 1.15rem; }
 }
 
 .nav-links a:hover, .nav-links a.active {
-  color: #f2f2f5;
+  color: #f4f4f5;
   background: rgba(255,63,52,.12);
 }
 
@@ -210,14 +210,14 @@ h3 { font-size: 1.15rem; }
   font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.14em;
-  color: #ff3f34;
+  color: #ee2f1d;
   background: linear-gradient(135deg, rgba(255,63,52,.12), rgba(255,77,26,.08));
   border: 1px solid rgba(255,63,52,.3);
   box-shadow: 0 4px 14px rgba(255,63,52,.12);
 }
 
 .nav-links a[href="/research"]:hover, .nav-links a[href="/research"].active {
-  color: #f2f2f5;
+  color: #f4f4f5;
   background: linear-gradient(135deg, rgba(255,63,52,.2), rgba(255,77,26,.14));
   border-color: rgba(255,77,26,.38);
 }
@@ -234,7 +234,7 @@ h3 { font-size: 1.15rem; }
   font-family: var(--font-mono);
   font-size: 0.62rem;
   letter-spacing: 0.08em;
-  color: #a2a2ab;
+  color: #a1a1aa;
   text-transform: uppercase;
 }
 
@@ -242,11 +242,11 @@ h3 { font-size: 1.15rem; }
   font-family: var(--font-mono);
   font-size: 0.62rem;
   letter-spacing: 0.08em;
-  color: #f2f2f5;
+  color: #f4f4f5;
   text-decoration: none;
   padding: 5px 13px;
   border-radius: var(--radius-pill);
-  border: 1px solid rgba(190,190,198,.22);
+  border: 1px solid rgba(255,255,255,.14);
   transition: all 0.2s;
 }
 
@@ -272,8 +272,8 @@ h3 { font-size: 1.15rem; }
 /* ===== TICKER TAPE ===== */
 .ticker-wrap {
   overflow: hidden;
-  background: rgba(28,26,25,0.88);
-  border-top: 1px solid rgba(190,190,198,.1);
+  background: #0b0b0d;
+  border-top: 1px solid rgba(255,255,255,.08);
   position: relative;
   height: 28px;
   display: flex;
@@ -309,7 +309,7 @@ h3 { font-size: 1.15rem; }
 }
 
 .ticker-item .sym { color: rgba(94,90,120,.7); font-weight: 500; letter-spacing: .08em; }
-.ticker-item .price { color: #f2f2f5; font-weight: 600; }
+.ticker-item .price { color: #f4f4f5; font-weight: 600; }
 .ticker-item .chg { font-weight: 500; }
 .ticker-item .chg.pos { color: #ff9d8a; }
 .ticker-item .chg.neg { color: #f87171; }
@@ -1604,8 +1604,8 @@ h3 { font-size: 1.15rem; }
 .sector-perf-name { font-size: 0.7rem; color: var(--sl-text); flex: 1; }
 .sector-perf-bar-wrap { flex: 2; height: 4px; background: rgba(255,255,255,0.06); border-radius: 2px; overflow: hidden; }
 .sector-perf-bar { height: 100%; border-radius: 2px; transition: width 0.6s ease; }
-.sector-perf-bar.pos { background: linear-gradient(90deg, #ff3f34, #ff9d8a); }
-.sector-perf-bar.neg { background: linear-gradient(90deg, #ff4a26, #f87171); }
+.sector-perf-bar.pos { background: linear-gradient(90deg, #ee2f1d, #ff9d8a); }
+.sector-perf-bar.neg { background: linear-gradient(90deg, #ff4b33, #f87171); }
 .sector-perf-val { font-family: var(--font-mono); font-size: 0.7rem; min-width: 52px; text-align: right; }
 
 /* Analyst ratings */
@@ -1653,7 +1653,7 @@ h3 { font-size: 1.15rem; }
   align-items: center;
   justify-content: space-between;
   padding: 20px 0 12px;
-  border-bottom: 1px solid rgba(190,190,198,.13);
+  border-bottom: 1px solid rgba(255,255,255,.08);
   margin-bottom: 0;
 }
 .page-header-left {
@@ -1801,7 +1801,7 @@ h3 { font-size: 1.15rem; }
 }
 
 .workspace-title .gradient {
-  background: linear-gradient(90deg, #f7f3ef 0%, #ffb3a6 34%, #ff5c38 68%, #ff7a68 100%);
+  background: linear-gradient(90deg, #f7f3ef 0%, #ffb3a6 34%, #ff5334 68%, #ff7a68 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -2374,7 +2374,7 @@ h3 { font-size: 1.15rem; }
   position: relative;
   height: 6px;
   border-radius: 3px;
-  background: linear-gradient(90deg, #ef4444 0%, #ff6a45 25%, #eab308 50%, #84cc16 75%, #22c55e 100%);
+  background: linear-gradient(90deg, #ef4444 0%, #ff5334 25%, #eab308 50%, #84cc16 75%, #22c55e 100%);
   margin: 8px 0 4px;
 }
 .fear-greed-needle {
@@ -2590,7 +2590,7 @@ h3 { font-size: 1.15rem; }
   margin-bottom: 0;
 }
 .rtab:hover {
-  color: #f2f2f5;
+  color: #f4f4f5;
   background: rgba(255,255,255,.06);
 }
 .rtab.active {
@@ -2824,9 +2824,9 @@ h3 { font-size: 1.15rem; }
 }
 .starter-banner.show { display: flex; }
 .starter-banner-text { color: var(--sl-text); }
-.starter-banner-text strong { color: #ff3f34; }
+.starter-banner-text strong { color: #ee2f1d; }
 .starter-banner-cta {
-  flex-shrink: 0; background: linear-gradient(135deg,#ff3f34,#ff4a26);
+  flex-shrink: 0; background: linear-gradient(135deg,#ee2f1d,#ff4b33);
   border: none; border-radius: 6px; color: #fff; font-size: .7rem; font-weight: 700;
   padding: 5px 14px; cursor: pointer; white-space: nowrap;
   font-family: 'Space Grotesk', sans-serif;
@@ -2847,7 +2847,7 @@ h3 { font-size: 1.15rem; }
 }
 .hero-lock-overlay.show { display: flex; }
 .hero-lock-overlay .lock-icon { font-size: 1.2rem; }
-.hero-lock-overlay .lock-label { font-size: .62rem; color: #ff3f34; font-weight: 600; letter-spacing: .06em; }
+.hero-lock-overlay .lock-label { font-size: .62rem; color: #ee2f1d; font-weight: 600; letter-spacing: .06em; }
 
 .table-blur-wrap { position: relative; overflow-x: auto; -webkit-overflow-scrolling: touch; }
 .table-blur-wrap table { min-width: 560px; }
@@ -2860,7 +2860,7 @@ h3 { font-size: 1.15rem; }
 .table-blur-mask .upgrade-msg { font-size: .72rem; color: var(--sl-muted); }
 .table-blur-mask .upgrade-btn {
   background: rgba(255,63,52,.15); border: 1px solid rgba(255,63,52,.35); border-radius: 6px;
-  color: #ff3f34; font-size: .72rem; font-weight: 600; padding: 5px 16px; cursor: pointer;
+  color: #ee2f1d; font-size: .72rem; font-weight: 600; padding: 5px 16px; cursor: pointer;
   font-family: 'Space Grotesk', sans-serif;
 }
 .table-blur-mask .upgrade-btn:hover { background: rgba(255,63,52,.28); }
@@ -2889,11 +2889,11 @@ html.starter-mode .hero-lock-wrap       { display: none !important; }
   padding: .3rem 1rem; border-radius: 999px; margin-bottom: 1.4rem;
   border: 1px solid transparent;
   background: linear-gradient(var(--sl-bg),var(--sl-bg)) padding-box,
-              linear-gradient(90deg,#ff3f34,#ff4a26) border-box;
+              linear-gradient(90deg,#ee2f1d,#ff4b33) border-box;
   font-family: 'DM Mono', monospace; font-size: .58rem; letter-spacing: .14em;
   text-transform: uppercase; color: var(--sl-muted);
 }
-.sgp-badge::before { content:''; width:5px;height:5px;border-radius:50%;background:linear-gradient(135deg,#ff3f34,#ff4a26);flex-shrink:0; }
+.sgp-badge::before { content:''; width:5px;height:5px;border-radius:50%;background:linear-gradient(135deg,#ee2f1d,#ff4b33);flex-shrink:0; }
 .sgp-title {
   font-size: clamp(1.6rem,4vw,2.4rem); font-weight: 700; line-height: 1.1;
   letter-spacing: -.02em; color: var(--sl-text); margin-bottom: .7rem;
@@ -2914,10 +2914,10 @@ html.starter-mode .hero-lock-wrap       { display: none !important; }
 }
 .sgp-plan::before {
   content:''; position:absolute; inset:0 0 auto; height:2px;
-  background:linear-gradient(90deg,#ff3f34,#ff4a26 50%,#ff4a26,transparent 85%);
+  background:linear-gradient(90deg,#ee2f1d,#ff4b33 50%,#ff4b33,transparent 85%);
 }
 .sgp-plan:hover { border-color: rgba(255,63,52,.38); box-shadow: 0 8px 28px rgba(255,63,52,.14); }
-.sgp-tier { font-family:'DM Mono',monospace; font-size:.56rem; letter-spacing:.18em; text-transform:uppercase; color:#ff3f34; margin-bottom:.5rem; font-weight:500; }
+.sgp-tier { font-family:'DM Mono',monospace; font-size:.56rem; letter-spacing:.18em; text-transform:uppercase; color:#ee2f1d; margin-bottom:.5rem; font-weight:500; }
 .sgp-price { font-size:1.8rem; font-weight:700; color:var(--sl-text); line-height:1; margin-bottom:.1rem; }
 .sgp-price span { font-size:.72rem; color:var(--sl-muted); font-weight:400; }
 .sgp-features { list-style:none; margin:.9rem 0 1.2rem; display:flex; flex-direction:column; gap:.4rem; }
@@ -2930,16 +2930,16 @@ html.starter-mode .hero-lock-wrap       { display: none !important; }
 .sgp-btn {
   display:block; text-align:center; text-decoration:none;
   background:rgba(255,63,52,.15); border:1px solid rgba(255,63,52,.35); border-radius:10px;
-  color:#ff3f34; font-size:.82rem; font-weight:700; padding:.65rem 1rem; cursor:pointer;
+  color:#ee2f1d; font-size:.82rem; font-weight:700; padding:.65rem 1rem; cursor:pointer;
   font-family:'Space Grotesk',sans-serif; transition:background .15s,border-color .15s;
 }
 .sgp-btn:hover { background:rgba(255,63,52,.25); border-color:rgba(255,63,52,.55); }
 .sgp-btn-pro {
-  background:linear-gradient(135deg,#ff3f34 0%,#ff4a26 50%,#ff4a26 100%);
+  background:linear-gradient(135deg,#ee2f1d 0%,#ff4b33 50%,#ff4b33 100%);
   border-color:transparent; color:#fff;
   box-shadow:0 4px 20px rgba(255,63,52,.3);
 }
-.sgp-btn-pro:hover { filter:brightness(1.08); background:linear-gradient(135deg,#ff3f34 0%,#ff4a26 50%,#ff4a26 100%); border-color:transparent; }
+.sgp-btn-pro:hover { filter:brightness(1.08); background:linear-gradient(135deg,#ee2f1d 0%,#ff4b33 50%,#ff4b33 100%); border-color:transparent; }
 @media(max-width:520px){ .sgp-plans{grid-template-columns:1fr} }
 .sgp-mini-stats {
   display: flex; gap: 0; margin-bottom: 2rem;
@@ -3097,7 +3097,7 @@ html.starter-mode .hero-lock-wrap       { display: none !important; }
   font-size: 1.1rem !important;
   font-weight: 700 !important;
   letter-spacing: .14em !important;
-  background: linear-gradient(90deg,#ff3f34 0%,#ff4a26 35%,#ff4a26 72%,#ff6a45 100%) !important;
+  background: linear-gradient(90deg,#ee2f1d 0%,#ff4b33 35%,#ff4b33 72%,#ff5334 100%) !important;
   background-size: 200% auto !important;
   -webkit-background-clip: text !important;
   -webkit-text-fill-color: transparent !important;
@@ -3112,7 +3112,7 @@ html.starter-mode .hero-lock-wrap       { display: none !important; }
 .brand-mark { display: block; width: auto; flex-shrink: 0; }
 .logo .brand-mark { height: 24px; width: 24px; margin-right: .55rem; }
 .logo .brand-text {
-  background: linear-gradient(90deg,#ff3f34 0%,#ff4a26 35%,#ff4a26 72%,#ff6a45 100%);
+  background: linear-gradient(90deg,#ee2f1d 0%,#ff4b33 35%,#ff4b33 72%,#ff5334 100%);
   background-size: 200% auto;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -3146,7 +3146,7 @@ html.starter-mode .hero-lock-wrap       { display: none !important; }
   align-items: center;
 }
 .nav-tab-link:hover {
-  background: linear-gradient(90deg,#ff3f34 0%,#ff4a26 35%,#ff4a26 72%,#ff6a45 100%);
+  background: linear-gradient(90deg,#ee2f1d 0%,#ff4b33 35%,#ff4b33 72%,#ff5334 100%);
   background-size: 200% auto;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -3154,13 +3154,13 @@ html.starter-mode .hero-lock-wrap       { display: none !important; }
   animation: brandSlide 4s linear infinite;
 }
 .nav-tab-link-active {
-  background: linear-gradient(90deg,#ff3f34 0%,#ff4a26 35%,#ff4a26 72%,#ff6a45 100%) !important;
+  background: linear-gradient(90deg,#ee2f1d 0%,#ff4b33 35%,#ff4b33 72%,#ff5334 100%) !important;
   background-size: 200% auto !important;
   -webkit-background-clip: text !important;
   -webkit-text-fill-color: transparent !important;
   background-clip: text !important;
   animation: brandSlide 4s linear infinite !important;
-  border-bottom-color: #ff3f34 !important;
+  border-bottom-color: #ee2f1d !important;
 }
 
 /* ── Mobile overhaul ── */
@@ -3393,7 +3393,7 @@ html.starter-mode .hero-lock-wrap       { display: none !important; }
           <span id="workspace-clock">—</span>
         </div>
         <div class="workspace-wordmark-wrap">
-          <span style="font-family:'Space Grotesk',sans-serif;font-size:clamp(1.6rem,3.2vw,2.4rem);font-weight:800;letter-spacing:.18em;text-transform:uppercase;background:linear-gradient(90deg,#ff3f34 0%,#ff4a26 35%,#ff4a26 72%,#ff6a45 100%);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:brandSlide 4s linear infinite;">SPECTRE</span>
+          <span style="font-family:'Space Grotesk',sans-serif;font-size:clamp(1.6rem,3.2vw,2.4rem);font-weight:800;letter-spacing:.18em;text-transform:uppercase;background:linear-gradient(90deg,#ee2f1d 0%,#ff4b33 35%,#ff4b33 72%,#ff5334 100%);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:brandSlide 4s linear infinite;">SPECTRE</span>
         </div>
         <h1 class="workspace-title">Ask your portfolio <span class="gradient">anything.</span></h1>
         <p class="workspace-sub">Grounded in your live holdings, real-time market data, and risk metrics.</p>
@@ -3606,15 +3606,15 @@ html.starter-mode .hero-lock-wrap       { display: none !important; }
           <line x1="0" y1="60" x2="900" y2="60" stroke="#ffffff08" stroke-width="1"/>
           <line x1="0" y1="120" x2="900" y2="120" stroke="#ffffff08" stroke-width="1"/>
           <line x1="0" y1="180" x2="900" y2="180" stroke="#ffffff08" stroke-width="1"/>
-          <text id="chart-label-0" x="8" y="55" fill="#a2a2ab" font-size="10" font-family="DM Mono"></text>
-          <text id="chart-label-1" x="8" y="115" fill="#a2a2ab" font-size="10" font-family="DM Mono"></text>
-          <text id="chart-label-2" x="8" y="175" fill="#a2a2ab" font-size="10" font-family="DM Mono"></text>
+          <text id="chart-label-0" x="8" y="55" fill="#a1a1aa" font-size="10" font-family="DM Mono"></text>
+          <text id="chart-label-1" x="8" y="115" fill="#a1a1aa" font-size="10" font-family="DM Mono"></text>
+          <text id="chart-label-2" x="8" y="175" fill="#a1a1aa" font-size="10" font-family="DM Mono"></text>
           <g id="chart-time-labels"></g>
           <path id="chart-area" fill="url(#chart-fill)"/>
           <path id="chart-line" fill="none" stroke="#ff6a52" stroke-width="2.5" stroke-linecap="round"/>
           <circle id="chart-dot-outer" r="8" fill="#ff6a52" opacity="0.3"/>
           <circle id="chart-dot-inner" r="4" fill="#ff6a52"/>
-          <text id="chart-loading" x="450" y="125" fill="#a2a2ab" font-size="13" font-family="DM Mono" text-anchor="middle">Loading chart…</text>
+          <text id="chart-loading" x="450" y="125" fill="#a1a1aa" font-size="13" font-family="DM Mono" text-anchor="middle">Loading chart…</text>
         </svg>
       </div>
 
@@ -5043,7 +5043,7 @@ const TAG_COLORS = {
   'fed':        ['rgba(239,68,68,0.18)',    '#f87171'],
   'commodities':['rgba(255,181,71,0.18)',   '#ffb547'],
   'macro':      ['rgba(139,92,246,0.18)',   '#ff6a52'],
-  'default':    ['rgba(138,134,168,0.18)',  '#a2a2ab'],
+  'default':    ['rgba(138,134,168,0.18)',  '#a1a1aa'],
 };
 function tagStyle(tag) {
   const key = (tag || '').toLowerCase().trim();
@@ -5193,21 +5193,21 @@ function buildSectorBars() {
   if (!sorted.length) return;
   const max = sorted[0][1];
   const colors = {
-    'Financials':    'linear-gradient(90deg, #ff3f34, #ff9d8a)',
-    'Materials':     'linear-gradient(90deg, #ff5c38, #ff9d8a)',
-    'Consumer':      'linear-gradient(90deg, #ff4a26, #ff3f34)',
-    'Energy':        'linear-gradient(90deg, #ff4a26, #ff6a45)',
+    'Financials':    'linear-gradient(90deg, #ee2f1d, #ff9d8a)',
+    'Materials':     'linear-gradient(90deg, #ff5334, #ff9d8a)',
+    'Consumer':      'linear-gradient(90deg, #ff4b33, #ee2f1d)',
+    'Energy':        'linear-gradient(90deg, #ff4b33, #ff5334)',
     'Healthcare':    'linear-gradient(90deg, #5fb8ff, #818cf8)',
-    'Comms':         'linear-gradient(90deg, #ff5c38, #ff5c38)',
+    'Comms':         'linear-gradient(90deg, #ff5334, #ff5334)',
     'Real Estate':   'linear-gradient(90deg, #ff9d8a, #818cf8)',
-    'Industrials':   'linear-gradient(90deg, #818cf8, #ff3f34)',
-    'Technology':    'linear-gradient(90deg, #ff3f34, #ff4a26)',
+    'Industrials':   'linear-gradient(90deg, #818cf8, #ee2f1d)',
+    'Technology':    'linear-gradient(90deg, #ee2f1d, #ff4b33)',
     'Utilities':     'linear-gradient(90deg, #6366f1, #818cf8)',
   };
   const container = document.getElementById('sectorBars');
   container.innerHTML = sorted.map(([name, cap]) => {
     const pct = (cap / max) * 100;
-    const bg = colors[name] || 'linear-gradient(90deg, #a2a2ab, #ff5c38)';
+    const bg = colors[name] || 'linear-gradient(90deg, #a1a1aa, #ff5334)';
     return `<div class="sector-bar-item">
       <span class="sector-bar-name">${name}</span>
       <div class="sector-bar-track"><div class="sector-bar-fill" style="background:${bg};" data-width="${pct}"></div></div>
@@ -5325,7 +5325,7 @@ function renderChart(data) {
       }
       const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
       t.setAttribute('x', x.toFixed(1)); t.setAttribute('y', H - 2);
-      t.setAttribute('fill', '#a2a2ab60'); t.setAttribute('font-size', '9');
+      t.setAttribute('fill', '#a1a1aa60'); t.setAttribute('font-size', '9');
       t.setAttribute('font-family', 'DM Mono'); t.setAttribute('text-anchor', 'middle');
       t.textContent = label;
       tlGroup.appendChild(t);
@@ -5569,7 +5569,7 @@ async function fetchLiveQuotes() {
     if (statusEl) {
       const dot = statusEl.querySelector('.status-dot');
       if (state.demoMode) {
-        if (dot) { dot.style.background = '#ff3f34'; dot.style.boxShadow = '0 0 6px #ff3f34'; }
+        if (dot) { dot.style.background = '#ee2f1d'; dot.style.boxShadow = '0 0 6px #ee2f1d'; }
         statusEl.style.background = 'rgba(255,63,52,0.1)';
         statusEl.style.borderColor = 'rgba(255,63,52,0.2)';
         statusEl.style.color = '#ff9d8a';
@@ -6114,7 +6114,7 @@ function setChartEmpty(canvasId, message, compactHeight) {
     if (compactHeight) wrap.style.height = `${compactHeight}px`;
   }
   const { ctx, width, height } = setupCanvas(canvas);
-  ctx.fillStyle = '#a2a2ab';
+  ctx.fillStyle = '#a1a1aa';
   ctx.font = '11px "DM Mono", monospace';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
@@ -6321,13 +6321,13 @@ function drawFallbackLineChart(canvasId, labels, values, color, options) {
   ctx.lineWidth = 1;
   ctx.fill();
   ctx.stroke();
-  ctx.fillStyle = '#f2f2f5';
+  ctx.fillStyle = '#f4f4f5';
   ctx.textBaseline = 'middle';
   ctx.fillText(badgeText, badgeX + 8, badgeY + badgeH / 2);
   ctx.textBaseline = 'alphabetic';
 
   ctx.font = '10px "DM Mono", monospace';
-  ctx.fillStyle = '#a2a2ab';
+  ctx.fillStyle = '#a1a1aa';
   const tickCount = Math.min(labels.length, 4);
   for (let i = 0; i < tickCount; i++) {
     const idx = Math.round(i * (labels.length - 1) / Math.max(tickCount - 1, 1));
@@ -6361,9 +6361,9 @@ function drawFallbackBarChart(canvasId, labels, values, colors) {
     ctx.fillStyle = colors[index] || 'rgba(255,106,82,0.75)';
     ctx.fillRect(x, y, barWidth, barHeight);
 
-    ctx.fillStyle = '#f2f2f5';
+    ctx.fillStyle = '#f4f4f5';
     ctx.fillText(label, 10, y + barHeight - 2);
-    ctx.fillStyle = '#a2a2ab';
+    ctx.fillStyle = '#a1a1aa';
     ctx.fillText(`${value >= 0 ? '+' : ''}${value.toFixed(1)}%`, value >= 0 ? x + barWidth + 6 : x - 38, y + barHeight - 2);
   });
 }
@@ -6389,7 +6389,7 @@ function drawFallbackCompareBarChart(canvasId, labels, estimateValues, actualVal
     ctx.fillRect(baseX, height - pad.bottom - estHeight, barWidth, estHeight);
     ctx.fillStyle = 'rgba(255,157,138,0.8)';
     ctx.fillRect(baseX + barWidth + 4, height - pad.bottom - actHeight, barWidth, actHeight);
-    ctx.fillStyle = '#a2a2ab';
+    ctx.fillStyle = '#a1a1aa';
     ctx.font = '9px "DM Mono", monospace';
     ctx.fillText(label.split(' ')[0], baseX, height - 6);
   });
@@ -6488,7 +6488,7 @@ function makeCjsLineChart(canvasId, labels, values, color, label, options) {
       drawCtx.lineWidth = 1;
       drawCtx.fill();
       drawCtx.stroke();
-      drawCtx.fillStyle = '#f2f2f5';
+      drawCtx.fillStyle = '#f4f4f5';
       drawCtx.textBaseline = 'middle';
       drawCtx.fillText(text, boxX + 8, boxY + boxH / 2);
       drawCtx.restore();
@@ -6529,8 +6529,8 @@ function makeCjsLineChart(canvasId, labels, values, color, label, options) {
           backgroundColor: 'rgba(10,7,20,0.96)',
           borderColor: 'rgba(255,106,82,0.25)',
           borderWidth: 1,
-          titleColor: '#a2a2ab',
-          bodyColor: '#f2f2f5',
+          titleColor: '#a1a1aa',
+          bodyColor: '#f4f4f5',
           padding: 10,
           titleFont: { family: 'DM Mono', size: 10 },
           bodyFont: { family: 'DM Mono', size: 12, weight: '500' },
@@ -6608,8 +6608,8 @@ function makeCjsBarChart(canvasId, labels, values, colors) {
           backgroundColor: 'rgba(14,10,24,0.95)',
           borderColor: 'rgba(255,255,255,0.1)',
           borderWidth: 1,
-          titleColor: '#a2a2ab',
-          bodyColor: '#f2f2f5',
+          titleColor: '#a1a1aa',
+          bodyColor: '#f4f4f5',
           titleFont: { family: 'DM Mono', size: 10 },
           bodyFont: { family: 'DM Mono', size: 12 },
           callbacks: { label: ctx => ' ' + (ctx.parsed.x >= 0 ? '+' : '') + ctx.parsed.x.toFixed(2) + '%' },
@@ -6619,13 +6619,13 @@ function makeCjsBarChart(canvasId, labels, values, colors) {
         x: {
           display: true,
           grid: { color: 'rgba(255,255,255,0.04)' },
-          ticks: { color: '#a2a2ab', font: { family: 'DM Mono', size: 9 }, callback: v => (v>=0?'+':'') + v.toFixed(1)+'%' },
+          ticks: { color: '#a1a1aa', font: { family: 'DM Mono', size: 9 }, callback: v => (v>=0?'+':'') + v.toFixed(1)+'%' },
           border: { display: false },
         },
         y: {
           display: true,
           grid: { display: false },
-          ticks: { color: '#f2f2f5', font: { family: 'DM Mono', size: 10 } },
+          ticks: { color: '#f4f4f5', font: { family: 'DM Mono', size: 10 } },
           border: { display: false },
         },
       },
@@ -6673,7 +6673,7 @@ function makeCjsCompareBarChart(canvasId, labels, estimateValues, actualValues) 
       plugins: {
         legend: {
           labels: {
-            color: '#f2f2f5',
+            color: '#f4f4f5',
             font: { family: 'DM Mono', size: 10 },
           },
         },
@@ -6681,20 +6681,20 @@ function makeCjsCompareBarChart(canvasId, labels, estimateValues, actualValues) 
           backgroundColor: 'rgba(14,10,24,0.95)',
           borderColor: 'rgba(255,255,255,0.1)',
           borderWidth: 1,
-          titleColor: '#a2a2ab',
-          bodyColor: '#f2f2f5',
+          titleColor: '#a1a1aa',
+          bodyColor: '#f4f4f5',
           titleFont: { family: 'DM Mono', size: 10 },
           bodyFont: { family: 'DM Mono', size: 12 },
         },
       },
       scales: {
         x: {
-          ticks: { color: '#a2a2ab', font: { family: 'DM Mono', size: 9 }, maxRotation: 0 },
+          ticks: { color: '#a1a1aa', font: { family: 'DM Mono', size: 9 }, maxRotation: 0 },
           grid: { display: false },
           border: { display: false },
         },
         y: {
-          ticks: { color: '#a2a2ab', font: { family: 'DM Mono', size: 9 } },
+          ticks: { color: '#a1a1aa', font: { family: 'DM Mono', size: 9 } },
           grid: { color: 'rgba(255,255,255,0.04)' },
           border: { display: false },
         },

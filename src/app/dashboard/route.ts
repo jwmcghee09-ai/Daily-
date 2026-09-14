@@ -39,13 +39,13 @@ const MYRMIDON_AI_TERMINAL = `<!-- MYRMIDON AI terminal (embeds /terminal) -->
 
 const MYRMIDON_ANALYTICS_HTML = `<!-- MYRMIDON ANALYTICS PAGE -->
 <style>
-.myrm-stat-card{background:#1e1e22;border:1px solid rgba(255,106,82,.22);border-radius:10px;padding:1.2rem}
+.myrm-stat-card{background:#111114;border:1px solid rgba(255,106,82,.22);border-radius:10px;padding:1.2rem}
 .myrm-stat-label{font-family:monospace;font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,157,138,.8);margin-bottom:.4rem}
 .myrm-stat-value{font-family:monospace;font-size:1.3rem;font-weight:600;color:#fff;margin-bottom:.2rem;line-height:1.2}
 .myrm-stat-sub{font-family:monospace;font-size:.62rem;color:rgba(255,157,138,.65)}
-.myrm-dark-card{background:#1e1e22;border:1px solid rgba(255,106,82,.22);border-radius:10px;padding:1.2rem;margin-bottom:1.2rem}
+.myrm-dark-card{background:#111114;border:1px solid rgba(255,106,82,.22);border-radius:10px;padding:1.2rem;margin-bottom:1.2rem}
 .myrm-section-label{font-family:monospace;font-size:.55rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,157,138,.85);margin-bottom:.9rem;display:flex;align-items:center;gap:.5rem}
-.myrm-section-label::before{content:'';display:block;width:14px;height:1px;background:linear-gradient(90deg,#ff4a26,#ff5c38);flex-shrink:0}
+.myrm-section-label::before{content:'';display:block;width:14px;height:1px;background:linear-gradient(90deg,#ff4b33,#ff5334);flex-shrink:0}
 .myrm-table{width:100%;border-collapse:collapse;font-size:.78rem}
 .myrm-table th{text-align:left;padding:.45rem .6rem;font-family:monospace;font-size:.52rem;letter-spacing:.1em;color:rgba(255,157,138,.7);font-weight:600;text-transform:uppercase;border-bottom:1px solid rgba(255,106,82,.12)}
 .myrm-table td{padding:.5rem .6rem;border-bottom:1px solid rgba(255,106,82,.06);vertical-align:middle}
@@ -53,14 +53,14 @@ const MYRMIDON_ANALYTICS_HTML = `<!-- MYRMIDON ANALYTICS PAGE -->
 .myrm-table tr:hover td{background:rgba(255,106,82,.04)}
 .myrm-pos{color:#4ade80}.myrm-neg{color:#f87171}.myrm-amb{color:#ff6a52}.myrm-ora{color:#ff7a30}.myrm-cyn{color:#5fb8ff}
 /* macro ticker */
-.myrm-macro-bar{display:flex;flex-wrap:wrap;gap:0;border:1px solid rgba(255,106,82,.15);border-radius:10px;overflow:hidden;margin-bottom:1rem;background:rgba(10,10,18,.8)}
+.myrm-macro-bar{display:flex;flex-wrap:wrap;gap:0;border:1px solid rgba(255,106,82,.15);border-radius:10px;overflow:hidden;margin-bottom:1rem;background:#111114}
 .myrm-mkt{display:flex;align-items:center;gap:.5rem;padding:.6rem 1rem;border-right:1px solid rgba(255,106,82,.1);flex:1;min-width:90px}
 .myrm-mkt:last-child{border-right:none}
 .myrm-mkt-sym{font-family:monospace;font-size:.52rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,106,82,.45)}
 .myrm-mkt-val{font-family:monospace;font-size:.82rem;font-weight:600;color:#fff}
 .myrm-mkt-chg{font-family:monospace;font-size:.6rem}
 /* risk signals */
-.myrm-risk-bar{display:flex;flex-wrap:wrap;gap:.4rem;padding:.75rem 1rem;border:1px solid rgba(255,106,82,.22);border-radius:10px;margin-bottom:1rem;background:#1e1e22;align-items:center}
+.myrm-risk-bar{display:flex;flex-wrap:wrap;gap:.4rem;padding:.75rem 1rem;border:1px solid rgba(255,106,82,.22);border-radius:10px;margin-bottom:1rem;background:#111114;align-items:center}
 .myrm-risk-lbl{font-family:monospace;font-size:.52rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,157,138,.6);flex-shrink:0;margin-right:.2rem}
 .myrm-sig{font-family:monospace;font-size:.6rem;padding:.2rem .7rem;border-radius:3px;border:1px solid;white-space:nowrap}
 .myrm-sig-ok{color:#4ade80;border-color:rgba(74,222,128,.35);background:rgba(74,222,128,.1)}
@@ -72,7 +72,7 @@ const MYRMIDON_ANALYTICS_HTML = `<!-- MYRMIDON ANALYTICS PAGE -->
     <div style="padding:.5rem 0 1.5rem;display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:.8rem">
       <div>
         <div id="myrm-feed-label" style="font-family:monospace;font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:#ff6a52;margin-bottom:.4rem">Myrmidon · Portfolio Analytics</div>
-        <h2 style="font-family:var(--disp);font-size:clamp(1.6rem,3vw,2.6rem);margin:0;background:linear-gradient(120deg,#ff3f34 0%,#ff4a26 35%,#ff4a26 72%,#ff6a45 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Analytics</h2>
+        <h2 style="font-family:var(--disp);font-size:clamp(1.6rem,3vw,2.6rem);margin:0;background:linear-gradient(120deg,#ee2f1d 0%,#ff4b33 35%,#ff4b33 72%,#ff5334 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Analytics</h2>
         <div id="myrm-api-status" style="font-family:monospace;font-size:.58rem;color:#ff7a30;margin-top:.4rem;min-height:1em">⚙ Initialising…</div>
       </div>
       <div style="display:flex;align-items:center;gap:.6rem">

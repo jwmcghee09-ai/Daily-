@@ -14,31 +14,31 @@ const HTML = `<!DOCTYPE html>
   <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:#121214;color:#e6e4f2;font-family:'Courier New',Courier,monospace;font-size:14px;min-height:100vh}
+body{background:#050405;color:#e6e4f2;font-family:'Courier New',Courier,monospace;font-size:14px;min-height:100vh}
 a{color:inherit;text-decoration:none}
 
-#topbar{background:#1b1b1e;border-bottom:2px solid #ff6a52;padding:10px 22px;display:flex;align-items:center;gap:18px;font-size:12px;color:#666;position:sticky;top:0;z-index:10}
+#topbar{background:#0b0b0d;border-bottom:2px solid #ff6a52;padding:10px 22px;display:flex;align-items:center;gap:18px;font-size:12px;color:#666;position:sticky;top:0;z-index:10}
 #topbar .right{margin-left:auto;display:flex;gap:14px;align-items:center}
-.tblink{color:#ff6a52;border:1px solid #35353c;border-radius:4px;padding:5px 12px;font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+.tblink{color:#ff6a52;border:1px solid #26262b;border-radius:4px;padding:5px 12px;font-size:11px;letter-spacing:.06em;text-transform:uppercase}
 .tblink:hover{border-color:#ff6a52}
 
 .brand-mark{display:block;width:20px;height:20px;flex-shrink:0}
-#titlebar{background:linear-gradient(90deg,#ff3f34 0%,#ff4a26 35%,#ff4a26 72%,#ff6a45 100%);color:#fff;padding:10px 22px;font-weight:bold;font-size:16px;letter-spacing:.06em;display:flex;justify-content:space-between;align-items:center}
+#titlebar{background:linear-gradient(90deg,#ee2f1d 0%,#ff4b33 35%,#ff4b33 72%,#ff5334 100%);color:#fff;padding:10px 22px;font-weight:bold;font-size:16px;letter-spacing:.06em;display:flex;justify-content:space-between;align-items:center}
 
 .spill{font-size:10px;padding:3px 10px;border-radius:3px;border:1px solid;text-transform:uppercase;letter-spacing:.05em;font-weight:bold}
 .spill-on{color:#00e676;border-color:#003300;background:#010800}
-.spill-off{color:#777;border-color:#333;background:#141416}
+.spill-off{color:#777;border-color:#333;background:#050405}
 .spill-auto{color:#ff4444;border-color:#3a0000;background:#0d0000}
 
 #wrap{max-width:1280px;margin:0 auto;padding:26px 22px 60px;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:24px;align-items:start}
 @media(max-width:980px){#wrap{grid-template-columns:1fr}}
 
-.card{background:#1b1b1e;border:1px solid #35353c;border-radius:10px;overflow:hidden;margin-bottom:24px}
-.card-h{background:#1e1e22;border-bottom:1px solid #2a2a2e;padding:12px 18px;color:#ff6a52;font-size:11px;letter-spacing:.14em;text-transform:uppercase;display:flex;align-items:center;justify-content:space-between}
+.card{background:#0b0b0d;border:1px solid #26262b;border-radius:10px;overflow:hidden;margin-bottom:24px}
+.card-h{background:#111114;border-bottom:1px solid #1f1f23;padding:12px 18px;color:#ff6a52;font-size:11px;letter-spacing:.14em;text-transform:uppercase;display:flex;align-items:center;justify-content:space-between}
 .card-b{padding:18px}
 
 .sbanner{border:1px solid;border-radius:6px;padding:12px 15px;font-size:12.5px;line-height:1.65;margin-bottom:18px}
-.sbanner-off{border-color:#35353c;background:#1b1b1e;color:#999}
+.sbanner-off{border-color:#26262b;background:#0b0b0d;color:#999}
 .sbanner-on{border-color:#003300;background:#010800;color:#00e676}
 .sbanner-auto{border-color:#3a0000;background:#0d0000;color:#ff4444}
 
@@ -48,7 +48,7 @@ a{color:inherit;text-decoration:none}
 
 .mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 @media(max-width:560px){.mode-grid{grid-template-columns:1fr}}
-.mode-card{border:1px solid #35353c;border-radius:8px;padding:13px 14px;cursor:pointer;background:#141416;transition:border-color .12s}
+.mode-card{border:1px solid #26262b;border-radius:8px;padding:13px 14px;cursor:pointer;background:#050405;transition:border-color .12s}
 .mode-card:hover{border-color:#4a4478}
 .mode-card.sel{border-color:#ff6a52;background:#2a201d;box-shadow:0 0 0 1px #ff6a52 inset}
 .mode-name{font-size:13px;font-weight:bold;color:#e6e4f2;margin-bottom:5px;letter-spacing:.04em}
@@ -56,19 +56,19 @@ a{color:inherit;text-decoration:none}
 .mode-desc{font-size:11px;line-height:1.55;color:#888}
 
 #custom-wrap{display:none;margin-top:10px}
-#custom-prompt{width:100%;background:#141416;border:1px solid #35353c;border-radius:6px;color:#e6e4f2;font-family:'Courier New',monospace;font-size:13px;padding:11px 13px;resize:vertical;min-height:90px;outline:none;line-height:1.6}
+#custom-prompt{width:100%;background:#050405;border:1px solid #26262b;border-radius:6px;color:#e6e4f2;font-family:'Courier New',monospace;font-size:13px;padding:11px 13px;resize:vertical;min-height:90px;outline:none;line-height:1.6}
 #custom-prompt:focus{border-color:#ff6a52}
 
 .seg{display:flex;gap:8px;flex-wrap:wrap}
-.seg-btn{border:1px solid #35353c;border-radius:6px;background:#141416;color:#999;font-family:'Courier New',monospace;font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;padding:9px 16px;cursor:pointer}
+.seg-btn{border:1px solid #26262b;border-radius:6px;background:#050405;color:#999;font-family:'Courier New',monospace;font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;padding:9px 16px;cursor:pointer}
 .seg-btn.sel{border-color:#ff6a52;color:#ffb3a6;background:#2a201d}
 .seg-note{font-size:11px;color:#777;margin-top:8px;line-height:1.5}
 
 .lim-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
 .lim label{display:block;color:#777;font-size:10px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
-.lim input{width:100%;background:#141416;border:1px solid #35353c;border-radius:6px;color:#e6e4f2;font-family:'Courier New',monospace;font-size:13px;padding:9px 11px;outline:none}
+.lim input{width:100%;background:#050405;border:1px solid #26262b;border-radius:6px;color:#e6e4f2;font-family:'Courier New',monospace;font-size:13px;padding:9px 11px;outline:none}
 .lim input:focus{border-color:#ff6a52}
-.lim-note{font-size:11px;color:#666;margin-top:12px;line-height:1.6;border-top:1px solid #2a2a2e;padding-top:10px}
+.lim-note{font-size:11px;color:#666;margin-top:12px;line-height:1.6;border-top:1px solid #1f1f23;padding-top:10px}
 .lim-note b{color:#999}
 
 .arm-row{display:flex;gap:22px;flex-wrap:wrap;margin-bottom:16px}
@@ -78,7 +78,7 @@ a{color:inherit;text-decoration:none}
 
 .btn{border-radius:6px;font-family:'Courier New',monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase;padding:11px 22px;cursor:pointer;border:1px solid}
 .btn-save{background:#2a2220;border-color:#ff6a52;color:#ffb3a6}
-.btn-save:hover{background:#2e2e34}
+.btn-save:hover{background:#1f1f23}
 .btn-run{background:#041505;border-color:#00e676;color:#00e676}
 .btn-run:hover{background:#0a2510}
 .btn:disabled{opacity:.4;cursor:default}
@@ -86,18 +86,18 @@ a{color:inherit;text-decoration:none}
 .btn-danger{background:#150404;border-color:#ff4444;color:#ff4444}
 #save-msg{font-size:12px;color:#888;align-self:center}
 
-.ptrade{border:1px solid #35353c;border-radius:8px;padding:13px 15px;margin-bottom:12px;background:#141416}
+.ptrade{border:1px solid #26262b;border-radius:8px;padding:13px 15px;margin-bottom:12px;background:#050405}
 .ptrade-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
 .pos{color:#00e676}.neg{color:#ff4444}.cyn{color:#5fb8ff}
 .ptrade-reason{color:#888;font-size:12px;line-height:1.55;margin-bottom:10px}
 
 .srun{border-bottom:1px solid #262322;padding:11px 0;cursor:pointer;line-height:1.55;font-size:12.5px}
 .srun:last-child{border-bottom:none}
-.srun:hover{background:#1b1b1e}
+.srun:hover{background:#0b0b0d}
 .srun-exp{display:none;font-size:12px;color:#999;white-space:pre-wrap;word-break:break-word;padding:9px 4px 3px;line-height:1.6}
 .dim{color:#555}
 .empty{color:#444;font-style:italic;font-size:12px;padding:8px 0}
-::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:#141416}::-webkit-scrollbar-thumb{background:#2a2a2e}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:#050405}::-webkit-scrollbar-thumb{background:#1f1f23}
 </style>
 </head>
 <body>
@@ -169,7 +169,7 @@ a{color:inherit;text-decoration:none}
         Each run, Myrmidon pulls your live account, positions, open orders and risk signals, then asks the AI what — if anything — your strategy calls for.
         Every proposal passes through the safety limits above <span style="color:#ffb3a6">in code</span>; anything that violates them is rejected and logged with the reason.
         With AUTOPILOT off, accepted trades queue for <span style="color:#ffb3a6">5 minutes</span> so you can cancel, then fire on the next run.
-        Schedule runs by pointing a cron at <span style="color:#5fb8ff">/api/internal/ops/strategy-run</span> with your cron token, or press ▶ Run now anytime.<div style="margin-top:12px;border-top:1px solid #2a2a2e;padding-top:10px;font-size:11px;color:#666;line-height:1.7">You write the strategy; Myrmidon executes your instructions within the hard safety limits. Nothing here is financial advice or a recommendation — strategy outcomes are your responsibility. This is a paper trading account.</div>
+        Schedule runs by pointing a cron at <span style="color:#5fb8ff">/api/internal/ops/strategy-run</span> with your cron token, or press ▶ Run now anytime.<div style="margin-top:12px;border-top:1px solid #1f1f23;padding-top:10px;font-size:11px;color:#666;line-height:1.7">You write the strategy; Myrmidon executes your instructions within the hard safety limits. Nothing here is financial advice or a recommendation — strategy outcomes are your responsibility. This is a paper trading account.</div>
       </div>
     </div>
   </div>

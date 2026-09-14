@@ -8,8 +8,8 @@
   background:
     radial-gradient(ellipse 70% 50% at 50% -10%, rgba(255, 63, 52, 0.08) 0%, transparent 100%),
     radial-gradient(ellipse 40% 60% at 100% 80%, rgba(255, 122, 48, 0.05) 0%, transparent 60%),
-    #141416;
-  color: #f2f2f5;
+    #050405;
+  color: #f4f4f5;
   font-family: var(--font-geist-sans), "Avenir Next", sans-serif;
 }
 
@@ -19,7 +19,7 @@
   top: 0;
   z-index: 20;
   height: 56px;
-  border-bottom: 1px solid rgba(190, 190, 198, 0.13);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(23, 21, 20, 0.94);
   backdrop-filter: blur(28px) saturate(1.4);
   -webkit-backdrop-filter: blur(28px) saturate(1.4);
@@ -67,7 +67,7 @@
   font-size: 18px;
   font-weight: 700;
   letter-spacing: 0.14em;
-  background: linear-gradient(90deg, #ff3f34 0%, #ff4a26 35%, #ff4a26 72%, #ff6a45 100%);
+  background: linear-gradient(90deg, #ee2f1d 0%, #ff4b33 35%, #ff4b33 72%, #ff5334 100%);
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
@@ -117,7 +117,7 @@
   position: absolute;
   inset: 0 0 auto;
   height: 2px;
-  background: linear-gradient(90deg, #ff3f34, #ff4a26 40%, #ff4a26 70%, transparent);
+  background: linear-gradient(90deg, #ee2f1d, #ff4b33 40%, #ff4b33 70%, transparent);
 }
 
 /* ── Form card: dark, clean ── */
@@ -125,7 +125,7 @@
   position: relative;
   border: 1px solid rgba(190, 190, 198, 0.18);
   border-radius: 20px;
-  background: #1e1e22;
+  background: #111114;
   overflow: hidden;
   box-shadow: 0 8px 40px rgba(190, 190, 198, 0.09), 0 1px 0 rgba(190, 190, 198, 0.08);
 }
@@ -135,7 +135,7 @@
   position: absolute;
   inset: 0 0 auto;
   height: 2px;
-  background: linear-gradient(90deg, transparent, #ff3f34, #ff4a26 50%, #ff4a26, transparent);
+  background: linear-gradient(90deg, transparent, #ee2f1d, #ff4b33 50%, #ff4b33, transparent);
 }
 
 /* ── Side card content (dark text on dark bg = light text) ── */
@@ -148,7 +148,7 @@
   border: 1px solid transparent;
   background:
     linear-gradient(rgba(13, 10, 20, 1), rgba(13, 10, 20, 1)) padding-box,
-    linear-gradient(90deg, #ff3f34, #ff4a26) border-box;
+    linear-gradient(90deg, #ee2f1d, #ff4b33) border-box;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-size: 11px;
@@ -161,7 +161,7 @@
   width: 5px;
   height: 5px;
   border-radius: 999px;
-  background: linear-gradient(135deg, #ff3f34, #ff4a26);
+  background: linear-gradient(135deg, #ee2f1d, #ff4b33);
   flex-shrink: 0;
 }
 
@@ -172,18 +172,18 @@
   font-weight: 700;
   line-height: 1.1;
   letter-spacing: -0.03em;
-  color: #f2f2f5;
+  color: #f4f4f5;
 }
 
 .sideCard h1 span {
-  background: linear-gradient(90deg, #ff3f34, #ff4a26 42%, #ff4a26 82%, #ff6a45);
+  background: linear-gradient(90deg, #ee2f1d, #ff4b33 42%, #ff4b33 82%, #ff5334);
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
 }
 
 .sideCard > p {
-  color: #a2a2ab;
+  color: #a1a1aa;
   font-size: 14px;
   line-height: 1.7;
   margin-bottom: 0;
@@ -201,7 +201,7 @@
   gap: 10px;
   padding: 9px 0;
   border-bottom: 1px solid rgba(160, 100, 255, 0.1);
-  color: #a2a2ab;
+  color: #a1a1aa;
   font-size: 13.5px;
   line-height: 1.5;
 }
@@ -238,14 +238,14 @@
 }
 
 .sideMeta a {
-  color: #a2a2ab;
+  color: #a1a1aa;
   text-decoration: none;
   font-size: 12.5px;
   transition: color 0.15s;
 }
 
 .sideMeta a:hover {
-  color: #f2f2f5;
+  color: #f4f4f5;
 }
 
 /* ── Form card URL bar ── */
@@ -279,13 +279,13 @@
   border-radius: 999px;
   border: 1px solid transparent;
   background:
-    linear-gradient(#141416, #141416) padding-box,
-    linear-gradient(90deg, #ff3f34, #ff4a26) border-box;
+    linear-gradient(#050405, #050405) padding-box,
+    linear-gradient(90deg, #ee2f1d, #ff4b33) border-box;
   text-transform: uppercase;
   letter-spacing: 0.09em;
   font-size: 10.5px;
   font-weight: 700;
-  color: #a2a2ab;
+  color: #a1a1aa;
 }
 
 .sectionLabel::before {
@@ -293,7 +293,7 @@
   width: 5px;
   height: 5px;
   border-radius: 999px;
-  background: linear-gradient(135deg, #ff3f34, #ff4a26);
+  background: linear-gradient(135deg, #ee2f1d, #ff4b33);
   flex-shrink: 0;
 }
 
@@ -303,12 +303,12 @@
   font-size: 24px;
   font-weight: 700;
   letter-spacing: -0.02em;
-  color: #f2f2f5;
+  color: #f4f4f5;
 }
 
 .cardBody > p,
 .cardBody p {
-  color: #a2a2ab;
+  color: #a1a1aa;
   font-size: 14px;
   line-height: 1.6;
 }
@@ -353,7 +353,7 @@
 }
 
 .formGrid span {
-  color: #a2a2ab;
+  color: #a1a1aa;
   font-size: 13px;
   font-weight: 600;
 }
@@ -364,8 +364,8 @@
   padding: 0 14px;
   border: 1px solid rgba(190, 190, 198, 0.2);
   border-radius: 10px;
-  background: #1e1e22;
-  color: #f2f2f5;
+  background: #111114;
+  color: #f4f4f5;
   font-size: 15px;
   font-family: inherit;
   transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
@@ -377,7 +377,7 @@
 
 .formGrid input:focus {
   outline: 0;
-  background: #1e1e22;
+  background: #111114;
   border-color: rgba(255, 63, 52, 0.5);
   box-shadow: 0 0 0 3px rgba(255, 63, 52, 0.1);
 }
@@ -392,8 +392,8 @@
   padding: 0 16px;
   border: 1px solid rgba(190, 190, 198, 0.2);
   border-radius: 10px;
-  background: #1e1e22;
-  color: #a2a2ab;
+  background: #111114;
+  color: #a1a1aa;
   font-size: 13px;
   font-weight: 600;
   font-family: inherit;
@@ -403,8 +403,8 @@
 
 .toggleButton:hover {
   border-color: rgba(255, 63, 52, 0.4);
-  color: #f2f2f5;
-  background: #1e1e22;
+  color: #f4f4f5;
+  background: #111114;
 }
 
 /* ── Buttons ── */
@@ -432,7 +432,7 @@
 
 .primaryButton {
   color: #fff;
-  background: linear-gradient(135deg, #ff3f34 0%, #ff4a26 45%, #ff4a26 100%);
+  background: linear-gradient(135deg, #ee2f1d 0%, #ff4b33 45%, #ff4b33 100%);
   box-shadow: 0 4px 24px rgba(255, 122, 48, 0.35), 0 1px 0 rgba(255, 255, 255, 0.12) inset;
   border: none;
 }
@@ -443,19 +443,19 @@
 }
 
 .ghostButton {
-  border-color: rgba(190, 190, 198, 0.22);
-  color: #f2f2f5;
+  border-color: rgba(255, 255, 255, 0.14);
+  color: #f4f4f5;
   background: transparent;
 }
 
 .ghostButton:hover {
-  background: rgba(190, 190, 198, 0.05);
+  background: rgba(255, 255, 255, 0.04);
   border-color: rgba(190, 190, 198, 0.36);
 }
 
 .outlineButton {
-  border-color: rgba(190, 190, 198, 0.22);
-  color: #f2f2f5;
+  border-color: rgba(255, 255, 255, 0.14);
+  color: #f4f4f5;
   background: transparent;
 }
 
@@ -485,7 +485,7 @@
   border: 0;
   padding: 0;
   background: transparent;
-  color: #ff3f34;
+  color: #ee2f1d;
   font-size: 13.5px;
   font-weight: 600;
   font-family: inherit;
@@ -494,7 +494,7 @@
 }
 
 .forgotLink:hover {
-  color: #ff3f34;
+  color: #ee2f1d;
   transform: translateY(-1px);
 }
 
@@ -519,7 +519,7 @@
 .textButton {
   border: 0;
   background: transparent;
-  color: #a2a2ab;
+  color: #a1a1aa;
   font-size: 13.5px;
   font-weight: 500;
   font-family: inherit;
@@ -530,7 +530,7 @@
 
 .textButton:hover,
 .textButton:focus-visible {
-  color: #f2f2f5;
+  color: #f4f4f5;
   transform: translateY(-1px);
   outline: 0;
 }
@@ -540,13 +540,13 @@
   display: grid;
   gap: 8px;
   padding: 14px;
-  border: 1px solid rgba(190, 190, 198, 0.13);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 14px;
   background: #faf9ff;
 }
 
 .planPicker legend {
-  color: #a2a2ab;
+  color: #a1a1aa;
   font-size: 13px;
   font-weight: 600;
   padding: 0;
@@ -564,9 +564,9 @@
   column-gap: 10px;
   row-gap: 4px;
   padding: 11px 13px;
-  border: 1px solid rgba(190, 190, 198, 0.13);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 10px;
-  background: #1e1e22;
+  background: #111114;
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
 }
@@ -593,31 +593,31 @@
 .planOptionName {
   font-size: 13.5px;
   font-weight: 700;
-  color: #f2f2f5;
+  color: #f4f4f5;
 }
 
 .planOptionPrice {
   font-size: 11.5px;
   font-weight: 500;
-  color: #a2a2ab;
+  color: #a1a1aa;
   font-family: var(--font-geist-mono), monospace;
   white-space: nowrap;
 }
 
 .planOptionActive .planOptionPrice {
-  color: #ff3f34;
+  color: #ee2f1d;
 }
 
 .planOptionFeatures {
   width: 100%;
   padding-left: 26px;
   font-size: 11.5px;
-  color: #a2a2ab;
+  color: #a1a1aa;
   line-height: 1.5;
 }
 
 .planOptionActive .planOptionFeatures {
-  color: #ff3f34;
+  color: #ee2f1d;
 }
 
 .planOption::before {
@@ -625,14 +625,14 @@
   width: 15px;
   height: 15px;
   border-radius: 50%;
-  border: 2px solid rgba(190, 190, 198, 0.22);
+  border: 2px solid rgba(255, 255, 255, 0.14);
   flex-shrink: 0;
   transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
 }
 
 .planOptionActive::before {
-  border-color: #ff3f34;
-  background: radial-gradient(circle, #ff3f34 40%, transparent 42%);
+  border-color: #ee2f1d;
+  background: radial-gradient(circle, #ee2f1d 40%, transparent 42%);
   box-shadow: 0 0 0 3px rgba(255, 63, 52, 0.13);
 }
 
@@ -648,7 +648,7 @@
   height: 15px;
   margin-top: 3px;
   flex-shrink: 0;
-  accent-color: #ff3f34;
+  accent-color: #ee2f1d;
   border: 1px solid rgba(190, 190, 198, 0.3);
   border-radius: 4px;
   cursor: pointer;
@@ -657,17 +657,17 @@
 .termsRow span {
   font-size: 13px;
   line-height: 1.6;
-  color: #a2a2ab;
+  color: #a1a1aa;
 }
 
 .termsRow a {
-  color: #ff3f34;
+  color: #ee2f1d;
   text-decoration: none;
   transition: color 0.15s;
 }
 
 .termsRow a:hover {
-  color: #ff3f34;
+  color: #ee2f1d;
 }
 
 /* ── Password reset flow ── */
@@ -688,7 +688,7 @@
 }
 
 .resetStep[data-active="true"] {
-  color: #ff3f34;
+  color: #ee2f1d;
 }
 
 .resetStepDivider {
@@ -705,7 +705,7 @@
   border-radius: 14px;
   background: rgba(255, 63, 52, 0.07);
   border: 1px solid rgba(255, 63, 52, 0.16);
-  color: #ff3f34;
+  color: #ee2f1d;
   margin-bottom: 14px;
 }
 
@@ -715,12 +715,12 @@
   padding: 13px 15px;
   border: 1px solid rgba(190, 190, 198, 0.12);
   border-radius: 12px;
-  background: #1e1e22;
+  background: #111114;
 }
 
 .modeCardTitle {
   margin-bottom: 8px;
-  color: #f2f2f5;
+  color: #f4f4f5;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.1em;
@@ -738,7 +738,7 @@
 .modeCardList li {
   position: relative;
   padding-left: 16px;
-  color: #a2a2ab;
+  color: #a1a1aa;
   font-size: 13px;
   line-height: 1.6;
 }
@@ -751,7 +751,7 @@
   width: 6px;
   height: 6px;
   border-radius: 999px;
-  background: linear-gradient(135deg, #ff3f34, #ff4a26);
+  background: linear-gradient(135deg, #ee2f1d, #ff4b33);
 }
 
 /* ── Responsive ── */
@@ -813,6 +813,6 @@
   letter-spacing: 0.16em;
   padding: 5px 12px;
   border-radius: 999px;
-  background: linear-gradient(135deg, #ff4a26, #ff3f34);
+  background: linear-gradient(135deg, #ff4b33, #ee2f1d);
   color: #fff;
 }

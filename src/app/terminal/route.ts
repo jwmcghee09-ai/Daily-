@@ -18,7 +18,7 @@ const HTML = `<!DOCTYPE html>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;overflow:hidden}
-body{background:#141416;color:#e6e4f2;font-family:'DM Mono','Courier New',monospace;font-size:13.5px;display:flex;flex-direction:column}
+body{background:#050405;color:#e6e4f2;font-family:'DM Mono','Courier New',monospace;font-size:13.5px;display:flex;flex-direction:column}
 body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse 50% 40% at 12% 0%,rgba(255,63,52,.10) 0%,transparent 65%),radial-gradient(ellipse 42% 45% at 95% 95%,rgba(255,122,48,.06) 0%,transparent 65%)}
 body>*{position:relative;z-index:1}
 
@@ -26,24 +26,24 @@ body>*{position:relative;z-index:1}
    gradient, where an orange mark would vanish. */
 .brand-mark{display:block;width:20px;height:20px;flex-shrink:0}
 #topbar{background:rgba(13,12,22,.92);border-bottom:1px solid rgba(255,106,82,.22);padding:9px 18px;display:flex;align-items:center;gap:16px;font-size:11.5px;color:#777;flex-shrink:0;backdrop-filter:blur(10px)}
-.fkey{color:#1b1b1e;background:#ff6a52;padding:3px 9px;border-radius:6px;font-weight:500;font-size:11px;cursor:pointer;font-family:'DM Mono',monospace}
+.fkey{color:#0b0b0d;background:#ff6a52;padding:3px 9px;border-radius:6px;font-weight:500;font-size:11px;cursor:pointer;font-family:'DM Mono',monospace}
 .fkey:hover{background:#ffb3a6}
 .flabel{color:#888}
 #topbar .right{margin-left:auto;display:flex;gap:16px;align-items:center}
 #clock{color:#ff6a52;font-size:13px;font-weight:bold;letter-spacing:.05em}
 #conn{font-size:12px;color:#ff6a52}
 
-#titlebar{background:linear-gradient(90deg,#ff3f34 0%,#ff4a26 35%,#ff4a26 72%,#ff6a45 100%);color:#fff;padding:10px 18px;display:flex;justify-content:space-between;align-items:center;font-weight:600;font-size:15px;letter-spacing:.1em;flex-shrink:0;font-family:'Space Grotesk',sans-serif}
+#titlebar{background:linear-gradient(90deg,#ee2f1d 0%,#ff4b33 35%,#ff4b33 72%,#ff5334 100%);color:#fff;padding:10px 18px;display:flex;justify-content:space-between;align-items:center;font-weight:600;font-size:15px;letter-spacing:.1em;flex-shrink:0;font-family:'Space Grotesk',sans-serif}
 
 #metrics{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;padding:14px 18px 2px;flex-shrink:0}
-.mc{padding:13px 16px;background:#1e1e22;border:1px solid rgba(255,106,82,.18);border-radius:12px}
+.mc{padding:13px 16px;background:#111114;border:1px solid rgba(255,106,82,.18);border-radius:12px}
 .mc:last-child{border-right:1px solid rgba(255,106,82,.18)}
 .ml{font-size:9.5px;text-transform:uppercase;color:rgba(255,157,138,.55);letter-spacing:.12em;margin-bottom:5px}
 .mv{font-size:22px;font-weight:bold;color:#ff6a52;line-height:1.1}
 .ms{font-size:11px;color:#666;margin-top:3px}
 
 /* strategy banner */
-#strat-bar{background:#1e1e22;border:1px solid rgba(255,106,82,.14);border-radius:10px;margin:10px 18px 0;padding:8px 15px;font-size:11px;color:#777;flex-shrink:0;display:flex;gap:12px;align-items:center;min-height:22px}
+#strat-bar{background:#111114;border:1px solid rgba(255,106,82,.14);border-radius:10px;margin:10px 18px 0;padding:8px 15px;font-size:11px;color:#777;flex-shrink:0;display:flex;gap:12px;align-items:center;min-height:22px}
 #strat-bar .strat-label{color:#ff6a52;font-size:9px;text-transform:uppercase;letter-spacing:.1em;flex-shrink:0}
 #strat-text{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 #lessons-wrap{flex-shrink:0;color:#555;font-size:10px}
@@ -52,12 +52,12 @@ body>*{position:relative;z-index:1}
 #main{display:grid;grid-template-columns:340px 1fr 400px;flex:1;min-height:0;gap:14px;padding:14px 18px}
 
 /* panels */
-#left{display:flex;flex-direction:column;min-height:0;overflow:hidden;background:#1b1b1e;border:1px solid rgba(255,106,82,.18);border-radius:14px}
-#center{display:flex;flex-direction:column;min-height:0;background:#1b1b1e;border:1px solid rgba(255,106,82,.18);border-radius:14px;overflow:hidden}
-#chat-panel{display:flex;flex-direction:column;min-height:0;background:#1b1b1e;border:1px solid rgba(255,106,82,.18);border-radius:14px;overflow:hidden}
+#left{display:flex;flex-direction:column;min-height:0;overflow:hidden;background:#0b0b0d;border:1px solid rgba(255,106,82,.18);border-radius:14px}
+#center{display:flex;flex-direction:column;min-height:0;background:#0b0b0d;border:1px solid rgba(255,106,82,.18);border-radius:14px;overflow:hidden}
+#chat-panel{display:flex;flex-direction:column;min-height:0;background:#0b0b0d;border:1px solid rgba(255,106,82,.18);border-radius:14px;overflow:hidden}
 
-.ph{background:#1e1e22;border-bottom:1px solid rgba(255,106,82,.12);padding:9px 14px;color:rgba(255,157,138,.85);font-size:10px;letter-spacing:.14em;text-transform:uppercase;flex-shrink:0}
-.ph::before{content:'';display:inline-block;width:14px;height:1px;background:linear-gradient(90deg,#ff4a26,#ff5c38);margin-right:8px;vertical-align:middle}
+.ph{background:#111114;border-bottom:1px solid rgba(255,106,82,.12);padding:9px 14px;color:rgba(255,157,138,.85);font-size:10px;letter-spacing:.14em;text-transform:uppercase;flex-shrink:0}
+.ph::before{content:'';display:inline-block;width:14px;height:1px;background:linear-gradient(90deg,#ff4b33,#ff5334);margin-right:8px;vertical-align:middle}
 
 /* position buckets */
 #core-wrap{overflow-y:auto;max-height:44%}
@@ -66,19 +66,19 @@ body>*{position:relative;z-index:1}
 /* center: chart top, trades bottom */
 #chart-area{flex:1;min-height:0;padding:12px 16px 8px;position:relative}
 #chart-area svg{width:100%;height:100%;display:block}
-#trades-area{flex-shrink:0;height:230px;overflow-y:auto;border-top:1px solid #2a2a2e}
-#open-orders-area{flex-shrink:0;height:110px;overflow-y:auto;border-top:1px solid #2a2a2e}
+#trades-area{flex-shrink:0;height:230px;overflow-y:auto;border-top:1px solid #1f1f23}
+#open-orders-area{flex-shrink:0;height:110px;overflow-y:auto;border-top:1px solid #1f1f23}
 
 /* chat */
 #chat-msgs{flex:1;overflow-y:auto;min-height:0;padding:14px 14px 8px;display:flex;flex-direction:column;gap:12px}
 .cmsg-u{align-self:flex-end;background:rgba(255,106,82,.12);border:1px solid rgba(255,106,82,.28);border-radius:12px 12px 3px 12px;padding:9px 13px;max-width:92%;font-size:12.5px;color:#e6e4f2;white-space:pre-wrap;word-break:break-word}
 .cmsg-a{align-self:flex-start;background:rgba(255,255,255,.03);border:1px solid rgba(255,106,82,.12);border-radius:3px 12px 12px 12px;padding:9px 13px;max-width:94%;font-size:12.5px;color:#e6e4f2;white-space:pre-wrap;word-break:break-word;line-height:1.5}
 .cmsg-sys{color:#555;font-size:12px;text-align:center;padding:2px 0;font-style:italic}
-#chat-input-row{display:flex;gap:8px;padding:12px;border-top:1px solid #2a2a2e;flex-shrink:0}
+#chat-input-row{display:flex;gap:8px;padding:12px;border-top:1px solid #1f1f23;flex-shrink:0}
 #chat-in{flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,106,82,.25);border-radius:10px;color:#e6e4f2;font-family:'Courier New',monospace;font-size:13px;padding:9px 11px;resize:none;min-height:44px;max-height:110px;overflow-y:auto;outline:none}
 #chat-in:focus{border-color:#ff6a52}
 #chat-send{background:linear-gradient(135deg,rgba(255,63,52,.25),rgba(255,122,48,.2));border:1px solid rgba(255,106,82,.5);border-radius:10px;color:#ff6a52;font-family:'Courier New',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:9px 16px;cursor:pointer;white-space:nowrap;align-self:flex-end}
-#chat-send:hover{background:#2e2e34}
+#chat-send:hover{background:#1f1f23}
 #chat-send:disabled{opacity:.4;cursor:default}
 /* tool badges */
 .tbadge{display:inline-block;font-size:10px;padding:3px 8px;border-radius:3px;border:1px solid;font-family:'Courier New',monospace;white-space:nowrap;margin:0 2px 2px 0;vertical-align:middle}
@@ -86,46 +86,46 @@ body>*{position:relative;z-index:1}
 @keyframes tbp{0%,100%{opacity:1}50%{opacity:.4}}
 .tbadge-done{color:#00e676;border-color:#003300;background:#010800}
 /* log panel */
-#log-panel{display:none;flex-direction:column;flex-shrink:0;border-top:2px solid #2a2a2e;height:270px}
+#log-panel{display:none;flex-direction:column;flex-shrink:0;border-top:2px solid #1f1f23;height:270px}
 #log-panel.lp-open{display:flex}
 #log-content{flex:1;overflow-y:auto;padding:8px 12px;font-size:11.5px}
-.log-row{border-bottom:1px solid #1b1b1e;padding:8px 0;cursor:pointer;line-height:1.4}
-.log-row:hover{background:#141416}
-.log-exp{display:none;font-size:9px;color:#666;white-space:pre-wrap;word-break:break-word;max-height:100px;overflow-y:auto;padding:4px 0;border-top:1px solid #1b1b1e;margin-top:3px;line-height:1.55}
+.log-row{border-bottom:1px solid #0b0b0d;padding:8px 0;cursor:pointer;line-height:1.4}
+.log-row:hover{background:#050405}
+.log-exp{display:none;font-size:9px;color:#666;white-space:pre-wrap;word-break:break-word;max-height:100px;overflow-y:auto;padding:4px 0;border-top:1px solid #0b0b0d;margin-top:3px;line-height:1.55}
 /* strategy panel */
-#strategy-panel{display:none;flex-direction:column;flex-shrink:0;border-top:2px solid #2a2a2e;height:520px}
+#strategy-panel{display:none;flex-direction:column;flex-shrink:0;border-top:2px solid #1f1f23;height:520px}
 .sbanner{border:1px solid;border-radius:5px;padding:9px 12px;font-size:11.5px;line-height:1.6;margin-bottom:12px}
-.sbanner-off{border-color:#35353c;background:#1b1b1e;color:#888}
+.sbanner-off{border-color:#26262b;background:#0b0b0d;color:#888}
 .sbanner-on{border-color:#003300;background:#010800;color:#00e676}
 .sbanner-auto{border-color:#3a0000;background:#0d0000;color:#ff4444}
 .snum{display:inline-block;width:14px;height:14px;line-height:14px;text-align:center;border-radius:50%;background:#ff6a52;color:#000;font-size:9px;font-weight:bold;margin-right:5px}
-.ssec{color:#ff6a52;font-size:10px;text-transform:uppercase;letter-spacing:.1em;margin:14px 0 8px;border-top:1px solid #2a2a2e;padding-top:12px}
+.ssec{color:#ff6a52;font-size:10px;text-transform:uppercase;letter-spacing:.1em;margin:14px 0 8px;border-top:1px solid #1f1f23;padding-top:12px}
 #sp-mode-desc{color:#777;font-size:10.5px;line-height:1.55;margin:3px 0 9px;padding-left:2px}
 #strategy-panel.sp-open{display:flex}
 #strategy-content{flex:1;overflow-y:auto;padding:12px 14px;font-size:11.5px}
 .sfield{display:flex;align-items:center;gap:8px;margin-bottom:8px}
 .sfield label{color:#555;font-size:10px;text-transform:uppercase;letter-spacing:.05em;width:96px;flex-shrink:0}
-.sfield select,.sfield input[type=text],.sfield input[type=number]{flex:1;background:#141416;border:1px solid #35353c;border-radius:2px;color:#e6e4f2;font-family:'Courier New',monospace;font-size:12px;padding:6px 8px;outline:none;min-width:0}
+.sfield select,.sfield input[type=text],.sfield input[type=number]{flex:1;background:#050405;border:1px solid #26262b;border-radius:2px;color:#e6e4f2;font-family:'Courier New',monospace;font-size:12px;padding:6px 8px;outline:none;min-width:0}
 .sfield select:focus,.sfield input:focus{border-color:#ff6a52}
 .sfield input[type=checkbox]{accent-color:#ff6a52}
-#strat-custom-prompt{width:100%;background:#141416;border:1px solid #35353c;border-radius:4px;color:#e6e4f2;font-family:'Courier New',monospace;font-size:12px;padding:8px 10px;resize:vertical;min-height:60px;outline:none;box-sizing:border-box}
+#strat-custom-prompt{width:100%;background:#050405;border:1px solid #26262b;border-radius:4px;color:#e6e4f2;font-family:'Courier New',monospace;font-size:12px;padding:8px 10px;resize:vertical;min-height:60px;outline:none;box-sizing:border-box}
 .sbtn{background:#2a2220;border:1px solid #ff6a52;border-radius:4px;color:#ff6a52;font-family:'Courier New',monospace;font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:7px 14px;cursor:pointer}
-.sbtn:hover{background:#2e2e34}
+.sbtn:hover{background:#1f1f23}
 .sbtn:disabled{opacity:.4;cursor:default}
 .sbtn-danger{border-color:#ff4444;color:#ff4444}
 .sbtn-green{border-color:#00e676;color:#00e676}
 .spill{font-size:8px;padding:1px 6px;border-radius:2px;border:1px solid;text-transform:uppercase;letter-spacing:.05em}
 .spill-on{color:#00e676;border-color:#003300;background:#010800}
-.spill-off{color:#555;border-color:#222;background:#141416}
+.spill-off{color:#555;border-color:#222;background:#050405}
 .spill-auto{color:#ff4444;border-color:#3a0000;background:#0d0000;font-weight:bold}
-.ptrade{border:1px solid #35353c;border-radius:5px;padding:9px 11px;margin-bottom:8px;background:#141416}
-.srun{border-bottom:1px solid #1b1b1e;padding:7px 0;cursor:pointer;line-height:1.4}
-.srun:hover{background:#141416}
+.ptrade{border:1px solid #26262b;border-radius:5px;padding:9px 11px;margin-bottom:8px;background:#050405}
+.srun{border-bottom:1px solid #0b0b0d;padding:7px 0;cursor:pointer;line-height:1.4}
+.srun:hover{background:#050405}
 .srun-exp{display:none;font-size:9px;color:#666;white-space:pre-wrap;word-break:break-word;padding:3px 0;line-height:1.5}
 
 /* tables */
 table{width:100%;border-collapse:collapse;font-size:12.5px}
-th{padding:8px 12px;text-align:left;font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,157,138,.5);border-bottom:1px solid rgba(255,106,82,.12);position:sticky;top:0;background:#1b1b1e}
+th{padding:8px 12px;text-align:left;font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,157,138,.5);border-bottom:1px solid rgba(255,106,82,.12);position:sticky;top:0;background:#0b0b0d}
 td{padding:8px 12px;border-bottom:1px solid rgba(255,106,82,.05);vertical-align:middle}
 tr:hover td{background:rgba(255,106,82,.05)}
 
@@ -161,7 +161,7 @@ tr:hover td{background:rgba(255,106,82,.05)}
   <span class="fkey" onclick="focusChat()">F8</span><span class="flabel">CHAT</span>
   <span class="fkey" onclick="toggleLog()">F9</span><span class="flabel">LOG</span>
   <span class="fkey" onclick="toggleStrategy()">F10</span><span class="flabel">STRATEGY</span>
-  <a href="/strategy" style="color:#ff6a52;font-size:11px;letter-spacing:.05em;text-decoration:none;border:1px solid #35353c;border-radius:3px;padding:2px 8px">STRATEGY PAGE ↗</a>
+  <a href="/strategy" style="color:#ff6a52;font-size:11px;letter-spacing:.05em;text-decoration:none;border:1px solid #26262b;border-radius:3px;padding:2px 8px">STRATEGY PAGE ↗</a>
   <span id="strat-status-pill" class="spill spill-off" style="margin-left:4px">BOT OFF</span>
   <div class="right">
     <span id="conn">CONNECTING…</span>
@@ -206,7 +206,7 @@ tr:hover td{background:rgba(255,106,82,.05)}
   <span id="strat-text">Click to expand…</span>
   <span id="lessons-wrap"></span>
 </div>
-<div id="strat-detail" style="display:none;background:#141416;border-bottom:1px solid #2a2a2e;padding:8px 10px;flex-shrink:0;font-size:11px;line-height:1.7;color:#888">
+<div id="strat-detail" style="display:none;background:#050405;border-bottom:1px solid #1f1f23;padding:8px 10px;flex-shrink:0;font-size:11px;line-height:1.7;color:#888">
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 24px">
     <div>
       <div style="color:#ff6a52;font-size:9px;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">Portfolio Rules</div>
@@ -232,7 +232,7 @@ tr:hover td{background:rgba(255,106,82,.05)}
   <!-- LEFT: positions split into two buckets -->
   <div id="left">
     <div class="ph"><span id="core-label">CORE · INDEX SLEEVE</span><span style="color:#555;text-transform:none;letter-spacing:0;margin-left:8px;font-size:10px" id="core-sub">— your long-term ETF base</span><span style="float:right;color:#333;font-size:9px" id="core-pct"></span></div>
-    <div id="core-wrap" style="border-bottom:1px solid #2a2a2e"><div class="placeholder">LOADING…</div></div>
+    <div id="core-wrap" style="border-bottom:1px solid #1f1f23"><div class="placeholder">LOADING…</div></div>
     <div class="ph" style="background:#030a04;border-color:#003300;color:#00e676"><span id="alpha-label">ALPHA · SATELLITE SLEEVE</span><span style="color:#555;text-transform:none;letter-spacing:0;margin-left:8px;font-size:10px" id="alpha-sub">— active stock picks</span><span style="float:right;color:#003300;font-size:9px" id="alpha-pct"></span></div>
     <div id="alpha-wrap" style="flex:1;overflow-y:auto;min-height:0"><div class="placeholder">LOADING…</div></div>
   </div>
@@ -241,7 +241,7 @@ tr:hover td{background:rgba(255,106,82,.05)}
   <div id="center">
     <div class="ph"><span id="curve-label">30-DAY EQUITY CURVE</span><span style="color:#555;text-transform:none;letter-spacing:0;margin-left:8px;font-size:10px" id="curve-sub">— your account value over the last month</span><span style="float:right;color:#333;font-size:9px" id="curve-range"></span></div>
     <div id="chart-area">
-      <svg id="chart" preserveAspectRatio="none"><text x="50%" y="50%" text-anchor="middle" fill="#2a2a2e" font-size="12" font-family="monospace">LOADING…</text></svg>
+      <svg id="chart" preserveAspectRatio="none"><text x="50%" y="50%" text-anchor="middle" fill="#1f1f23" font-size="12" font-family="monospace">LOADING…</text></svg>
     </div>
     <div id="trades-area">
       <div class="ph"><span id="trades-label">RECENT FILLED TRADES</span><span style="color:#555;text-transform:none;letter-spacing:0;margin-left:8px;font-size:10px" id="trades-sub">— orders that actually executed</span></div>
@@ -277,8 +277,8 @@ tr:hover td{background:rgba(255,106,82,.05)}
 </div>
 
 <div id="help-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:100;overflow-y:auto" onclick="if(event.target===this)toggleHelp()">
-  <div style="max-width:760px;margin:5vh auto;background:#1b1b1e;border:1px solid #ff6a52;border-radius:10px;overflow:hidden">
-    <div style="background:linear-gradient(90deg,#ff3f34 0%,#ff4a26 35%,#ff4a26 72%,#ff6a45 100%);color:#fff;padding:12px 20px;font-weight:bold;font-size:15px;display:flex;justify-content:space-between;align-items:center">WHAT AM I LOOKING AT? <button onclick="toggleHelp()" style="background:none;border:1px solid rgba(255,255,255,.5);border-radius:4px;color:#fff;font-family:'Courier New',monospace;font-size:11px;padding:4px 10px;cursor:pointer">CLOSE (ESC)</button></div>
+  <div style="max-width:760px;margin:5vh auto;background:#0b0b0d;border:1px solid #ff6a52;border-radius:10px;overflow:hidden">
+    <div style="background:linear-gradient(90deg,#ee2f1d 0%,#ff4b33 35%,#ff4b33 72%,#ff5334 100%);color:#fff;padding:12px 20px;font-weight:bold;font-size:15px;display:flex;justify-content:space-between;align-items:center">WHAT AM I LOOKING AT? <button onclick="toggleHelp()" style="background:none;border:1px solid rgba(255,255,255,.5);border-radius:4px;color:#fff;font-family:'Courier New',monospace;font-size:11px;padding:4px 10px;cursor:pointer">CLOSE (ESC)</button></div>
     <div style="padding:20px 22px;font-size:13px;line-height:1.8;color:#bbb">
       <p style="margin-bottom:14px">This is your <span style="color:#ffb3a6">paper trading terminal</span> — a practice account with fake money on the real US market, managed with the help of an AI called Myrmidon. No real dollars are at risk.</p>
       <div style="color:#ff6a52;font-size:11px;letter-spacing:.1em;margin:16px 0 8px">THE NUMBERS UP TOP</div>
@@ -635,11 +635,11 @@ tr:hover td{background:rgba(255,106,82,.05)}
   // chart
   function renderChart(hist){
     var svg=$('chart');
-    if(!hist||!hist.equity){svg.innerHTML='<text x="50%" y="50%" text-anchor="middle" fill="#2a2a2e" font-size="11" font-family="monospace">NO HISTORY DATA</text>';return;}
+    if(!hist||!hist.equity){svg.innerHTML='<text x="50%" y="50%" text-anchor="middle" fill="#1f1f23" font-size="11" font-family="monospace">NO HISTORY DATA</text>';return;}
     var raw=hist.equity||[],ts=hist.timestamp||[],vals=[],tss=[];
     var fx=lastRate||1;
     for(var i=0;i<raw.length;i++){if(raw[i]!=null&&raw[i]>0){vals.push(raw[i]/fx);tss.push(ts[i]||0);}}
-    if(vals.length<2){svg.innerHTML='<text x="50%" y="50%" text-anchor="middle" fill="#2a2a2e" font-size="11" font-family="monospace">INSUFFICIENT DATA</text>';return;}
+    if(vals.length<2){svg.innerHTML='<text x="50%" y="50%" text-anchor="middle" fill="#1f1f23" font-size="11" font-family="monospace">INSUFFICIENT DATA</text>';return;}
     var W=900,H=200,PX=10,PY=22;
     var lo=Math.min.apply(null,vals)*0.999,hi=Math.max.apply(null,vals)*1.001,rng=hi-lo;
     var tx=function(i){return PX+(i/(vals.length-1))*(W-PX*2);};
@@ -653,7 +653,7 @@ tr:hover td{background:rgba(255,106,82,.05)}
     $('curve-range').textContent=fmtd(tss[0])+' → '+fmtd(tss[tss.length-1]);
     svg.setAttribute('viewBox','0 0 '+W+' '+H);
     svg.innerHTML=grid+'<defs><linearGradient id="gr" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+lc+'" stop-opacity="0.1"/><stop offset="100%" stop-color="'+lc+'" stop-opacity="0.01"/></linearGradient></defs>'+
-      '<line x1="'+PX+'" y1="'+ty(start)+'" x2="'+(W-PX)+'" y2="'+ty(start)+'" stroke="#2a2a2e" stroke-width="1" stroke-dasharray="3,4"/>'+
+      '<line x1="'+PX+'" y1="'+ty(start)+'" x2="'+(W-PX)+'" y2="'+ty(start)+'" stroke="#1f1f23" stroke-width="1" stroke-dasharray="3,4"/>'+
       '<path d="'+fill+'" fill="url(#gr)"/><path d="'+path+'" fill="none" stroke="'+lc+'" stroke-width="1.5" stroke-linejoin="round"/>'+
       '<circle cx="'+tx(vals.length-1)+'" cy="'+ty(end)+'" r="3" fill="'+lc+'"/>'+
       '<text x="'+PX+'" y="'+(H-4)+'" font-size="8" fill="#3c3760" font-family="monospace">'+fmtd(tss[0])+'</text>'+
