@@ -732,6 +732,20 @@
   background: var(--border);
 }
 
+/* Three across only holds while the cards stay readable; below that go two,
+   and the 960px block further down takes it to one. */
+@media (max-width: 1080px) {
+  .featureGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Nine cards over two columns leaves the last one orphaned — let it run
+     the full width instead of sitting next to a hole. */
+  .featureGrid > .featureItem:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+}
+
 .featureItem {
   background: var(--surface);
   backdrop-filter: blur(8px);

@@ -56,36 +56,52 @@ const workflowSteps: readonly WorkflowStep[] = [
 const features: readonly MarketingCard[] = [
   {
     title: "AI Portfolio Analyst",
-    copy: "Natural-language answers grounded in holdings, weights, live pricing, snapshots, and research context.",
-    icon: <UploadIcon />,
+    copy: "Ask in plain English. Answers come from your real holdings, not guesses.",
+    icon: <PulseIcon />,
   },
   {
-    title: "Cross-Source Ingestion",
-    copy: "CommSec, broker exports, super, ETFs, funds, crypto, savings, tax reports, and bullion in one workflow.",
-    icon: <PulseIcon />,
+    title: "Import Anything",
+    copy: "CommSec, Selfwealth, Stake, super, ETFs, funds, crypto, bullion.",
+    icon: <UploadIcon />,
     alt: true,
+  },
+  {
+    title: "Forward a Contract Note",
+    copy: "Email the broker confirmation to SPECTRE. The trade files itself.",
+    icon: <BellIcon />,
   },
   {
     title: "Quant Risk Engine",
-    copy: "Risk score, VaR95, Expected Shortfall, beta, tracking error, correlation, drawdown, and data-quality checks.",
-    icon: <BarsIcon />,
-  },
-  {
-    title: "Research Terminal",
-    copy: "ASX, macro, earnings, crypto, commodities, FRED signals, central-bank rates, and CFTC positioning.",
-    icon: <BarsIcon />,
+    copy: "VaR 95, CVaR, beta, Sharpe, drawdown, correlation — computed, not estimated.",
+    icon: <ShieldIcon />,
+    alt: true,
   },
   {
     title: "Monte Carlo & Stress",
-    copy: "500-path portfolio projections with bull, base, and bear outcomes tied to your imported holdings.",
+    copy: "500 paths to p10/p50/p90, plus a GFC-scale shock against your book.",
     icon: <ClockIcon />,
+  },
+  {
+    title: "Advanced Scanner",
+    copy: "ADX, MACD, Bollinger squeeze, ATR and strength against the ASX 200.",
+    icon: <GridIcon />,
     alt: true,
   },
   {
-    title: "Alerts & History",
-    copy: "Snapshot history, data-quality confidence, and dip alerts so AI has memory and you have follow-through.",
-    icon: <BellIcon />,
+    title: "Research Terminal",
+    copy: "ASX movers, news, macro, rates and commodities in one place.",
+    icon: <BarsIcon />,
+  },
+  {
+    title: "Myrmidon Agent",
+    copy: "An autonomous trader on paper money. Every decision shown before it runs.",
+    icon: <UsersIcon />,
     alt: true,
+  },
+  {
+    title: "Connect Your Own AI",
+    copy: "Twelve tools over MCP. Claude reads your portfolio from your machine.",
+    icon: <LockIcon />,
   },
 ] as const;
 
@@ -704,7 +720,8 @@ export default function LandingPage({
                 <div className={styles.connectAsk}>› How is my portfolio positioned right now?</div>
                 <div className={styles.connectToolRow}>
                   <span className={styles.connectTool}>get_portfolio ✓</span>
-                  <span className={styles.connectTool}>scan_stock ✓</span>
+                  <span className={styles.connectTool}>portfolio_risk ✓</span>
+                  <span className={styles.connectTool}>market_scan ✓</span>
                 </div>
                 <div className={styles.connectReply}>
                   Your book is <strong>$54,428</strong>, down <strong>1.5%</strong> today. It&rsquo;s concentrated —
@@ -720,6 +737,7 @@ export default function LandingPage({
                 ["Always current", "It reads your live holdings every time you ask, so imports and edits show up immediately."],
                 ["Stays on your machine", "The connector runs locally. Your holdings are never handed to a third party."],
                 ["No extra AI bill", "You bring your own model, so there's nothing metered on our side."],
+                ["Twelve tools", "Holdings, risk, Monte Carlo, the scanner, news, movers and macro — all callable."],
               ].map(([title, copy], index) => (
                 <li key={title} className={styles.reveal} style={{ transitionDelay: `${0.18 + index * 0.07}s` }}>
                   <strong>{title}</strong> — {copy}
@@ -944,7 +962,7 @@ export default function LandingPage({
       <section className={styles.section} id="features">
         <div className={styles.container}>
           <div className={`${styles.sectionLabel} ${styles.reveal}`}>Features</div>
-          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`} style={{ transitionDelay: "0.07s" }}>Six tools that actually talk to each other.</h2>
+          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`} style={{ transitionDelay: "0.07s" }}>Nine tools that actually talk to each other.</h2>
 
           <div className={styles.featureGrid}>
             {features.map((feature, index) => (
