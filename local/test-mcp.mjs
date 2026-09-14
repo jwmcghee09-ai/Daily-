@@ -63,6 +63,7 @@ const names = (list.result?.tools ?? []).map((t) => t.name);
 const EXPECTED_TOOLS = [
   "scan_stock", "compare_stocks", "get_portfolio", "myrmidon_status",
   "myrmidon_decisions", "myrmidon_strategy", "analyse_portfolio", "portfolio_risk",
+  "market_scan", "market_news", "market_movers", "macro_indicators",
 ];
 const missingTools = EXPECTED_TOOLS.filter((t) => !names.includes(t));
 check("tools/list", missingTools.length === 0,
@@ -142,6 +143,30 @@ if (riskData?.portfolio) {
   check("portfolio_risk responds sensibly when signed out",
     risk.result.isError === true || !!riskData?.error,
     (riskData?.error || risk.result.content[0].text).slice(0, 70));
+}
+
+// market_scan is a passthrough to the website's scanner, so what matters is
+// that the advanced indicators actually arrive — not that a local copy
+// recomputed something resembling them.
+const mscan = await rpc("tools/call", { name: "market_scan", arguments: { symbol: "BHP" } });
+let mscanData = null;
+try { mscanData = JSON.parse(mscan.result.content[0].text); } catch { /* plain-text error */ }
+if (mscanData?.price) {
+  check("market_scan returns the advanced indicator set",
+    ["macd", "bollinger", "atr", "adx", "stochastic", "obv", "levels"].every((k) => k in mscanData),
+    `${mscanData.symbol} $${mscanData.price?.toFixed(2)}, ADX ${mscanData.adx?.adx?.toFixed(1)}`);
+  check("market_scan compares against the right benchmark",
+    !mscanData.relativeStrength || mscanData.relativeStrength.benchmark === (mscanData.symbol.endsWith(".AX") ? "^AXJO" : "^GSPC"),
+    mscanData.relativeStrength?.benchmarkName ?? "none");
+  // The bug this guards: a swing low above the current price is not support.
+  const levels = mscanData.levels ?? { support: [], resistance: [] };
+  check("market_scan never reports support above the price",
+    levels.support.every((l) => l < mscanData.price) && levels.resistance.every((l) => l > mscanData.price),
+    `price ${mscanData.price.toFixed(2)}`);
+} else {
+  check("market_scan responds sensibly when signed out",
+    mscan.result.isError === true || !!mscanData?.error,
+    (mscanData?.error || mscan.result.content[0].text).slice(0, 60));
 }
 
 const pong = await rpc("ping");

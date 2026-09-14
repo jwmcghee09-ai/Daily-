@@ -163,6 +163,47 @@ const TOOLS = [
       },
     },
   },
+  {
+    name: "market_scan",
+    description:
+      "Run SPECTRE's full scanner on one symbol — the same analysis the Research tab shows, " +
+      "computed server-side. Beyond price, RSI, moving averages and the 52-week range it returns " +
+      "MACD with crossover age, Bollinger bands with a volatility-squeeze flag, ATR (average true " +
+      "range, which counts overnight gaps), ADX trend strength with +DI/-DI, stochastic, on-balance " +
+      "volume direction, recent swing support and resistance levels, and relative strength against " +
+      "the index the stock actually trades in (ASX 200 for .AX, S&P 500 otherwise). Prefer this over " +
+      "scan_stock when the user wants depth: trend strength, volatility regime, whether a move is " +
+      "confirmed by volume, or whether a stock is beating its market. Bare tickers resolve to the ASX " +
+      "first. Requires `node spectre.mjs login`.",
+    inputSchema: {
+      type: "object",
+      properties: { symbol: { type: "string", description: "Ticker, e.g. BHP, CBA.AX, NVDA" } },
+      required: ["symbol"],
+    },
+  },
+  {
+    name: "market_news",
+    description:
+      "Latest market news headlines SPECTRE is tracking, with source and timestamp. Use when the " +
+      "user asks what is happening, or when a scan flags a gap or an outsized move and the cause " +
+      "matters — the chart can say something moved but never why.",
+    inputSchema: { type: "object", properties: {} },
+  },
+  {
+    name: "market_movers",
+    description:
+      "Today's biggest gainers, losers and most actively traded names. Use for 'what is moving', " +
+      "or to find candidates to then run market_scan against.",
+    inputSchema: { type: "object", properties: {} },
+  },
+  {
+    name: "macro_indicators",
+    description:
+      "Macro series SPECTRE tracks from FRED — rates, inflation, employment and the like — as the " +
+      "backdrop a portfolio sits in. Use when the user asks about the economy, rates, or why a whole " +
+      "market is moving rather than one stock.",
+    inputSchema: { type: "object", properties: {} },
+  },
 ];
 
 // ── Tool implementations ────────────────────────────────────────────────────
@@ -241,6 +282,31 @@ async function portfolioRiskTool({ window, horizon } = {}) {
   return { ...data, spectreToolVersion: SERVER_VERSION, disclaimer: DISCLAIMER };
 }
 
+/**
+ * Research tools are thin passthroughs to the website, for the same reason
+ * portfolio_risk is: the analysis lives where the data lives, so it cannot
+ * drift from what the Research tab shows, and a new indicator reaches a
+ * connected AI without anyone updating files on their own machine.
+ */
+async function marketScanTool({ symbol }) {
+  const cleaned = String(symbol ?? "").toUpperCase().replace(/[^A-Z0-9.\-]/g, "").slice(0, 12);
+  if (!cleaned) throw new Error("symbol is required");
+  const data = await apiGet(`/api/research/scan?symbol=${encodeURIComponent(cleaned)}`);
+  return { ...data, spectreToolVersion: SERVER_VERSION, disclaimer: DISCLAIMER };
+}
+
+async function marketNewsTool() {
+  return { ...(await apiGet("/api/research/news")), disclaimer: DISCLAIMER };
+}
+
+async function marketMoversTool() {
+  return { ...(await apiGet("/api/research/movers")), disclaimer: DISCLAIMER };
+}
+
+async function macroIndicatorsTool() {
+  return { ...(await apiGet("/api/research/fred")), disclaimer: DISCLAIMER };
+}
+
 async function analysePortfolioTool({ csv_path: csvPath }) {
   if (!csvPath || typeof csvPath !== "string") throw new Error("csv_path is required");
   const holdings = await readPortfolio(csvPath);
@@ -298,6 +364,10 @@ const HANDLERS = {
   myrmidon_strategy: myrmidonStrategy,
   analyse_portfolio: analysePortfolioTool,
   portfolio_risk: portfolioRiskTool,
+  market_scan: marketScanTool,
+  market_news: marketNewsTool,
+  market_movers: marketMoversTool,
+  macro_indicators: macroIndicatorsTool,
 };
 
 // ── JSON-RPC over stdio ─────────────────────────────────────────────────────
