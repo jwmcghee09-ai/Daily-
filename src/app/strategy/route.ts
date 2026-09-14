@@ -14,7 +14,7 @@ const HTML = `<!DOCTYPE html>
   <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:#050405;color:#e6e4f2;font-family:'Courier New',Courier,monospace;font-size:14px;min-height:100vh}
+body{background:radial-gradient(ellipse 130% 70% at 50% -25%,rgba(255,255,255,.045) 0%,rgba(255,255,255,.012) 45%,transparent 70%),radial-gradient(ellipse 70% 50% at 50% -10%,rgba(255,63,52,.055) 0%,transparent 100%),radial-gradient(ellipse 110% 90% at 50% 35%,transparent 45%,rgba(0,0,0,.55) 100%),#060607;background-attachment:fixed;color:#e6e4f2;font-family:'Courier New',Courier,monospace;font-size:14px;min-height:100vh}
 a{color:inherit;text-decoration:none}
 
 #topbar{background:#0b0b0d;border-bottom:2px solid #ff6a52;padding:10px 22px;display:flex;align-items:center;gap:18px;font-size:12px;color:#666;position:sticky;top:0;z-index:10}

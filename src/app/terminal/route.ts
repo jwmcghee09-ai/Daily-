@@ -18,8 +18,16 @@ const HTML = `<!DOCTYPE html>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;overflow:hidden}
-body{background:#050405;color:#e6e4f2;font-family:'DM Mono','Courier New',monospace;font-size:13.5px;display:flex;flex-direction:column}
-body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse 50% 40% at 12% 0%,rgba(255,63,52,.10) 0%,transparent 65%),radial-gradient(ellipse 42% 45% at 95% 95%,rgba(255,122,48,.06) 0%,transparent 65%)}
+body{background:radial-gradient(ellipse 130% 70% at 50% -25%,rgba(255,255,255,.045) 0%,rgba(255,255,255,.012) 45%,transparent 70%),radial-gradient(ellipse 70% 50% at 50% -10%,rgba(255,63,52,.055) 0%,transparent 100%),radial-gradient(ellipse 110% 90% at 50% 35%,transparent 45%,rgba(0,0,0,.55) 100%),#060607;background-attachment:fixed;color:#e6e4f2;font-family:'DM Mono','Courier New',monospace;font-size:13.5px;display:flex;flex-direction:column}
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(ellipse 130% 70% at 50% -25%,rgba(255,255,255,.045) 0%,rgba(255,255,255,.012) 45%,transparent 70%),
+    radial-gradient(ellipse 70% 50% at 50% -10%,rgba(255,63,52,.055) 0%,transparent 100%),
+    radial-gradient(ellipse 40% 60% at 100% 80%,rgba(255,74,38,.04) 0%,transparent 60%),
+    radial-gradient(ellipse 110% 90% at 50% 35%,transparent 45%,rgba(0,0,0,.55) 100%),
+    #060607;
+}
 body>*{position:relative;z-index:1}
 
 /* Brand mark on the dark topbar — the titlebar below is an orange

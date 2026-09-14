@@ -34,10 +34,15 @@
   --safeTop: env(safe-area-inset-top, 0px);
   min-height: 100vh;
   color: var(--text);
+  /* Near-black, but polished rather than flat: a broad specular sheen across
+     the top, the brand warmth kept faint beneath it, and a vignette pulling the
+     edges down so the surface reads as curved and catching light. */
   background:
-    radial-gradient(ellipse 70% 50% at 50% -10%, rgba(255, 63, 52, 0.07) 0%, transparent 100%),
-    radial-gradient(ellipse 40% 60% at 100% 80%, rgba(255, 74, 38, 0.05) 0%, transparent 60%),
-    #141416;
+    radial-gradient(ellipse 130% 70% at 50% -25%, rgba(255, 255, 255, 0.045) 0%, rgba(255, 255, 255, 0.012) 45%, transparent 70%),
+    radial-gradient(ellipse 70% 50% at 50% -10%, rgba(255, 63, 52, 0.055) 0%, transparent 100%),
+    radial-gradient(ellipse 40% 60% at 100% 80%, rgba(255, 74, 38, 0.04) 0%, transparent 60%),
+    radial-gradient(ellipse 110% 90% at 50% 35%, transparent 45%, rgba(0, 0, 0, 0.55) 100%),
+    #060607;
   font-family: var(--font-geist-sans), "Avenir Next", sans-serif;
 }
 
