@@ -5,6 +5,7 @@ import { isTerminalRequestAuthorized } from "@/lib/terminal-auth";
 import { brokerHeaders, isBrokerConnected, BROKER_DISCONNECTED_MESSAGE } from "@/lib/broker";
 import { ingestedTradesForAi, portfolioSnapshotForAi } from "@/lib/portfolio-feed";
 import { normaliseSymbol, yahooDailyBars } from "@/lib/market-data";
+import { describeModelError, invalidateGroqModel, resolveGroqModel } from "@/lib/ai-provider";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -13,7 +14,8 @@ const ALPACA_BASE = "https://paper-api.alpaca.markets/v2";
 const ALPACA_DATA = "https://data.alpaca.markets/v2";
 const ALPACA_NEWS = "https://data.alpaca.markets/v1beta1/news";
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
-const GROQ_MODEL = "llama-3.1-8b-instant";
+// Resolved from the provider at request time — see lib/ai-provider.ts. A
+// pinned model ID is a feature that breaks the day the provider retires it.
 const MAX_TURNS = 10;
 
 function alpacaHeaders() {
@@ -259,6 +261,7 @@ export async function POST(req: NextRequest) {
 
   const groqKey = process.env.GROQ_API_KEY;
   if (!groqKey) return new Response(JSON.stringify({ error: "GROQ_API_KEY not set" }), { status: 503 });
+  let groqModel = await resolveGroqModel(groqKey);
 
   let body: { messages?: unknown };
   try { body = await req.json(); } catch { return new Response(JSON.stringify({ error: "Invalid JSON" }), { status: 400 }); }
@@ -311,7 +314,7 @@ APPROACH: Read the portfolio before answering anything about it. Talk in AUD. Be
   const userMessage = (body.messages as OAIMessage[]).at(-1)?.content ?? "";
   const toolCallsLog: Array<{ name: string; input: Record<string, unknown>; output_preview: string }> = [];
   let finalReply = "";
-  let usedModel = GROQ_MODEL;
+  let usedModel = groqModel;
 
   const messages: OAIMessage[] = (body.messages as OAIMessage[]).map(m => ({
     role: m.role,
@@ -325,13 +328,14 @@ APPROACH: Read the portfolio before answering anything about it. Talk in AUD. Be
         controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
       }
 
+      let retriedModel = false;
       try {
         for (let turn = 0; turn < MAX_TURNS; turn++) {
           const res = await fetch(GROQ_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json", "Authorization": `Bearer ${groqKey}` },
             body: JSON.stringify({
-              model: GROQ_MODEL,
+              model: groqModel,
               messages: [{ role: "system", content: SYSTEM }, ...messages],
               tools,
               tool_choice: "auto",
@@ -350,7 +354,21 @@ APPROACH: Read the portfolio before answering anything about it. Talk in AUD. Be
 
           if (!res.ok) {
             const err = await res.text();
-            emit({ type: "error", message: `Groq ${res.status}: ${err.slice(0, 200)}` });
+            // A model can be retired between resolution and this call. Drop the
+            // cached choice, pick again, and retry once before reporting.
+            if (res.status === 404 && /model/i.test(err) && !retriedModel) {
+              retriedModel = true;
+              invalidateGroqModel();
+              const next = await resolveGroqModel(groqKey);
+              if (next !== groqModel) {
+                groqModel = next;
+                usedModel = next;
+                emit({ type: "status", message: `Switching to ${next}…` });
+                turn -= 1;
+                continue;
+              }
+            }
+            emit({ type: "error", message: describeModelError(res.status, err, groqModel) });
             break;
           }
 
@@ -462,7 +480,7 @@ Extract what should be saved to persistent memory. Output valid JSON only, no ma
       method: "POST",
       headers: { "Content-Type": "application/json", "Authorization": `Bearer ${groqKey}` },
       body: JSON.stringify({
-        model: "llama-3.1-8b-instant",
+        model: await resolveGroqModel(groqKey),
         messages: [{ role: "user", content: prompt }],
         max_tokens: 400,
         temperature: 0.1,

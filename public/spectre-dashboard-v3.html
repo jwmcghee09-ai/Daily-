@@ -1229,6 +1229,40 @@ tbody tr:hover{ background:rgba(255,63,52,.04) !important }
 }
 
 @media(max-width:900px){html,body{overflow-x:hidden;overflow-x:clip}.risk-help-tip{max-width:calc(100vw - 48px)}}
+
+/* ── Nested surfaces ──
+   A card inside a card, both filled with var(--card), reads as a box outlined
+   on an identical background — the boxiness has nothing to do with the colour,
+   it is the double surface. The homepage never nests fills: a panel holds rows
+   separated by space or a hairline. So a tile drops its own fill and border
+   when it sits inside another carded surface, and keeps them when it stands on
+   the page and needs to be visible at all. */
+.panel-half .perf-row,
+.panel-half .stress-card,
+.chart-card .kpi-mini,
+.signal-card .kpi-mini,
+.console-card .kpi-mini,
+.landing-preview-panel .landing-preview-stat,
+.landing-preview-panel .kpi-mini {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Rows in a list get a hairline between them rather than four borders each. */
+.panel-half .perf-row {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+.panel-half .perf-row:last-child { border-bottom: 0 !important; }
+
+/* Stress tiles keep only the accent edge that told them apart. */
+.panel-half .stress-card {
+  border-left: 2px solid rgba(255, 255, 255, 0.10) !important;
+  padding-left: .9rem !important;
+}
 </style>
 </head>
 <body class="boot-pending">

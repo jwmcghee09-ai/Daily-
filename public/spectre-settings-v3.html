@@ -177,6 +177,19 @@ nav{position:fixed;top:0;left:0;right:0;z-index:900;height:60px;background:rgba(
   .footer{padding:1.5rem 0}
   .foot-inner{flex-direction:column;align-items:center;text-align:center;gap:.4rem}
 }
+
+/* ── Nested surfaces ──
+   Same rule as the dashboard: a filled row inside a filled card reads as a box
+   outlined on an identical background. Rows get a hairline instead. */
+.settings-card .settings-row {
+  background: transparent !important;
+  border: 0 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+  border-radius: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+.settings-card .settings-rows > .settings-row:last-child { border-bottom: 0 !important; }
 </style>
 </head>
 <body class="boot-pending">

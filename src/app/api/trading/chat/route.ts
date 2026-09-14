@@ -2,14 +2,14 @@ import { NextRequest } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { readTradingMemory, insertTradingDecision } from "@/lib/db";
 import { brokerHeaders, isBrokerConnected } from "@/lib/broker";
+import { describeModelError, invalidateGroqModel, resolveGroqModel } from "@/lib/ai-provider";
 
 const TRADER_EMAIL = "jwmcghee09@gmail.com";
 const ALPACA_BASE = "https://paper-api.alpaca.markets/v2";
 const ALPACA_DATA = "https://data.alpaca.markets/v2";
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 const CLAUDE_URL = "https://api.anthropic.com/v1/messages";
-// llama-3.1-8b-instant has ~3x the token/min rate limit vs 70b on Groq free tier
-const GROQ_MODEL = "llama-3.1-8b-instant";
+// Resolved from the provider at request time — see lib/ai-provider.ts.
 const CLAUDE_MODEL = "claude-opus-4-7";
 const MAX_TURNS = 8;
 
@@ -191,6 +191,7 @@ export async function POST(request: NextRequest) {
   }
 
   const groqKey = process.env.GROQ_API_KEY;
+  const groqModel = groqKey ? await resolveGroqModel(groqKey) : "";
   const anthropicKey = process.env.ANTHROPIC_API_KEY;
   if (!groqKey && !anthropicKey) {
     return new Response(`data: ${JSON.stringify({ type: "error", message: "No AI API key configured" })}\n\n`, {
@@ -244,14 +245,14 @@ export async function POST(request: NextRequest) {
         }));
 
         if (groqKey) {
-          usedModel = `groq/${GROQ_MODEL}`;
+          usedModel = `groq/${groqModel}`;
           // Groq agentic loop
           for (let turn = 0; turn < MAX_TURNS; turn++) {
             let res = await fetch(GROQ_URL, {
               method: "POST",
               headers: { "Content-Type": "application/json", "Authorization": `Bearer ${groqKey}` },
               body: JSON.stringify({
-                model: GROQ_MODEL,
+                model: groqModel,
                 messages: [{ role: "system", content: systemPrompt }, ...messages],
                 tools: TOOLS_GROQ,
                 tool_choice: "auto",
@@ -267,7 +268,7 @@ export async function POST(request: NextRequest) {
                 method: "POST",
                 headers: { "Content-Type": "application/json", "Authorization": `Bearer ${groqKey}` },
                 body: JSON.stringify({
-                  model: GROQ_MODEL,
+                  model: groqModel,
                   messages: [{ role: "system", content: systemPrompt }, ...messages],
                   tools: TOOLS_GROQ,
                   tool_choice: "auto",
@@ -276,7 +277,11 @@ export async function POST(request: NextRequest) {
               });
             }
 
-            if (!res.ok) throw new Error(`Groq ${res.status}: ${(await res.text()).slice(0, 200)}`);
+            if (!res.ok) {
+              const body = await res.text();
+              if (res.status === 404 && /model/i.test(body)) invalidateGroqModel();
+              throw new Error(describeModelError(res.status, body, groqModel));
+            }
 
             const data = await res.json() as {
               choices: [{ message: { content: string | null; tool_calls?: OAIToolCall[] }; finish_reason: string }]
