@@ -138,6 +138,19 @@ for (const surface of PALETTE_SURFACES) {
   else fail(`${surface}: ${hits.length} gradient(s) still on the old light orange — ${hits[0].slice(0, 70)}`);
 }
 
+// ── 3d. No graph-paper grid overlays ──
+// The homepage has none. Other pages each painted their own fixed grid of
+// criss-cross lines or dots over everything, which is the single loudest way
+// they stopped looking like the same product.
+const GRID_PATTERN = /(1px|\.6px)\s*,\s*transparent\s+(1px|\.6px)/;
+for (const surface of PALETTE_SURFACES) {
+  const path = join(root, surface);
+  if (!existsSync(path)) continue;
+  const css = readFileSync(path, "utf8");
+  if (GRID_PATTERN.test(css)) fail(`${surface}: has a repeating grid/dot overlay — the homepage has none`);
+  else ok(`${surface}: no grid overlay`);
+}
+
 // ── 4. Landing page must not reference CSS classes that don't exist ──
 const cssModule = readFileSync(join(root, "src/components/marketing/landing-page.module.css"), "utf8");
 const definedClasses = new Set([...cssModule.matchAll(/\.([A-Za-z0-9_-]+)/g)].map((m) => m[1]));
