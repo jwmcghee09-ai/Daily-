@@ -32,6 +32,19 @@ function report(label, names) {
 
 const hardMissing = report("Required env", required);
 report("Recommended env", optionalButRecommended);
+
+// Entitlements fail closed: with this unset, every account resolves to
+// planTier "none". That is the right default for a variable going missing, but
+// it means the growth-mode giveaway has to be stated out loud, so say plainly
+// which way this deployment is pointed rather than leaving it to be discovered.
+const freeAccess = ["1", "true", "on", "yes"]
+  .includes(String(process.env.FOUNDING_FREE_ACCESS || "").trim().toLowerCase());
+console.log(
+  freeAccess
+    ? "Access tier: FOUNDING_FREE_ACCESS is on — every account gets Pro free"
+    : "Access tier: paid tiers enforced — set FOUNDING_FREE_ACCESS=1 to give the product away",
+);
+
 console.log("Checklist: docs/CUSTOMER_LAUNCH_CHECKLIST.md");
 
 if (hardMissing > 0) {

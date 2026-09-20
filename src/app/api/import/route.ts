@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
-import { saveImport } from "@/lib/db";
+import { NoValidHoldingsError, saveImport } from "@/lib/db";
 import { DataSource, PortfolioHolding } from "@/lib/portfolio";
 
 export const runtime = "nodejs";
@@ -67,7 +67,12 @@ export async function POST(request: Request) {
 
     const state = saveImport(sessionUser.id, payload.source, payload.holdings);
     return NextResponse.json(state);
-  } catch {
+  } catch (error) {
+    // Rows that all fail validation are a bad request, not a server fault.
+    if (error instanceof NoValidHoldingsError) {
+      return NextResponse.json({ error: error.message }, { status: 422 });
+    }
+
     return NextResponse.json({ error: "Failed to persist imported report." }, { status: 500 });
   }
 }

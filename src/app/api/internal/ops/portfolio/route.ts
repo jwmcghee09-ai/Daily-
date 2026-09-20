@@ -83,7 +83,6 @@ export async function GET(request: Request) {
   // Win rate on closed trades
   const closedArray = Array.isArray(closedOrders) ? closedOrders as Record<string, string>[] : [];
   const filled = closedArray.filter(o => o.status === "filled" && o.side === "sell");
-  const totalPl = filled.reduce((s, o) => s + (parseFloat(o.filled_avg_price) - parseFloat(o.filled_avg_price)) * parseFloat(o.filled_qty), 0);
 
   // 30-day equity stats
   const histEquity = (history as Record<string, number[]> | null)?.equity ?? [];

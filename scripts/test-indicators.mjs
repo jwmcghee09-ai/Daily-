@@ -5,13 +5,13 @@
 // is obvious by construction — a pure uptrend must give a high ADX and a
 // bullish MACD, a flat series must give a squeeze and no trend, and so on.
 import { execFileSync } from "node:child_process";
-import { writeFileSync, mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 const dir = mkdtempSync(join(tmpdir(), "spectre-ind-"));
 // Strip the types so this runs without a TS toolchain.
-const src = execFileSync("npx", ["tsc", "src/lib/indicators.ts", "--target", "es2022",
+execFileSync("npx", ["tsc", "src/lib/indicators.ts", "--target", "es2022",
   "--module", "esnext", "--outDir", dir, "--skipLibCheck"], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
 const mod = await import(join(dir, "indicators.js"));
 

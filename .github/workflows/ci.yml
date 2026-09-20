@@ -1,0 +1,147 @@
+name: CI
+
+# Everything here already existed as a script someone had to remember to run.
+# Nothing did, so a deploy could go out against a tree that failed typecheck or
+# a suite that had been red for days. Running them on every push is the cheapest
+# way to make the rest of the repo's guardrails mean something.
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  # A newer push makes an in-flight run irrelevant — except on main, where the
+  # record of what passed is worth keeping.
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+env:
+  # Render pins this; CI matching it means "passes here" says something about
+  # "runs there". node:sqlite is behind a flag before 22.5 and this repo uses it.
+  NODE_VERSION: "22.13.0"
+
+jobs:
+  static:
+    name: Typecheck, lint, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - run: npm ci
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      # Vendored Chart.js and Electron's CommonJS entry points are excluded in
+      # eslint.config.mjs, so the app's own code is expected to be clean.
+      - name: Lint
+        run: npx eslint --max-warnings=0
+
+      - name: Build
+        run: npx next build
+
+      # The build output is what every runtime suite below needs; rebuilding it
+      # in each job would triple the slowest step.
+      - name: Cache build for the runtime jobs
+        uses: actions/upload-artifact@v4
+        with:
+          name: next-build
+          path: .next
+          retention-days: 1
+          include-hidden-files: true
+
+  unit:
+    name: Library suites
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+
+      # These need no server: they compile the library under test and exercise
+      # it directly.
+      - name: Indicators
+        run: node scripts/test-indicators.mjs
+      - name: Snapshot continuity
+        run: node scripts/test-snapshot-continuity.mjs
+      - name: AI provider resolution and failover
+        run: node scripts/test-ai-provider.mjs
+      - name: Import bounds
+        run: node scripts/test-import-bounds.mjs
+      - name: Contract-note parser
+        run: node --experimental-strip-types scripts/test-contract-notes.mjs
+      - name: MCP connector
+        run: node local/test-mcp.mjs
+      - name: MCP client setup
+        run: node local/test-setup.mjs
+
+      - name: Site guardrails
+        run: node scripts/verify-site.mjs
+
+  server:
+    name: API suites
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    needs: static
+    env:
+      # The inbound-email suites sign their own webhook payloads, so these must
+      # match what the tests use. They are test fixtures, not secrets.
+      INBOUND_EMAIL_SIGNING_KEY: ci-signing-key
+      INBOUND_EMAIL_BASIC_AUTH: ci-user:ci-pass
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: next-build
+          path: .next
+
+      - name: Start the server
+        run: |
+          npx next start -p 3457 > /tmp/server.log 2>&1 &
+          for i in $(seq 1 60); do
+            if [ "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3457/ || true)" = "200" ]; then
+              echo "up after ${i}s"; exit 0
+            fi
+            sleep 1
+          done
+          echo "server never became ready"; cat /tmp/server.log; exit 1
+
+      - name: Endpoint stress (auth, rate limits, injection, races)
+        run: node scripts/stress-all.mjs http://localhost:3457
+
+      # Both email suites need a signed-in account to read the forwarding
+      # address, so make one and hand them its session.
+      - name: Inbound email pipeline
+        run: |
+          COOKIE_JAR=$(mktemp)
+          curl -s -c "$COOKIE_JAR" -X POST http://localhost:3457/api/auth/register \
+            -H 'Content-Type: application/json' \
+            -d "{\"email\":\"ci-$(date +%s)@example.com\",\"password\":\"CiTestPass123!\",\"displayName\":\"CI\",\"acceptsTerms\":true}" \
+            -o /dev/null
+          TOKEN=$(awk '!/^# / && NF>=7 {print $7}' "$COOKIE_JAR" | tail -1)
+          if [ -z "$TOKEN" ]; then echo "could not register a CI account"; cat /tmp/server.log; exit 1; fi
+          export TEST_COOKIE="spectre_session=$TOKEN"
+          node scripts/test-email-ingest.mjs
+          node scripts/test-inbound-providers.mjs
+
+      - name: Server log on failure
+        if: failure()
+        run: cat /tmp/server.log || true

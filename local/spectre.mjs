@@ -363,15 +363,36 @@ async function cmdVersion() {
       : `  ${C.orange}○${C.reset} Not signed in — run ${C.white}node spectre.mjs login${C.reset}`,
   );
 
-  // A checkout on a detached HEAD silently refuses every `git pull` — the copy
-  // then sits frozen at whatever commit it was pinned to while looking like a
-  // normal clone, which is indistinguishable from the tools being broken.
-  // Diagnose it here rather than leaving it to be discovered.
+  // How this copy updates depends on how it arrived, and getting that wrong is
+  // worse than saying nothing: a downloaded zip has no git repo, and telling
+  // its owner to fix a detached HEAD sends them after a problem they do not
+  // have. Three genuinely different cases, so distinguish all three.
+  //
+  // The one worth catching is a clone on a detached HEAD: it refuses every
+  // `git pull` in silence, so the copy sits frozen while looking like a normal
+  // checkout — indistinguishable from the tools simply being broken.
+  const { execFile } = await import("node:child_process");
+  const { promisify } = await import("node:util");
+  const run = promisify(execFile);
+  const dir = new URL(".", import.meta.url).pathname;
+
+  let insideRepo = false;
   try {
-    const { execFile } = await import("node:child_process");
-    const { promisify } = await import("node:util");
-    const run = promisify(execFile);
-    const dir = new URL(".", import.meta.url).pathname;
+    const { stdout } = await run("git", ["-C", dir, "rev-parse", "--is-inside-work-tree"]);
+    insideRepo = stdout.trim() === "true";
+  } catch {
+    insideRepo = false; // no git, or not a repo — a downloaded copy
+  }
+
+  if (!insideRepo) {
+    console.log(
+      `  ${C.green}✓${C.reset} Downloaded copy ${C.grey}— re-download to update:${C.reset}\n` +
+      `    ${C.grey}${(config?.baseUrl || DEFAULT_BASE_URL)}/mcp-setup${C.reset}\n`,
+    );
+    return;
+  }
+
+  try {
     const { stdout } = await run("git", ["-C", dir, "symbolic-ref", "--quiet", "HEAD"]);
     const branch = stdout.trim().replace("refs/heads/", "");
     console.log(`  ${C.green}✓${C.reset} On branch ${branch} ${C.grey}— \`git pull\` will update this copy${C.reset}\n`);

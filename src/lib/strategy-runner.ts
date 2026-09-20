@@ -3,14 +3,12 @@ import {
   insertStrategyRun, insertTradingDecision,
   insertPendingTrade, listDuePendingTrades, resolvePendingTrade,
   getPendingTrade, sumExecutedBuyNotionalToday,
-  readTradingMemory, PendingTrade,
+  readTradingMemory,
 } from "@/lib/db";
 import { brokerHeaders, isBrokerConnected, BROKER_DISCONNECTED_MESSAGE } from "@/lib/broker";
+import { invalidateGroqModel, NO_PROVIDER_MESSAGE, resolveChatProviders } from "@/lib/ai-provider";
 
 const ALPACA_BASE = "https://paper-api.alpaca.markets/v2";
-const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
-const GROQ_MODEL = "llama-3.3-70b-versatile";
-const GROQ_FALLBACK = "llama-3.1-8b-instant";
 const CASH_FLOOR_PCT = 0.20;
 const CONFIRM_WINDOW_MIN = 5;
 
@@ -126,33 +124,64 @@ const RISK_PROMPTS: Record<string, string> = {
 interface AiAction { action: string; symbol: string; qty: number; reason: string; }
 interface AiDecision { assessment: string; actions: AiAction[]; stop_alerts: Array<{ symbol: string; note: string }>; }
 
-async function callGroqJson(prompt: string, groqKey: string): Promise<{ decision: AiDecision; model: string }> {
+/**
+ * Ask for a decision, trying every configured backend.
+ *
+ * This runs unattended on a schedule, so a failure here is not an error message
+ * someone reads — it is Myrmidon quietly not trading. It previously hardcoded
+ * two Groq model IDs, which is the arrangement that already took the terminal
+ * chat down once when one of them was retired; now the model comes from what
+ * the provider says it serves, and a second provider stands behind the first.
+ */
+async function callAiForDecision(prompt: string): Promise<{ decision: AiDecision; model: string }> {
+  const providers = await resolveChatProviders();
+  if (!providers.length) throw new Error(NO_PROVIDER_MESSAGE);
+
   let lastErr = "";
-  for (const model of [GROQ_MODEL, GROQ_FALLBACK]) {
+  for (const provider of providers) {
     for (let attempt = 0; attempt < 2; attempt++) {
-      const res = await fetch(GROQ_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${groqKey}` },
-        body: JSON.stringify({
-          model,
-          messages: [{ role: "user", content: prompt }],
-          max_tokens: 1500,
-          temperature: 0.2,
-          response_format: { type: "json_object" },
-        }),
-      });
+      let res: Response;
+      try {
+        res = await fetch(provider.url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${provider.key}` },
+          body: JSON.stringify({
+            model: provider.model,
+            messages: [{ role: "user", content: prompt }],
+            max_tokens: 1500,
+            temperature: 0.2,
+            response_format: { type: "json_object" },
+          }),
+        });
+      } catch (e) {
+        lastErr = `${provider.name}: ${e instanceof Error ? e.message : "network error"}`;
+        break;
+      }
+
       if (res.status === 429) {
+        // Only wait it out if there is nothing else to try.
+        if (provider !== providers[providers.length - 1]) {
+          lastErr = `${provider.name} rate limited`;
+          break;
+        }
         const retryAfter = parseInt(res.headers.get("retry-after") ?? "20");
         await new Promise(r => setTimeout(r, Math.min(retryAfter, 30) * 1000));
         continue;
       }
-      if (!res.ok) { lastErr = `Groq ${res.status}: ${(await res.text()).slice(0, 200)}`; break; }
+
+      if (!res.ok) {
+        const body = (await res.text()).slice(0, 200);
+        if (res.status === 404 && /model/i.test(body) && provider.name === "Groq") invalidateGroqModel();
+        lastErr = `${provider.name} ${res.status}: ${body}`;
+        break;
+      }
+
       const data = await res.json() as { choices: [{ message: { content: string } }] };
       const text = data.choices[0].message.content ?? "";
       try {
         const parsed = JSON.parse(text) as Partial<AiDecision>;
         return {
-          model,
+          model: `${provider.name.toLowerCase()}/${provider.model}`,
           decision: {
             assessment: String(parsed.assessment ?? ""),
             actions: Array.isArray(parsed.actions) ? parsed.actions.filter(a => a && typeof a === "object") as AiAction[] : [],
@@ -160,7 +189,7 @@ async function callGroqJson(prompt: string, groqKey: string): Promise<{ decision
           },
         };
       } catch {
-        lastErr = "Model returned invalid JSON";
+        lastErr = `${provider.name} returned invalid JSON`;
         break;
       }
     }
@@ -354,8 +383,9 @@ export async function runStrategy(trigger: "cron" | "manual"): Promise<StrategyR
   if (cfg.mode === "custom" && !cfg.custom_prompt.trim()) {
     return { status: "skipped", summary: "No strategy written yet — add one on /strategy", pending_processed: pendingProcessed };
   }
-  const groqKey = process.env.GROQ_API_KEY;
-  if (!groqKey) return { status: "error", summary: "GROQ_API_KEY not set", pending_processed: pendingProcessed };
+  if (!(await resolveChatProviders()).length) {
+    return { status: "error", summary: NO_PROVIDER_MESSAGE, pending_processed: pendingProcessed };
+  }
 
   let acct: AlpacaAccount;
   let positions: AlpacaPosition[];
@@ -423,7 +453,7 @@ Empty actions array is fine.`;
   let decision: AiDecision;
   let model: string;
   try {
-    const out = await callGroqJson(prompt, groqKey);
+    const out = await callAiForDecision(prompt);
     decision = out.decision;
     model = out.model;
   } catch (e) {

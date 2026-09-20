@@ -2,7 +2,13 @@ import { NextRequest } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { readTradingMemory, insertTradingDecision } from "@/lib/db";
 import { brokerHeaders, isBrokerConnected } from "@/lib/broker";
-import { describeModelError, invalidateGroqModel, resolveGroqModel } from "@/lib/ai-provider";
+import {
+  describeModelError,
+  invalidateGroqModel,
+  ProviderUnavailableError,
+  resolveGroqModel,
+  shouldFailOver,
+} from "@/lib/ai-provider";
 
 const TRADER_EMAIL = "jwmcghee09@gmail.com";
 const ALPACA_BASE = "https://paper-api.alpaca.markets/v2";
@@ -280,7 +286,12 @@ export async function POST(request: NextRequest) {
             if (!res.ok) {
               const body = await res.text();
               if (res.status === 404 && /model/i.test(body)) invalidateGroqModel();
-              throw new Error(describeModelError(res.status, body, groqModel));
+              const described = describeModelError(res.status, body, groqModel);
+              // Typed so the Claude fallback below can recognise it without
+              // having to guess from the wording.
+              throw shouldFailOver(res.status)
+                ? new ProviderUnavailableError("Groq", res.status, described)
+                : new Error(described);
             }
 
             const data = await res.json() as {
@@ -380,8 +391,8 @@ export async function POST(request: NextRequest) {
 
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
-        // If Groq failed and we have Claude, try falling back
-        if (anthropicKey && groqKey && msg.includes("Groq")) {
+        // If Groq failed in a way Claude might survive, hand over.
+        if (anthropicKey && e instanceof ProviderUnavailableError) {
           emit({ type: "status", message: "Groq unavailable, switching to Claude…" });
           try {
             usedModel = CLAUDE_MODEL;

@@ -710,6 +710,35 @@ function sanitizeNumber(value: unknown, fallback = 0): number {
   return Number.isFinite(numeric) ? numeric : fallback;
 }
 
+/**
+ * Upper bounds on imported figures.
+ *
+ * Being finite is not enough. An import may carry up to MAX_HOLDINGS rows, and
+ * every `value` is summed into `totalValue`, so values near Number.MAX_VALUE
+ * overflow that sum to Infinity. Infinity then spreads through every derived
+ * metric — P&L, concentration, VaR, drawdown, the stress scenarios — and
+ * JSON.stringify serialises it as `null`. The page does not error; it simply
+ * renders blank, which is the worst way for this to fail.
+ *
+ * A trillion is far above any real holding and low enough that 10,000 of them
+ * still sum to 1e16, nowhere near the float ceiling.
+ */
+const MAX_HOLDING_MAGNITUDE = 1e12;
+const MAX_TICKER_LENGTH = 32;
+const MAX_TEXT_LENGTH = 128;
+
+/** Finite, within bounds, and never NaN — safe to sum and to divide by. */
+function sanitizeBoundedNumber(value: unknown, fallback = 0, { allowNegative = false } = {}): number {
+  const numeric = sanitizeNumber(value, fallback);
+  const floored = allowNegative ? numeric : Math.max(0, numeric);
+  return Math.max(-MAX_HOLDING_MAGNITUDE, Math.min(MAX_HOLDING_MAGNITUDE, floored));
+}
+
+/** Trimmed, non-empty, and short enough not to wreck a table cell. */
+function sanitizeBoundedString(value: unknown, fallback: string, maxLength: number): string {
+  return sanitizeString(value, fallback).slice(0, maxLength);
+}
+
 function sanitizeDate(value: unknown): string {
   if (typeof value !== "string" || value.trim().length === 0) {
     return new Date().toISOString().slice(0, 10);
@@ -782,13 +811,15 @@ function pruneSnapshotsForUser(db: DatabaseSync, userId: string, retentionDays: 
 }
 
 function sanitizeHolding(raw: PortfolioHolding, source: DataSource, index: number): PortfolioHolding | null {
-  const value = sanitizeNumber(raw.value, Number.NaN);
-  if (!Number.isFinite(value) || value <= 0) {
+  const rawValue = sanitizeNumber(raw.value, Number.NaN);
+  if (!Number.isFinite(rawValue) || rawValue <= 0) {
     return null;
   }
 
+  const value = sanitizeBoundedNumber(rawValue);
+
   return {
-    id: sanitizeString(raw.id, `${source}-${index}-${Date.now()}`),
+    id: sanitizeBoundedString(raw.id, `${source}-${index}-${Date.now()}`, MAX_TEXT_LENGTH),
     source,
     account: sanitizeString(
       raw.account,
@@ -810,13 +841,16 @@ function sanitizeHolding(raw: PortfolioHolding, source: DataSource, index: numbe
                   ? "Global Holdings"
                   : "Brokerage",
     ),
-    ticker: sanitizeString(raw.ticker, "UNKNOWN").toUpperCase(),
-    name: sanitizeString(raw.name, "Unnamed Holding"),
-    units: sanitizeNumber(raw.units, 0),
-    price: sanitizeNumber(raw.price, 0),
-    prevClose: sanitizeNumber(raw.prevClose, sanitizeNumber(raw.price, 0)),
+    ticker: sanitizeBoundedString(raw.ticker, "UNKNOWN", MAX_TICKER_LENGTH).toUpperCase(),
+    name: sanitizeBoundedString(raw.name, "Unnamed Holding", MAX_TEXT_LENGTH),
+    // A negative share count means the parse went wrong, not that the user is
+    // short — nothing downstream models a short position. Keep the money,
+    // refuse the impossible count.
+    units: sanitizeBoundedNumber(raw.units, 0),
+    price: sanitizeBoundedNumber(raw.price, 0),
+    prevClose: sanitizeBoundedNumber(raw.prevClose, sanitizeBoundedNumber(raw.price, 0)),
     value,
-    costBase: sanitizeNumber(raw.costBase, value),
+    costBase: sanitizeBoundedNumber(raw.costBase, value),
     sector: sanitizeString(
       raw.sector,
       source === "super"
@@ -1694,6 +1728,26 @@ function compositionFingerprint(db: DatabaseSync, userId: string): string {
     .join("|");
 }
 
+/**
+ * Every row failed validation. That is a problem with what was sent, not with
+ * the server, so callers should answer 422 and say which column to look at —
+ * not 500 "something went wrong", which tells the user nothing and puts a
+ * false alarm in the error tracker.
+ */
+export class NoValidHoldingsError extends Error {
+  readonly rowsReceived: number;
+
+  constructor(rowsReceived: number) {
+    super(
+      rowsReceived === 0
+        ? "No holdings were provided."
+        : `None of the ${rowsReceived} row(s) had a usable value. Each holding needs a positive "value" — check that the value column parsed as a number.`,
+    );
+    this.name = "NoValidHoldingsError";
+    this.rowsReceived = rowsReceived;
+  }
+}
+
 export function saveImport(userId: string, source: DataSource, holdings: PortfolioHolding[]): PortfolioState {
   const db = getDb();
   const normalizedSource: DataSource = normalizeSource(source);
@@ -1704,7 +1758,7 @@ export function saveImport(userId: string, source: DataSource, holdings: Portfol
     .filter((holding): holding is PortfolioHolding => Boolean(holding));
 
   if (cleanedHoldings.length === 0) {
-    throw new Error("No valid holdings to save.");
+    throw new NoValidHoldingsError(holdings.length);
   }
 
   const nowIso = new Date().toISOString();
@@ -3189,10 +3243,15 @@ export function markPriceDipAlertTriggered(userId: string, ticker: string, trigg
 }
 
 export function isFoundingFreeAccess(): boolean {
-  // Growth mode: every account gets the full product free. Flip off by setting
-  // FOUNDING_FREE_ACCESS=0 in the environment when paid tiers return.
+  // Growth mode: every account gets the full product free. Set
+  // FOUNDING_FREE_ACCESS=1 to enable it; it is set in render.yaml today.
+  //
+  // This is deliberately opt-in rather than opt-out. Giving the product away
+  // has to be a decision someone made, not what happens when a variable goes
+  // missing — an unset or misspelled name should cost nothing, and under the
+  // old default it silently granted Pro to everyone with no error anywhere.
   const v = (process.env.FOUNDING_FREE_ACCESS || "").trim().toLowerCase();
-  return !["0", "false", "off"].includes(v);
+  return ["1", "true", "on", "yes"].includes(v);
 }
 
 export function readUserEntitlements(userId: string): UserEntitlements {

@@ -106,6 +106,92 @@ const load = async () => import(`${join(dir, "ai-provider.js")}?v=${Math.random(
   check("rate limiting says so", /[Rr]ate limited/.test(m.describeModelError(429, "slow down", "x")));
 }
 
+// ── Provider ordering: one backend going down must not take the feature with it ──
+const withEnv = async (env, body) => {
+  const saved = {};
+  for (const [k, v] of Object.entries(env)) {
+    saved[k] = process.env[k];
+    if (v === undefined) delete process.env[k];
+    else process.env[k] = v;
+  }
+  try { return await body(); } finally {
+    for (const [k, v] of Object.entries(saved)) {
+      if (v === undefined) delete process.env[k];
+      else process.env[k] = v;
+    }
+  }
+};
+
+{
+  stubModels(["llama-3.3-70b-versatile"]);
+  await withEnv({ GROQ_API_KEY: "g", OPENAI_API_KEY: "o", AI_PROVIDER: undefined }, async () => {
+    const m = await load();
+    const providers = await m.resolveChatProviders();
+    check("both configured backends are offered", providers.length === 2, providers.map((p) => p.name).join(", "));
+    check("Groq is tried first (its free tier is what keeps this cheap)", providers[0].name === "Groq");
+    check("OpenAI stands behind it", providers[1].name === "OpenAI");
+    check("the Groq model is resolved, not hardcoded",
+      providers[0].model === "llama-3.3-70b-versatile", providers[0].model);
+    check("every provider carries a usable endpoint and key",
+      providers.every((p) => /^https:\/\//.test(p.url) && p.key.length > 0));
+  });
+}
+
+{
+  stubModels(["llama-3.3-70b-versatile"]);
+  await withEnv({ GROQ_API_KEY: undefined, OPENAI_API_KEY: "o", AI_PROVIDER: undefined }, async () => {
+    const m = await load();
+    const providers = await m.resolveChatProviders();
+    check("OpenAI alone still serves the feature",
+      providers.length === 1 && providers[0].name === "OpenAI", providers.map((p) => p.name).join(","));
+  });
+}
+
+{
+  stubModels(["llama-3.3-70b-versatile"]);
+  await withEnv({ GROQ_API_KEY: "g", OPENAI_API_KEY: "o", AI_PROVIDER: "openai" }, async () => {
+    const m = await load();
+    const providers = await m.resolveChatProviders();
+    check("AI_PROVIDER pins one backend for debugging",
+      providers.length === 1 && providers[0].name === "OpenAI", providers.map((p) => p.name).join(","));
+  });
+}
+
+{
+  await withEnv({ GROQ_API_KEY: undefined, OPENAI_API_KEY: undefined, AI_PROVIDER: undefined }, async () => {
+    const m = await load();
+    check("no keys means no providers, not a crash", (await m.resolveChatProviders()).length === 0);
+    check("and the message says which keys to set",
+      /GROQ_API_KEY/.test(m.NO_PROVIDER_MESSAGE) && /OPENAI_API_KEY/.test(m.NO_PROVIDER_MESSAGE));
+  });
+}
+
+// ── Which failures are worth another backend ──
+{
+  const m = await load();
+  for (const status of [401, 403, 429, 500, 502, 503]) {
+    check(`${status} fails over to the next provider`, m.shouldFailOver(status) === true);
+  }
+  // A 400 is our own malformed request — it will fail identically everywhere.
+  for (const status of [400, 404, 422]) {
+    check(`${status} does not waste a second request`, m.shouldFailOver(status) === false);
+  }
+}
+
+// ── The failover signal must not depend on error wording ──
+{
+  const m = await load();
+  const err = new m.ProviderUnavailableError("Groq", 503, "AI provider error 503: upstream down");
+  check("an unavailable provider is recognisable by type", err instanceof m.ProviderUnavailableError);
+  check("it carries which provider failed", err.provider === "Groq");
+  check("and the status it failed with", err.status === 503);
+  // The regression this replaces: trading/chat tested `msg.includes("Groq")`,
+  // and describeModelError never produces that string, so the Claude fallback
+  // it guarded could never run.
+  check("describeModelError still does not contain the provider name — hence the type",
+    !/Groq/.test(m.describeModelError(503, "upstream down", "x")));
+}
+
 globalThis.fetch = realFetch;
 rmSync(dir, { recursive: true, force: true });
 console.log(failures === 0 ? "\nAll AI-provider checks passed" : `\n${failures} check(s) FAILED`);

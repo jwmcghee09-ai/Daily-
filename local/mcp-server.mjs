@@ -14,7 +14,7 @@ import { analyse } from "./lib/engine.mjs";
 import { loadBars } from "./lib/quotes.mjs";
 import { valueHoldings } from "./lib/holdings.mjs";
 import { readPortfolio } from "./lib/portfolio.mjs";
-import { fetchAccountPortfolio, readConfig, apiGet } from "./lib/account.mjs";
+import { fetchAccountPortfolio, apiGet } from "./lib/account.mjs";
 
 // Bump this whenever the shape of what a tool returns changes. It is stamped
 // onto get_portfolio's result so you can tell, from the AI's own answer,

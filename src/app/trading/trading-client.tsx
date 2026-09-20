@@ -82,10 +82,6 @@ function fmtDate(iso: unknown): string {
   return new Date(String(iso) + "T12:00:00").toLocaleDateString("en-AU", { month: "short", day: "numeric" });
 }
 
-function lessonText(l: string | { lesson: string; date: string }): string {
-  return typeof l === "string" ? l : l.lesson;
-}
-
 // ── Tooltip ───────────────────────────────────────────────────────────────────
 
 function PriceTooltip({ active, payload }: { active?: boolean; payload?: Array<{ payload: ChartBar }>; label?: string; }) {

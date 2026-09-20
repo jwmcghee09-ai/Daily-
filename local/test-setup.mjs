@@ -34,7 +34,7 @@ await withHome(async () => {
 });
 
 // ── 2. Existing config with other servers — the case that must not regress ──
-await withHome(async (home) => {
+await withHome(async () => {
   const path = clientConfigPath();
   const { mkdirSync } = await import("node:fs");
   mkdirSync(join(path, ".."), { recursive: true });

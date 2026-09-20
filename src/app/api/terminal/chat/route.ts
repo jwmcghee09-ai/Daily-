@@ -5,7 +5,15 @@ import { isTerminalRequestAuthorized } from "@/lib/terminal-auth";
 import { brokerHeaders, isBrokerConnected, BROKER_DISCONNECTED_MESSAGE } from "@/lib/broker";
 import { ingestedTradesForAi, portfolioSnapshotForAi } from "@/lib/portfolio-feed";
 import { normaliseSymbol, yahooDailyBars } from "@/lib/market-data";
-import { describeModelError, invalidateGroqModel, resolveGroqModel } from "@/lib/ai-provider";
+import {
+  type ChatProvider,
+  describeModelError,
+  invalidateGroqModel,
+  NO_PROVIDER_MESSAGE,
+  resolveChatProviders,
+  resolveGroqModel,
+  shouldFailOver,
+} from "@/lib/ai-provider";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -13,7 +21,6 @@ export const maxDuration = 120;
 const ALPACA_BASE = "https://paper-api.alpaca.markets/v2";
 const ALPACA_DATA = "https://data.alpaca.markets/v2";
 const ALPACA_NEWS = "https://data.alpaca.markets/v1beta1/news";
-const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 // Resolved from the provider at request time — see lib/ai-provider.ts. A
 // pinned model ID is a feature that breaks the day the provider retires it.
 const MAX_TURNS = 10;
@@ -259,9 +266,11 @@ export async function POST(req: NextRequest) {
     return new Response(JSON.stringify({ error: "Not authorized — sign in at /signin first" }), { status: 403 });
   }
 
-  const groqKey = process.env.GROQ_API_KEY;
-  if (!groqKey) return new Response(JSON.stringify({ error: "GROQ_API_KEY not set" }), { status: 503 });
-  let groqModel = await resolveGroqModel(groqKey);
+  const providers = await resolveChatProviders();
+  if (!providers.length) return new Response(JSON.stringify({ error: NO_PROVIDER_MESSAGE }), { status: 503 });
+  let providerIndex = 0;
+  let provider = providers[0];
+  const groqKey = process.env.GROQ_API_KEY || "";
 
   let body: { messages?: unknown };
   try { body = await req.json(); } catch { return new Response(JSON.stringify({ error: "Invalid JSON" }), { status: 400 }); }
@@ -314,7 +323,7 @@ APPROACH: Read the portfolio before answering anything about it. Talk in AUD. Be
   const userMessage = (body.messages as OAIMessage[]).at(-1)?.content ?? "";
   const toolCallsLog: Array<{ name: string; input: Record<string, unknown>; output_preview: string }> = [];
   let finalReply = "";
-  let usedModel = groqModel;
+  let usedModel = provider.model;
 
   const messages: OAIMessage[] = (body.messages as OAIMessage[]).map(m => ({
     role: m.role,
@@ -331,11 +340,11 @@ APPROACH: Read the portfolio before answering anything about it. Talk in AUD. Be
       let retriedModel = false;
       try {
         for (let turn = 0; turn < MAX_TURNS; turn++) {
-          const res = await fetch(GROQ_URL, {
+          const res = await fetch(provider.url, {
             method: "POST",
-            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${groqKey}` },
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${provider.key}` },
             body: JSON.stringify({
-              model: groqModel,
+              model: provider.model,
               messages: [{ role: "system", content: SYSTEM }, ...messages],
               tools,
               tool_choice: "auto",
@@ -343,7 +352,20 @@ APPROACH: Read the portfolio before answering anything about it. Talk in AUD. Be
             }),
           });
 
+          // Move to the next backend rather than making the user wait out a
+          // limit or an outage we already have an alternative for.
+          const failOver = (reason: string): boolean => {
+            if (providerIndex + 1 >= providers.length) return false;
+            providerIndex += 1;
+            provider = providers[providerIndex];
+            usedModel = provider.model;
+            emit({ type: "status", message: `${reason} — switching to ${provider.name}…` });
+            return true;
+          };
+
           if (res.status === 429) {
+            if (failOver("Rate limited")) { turn -= 1; continue; }
+
             const retryAfter = res.headers.get("retry-after");
             const wait = Math.min((retryAfter ? parseInt(retryAfter) : 30) * 1000, 35000);
             emit({ type: "status", message: `Rate limit — retrying in ${Math.ceil(wait / 1000)}s…` });
@@ -358,17 +380,25 @@ APPROACH: Read the portfolio before answering anything about it. Talk in AUD. Be
             // cached choice, pick again, and retry once before reporting.
             if (res.status === 404 && /model/i.test(err) && !retriedModel) {
               retriedModel = true;
-              invalidateGroqModel();
-              const next = await resolveGroqModel(groqKey);
-              if (next !== groqModel) {
-                groqModel = next;
+              if (provider.name === "Groq") invalidateGroqModel();
+              const next = provider.name === "Groq" && groqKey
+                ? await resolveGroqModel(groqKey)
+                : provider.model;
+              if (next !== provider.model) {
+                provider = { ...provider, model: next };
                 usedModel = next;
                 emit({ type: "status", message: `Switching to ${next}…` });
                 turn -= 1;
                 continue;
               }
             }
-            emit({ type: "error", message: describeModelError(res.status, err, groqModel) });
+
+            if (shouldFailOver(res.status) && failOver(`${provider.name} unavailable`)) {
+              turn -= 1;
+              continue;
+            }
+
+            emit({ type: "error", message: describeModelError(res.status, err, provider.model) });
             break;
           }
 
@@ -426,7 +456,7 @@ APPROACH: Read the portfolio before answering anything about it. Talk in AUD. Be
               model: usedModel,
             });
           } catch { /* db may not be available */ }
-          autoSaveMemory(messages, finalReply, groqKey, memory).catch(() => { /* silent */ });
+          autoSaveMemory(messages, finalReply, providers, memory).catch(() => { /* silent */ });
         }
       } catch (e) {
         emit({ type: "error", message: e instanceof Error ? e.message : String(e) });
@@ -447,7 +477,7 @@ APPROACH: Read the portfolio before answering anything about it. Talk in AUD. Be
 async function autoSaveMemory(
   messages: Array<{ role: string; content: string | null }>,
   reply: string,
-  groqKey: string,
+  providers: ChatProvider[],
   existing: { strategy: string; lessons: string[]; updatedAt: string } | null
 ) {
   const transcript = messages
@@ -476,17 +506,25 @@ Extract what should be saved to persistent memory. Output valid JSON only, no ma
 }`;
 
   try {
-    const res = await fetch(GROQ_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${groqKey}` },
-      body: JSON.stringify({
-        model: await resolveGroqModel(groqKey),
-        messages: [{ role: "user", content: prompt }],
-        max_tokens: 400,
-        temperature: 0.1,
-      }),
-    });
-    if (!res.ok) return;
+    // Best-effort and invisible to the user, but losing a lesson because one
+    // backend was rate limited is still a loss — try the others.
+    let res: Response | null = null;
+    for (const candidate of providers) {
+      const attempt = await fetch(candidate.url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${candidate.key}` },
+        body: JSON.stringify({
+          model: candidate.model,
+          messages: [{ role: "user", content: prompt }],
+          max_tokens: 400,
+          temperature: 0.1,
+        }),
+      }).catch(() => null);
+
+      if (attempt?.ok) { res = attempt; break; }
+      if (attempt && !shouldFailOver(attempt.status)) return;
+    }
+    if (!res) return;
     const data = await res.json() as { choices: [{ message: { content: string } }] };
     const text = data.choices[0].message.content ?? "";
     const match = text.match(/\{[\s\S]*\}/);

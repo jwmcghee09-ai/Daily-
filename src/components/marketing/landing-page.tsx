@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { useRouter } from "next/navigation";
 import styles from "./landing-page.module.css";
 
 type CheckoutPlan = "free" | "plus" | "pro";
@@ -1338,41 +1337,6 @@ function TypeCommandBar() {
       <span className={styles.commandHint}>ask anything</span>
     </div>
   );
-}
-
-function TypedLine({ text, className }: { text: string; className?: string }) {
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      el.textContent = text;
-      return;
-    }
-    let timer = 0;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (!entries[0]?.isIntersecting) return;
-        observer.disconnect();
-        let pos = 0;
-        const tick = () => {
-          pos += 1;
-          el.textContent = text.slice(0, pos);
-          if (pos < text.length) timer = window.setTimeout(tick, 22);
-        };
-        timer = window.setTimeout(tick, 500);
-      },
-      { threshold: 0.6 },
-    );
-    observer.observe(el);
-    return () => {
-      observer.disconnect();
-      window.clearTimeout(timer);
-    };
-  }, [text]);
-
-  return <div ref={ref} className={className} />;
 }
 
 function StatCounter({ value }: { value: string }) {

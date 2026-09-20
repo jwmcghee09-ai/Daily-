@@ -91,6 +91,100 @@ export function invalidateGroqModel(): void {
 }
 
 /**
+ * One chat backend, in the order it should be tried.
+ *
+ * Groq and OpenAI both speak the OpenAI /chat/completions shape — same request
+ * body, same tool-calling fields, same streaming format — so a caller can move
+ * between them without changing anything but the URL, key and model.
+ */
+export interface ChatProvider {
+  name: string;
+  url: string;
+  key: string;
+  model: string;
+}
+
+const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
+const GROQ_CHAT_URL = `${GROQ_BASE}/chat/completions`;
+const DEFAULT_OPENAI_MODEL = "gpt-4o-mini";
+
+/**
+ * Every configured backend, best first.
+ *
+ * Myrmidon ran on Groq alone. Model retirement is handled above, but that is
+ * only one of the ways a single provider takes the feature down with it — an
+ * outage, an expired key or a sustained rate limit does the same, and there was
+ * nothing behind it. Groq stays first because its free tier is what keeps this
+ * cheap; OpenAI is there so a bad hour at Groq is not a dead product.
+ *
+ * `AI_PROVIDER=groq` or `AI_PROVIDER=openai` pins one for debugging.
+ */
+export async function resolveChatProviders(): Promise<ChatProvider[]> {
+  const pinned = String(process.env.AI_PROVIDER || "").trim().toLowerCase();
+  const groqKey = String(process.env.GROQ_API_KEY || "").trim();
+  const openAiKey = String(process.env.OPENAI_API_KEY || "").trim();
+
+  const providers: ChatProvider[] = [];
+
+  if (groqKey && pinned !== "openai") {
+    providers.push({
+      name: "Groq",
+      url: GROQ_CHAT_URL,
+      key: groqKey,
+      model: await resolveGroqModel(groqKey),
+    });
+  }
+
+  if (openAiKey && pinned !== "groq") {
+    providers.push({
+      name: "OpenAI",
+      url: OPENAI_URL,
+      key: openAiKey,
+      model: String(process.env.OPENAI_MODEL || "").trim() || DEFAULT_OPENAI_MODEL,
+    });
+  }
+
+  return providers;
+}
+
+/**
+ * Whether a failed response is worth trying the next provider for.
+ *
+ * A provider being down, out of quota, or refusing our key is not going to fix
+ * itself on a retry, and the next backend may well answer. A 400 is our own
+ * malformed request and will fail identically everywhere, so it is not
+ * worth the extra round trip.
+ */
+export function shouldFailOver(status: number): boolean {
+  return status === 401 || status === 403 || status === 429 || status >= 500;
+}
+
+/** Said once, so every surface explains a missing key the same way. */
+export const NO_PROVIDER_MESSAGE =
+  "No AI provider is configured — set GROQ_API_KEY or OPENAI_API_KEY in the environment.";
+
+/**
+ * A backend failed in a way another backend might not.
+ *
+ * Callers used to decide this by looking for a provider's name in the error
+ * text, which quietly stopped working: describeModelError says "The AI
+ * provider…" and "GROQ_API_KEY", so a test for "Groq" matched neither and the
+ * fallback never ran. Carrying the decision on the error type instead means it
+ * cannot drift out of step with the wording again.
+ */
+export class ProviderUnavailableError extends Error {
+  readonly provider: string;
+  readonly status: number;
+
+  constructor(provider: string, status: number, message: string) {
+    super(message);
+    this.name = "ProviderUnavailableError";
+    this.provider = provider;
+    this.status = status;
+  }
+}
+
+/**
  * Turn a provider error into something a person can act on. A raw
  * "model_not_found" tells the user nothing about what to do next.
  */

@@ -12,6 +12,10 @@ services:
         value: production
       - key: SQLITE_DB_PATH
         value: /var/data/aladdin.sqlite
+      # Growth mode — every account gets the full product free. Remove this
+      # entry (or set it to 0) when paid tiers go live.
+      - key: FOUNDING_FREE_ACCESS
+        value: "1"
       - key: BACKUP_OUTPUT_DIR
         value: /var/data/backups
       - key: BACKUP_OFFSITE_ENABLED
@@ -27,6 +31,10 @@ services:
       - key: ALPACA_API_SECRET
         sync: false
       - key: GROQ_API_KEY
+        sync: false
+      # Stands behind Groq. Without it a Groq outage, an expired key or a
+      # sustained rate limit takes Myrmidon down with nothing behind it.
+      - key: OPENAI_API_KEY
         sync: false
       - key: ANTHROPIC_API_KEY
         sync: false

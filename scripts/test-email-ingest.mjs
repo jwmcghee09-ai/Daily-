@@ -33,7 +33,6 @@ let res = await fetch(`${BASE}/api/ingest/trades`, { headers: authed() });
 let data = await res.json();
 const address = data.forwardingAddress ?? "";
 check("forwarding address issued", /^[a-z0-9]{8,40}@/.test(address), address);
-const alias = address.split("@")[0];
 
 // stable across calls
 data = await (await fetch(`${BASE}/api/ingest/trades`, { headers: authed() })).json();
