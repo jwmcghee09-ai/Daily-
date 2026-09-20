@@ -3,6 +3,14 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
+import {
+  ChatGPTMark,
+  ClaudeMark,
+  CursorMark,
+  LMStudioMark,
+  OllamaMark,
+  ZedMark,
+} from "./client-logos";
 import styles from "./landing-page.module.css";
 
 type CheckoutPlan = "free" | "plus" | "pro";
@@ -50,6 +58,37 @@ const workflowSteps: readonly WorkflowStep[] = [
     copy: "Run AI analysis, Monte Carlo scenarios, VaR and drawdown checks, and live dip alerts from the same system.",
     icon: <PulseIcon />,
   },
+] as const;
+
+type McpClient = {
+  name: string;
+  note: string;
+  mark: ReactNode;
+  copy?: string;
+};
+
+/** The assistants most visitors already pay for — so they lead. */
+const primaryClients: readonly McpClient[] = [
+  {
+    name: "Claude",
+    note: "Desktop app",
+    mark: <ClaudeMark />,
+    copy: "One command writes the connector into Claude Desktop, leaving your other connections alone.",
+  },
+  {
+    name: "ChatGPT",
+    note: "Connectors",
+    mark: <ChatGPTMark />,
+    copy: "Add SPECTRE as a connector and ask about your holdings in the app you already use.",
+  },
+] as const;
+
+/** Everything else that speaks MCP — editors and fully local models. */
+const otherClients: readonly McpClient[] = [
+  { name: "Cursor", note: "Editor", mark: <CursorMark /> },
+  { name: "LM Studio", note: "Local models", mark: <LMStudioMark /> },
+  { name: "Ollama", note: "Fully offline", mark: <OllamaMark /> },
+  { name: "Zed", note: "Editor", mark: <ZedMark /> },
 ] as const;
 
 const features: readonly MarketingCard[] = [
@@ -696,21 +735,44 @@ export default function LandingPage({
             us, never guessed by it — and you keep using the assistant you already pay for.
           </p>
 
-          <div className={styles.connectGrid}>
-            {[
-              { name: "Claude", note: "Desktop app" },
-              { name: "ChatGPT", note: "Connectors" },
-              { name: "Cursor", note: "Editor" },
-              { name: "LM Studio", note: "Local models" },
-              { name: "Ollama", note: "Fully offline" },
-              { name: "Zed", note: "Editor" },
-            ].map((client, index) => (
-              <div key={client.name} className={`${styles.connectChip} ${styles.reveal}`} style={{ transitionDelay: `${index * 0.06}s` }}>
-                <span className={styles.connectChipName}>{client.name}</span>
-                <span className={styles.connectChipNote}>{client.note}</span>
+          {/* The two most people already have get the room; the rest are there
+              to show this is an open protocol, not a two-vendor deal. */}
+          <div className={styles.connectPrimary}>
+            {primaryClients.map((client, index) => (
+              <div
+                key={client.name}
+                className={`${styles.connectCard} ${styles.reveal}`}
+                style={{ transitionDelay: `${0.18 + index * 0.07}s` }}
+              >
+                <span className={styles.connectCardLogo}>{client.mark}</span>
+                <div className={styles.connectCardText}>
+                  <span className={styles.connectCardName}>{client.name}</span>
+                  <span className={styles.connectCardNote}>{client.note}</span>
+                  <span className={styles.connectCardCopy}>{client.copy}</span>
+                </div>
               </div>
             ))}
           </div>
+
+          <div className={styles.connectGrid}>
+            {otherClients.map((client, index) => (
+              <div
+                key={client.name}
+                className={`${styles.connectChip} ${styles.reveal}`}
+                style={{ transitionDelay: `${0.32 + index * 0.06}s` }}
+              >
+                <span className={styles.connectChipLogo}>{client.mark}</span>
+                <span className={styles.connectChipText}>
+                  <span className={styles.connectChipName}>{client.name}</span>
+                  <span className={styles.connectChipNote}>{client.note}</span>
+                </span>
+              </div>
+            ))}
+          </div>
+
+          <p className={`${styles.connectFootnote} ${styles.reveal}`} style={{ transitionDelay: "0.6s" }}>
+            Any MCP client works — these are simply the common ones. Setup is one command.
+          </p>
 
           <div className={styles.connectSplit}>
             <div className={`${styles.connectTerm} ${styles.revealScale}`} style={{ transitionDelay: "0.12s" }}>

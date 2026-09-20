@@ -3653,18 +3653,104 @@
 }
 
 /* ── Bring your own AI (MCP) ── */
+/* Two cards for the assistants most visitors already have, then a row of
+   smaller chips. The marks are monochrome on purpose: six brand palettes on a
+   near-black page fight each other and the accent, and the shapes alone are
+   what make each one recognisable. */
+.connectPrimary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 56px;
+}
+
+.connectCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  padding: 24px 26px;
+  border: 1px solid #242428;
+  border-radius: 18px;
+  background: #0a0a0c;
+  transition: border-color 0.25s ease, transform 0.25s ease, background 0.25s ease;
+}
+
+.connectCard:hover {
+  border-color: rgba(255, 74, 38, 0.45);
+  background: #0c0b0d;
+  transform: translateY(-2px);
+}
+
+.connectCardLogo {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  border: 1px solid #24242a;
+  background: rgba(255, 255, 255, 0.03);
+  color: #e6e6ea;
+  transition: color 0.25s ease, border-color 0.25s ease;
+}
+
+.connectCard:hover .connectCardLogo {
+  color: #fff;
+  border-color: rgba(255, 74, 38, 0.35);
+}
+
+.connectCardLogo svg {
+  width: 24px;
+  height: 24px;
+  display: block;
+}
+
+.connectCardText {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.connectCardName {
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: #f4f4f7;
+  letter-spacing: -0.01em;
+}
+
+.connectCardNote {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.connectCardCopy {
+  margin-top: 3px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
 .connectGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
-  margin-top: 56px;
+  margin-top: 16px;
 }
 
 .connectChip {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 16px 18px;
+  align-items: center;
+  /* Centred so the row reads as a logo strip. Left-aligning left each chip
+     two-thirds empty, since the columns are far wider than their contents. */
+  justify-content: center;
+  gap: 12px;
+  padding: 14px 16px;
   border: 1px solid #242428;
   border-radius: 16px;
   background: #0a0a0c;
@@ -3674,6 +3760,34 @@
 .connectChip:hover {
   border-color: rgba(255, 74, 38, 0.4);
   transform: translateY(-2px);
+}
+
+.connectChipLogo {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  color: #b8b8c0;
+  transition: color 0.25s ease;
+}
+
+.connectChip:hover .connectChipLogo {
+  color: #fff;
+}
+
+.connectChipLogo svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
+.connectChipText {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
 }
 
 .connectChipName {
@@ -3689,6 +3803,12 @@
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: #85858e;
+}
+
+.connectFootnote {
+  margin-top: 22px;
+  font-size: 13.5px;
+  color: var(--muted);
 }
 
 .connectSplit {
@@ -3786,8 +3906,23 @@
     grid-template-columns: 1fr;
     gap: 40px;
   }
-  .connectGrid {
+  .connectPrimary {
+    grid-template-columns: 1fr;
     margin-top: 40px;
+  }
+  /* Four across leaves no room for a mark plus a name; two rows of two do. */
+  .connectGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 460px) {
+  .connectGrid {
+    grid-template-columns: 1fr;
+  }
+  .connectCard {
+    padding: 20px;
+    gap: 14px;
   }
 }
 
