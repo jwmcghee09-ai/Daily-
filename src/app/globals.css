@@ -1,20 +1,20 @@
 :root {
-  --bg: #040404;
-  --bg-soft: #0a0a0d;
-  --surface: #111114;
-  --surface-elevated: #17171c;
-  --text: #f4f4f5;
-  --muted: #a1a1aa;
-  --border: #313136;
-  --ring: #595963;
+  --bg: #f6f6f7;
+  --bg-soft: #f2f2f5;
+  --surface: #ffffff;
+  --surface-elevated: #e3e3e8;
+  --text: #0f0f11;
+  --muted: #5c5c66;
+  --border: #e3e3e7;
+  --ring: #bcbcbc;
   --accent: #ff4b33;
-  --accent-strong: #ff2f14;
+  --accent-strong: #e8391b;
   --accent-mid: #ff7a68;
   --accent-soft: rgba(255, 75, 51, 0.14);
-  --accent-faint: rgba(255, 75, 51, 0.07);
-  --positive: #fafafa;
-  --negative: #ff4b33;
-  --shadow: 0 30px 52px -34px rgba(0, 0, 0, 0.92);
+  --accent-faint: rgba(245, 46, 20, 0.07);
+  --positive: #0a7d3c;
+  --negative: #c92a2a;
+  --shadow: 0 1px 2px rgba(15, 15, 17, 0.04), 0 8px 24px -16px rgba(15, 15, 17, 0.10);
 }
 
 * {
@@ -27,26 +27,23 @@ html,
 body {
   width: 100%;
   min-height: 100%;
-  background: #05050a;
+  background: #f5f5fa;
 }
 
 body {
   font-family: "Avenir Next", "Avenir", "Segoe UI", sans-serif;
   color: var(--text);
-  background-color: #05050a;
-  background:
-    radial-gradient(circle at 84% 12%, rgba(255, 75, 51, 0.18) 0%, transparent 32%),
-    radial-gradient(circle at 18% 88%, rgba(255, 75, 51, 0.12) 0%, transparent 30%),
-    linear-gradient(145deg, #050506 0%, #0b0b0f 52%, #060607 100%);
+  background-color: #f5f5fa;
+  background: var(--bg);
 }
 
 .recharts-cartesian-grid line {
-  stroke: #2e2e35;
+  stroke: #cccccc;
 }
 
 .recharts-text,
 .recharts-legend-item-text {
-  fill: #dcdce1 !important;
+  fill: #1e1e23 !important;
 }
 
 table {
@@ -59,12 +56,12 @@ th,
 td {
   text-align: left;
   padding: 10px 8px;
-  border-bottom: 1px solid #282831;
+  border-bottom: 1px solid #d1d1d1;
   font-size: 0.89rem;
 }
 
 th {
-  color: #ffc2b8;
+  color: #f53414;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -76,9 +73,9 @@ tr:hover td {
 }
 
 .source-badge.index {
-  background: linear-gradient(135deg, #6f8cff 0%, #4860db 100%);
-  color: #f8f9ff;
-  border-color: #9baafc;
+  background: linear-gradient(135deg, #1035c6 0%, #233bb3 100%);
+  color: #102ac6;
+  border-color: #102cc6;
 }
 
 @keyframes rise-in {
@@ -94,57 +91,33 @@ tr:hover td {
 
 /* === SPECTRE Visual Refresh === */
 :root {
-  --panel-bg: linear-gradient(160deg, rgba(19, 19, 24, 0.94) 0%, rgba(11, 11, 16, 0.96) 100%);
-  --panel-border: rgba(255, 255, 255, 0.12);
-  --panel-border-accent: rgba(255, 75, 51, 0.56);
-  --panel-shadow: 0 26px 42px -32px rgba(0, 0, 0, 0.9);
+  --panel-bg: linear-gradient(160deg, rgba(231, 231, 236, 0.94) 0%, rgba(0, 0, 0, 0.432) 100%);
+  --panel-border: rgba(0, 0, 0, 0.12);
+  --panel-border-accent: rgba(245, 46, 20, 0.56);
+  --panel-shadow: 0 26px 42px -32px rgba(0, 0, 0, 0.405);
 }
 
 body {
   font-family: var(--font-geist-sans), "Manrope", "Avenir Next", sans-serif;
   letter-spacing: 0.01em;
-  background:
-    radial-gradient(circle at 90% 8%, rgba(255, 75, 51, 0.22) 0%, transparent 30%),
-    radial-gradient(circle at 12% 76%, rgba(130, 83, 255, 0.2) 0%, transparent 34%),
-    radial-gradient(circle at 0% 70%, rgba(255, 75, 51, 0.16) 0%, transparent 26%),
-    linear-gradient(150deg, #030305 0%, #0c0913 48%, #060609 100%);
+  background: var(--bg);
 }
 
 body::before,
-body::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-}
+body::after { background: none; }
 
-body::before {
-  background: repeating-linear-gradient(
-    120deg,
-    transparent,
-    transparent 18px,
-    rgba(255, 255, 255, 0.015) 18px,
-    rgba(255, 255, 255, 0.015) 19px
-  );
-  opacity: 0.6;
-  z-index: -2;
-}
+body::before { background: none; }
 
-body::after {
-  background:
-    radial-gradient(circle at 50% 120%, rgba(255, 75, 51, 0.12) 0%, transparent 46%),
-    radial-gradient(circle at 28% -16%, rgba(130, 83, 255, 0.14) 0%, transparent 44%);
-  z-index: -1;
-}
+body::after { background: none; }
 
 .recharts-text,
 .recharts-legend-item-text {
-  fill: #e4e4e8 !important;
+  fill: #17171b !important;
   font-size: 0.78rem;
 }
 
 .recharts-tooltip-wrapper {
-  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.35));
+  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.158));
 }
 
 table {
@@ -155,22 +128,22 @@ th {
   position: sticky;
   top: 0;
   z-index: 2;
-  background: rgba(22, 22, 29, 0.96);
-  color: #ffc4bb;
+  background: rgba(228, 228, 228, 0.96);
+  color: #f53214;
 }
 
 tr:nth-child(even) td {
-  background: rgba(255, 255, 255, 0.01);
+  background: rgba(0, 0, 0, 0.01);
 }
 
 tr:hover td {
-  background: rgba(255, 75, 51, 0.08);
+  background: rgba(245, 46, 20, 0.08);
 }
 
 @keyframes aiPulseDotDash {
-  0%   { box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.7); }
-  60%  { box-shadow: 0 0 0 5px rgba(168, 85, 247, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(168, 85, 247, 0); }
+  0%   { box-shadow: 0 0 0 0 rgba(109, 16, 198, 0.7); }
+  60%  { box-shadow: 0 0 0 5px rgba(109, 16, 198, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(109, 16, 198, 0); }
 }
 
 .chart-card.chart-holdings .recharts-responsive-container {
@@ -179,27 +152,27 @@ tr:hover td {
 }
 
 td {
-  color: #e8e8ed;
+  color: #121217;
 }
 
 @keyframes spectre-glow {
   0%,
   100% {
-    text-shadow: 0 0 26px rgba(255, 75, 51, 0.26);
+    text-shadow: 0 0 26px rgba(245, 46, 20, 0.26);
   }
   50% {
-    text-shadow: 0 0 38px rgba(255, 75, 51, 0.5);
+    text-shadow: 0 0 38px rgba(245, 46, 20, 0.5);
   }
 }
 
 .landing-chart-card .recharts-cartesian-axis-tick-value,
 .landing-chart-card .recharts-legend-item-text {
-  fill: #d0d2df !important;
+  fill: #575c7f !important;
   font-size: 0.76rem;
 }
 
 .landing-chart-card .recharts-tooltip-wrapper {
-  filter: drop-shadow(0 12px 16px rgba(0, 0, 0, 0.35));
+  filter: drop-shadow(0 12px 16px rgba(0, 0, 0, 0.158));
 }
 
 @keyframes landing-rise {
@@ -471,15 +444,15 @@ td {
 
 /* === Sleek UI Polish === */
 :root {
-  --sleek-border: rgba(255, 255, 255, 0.14);
-  --sleek-border-soft: rgba(255, 255, 255, 0.09);
-  --sleek-shadow: 0 26px 38px -30px rgba(0, 0, 0, 0.88);
-  --sleek-shadow-soft: 0 14px 26px -20px rgba(0, 0, 0, 0.78);
+  --sleek-border: rgba(0, 0, 0, 0.14);
+  --sleek-border-soft: rgba(0, 0, 0, 0.09);
+  --sleek-shadow: 0 26px 38px -30px rgba(0, 0, 0, 0.396);
+  --sleek-shadow-soft: 0 14px 26px -20px rgba(0, 0, 0, 0.351);
 }
 
 .spectre-landing .recharts-text,
 .spectre-landing .recharts-legend-item-text {
-  fill: #b4b0cc !important;
+  fill: #5b5482 !important;
 }
 
 @keyframes spectre-tick {
@@ -496,9 +469,9 @@ td {
 .spectre-app .source-badge.index,
 .spectre-app .source-badge.tax,
 .spectre-app .source-badge.savings {
-  background: rgba(255, 255, 255, 0.05);
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.05);
+  color: #0f0f0f;
+  border: 1px solid rgba(0, 0, 0, 0.12);
 }
 
 @keyframes traderPulse {

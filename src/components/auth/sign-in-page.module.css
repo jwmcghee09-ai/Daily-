@@ -5,11 +5,9 @@
 
 .page {
   min-height: 100vh;
-  background:
-    radial-gradient(ellipse 70% 50% at 50% -10%, rgba(255, 63, 52, 0.08) 0%, transparent 100%),
-    radial-gradient(ellipse 40% 60% at 100% 80%, rgba(255, 122, 48, 0.05) 0%, transparent 60%),
-    #050405;
-  color: #f4f4f5;
+  background:  
+    #f8f6f8;
+  color: #0f0f10;
   font-family: var(--font-geist-sans), "Avenir Next", sans-serif;
 }
 
@@ -19,8 +17,8 @@
   top: 0;
   z-index: 20;
   height: 56px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(23, 21, 20, 0.94);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(235, 233, 232, 0.94);
   backdrop-filter: blur(28px) saturate(1.4);
   -webkit-backdrop-filter: blur(28px) saturate(1.4);
 }
@@ -59,7 +57,7 @@
   height: 56px;
   width: 56px;
   margin-bottom: 1.25rem;
-  filter: drop-shadow(0 8px 28px rgba(255, 63, 52, 0.26));
+  filter: drop-shadow(0 8px 28px rgba(245, 32, 20, 0.26));
 }
 
 .brandText {
@@ -67,7 +65,7 @@
   font-size: 18px;
   font-weight: 700;
   letter-spacing: 0.14em;
-  background: linear-gradient(90deg, #ee2f1d 0%, #ff4b33 35%, #ff4b33 72%, #ff5334 100%);
+  background: linear-gradient(90deg, #ee2d1b 0%, #f52e14 35%, #f52e14 72%, #f53614 100%);
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
@@ -104,12 +102,12 @@
 /* ── Side card: dark, like landing page product preview ── */
 .sideCard {
   position: relative;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 20px;
-  background: rgba(10, 7, 22, 0.94);
+  background: rgba(239, 239, 239, 0.94);
   overflow: hidden;
   padding: 36px;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.18), 0 4px 16px rgba(190, 190, 198, 0.1);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.081), 0 4px 16px rgba(57, 57, 65, 0.1);
 }
 
 .sideCard::before {
@@ -117,17 +115,17 @@
   position: absolute;
   inset: 0 0 auto;
   height: 2px;
-  background: linear-gradient(90deg, #ee2f1d, #ff4b33 40%, #ff4b33 70%, transparent);
+  background: linear-gradient(90deg, #ee2d1b, #f52e14 40%, #f52e14 70%, transparent);
 }
 
 /* ── Form card: dark, clean ── */
 .formCard {
   position: relative;
-  border: 1px solid rgba(190, 190, 198, 0.18);
+  border: 1px solid rgba(57, 57, 65, 0.18);
   border-radius: 20px;
-  background: #111114;
+  background: #ebebee;
   overflow: hidden;
-  box-shadow: 0 8px 40px rgba(190, 190, 198, 0.09), 0 1px 0 rgba(190, 190, 198, 0.08);
+  box-shadow: 0 8px 40px rgba(57, 57, 65, 0.09), 0 1px 0 rgba(57, 57, 65, 0.08);
 }
 
 .formCard::before {
@@ -135,7 +133,7 @@
   position: absolute;
   inset: 0 0 auto;
   height: 2px;
-  background: linear-gradient(90deg, transparent, #ee2f1d, #ff4b33 50%, #ff4b33, transparent);
+  background: linear-gradient(90deg, transparent, #ee2d1b, #f52e14 50%, #f52e14, transparent);
 }
 
 /* ── Side card content (dark text on dark bg = light text) ── */
@@ -147,13 +145,13 @@
   border-radius: 999px;
   border: 1px solid transparent;
   background:
-    linear-gradient(rgba(13, 10, 20, 1), rgba(13, 10, 20, 1)) padding-box,
-    linear-gradient(90deg, #ee2f1d, #ff4b33) border-box;
+    linear-gradient(rgba(239, 239, 239, 1), rgba(239, 239, 239, 1)) padding-box,
+    linear-gradient(90deg, #ee2d1b, #f52e14) border-box;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-size: 11px;
   font-weight: 700;
-  color: #ffb3a6;
+  color: #f53514;
 }
 
 .pill::before {
@@ -161,7 +159,7 @@
   width: 5px;
   height: 5px;
   border-radius: 999px;
-  background: linear-gradient(135deg, #ee2f1d, #ff4b33);
+  background: linear-gradient(135deg, #ee2d1b, #f52e14);
   flex-shrink: 0;
 }
 
@@ -172,18 +170,18 @@
   font-weight: 700;
   line-height: 1.1;
   letter-spacing: -0.03em;
-  color: #f4f4f5;
+  color: #0f0f10;
 }
 
 .sideCard h1 span {
-  background: linear-gradient(90deg, #ee2f1d, #ff4b33 42%, #ff4b33 82%, #ff5334);
+  background: linear-gradient(90deg, #ee2d1b, #f52e14 42%, #f52e14 82%, #f53614);
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
 }
 
 .sideCard > p {
-  color: #a1a1aa;
+  color: #55555e;
   font-size: 14px;
   line-height: 1.7;
   margin-bottom: 0;
@@ -200,8 +198,8 @@
   display: flex;
   gap: 10px;
   padding: 9px 0;
-  border-bottom: 1px solid rgba(160, 100, 255, 0.1);
-  color: #a1a1aa;
+  border-bottom: 1px solid rgba(87, 16, 198, 0.1);
+  color: #55555e;
   font-size: 13.5px;
   line-height: 1.5;
 }
@@ -212,7 +210,7 @@
 
 .pointList li::before {
   content: "→";
-  color: #ff7a30;
+  color: #f56514;
   flex-shrink: 0;
   font-size: 12px;
   margin-top: 1px;
@@ -223,7 +221,7 @@
   gap: 8px;
   margin-top: 24px;
   padding-top: 20px;
-  border-top: 1px solid rgba(160, 100, 255, 0.1);
+  border-top: 1px solid rgba(87, 16, 198, 0.1);
 }
 
 .sideMeta div {
@@ -233,19 +231,19 @@
 }
 
 .sideMeta span {
-  color: rgba(155, 143, 187, 0.45);
+  color: rgba(95, 81, 133, 0.45);
   font-size: 12.5px;
 }
 
 .sideMeta a {
-  color: #a1a1aa;
+  color: #55555e;
   text-decoration: none;
   font-size: 12.5px;
   transition: color 0.15s;
 }
 
 .sideMeta a:hover {
-  color: #f4f4f5;
+  color: #0f0f10;
 }
 
 /* ── Form card URL bar ── */
@@ -254,13 +252,13 @@
   align-items: center;
   justify-content: center;
   padding: 11px 20px;
-  background: #faf9ff;
-  border-bottom: 1px solid rgba(190, 190, 198, 0.09);
+  background: #2e10c6;
+  border-bottom: 1px solid rgba(57, 57, 65, 0.09);
 }
 
 .cardUrl {
   text-align: center;
-  color: rgba(94, 90, 120, 0.55);
+  color: rgba(139, 135, 165, 0.55);
   font-size: 11px;
   letter-spacing: 0.05em;
   font-family: var(--font-geist-mono), monospace;
@@ -279,13 +277,13 @@
   border-radius: 999px;
   border: 1px solid transparent;
   background:
-    linear-gradient(#050405, #050405) padding-box,
-    linear-gradient(90deg, #ee2f1d, #ff4b33) border-box;
+    linear-gradient(#f8f6f8, #f8f6f8) padding-box,
+    linear-gradient(90deg, #ee2d1b, #f52e14) border-box;
   text-transform: uppercase;
   letter-spacing: 0.09em;
   font-size: 10.5px;
   font-weight: 700;
-  color: #a1a1aa;
+  color: #55555e;
 }
 
 .sectionLabel::before {
@@ -293,7 +291,7 @@
   width: 5px;
   height: 5px;
   border-radius: 999px;
-  background: linear-gradient(135deg, #ee2f1d, #ff4b33);
+  background: linear-gradient(135deg, #ee2d1b, #f52e14);
   flex-shrink: 0;
 }
 
@@ -303,12 +301,12 @@
   font-size: 24px;
   font-weight: 700;
   letter-spacing: -0.02em;
-  color: #f4f4f5;
+  color: #0f0f10;
 }
 
 .cardBody > p,
 .cardBody p {
-  color: #a1a1aa;
+  color: #55555e;
   font-size: 14px;
   line-height: 1.6;
 }
@@ -323,21 +321,21 @@
 }
 
 .bannerSuccess {
-  background: rgba(255, 63, 52, 0.07);
-  border: 1px solid rgba(255, 63, 52, 0.2);
+  background: rgba(245, 32, 20, 0.07);
+  border: 1px solid rgba(245, 32, 20, 0.2);
   color: #3b1f6e;
 }
 
 .bannerInfo {
-  background: rgba(255, 122, 48, 0.07);
-  border: 1px solid rgba(255, 122, 48, 0.2);
-  color: #7a3b10;
+  background: rgba(245, 101, 20, 0.07);
+  border: 1px solid rgba(245, 101, 20, 0.2);
+  color: #ab5316;
 }
 
 .bannerError {
   background: rgba(220, 38, 38, 0.07);
   border: 1px solid rgba(220, 38, 38, 0.2);
-  color: #7f1d1d;
+  color: #9e2424;
 }
 
 /* ── Form grid ── */
@@ -353,7 +351,7 @@
 }
 
 .formGrid span {
-  color: #a1a1aa;
+  color: #55555e;
   font-size: 13px;
   font-weight: 600;
 }
@@ -362,24 +360,24 @@
   width: 100%;
   height: 46px;
   padding: 0 14px;
-  border: 1px solid rgba(190, 190, 198, 0.2);
+  border: 1px solid rgba(57, 57, 65, 0.2);
   border-radius: 10px;
-  background: #111114;
-  color: #f4f4f5;
+  background: #ebebee;
+  color: #0f0f10;
   font-size: 15px;
   font-family: inherit;
   transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
 }
 
 .formGrid input::placeholder {
-  color: #8a827b;
+  color: #847c75;
 }
 
 .formGrid input:focus {
   outline: 0;
-  background: #111114;
-  border-color: rgba(255, 63, 52, 0.5);
-  box-shadow: 0 0 0 3px rgba(255, 63, 52, 0.1);
+  background: #ebebee;
+  border-color: rgba(245, 32, 20, 0.5);
+  box-shadow: 0 1px 2px rgba(15, 15, 17, 0.04);
 }
 
 .passwordRow {
@@ -390,10 +388,10 @@
 
 .toggleButton {
   padding: 0 16px;
-  border: 1px solid rgba(190, 190, 198, 0.2);
+  border: 1px solid rgba(57, 57, 65, 0.2);
   border-radius: 10px;
-  background: #111114;
-  color: #a1a1aa;
+  background: #ebebee;
+  color: #55555e;
   font-size: 13px;
   font-weight: 600;
   font-family: inherit;
@@ -402,9 +400,9 @@
 }
 
 .toggleButton:hover {
-  border-color: rgba(255, 63, 52, 0.4);
-  color: #f4f4f5;
-  background: #111114;
+  border-color: rgba(245, 32, 20, 0.4);
+  color: #0f0f10;
+  background: #ebebee;
 }
 
 /* ── Buttons ── */
@@ -431,42 +429,42 @@
 }
 
 .primaryButton {
-  color: #fff;
-  background: linear-gradient(135deg, #ee2f1d 0%, #ff4b33 45%, #ff4b33 100%);
-  box-shadow: 0 4px 24px rgba(255, 122, 48, 0.35), 0 1px 0 rgba(255, 255, 255, 0.12) inset;
+  color: #0f0f0f;
+  background: linear-gradient(135deg, #ee2d1b 0%, #f52e14 45%, #f52e14 100%);
+  box-shadow: 0 1px 2px rgba(15, 15, 17, 0.04);
   border: none;
 }
 
 .primaryButton:hover {
-  box-shadow: 0 6px 32px rgba(255, 122, 48, 0.5), 0 1px 0 rgba(255, 255, 255, 0.15) inset;
+  box-shadow: 0 1px 2px rgba(15, 15, 17, 0.04);
   filter: brightness(1.07);
 }
 
 .ghostButton {
-  border-color: rgba(255, 255, 255, 0.14);
-  color: #f4f4f5;
+  border-color: rgba(0, 0, 0, 0.14);
+  color: #0f0f10;
   background: transparent;
 }
 
 .ghostButton:hover {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(190, 190, 198, 0.36);
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(57, 57, 65, 0.36);
 }
 
 .outlineButton {
-  border-color: rgba(255, 255, 255, 0.14);
-  color: #f4f4f5;
+  border-color: rgba(0, 0, 0, 0.14);
+  color: #0f0f10;
   background: transparent;
 }
 
 .demoButton {
-  border-color: rgba(255, 122, 48, 0.35);
-  color: #ff7a30;
-  background: rgba(255, 122, 48, 0.08);
+  border-color: rgba(245, 101, 20, 0.35);
+  color: #f56514;
+  background: rgba(245, 101, 20, 0.08);
 }
 
 .demoButton:hover {
-  background: rgba(255, 122, 48, 0.14);
+  background: rgba(245, 101, 20, 0.14);
 }
 
 .fullButton {
@@ -485,7 +483,7 @@
   border: 0;
   padding: 0;
   background: transparent;
-  color: #ee2f1d;
+  color: #ee2d1b;
   font-size: 13.5px;
   font-weight: 600;
   font-family: inherit;
@@ -494,7 +492,7 @@
 }
 
 .forgotLink:hover {
-  color: #ee2f1d;
+  color: #ee2d1b;
   transform: translateY(-1px);
 }
 
@@ -513,13 +511,13 @@
   justify-content: center;
   margin-top: 16px;
   padding-top: 16px;
-  border-top: 1px solid rgba(190, 190, 198, 0.09);
+  border-top: 1px solid rgba(57, 57, 65, 0.09);
 }
 
 .textButton {
   border: 0;
   background: transparent;
-  color: #a1a1aa;
+  color: #55555e;
   font-size: 13.5px;
   font-weight: 500;
   font-family: inherit;
@@ -530,7 +528,7 @@
 
 .textButton:hover,
 .textButton:focus-visible {
-  color: #f4f4f5;
+  color: #0f0f10;
   transform: translateY(-1px);
   outline: 0;
 }
@@ -540,13 +538,13 @@
   display: grid;
   gap: 8px;
   padding: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 14px;
-  background: #faf9ff;
+  background: #2e10c6;
 }
 
 .planPicker legend {
-  color: #a1a1aa;
+  color: #55555e;
   font-size: 13px;
   font-weight: 600;
   padding: 0;
@@ -564,22 +562,22 @@
   column-gap: 10px;
   row-gap: 4px;
   padding: 11px 13px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 10px;
-  background: #111114;
+  background: #ebebee;
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
 }
 
 .planOption:hover {
-  border-color: rgba(255, 63, 52, 0.28);
-  background: rgba(255, 63, 52, 0.03);
+  border-color: rgba(245, 32, 20, 0.28);
+  background: rgba(245, 32, 20, 0.03);
 }
 
 .planOptionActive {
-  border-color: rgba(255, 63, 52, 0.42) !important;
-  background: rgba(255, 63, 52, 0.06) !important;
-  box-shadow: 0 0 0 1px rgba(255, 63, 52, 0.12);
+  border-color: rgba(245, 32, 20, 0.42) !important;
+  background: rgba(245, 32, 20, 0.06) !important;
+  box-shadow: 0 1px 2px rgba(15, 15, 17, 0.04);
 }
 
 .planOptionInner {
@@ -593,31 +591,31 @@
 .planOptionName {
   font-size: 13.5px;
   font-weight: 700;
-  color: #f4f4f5;
+  color: #0f0f10;
 }
 
 .planOptionPrice {
   font-size: 11.5px;
   font-weight: 500;
-  color: #a1a1aa;
+  color: #55555e;
   font-family: var(--font-geist-mono), monospace;
   white-space: nowrap;
 }
 
 .planOptionActive .planOptionPrice {
-  color: #ee2f1d;
+  color: #ee2d1b;
 }
 
 .planOptionFeatures {
   width: 100%;
   padding-left: 26px;
   font-size: 11.5px;
-  color: #a1a1aa;
+  color: #55555e;
   line-height: 1.5;
 }
 
 .planOptionActive .planOptionFeatures {
-  color: #ee2f1d;
+  color: #ee2d1b;
 }
 
 .planOption::before {
@@ -625,15 +623,15 @@
   width: 15px;
   height: 15px;
   border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.14);
+  border: 2px solid rgba(0, 0, 0, 0.14);
   flex-shrink: 0;
   transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
 }
 
 .planOptionActive::before {
-  border-color: #ee2f1d;
-  background: radial-gradient(circle, #ee2f1d 40%, transparent 42%);
-  box-shadow: 0 0 0 3px rgba(255, 63, 52, 0.13);
+  border-color: #ee2d1b;
+  background: radial-gradient(circle, #ee2d1b 40%, transparent 42%);
+  box-shadow: 0 1px 2px rgba(15, 15, 17, 0.04);
 }
 
 /* ── Terms row ── */
@@ -648,8 +646,8 @@
   height: 15px;
   margin-top: 3px;
   flex-shrink: 0;
-  accent-color: #ee2f1d;
-  border: 1px solid rgba(190, 190, 198, 0.3);
+  accent-color: #ee2d1b;
+  border: 1px solid rgba(57, 57, 65, 0.3);
   border-radius: 4px;
   cursor: pointer;
 }
@@ -657,17 +655,17 @@
 .termsRow span {
   font-size: 13px;
   line-height: 1.6;
-  color: #a1a1aa;
+  color: #55555e;
 }
 
 .termsRow a {
-  color: #ee2f1d;
+  color: #ee2d1b;
   text-decoration: none;
   transition: color 0.15s;
 }
 
 .termsRow a:hover {
-  color: #ee2f1d;
+  color: #ee2d1b;
 }
 
 /* ── Password reset flow ── */
@@ -682,17 +680,17 @@
   font-family: var(--font-geist-mono), monospace;
   font-size: 11px;
   letter-spacing: 0.06em;
-  color: rgba(94, 90, 120, 0.4);
+  color: rgba(139, 135, 165, 0.4);
   white-space: nowrap;
   transition: color 0.2s;
 }
 
 .resetStep[data-active="true"] {
-  color: #ee2f1d;
+  color: #ee2d1b;
 }
 
 .resetStepDivider {
-  color: rgba(190, 190, 198, 0.18);
+  color: rgba(57, 57, 65, 0.18);
   font-size: 10px;
 }
 
@@ -703,9 +701,9 @@
   width: 50px;
   height: 50px;
   border-radius: 14px;
-  background: rgba(255, 63, 52, 0.07);
-  border: 1px solid rgba(255, 63, 52, 0.16);
-  color: #ee2f1d;
+  background: rgba(245, 32, 20, 0.07);
+  border: 1px solid rgba(245, 32, 20, 0.16);
+  color: #ee2d1b;
   margin-bottom: 14px;
 }
 
@@ -713,14 +711,14 @@
 .modeCard {
   margin-top: 14px;
   padding: 13px 15px;
-  border: 1px solid rgba(190, 190, 198, 0.12);
+  border: 1px solid rgba(57, 57, 65, 0.12);
   border-radius: 12px;
-  background: #111114;
+  background: #ebebee;
 }
 
 .modeCardTitle {
   margin-bottom: 8px;
-  color: #f4f4f5;
+  color: #0f0f10;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.1em;
@@ -738,7 +736,7 @@
 .modeCardList li {
   position: relative;
   padding-left: 16px;
-  color: #a1a1aa;
+  color: #55555e;
   font-size: 13px;
   line-height: 1.6;
 }
@@ -751,7 +749,7 @@
   width: 6px;
   height: 6px;
   border-radius: 999px;
-  background: linear-gradient(135deg, #ee2f1d, #ff4b33);
+  background: linear-gradient(135deg, #ee2d1b, #f52e14);
 }
 
 /* ── Responsive ── */
@@ -797,11 +795,11 @@
   gap: 10px;
   padding: 16px 18px;
   border-radius: 14px;
-  border: 1px solid rgba(255, 122, 48, 0.45);
-  background: linear-gradient(135deg, rgba(255, 92, 31, 0.10), rgba(255, 63, 52, 0.04));
+  border: 1px solid rgba(245, 101, 20, 0.45);
+  background: linear-gradient(135deg, rgba(245, 81, 20, 0.10), rgba(245, 32, 20, 0.04));
   font-size: 13.5px;
   line-height: 1.6;
-  color: #b3aca5;
+  color: #5a534c;
   margin: 4px 0 2px;
 }
 
@@ -813,6 +811,6 @@
   letter-spacing: 0.16em;
   padding: 5px 12px;
   border-radius: 999px;
-  background: linear-gradient(135deg, #ff4b33, #ee2f1d);
-  color: #fff;
+  background: linear-gradient(135deg, #f52e14, #ee2d1b);
+  color: #0f0f0f;
 }

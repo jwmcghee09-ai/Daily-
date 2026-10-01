@@ -278,26 +278,9 @@ export default function LandingPage({
   }, []);
 
   useEffect(() => {
-    const reveals = document.querySelectorAll<HTMLElement>(
-      `.${styles.reveal}, .${styles.revealLeft}, .${styles.revealRight}, .${styles.revealScale}, .${styles.revealUp}, .${styles.revealTilt}`,
-    );
-    const compactMotion = typeof window !== "undefined" && window.innerWidth <= 960;
-
-    const revealObserver = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (!entry.isIntersecting) return;
-          entry.target.classList.add(styles.visible);
-          revealObserver.unobserve(entry.target);
-        });
-      },
-      {
-        threshold: compactMotion ? 0.03 : 0.08,
-        rootMargin: compactMotion ? "0px 0px -10% 0px" : "0px",
-      },
-    );
-
-    reveals.forEach((element) => revealObserver.observe(element));
+    // The reveal observer is gone with the animation it drove: it watched
+    // eighty-eight elements to add a class that no longer does anything, which
+    // is observer bookkeeping on every scroll for no visible result.
 
     const nav = document.querySelector<HTMLElement>(`.${styles.nav}`);
     const sections = [...document.querySelectorAll<HTMLElement>("section[id]")];
@@ -341,7 +324,6 @@ export default function LandingPage({
     }
 
     return () => {
-      revealObserver.disconnect();
       riskObserver?.disconnect();
       window.removeEventListener("scroll", syncScroll);
     };
@@ -496,7 +478,7 @@ export default function LandingPage({
                 </span>
               ))}
             </div>
-            <p className={`${styles.reveal}`} style={{ fontSize: "0.75rem", color: "rgba(190,190,198,0.65)", marginTop: "1rem", letterSpacing: "0.04em" }}>
+            <p className={`${styles.reveal}`} style={{ fontSize: "0.75rem", color: "var(--muted)", marginTop: "1rem", letterSpacing: "0.04em" }}>
               Built for Australian investors · No card required · Cancel anytime
             </p>
 
@@ -581,8 +563,8 @@ export default function LandingPage({
               { val: "12+", label: "Risk Signals" },
               { val: "500", label: "Monte Carlo Paths" },
               { val: "3", label: "Quant · AI · Research" },
-            ].map(({ val, label }, index) => (
-              <div key={label} className={`${styles.statStat} ${styles.reveal}`} style={{ transitionDelay: `${index * 0.08}s` }}>
+            ].map(({ val, label }) => (
+              <div key={label} className={`${styles.statStat} ${styles.reveal}`}>
                 <StatCounter value={val} />
                 <div className={styles.statStatLabel}>{label}</div>
               </div>
@@ -595,10 +577,10 @@ export default function LandingPage({
         <div className={styles.container}>
           <div className={styles.aiRevealHead}>
             <div className={`${styles.sectionLabel} ${styles.reveal}`}>AI Portfolio Analyst</div>
-            <h2 className={`${styles.aiRevealTitle} ${styles.reveal}`} style={{ transitionDelay: "0.07s" }}>
+            <h2 className={`${styles.aiRevealTitle} ${styles.reveal}`}>
               Ask your portfolio<br /><span>anything.</span>
             </h2>
-            <p className={`${styles.aiRevealSub} ${styles.reveal}`} style={{ transitionDelay: "0.14s" }}>
+            <p className={`${styles.aiRevealSub} ${styles.reveal}`}>
               This isn’t generic finance chat. Before answering, SPECTRE reads your actual holdings, live prices, your risk numbers, and the research feed — so “why am I down today?” gets a real answer, with your tickers in it.
             </p>
           </div>
@@ -639,7 +621,7 @@ export default function LandingPage({
       <section className={styles.scannerSection} id="scanner">
         <div className={styles.container}>
           <div className={styles.scannerInner}>
-            <div className={`${styles.scannerCard} ${styles.revealScale}`} style={{ transitionDelay: "0.12s" }}>
+            <div className={`${styles.scannerCard} ${styles.revealScale}`}>
               <div className={styles.scanTermBar}>SPECTRE // SCANNER — LIVE FOR EVERY ACCOUNT</div>
               <div className={styles.scannerCardBody}>
                 <div className={styles.scanHead}>
@@ -667,14 +649,14 @@ export default function LandingPage({
                     </div>
                   ))}
                 </div>
-                <div className={`${styles.scanFlag} ${styles.scanFlagAlert} ${styles.reveal}`} style={{ transitionDelay: "0.4s" }}>
+                <div className={`${styles.scanFlag} ${styles.scanFlagAlert} ${styles.reveal}`}>
                   <span className={styles.scanFlagTag}>ALERT</span>
                   <div>
                     <strong>Volume 3.2× the 20-day average</strong>
                     <p>Unusual activity — something moved the crowd today. Check announcements before acting.</p>
                   </div>
                 </div>
-                <div className={`${styles.scanFlag} ${styles.scanFlagWatch} ${styles.reveal}`} style={{ transitionDelay: "0.55s" }}>
+                <div className={`${styles.scanFlag} ${styles.scanFlagWatch} ${styles.reveal}`}>
                   <span className={styles.scanFlagTag}>WATCH</span>
                   <div>
                     <strong>RSI 71 — running hot</strong>
@@ -692,11 +674,11 @@ export default function LandingPage({
                 <span className={styles.scannerLiveDot} />
                 Live Now · Free For Everyone
               </div>
-              <h2 className={`${styles.scanTitle} ${styles.revealUp}`} style={{ transitionDelay: "0.06s" }}>
+              <h2 className={`${styles.scanTitle} ${styles.revealUp}`}>
                 Scan any stock.<br />
                 <span>Free, for everyone.</span>
               </h2>
-              <p className={`${styles.scanSub} ${styles.reveal}`} style={{ transitionDelay: "0.12s" }}>
+              <p className={`${styles.scanSub} ${styles.reveal}`}>
                 Free on every account. Search any stock and SPECTRE checks a year of price, volume,
                 momentum, and volatility history — then flags what looks unusual.
               </p>
@@ -705,13 +687,13 @@ export default function LandingPage({
                   ["Search any stock", "Type BHP, CBA, NVDA — ASX tickers resolve first, and US or global markets work too."],
                   ["Possible anomalies only", "RSI extremes, volume spikes, price gaps, 52-week levels, trend breaks, and volatility bursts. Flags, not orders."],
                   ["You have the final say", "The scanner never trades and never tells you what to do. It surfaces the signal; you make the call."],
-                ].map(([title, copy], index) => (
-                  <li key={title} className={styles.reveal} style={{ transitionDelay: `${0.18 + index * 0.08}s` }}>
+                ].map(([title, copy]) => (
+                  <li key={title} className={styles.reveal}>
                     <strong>{title}</strong> — {copy}
                   </li>
                 ))}
               </ul>
-              <div className={`${styles.scannerCtaRow} ${styles.reveal}`} style={{ transitionDelay: "0.42s" }}>
+              <div className={`${styles.scannerCtaRow} ${styles.reveal}`}>
                 <Link href="/signin?mode=register&plan=free" className={`${styles.button} ${styles.primaryButton}`}>
                   Scan Your First Stock Free →
                 </Link>
@@ -726,10 +708,10 @@ export default function LandingPage({
       <section className={styles.section} id="connect">
         <div className={styles.container}>
           <div className={`${styles.sectionLabel} ${styles.reveal}`}>Bring Your Own AI</div>
-          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`} style={{ transitionDelay: "0.07s" }}>
+          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`}>
             Connect your favourite frontier model.
           </h2>
-          <p className={`${styles.sectionSub} ${styles.reveal}`} style={{ transitionDelay: "0.14s" }}>
+          <p className={`${styles.sectionSub} ${styles.reveal}`}>
             SPECTRE speaks the Model Context Protocol, so you can plug Claude, ChatGPT or a model running
             on your own machine straight into your portfolio. Your AI reads the real numbers — computed by
             us, never guessed by it — and you keep using the assistant you already pay for.
@@ -738,11 +720,10 @@ export default function LandingPage({
           {/* The two most people already have get the room; the rest are there
               to show this is an open protocol, not a two-vendor deal. */}
           <div className={styles.connectPrimary}>
-            {primaryClients.map((client, index) => (
+            {primaryClients.map((client) => (
               <div
                 key={client.name}
                 className={`${styles.connectCard} ${styles.reveal}`}
-                style={{ transitionDelay: `${0.18 + index * 0.07}s` }}
               >
                 <span className={styles.connectCardLogo}>{client.mark}</span>
                 <div className={styles.connectCardText}>
@@ -755,11 +736,10 @@ export default function LandingPage({
           </div>
 
           <div className={styles.connectGrid}>
-            {otherClients.map((client, index) => (
+            {otherClients.map((client) => (
               <div
                 key={client.name}
                 className={`${styles.connectChip} ${styles.reveal}`}
-                style={{ transitionDelay: `${0.32 + index * 0.06}s` }}
               >
                 <span className={styles.connectChipLogo}>{client.mark}</span>
                 <span className={styles.connectChipText}>
@@ -770,12 +750,12 @@ export default function LandingPage({
             ))}
           </div>
 
-          <p className={`${styles.connectFootnote} ${styles.reveal}`} style={{ transitionDelay: "0.6s" }}>
+          <p className={`${styles.connectFootnote} ${styles.reveal}`}>
             Any MCP client works — these are simply the common ones. Setup is one command.
           </p>
 
           <div className={styles.connectSplit}>
-            <div className={`${styles.connectTerm} ${styles.revealScale}`} style={{ transitionDelay: "0.12s" }}>
+            <div className={`${styles.connectTerm} ${styles.revealScale}`}>
               <div className={styles.scanTermBar}>YOUR AI // CONNECTED TO SPECTRE</div>
               <div className={styles.connectTermBody}>
                 <div className={styles.connectAsk}>› How is my portfolio positioned right now?</div>
@@ -799,8 +779,8 @@ export default function LandingPage({
                 ["Stays on your machine", "The connector runs locally. Your holdings are never handed to a third party."],
                 ["No extra AI bill", "You bring your own model, so there's nothing metered on our side."],
                 ["Twelve tools", "Holdings, risk, Monte Carlo, the scanner, news, movers and macro — all callable."],
-              ].map(([title, copy], index) => (
-                <li key={title} className={styles.reveal} style={{ transitionDelay: `${0.18 + index * 0.07}s` }}>
+              ].map(([title, copy]) => (
+                <li key={title} className={styles.reveal}>
                   <strong>{title}</strong> — {copy}
                 </li>
               ))}
@@ -814,12 +794,12 @@ export default function LandingPage({
       <section className={styles.section} id="research">
         <div className={styles.container}>
           <div className={`${styles.sectionLabel} ${styles.reveal}`}>Research Terminal</div>
-          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`} style={{ transitionDelay: "0.07s" }}>The market data behind every answer.</h2>
-          <p className={`${styles.sectionSub} ${styles.reveal}`} style={{ transitionDelay: "0.14s" }}>
+          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`}>The market data behind every answer.</h2>
+          <p className={`${styles.sectionSub} ${styles.reveal}`}>
             The same feeds the AI reads: ASX equities, macro, earnings, crypto, commodities, treasury curves, and positioning data — open to explore on your own.
           </p>
 
-          <div className={`${styles.researchWindow} ${styles.revealScale}`} style={{ transitionDelay: "0.18s" }}>
+          <div className={`${styles.researchWindow} ${styles.revealScale}`}>
             <div className={styles.researchWindowBar}>spectre-assets.com / research</div>
             <div className={styles.researchTape}>
               {[
@@ -897,8 +877,8 @@ export default function LandingPage({
               { name: "FRED + CFTC", sub: "Credit spreads, breakevens, money supply, Fed balance sheet, and managed-money positioning.", alt: true },
               { name: "12 ASX Earnings Names", sub: "Calendar, surprises, fundamentals, and preview context for banks, miners, healthcare, and energy.", alt: true },
               { name: "News + Calendar", sub: "Headline feed, economic calendar, and session context ready to feed the AI workflow.", alt: true },
-            ].map((tile, index) => (
-              <div key={tile.name} className={`${styles.researchTile} ${styles.reveal}`} style={{ transitionDelay: `${index * 0.08}s` }}>
+            ].map((tile) => (
+              <div key={tile.name} className={`${styles.researchTile} ${styles.reveal}`}>
                 <div className={`${styles.researchTileIcon} ${tile.alt ? styles.researchTileIconAlt : ""}`}>
                   <BarsIcon />
                 </div>
@@ -1023,11 +1003,11 @@ export default function LandingPage({
       <section className={styles.section} id="features">
         <div className={styles.container}>
           <div className={`${styles.sectionLabel} ${styles.reveal}`}>Features</div>
-          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`} style={{ transitionDelay: "0.07s" }}>Nine tools that actually talk to each other.</h2>
+          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`}>Nine tools that actually talk to each other.</h2>
 
           <div className={styles.featureGrid}>
-            {features.map((feature, index) => (
-              <article key={feature.title} className={`${styles.featureItem} ${styles.reveal}`} style={{ transitionDelay: `${index * 0.07}s` }}>
+            {features.map((feature) => (
+              <article key={feature.title} className={`${styles.featureItem} ${styles.reveal}`}>
                 <div className={`${styles.iconWrap} ${feature.alt ? styles.iconAlt : ""}`}>{feature.icon}</div>
                 <h3>{feature.title}</h3>
                 <p>{feature.copy}</p>
@@ -1042,7 +1022,7 @@ export default function LandingPage({
       <section className={styles.section} id="charts">
         <div className={styles.container}>
           <div className={`${styles.sectionLabel} ${styles.reveal}`}>Dashboard Preview</div>
-          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`} style={{ transitionDelay: "0.07s" }}>What the live system actually tracks.</h2>
+          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`}>What the live system actually tracks.</h2>
 
           <div className={styles.chartsGrid}>
             <article className={`${styles.chartCard} ${styles.chartTall} ${styles.revealTilt}`}>
@@ -1073,7 +1053,7 @@ export default function LandingPage({
               </div>
             </article>
 
-            <article className={`${styles.chartCard} ${styles.chartTall} ${styles.revealTilt}`} style={{ transitionDelay: "0.08s" }}>
+            <article className={`${styles.chartCard} ${styles.chartTall} ${styles.revealTilt}`}>
               <div className={styles.chartCardHeader}>
                 <span className={styles.chartCardTitle}>Portfolio Drawdown (12-Month)</span>
                 <span className={`${styles.chartBadge} ${styles.chartBadgeOrange}`}>Max -11%</span>
@@ -1114,7 +1094,7 @@ export default function LandingPage({
               </div>
             </article>
 
-            <article className={`${styles.chartCard} ${styles.revealTilt}`} style={{ transitionDelay: "0.14s" }}>
+            <article className={`${styles.chartCard} ${styles.revealTilt}`}>
               <div className={styles.chartCardHeader}>
                 <span className={styles.chartCardTitle}>Portfolio Exposure Mix</span>
                 <span className={styles.chartBadge}>Cross-Source</span>
@@ -1137,7 +1117,7 @@ export default function LandingPage({
               </div>
             </article>
 
-            <article className={`${styles.chartCard} ${styles.revealTilt}`} style={{ transitionDelay: "0.2s" }}>
+            <article className={`${styles.chartCard} ${styles.revealTilt}`}>
               <div className={styles.chartCardHeader}>
                 <span className={styles.chartCardTitle}>Monte Carlo Projection (1Y)</span>
                 <span className={`${styles.chartBadge} ${styles.chartBadgeOrange}`}>500 Paths</span>
@@ -1173,14 +1153,13 @@ export default function LandingPage({
       <section className={styles.section} id="security">
         <div className={styles.container}>
           <div className={`${styles.sectionLabel} ${styles.reveal}`}>Security</div>
-          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`} style={{ transitionDelay: "0.07s" }}>Your data stays yours.</h2>
+          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`}>Your data stays yours.</h2>
 
           <div className={styles.securityGrid}>
-            {securityCards.map((card, index) => (
+            {securityCards.map((card) => (
               <article
                 key={card.title}
                 className={`${styles.securityCard} ${styles.reveal}`}
-                style={{ transitionDelay: `${index * 0.08}s` }}
               >
                 <div className={`${styles.iconWrap} ${card.alt ? styles.iconAlt : ""}`}>{card.icon}</div>
                 <h3>{card.title}</h3>
@@ -1219,7 +1198,7 @@ export default function LandingPage({
       <section className={styles.section}>
         <div className={styles.container}>
           <div className={`${styles.sectionLabel} ${styles.reveal}`}>Why SPECTRE?</div>
-          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`} style={{ transitionDelay: "0.07s" }}>A spreadsheet can’t answer questions. A chatbot can’t see your money.</h2>
+          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`}>A spreadsheet can’t answer questions. A chatbot can’t see your money.</h2>
 
           <div className={styles.compareGrid}>
             <div className={`${styles.compareColumn} ${styles.revealLeft}`}>
@@ -1251,7 +1230,7 @@ export default function LandingPage({
       <section className={styles.section}>
         <div className={styles.container}>
           <div className={`${styles.sectionLabel} ${styles.reveal}`}>FAQ</div>
-          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`} style={{ transitionDelay: "0.07s" }}>Common questions.</h2>
+          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`}>Common questions.</h2>
 
           <div className={`${styles.faqList} ${styles.reveal}`}>
             {faqs.map((faq, index) => (
