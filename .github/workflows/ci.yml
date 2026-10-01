@@ -80,6 +80,8 @@ jobs:
         run: node scripts/test-ai-provider.mjs
       - name: Import bounds
         run: node scripts/test-import-bounds.mjs
+      - name: Fund look-through
+        run: node scripts/test-lookthrough.mjs
       - name: Contract-note parser
         run: node --experimental-strip-types scripts/test-contract-notes.mjs
       - name: MCP connector

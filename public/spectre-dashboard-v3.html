@@ -121,6 +121,25 @@ body.has-onboard .hero{padding-top:1.5rem}
 .onboard-step-title{display:block;font-family:var(--sans);font-size:.82rem;font-weight:600;color:#fff}
 .onboard-step-desc{display:block;font-family:var(--sans);font-size:.72rem;color:var(--muted2);margin-top:.2rem;line-height:1.5}
 .onboard-step[data-done="1"] .onboard-step-title{text-decoration:line-through;text-decoration-color:rgba(255,255,255,.35)}
+.lt-sec{display:none}
+.lt-sec.show{display:block}
+.lt-compare{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;margin-bottom:1.3rem}
+@media(max-width:760px){.lt-compare{grid-template-columns:1fr}}
+.lt-card{padding:1.1rem 1.25rem;border:1px solid var(--border);border-radius:12px;background:rgba(255,255,255,.02)}
+.lt-card.real{border-color:rgba(255,63,52,.3);background:linear-gradient(180deg,rgba(255,63,52,.06),rgba(255,63,52,.02))}
+.lt-card-lbl{font-family:var(--mono);font-size:.56rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted2)}
+.lt-card.real .lt-card-lbl{color:#ff6a52}
+.lt-card-row{display:flex;gap:1.6rem;margin-top:.7rem;flex-wrap:wrap}
+.lt-stat-val{font-family:var(--sans);font-size:1.35rem;font-weight:700;color:#fff;line-height:1.1}
+.lt-stat-lbl{font-family:var(--mono);font-size:.54rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted2);margin-top:.2rem}
+.lt-rows{display:flex;flex-direction:column;gap:.35rem}
+.lt-row{display:grid;grid-template-columns:3.6rem 1fr auto;gap:.8rem;align-items:center;padding:.5rem .7rem;border-radius:8px;background:rgba(255,255,255,.02)}
+.lt-row-pct{font-family:var(--mono);font-size:.78rem;font-weight:700;color:#ff6a52;text-align:right}
+.lt-row-name{font-family:var(--sans);font-size:.8rem;color:#f2f2f5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lt-row-via{font-family:var(--mono);font-size:.54rem;letter-spacing:.06em;color:var(--muted2);white-space:nowrap}
+.lt-tag{display:inline-block;padding:.08rem .34rem;border-radius:4px;background:rgba(255,63,52,.16);color:#ff8f7a;font-size:.5rem;letter-spacing:.08em;margin-right:.3rem}
+.lt-note{font-family:var(--mono);font-size:.56rem;letter-spacing:.04em;color:var(--muted2);line-height:1.7;margin-top:1rem;border-top:1px solid var(--border);padding-top:.7rem}
+.lt-sub{font-family:var(--sans);font-size:.74rem;color:var(--muted2);margin:1.2rem 0 .6rem;font-weight:600}
 .nav-btn{font-family:var(--sans);font-size:.75rem;font-weight:600;color:#f4f4f5;background:transparent;border:1px solid rgba(255,255,255,.14);border-radius:999px;padding:.34rem 1rem;cursor:pointer;transition:all .2s;text-decoration:none;white-space:nowrap}
 .nav-btn:hover{border-color:rgba(255,255,255,.28);background:rgba(255,255,255,.04);transform:translateY(-1px)}
 .nav-btn-primary{color:#fff;background:linear-gradient(135deg,#ee2f1d 0%,#ff6a30 46%,#ff4b33 100%);border-color:transparent;box-shadow:0 4px 18px rgba(255,63,52,.28),0 1px 0 rgba(255,255,255,.1) inset}
@@ -1898,6 +1917,51 @@ tbody tr:hover{ background:rgba(255,63,52,.04) !important }
 </div>
 
 <div class="divider" data-page="quant"></div>
+
+<!-- LOOK-THROUGH: what the portfolio actually holds -->
+<div class="wrap" data-page="quant">
+  <section class="sec lt-sec" id="lookthrough">
+    <div class="sec-head">
+      <h2 class="sec-title">What You Actually Hold</h2>
+      <div class="sec-line"></div>
+      <span class="sec-label" id="lt-coverage">—</span>
+    </div>
+    <p class="settings-note" style="margin:.2rem 0 1.2rem;font-size:.78rem;color:var(--muted2);line-height:1.7">
+      Funds resolved into the companies inside them, folded in with anything held directly.
+      A book of index funds is not a handful of positions &mdash; it is several hundred companies,
+      and the ones you also own directly count twice.
+    </p>
+
+    <div class="lt-compare">
+      <div class="lt-card">
+        <div class="lt-card-lbl">As Held &mdash; fund wrappers</div>
+        <div class="lt-card-row">
+          <div><div class="lt-stat-val" id="lt-w-count">&mdash;</div><div class="lt-stat-lbl">Positions</div></div>
+          <div><div class="lt-stat-val" id="lt-w-top3">&mdash;</div><div class="lt-stat-lbl">Top 3</div></div>
+          <div><div class="lt-stat-val" id="lt-w-hhi">&mdash;</div><div class="lt-stat-lbl">HHI</div></div>
+        </div>
+      </div>
+      <div class="lt-card real">
+        <div class="lt-card-lbl">Actual &mdash; underlying securities</div>
+        <div class="lt-card-row">
+          <div><div class="lt-stat-val" id="lt-r-count">&mdash;</div><div class="lt-stat-lbl">Securities</div></div>
+          <div><div class="lt-stat-val" id="lt-r-top3">&mdash;</div><div class="lt-stat-lbl">Top 3</div></div>
+          <div><div class="lt-stat-val" id="lt-r-hhi">&mdash;</div><div class="lt-stat-lbl">HHI</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="lt-sub">Largest real exposures</div>
+    <div class="lt-rows" id="lt-top"></div>
+
+    <div id="lt-overlap-wrap" hidden>
+      <div class="lt-sub">Funds holding the same companies</div>
+      <div class="lt-rows" id="lt-overlap"></div>
+    </div>
+
+    <div class="lt-note" id="lt-sources"></div>
+  </section>
+</div>
 
 <!-- RISK SIGNALS -->
 <div class="wrap" data-page="quant">
@@ -5887,6 +5951,95 @@ tbody tr:hover{ background:rgba(255,63,52,.04) !important }
 
   document.addEventListener("DOMContentLoaded", window.updateOnboarding);
   window.updateOnboarding();
+})();
+
+// ── LOOK-THROUGH ────────────────────────────────────────────────────────────
+//
+// Fetched separately from the main portfolio load. Resolving funds reaches SEC
+// EDGAR on a cold cache, which is far slower than anything else on this page,
+// so it must never be in the way of the numbers that are already available.
+// The panel stays hidden until there is something real to show.
+(function () {
+  var loaded = false;
+
+  function pct(n) { return (Number(n) || 0).toFixed(1) + "%"; }
+  function esc(v) {
+    return String(v == null ? "" : v)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+  function set(id, text) { var el = document.getElementById(id); if (el) el.textContent = text; }
+
+  function render(data) {
+    var lt = data && data.lookThrough;
+    var section = document.getElementById("lookthrough");
+    if (!section || !lt) return;
+
+    var wrapper = data.portfolio || {};
+    set("lt-w-count", String(data.holdingCount != null ? data.holdingCount : "—"));
+    set("lt-w-top3", pct(wrapper.top3ConcentrationPct));
+    set("lt-w-hhi", String(Math.round(wrapper.hhi || 0)));
+    set("lt-r-count", String(lt.effectiveHoldingCount));
+    set("lt-r-top3", pct(lt.top3ConcentrationPct));
+    set("lt-r-hhi", String(Math.round(lt.hhi || 0)));
+    set("lt-coverage", Math.round(lt.coveragePct) + "% resolved");
+
+    var top = document.getElementById("lt-top");
+    if (top) {
+      top.innerHTML = (lt.topPositions || []).slice(0, 12).map(function (p) {
+        var via = (p.via || []).length ? "via " + p.via.join(", ") : "held directly";
+        var tag = p.heldDirectly && (p.via || []).length ? '<span class="lt-tag">DIRECT + FUNDS</span>' : "";
+        return '<div class="lt-row">'
+          + '<span class="lt-row-pct">' + pct(p.weightPct) + "</span>"
+          + '<span class="lt-row-name">' + tag + esc(p.name) + "</span>"
+          + '<span class="lt-row-via">' + esc(via) + "</span>"
+          + "</div>";
+      }).join("");
+    }
+
+    var overlaps = (lt.fundOverlaps || []).filter(function (o) { return o.overlapPct >= 5; });
+    var wrap = document.getElementById("lt-overlap-wrap");
+    var list = document.getElementById("lt-overlap");
+    if (wrap && list) {
+      wrap.hidden = overlaps.length === 0;
+      list.innerHTML = overlaps.slice(0, 6).map(function (o) {
+        return '<div class="lt-row">'
+          + '<span class="lt-row-pct">' + pct(o.overlapPct) + "</span>"
+          + '<span class="lt-row-name">' + esc(o.funds.join("  /  ")) + "</span>"
+          + '<span class="lt-row-via">same companies</span>'
+          + "</div>";
+      }).join("");
+    }
+
+    // Constituent data is a filing from a past date, never today's book. Say so
+    // on the page rather than letting a stale weight read as a live one.
+    var sources = (lt.sources || []).map(function (x) {
+      return esc(x.fundTicker) + " — " + esc(x.source) + ", as of " + esc(x.asOf);
+    }).join("<br>");
+    var unresolved = (lt.unresolved || []).length
+      ? "<br><br>Not looked through: "
+        + lt.unresolved.map(function (u) { return esc(u.ticker); }).join(", ")
+        + " — these count in every total above at their own value."
+      : "";
+    set("lt-sources", "");
+    var note = document.getElementById("lt-sources");
+    if (note) note.innerHTML = sources + unresolved;
+
+    section.classList.add("show");
+  }
+
+  window.loadLookThrough = function loadLookThrough(force) {
+    if (loaded && !force) return;
+    loaded = true;
+    fetch("/api/portfolio/metrics", { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) { if (d) render(d); })
+      .catch(function () { /* the rest of the page is unaffected */ });
+  };
+
+  // Deferred: let the portfolio paint first, then fill this in behind it.
+  if (document.readyState === "complete") window.setTimeout(window.loadLookThrough, 1200);
+  else window.addEventListener("load", function () { window.setTimeout(window.loadLookThrough, 1200); });
 })();
 
 // ── TAB NAVIGATION ──

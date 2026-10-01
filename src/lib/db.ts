@@ -340,6 +340,45 @@ function initSchema(db: DatabaseSync): void {
       value TEXT NOT NULL
     );
 
+    /*
+     * Resolved fund constituents.
+     *
+     * An N-PORT filing can run to thirteen thousand lines, and the underlying
+     * data changes at most quarterly, so re-fetching and re-parsing it per page
+     * view would be slow for no benefit — and would hammer EDGAR, which rate
+     * limits by user agent.
+     *
+     * Keyed by ticker alone, not by user: a fund's holdings are a public fact
+     * about the fund, identical for everyone who owns it. Rows uploaded by a
+     * user are the exception and carry their user id, since those are that
+     * person's own file.
+     */
+    CREATE TABLE IF NOT EXISTS fund_compositions (
+      ticker TEXT NOT NULL,
+      user_id TEXT NOT NULL DEFAULT '',
+      fund_name TEXT NOT NULL DEFAULT '',
+      route TEXT NOT NULL,
+      source TEXT NOT NULL,
+      as_of TEXT NOT NULL,
+      constituents TEXT NOT NULL,
+      constituent_count INTEGER NOT NULL DEFAULT 0,
+      fetched_at TEXT NOT NULL,
+      PRIMARY KEY (ticker, user_id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_fund_compositions_fetched ON fund_compositions (fetched_at);
+
+    /*
+     * Tickers that could not be resolved, so a miss is not retried on every
+     * page load. Most tickers in a portfolio are ordinary shares and will never
+     * resolve; without this, each one costs two EDGAR requests every time.
+     */
+    CREATE TABLE IF NOT EXISTS fund_resolution_misses (
+      ticker TEXT PRIMARY KEY,
+      reason TEXT NOT NULL,
+      checked_at TEXT NOT NULL
+    );
+
     CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY,
       email TEXT NOT NULL UNIQUE,
@@ -4372,4 +4411,146 @@ export function listIngestMessages(userId: string, limit = 25): Array<Record<str
   return getDb()
     .prepare("SELECT * FROM email_ingest_messages WHERE user_id = ? ORDER BY received_at DESC LIMIT ?")
     .all(userId, capped) as Array<Record<string, unknown>>;
+}
+
+// ── Fund look-through cache ─────────────────────────────────────────────────
+
+export interface CachedComposition {
+  ticker: string;
+  fundName: string;
+  route: string;
+  source: string;
+  asOf: string;
+  constituents: unknown[];
+  fetchedAt: string;
+}
+
+/**
+ * How long a cached composition is served before being refreshed.
+ *
+ * N-PORT is published quarterly and an uploaded file does not change at all
+ * until the user replaces it, so a week is well inside the data's own
+ * resolution while still picking up a new filing without anyone intervening.
+ */
+const COMPOSITION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+/** A miss is cheap to re-check but pointless to re-check often. */
+const MISS_TTL_MS = 3 * 24 * 60 * 60 * 1000;
+
+export function readFundComposition(ticker: string, userId = ""): CachedComposition | null {
+  // A user's own uploaded file outranks the shared public record.
+  const row = getDb()
+    .prepare(
+      `SELECT * FROM fund_compositions
+       WHERE ticker = ? AND user_id IN (?, '')
+       ORDER BY CASE WHEN user_id = '' THEN 1 ELSE 0 END
+       LIMIT 1`,
+    )
+    .get(ticker.toUpperCase(), userId) as Record<string, unknown> | undefined;
+  if (!row) return null;
+
+  const fetchedAt = String(row.fetched_at ?? "");
+  const age = Date.now() - new Date(fetchedAt).getTime();
+  // An upload has no upstream to go stale against; only fetched rows expire.
+  if (String(row.route) !== "uploaded" && (!Number.isFinite(age) || age > COMPOSITION_TTL_MS)) {
+    return null;
+  }
+
+  let constituents: unknown[] = [];
+  try {
+    const parsed = JSON.parse(String(row.constituents ?? "[]"));
+    if (Array.isArray(parsed)) constituents = parsed;
+  } catch {
+    return null; // a corrupt row is a cache miss, not an error
+  }
+
+  return {
+    ticker: String(row.ticker),
+    fundName: String(row.fund_name ?? ""),
+    route: String(row.route),
+    source: String(row.source),
+    asOf: String(row.as_of),
+    constituents,
+    fetchedAt,
+  };
+}
+
+export function writeFundComposition(input: {
+  ticker: string;
+  fundName?: string;
+  route: string;
+  source: string;
+  asOf: string;
+  constituents: unknown[];
+  userId?: string;
+}): void {
+  const db = getDb();
+  const ticker = input.ticker.toUpperCase();
+  const userId = input.userId ?? "";
+
+  db.prepare(
+    `INSERT INTO fund_compositions
+       (ticker, user_id, fund_name, route, source, as_of, constituents, constituent_count, fetched_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+     ON CONFLICT(ticker, user_id) DO UPDATE SET
+       fund_name = excluded.fund_name,
+       route = excluded.route,
+       source = excluded.source,
+       as_of = excluded.as_of,
+       constituents = excluded.constituents,
+       constituent_count = excluded.constituent_count,
+       fetched_at = excluded.fetched_at`,
+  ).run(
+    ticker, userId, input.fundName ?? "", input.route, input.source, input.asOf,
+    JSON.stringify(input.constituents), input.constituents.length, new Date().toISOString(),
+  );
+
+  // Resolving clears any standing miss for the same ticker.
+  db.prepare("DELETE FROM fund_resolution_misses WHERE ticker = ?").run(ticker);
+}
+
+export function deleteFundComposition(ticker: string, userId = ""): number {
+  const result = getDb()
+    .prepare("DELETE FROM fund_compositions WHERE ticker = ? AND user_id = ?")
+    .run(ticker.toUpperCase(), userId) as { changes?: number | bigint };
+  return Number(result.changes ?? 0);
+}
+
+export function listFundCompositions(userId = ""): Array<{
+  ticker: string; fundName: string; route: string; source: string;
+  asOf: string; constituentCount: number; fetchedAt: string;
+}> {
+  const rows = getDb()
+    .prepare(
+      `SELECT ticker, fund_name, route, source, as_of, constituent_count, fetched_at
+       FROM fund_compositions WHERE user_id IN (?, '') ORDER BY ticker`,
+    )
+    .all(userId) as Array<Record<string, unknown>>;
+  return rows.map((r) => ({
+    ticker: String(r.ticker),
+    fundName: String(r.fund_name ?? ""),
+    route: String(r.route),
+    source: String(r.source),
+    asOf: String(r.as_of),
+    constituentCount: Number(r.constituent_count ?? 0),
+    fetchedAt: String(r.fetched_at ?? ""),
+  }));
+}
+
+/** True when this ticker was recently checked and found not to be a fund. */
+export function isRecentResolutionMiss(ticker: string): boolean {
+  const row = getDb()
+    .prepare("SELECT checked_at FROM fund_resolution_misses WHERE ticker = ?")
+    .get(ticker.toUpperCase()) as { checked_at?: string } | undefined;
+  if (!row?.checked_at) return false;
+  const age = Date.now() - new Date(row.checked_at).getTime();
+  return Number.isFinite(age) && age < MISS_TTL_MS;
+}
+
+export function recordResolutionMiss(ticker: string, reason: string): void {
+  getDb()
+    .prepare(
+      `INSERT INTO fund_resolution_misses (ticker, reason, checked_at) VALUES (?, ?, ?)
+       ON CONFLICT(ticker) DO UPDATE SET reason = excluded.reason, checked_at = excluded.checked_at`,
+    )
+    .run(ticker.toUpperCase(), reason.slice(0, 200), new Date().toISOString());
 }

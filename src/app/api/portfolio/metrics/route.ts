@@ -21,6 +21,7 @@ import { getAuthenticatedUser } from "@/lib/auth";
 import { estimateHistoricalRiskFromYahoo, readPortfolioState } from "@/lib/db";
 import { computeMetrics, displayHoldingLabel, type PortfolioHolding, type RiskWindow } from "@/lib/portfolio";
 import { runMonteCarlo, stressScenarios } from "@/lib/quant";
+import { lookThroughPortfolio } from "@/lib/lookthrough-service";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -78,6 +79,24 @@ export async function GET(request: NextRequest) {
   const monteCarlo = simulated && !wantBands
     ? { ...simulated, bands: undefined, bandsNote: "Add ?bands=1 for the per-day percentile fan." }
     : simulated;
+
+  // Concentration measured on wrappers is concentration understated: a book of
+  // three ETFs reads as three positions when it is really several hundred
+  // companies, several of which the user also owns directly. Resolving the
+  // funds first is what lets every figure below describe securities rather than
+  // product names. Like the Yahoo estimate it reaches the network, so it is
+  // bounded and never blocks the rest of the answer.
+  let lookThrough: Awaited<ReturnType<typeof lookThroughPortfolio>> | null = null;
+  let lookThroughError: string | null = null;
+  try {
+    lookThrough = await Promise.race([
+      lookThroughPortfolio(state.holdings, user.id),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), RISK_TIMEOUT_MS)),
+    ]);
+    if (lookThrough === null) lookThroughError = "Timed out resolving fund holdings.";
+  } catch (error) {
+    lookThroughError = error instanceof Error ? error.message : String(error);
+  }
 
   // Snapshot-derived risk needs a history the account may not have yet; the
   // Yahoo estimate rebuilds it from real price series instead. It is the slower
@@ -139,6 +158,48 @@ export async function GET(request: NextRequest) {
     historicalRisk,
     historicalRiskError,
 
+    /*
+     * The same portfolio measured on the securities underneath the funds.
+     *
+     * `portfolio` above counts an ETF as one position. This counts the
+     * companies inside it, folds them in with anything held directly, and
+     * re-derives concentration from that. Where the two disagree, this one is
+     * the real exposure — and it disagrees in the direction that matters,
+     * because wrapper-level concentration always reads lower than the truth.
+     */
+    lookThrough: lookThrough && lookThrough.hasLookThrough
+      ? {
+          coveragePct: lookThrough.coveragePct,
+          resolvedValue: lookThrough.resolvedValue,
+          totalValue: lookThrough.totalValue,
+          effectiveHoldingCount: lookThrough.positions.length,
+          hhi: lookThrough.hhi,
+          top3ConcentrationPct: lookThrough.positions
+            .slice(0, 3)
+            .reduce((sum, p) => sum + p.weightPct, 0),
+          topPositions: lookThrough.positions.slice(0, 25).map((p) => ({
+            name: p.name,
+            ticker: p.ticker ?? null,
+            value: p.value,
+            weightPct: p.weightPct,
+            heldDirectly: p.direct,
+            via: p.via.map((v) => v.fundTicker),
+          })),
+          hiddenConcentration: lookThrough.hidden.slice(0, 15),
+          fundOverlaps: lookThrough.overlaps.slice(0, 10).map((o) => ({
+            funds: [o.a, o.b],
+            overlapPct: o.overlapPct,
+            sharedValue: o.sharedValue,
+          })),
+          byCountry: lookThrough.byCountry.slice(0, 15),
+          bySector: lookThrough.bySector.slice(0, 15),
+          byAssetClass: lookThrough.byAssetClass.slice(0, 10),
+          unresolved: lookThrough.unresolved,
+          sources: lookThrough.sources,
+        }
+      : null,
+    lookThroughError,
+
     // Last 90 value points, oldest first — enough to describe a trend.
     history: metrics.history.slice(-90),
 
@@ -155,6 +216,9 @@ export async function GET(request: NextRequest) {
         : "monteCarlo is null because the portfolio has fewer than two recorded value snapshots, so there is no return history to project from. Import again on another day and it will populate.",
       "stressScenarios are single-day shocks applied to the whole book, not predictions of likelihood.",
       "In historicalRisk, `notPriced` lists holdings that have no market quote by design (super, unlisted funds, gold) — they are still part of the portfolio and are counted in every value and weight above. Only `failedTickers` means a lookup actually failed.",
+      lookThrough && lookThrough.hasLookThrough
+        ? `lookThrough resolves funds into the companies they hold, so ${Math.round(lookThrough.coveragePct)}% of this portfolio is measured on securities rather than product names. Where lookThrough.hhi or top3ConcentrationPct differ from portfolio.*, prefer lookThrough — the wrapper-level figures understate concentration by construction. Constituent data is as of the dates in lookThrough.sources, not today.`
+        : "lookThrough is null because no holding resolved to a fund. US-listed funds resolve from SEC N-PORT filings; ASX funds and super options need their holdings file uploaded, since those issuers block automated requests.",
     ],
   });
 }
