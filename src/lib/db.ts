@@ -372,6 +372,8 @@ function initSchema(db: DatabaseSync): void {
       as_of TEXT NOT NULL,
       constituents TEXT NOT NULL,
       constituent_count INTEGER NOT NULL DEFAULT 0,
+      coverage_pct REAL,
+      coverage_note TEXT NOT NULL DEFAULT '',
       fetched_at TEXT NOT NULL,
       PRIMARY KEY (ticker, user_id)
     );
@@ -442,6 +444,29 @@ function initSchema(db: DatabaseSync): void {
 
     CREATE INDEX IF NOT EXISTS idx_price_dip_alerts_user_id ON price_dip_alerts (user_id);
   `);
+
+  // Added after fund_compositions shipped; an existing database needs them or
+  // every cached 13F reads as fully covered.
+  for (const [column, ddl] of [
+    ["coverage_pct", "ALTER TABLE fund_compositions ADD COLUMN coverage_pct REAL;"],
+    ["coverage_note", "ALTER TABLE fund_compositions ADD COLUMN coverage_note TEXT NOT NULL DEFAULT '';"],
+  ] as const) {
+    const present = db
+      .prepare("SELECT 1 AS ok FROM pragma_table_info('fund_compositions') WHERE name = ?")
+      .get(column) as { ok: number } | undefined;
+    if (!present) db.exec(ddl);
+  }
+
+  /*
+   * A 13F row cached before coverage existed carries NULL, which the resolver
+   * reads as "no limit" and allocates in full — the exact failure this feature
+   * is built to avoid, reporting a quarter of Berkshire as all of it. Those
+   * rows are dropped so they are fetched again with a coverage figure.
+   *
+   * A row where coverage genuinely could not be computed stores 0, not NULL,
+   * so this only removes the pre-migration ones.
+   */
+  db.exec("DELETE FROM fund_compositions WHERE route = '13f' AND coverage_pct IS NULL;");
 
   const hasPrevCloseColumn = db
     .prepare("SELECT 1 AS ok FROM pragma_table_info('holdings') WHERE name = 'prev_close'")
@@ -4454,6 +4479,9 @@ export interface CachedComposition {
   source: string;
   asOf: string;
   constituents: unknown[];
+  /** Absent for a fund's own filing, which covers the whole fund. */
+  coveragePct: number | null;
+  coverageNote: string | null;
   fetchedAt: string;
 }
 
@@ -4502,6 +4530,8 @@ export function readFundComposition(ticker: string, userId = ""): CachedComposit
     source: String(row.source),
     asOf: String(row.as_of),
     constituents,
+    coveragePct: row.coverage_pct == null ? null : Number(row.coverage_pct),
+    coverageNote: String(row.coverage_note ?? "") || null,
     fetchedAt,
   };
 }
@@ -4513,6 +4543,8 @@ export function writeFundComposition(input: {
   source: string;
   asOf: string;
   constituents: unknown[];
+  coveragePct?: number;
+  coverageNote?: string;
   userId?: string;
 }): void {
   const db = getDb();
@@ -4521,8 +4553,9 @@ export function writeFundComposition(input: {
 
   db.prepare(
     `INSERT INTO fund_compositions
-       (ticker, user_id, fund_name, route, source, as_of, constituents, constituent_count, fetched_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+       (ticker, user_id, fund_name, route, source, as_of, constituents, constituent_count,
+        coverage_pct, coverage_note, fetched_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(ticker, user_id) DO UPDATE SET
        fund_name = excluded.fund_name,
        route = excluded.route,
@@ -4530,10 +4563,13 @@ export function writeFundComposition(input: {
        as_of = excluded.as_of,
        constituents = excluded.constituents,
        constituent_count = excluded.constituent_count,
+       coverage_pct = excluded.coverage_pct,
+       coverage_note = excluded.coverage_note,
        fetched_at = excluded.fetched_at`,
   ).run(
     ticker, userId, input.fundName ?? "", input.route, input.source, input.asOf,
-    JSON.stringify(input.constituents), input.constituents.length, new Date().toISOString(),
+    JSON.stringify(input.constituents), input.constituents.length,
+    input.coveragePct ?? null, input.coverageNote ?? "", new Date().toISOString(),
   );
 
   // Resolving clears any standing miss for the same ticker.

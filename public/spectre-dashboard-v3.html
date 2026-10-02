@@ -6157,7 +6157,13 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
     // Constituent data is a filing from a past date, never today's book. Say so
     // on the page rather than letting a stale weight read as a live one.
     var sources = (lt.sources || []).map(function (x) {
-      return esc(x.fundTicker) + " — " + esc(x.source) + ", as of " + esc(x.asOf);
+      var line = esc(x.fundTicker) + " — " + esc(x.source) + ", as of " + esc(x.asOf);
+      // A 13F covers only part of the holding. Saying so next to the source is
+      // the difference between a partial answer and a misleading one.
+      if (x.coverageNote) {
+        line += '<br><span style="color:#c7300f">&nbsp;&nbsp;&#9888; ' + esc(x.coverageNote) + "</span>";
+      }
+      return line;
     }).join("<br>");
     var unresolved = (lt.unresolved || []).length
       ? "<br><br>Not looked through: "

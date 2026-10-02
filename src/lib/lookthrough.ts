@@ -45,6 +45,20 @@ export interface FundComposition {
   source: string;
   /** Effective date of the underlying filing or file, not the fetch time. */
   asOf: string;
+  /**
+   * How much of the holding these constituents actually account for.
+   *
+   * A fund's N-PORT is the whole fund, so this is absent and the constituents
+   * stand for all of it. A 13F is not: it reports only US-listed equities and
+   * leaves out operating businesses, cash, bonds and foreign holdings — about
+   * three quarters of Berkshire. Where that is the case, only this share is
+   * allocated to the constituents and the rest stays as the holding itself,
+   * because scaling a quarter of a company up to the whole of it would
+   * overstate every underlying position by four times.
+   */
+  coveragePct?: number;
+  /** Said plainly in the UI wherever coverage is partial. */
+  coverageNote?: string;
 }
 
 /** One line of a holding the user actually bears, after resolution. */
@@ -83,7 +97,7 @@ export interface LookThroughResult {
   /** Wrappers that could not be resolved, left in the book as themselves. */
   unresolved: Array<{ ticker: string; name: string; value: number; reason: string }>;
   overlaps: FundOverlap[];
-  sources: Array<{ fundTicker: string; source: string; asOf: string }>;
+  sources: Array<{ fundTicker: string; source: string; asOf: string; coveragePct?: number; coverageNote?: string }>;
 }
 
 /** The holding shape this operates on — a structural subset of PortfolioHolding. */
@@ -238,7 +252,13 @@ export function buildEffectiveBook(
       continue;
     }
 
-    sources.push({ fundTicker: wrapperKey, source: composition.source, asOf: composition.asOf });
+    sources.push({
+      fundTicker: wrapperKey,
+      source: composition.source,
+      asOf: composition.asOf,
+      coveragePct: composition.coveragePct,
+      coverageNote: composition.coverageNote,
+    });
 
     // Issuer weights rarely sum to exactly 100 — they are rounded, and some
     // funds report only their largest positions. Rescale to what is actually
@@ -256,14 +276,51 @@ export function buildEffectiveBook(
       continue;
     }
 
-    resolvedValue += value;
+    /*
+     * How much of this holding the constituents stand for.
+     *
+     * A fund's own filing covers the whole fund. A 13F does not — it reports
+     * US-listed equities and omits operating businesses, cash, bonds and
+     * foreign holdings. Allocating only the covered share and leaving the rest
+     * as the holding itself is the difference between saying "a quarter of your
+     * Berkshire is these companies" and claiming all of it is, which would
+     * overstate every one of them fourfold.
+     */
+    const coverage = Number.isFinite(composition.coveragePct ?? Number.NaN)
+      ? Math.min(1, Math.max(0, (composition.coveragePct as number) / 100))
+      : 1;
+    const coveredValue = value * coverage;
+    const residual = value - coveredValue;
+
+    if (residual > EPSILON) {
+      // The part no filing describes stays visible as the holding itself,
+      // rather than being quietly folded into the companies that are known.
+      add(constituentKey({ ticker: holding.ticker, name: holding.name }), {
+        ticker: holding.ticker,
+        name: composition.coverageNote
+          ? `${holding.name} — not covered by the filing`
+          : holding.name,
+        sector: holding.sector,
+        direct: true,
+      }, residual, null);
+    }
+
+    if (coveredValue <= EPSILON) {
+      unresolved.push({
+        ticker: holding.ticker, name: holding.name, value,
+        reason: composition.coverageNote ?? "The filing covers none of this holding",
+      });
+      continue;
+    }
+
+    resolvedValue += coveredValue;
     const fundMap = contributionsByFund.get(wrapperKey) ?? new Map<string, number>();
     contributionsByFund.set(wrapperKey, fundMap);
 
     for (const c of composition.constituents) {
       const w = Number.isFinite(c.weightPct) ? Math.max(0, c.weightPct) : 0;
       if (w <= EPSILON) continue;
-      const slice = value * (w / reported);
+      const slice = coveredValue * (w / reported);
       const placedKey = add(constituentKey(c), {
         ticker: c.ticker,
         name: c.name,

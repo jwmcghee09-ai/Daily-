@@ -16,7 +16,7 @@ writeFileSync(join(dir, "tsconfig.json"), JSON.stringify({
     baseUrl: root, paths: { "@/*": ["./src/*"] },
     outDir, rootDir: join(root, "src"), skipLibCheck: true,
   },
-  files: [join(root, "src/lib/lookthrough.ts")],
+  files: [join(root, "src/lib/lookthrough.ts"), join(root, "src/lib/fund-13f.ts")],
 }));
 try {
   execFileSync("npx", ["tsc", "-p", join(dir, "tsconfig.json")], { stdio: ["ignore", "pipe", "pipe"] });
@@ -272,6 +272,111 @@ const hold = (ticker, value, name = ticker) => ({ ticker, name, value });
   check("overlap follows the merge rather than the raw identifiers",
     r.overlaps.length === 1 && near(r.overlaps[0].overlapPct, 100),
     `${r.overlaps.length} overlap(s) at ${r.overlaps[0]?.overlapPct}%`);
+}
+
+
+// ── Partial coverage: a 13F is not the whole company ──────────────────────
+{
+  // Berkshire's 13F reports US-listed equities only — roughly a quarter of the
+  // company. Treating it as the whole holding would multiply every underlying
+  // position by four, which is the single most costly way this could be wrong.
+  const compositions = new Map([[
+    "BRK", {
+      fundTicker: "BRK",
+      constituents: [
+        { name: "Apple Inc", cusip: "037833100", weightPct: 50 },
+        { name: "American Express", cusip: "025816109", weightPct: 50 },
+      ],
+      source: "SEC Form 13F",
+      asOf: "2026-08-14",
+      coveragePct: 25,
+      coverageNote: "A 13F reports only US-listed equities — about 25% of this holding's assets.",
+    },
+  ]]);
+  const r = lt.buildEffectiveBook([hold("BRK", 10000, "Berkshire Hathaway")], compositions);
+
+  check("the whole holding is still accounted for", near(r.totalValue, 10000), String(r.totalValue));
+  check("and the positions still sum to it",
+    near(r.positions.reduce((s, p) => s + p.value, 0), 10000));
+
+  const apple = r.positions.find((p) => /APPLE/i.test(p.name));
+  // 25% of 10,000 is covered; Apple is half of that.
+  check("a constituent gets its share of the COVERED part only",
+    near(apple.value, 1250) && near(apple.weightPct, 12.5),
+    `${apple?.value} (${apple?.weightPct}%)`);
+
+  const residual = r.positions.find((p) => /not covered/i.test(p.name));
+  check("the uncovered remainder stays in the book as the holding",
+    residual != null && near(residual.value, 7500), `${residual?.value}`);
+  check("and says so by name", /not covered by the filing/i.test(residual?.name ?? ""), residual?.name);
+  check("only the covered part counts as resolved", near(r.resolvedValue, 2500), String(r.resolvedValue));
+}
+{
+  // No balance sheet to divide by means no honest denominator, so nothing is
+  // allocated — the holding is left whole and reported as unresolved.
+  const compositions = new Map([[
+    "UNK", {
+      fundTicker: "UNK",
+      constituents: [{ name: "Something", cusip: "111111111", weightPct: 100 }],
+      source: "SEC Form 13F", asOf: "2026-08-14",
+      coveragePct: 0,
+      coverageNote: "Total assets could not be read, so the share it represents is unknown.",
+    },
+  ]]);
+  const r = lt.buildEffectiveBook([hold("UNK", 5000, "Unknown Co")], compositions);
+  check("unknown coverage allocates nothing rather than guessing",
+    near(r.resolvedValue, 0) && near(r.totalValue, 5000), `resolved ${r.resolvedValue}`);
+  check("and the holding is named as unresolved, with the reason",
+    r.unresolved.length === 1 && /unknown/i.test(r.unresolved[0].reason), r.unresolved[0]?.reason);
+}
+{
+  // A fund's own filing covers the whole fund, so the absence of coveragePct
+  // must keep behaving exactly as before.
+  const compositions = new Map([fund("ETF", [
+    { name: "A", ticker: "A", weightPct: 60 }, { name: "B", ticker: "B", weightPct: 40 }])]);
+  const r = lt.buildEffectiveBook([hold("ETF", 1000)], compositions);
+  check("no coverage stated means full coverage", near(r.resolvedValue, 1000), String(r.resolvedValue));
+  check("and no residual line is invented", r.positions.length === 2, `${r.positions.length} positions`);
+}
+
+// ── 13F info table parsing ────────────────────────────────────────────────
+{
+  const f13 = await import(join(outDir, "lib/fund-13f.js"));
+  const entry = (name, cusip, value, extra = "") =>
+    `<infoTable><nameOfIssuer>${name}</nameOfIssuer><cusip>${cusip}</cusip>` +
+    `<value>${value}</value>${extra}</infoTable>`;
+
+  // A filer with several named managers reports the same stock once per
+  // manager. Berkshire's Apple stake arrives as two rows that are one position,
+  // and listing it twice would understate it in every concentration figure.
+  const xml = "<x>"
+    + entry("APPLE INC", "037833100", 1000)
+    + entry("APPLE INC", "037833100", 500)
+    + entry("COCA COLA CO", "191216100", 500)
+    + "</x>";
+  const { constituents, totalValue } = f13.parse13fInfoTable(xml);
+  check("duplicate manager rows are summed into one position",
+    constituents.length === 2, `${constituents.length} positions`);
+  const apple = constituents.find((c) => /APPLE/.test(c.name));
+  check("and the summed position carries the combined weight",
+    near(apple.weightPct, 75), `${apple?.weightPct}%`);
+  check("the reported total is the sum of every row", near(totalValue, 2000), String(totalValue));
+  check("weights sum to 100% of the filing",
+    near(constituents.reduce((s, c) => s + c.weightPct, 0), 100));
+
+  // Options are not a holding you can concentrate in, and counting a put as
+  // long exposure would invert its meaning.
+  const withPut = "<x>" + entry("APPLE INC", "037833100", 1000)
+    + entry("TESLA INC", "88160R101", 1000, "<putCall>Put</putCall>") + "</x>";
+  const puts = f13.parse13fInfoTable(withPut);
+  check("put and call lines are excluded",
+    puts.constituents.length === 1 && /APPLE/.test(puts.constituents[0].name),
+    puts.constituents.map((c) => c.name).join(","));
+
+  check("an empty table yields nothing rather than dividing by zero",
+    f13.parse13fInfoTable("<x></x>").constituents.length === 0);
+  check("13F positions are marked as US equity",
+    constituents.every((c) => c.assetClass === "EC" && c.country === "US"));
 }
 
 rmSync(dir, { recursive: true, force: true });

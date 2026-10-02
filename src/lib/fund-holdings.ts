@@ -23,6 +23,7 @@
  */
 import type { FundComposition, FundConstituent } from "@/lib/lookthrough";
 import { fetchNportComposition } from "@/lib/fund-sec";
+import { fetch13fComposition } from "@/lib/fund-13f";
 import { normaliseTicker } from "@/lib/lookthrough";
 
 /**
@@ -42,7 +43,7 @@ export const ASX_TO_US_FUND: Readonly<Record<string, string>> = {
   IWLD: "URTH", // iShares Core MSCI World
 };
 
-export type ResolutionRoute = "sec" | "cross-listed" | "uploaded";
+export type ResolutionRoute = "sec" | "cross-listed" | "uploaded" | "13f";
 
 export interface ResolvedFund extends FundComposition {
   route: ResolutionRoute;
@@ -94,7 +95,37 @@ export async function resolveFund(
   }
 
   const sec = await fetchNportComposition(symbol).catch(() => null);
-  return sec ? { ...sec, route: "sec" } : null;
+  if (sec) return { ...sec, route: "sec" };
+
+  /*
+   * Not a registered fund — but it may still be a vehicle held for the
+   * portfolio inside it. Berkshire files 13Fs and no N-PORT, so without this
+   * step it stays an opaque lump in an engine built to see inside things.
+   *
+   * Coverage is carried through rather than assumed: a 13F reports only
+   * US-listed equities, which for Berkshire is about a quarter of the company.
+   */
+  const thirteenF = await fetch13fComposition(symbol).catch(() => null);
+  if (thirteenF && thirteenF.constituents.length > 0) {
+    const pct = thirteenF.coveragePct;
+    return {
+      fundTicker: symbol,
+      constituents: thirteenF.constituents,
+      source: "SEC Form 13F",
+      asOf: thirteenF.asOf,
+      route: "13f",
+      // With no balance sheet to compare against there is no honest
+      // denominator, so nothing is allocated rather than guessing one.
+      coveragePct: pct ?? 0,
+      coverageNote: pct != null
+        ? `A 13F reports only US-listed equities — about ${pct.toFixed(0)}% of this holding's assets. `
+          + "Operating businesses, cash, bonds and foreign listings are not in it."
+        : "A 13F reports only US-listed equities, and this filer's total assets could not be read, "
+          + "so the share it represents is unknown.",
+    };
+  }
+
+  return null;
 }
 
 // ── Holdings files ──────────────────────────────────────────────────────────

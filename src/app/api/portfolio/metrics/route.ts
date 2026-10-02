@@ -217,7 +217,7 @@ export async function GET(request: NextRequest) {
       "stressScenarios are single-day shocks applied to the whole book, not predictions of likelihood.",
       "In historicalRisk, `notPriced` lists holdings that have no market quote by design (super, unlisted funds, gold) — they are still part of the portfolio and are counted in every value and weight above. Only `failedTickers` means a lookup actually failed.",
       lookThrough && lookThrough.hasLookThrough
-        ? `lookThrough resolves funds into the companies they hold, so ${Math.round(lookThrough.coveragePct)}% of this portfolio is measured on securities rather than product names. Where lookThrough.hhi or top3ConcentrationPct differ from portfolio.*, prefer lookThrough — the wrapper-level figures understate concentration by construction. Constituent data is as of the dates in lookThrough.sources, not today.`
+        ? `lookThrough resolves funds into the companies they hold, so ${Math.round(lookThrough.coveragePct)}% of this portfolio is measured on securities rather than product names. Where lookThrough.hhi or top3ConcentrationPct differ from portfolio.*, prefer lookThrough — the wrapper-level figures understate concentration by construction. Constituent data is as of the dates in lookThrough.sources, not today. Where a source in lookThrough.sources carries a coverageNote it is a Form 13F, which reports only US-listed equities — the uncovered remainder of that holding stays in the book as its own line and must not be described as resolved.`
         : "lookThrough is null because no holding resolved to a fund. US-listed funds resolve from SEC N-PORT filings; ASX funds and super options need their holdings file uploaded, since those issuers block automated requests.",
     ],
   });

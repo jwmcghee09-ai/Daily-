@@ -47,7 +47,8 @@ export interface PortfolioLookThrough extends LookThroughResult {
 }
 
 function toComposition(cached: {
-  ticker: string; fundName: string; route: string; source: string; asOf: string; constituents: unknown[];
+  ticker: string; fundName: string; route: string; source: string; asOf: string;
+  constituents: unknown[]; coveragePct?: number | null; coverageNote?: string | null;
 }): FundComposition {
   return {
     fundTicker: cached.ticker,
@@ -55,6 +56,10 @@ function toComposition(cached: {
     constituents: cached.constituents as FundConstituent[],
     source: cached.source,
     asOf: cached.asOf,
+    // Carried through the cache: without it a 13F holding would read as fully
+    // covered on every load after the first.
+    coveragePct: cached.coveragePct ?? undefined,
+    coverageNote: cached.coverageNote ?? undefined,
   };
 }
 
@@ -124,6 +129,8 @@ export async function lookThroughPortfolio(
           source: resolved.source,
           asOf: resolved.asOf,
           constituents: resolved.constituents,
+          coveragePct: resolved.coveragePct,
+          coverageNote: resolved.coverageNote,
         });
       } else {
         // Not a fund, or a fund with no public filing. Both are normal.
