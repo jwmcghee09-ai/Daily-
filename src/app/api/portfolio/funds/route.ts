@@ -18,6 +18,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { readFundComposition, readPortfolioState } from "@/lib/db";
+import { hasIssuerPage } from "@/lib/fund-render";
 import {
   exposureBy,
   normaliseTicker,
@@ -40,6 +41,22 @@ function toPositions(constituents: readonly FundConstituent[], fundValue: number
     (sum, c) => sum + (Number.isFinite(c.weightPct) ? Math.max(0, c.weightPct) : 0), 0);
   if (reported <= 0) return [];
 
+  /*
+   * Rescale a complete file, never a partial one.
+   *
+   * A full holdings file misses 100% only by rounding, so normalising it is a
+   * tidy-up. A partial source is different: an issuer page lists a top ten
+   * adding to a third of the fund, and scaling that to 100% reports BHP at 35%
+   * of VAS when Vanguard says 11.78%. Worse, it would disagree with the
+   * portfolio view, which allocates only the covered share — the same holding
+   * showing two different weights on one screen.
+   *
+   * So weights below the rounding band are left exactly as the issuer stated
+   * them, and the panel's own warning explains why they do not reach 100.
+   */
+  const complete = Math.abs(reported - 100) <= 5;
+  const divisor = complete ? reported : 100;
+
   return constituents.map((c) => {
     const weight = Number.isFinite(c.weightPct) ? Math.max(0, c.weightPct) : 0;
     return {
@@ -49,9 +66,9 @@ function toPositions(constituents: readonly FundConstituent[], fundValue: number
       isin: c.isin,
       cusip: c.cusip,
       // What this line is worth inside the parcel the user actually owns.
-      value: fundValue * (weight / reported),
-      // Rescaled to the fund, which is what "11.7% of A200" means.
-      weightPct: (weight / reported) * 100,
+      value: fundValue * (weight / divisor),
+      // The issuer's own figure, so "11.78% of VAS" means what Vanguard says.
+      weightPct: (weight / divisor) * 100,
       country: c.country,
       sector: c.sector,
       assetClass: c.assetClass,
@@ -220,6 +237,9 @@ export async function GET(request: NextRequest) {
         ticker: normaliseTicker(h.ticker),
         label: holdingName(h.ticker, h.name),
         value: h.value,
+        // Whether the issuer's page can be read on request, so the UI offers
+        // fetching only where there is something to fetch.
+        fetchable: hasIssuerPage(normaliseTicker(h.ticker)),
       })),
   });
 }

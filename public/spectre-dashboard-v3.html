@@ -6182,8 +6182,14 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
             + "<span><span class=\"fund-name\">" + esc(u.label) + "</span>"
             + '<span class="fund-sub">No holdings data \u2014 upload its file to see inside</span></span>'
             + '<span class="fund-val">' + money(u.value) + "</span>"
+            + '<span style="display:flex;gap:.4rem">'
+            // Offered only where an issuer page is known: a browser render is
+            // slow and heavy, so there is no point starting one that will miss.
+            + (u.fetchable
+                ? '<button type="button" class="fund-up" data-fetch="' + esc(u.ticker) + '">Fetch</button>'
+                : "")
             + '<button type="button" class="fund-up" data-upload="' + esc(u.ticker) + '">Upload</button>'
-            + "</div></div>";
+            + "</span></div></div>";
         }).join("");
 
         var count = document.getElementById("funds-count");
@@ -6200,9 +6206,9 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
               + "issuer does not publish a file we can fetch \u2014 upload it and it appears here."
             : "<strong>Nothing here can be looked through yet.</strong> US-listed funds resolve "
               + "automatically from SEC filings, and Betashares funds from their daily file. "
-              + "Vanguard, VanEck and iShares Australia publish holdings only through their own "
-              + "websites, and super funds publish twice a year on theirs \u2014 neither can be "
-              + "fetched, so download the holdings file and upload it against the ticker.";
+              + "Where <em>Fetch</em> is offered we can read the issuer\u2019s own page, though those "
+              + "publish only a top ten \u2014 the rest of the holding stays shown as itself. "
+              + "<em>Upload</em> the holdings file for the complete portfolio.";
         }
 
         section.classList.add("show");
@@ -6257,7 +6263,42 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
     input.click();
   }
 
+  // Read the issuer's page on request. Slow by nature — a browser launch and a
+  // full render — so the button says what is happening rather than appearing
+  // to hang.
+  function fetchFor(ticker, button) {
+    var original = button.textContent;
+    button.textContent = "Reading\u2026";
+    button.disabled = true;
+
+    fetch("/api/portfolio/funds/fetch", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ticker: ticker }),
+    })
+      .then(function (r) { return r.json().then(function (b) { return { ok: r.ok, body: b }; }); })
+      .then(function (res) {
+        if (!res.ok) {
+          button.textContent = "Not found";
+          button.title = [res.body.error, res.body.detail].filter(Boolean).join(" ");
+          window.setTimeout(function () {
+            button.textContent = original; button.disabled = false; button.title = "";
+          }, 6000);
+          return;
+        }
+        button.textContent = Math.round(res.body.coveragePct) + "% read";
+        window.setTimeout(function () { window.loadYourFunds(true); }, 700);
+      })
+      .catch(function () {
+        button.textContent = "Failed";
+        button.disabled = false;
+      });
+  }
+
   document.addEventListener("click", function (e) {
+    var fetchBtn = e.target.closest && e.target.closest("[data-fetch]");
+    if (fetchBtn) { fetchFor(fetchBtn.getAttribute("data-fetch"), fetchBtn); return; }
+
     var up = e.target.closest && e.target.closest("[data-upload]");
     if (up) { uploadFor(up.getAttribute("data-upload"), up); return; }
 

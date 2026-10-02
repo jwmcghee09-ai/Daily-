@@ -35,6 +35,11 @@ services:
       # fred.stlouisfed.org/docs/api/api_key.html
       - key: FRED_API_KEY
         sync: false
+      # Where Puppeteer puts Chromium at build time. Render wipes $HOME between
+      # build and run, so the default cache location is gone by the time a
+      # request needs the browser.
+      - key: PUPPETEER_CACHE_DIR
+        value: /opt/render/project/.cache/puppeteer
       - key: GROQ_API_KEY
         sync: false
       # Stands behind Groq. Without it a Groq outage, an expired key or a
