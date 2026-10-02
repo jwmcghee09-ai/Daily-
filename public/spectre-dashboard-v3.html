@@ -154,6 +154,12 @@ body.has-onboard .hero{padding-top:1.5rem}
 .hrisk-na{color:var(--muted)}
 .funds-sec{display:none}
 .funds-sec.show{display:block}
+.fund-row.unres{background:rgba(15,15,17,.015)}
+.fund-row.unres .fund-code{color:var(--muted)}
+.fund-up{font-family:var(--mono);font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;color:#c7300f;background:none;border:1px solid var(--border);border-radius:999px;padding:.32rem .8rem;cursor:pointer;white-space:nowrap}
+.fund-up:hover{border-color:rgba(255,75,51,.45)}
+.fund-empty{font-family:var(--sans);font-size:.8rem;color:var(--muted);line-height:1.75;padding:1.1rem 0 .2rem}
+.fund-empty strong{color:var(--text)}
 .fund-list{display:flex;flex-direction:column;gap:.6rem;margin-top:1.2rem}
 .fund-row{border:1px solid var(--border);border-radius:12px;background:#fff;overflow:hidden;transition:border-color .2s}
 .fund-row:hover{border-color:rgba(255,75,51,.35)}
@@ -6134,15 +6140,25 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
   window.loadYourFunds = function loadYourFunds(force) {
     if (loaded && !force) return;
     loaded = true;
+    if (force) cache = {};
     fetch("/api/portfolio/funds", { cache: "no-store" })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (d) {
-        if (!d || !d.funds || !d.funds.length) return;
+        if (!d) return;
         var section = document.getElementById("your-funds");
         var list = document.getElementById("fund-list");
         if (!section || !list) return;
 
-        list.innerHTML = d.funds.map(function (f) {
+        var resolved = d.funds || [];
+        var unresolved = d.unresolved || [];
+        // Nothing at all to say only when the account is empty. Previously the
+        // panel hid itself whenever no fund resolved, which for a typical
+        // Australian book — Vanguard ETFs and a super balance, none of which
+        // publish a fetchable file — meant the feature was invisible and gave
+        // no hint that uploading a file would turn it on.
+        if (!resolved.length && !unresolved.length) return;
+
+        list.innerHTML = resolved.map(function (f) {
           var sectors = (f.topSectors || []).map(function (s) {
             return esc(s.label) + " " + Math.round(s.pct) + "%";
           }).join(" · ");
@@ -6156,18 +6172,37 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
             + "</button>"
             + '<div class="fund-body"></div>'
             + "</div>";
+        }).join("")
+        // Holdings we cannot see inside are listed too, with the way to fix it
+        // attached — a hidden panel taught the user nothing.
+        + unresolved.map(function (u) {
+          return '<div class="fund-row unres" data-ticker="' + esc(u.ticker) + '">'
+            + '<div class="fund-head" style="cursor:default">'
+            + '<span class="fund-code">' + esc(u.ticker) + "</span>"
+            + "<span><span class=\"fund-name\">" + esc(u.label) + "</span>"
+            + '<span class="fund-sub">No holdings data \u2014 upload its file to see inside</span></span>'
+            + '<span class="fund-val">' + money(u.value) + "</span>"
+            + '<button type="button" class="fund-up" data-upload="' + esc(u.ticker) + '">Upload</button>'
+            + "</div></div>";
         }).join("");
 
         var count = document.getElementById("funds-count");
-        if (count) count.textContent = d.funds.length + (d.funds.length === 1 ? " fund" : " funds");
+        if (count) {
+          count.textContent = resolved.length
+            ? resolved.length + (resolved.length === 1 ? " fund" : " funds")
+            : "none yet";
+        }
 
-        // Say why a holding is absent rather than leaving it unexplained.
         var missing = document.getElementById("funds-missing");
         if (missing) {
-          missing.innerHTML = (d.unresolved || []).length
-            ? "Not shown (no constituent data, or held directly rather than through a fund): "
-              + d.unresolved.map(function (u) { return esc(u.ticker); }).join(", ") + "."
-            : "";
+          missing.innerHTML = resolved.length
+            ? "A holding with no data is either held directly rather than through a fund, or its "
+              + "issuer does not publish a file we can fetch \u2014 upload it and it appears here."
+            : "<strong>Nothing here can be looked through yet.</strong> US-listed funds resolve "
+              + "automatically from SEC filings, and Betashares funds from their daily file. "
+              + "Vanguard, VanEck and iShares Australia publish holdings only through their own "
+              + "websites, and super funds publish twice a year on theirs \u2014 neither can be "
+              + "fetched, so download the holdings file and upload it against the ticker.";
         }
 
         section.classList.add("show");
@@ -6175,7 +6210,57 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
       .catch(function () { /* the rest of the page is unaffected */ });
   };
 
+  // Upload a holdings file against one ticker, then redraw from the server so
+  // what is shown is what was actually stored, not what we hoped was.
+  function uploadFor(ticker, button) {
+    var input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".csv,.tsv,.txt,.xlsx,.xls,.ods";
+    input.addEventListener("change", function () {
+      var file = input.files && input.files[0];
+      if (!file) return;
+      var original = button.textContent;
+      button.textContent = "Reading\u2026";
+      button.disabled = true;
+
+      var reader = new FileReader();
+      reader.onload = function () {
+        var result = String(reader.result || "");
+        // A data URL, so take the part after the comma.
+        var base64 = result.slice(result.indexOf(",") + 1);
+        fetch("/api/portfolio/fund-holdings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ticker: ticker, fileName: file.name, fileBase64: base64 }),
+        })
+          .then(function (r) { return r.json().then(function (b) { return { ok: r.ok, body: b }; }); })
+          .then(function (res) {
+            if (!res.ok) {
+              button.textContent = "Failed";
+              button.title = res.body && res.body.error ? res.body.error : "Upload failed";
+              window.setTimeout(function () { button.textContent = original; button.disabled = false; }, 4000);
+              return;
+            }
+            button.textContent = res.body.constituents + " read";
+            // Redraw the whole list: this holding moves from unresolved to a
+            // fund you can open.
+            window.setTimeout(function () { window.loadYourFunds(true); }, 600);
+          })
+          .catch(function () {
+            button.textContent = "Failed";
+            button.disabled = false;
+          });
+      };
+      reader.onerror = function () { button.textContent = "Failed"; button.disabled = false; };
+      reader.readAsDataURL(file);
+    });
+    input.click();
+  }
+
   document.addEventListener("click", function (e) {
+    var up = e.target.closest && e.target.closest("[data-upload]");
+    if (up) { uploadFor(up.getAttribute("data-upload"), up); return; }
+
     var more = e.target.closest && e.target.closest(".fund-more");
     if (more) {
       var r = more.closest(".fund-row");

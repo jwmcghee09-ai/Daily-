@@ -61,6 +61,21 @@ function toPositions(constituents: readonly FundConstituent[], fundValue: number
   });
 }
 
+/**
+ * What to call a holding beside its ticker.
+ *
+ * displayHoldingLabel prefers the symbol, which is right for a table keyed by
+ * ticker and wrong here: the ticker already has its own column, so repeating it
+ * as the name told the reader nothing. The imported name is used when it says
+ * something the symbol does not.
+ */
+function holdingName(ticker: string, name: string | null | undefined): string {
+  const clean = String(name ?? "").trim();
+  const symbol = String(ticker ?? "").trim().toUpperCase();
+  if (clean && clean.toUpperCase() !== symbol) return clean;
+  return displayHoldingLabel(ticker, name);
+}
+
 export async function GET(request: NextRequest) {
   const user = await getAuthenticatedUser();
   if (!user) return NextResponse.json({ error: "Please sign in first." }, { status: 401 });
@@ -85,7 +100,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(
         {
           ticker: wanted,
-          label: displayHoldingLabel(holding.ticker, holding.name),
+          label: holdingName(holding.ticker, holding.name),
           value: holding.value,
           resolved: false,
           reason: "No constituent data for this holding yet. US funds resolve from SEC filings; "
@@ -118,7 +133,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       ticker: wanted,
-      label: cached.fundName || displayHoldingLabel(holding.ticker, holding.name),
+      label: cached.fundName || holdingName(holding.ticker, holding.name),
       value: holding.value,
       resolved: true,
       source: cached.source,
@@ -176,7 +191,7 @@ export async function GET(request: NextRequest) {
     const positions = toPositions(cached.constituents as FundConstituent[], holding.value);
     funds.push({
       ticker,
-      label: cached.fundName || displayHoldingLabel(holding.ticker, holding.name),
+      label: cached.fundName || holdingName(holding.ticker, holding.name),
       value: holding.value,
       source: cached.source,
       asOf: cached.asOf,
@@ -203,7 +218,7 @@ export async function GET(request: NextRequest) {
       })
       .map((h) => ({
         ticker: normaliseTicker(h.ticker),
-        label: displayHoldingLabel(h.ticker, h.name),
+        label: holdingName(h.ticker, h.name),
         value: h.value,
       })),
   });
