@@ -95,8 +95,26 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const positions = toPositions(cached.constituents as FundConstituent[], holding.value);
+    const constituents = cached.constituents as FundConstituent[];
+    const positions = toPositions(constituents, holding.value);
     const sorted = [...positions].sort((a, b) => b.value - a.value);
+
+    /*
+     * Does the issuer's own arithmetic add up?
+     *
+     * Constituents are rescaled to the holding, so they always sum to 100% by
+     * construction — which means a parser that quietly dropped a tenth of the
+     * fund would produce a page that looks perfectly consistent and is wrong by
+     * a tenth. The reported weights are kept unscaled for exactly this check.
+     *
+     * A couple of percent is ordinary: issuers round, and some report a
+     * position with no weight at all. A200 carries one such row, an index
+     * futures contract with blank weight and blank value, and the remaining
+     * lines still total 100%. A large shortfall is not rounding.
+     */
+    const reportedSum = constituents.reduce(
+      (sum, c) => sum + (Number.isFinite(c.weightPct) ? Math.max(0, c.weightPct) : 0), 0);
+    const weightsAccountedFor = reportedSum > 0 ? reportedSum : null;
 
     return NextResponse.json({
       ticker: wanted,
@@ -123,6 +141,13 @@ export async function GET(request: NextRequest) {
         country: p.country ?? null,
       })),
       truncated: positions.length > MAX_HOLDINGS,
+      // The issuer's own weights before rescaling — near 100 means nothing of
+      // substance was lost between their file and this page.
+      weightsAccountedFor,
+      weightsNote: weightsAccountedFor != null && Math.abs(weightsAccountedFor - 100) > 3
+        ? `The file's own weights total ${weightsAccountedFor.toFixed(1)}%, not 100%. `
+          + "Percentages here are scaled to what it reported, so they describe that part of the fund."
+        : null,
       note: "Weights are the fund's own, as reported in the filing or file named in `source`, "
         + "effective `asOf` — not today. `value` is your share of each company through this holding.",
     });

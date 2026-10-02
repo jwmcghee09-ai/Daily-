@@ -6094,6 +6094,9 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
     var notes = ['Weights are the fund\u2019s own, from ' + esc(d.source) + ", effective " + esc(d.asOf)
       + " \u2014 not today. Your money column is your share of each company through this holding."];
     if (d.coverageNote) notes.unshift('<span class="fund-warn">\u26a0 ' + esc(d.coverageNote) + "</span>");
+    // Shown only when the issuer's own weights do not add up, so a file that
+    // lost a chunk between their server and this page cannot look complete.
+    if (d.weightsNote) notes.unshift('<span class="fund-warn">\u26a0 ' + esc(d.weightsNote) + "</span>");
     if (d.truncated) notes.push("Showing the largest " + (d.holdings || []).length + " of " + d.holdingCount + ".");
 
     body.innerHTML =
