@@ -152,6 +152,34 @@ body.has-onboard .hero{padding-top:1.5rem}
 .hrisk-hot{color:#c7300f;font-weight:700}
 .hrisk-cool{color:#0a7d3c}
 .hrisk-na{color:var(--muted)}
+.funds-sec{display:none}
+.funds-sec.show{display:block}
+.fund-list{display:flex;flex-direction:column;gap:.6rem;margin-top:1.2rem}
+.fund-row{border:1px solid var(--border);border-radius:12px;background:#fff;overflow:hidden;transition:border-color .2s}
+.fund-row:hover{border-color:rgba(255,75,51,.35)}
+.fund-head{display:grid;grid-template-columns:auto 1fr auto auto;gap:1rem;align-items:center;padding:.95rem 1.1rem;cursor:pointer;background:none;border:0;width:100%;text-align:left;font:inherit;color:inherit}
+.fund-code{font-family:var(--mono);font-size:.72rem;font-weight:700;letter-spacing:.06em;color:#c7300f;min-width:4.2rem}
+.fund-name{display:block;font-family:var(--sans);font-size:.84rem;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fund-sub{display:block;font-family:var(--mono);font-size:.56rem;letter-spacing:.06em;color:var(--muted);margin-top:.18rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fund-val{font-family:var(--mono);font-size:.8rem;font-weight:700;color:var(--text);white-space:nowrap}
+.fund-chev{font-family:var(--mono);font-size:.7rem;color:var(--muted);transition:transform .2s}
+.fund-row[data-open="1"] .fund-chev{transform:rotate(90deg)}
+.fund-body{display:none;padding:0 1.1rem 1.1rem;border-top:1px solid var(--border)}
+.fund-row[data-open="1"] .fund-body{display:block}
+.fund-sub-h{font-family:var(--sans);font-size:.72rem;font-weight:700;color:var(--text);margin:1rem 0 .55rem}
+.sect-row{display:grid;grid-template-columns:9.5rem 1fr 4.6rem;gap:.7rem;align-items:center;padding:.22rem 0;font-family:var(--mono);font-size:.64rem}
+.sect-name{color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sect-bar{height:7px;border-radius:3px;background:rgba(15,15,17,.06);overflow:hidden}
+.sect-bar span{display:block;height:100%;background:linear-gradient(90deg,#ff6a52,#f53314);border-radius:3px}
+.sect-val{text-align:right;color:var(--muted)}
+.fund-tbl{width:100%;border-collapse:collapse;font-size:.7rem;font-family:var(--mono)}
+.fund-tbl th{text-align:right;font-size:.52rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:.4rem .55rem;border-bottom:1px solid var(--border)}
+.fund-tbl th:first-child,.fund-tbl td:first-child{text-align:left}
+.fund-tbl td{text-align:right;padding:.4rem .55rem;border-bottom:1px solid var(--border)}
+.fund-tbl td:first-child{font-family:var(--sans);color:var(--text)}
+.fund-tbl tbody tr:hover{background:rgba(15,15,17,.02)}
+.fund-note{font-family:var(--mono);font-size:.55rem;color:var(--muted);line-height:1.7;margin-top:.8rem}
+.fund-warn{color:#c7300f}
 .nav-btn{font-family:var(--sans);font-size:.75rem;font-weight:600;color:#0f0f10;background:transparent;border:1px solid rgba(0, 0, 0, .14);border-radius:999px;padding:.34rem 1rem;cursor:pointer;transition:all .2s;text-decoration:none;white-space:nowrap}
 .nav-btn:hover{border-color:rgba(0, 0, 0, .28);background:rgba(0, 0, 0, .04);transform:translateY(-1px)}
 .nav-btn-primary{color:#0f0f0f;background:linear-gradient(135deg,#ee2d1b 0%,#f55314 46%,#f52e14 100%);border-color:transparent;box-shadow: 0 1px 2px rgba(15, 15, 17, 0.04);border-color:transparent}
@@ -1909,6 +1937,23 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
 </div>
 
 <div class="divider" data-page="quant"></div>
+
+<!-- FUNDS YOU OWN -->
+<div class="wrap" data-page="quant">
+  <section class="sec funds-sec" id="your-funds">
+    <div class="sec-head">
+      <h2 class="sec-title">Inside Your Funds</h2>
+      <div class="sec-line"></div>
+      <span class="sec-label" id="funds-count">&mdash;</span>
+    </div>
+    <p class="settings-note" style="margin:.2rem 0 0;font-size:.78rem;color:var(--muted);line-height:1.7">
+      Every fund you hold that we can see inside. Open one for its own sector mix and the companies it
+      holds &mdash; with your money in each, not just the fund's percentage.
+    </p>
+    <div class="fund-list" id="fund-list"></div>
+    <div class="fund-note" id="funds-missing"></div>
+  </section>
+</div>
 
 <!-- PER-HOLDING RISK -->
 <div class="wrap" data-page="quant">
@@ -5981,6 +6026,175 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
   window.updateOnboarding();
 })();
 
+// ── INSIDE YOUR FUNDS ───────────────────────────────────────────────────────
+//
+// The look-through panel blends every fund into one book, which answers "what
+// do I actually hold?" and destroys the answer to "what is inside THIS fund?".
+// This asks the second question. A fund's constituents are fetched only when
+// its row is opened: one fund can run to thousands of lines, and sending every
+// fund's holdings to draw a list of six would be most of a megabyte unread.
+(function () {
+  var loaded = false;
+  var cache = {};
+
+  function esc(v) {
+    return String(v == null ? "" : v)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+  function money(v) {
+    if (v == null || !isFinite(v)) return "—";
+    return "$" + Math.round(v).toLocaleString();
+  }
+  function pct(v, d) { return v == null || !isFinite(v) ? "—" : v.toFixed(d == null ? 1 : d) + "%"; }
+
+  function sectorBars(rows, total) {
+    if (!rows || !rows.length) return "";
+    var peak = Math.max.apply(null, rows.map(function (r) { return r.pct || 0; }).concat([1]));
+    return rows.slice(0, 10).map(function (r) {
+      return '<div class="sect-row">'
+        + '<span class="sect-name">' + esc(r.label) + "</span>"
+        + '<span class="sect-bar"><span style="width:' + Math.max(1, (r.pct / peak) * 100) + '%"></span></span>'
+        + '<span class="sect-val">' + pct(r.pct) + " · " + money(r.value) + "</span>"
+        + "</div>";
+    }).join("");
+  }
+
+  function renderBody(row, d) {
+    var body = row.querySelector(".fund-body");
+    if (!body) return;
+
+    if (!d.resolved) {
+      body.innerHTML = '<div class="fund-note">' + esc(d.reason || "No constituent data.") + "</div>";
+      return;
+    }
+
+    // An index fund opens to two hundred rows, which buries every other fund
+    // under it — the list stops being a list. The long tail is each a fraction
+    // of a percent, so the top twenty is the part anyone reads; the rest is one
+    // click away.
+    var all = d.holdings || [];
+    var showAll = row.getAttribute("data-all") === "1";
+    var shown = showAll ? all : all.slice(0, 20);
+    var holdings = shown.map(function (h) {
+      return "<tr>"
+        + "<td>" + esc(h.name) + "</td>"
+        + "<td>" + esc(h.sector || "—") + "</td>"
+        + "<td>" + pct(h.weightPct, 2) + "</td>"
+        + "<td>" + money(h.value) + "</td>"
+        + "</tr>";
+    }).join("");
+    var more = all.length > 20
+      ? '<button type="button" class="fund-more" style="margin-top:.7rem;font-family:var(--mono);'
+        + "font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:#c7300f;background:none;"
+        + 'border:1px solid var(--border);border-radius:999px;padding:.35rem .9rem;cursor:pointer">'
+        + (showAll ? "Show top 20" : "Show all " + all.length) + "</button>"
+      : "";
+
+    var notes = ['Weights are the fund\u2019s own, from ' + esc(d.source) + ", effective " + esc(d.asOf)
+      + " \u2014 not today. Your money column is your share of each company through this holding."];
+    if (d.coverageNote) notes.unshift('<span class="fund-warn">\u26a0 ' + esc(d.coverageNote) + "</span>");
+    if (d.truncated) notes.push("Showing the largest " + (d.holdings || []).length + " of " + d.holdingCount + ".");
+
+    body.innerHTML =
+      '<div class="fund-sub-h">Sectors</div>' + sectorBars(d.bySector)
+      + ((d.byCountry || []).length > 1
+          ? '<div class="fund-sub-h">Countries</div>' + sectorBars(d.byCountry) : "")
+      + '<div class="fund-sub-h">Holdings</div>'
+      + '<div style="overflow-x:auto"><table class="fund-tbl"><thead><tr>'
+      + "<th>Company</th><th>Sector</th><th>Weight</th><th>Your money</th>"
+      + "</tr></thead><tbody>" + holdings + "</tbody></table></div>"
+      + more
+      + '<div class="fund-note">' + notes.join("<br>") + "</div>";
+  }
+
+  function open(row) {
+    var ticker = row.getAttribute("data-ticker");
+    row.setAttribute("data-open", "1");
+    if (cache[ticker]) { renderBody(row, cache[ticker]); return; }
+
+    var body = row.querySelector(".fund-body");
+    if (body) body.innerHTML = '<div class="fund-note">Reading the filing\u2026</div>';
+
+    fetch("/api/portfolio/funds?ticker=" + encodeURIComponent(ticker), { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (!d) { if (body) body.innerHTML = '<div class="fund-note">Could not load this fund.</div>'; return; }
+        cache[ticker] = d;
+        renderBody(row, d);
+      })
+      .catch(function () {
+        if (body) body.innerHTML = '<div class="fund-note">Could not load this fund.</div>';
+      });
+  }
+
+  window.loadYourFunds = function loadYourFunds(force) {
+    if (loaded && !force) return;
+    loaded = true;
+    fetch("/api/portfolio/funds", { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (!d || !d.funds || !d.funds.length) return;
+        var section = document.getElementById("your-funds");
+        var list = document.getElementById("fund-list");
+        if (!section || !list) return;
+
+        list.innerHTML = d.funds.map(function (f) {
+          var sectors = (f.topSectors || []).map(function (s) {
+            return esc(s.label) + " " + Math.round(s.pct) + "%";
+          }).join(" · ");
+          return '<div class="fund-row" data-ticker="' + esc(f.ticker) + '" data-open="0">'
+            + '<button class="fund-head" type="button">'
+            + '<span class="fund-code">' + esc(f.ticker) + "</span>"
+            + "<span><span class=\"fund-name\">" + esc(f.label) + "</span>"
+            + '<span class="fund-sub">' + f.holdingCount + " holdings · " + sectors + "</span></span>"
+            + '<span class="fund-val">' + money(f.value) + "</span>"
+            + '<span class="fund-chev">\u203a</span>'
+            + "</button>"
+            + '<div class="fund-body"></div>'
+            + "</div>";
+        }).join("");
+
+        var count = document.getElementById("funds-count");
+        if (count) count.textContent = d.funds.length + (d.funds.length === 1 ? " fund" : " funds");
+
+        // Say why a holding is absent rather than leaving it unexplained.
+        var missing = document.getElementById("funds-missing");
+        if (missing) {
+          missing.innerHTML = (d.unresolved || []).length
+            ? "Not shown (no constituent data, or held directly rather than through a fund): "
+              + d.unresolved.map(function (u) { return esc(u.ticker); }).join(", ") + "."
+            : "";
+        }
+
+        section.classList.add("show");
+      })
+      .catch(function () { /* the rest of the page is unaffected */ });
+  };
+
+  document.addEventListener("click", function (e) {
+    var more = e.target.closest && e.target.closest(".fund-more");
+    if (more) {
+      var r = more.closest(".fund-row");
+      if (!r) return;
+      r.setAttribute("data-all", r.getAttribute("data-all") === "1" ? "0" : "1");
+      renderBody(r, cache[r.getAttribute("data-ticker")]);
+      return;
+    }
+
+    var head = e.target.closest && e.target.closest(".fund-head");
+    if (!head) return;
+    var row = head.closest(".fund-row");
+    if (!row) return;
+    if (row.getAttribute("data-open") === "1") { row.setAttribute("data-open", "0"); return; }
+    // One at a time: two open index funds is a thousand rows of table.
+    document.querySelectorAll('.fund-row[data-open="1"]').forEach(function (other) {
+      other.setAttribute("data-open", "0");
+    });
+    open(row);
+  });
+})();
+
 // ── PER-HOLDING RISK ────────────────────────────────────────────────────────
 //
 // The portfolio's risk figures, broken out by holding. Risk share is the column
@@ -6187,6 +6401,8 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
         render(d);
         // Same payload, so the risk table costs no extra request.
         if (window.renderHoldingRisk) window.renderHoldingRisk(d);
+        // The fund list needs its own call: constituents are not in this one.
+        if (window.loadYourFunds) window.loadYourFunds();
       })
       .catch(function () { /* the rest of the page is unaffected */ });
   };
