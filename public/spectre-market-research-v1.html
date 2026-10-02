@@ -4338,33 +4338,33 @@ html.starter-mode .hero-lock-wrap       { display: none !important; }
     <div class="macro-rates-strip reveal">
       <div class="macro-rate-cell">
         <div class="macro-rate-name">🇦🇺 RBA Cash Rate</div>
-        <div class="macro-rate-val" id="macro-rba-rate">4.35%</div>
-        <div class="macro-rate-dir hold" id="macro-rba-dir">● HOLD</div>
+        <div class="macro-rate-val" id="macro-rba-rate">—</div>
+        <div class="macro-rate-dir hold" id="macro-rba-dir"></div>
       </div>
       <div class="macro-rate-cell">
         <div class="macro-rate-name">🇺🇸 Fed Funds Rate</div>
-        <div class="macro-rate-val" id="macro-fed-rate">4.25–4.50%</div>
-        <div class="macro-rate-dir cut" id="macro-fed-dir">▼ CUT</div>
+        <div class="macro-rate-val" id="macro-fed-rate">—</div>
+        <div class="macro-rate-dir cut" id="macro-fed-dir"></div>
       </div>
       <div class="macro-rate-cell">
         <div class="macro-rate-name">🇪🇺 ECB Deposit Rate</div>
-        <div class="macro-rate-val" id="macro-ecb-rate">2.50%</div>
-        <div class="macro-rate-dir cut" id="macro-ecb-dir">▼ CUT</div>
+        <div class="macro-rate-val" id="macro-ecb-rate">—</div>
+        <div class="macro-rate-dir cut" id="macro-ecb-dir"></div>
       </div>
       <div class="macro-rate-cell">
         <div class="macro-rate-name">🇬🇧 BoE Bank Rate</div>
-        <div class="macro-rate-val" id="macro-boe-rate">4.50%</div>
-        <div class="macro-rate-dir cut" id="macro-boe-dir">▼ CUT</div>
+        <div class="macro-rate-val" id="macro-boe-rate">—</div>
+        <div class="macro-rate-dir cut" id="macro-boe-dir"></div>
       </div>
       <div class="macro-rate-cell">
         <div class="macro-rate-name">🇯🇵 BoJ Policy Rate</div>
-        <div class="macro-rate-val" id="macro-boj-rate">0.50%</div>
-        <div class="macro-rate-dir hike" id="macro-boj-dir">▲ HIKE</div>
+        <div class="macro-rate-val" id="macro-boj-rate">—</div>
+        <div class="macro-rate-dir hike" id="macro-boj-dir"></div>
       </div>
       <div class="macro-rate-cell">
         <div class="macro-rate-name">🇨🇳 PBoC LPR 1Y</div>
-        <div class="macro-rate-val" id="macro-pboc-rate">3.10%</div>
-        <div class="macro-rate-dir cut" id="macro-pboc-dir">▼ CUT</div>
+        <div class="macro-rate-val" id="macro-pboc-rate">—</div>
+        <div class="macro-rate-dir cut" id="macro-pboc-dir"></div>
       </div>
     </div>
 
@@ -7664,5 +7664,37 @@ function _demoSnapshot(url) {
 </script>
 
 
+
+<script>
+// ── POLICY RATES ────────────────────────────────────────────────────────────
+//
+// These were literal text in the markup with nothing able to change them: the
+// RBA cell read 4.35% while the actual cash rate had moved to 4.60% two days
+// earlier. A figure a reader cannot tell apart from a live one has to be live,
+// so the strip is filled from /api/research/rates and left blank when a rate
+// cannot be fetched — a dash prompts a question, a stale rate does not.
+(function () {
+  function paint(rate) {
+    var val = document.getElementById("macro-" + rate.key + "-rate");
+    if (val) {
+      val.textContent = rate.display;
+      val.title = rate.unavailable
+        ? rate.unavailable
+        : rate.source + (rate.asOf ? " — as at " + rate.asOf : "");
+    }
+    var dir = document.getElementById("macro-" + rate.key + "-dir");
+    if (!dir) return;
+    if (!rate.direction) { dir.textContent = ""; dir.className = "macro-rate-dir"; return; }
+    var label = { hike: "\u25b2 HIKE", cut: "\u25bc CUT", hold: "\u25cf HOLD" }[rate.direction];
+    dir.textContent = label;
+    dir.className = "macro-rate-dir " + rate.direction;
+  }
+
+  fetch("/api/research/rates", { cache: "no-store" })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (d) { if (d && d.rates) d.rates.forEach(paint); })
+    .catch(function () { /* the dashes already say nothing is known */ });
+})();
+</script>
 </body>
 </html>
