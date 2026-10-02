@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { DataSource, isSyntheticTicker, PortfolioHolding, PortfolioState, RiskWindow } from "@/lib/portfolio";
+import { computeHoldingRisk, type HoldingRisk } from "@/lib/holding-risk";
 
 const DEFAULT_DB_FILE = path.join(process.cwd(), "data", "aladdin.sqlite");
 const RENDER_DISK_DIR = "/var/data";
@@ -272,6 +273,15 @@ export interface HistoricalRiskEstimateResult {
   sharpeRatioAnnual: number | null;
   sortinoRatioAnnual: number | null;
   returnSkewness: number | null;
+  /**
+   * The same measures, per holding, plus each one's share of portfolio risk.
+   *
+   * Every scalar above describes the book as a whole, which cannot answer
+   * "which holding is carrying this?" — and that is usually the question. The
+   * per-ticker return series needed for it were already being built here for
+   * the correlation matrix and then discarded.
+   */
+  holdingRisk: HoldingRisk[];
 }
 
 export interface PriceDipAlertSetting {
@@ -2254,6 +2264,7 @@ export async function estimateHistoricalRiskFromYahoo(
       sharpeRatioAnnual: null,
       sortinoRatioAnnual: null,
       returnSkewness: null,
+      holdingRisk: [],
     };
   }
 
@@ -2365,6 +2376,7 @@ export async function estimateHistoricalRiskFromYahoo(
       sharpeRatioAnnual: null,
       sortinoRatioAnnual: null,
       returnSkewness: null,
+      holdingRisk: [],
     };
   }
 
@@ -2413,6 +2425,7 @@ export async function estimateHistoricalRiskFromYahoo(
       sharpeRatioAnnual: null,
       sortinoRatioAnnual: null,
       returnSkewness: null,
+      holdingRisk: [],
     };
   }
 
@@ -2461,11 +2474,15 @@ export async function estimateHistoricalRiskFromYahoo(
   let trackingErrorAnnualPct: number | null = null;
   let correlationToBenchmark: number | null = null;
 
+  // Shared with the per-holding pass below so each holding's beta is measured
+  // against the same benchmark the portfolio's is.
+  let benchmarkReturnsByDate: Map<string, number> | undefined;
   const benchmarkSeries = await fetchAsx200SeriesFromYahoo(windowSettings.yahooRange);
   if (benchmarkSeries && benchmarkSeries.length >= 2) {
     const rawBenchmarkReturns = calculateReturnsFromPrices(benchmarkSeries);
     const cleanedBenchmarkReturns = cleanReturnsForRisk(rawBenchmarkReturns);
     const benchmarkMap = new Map(cleanedBenchmarkReturns.map((point) => [point.date, point.value]));
+    benchmarkReturnsByDate = benchmarkMap;
     const portfolioReturnByDate = new Map(selectedDates.map((date, index) => [date, portfolioReturns[index]]));
     const benchmarkAlignedDates = selectedDates.filter((date) => benchmarkMap.has(date));
     const portfolioAlignedReturns: number[] = [];
@@ -2569,6 +2586,20 @@ export async function estimateHistoricalRiskFromYahoo(
     noteParts.push("Not enough benchmark overlap to estimate beta/tracking error.");
   }
 
+  /*
+   * The same measures, per holding.
+   *
+   * returnsByTicker and selectedDates are the series and the aligned dates the
+   * portfolio figures above were blended from, so these rows describe exactly
+   * the same period and the risk contributions sum to the portfolio's own.
+   */
+  const holdingRisk = computeHoldingRisk(
+    [...valueByTicker.entries()].map(([key, h]) => ({ key, ticker: h.ticker, label: h.label, value: h.value })),
+    returnsByTicker,
+    selectedDates,
+    benchmarkReturnsByDate,
+  );
+
   return {
     source: "yahoo_estimate",
     lessAccurateThanSnapshots: true,
@@ -2605,6 +2636,7 @@ export async function estimateHistoricalRiskFromYahoo(
     sharpeRatioAnnual: null,
     sortinoRatioAnnual: null,
     returnSkewness: null,
+    holdingRisk,
   };
 }
 

@@ -136,6 +136,22 @@ body.has-onboard .hero{padding-top:1.5rem}
 .lt-tag{display:inline-block;padding:.08rem .34rem;border-radius:4px;background:rgba(245, 32, 20, .16);color:#f53814;font-size:.5rem;letter-spacing:.08em;margin-right:.3rem}
 .lt-note{font-family:var(--mono);font-size:.56rem;letter-spacing:.04em;color:var(--muted2);line-height:1.7;margin-top:1rem;border-top:1px solid var(--border);padding-top:.7rem}
 .lt-sub{font-family:var(--sans);font-size:.74rem;color:var(--muted2);margin:1.2rem 0 .6rem;font-weight:600}
+.hrisk-sec{display:none}
+.hrisk-sec.show{display:block}
+.hrisk-wrap{overflow-x:auto;margin-top:1.1rem}
+.hrisk{width:100%;border-collapse:collapse;font-size:.76rem}
+.hrisk th{font-family:var(--mono);font-size:.54rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);text-align:right;padding:.55rem .7rem;border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none}
+.hrisk th:first-child{text-align:left}
+.hrisk th:hover{color:var(--text)}
+.hrisk th[data-sorted]{color:#f53314}
+.hrisk td{padding:.6rem .7rem;text-align:right;border-bottom:1px solid var(--border);font-family:var(--mono);white-space:nowrap}
+.hrisk td:first-child{text-align:left;font-family:var(--sans);font-weight:600;color:var(--text)}
+.hrisk tbody tr:hover{background:rgba(15,15,17,.025)}
+.hrisk-bar{position:relative;display:block;height:3px;border-radius:2px;background:rgba(15,15,17,.08);margin-top:.28rem;overflow:hidden}
+.hrisk-bar span{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,#ff6a52,#f53314);border-radius:2px}
+.hrisk-hot{color:#c7300f;font-weight:700}
+.hrisk-cool{color:#0a7d3c}
+.hrisk-na{color:var(--muted)}
 .nav-btn{font-family:var(--sans);font-size:.75rem;font-weight:600;color:#0f0f10;background:transparent;border:1px solid rgba(0, 0, 0, .14);border-radius:999px;padding:.34rem 1rem;cursor:pointer;transition:all .2s;text-decoration:none;white-space:nowrap}
 .nav-btn:hover{border-color:rgba(0, 0, 0, .28);background:rgba(0, 0, 0, .04);transform:translateY(-1px)}
 .nav-btn-primary{color:#0f0f0f;background:linear-gradient(135deg,#ee2d1b 0%,#f55314 46%,#f52e14 100%);border-color:transparent;box-shadow: 0 1px 2px rgba(15, 15, 17, 0.04);border-color:transparent}
@@ -1893,6 +1909,42 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
 </div>
 
 <div class="divider" data-page="quant"></div>
+
+<!-- PER-HOLDING RISK -->
+<div class="wrap" data-page="quant">
+  <section class="sec sec-alt hrisk-sec" id="holding-risk">
+    <div class="sec-head">
+      <h2 class="sec-title">Where The Risk Is</h2>
+      <div class="sec-line"></div>
+      <span class="sec-label" id="hrisk-window">&mdash;</span>
+    </div>
+    <p class="settings-note" style="margin:.2rem 0 0;font-size:.78rem;color:var(--muted);line-height:1.7">
+      Every risk figure above describes the whole portfolio. This is the same analysis per holding.
+      <strong style="color:var(--text)">Risk share</strong> is what matters most &mdash; it counts both how much
+      you hold and how it moves against everything else, and the four columns sum to 100%. A holding above
+      1.0&times; its weight is carrying more risk than its size suggests.
+    </p>
+    <div class="hrisk-wrap">
+      <table class="hrisk">
+        <thead>
+          <tr>
+            <th data-sort="label">Holding</th>
+            <th data-sort="weightPct">Weight</th>
+            <th data-sort="riskContributionPct" data-sorted="desc">Risk Share</th>
+            <th data-sort="riskPerUnitWeight">&times; Weight</th>
+            <th data-sort="volatilityAnnualPct">Volatility</th>
+            <th data-sort="var95Pct">VaR 95</th>
+            <th data-sort="maxDrawdownPct">Max Drawdown</th>
+            <th data-sort="betaToBenchmark">Beta</th>
+            <th data-sort="sharpeRatioAnnual">Sharpe</th>
+          </tr>
+        </thead>
+        <tbody id="hrisk-body"></tbody>
+      </table>
+    </div>
+    <div class="lt-note" id="hrisk-note"></div>
+  </section>
+</div>
 
 <!-- LOOK-THROUGH: what the portfolio actually holds -->
 <div class="wrap" data-page="quant">
@@ -5929,6 +5981,121 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
   window.updateOnboarding();
 })();
 
+// ── PER-HOLDING RISK ────────────────────────────────────────────────────────
+//
+// The portfolio's risk figures, broken out by holding. Risk share is the column
+// worth reading: volatility ranks a holding by how much it moves on its own,
+// share ranks it by how much of the PORTFOLIO's risk it is responsible for,
+// which accounts for weight and for how it moves against everything else. The
+// two rankings disagree often, and when they do this is the actionable one.
+(function () {
+  var rows = [];
+  var sortKey = "riskContributionPct";
+  var sortDir = -1;
+
+  function esc(v) {
+    return String(v == null ? "" : v)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+  function num(v, digits, suffix) {
+    if (v == null || !isFinite(v)) return '<span class="hrisk-na">&mdash;</span>';
+    var d = digits == null ? 1 : digits;
+    // A value that rounds to zero must print as zero. "-0.0%" is arithmetically
+    // honest and reads as a rendering fault.
+    var out = v.toFixed(d);
+    if (/^-0(\.0+)?$/.test(out)) out = out.slice(1);
+    return out + (suffix || "");
+  }
+
+  function paint() {
+    var body = document.getElementById("hrisk-body");
+    if (!body) return;
+
+    var sorted = rows.slice().sort(function (a, b) {
+      var x = a[sortKey], y = b[sortKey];
+      if (typeof x === "string" || typeof y === "string") {
+        return String(x || "").localeCompare(String(y || "")) * sortDir;
+      }
+      // Holdings with no price history sort last whichever way the column goes.
+      if (x == null && y == null) return 0;
+      if (x == null) return 1;
+      if (y == null) return -1;
+      return (x - y) * sortDir;
+    });
+
+    var peak = Math.max.apply(null, rows.map(function (r) {
+      return Math.abs(r.riskContributionPct || 0);
+    }).concat([1]));
+
+    body.innerHTML = sorted.map(function (r) {
+      var share = r.riskContributionPct;
+      var ratio = r.riskPerUnitWeight;
+      var ratioCls = ratio == null ? "hrisk-na" : (ratio >= 1.15 ? "hrisk-hot" : (ratio <= 0.85 ? "hrisk-cool" : ""));
+      var bar = share == null ? "" :
+        '<span class="hrisk-bar"><span style="width:' + Math.min(100, Math.abs(share) / peak * 100) + '%"></span></span>';
+      return "<tr>"
+        + "<td>" + esc(r.label) + bar + "</td>"
+        + "<td>" + num(r.weightPct, 1, "%") + "</td>"
+        + "<td><strong>" + num(share, 1, "%") + "</strong></td>"
+        + '<td class="' + ratioCls + '">' + num(ratio, 2, "&times;") + "</td>"
+        + "<td>" + num(r.volatilityAnnualPct, 1, "%") + "</td>"
+        + "<td>" + num(r.var95Pct, 2, "%") + "</td>"
+        + "<td>" + num(r.maxDrawdownPct, 1, "%") + "</td>"
+        + "<td>" + num(r.betaToBenchmark, 2) + "</td>"
+        + "<td>" + num(r.sharpeRatioAnnual, 2) + "</td>"
+        + "</tr>";
+    }).join("");
+
+    document.querySelectorAll(".hrisk th[data-sort]").forEach(function (th) {
+      if (th.getAttribute("data-sort") === sortKey) th.setAttribute("data-sorted", sortDir < 0 ? "desc" : "asc");
+      else th.removeAttribute("data-sorted");
+    });
+  }
+
+  window.renderHoldingRisk = function renderHoldingRisk(data) {
+    var hr = data && data.historicalRisk && data.historicalRisk.holdingRisk;
+    var section = document.getElementById("holding-risk");
+    if (!section || !hr || !hr.length) return;
+
+    rows = hr;
+    paint();
+
+    var h = data.historicalRisk;
+    var win = document.getElementById("hrisk-window");
+    if (win) win.textContent = (h.riskWindow || "") + " \u00b7 " + (h.pointsUsed || 0) + " days";
+
+    // Say which holdings are absent and why. A fund with no public quote is
+    // still part of the portfolio and still counted in every weight; calling
+    // that a failure once had an assistant tell a user their ticker was fake.
+    var note = document.getElementById("hrisk-note");
+    if (note) {
+      var parts = ["Measured against " + esc(h.benchmarkName || "the benchmark")
+        + " over " + (h.pointsUsed || 0) + " trading days. Risk share counts weight and co-movement, so the column sums to 100%."];
+      if ((h.notPriced || []).length) {
+        parts.push("No market quote by design (still counted in every weight above): " + h.notPriced.map(esc).join(", ") + ".");
+      }
+      if ((h.failedTickers || []).length) {
+        parts.push("Price lookup failed: " + h.failedTickers.map(esc).join(", ") + ".");
+      }
+      note.innerHTML = parts.join("<br>");
+    }
+
+    section.classList.add("show");
+  };
+
+  document.addEventListener("click", function (e) {
+    var th = e.target.closest && e.target.closest(".hrisk th[data-sort]");
+    if (!th) return;
+    var key = th.getAttribute("data-sort");
+    // Re-clicking a column flips it; a new column starts descending, which is
+    // the useful direction for every column here except the name.
+    if (key === sortKey) sortDir = -sortDir;
+    else { sortKey = key; sortDir = key === "label" ? 1 : -1; }
+    paint();
+  });
+})();
+
 // ── LOOK-THROUGH ────────────────────────────────────────────────────────────
 //
 // Fetched separately from the main portfolio load. Resolving funds reaches SEC
@@ -6009,7 +6176,12 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
     loaded = true;
     fetch("/api/portfolio/metrics", { cache: "no-store" })
       .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (d) { if (d) render(d); })
+      .then(function (d) {
+        if (!d) return;
+        render(d);
+        // Same payload, so the risk table costs no extra request.
+        if (window.renderHoldingRisk) window.renderHoldingRisk(d);
+      })
       .catch(function () { /* the rest of the page is unaffected */ });
   };
 
