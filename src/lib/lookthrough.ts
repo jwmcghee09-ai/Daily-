@@ -106,6 +106,15 @@ export interface LookThroughInput {
   name: string;
   value: number;
   sector?: string;
+  /**
+   * Which import the holding came from.
+   *
+   * Australian tickers rarely carry a suffix — a portfolio holds "A200", not
+   * "A200.AX" — so the symbol alone cannot say which market it belongs to, and
+   * an ASX fund silently took the US route and resolved to nothing. The import
+   * already knows; it just was not being passed along.
+   */
+  source?: string;
 }
 
 /**
@@ -123,9 +132,22 @@ export function constituentKey(c: { ticker?: string; isin?: string; cusip?: stri
   return `name:${normaliseName(c.name)}`;
 }
 
-/** ASX lines arrive as both "BHP" and "BHP.AX" depending on the source. */
+/**
+ * One symbol, however the source spells it.
+ *
+ * The same company reaches this code as "BHP" from a portfolio, "BHP.AX" from a
+ * price feed and "BHP AT" from an issuer's holdings file, which uses Bloomberg
+ * market codes. Left alone those are three securities, and a stock held both
+ * directly and inside a fund stops merging — understating concentration in the
+ * one direction that matters.
+ */
 export function normaliseTicker(ticker: string): string {
-  return ticker.trim().toUpperCase().replace(/\.(AX|AU|US|L|NZ|TO)$/i, "");
+  return ticker
+    .trim()
+    .toUpperCase()
+    // Bloomberg writes the market after a space: "BHP AT", "AAPL US".
+    .replace(/\s+(AT|AU|US|LN|NA|GR|JT|HK|CN|SW|FP|IM|SM|SE|NO|DC|CT|NZ)$/i, "")
+    .replace(/\.(AX|AU|US|L|NZ|TO)$/i, "");
 }
 
 /**

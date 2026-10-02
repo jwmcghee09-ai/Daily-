@@ -3,9 +3,9 @@
 // and every weight derived from it is wrong — but nothing errors, and the page
 // still renders a confident number. So the totals are asserted on every case.
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join, relative } from "node:path";
 
 const root = "/home/user/Daily-";
 const dir = mkdtempSync(join(tmpdir(), "spectre-lt-"));
@@ -16,11 +16,39 @@ writeFileSync(join(dir, "tsconfig.json"), JSON.stringify({
     baseUrl: root, paths: { "@/*": ["./src/*"] },
     outDir, rootDir: join(root, "src"), skipLibCheck: true,
   },
-  files: [join(root, "src/lib/lookthrough.ts"), join(root, "src/lib/fund-13f.ts")],
+  files: [
+    join(root, "src/lib/lookthrough.ts"),
+    join(root, "src/lib/fund-13f.ts"),
+    join(root, "src/lib/fund-asx.ts"),
+    join(root, "src/lib/fund-holdings.ts"),
+  ],
 }));
 try {
   execFileSync("npx", ["tsc", "-p", join(dir, "tsconfig.json")], { stdio: ["ignore", "pipe", "pipe"] });
 } catch { /* emit anyway */ }
+
+// tsc emits the "@/..." specifier verbatim and drops the file extension;
+// Node accepts neither, so rewrite both before importing.
+function rewriteSpecifiers(directory) {
+  for (const entry of readdirSync(directory)) {
+    const full = join(directory, entry);
+    if (statSync(full).isDirectory()) { rewriteSpecifiers(full); continue; }
+    if (!full.endsWith(".js")) continue;
+    writeFileSync(full, readFileSync(full, "utf8").replace(
+      /(\bfrom\s*)(["'])([^"']+)\2/g,
+      (match, lead, quote, spec) => {
+        let target = spec;
+        if (spec.startsWith("@/")) {
+          target = relative(dirname(full), join(outDir, spec.slice(2))).replace(/\\/g, "/");
+          if (!target.startsWith(".")) target = `./${target}`;
+        } else if (!spec.startsWith(".")) return match;
+        if (!/\.[cm]?js$/.test(target)) target += ".js";
+        return `${lead}${quote}${target}${quote}`;
+      },
+    ));
+  }
+}
+rewriteSpecifiers(outDir);
 
 const lt = await import(join(outDir, "lib/lookthrough.js"));
 
@@ -377,6 +405,56 @@ const hold = (ticker, value, name = ticker) => ({ ticker, name, value });
     f13.parse13fInfoTable("<x></x>").constituents.length === 0);
   check("13F positions are marked as US equity",
     constituents.every((c) => c.assetClass === "EC" && c.country === "US"));
+}
+
+// ── Bloomberg market codes ────────────────────────────────────────────────
+{
+  // Issuer holdings files write the market after a space. Left alone, the BHP
+  // inside an ETF never merges with the BHP held directly, and concentration
+  // reads low — the one direction a risk number must not be wrong in.
+  check("a Bloomberg-coded ticker normalises to the bare symbol",
+    lt.normaliseTicker("BHP AT") === "BHP" && lt.normaliseTicker("AAPL US") === "AAPL",
+    `${lt.normaliseTicker("BHP AT")} / ${lt.normaliseTicker("AAPL US")}`);
+  check("so it keys the same as the directly-held line",
+    lt.constituentKey({ ticker: "BHP AT", name: "BHP GROUP LTD" })
+    === lt.constituentKey({ ticker: "BHP", name: "BHP Group" }));
+  check("a real symbol ending in those letters is not truncated",
+    lt.normaliseTicker("ANZ") === "ANZ" && lt.normaliseTicker("WES") === "WES");
+}
+
+// ── Issuer CSV parsing ────────────────────────────────────────────────────
+{
+  const asx = await import(join(outDir, "lib/fund-asx.js"));
+
+  // Shaped like a real Betashares file: preamble, table, quoted disclaimer
+  // rows whose commas would otherwise split into phantom columns.
+  const csv = [
+    "Betashares Portfolio Holdings,",
+    ",",
+    "Fund Name,Betashares Australia 200 ETF",
+    "Fund ASX Code,A200",
+    "Date,2026-10-01",
+    ",",
+    "Ticker,Name,Asset Class,Sector,Country,Currency,Weight (%),Shares/Units (#),Market Value (AUD)",
+    "BHP AT,BHP GROUP LTD,Equities,Materials,Australia,AUD,11.74785059,21325159.0,1285054081.34",
+    "CBA AT,COMMONWEALTH BANK OF AUSTRALIA,Equities,Financials,Australia,AUD,9.57235344,6994085.0,1047084465.35",
+    '"Total weights may not add up to 100%, due to rounding or immateriality."',
+  ].join("\n");
+
+  const rows = asx.parseCsvRows(csv);
+  check("quoted fields containing commas stay one cell",
+    rows[rows.length - 1].length === 1, `${rows[rows.length - 1].length} cells in the disclaimer row`);
+
+  const { parseHoldingsRows } = await import(join(outDir, "lib/fund-holdings.js"));
+  const parsed = parseHoldingsRows(rows);
+  check("the header is found below the preamble", parsed.constituents.length === 2,
+    `${parsed.constituents.length} constituents`);
+  const bhp = parsed.constituents.find((c) => /BHP/.test(c.name));
+  check("issuer weights are used as reported", near(bhp.weightPct, 11.74785059, 1e-6), String(bhp?.weightPct));
+  check("sector and country come through", bhp.sector === "Materials" && bhp.country === "Australia",
+    `${bhp?.sector} / ${bhp?.country}`);
+  check("the disclaimer is not read as a holding",
+    !parsed.constituents.some((c) => /rounding/i.test(c.name)));
 }
 
 rmSync(dir, { recursive: true, force: true });

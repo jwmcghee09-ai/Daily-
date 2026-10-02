@@ -117,8 +117,13 @@ export async function lookThroughPortfolio(
 
     liveCalls += 1;
     try {
+      // The import's own source is the reliable signal; the suffix is not,
+      // since Australian portfolios list bare codes.
+      const australian = holding.source === "asx" || holding.source === "super"
+        || holding.source === "index" || holding.source === "fund"
+        || /\.(AX|AU)$/i.test(holding.ticker);
       const resolved = await resolveFund(holding.ticker, {
-        market: /\.(AX|AU)$/i.test(holding.ticker) ? "asx" : undefined,
+        market: australian ? "asx" : undefined,
       });
       if (resolved && resolved.constituents.length > 0) {
         compositions.set(symbol, resolved);

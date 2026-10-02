@@ -24,6 +24,7 @@
 import type { FundComposition, FundConstituent } from "@/lib/lookthrough";
 import { fetchNportComposition } from "@/lib/fund-sec";
 import { fetch13fComposition } from "@/lib/fund-13f";
+import { fetchBetasharesComposition } from "@/lib/fund-asx";
 import { normaliseTicker } from "@/lib/lookthrough";
 
 /**
@@ -43,7 +44,7 @@ export const ASX_TO_US_FUND: Readonly<Record<string, string>> = {
   IWLD: "URTH", // iShares Core MSCI World
 };
 
-export type ResolutionRoute = "sec" | "cross-listed" | "uploaded" | "13f";
+export type ResolutionRoute = "sec" | "cross-listed" | "uploaded" | "13f" | "issuer";
 
 export interface ResolvedFund extends FundComposition {
   route: ResolutionRoute;
@@ -78,6 +79,10 @@ export async function resolveFund(
   const isAsx = options.market === "asx" || /\.(AX|AU)$/i.test(ticker.trim());
 
   if (isAsx) {
+    // The issuer's own file first: it is the fund itself, daily, and dated.
+    const issuer = await fetchBetasharesComposition(symbol).catch(() => null);
+    if (issuer) return { ...issuer, route: "issuer" };
+
     const usEquivalent = ASX_TO_US_FUND[symbol];
     if (usEquivalent) {
       const sec = await fetchNportComposition(usEquivalent).catch(() => null);
@@ -90,7 +95,8 @@ export async function resolveFund(
         };
       }
     }
-    // An unmapped ASX fund has no fetchable source; it needs an upload.
+    // No issuer file and no US twin: Australia has no central database, so
+    // this one needs the holdings file uploaded.
     return null;
   }
 

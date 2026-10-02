@@ -388,6 +388,7 @@ function initSchema(db: DatabaseSync): void {
     CREATE TABLE IF NOT EXISTS fund_resolution_misses (
       ticker TEXT PRIMARY KEY,
       reason TEXT NOT NULL,
+      resolver_version INTEGER NOT NULL DEFAULT 0,
       checked_at TEXT NOT NULL
     );
 
@@ -467,6 +468,13 @@ function initSchema(db: DatabaseSync): void {
    * so this only removes the pre-migration ones.
    */
   db.exec("DELETE FROM fund_compositions WHERE route = '13f' AND coverage_pct IS NULL;");
+
+  const hasResolverVersion = db
+    .prepare("SELECT 1 AS ok FROM pragma_table_info('fund_resolution_misses') WHERE name = 'resolver_version'")
+    .get() as { ok: number } | undefined;
+  if (!hasResolverVersion) {
+    db.exec("ALTER TABLE fund_resolution_misses ADD COLUMN resolver_version INTEGER NOT NULL DEFAULT 0;");
+  }
 
   const hasPrevCloseColumn = db
     .prepare("SELECT 1 AS ok FROM pragma_table_info('holdings') WHERE name = 'prev_close'")
@@ -4604,12 +4612,29 @@ export function listFundCompositions(userId = ""): Array<{
   }));
 }
 
-/** True when this ticker was recently checked and found not to be a fund. */
+/**
+ * Which generation of the resolver recorded a miss.
+ *
+ * Bump this whenever a resolution route is added, so tickers that genuinely
+ * could not be resolved before are tried again. Without it a deploy that adds a
+ * source is invisible for the life of the miss cache — the ASX issuer route
+ * shipped and every Betashares fund stayed unresolved, because they had all
+ * been recorded as misses by the resolver that could not read them.
+ *
+ *   1 — N-PORT, cross-listing, uploads
+ *   2 — + Form 13F
+ *   3 — + Betashares daily holdings
+ */
+export const FUND_RESOLVER_VERSION = 3;
+
+/** True when this ticker was recently checked, by this resolver, and missed. */
 export function isRecentResolutionMiss(ticker: string): boolean {
   const row = getDb()
-    .prepare("SELECT checked_at FROM fund_resolution_misses WHERE ticker = ?")
-    .get(ticker.toUpperCase()) as { checked_at?: string } | undefined;
+    .prepare("SELECT checked_at, resolver_version FROM fund_resolution_misses WHERE ticker = ?")
+    .get(ticker.toUpperCase()) as { checked_at?: string; resolver_version?: number } | undefined;
   if (!row?.checked_at) return false;
+  // An older resolver's verdict says nothing about what this one can do.
+  if (Number(row.resolver_version ?? 0) !== FUND_RESOLVER_VERSION) return false;
   const age = Date.now() - new Date(row.checked_at).getTime();
   return Number.isFinite(age) && age < MISS_TTL_MS;
 }
@@ -4617,8 +4642,12 @@ export function isRecentResolutionMiss(ticker: string): boolean {
 export function recordResolutionMiss(ticker: string, reason: string): void {
   getDb()
     .prepare(
-      `INSERT INTO fund_resolution_misses (ticker, reason, checked_at) VALUES (?, ?, ?)
-       ON CONFLICT(ticker) DO UPDATE SET reason = excluded.reason, checked_at = excluded.checked_at`,
+      `INSERT INTO fund_resolution_misses (ticker, reason, resolver_version, checked_at)
+       VALUES (?, ?, ?, ?)
+       ON CONFLICT(ticker) DO UPDATE SET
+         reason = excluded.reason,
+         resolver_version = excluded.resolver_version,
+         checked_at = excluded.checked_at`,
     )
-    .run(ticker.toUpperCase(), reason.slice(0, 200), new Date().toISOString());
+    .run(ticker.toUpperCase(), reason.slice(0, 200), FUND_RESOLVER_VERSION, new Date().toISOString());
 }
