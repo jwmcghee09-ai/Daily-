@@ -130,6 +130,43 @@ function decodeXml(value: string): string {
 }
 
 /**
+ * What N-PORT's `issuerCat` actually says.
+ *
+ * It is tempting to read it as a sector and the form does not mean it that way:
+ * it classifies the ISSUER, so every one of the 504 equities in IVV comes back
+ * "CORP" and the panel reported "CORP 100%" where a reader expected Technology,
+ * Financials, Energy. N-PORT carries no GICS classification at all, for any
+ * fund — so rather than dress an issuer type up as a sector, the codes are
+ * spelled out and the surfaces that show them say what they are.
+ *
+ * Unrecognised codes pass through unchanged; a new one should read oddly rather
+ * than be silently folded into "Other".
+ */
+export const NPORT_ISSUER_CATEGORIES: Readonly<Record<string, string>> = {
+  CORP: "Corporate issuer",
+  MUN: "Municipal",
+  UST: "US Treasury",
+  USGA: "US government agency",
+  USGSE: "US government-sponsored entity",
+  NUSS: "Non-US sovereign or supranational",
+  RF: "Registered fund",
+  RA: "Repurchase agreement",
+  "ABS-MBS": "Mortgage-backed",
+  "ABS-ABCP": "Asset-backed commercial paper",
+  "ABS-CBDO": "Collateralised debt obligation",
+  "ABS-O": "Asset-backed, other",
+  PF: "Private fund",
+  O: "Other",
+};
+
+/** Whether a set of labels is N-PORT issuer categories rather than sectors. */
+export function isIssuerCategorySet(labels: readonly string[]): boolean {
+  const known = new Set(Object.values(NPORT_ISSUER_CATEGORIES));
+  const present = labels.filter((l) => String(l ?? "").trim().length > 0);
+  return present.length > 0 && present.every((l) => known.has(l));
+}
+
+/**
  * N-PORT reports weights as a fraction of net assets in `pctVal`, already
  * computed by the filer. Using it directly avoids re-deriving weights from
  * valUSD, which disagrees with the filer's own total for funds holding
@@ -165,7 +202,13 @@ export function parseNportHoldings(xml: string): FundConstituent[] {
       weightPct: pct,
       country: tag(block, "invCountry") || undefined,
       assetClass: tag(block, "assetCat") || undefined,
-      sector: tag(block, "issuerCat") || undefined,
+      // An issuer category, spelled out. See NPORT_ISSUER_CATEGORIES: it is
+      // not a sector, and the UI labels it accordingly.
+      sector: (() => {
+        const code = tag(block, "issuerCat");
+        if (!code) return undefined;
+        return NPORT_ISSUER_CATEGORIES[code.trim().toUpperCase()] ?? code;
+      })(),
     });
   }
 

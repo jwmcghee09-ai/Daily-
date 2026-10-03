@@ -392,6 +392,23 @@ function initSchema(db: DatabaseSync): void {
       checked_at TEXT NOT NULL
     );
 
+    /*
+     * Whether a ticker is a fund or a company. A public fact about the
+     * instrument, so keyed by ticker alone like fund_compositions, and cached
+     * for a long time: an instrument does not change kind. Without this the
+     * look-through panel would ask the exchange about every holding on every
+     * load, and it exists at all because the panel used to assume everything
+     * was a fund and offer to read BHP's portfolio.
+     */
+    CREATE TABLE IF NOT EXISTS instrument_kinds (
+      ticker TEXT PRIMARY KEY,
+      kind TEXT NOT NULL,
+      name TEXT NOT NULL DEFAULT '',
+      exchange TEXT NOT NULL DEFAULT '',
+      basis TEXT NOT NULL DEFAULT '',
+      checked_at TEXT NOT NULL
+    );
+
     CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY,
       email TEXT NOT NULL UNIQUE,
@@ -4644,8 +4661,9 @@ export function listFundCompositions(userId = ""): Array<{
  *   1 — N-PORT, cross-listing, uploads
  *   2 — + Form 13F
  *   3 — + Betashares daily holdings
+ *   4 — + IHVV, and IEM pointed at the right US fund
  */
-export const FUND_RESOLVER_VERSION = 3;
+export const FUND_RESOLVER_VERSION = 4;
 
 /** True when this ticker was recently checked, by this resolver, and missed. */
 export function isRecentResolutionMiss(ticker: string): boolean {
@@ -4670,4 +4688,64 @@ export function recordResolutionMiss(ticker: string, reason: string): void {
          checked_at = excluded.checked_at`,
     )
     .run(ticker.toUpperCase(), reason.slice(0, 200), FUND_RESOLVER_VERSION, new Date().toISOString());
+}
+
+// ── What a ticker is ────────────────────────────────────────────────────────
+
+export interface StoredInstrumentKind {
+  ticker: string;
+  kind: string;
+  name: string;
+  exchange: string;
+  basis: string;
+}
+
+/*
+ * BHP will still be a company next year, so a settled answer is kept for a
+ * quarter. The exception is a ticker that changed hands or was reused, which a
+ * quarterly re-check picks up without ever being the slow path.
+ */
+const INSTRUMENT_KIND_TTL_MS = 90 * 24 * 60 * 60 * 1000;
+
+/** A ticker's kind, or null when nothing fresh is stored. */
+export function readInstrumentKind(ticker: string): StoredInstrumentKind | null {
+  const row = getDb()
+    .prepare("SELECT ticker, kind, name, exchange, basis, checked_at FROM instrument_kinds WHERE ticker = ?")
+    .get(ticker.trim().toUpperCase()) as
+      | { ticker: string; kind: string; name: string; exchange: string; basis: string; checked_at: string }
+      | undefined;
+  if (!row?.kind) return null;
+
+  const age = Date.now() - new Date(row.checked_at).getTime();
+  if (!Number.isFinite(age) || age >= INSTRUMENT_KIND_TTL_MS) return null;
+
+  return {
+    ticker: row.ticker,
+    kind: row.kind,
+    name: row.name ?? "",
+    exchange: row.exchange ?? "",
+    basis: row.basis ?? "",
+  };
+}
+
+export function writeInstrumentKind(entry: StoredInstrumentKind): void {
+  getDb()
+    .prepare(
+      `INSERT INTO instrument_kinds (ticker, kind, name, exchange, basis, checked_at)
+       VALUES (?, ?, ?, ?, ?, ?)
+       ON CONFLICT(ticker) DO UPDATE SET
+         kind = excluded.kind,
+         name = excluded.name,
+         exchange = excluded.exchange,
+         basis = excluded.basis,
+         checked_at = excluded.checked_at`,
+    )
+    .run(
+      entry.ticker.trim().toUpperCase(),
+      String(entry.kind).slice(0, 32),
+      String(entry.name ?? "").slice(0, 200),
+      String(entry.exchange ?? "").slice(0, 64),
+      String(entry.basis ?? "").slice(0, 200),
+      new Date().toISOString(),
+    );
 }

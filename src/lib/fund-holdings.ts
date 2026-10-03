@@ -25,24 +25,14 @@ import type { FundComposition, FundConstituent } from "@/lib/lookthrough";
 import { fetchNportComposition } from "@/lib/fund-sec";
 import { fetch13fComposition } from "@/lib/fund-13f";
 import { fetchBetasharesComposition } from "@/lib/fund-asx";
+import { ASX_TO_US_FUND, AUD_HEDGED_FEEDERS } from "@/lib/fund-crosslist";
 import { normaliseTicker } from "@/lib/lookthrough";
 
 /**
- * ASX tickers that ARE a US registered fund, not merely similar to one.
- *
- * Only cross-listings and feeder structures belong here. The test is whether
- * the two tickers give you a claim on the same portfolio; "tracks the same
- * index" is not the same thing and does not qualify.
+ * The cross-listing map lives in its own module so the classifier can read it
+ * too, and is re-exported here because this is where callers expect it.
  */
-export const ASX_TO_US_FUND: Readonly<Record<string, string>> = {
-  IVV: "IVV",   // iShares S&P 500 — ASX cross-listing of the US fund
-  VTS: "VTI",   // Vanguard US Total Market — feeds the US fund
-  VEU: "VEU",   // Vanguard All-World ex-US — feeds the US fund
-  IJH: "IJH",   // iShares S&P Mid-Cap 400
-  IJR: "IJR",   // iShares S&P Small-Cap 600
-  IEM: "IEMG",  // iShares Emerging Markets
-  IWLD: "URTH", // iShares Core MSCI World
-};
+export { ASX_TO_US_FUND } from "@/lib/fund-crosslist";
 
 export type ResolutionRoute = "sec" | "cross-listed" | "uploaded" | "13f" | "issuer";
 
@@ -78,9 +68,31 @@ export async function resolveFund(
 
   const isAsx = options.market === "asx" || /\.(AX|AU)$/i.test(ticker.trim());
 
+  /*
+   * What is this, before asking anyone what is inside it?
+   *
+   * Most tickers in a portfolio are ordinary shares, and every request spent
+   * asking Betashares for BHP's constituent file is a request that returns 404
+   * and a slot of the per-page resolution budget that a real fund could have
+   * used. The classifier is cached in the database, so this costs one lookup
+   * per ticker ever.
+   *
+   * A company is not skipped outright: Berkshire is a company and holds a
+   * portfolio worth seeing. It is skipped on the routes that only a fund can
+   * answer — an issuer constituent file, a fund register — and sent straight
+   * to the 13F route, which is the one built for companies.
+   */
+  const identity = await import("@/lib/instrument-kind")
+    .then((m) => m.classifyInstrument(ticker, { market: isAsx ? "asx" : options.market }))
+    .catch(() => null);
+  const isCompany = identity?.kind === "company" && !ASX_TO_US_FUND[symbol];
+
+  // An index is a benchmark, not a holding with constituents anyone owns.
+  if (identity?.kind === "index") return null;
+
   if (isAsx) {
     // The issuer's own file first: it is the fund itself, daily, and dated.
-    const issuer = await fetchBetasharesComposition(symbol).catch(() => null);
+    const issuer = isCompany ? null : await fetchBetasharesComposition(symbol).catch(() => null);
     if (issuer) return { ...issuer, route: "issuer" };
 
     const usEquivalent = ASX_TO_US_FUND[symbol];
@@ -90,8 +102,18 @@ export async function resolveFund(
         return {
           ...sec,
           fundTicker: symbol,
+          // Not the US fund's name. The user holds IHVV, and labelling their
+          // holding "iShares Core S&P 500 ETF" because that is what the filing
+          // says reads as though the ticker had been mixed up. `source` names
+          // the filing, which is where that belongs.
+          fundName: undefined,
           source: `SEC N-PORT via ${usEquivalent}`,
           route: "cross-listed",
+          coverageNote: AUD_HEDGED_FEEDERS.has(symbol)
+            ? `These are ${usEquivalent}'s holdings, which this fund owns through its units in it. `
+              + "The AUD/USD forwards that hedge the currency are a separate position and are not "
+              + "shown — the companies are right, the currency exposure is not represented."
+            : undefined,
         };
       }
     }
@@ -100,7 +122,7 @@ export async function resolveFund(
     return null;
   }
 
-  const sec = await fetchNportComposition(symbol).catch(() => null);
+  const sec = isCompany ? null : await fetchNportComposition(symbol).catch(() => null);
   if (sec) return { ...sec, route: "sec" };
 
   /*

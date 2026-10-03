@@ -158,6 +158,13 @@ body.has-onboard .hero{padding-top:1.5rem}
 .fund-row.unres .fund-code{color:var(--muted)}
 .fund-up{font-family:var(--mono);font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;color:#c7300f;background:none;border:1px solid var(--border);border-radius:999px;padding:.32rem .8rem;cursor:pointer;white-space:nowrap}
 .fund-up:hover{border-color:rgba(255,75,51,.45)}
+/* Direct shareholdings: present, named, and visibly not awaiting a file. */
+.fund-shares-h{font-family:var(--sans);font-size:.72rem;font-weight:700;color:var(--text);margin:1.5rem 0 .2rem}
+.fund-shares-h span{display:block;font-family:var(--mono);font-size:.55rem;font-weight:400;letter-spacing:.04em;color:var(--muted);line-height:1.7;margin-top:.25rem;text-transform:none}
+.fund-row.share{background:none;border-style:dashed}
+.fund-row.share:hover{border-color:var(--border)}
+.fund-row.share .fund-head{grid-template-columns:auto 1fr auto}
+.fund-link{font:inherit;color:#c7300f;background:none;border:0;padding:0;cursor:pointer;text-decoration:underline}
 .fund-empty{font-family:var(--sans);font-size:.8rem;color:var(--muted);line-height:1.75;padding:1.1rem 0 .2rem}
 .fund-empty strong{color:var(--text)}
 .fund-list{display:flex;flex-direction:column;gap:.6rem;margin-top:1.2rem}
@@ -6106,7 +6113,9 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
     if (d.truncated) notes.push("Showing the largest " + (d.holdings || []).length + " of " + d.holdingCount + ".");
 
     body.innerHTML =
-      '<div class="fund-sub-h">Sectors</div>' + sectorBars(d.bySector)
+      // "Sectors" for an issuer file that classifies them; "Issuer type" for a
+      // filing, which classifies the issuer and not the business it is in.
+      '<div class="fund-sub-h">' + esc(d.sectorHeading || "Sectors") + "</div>" + sectorBars(d.bySector)
       + ((d.byCountry || []).length > 1
           ? '<div class="fund-sub-h">Countries</div>' + sectorBars(d.byCountry) : "")
       + '<div class="fund-sub-h">Holdings</div>'
@@ -6137,6 +6146,42 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
       });
   }
 
+  /**
+   * Holdings you own directly.
+   *
+   * One line each, no buttons, under a heading that says what they are. They
+   * are listed rather than hidden because a reader counting their holdings
+   * against this panel should find all of them, and because "we know BHP is a
+   * company" is more informative than BHP's silent absence.
+   */
+  function shareRows(shares) {
+    if (!shares.length) return "";
+    var total = shares.reduce(function (sum, s) { return sum + (Number(s.value) || 0); }, 0);
+    return '<div class="fund-shares-h">Held directly — ' + shares.length
+      + (shares.length === 1 ? " company" : " companies") + " · " + money(total)
+      + '<span>Shares in a business, not a fund. There is nothing inside them to look through: '
+      + "the risk engine already measures them one by one.</span></div>"
+      + shares.map(function (s) {
+        return '<div class="fund-row unres share" data-ticker="' + esc(s.ticker) + '">'
+          // The source of the classification goes in the tooltip rather than
+          // the line: a reader wants "listed company", an auditor wants to know
+          // it came from exchange reference data.
+          + '<div class="fund-head" style="cursor:default" title="'
+          + esc(s.kindBasis || "") + '">'
+          + '<span class="fund-code">' + esc(s.ticker) + "</span>"
+          + "<span><span class=\"fund-name\">" + esc(s.label) + "</span>"
+          + '<span class="fund-sub">Listed company'
+          + (s.exchange ? " · " + esc(s.exchange) : "") + "</span></span>"
+          + '<span class="fund-val">' + money(s.value) + "</span>"
+          // No Upload or Fetch: there is no holdings file for a company. If the
+          // classification is ever wrong, the row below says so.
+          + "</div></div>";
+      }).join("")
+      + '<div class="fund-note">Something here is really a fund? '
+      + '<button type="button" class="fund-link" data-upload-any="1">Upload its holdings file</button>'
+      + " and it moves up.</div>";
+  }
+
   window.loadYourFunds = function loadYourFunds(force) {
     if (loaded && !force) return;
     loaded = true;
@@ -6159,9 +6204,14 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
         if (!resolved.length && !unresolved.length) return;
 
         list.innerHTML = resolved.map(function (f) {
-          var sectors = (f.topSectors || []).map(function (s) {
-            return esc(s.label) + " " + Math.round(s.pct) + "%";
-          }).join(" · ");
+          // A filing's issuer categories are "Corporate issuer 100%" for any
+          // equity fund, which tells a reader nothing at a glance. The largest
+          // holding does, so that is what the row carries instead.
+          var sectors = f.sectorHeading === "Issuer type"
+            ? (f.topHolding ? "largest: " + esc(f.topHolding) : "")
+            : (f.topSectors || []).map(function (s) {
+                return esc(s.label) + " " + Math.round(s.pct) + "%";
+              }).join(" · ");
           return '<div class="fund-row" data-ticker="' + esc(f.ticker) + '" data-open="0">'
             + '<button class="fund-head" type="button">'
             + '<span class="fund-code">' + esc(f.ticker) + "</span>"
@@ -6175,12 +6225,19 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
         }).join("")
         // Holdings we cannot see inside are listed too, with the way to fix it
         // attached — a hidden panel taught the user nothing.
-        + unresolved.map(function (u) {
+        //
+        // Split by what the holding is. Shares are not a fund with a missing
+        // file: BHP has no portfolio, and offering to upload one was asking the
+        // user for a document that does not exist. Anything not positively
+        // identified stays with the funds, where the upload is still offered,
+        // since that is the safe direction to be wrong in.
+        + unresolved.filter(function (u) { return u.kind !== "company"; }).map(function (u) {
           return '<div class="fund-row unres" data-ticker="' + esc(u.ticker) + '">'
             + '<div class="fund-head" style="cursor:default">'
             + '<span class="fund-code">' + esc(u.ticker) + "</span>"
             + "<span><span class=\"fund-name\">" + esc(u.label) + "</span>"
-            + '<span class="fund-sub">No holdings data \u2014 upload its file to see inside</span></span>'
+            + '<span class="fund-sub">'
+            + esc(u.reason || "No holdings data \u2014 upload its file to see inside") + "</span></span>"
             + '<span class="fund-val">' + money(u.value) + "</span>"
             + '<span style="display:flex;gap:.4rem">'
             // Offered only where an issuer page is known: a browser render is
@@ -6190,7 +6247,8 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
                 : "")
             + '<button type="button" class="fund-up" data-upload="' + esc(u.ticker) + '">Upload</button>'
             + "</span></div></div>";
-        }).join("");
+        }).join("")
+        + shareRows(unresolved.filter(function (u) { return u.kind === "company"; }));
 
         var count = document.getElementById("funds-count");
         if (count) {
@@ -6202,8 +6260,9 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
         var missing = document.getElementById("funds-missing");
         if (missing) {
           missing.innerHTML = resolved.length
-            ? "A holding with no data is either held directly rather than through a fund, or its "
-              + "issuer does not publish a file we can fetch \u2014 upload it and it appears here."
+            ? "A fund listed without holdings is one whose issuer publishes no file we can fetch "
+              + "\u2014 upload it and it appears here. Companies you hold directly are listed "
+              + "separately: there is nothing inside them to look through."
             : "<strong>Nothing here can be looked through yet.</strong> US-listed funds resolve "
               + "automatically from SEC filings, and Betashares funds from their daily file. "
               + "Where <em>Fetch</em> is offered we can read the issuer\u2019s own page, though those "
@@ -6302,6 +6361,18 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
     var up = e.target.closest && e.target.closest("[data-upload]");
     if (up) { uploadFor(up.getAttribute("data-upload"), up); return; }
 
+    // The escape hatch for a misclassification. A holding read as a company
+    // gets no Upload button, so this asks which ticker and then does the same
+    // upload — the classifier is good, not infallible, and being wrong about
+    // one line should not cost the user the feature.
+    var any = e.target.closest && e.target.closest("[data-upload-any]");
+    if (any) {
+      var asked = window.prompt("Which holding is a fund? Enter its ticker.");
+      var code = String(asked || "").trim().toUpperCase().replace(/[^A-Z0-9.]/g, "");
+      if (code) uploadFor(code, any);
+      return;
+    }
+
     var more = e.target.closest && e.target.closest(".fund-more");
     if (more) {
       var r = more.closest(".fund-row");
@@ -6315,6 +6386,9 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
     if (!head) return;
     var row = head.closest(".fund-row");
     if (!row) return;
+    // A row with no constituents has nothing to expand; opening it would fetch
+    // the holding and draw an empty body.
+    if (row.classList.contains("unres")) return;
     if (row.getAttribute("data-open") === "1") { row.setAttribute("data-open", "0"); return; }
     // One at a time: two open index funds is a thousand rows of table.
     document.querySelectorAll('.fund-row[data-open="1"]').forEach(function (other) {

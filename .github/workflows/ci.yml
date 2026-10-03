@@ -129,6 +129,8 @@ jobs:
         run: node scripts/test-import-bounds.mjs
       - name: Fund look-through
         run: node scripts/test-lookthrough.mjs
+      - name: Fund or company
+        run: node scripts/test-instrument-kind.mjs
       - name: Per-holding risk
         run: node scripts/test-holding-risk.mjs
       - name: Contract-note parser

@@ -19,6 +19,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { readFundComposition, readPortfolioState } from "@/lib/db";
 import { hasIssuerPage } from "@/lib/fund-render";
+import { isIssuerCategorySet } from "@/lib/fund-sec";
+import {
+  cachedInstrumentKind,
+  classifyInstrument,
+  unresolvedReason,
+  type InstrumentIdentity,
+} from "@/lib/instrument-kind";
 import {
   exposureBy,
   normaliseTicker,
@@ -31,6 +38,64 @@ export const runtime = "nodejs";
 
 /** How many holdings one fund returns. AGG reports over 13,000. */
 const MAX_HOLDINGS = 250;
+
+/**
+ * How many holdings get identified on one request.
+ *
+ * Classification is cached for a quarter, so this only bites on the first load
+ * of a new portfolio. Capping it means a fifty-line book draws the panel
+ * promptly with the largest holdings named and the tail filled in next time,
+ * rather than holding the panel open behind fifty lookups.
+ */
+const MAX_LIVE_CLASSIFICATIONS = 12;
+/** Lookups in parallel — enough to be quick, few enough to be polite. */
+const CLASSIFY_CONCURRENCY = 4;
+
+/**
+ * Identify a batch of holdings, newest answers cached in the database.
+ *
+ * `allowNetwork` is false past the cap rather than the whole call being
+ * skipped, so anything already known still comes back named.
+ */
+async function identify(
+  wanted: readonly { ticker: string; market: "asx" | "us" | undefined }[],
+): Promise<Map<string, InstrumentIdentity>> {
+  const out = new Map<string, InstrumentIdentity>();
+  let spent = 0;
+
+  const queue = [...wanted];
+  const workers = Array.from({ length: Math.min(CLASSIFY_CONCURRENCY, queue.length) }, async () => {
+    for (;;) {
+      const next = queue.shift();
+      if (!next) return;
+
+      // A cached answer costs nothing, so it does not consume the budget —
+      // which matters on a long book, where otherwise the first twelve
+      // already-known holdings would use up the allowance meant for the
+      // unknown ones.
+      const known = await cachedInstrumentKind(next.ticker).catch(() => null);
+      if (known) { out.set(next.ticker, known); continue; }
+
+      const allowNetwork = spent < MAX_LIVE_CLASSIFICATIONS;
+      if (allowNetwork) spent += 1;
+      const identity = await classifyInstrument(next.ticker, { market: next.market, allowNetwork })
+        .catch(() => null);
+      if (identity) out.set(next.ticker, identity);
+    }
+  });
+
+  await Promise.all(workers);
+  return out;
+}
+
+/** Australian unless the import says otherwise; bare codes carry no suffix. */
+function marketOf(holding: { ticker?: string | null; source?: string | null }): "asx" | "us" | undefined {
+  const source = String(holding.source ?? "");
+  if (source === "asx" || source === "super" || source === "index" || source === "fund") return "asx";
+  if (/\.(AX|AU)$/i.test(String(holding.ticker ?? ""))) return "asx";
+  if (source === "us") return "us";
+  return undefined;
+}
 
 /**
  * Constituents as positions, so the same rollups the whole-portfolio view uses
@@ -114,14 +179,19 @@ export async function GET(request: NextRequest) {
 
     const cached = readFundComposition(wanted, user.id);
     if (!cached || cached.constituents.length === 0) {
+      // Why it is not here, not just that it is not — "upload its holdings
+      // file" is the wrong instruction for a mining company.
+      const identity = await classifyInstrument(wanted, { market: marketOf(holding) })
+        .catch(() => null);
       return NextResponse.json(
         {
           ticker: wanted,
-          label: holdingName(holding.ticker, holding.name),
+          label: identity?.name || holdingName(holding.ticker, holding.name),
           value: holding.value,
           resolved: false,
-          reason: "No constituent data for this holding yet. US funds resolve from SEC filings; "
-            + "for an ASX fund or a super option, upload its holdings file.",
+          kind: identity?.kind ?? "unknown",
+          kindBasis: identity?.basis ?? null,
+          reason: unresolvedReason(identity?.kind ?? "unknown"),
         },
         { status: 200 },
       );
@@ -144,6 +214,8 @@ export async function GET(request: NextRequest) {
      * futures contract with blank weight and blank value, and the remaining
      * lines still total 100%. A large shortfall is not rounding.
      */
+    const bySector = exposureBy(positions, "sector");
+
     const reportedSum = constituents.reduce(
       (sum, c) => sum + (Number.isFinite(c.weightPct) ? Math.max(0, c.weightPct) : 0), 0);
     const weightsAccountedFor = reportedSum > 0 ? reportedSum : null;
@@ -160,7 +232,11 @@ export async function GET(request: NextRequest) {
       coverageNote: cached.coverageNote,
       holdingCount: positions.length,
       // Rollups over the fund alone — its own sector mix, not the portfolio's.
-      bySector: exposureBy(positions, "sector"),
+      bySector,
+      // N-PORT classifies the issuer, not the sector, so for a fund resolved
+      // from a filing this column is "Corporate issuer" all the way down. It
+      // gets its own heading rather than being presented as a sector mix.
+      sectorHeading: isIssuerCategorySet(bySector.map((s) => s.label)) ? "Issuer type" : "Sectors",
       byCountry: exposureBy(positions, "country"),
       byAssetClass: exposureBy(positions, "assetClass"),
       holdings: sorted.slice(0, MAX_HOLDINGS).map((p) => ({
@@ -196,6 +272,7 @@ export async function GET(request: NextRequest) {
     coveragePct: number | null;
     holdingCount: number;
     topSectors: ReturnType<typeof exposureBy>;
+    sectorHeading: string;
     topHolding: string | null;
   }
 
@@ -206,6 +283,7 @@ export async function GET(request: NextRequest) {
     if (!cached || cached.constituents.length === 0) continue;
 
     const positions = toPositions(cached.constituents as FundConstituent[], holding.value);
+    const sectors = exposureBy(positions, "sector");
     funds.push({
       ticker,
       label: cached.fundName || holdingName(holding.ticker, holding.name),
@@ -216,7 +294,8 @@ export async function GET(request: NextRequest) {
       coveragePct: cached.coveragePct,
       holdingCount: positions.length,
       // Enough to tell two funds apart without opening either.
-      topSectors: exposureBy(positions, "sector").slice(0, 3),
+      topSectors: sectors.slice(0, 3),
+      sectorHeading: isIssuerCategorySet(sectors.map((s) => s.label)) ? "Issuer type" : "Sectors",
       topHolding: positions.length
         ? [...positions].sort((a, b) => b.weightPct - a.weightPct)[0].name
         : null,
@@ -225,21 +304,48 @@ export async function GET(request: NextRequest) {
 
   funds.sort((a, b) => b.value - a.value);
 
+  const missing = holdings.filter((h) => {
+    const t = normaliseTicker(h.ticker);
+    return !funds.some((f) => f.ticker === t);
+  });
+
+  /*
+   * What each unlooked-through holding actually is.
+   *
+   * Until this existed the panel put every one of them under "No holdings data
+   * — upload its file to see inside", which for BHP is an instruction to
+   * produce a document that does not exist. Largest first, so a capped budget
+   * is spent on the holdings that matter most.
+   */
+  const identities = await identify(
+    [...missing]
+      .sort((a, b) => (Number(b.value) || 0) - (Number(a.value) || 0))
+      .map((h) => ({ ticker: normaliseTicker(h.ticker), market: marketOf(h) })),
+  );
+
   return NextResponse.json({
     funds,
     // Named so the UI can say why a fund the user holds is missing from the list.
-    unresolved: holdings
-      .filter((h) => {
-        const t = normaliseTicker(h.ticker);
-        return !funds.some((f) => f.ticker === t);
-      })
-      .map((h) => ({
-        ticker: normaliseTicker(h.ticker),
-        label: holdingName(h.ticker, h.name),
+    unresolved: missing.map((h) => {
+      const ticker = normaliseTicker(h.ticker);
+      const identity = identities.get(ticker);
+      const kind = identity?.kind ?? "unknown";
+      return {
+        ticker,
+        // The issuer's own name where a lookup found one: "iShares S&P 500 AUD
+        // Hedged ETF" says more than the imported label usually does.
+        label: identity?.name || holdingName(h.ticker, h.name),
         value: h.value,
+        kind,
+        /** How that was decided, so a wrong label can be traced. */
+        kindBasis: identity?.basis ?? null,
+        exchange: identity?.exchange ?? null,
+        reason: unresolvedReason(kind),
         // Whether the issuer's page can be read on request, so the UI offers
-        // fetching only where there is something to fetch.
-        fetchable: hasIssuerPage(normaliseTicker(h.ticker)),
-      })),
+        // fetching only where there is something to fetch. Never for a
+        // company: there is no holdings page to render.
+        fetchable: kind !== "company" && hasIssuerPage(ticker),
+      };
+    }),
   });
 }
