@@ -37,6 +37,9 @@ jobs:
 
       - run: npm ci
 
+      # The only type gate there is. next.config.ts sets ignoreBuildErrors,
+      # because the deploy host builds without devDependencies and so cannot
+      # type-check its own source. Deleting this step ships type errors.
       - name: Typecheck
         run: npx tsc --noEmit
 
@@ -78,8 +81,11 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
 
+      # No --include=dev: the point of this job is to build the way the host
+      # does, with devDependencies absent. It passes because the build no
+      # longer type-checks; the static job above does that with the full tree.
       # Chromium is only needed at request time, never to build.
-      - run: npm ci --include=dev
+      - run: npm ci --omit=dev
         env:
           PUPPETEER_SKIP_DOWNLOAD: "1"
 
@@ -89,9 +95,12 @@ jobs:
       # A dependency the running server needs must survive a production install.
       # puppeteer was moved to dependencies without regenerating the lockfile,
       # which would have omitted it at runtime and broken the renderer.
+      # The renderer calls puppeteer at request time, so it has to survive the
+      # install above. It was once moved to dependencies without regenerating
+      # the lockfile, which omitted it in production and would have thrown on
+      # first use.
       - name: Runtime dependencies survive a production install
         run: |
-          npm ci --omit=dev --ignore-scripts
           node -e "require.resolve('puppeteer/package.json')" \
             || { echo 'puppeteer is missing from a production install'; exit 1; }
           echo "runtime dependencies present"

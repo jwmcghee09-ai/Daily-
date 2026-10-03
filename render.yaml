@@ -2,10 +2,10 @@ services:
   - type: web
     name: spectre-portfolio
     runtime: node
-    # --include=dev because NODE_ENV=production (below) otherwise makes npm
-    # omit devDependencies — and typescript and every @types/* package is
-    # one, so the build ran without the types it type-checks against.
-    buildCommand: npm ci --include=dev && npm run build
+    # Plain install: the build does not type-check (see next.config.ts), so it
+    # has no need of devDependencies. Note this service takes its build command
+    # from the Render dashboard, not from here.
+    buildCommand: npm ci && npm run build
     startCommand: npm run start
     healthCheckPath: /api/health
     envVars:
