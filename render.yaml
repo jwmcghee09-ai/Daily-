@@ -2,7 +2,10 @@ services:
   - type: web
     name: spectre-portfolio
     runtime: node
-    buildCommand: npm ci && npm run build
+    # --include=dev because NODE_ENV=production (below) otherwise makes npm
+    # omit devDependencies — and typescript and every @types/* package is
+    # one, so the build ran without the types it type-checks against.
+    buildCommand: npm ci --include=dev && npm run build
     startCommand: npm run start
     healthCheckPath: /api/health
     envVars:

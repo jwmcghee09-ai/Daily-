@@ -58,6 +58,44 @@ jobs:
           retention-days: 1
           include-hidden-files: true
 
+  deploy-build:
+    name: Production build (as Render runs it)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # The static job builds with a normal install, which carries every
+    # devDependency and so type-checks against types the deployed build may not
+    # have. That is how a missing @types/papaparse reached production and broke
+    # the deploy: it compiled here and failed there.
+    #
+    # This job reproduces the deployment exactly — same NODE_ENV, same install
+    # flags as render.yaml's buildCommand. Keep the two in step.
+    env:
+      NODE_ENV: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      # Chromium is only needed at request time, never to build.
+      - run: npm ci --include=dev
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: "1"
+
+      - name: Build
+        run: npx next build
+
+      # A dependency the running server needs must survive a production install.
+      # puppeteer was moved to dependencies without regenerating the lockfile,
+      # which would have omitted it at runtime and broken the renderer.
+      - name: Runtime dependencies survive a production install
+        run: |
+          npm ci --omit=dev --ignore-scripts
+          node -e "require.resolve('puppeteer/package.json')" \
+            || { echo 'puppeteer is missing from a production install'; exit 1; }
+          echo "runtime dependencies present"
+
   unit:
     name: Library suites
     runs-on: ubuntu-latest

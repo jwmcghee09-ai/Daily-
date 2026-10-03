@@ -125,7 +125,23 @@ async function render(ticker: string): Promise<RenderedHoldings | null> {
   const pinned = String(process.env.PROXY_CA_SPKI ?? "").trim();
   if (pinned) launchArgs.push(`--ignore-certificate-errors-spki-list=${pinned}`);
 
-  const browser = await puppeteer.launch({ headless: true, args: launchArgs });
+  let browser;
+  try {
+    browser = await puppeteer.launch({ headless: true, args: launchArgs });
+  } catch (error) {
+    // Chromium is downloaded by puppeteer's postinstall into PUPPETEER_CACHE_DIR.
+    // If a host wipes that between build and run, launching fails with a message
+    // about a missing browser — which is worth saying plainly rather than
+    // letting it surface as "no holdings table could be read".
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(
+      /could not find|does not exist|ENOENT/i.test(message)
+        ? "No browser is available on this server, so issuer pages cannot be read. "
+          + "Check that PUPPETEER_CACHE_DIR survives from build to run."
+        : message,
+    );
+  }
+
   try {
     const tab = await browser.newPage();
     await tab.setUserAgent(
