@@ -16,7 +16,7 @@
  * a megabyte for nothing.
  */
 import { NextRequest, NextResponse } from "next/server";
-import { getAuthenticatedUser } from "@/lib/auth";
+import { guardDemoGuest, resolvePortfolioActor } from "@/lib/portfolio-actor";
 import { readFundComposition, readPortfolioState } from "@/lib/db";
 import { hasIssuerPage } from "@/lib/fund-render";
 import { isIssuerCategorySet } from "@/lib/fund-sec";
@@ -159,10 +159,15 @@ function holdingName(ticker: string, name: string | null | undefined): string {
 }
 
 export async function GET(request: NextRequest) {
-  const user = await getAuthenticatedUser();
-  if (!user) return NextResponse.json({ error: "Please sign in first." }, { status: 401 });
+  const actor = await resolvePortfolioActor(request);
+  if (!actor) return NextResponse.json({ error: "Please sign in first." }, { status: 401 });
+  // Identifying holdings touches the exchange, so a guest gets a budget. The
+  // answers are cached by ticker across everyone, so in practice a guest
+  // looking at a common Australian book spends nothing.
+  const limited = guardDemoGuest(request, actor, "funds", 20, 60_000);
+  if (limited) return limited;
 
-  const state = readPortfolioState(user.id);
+  const state = readPortfolioState(actor.userId);
   const holdings = (state.holdings ?? []).filter((h) => {
     const ticker = String(h.ticker ?? "").trim();
     return ticker.length > 0 && !isSyntheticTicker(ticker.toUpperCase());
@@ -177,7 +182,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: `You do not hold ${wanted}.` }, { status: 404 });
     }
 
-    const cached = readFundComposition(wanted, user.id);
+    const cached = readFundComposition(wanted, actor.userId);
     if (!cached || cached.constituents.length === 0) {
       // Why it is not here, not just that it is not — "upload its holdings
       // file" is the wrong instruction for a mining company.
@@ -279,7 +284,7 @@ export async function GET(request: NextRequest) {
   const funds: FundSummary[] = [];
   for (const holding of holdings) {
     const ticker = normaliseTicker(holding.ticker);
-    const cached = readFundComposition(ticker, user.id);
+    const cached = readFundComposition(ticker, actor.userId);
     if (!cached || cached.constituents.length === 0) continue;
 
     const positions = toPositions(cached.constituents as FundConstituent[], holding.value);

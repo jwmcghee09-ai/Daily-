@@ -14,7 +14,7 @@
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
 import { NextResponse } from "next/server";
-import { getAuthenticatedUser } from "@/lib/auth";
+import { guardDemoGuest, resolvePortfolioActor } from "@/lib/portfolio-actor";
 import { deleteFundComposition, listFundCompositions, writeFundComposition } from "@/lib/db";
 import { parseHoldingsRows } from "@/lib/fund-holdings";
 import { normaliseTicker } from "@/lib/lookthrough";
@@ -46,15 +46,24 @@ function workbookToRows(buffer: Buffer): string[][] {
   return best;
 }
 
-export async function GET() {
-  const user = await getAuthenticatedUser();
-  if (!user) return NextResponse.json({ error: "Please sign in first." }, { status: 401 });
-  return NextResponse.json({ compositions: listFundCompositions(user.id) });
+export async function GET(request: Request) {
+  const actor = await resolvePortfolioActor(request);
+  if (!actor) return NextResponse.json({ error: "Please sign in first." }, { status: 401 });
+  return NextResponse.json({ compositions: listFundCompositions(actor.userId) });
 }
 
 export async function POST(request: Request) {
-  const user = await getAuthenticatedUser();
-  if (!user) return NextResponse.json({ error: "Please sign in first." }, { status: 401 });
+  const actor = await resolvePortfolioActor(request);
+  if (!actor) return NextResponse.json({ error: "Please sign in first." }, { status: 401 });
+  /*
+   * Separate from the demo's two-file portfolio import cap, deliberately: a
+   * holdings file is what makes look-through work for an Australian fund, and
+   * spending the portfolio budget on it would mean a visitor could demonstrate
+   * one feature or the other but not both. Parsing a workbook is local work, so
+   * the budget is generous.
+   */
+  const limited = guardDemoGuest(request, actor, "fundupload", 6, 5 * 60_000);
+  if (limited) return limited;
 
   const declared = Number(request.headers.get("content-length") || "0");
   if (Number.isFinite(declared) && declared > MAX_BODY_BYTES) {
@@ -129,7 +138,7 @@ export async function POST(request: Request) {
     source: "Uploaded holdings file",
     asOf,
     constituents: parsed.constituents,
-    userId: user.id,
+    userId: actor.userId,
   });
 
   return NextResponse.json({
@@ -148,12 +157,12 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  const user = await getAuthenticatedUser();
-  if (!user) return NextResponse.json({ error: "Please sign in first." }, { status: 401 });
+  const actor = await resolvePortfolioActor(request);
+  if (!actor) return NextResponse.json({ error: "Please sign in first." }, { status: 401 });
 
   const ticker = normaliseTicker(new URL(request.url).searchParams.get("ticker") ?? "");
   if (!ticker) return NextResponse.json({ error: "Which ticker?" }, { status: 400 });
 
-  const removed = deleteFundComposition(ticker, user.id);
+  const removed = deleteFundComposition(ticker, actor.userId);
   return NextResponse.json({ ok: true, removed });
 }

@@ -12,7 +12,7 @@
  * rest of the holding stays visible as itself.
  */
 import { NextRequest, NextResponse } from "next/server";
-import { getAuthenticatedUser } from "@/lib/auth";
+import { guardDemoGuest, resolvePortfolioActor } from "@/lib/portfolio-actor";
 import { readPortfolioState, writeFundComposition } from "@/lib/db";
 import { fetchRenderedHoldings, hasIssuerPage, issuerPageFor } from "@/lib/fund-render";
 import { normaliseTicker } from "@/lib/lookthrough";
@@ -22,8 +22,17 @@ export const runtime = "nodejs";
 export const maxDuration = 90;
 
 export async function POST(request: NextRequest) {
-  const user = await getAuthenticatedUser();
-  if (!user) return NextResponse.json({ error: "Please sign in first." }, { status: 401 });
+  const actor = await resolvePortfolioActor(request);
+  if (!actor) return NextResponse.json({ error: "Please sign in first." }, { status: 401 });
+  /*
+   * A browser launch and a full render: fifteen seconds and a few hundred
+   * megabytes. Worth showing in the demo — it is one of the more convincing
+   * things the product does — and worth a tight budget, since the caller is
+   * anonymous. Renders are already single-flighted per ticker, so this bounds
+   * how many distinct ones a visitor can start.
+   */
+  const limited = guardDemoGuest(request, actor, "fundfetch", 3, 5 * 60_000);
+  if (limited) return limited;
 
   let body: { ticker?: unknown };
   try {
@@ -37,7 +46,7 @@ export async function POST(request: NextRequest) {
 
   // Only for something the user actually holds: this spends real resources, and
   // an open renderer is somewhere to point at arbitrary pages.
-  const state = readPortfolioState(user.id);
+  const state = readPortfolioState(actor.userId);
   const holding = (state.holdings ?? []).find((h) => normaliseTicker(h.ticker) === ticker);
   if (!holding) {
     return NextResponse.json({ error: `You do not hold ${ticker}.` }, { status: 404 });
@@ -90,7 +99,7 @@ export async function POST(request: NextRequest) {
     coveragePct: rendered.coveragePct,
     coverageNote: `Read from the ${rendered.source}, which publishes only its largest holdings — `
       + `about ${rendered.coveragePct.toFixed(0)}% of the fund. The rest is shown as the holding itself.`,
-    userId: user.id,
+    userId: actor.userId,
   });
 
   return NextResponse.json({

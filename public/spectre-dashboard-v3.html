@@ -6050,6 +6050,21 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
   var loaded = false;
   var cache = {};
 
+  /*
+   * Carry the demo through.
+   *
+   * The demo is a guest session identified by `demo=1` plus a cookie, exactly
+   * as /api/portfolio and /api/risk/estimate already expect it. These calls
+   * omitted it, so every one of them answered 401 and the panel silently drew
+   * nothing — the feature looked absent from the demo rather than unavailable.
+   */
+  var DEMO = new URLSearchParams(location.search).get("demo") === "1";
+  function api(path) {
+    if (!DEMO) return path;
+    return path + (path.indexOf("?") >= 0 ? "&" : "?") + "demo=1";
+  }
+
+
   function esc(v) {
     return String(v == null ? "" : v)
       .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
@@ -6134,7 +6149,7 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
     var body = row.querySelector(".fund-body");
     if (body) body.innerHTML = '<div class="fund-note">Reading the filing\u2026</div>';
 
-    fetch("/api/portfolio/funds?ticker=" + encodeURIComponent(ticker), { cache: "no-store" })
+    fetch(api("/api/portfolio/funds?ticker=" + encodeURIComponent(ticker)), { cache: "no-store" })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (d) {
         if (!d) { if (body) body.innerHTML = '<div class="fund-note">Could not load this fund.</div>'; return; }
@@ -6186,7 +6201,7 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
     if (loaded && !force) return;
     loaded = true;
     if (force) cache = {};
-    fetch("/api/portfolio/funds", { cache: "no-store" })
+    fetch(api("/api/portfolio/funds"), { cache: "no-store" })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (d) {
         if (!d) return;
@@ -6293,7 +6308,7 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
         var result = String(reader.result || "");
         // A data URL, so take the part after the comma.
         var base64 = result.slice(result.indexOf(",") + 1);
-        fetch("/api/portfolio/fund-holdings", {
+        fetch(api("/api/portfolio/fund-holdings"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ ticker: ticker, fileName: file.name, fileBase64: base64 }),
@@ -6330,7 +6345,7 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
     button.textContent = "Reading\u2026";
     button.disabled = true;
 
-    fetch("/api/portfolio/funds/fetch", {
+    fetch(api("/api/portfolio/funds/fetch"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ticker: ticker }),
@@ -6523,6 +6538,21 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
   var loaded = false;
 
   function pct(n) { return (Number(n) || 0).toFixed(1) + "%"; }
+
+  /*
+   * Carry the demo through.
+   *
+   * The demo is a guest session identified by `demo=1` plus a cookie, exactly
+   * as /api/portfolio and /api/risk/estimate already expect it. These calls
+   * omitted it, so every one of them answered 401 and the panel silently drew
+   * nothing — the feature looked absent from the demo rather than unavailable.
+   */
+  var DEMO = new URLSearchParams(location.search).get("demo") === "1";
+  function api(path) {
+    if (!DEMO) return path;
+    return path + (path.indexOf("?") >= 0 ? "&" : "?") + "demo=1";
+  }
+
   function esc(v) {
     return String(v == null ? "" : v)
       .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
@@ -6597,7 +6627,7 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
   window.loadLookThrough = function loadLookThrough(force) {
     if (loaded && !force) return;
     loaded = true;
-    fetch("/api/portfolio/metrics", { cache: "no-store" })
+    fetch(api("/api/portfolio/metrics"), { cache: "no-store" })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (d) {
         if (!d) return;

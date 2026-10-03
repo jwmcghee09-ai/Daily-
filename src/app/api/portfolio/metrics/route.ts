@@ -17,7 +17,7 @@
  * page and this endpoint read.
  */
 import { NextRequest, NextResponse } from "next/server";
-import { getAuthenticatedUser } from "@/lib/auth";
+import { guardDemoGuest, resolvePortfolioActor } from "@/lib/portfolio-actor";
 import { estimateHistoricalRiskFromYahoo, readPortfolioState } from "@/lib/db";
 import { computeMetrics, displayHoldingLabel, type PortfolioHolding, type RiskWindow } from "@/lib/portfolio";
 import { runMonteCarlo, stressScenarios } from "@/lib/quant";
@@ -52,14 +52,21 @@ function slimHolding(holding: PortfolioHolding & { weightPct: number }) {
 }
 
 export async function GET(request: NextRequest) {
-  const user = await getAuthenticatedUser();
-  if (!user) {
+  // The demo reaches this too. It is the call that resolves funds and feeds the
+  // look-through panel, the per-holding risk table and the fund list, so a 401
+  // here is why none of those appeared in the demo at all.
+  const actor = await resolvePortfolioActor(request);
+  if (!actor) {
     return NextResponse.json({ error: "Please sign in first." }, { status: 401 });
   }
+  // Up to twelve live EDGAR resolutions plus a priced risk estimate, for a
+  // visitor with no account. Signed-in callers are unaffected.
+  const limited = guardDemoGuest(request, actor, "metrics", 12, 60_000);
+  if (limited) return limited;
 
   const riskWindow = toRiskWindow(request.nextUrl.searchParams.get("window"));
   const horizonDays = Math.min(Math.max(Number(request.nextUrl.searchParams.get("horizon")) || 30, 1), 365);
-  const state = readPortfolioState(user.id);
+  const state = readPortfolioState(actor.userId);
 
   if (!state.holdings.length) {
     return NextResponse.json(
@@ -90,7 +97,7 @@ export async function GET(request: NextRequest) {
   let lookThroughError: string | null = null;
   try {
     lookThrough = await Promise.race([
-      lookThroughPortfolio(state.holdings, user.id),
+      lookThroughPortfolio(state.holdings, actor.userId),
       new Promise<null>((resolve) => setTimeout(() => resolve(null), RISK_TIMEOUT_MS)),
     ]);
     if (lookThrough === null) lookThroughError = "Timed out resolving fund holdings.";
@@ -105,7 +112,7 @@ export async function GET(request: NextRequest) {
   let historicalRiskError: string | null = null;
   try {
     historicalRisk = await Promise.race([
-      estimateHistoricalRiskFromYahoo(user.id, riskWindow),
+      estimateHistoricalRiskFromYahoo(actor.userId, riskWindow),
       new Promise<null>((resolve) => setTimeout(() => resolve(null), RISK_TIMEOUT_MS)),
     ]);
     if (historicalRisk === null) historicalRiskError = "Timed out fetching price history.";
