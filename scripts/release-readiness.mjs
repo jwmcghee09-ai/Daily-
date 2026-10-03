@@ -33,17 +33,28 @@ function report(label, names) {
 const hardMissing = report("Required env", required);
 report("Recommended env", optionalButRecommended);
 
-// Entitlements fail closed: with this unset, every account resolves to
-// planTier "none". That is the right default for a variable going missing, but
-// it means the growth-mode giveaway has to be stated out loud, so say plainly
-// which way this deployment is pointed rather than leaving it to be discovered.
-const freeAccess = ["1", "true", "on", "yes"]
-  .includes(String(process.env.FOUNDING_FREE_ACCESS || "").trim().toLowerCase());
+// Which way this deployment points on access, said plainly rather than left to
+// be discovered. Growth mode is on when the flag says so, and also when no
+// Stripe configuration exists — with no checkout, denying access would lock out
+// every user of a product none of them could buy.
+const flag = String(process.env.FOUNDING_FREE_ACCESS || "").trim().toLowerCase();
+const billingConfigured = Boolean(
+  String(process.env.STRIPE_SECRET_KEY || "").trim()
+  && (String(process.env.STRIPE_PRO_PRICE_ID || "").trim()
+    || String(process.env.STRIPE_PRICE_STARTER_MONTHLY || "").trim()),
+);
+const freeAccess = ["1", "true", "on", "yes"].includes(flag)
+  || (!["0", "false", "off", "no"].includes(flag) && !billingConfigured);
+
 console.log(
   freeAccess
-    ? "Access tier: FOUNDING_FREE_ACCESS is on — every account gets Pro free"
+    ? `Access tier: every account gets Pro free (${flag ? "FOUNDING_FREE_ACCESS is set" : "no Stripe configuration, so nobody could pay"})`
     : "Access tier: paid tiers enforced — set FOUNDING_FREE_ACCESS=1 to give the product away",
 );
+if (!flag) {
+  console.log("  FOUNDING_FREE_ACCESS is not set. Set it explicitly before configuring Stripe, "
+    + "or access flips the day billing is turned on.");
+}
 
 console.log("Checklist: docs/CUSTOMER_LAUNCH_CHECKLIST.md");
 
