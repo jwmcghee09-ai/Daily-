@@ -2699,6 +2699,7 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
     alerts: [],
     availableAlertTickers: [],
     historicalRiskEstimate: null,
+    lookThrough: null,
     holdingsAi: null,
     holdingsAiError: "",
     holdingsAiLoading: false,
@@ -2708,6 +2709,16 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
     riskWindow: "6M",
     uploadSource: null,
   };
+  /*
+   * Exposed the way renderPortfolio already is.
+   *
+   * Two later blocks on this page read window.state — the nav ticker strip to
+   * show the user's own holdings, and now the look-through loader to hand its
+   * result to the main render — and neither could, because nothing ever
+   * assigned it. The ticker strip has been quietly showing its hardcoded ASX
+   * blue-chip fallback ever since.
+   */
+  window.state = state;
   let chartResizeTimer = null;
 
   const toastEl = document.getElementById("system-toast");
@@ -4609,6 +4620,47 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
     if (typeof window.updateOnboarding === "function") window.updateOnboarding(holdings.length);
     const snapshots = state.portfolio.snapshots || [];
     const metrics = computeMetrics(holdings, snapshots, state.riskWindow);
+
+    /*
+     * Concentration, measured on what is actually owned.
+     *
+     * computeMetrics counts an ETF as one position, so a book of three
+     * trackers read as three holdings when it was several hundred companies —
+     * and concentration measured on wrappers is always lower than the truth,
+     * which is the one direction a risk figure must not be wrong in. Where the
+     * funds have been resolved, these come from the effective book instead.
+     *
+     * Falls back to the wrapper figures on its own: a portfolio of ordinary
+     * shares has no look-through to do, and the two agree for it anyway.
+     */
+    const lookThrough = state.lookThrough;
+    const concentrationBasis = lookThrough ? "securities" : "holdings";
+    const effectiveTop3Pct = lookThrough && Number.isFinite(lookThrough.top3ConcentrationPct)
+      ? lookThrough.top3ConcentrationPct
+      : metrics.top3ConcentrationPct;
+    const effectiveHhi = lookThrough && Number.isFinite(lookThrough.hhi)
+      ? lookThrough.hhi
+      : metrics.hhi;
+    /*
+     * Sectors only where the look-through actually has them.
+     *
+     * A filing classifies the issuer, not the business, so an S&P 500 tracker
+     * resolved from N-PORT reports one category — "Corporate issuer" — for
+     * every holding. Substituting that for the sector chart would replace a
+     * rough breakdown with a single bar at 100%, which is worse. An issuer
+     * file with real sectors is better than the wrapper's, and gets used.
+     */
+    const effectiveSectors = lookThrough
+      && (lookThrough.bySector || []).length
+      && !lookThrough.sectorsAreIssuerCategories
+      ? lookThrough.bySector.map((item) => ({ name: item.label, pct: Number(item.pct) || 0 }))
+      : metrics.sectorAllocation;
+    // The score reads concentration too, so it has to see the same figures or
+    // the panel disagrees with itself.
+    const scoreMetrics = lookThrough
+      ? { ...metrics, top3ConcentrationPct: effectiveTop3Pct, hhi: effectiveHhi }
+      : metrics;
+
     const today = computeTodayChange(holdings, snapshots, state.portfolio.lastPriceRefreshAt || "");
     const effectiveVar95Pct = metrics.var95Pct ?? state.historicalRiskEstimate?.var95Pct ?? null;
     const effectiveCvar95Pct = metrics.cvar95Pct ?? state.historicalRiskEstimate?.cvar95Pct ?? null;
@@ -4632,7 +4684,7 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
     const usingYahooBeta = Number.isFinite(state.historicalRiskEstimate?.betaToBenchmark);
     const usingYahooTrackingError = Number.isFinite(state.historicalRiskEstimate?.trackingErrorAnnualPct);
     const isPro = Boolean(state.sessionUser?.proEnabled);
-    const riskScore = computeRiskScore(metrics, metrics.dailyReturns.length, state.holdingsAi, isPro);
+    const riskScore = computeRiskScore(scoreMetrics, metrics.dailyReturns.length, state.holdingsAi, isPro);
 
     const latestReportDate = holdings.reduce((max, item) => (String(item.reportDate || "") > String(max) ? item.reportDate : max), "");
     const latestPriceTime = state.portfolio.lastPriceRefreshAt || state.portfolio.updatedAt || "";
@@ -4651,11 +4703,11 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
     const stale = holdings.filter((holding) => !Number.isFinite(holding.price) || holding.price <= 0).length;
     const confidence = metrics.dailyReturns.length >= 63 ? "High" : metrics.dailyReturns.length >= 20 ? "Medium" : "Low";
     const signalRiskBars = [
-      { label: "Concentration", value: normalizePenalty(metrics.top3ConcentrationPct, 30, 75) * 100, tone: "purple" },
+      { label: "Concentration", value: normalizePenalty(effectiveTop3Pct, 30, 75) * 100, tone: "purple" },
       { label: "VaR 95%", value: normalizePenalty(effectiveVar95Pct, 0.7, 3.2) * 100, tone: "pink" },
       { label: "Drawdown", value: normalizePenalty(effectiveMaxDrawdownPct, 6, 25) * 100, tone: "orange" },
       { label: "Volatility", value: normalizePenalty(effectiveVolatilityPct, 8, 30) * 100, tone: "amber" },
-      { label: "HHI", value: normalizePenalty(metrics.hhi, 1500, 4000) * 100, tone: "purple" },
+      { label: "HHI", value: normalizePenalty(effectiveHhi, 1500, 4000) * 100, tone: "purple" },
       { label: "Largest Account", value: normalizePenalty(metrics.largestAccountPct, 45, 85) * 100, tone: "pink" },
       { label: "Source Mix", value: normalizePenalty(metrics.sourceRiskLoad, 0.55, 1.35) * 100, tone: "amber" },
       { label: "Data Quality Risk", value: (1 - clamp(metrics.dailyReturns.length / 63, 0, 1)) * 100, tone: "soft" },
@@ -4683,7 +4735,7 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
       width: (item.magnitude / moverScale) * 100,
       tone: item.pct >= 0 ? "pos" : "neg",
     }));
-    const top3SectorPct = metrics.sectorAllocation.slice(0, 3).reduce((total, item) => total + (Number(item?.pct) || 0), 0);
+    const top3SectorPct = effectiveSectors.slice(0, 3).reduce((total, item) => total + (Number(item?.pct) || 0), 0);
 
     setText("meta-holdings-count", `${holdings.length} positions`);
     setText("meta-latest-report", latestReportDate ? formatDate(latestReportDate) : "—");
@@ -4736,7 +4788,7 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
         ? `Drawdown measures peak-to-trough decline. Your current max drawdown sits at ${formatPercent(effectiveMaxDrawdownPct, { negative: true, decimals: 1 })} over the selected window.`
         : "Drawdown measures peak-to-trough decline across the latest portfolio history window.",
     );
-    renderSignalSectorBars(metrics.sectorAllocation.slice(0, 6).map((item) => ({ label: String(item.name || "—"), pct: Number(item.pct) || 0 })));
+    renderSignalSectorBars(effectiveSectors.slice(0, 6).map((item) => ({ label: String(item.name || "—"), pct: Number(item.pct) || 0 })));
     setText("signal-sector-badge", `Top-3 = ${formatPercent(top3SectorPct, { decimals: 0 })}`);
     setText(
       "signal-sector-footer",
@@ -4756,20 +4808,24 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
 
     setText("risk-score", riskScore ? `${riskScore.score} / 100` : "—");
     setText("risk-score-sub", riskScore ? riskScore.label : "Insufficient history");
-    setText("risk-top3", formatPercent(metrics.top3ConcentrationPct, { decimals: 1 }));
-    setText("risk-top3-sub", metrics.top3ConcentrationPct >= 40 ? "High concentration" : "Balanced concentration");
-    setText("risk-hhi", Number.isFinite(metrics.hhi) ? Number(metrics.hhi).toLocaleString("en-AU", { maximumFractionDigits: 0 }) : "—");
+    setText("risk-top3", formatPercent(effectiveTop3Pct, { decimals: 1 }));
+    // The basis goes on the line, because a reader comparing this with the
+    // holdings table needs to know it is not counting the same things.
+    setText("risk-top3-sub",
+      (effectiveTop3Pct >= 40 ? "High concentration" : "Balanced concentration")
+      + " · of " + concentrationBasis);
+    setText("risk-hhi", Number.isFinite(effectiveHhi) ? Number(effectiveHhi).toLocaleString("en-AU", { maximumFractionDigits: 0 }) : "—");
     setText(
       "risk-hhi-sub",
-      metrics.hhi >= 2500
+      (effectiveHhi >= 2500
         ? "High concentration"
-        : metrics.hhi >= 1500
+        : effectiveHhi >= 1500
           ? "Moderate concentration"
-          : "Diversified",
+          : "Diversified") + " · of " + concentrationBasis,
     );
     setClass(
       "risk-hhi",
-      `risk-val ${metrics.hhi >= 2500 ? "danger" : metrics.hhi >= 1500 ? "purple" : ""}`.trim(),
+      `risk-val ${effectiveHhi >= 2500 ? "danger" : effectiveHhi >= 1500 ? "purple" : ""}`.trim(),
     );
     setText("risk-rsi", Number.isFinite(effectiveRsi) ? Number(effectiveRsi).toFixed(1) : "—");
     setText(
@@ -5043,7 +5099,7 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
       label: item.name,
       color: [P, O, P2, "rgba(198, 98, 16, .75)"][index] || "rgba(87, 16, 198, .18)",
     }));
-    const sectorSlices = metrics.sectorAllocation.slice(0, 4).map((item, index) => ({
+    const sectorSlices = effectiveSectors.slice(0, 4).map((item, index) => ({
       pct: item.pct,
       label: item.name,
       color: [P, O, P2, "rgba(198, 98, 16, .72)"][index] || "rgba(87, 16, 198, .16)",
@@ -6632,6 +6688,18 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
       .then(function (d) {
         if (!d) return;
         render(d);
+        /*
+         * Hand it to the main render too.
+         *
+         * The headline Risk Signals panel draws before this request returns,
+         * so concentration there was always the wrapper figure. Storing the
+         * result and re-rendering is how state.historicalRiskEstimate already
+         * works, and it keeps the page useful while this is still in flight.
+         */
+        if (window.state && d.lookThrough && d.lookThrough.hasLookThrough !== false) {
+          window.state.lookThrough = d.lookThrough;
+          if (window.renderPortfolio) window.renderPortfolio();
+        }
         // Same payload, so the risk table costs no extra request.
         if (window.renderHoldingRisk) window.renderHoldingRisk(d);
         // The fund list needs its own call: constituents are not in this one.

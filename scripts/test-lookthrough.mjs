@@ -464,6 +464,22 @@ const hold = (ticker, value, name = ticker) => ({ ticker, name, value });
     !f13.isPortfolioFiler(3571));
   check("a missing code declines rather than assumes",
     !f13.isPortfolioFiler(null) && !f13.isPortfolioFiler(undefined) && !f13.isPortfolioFiler(NaN));
+  /*
+   * A real portfolio mixes sources. A filing's categories beside directly-held
+   * shares that carry no sector gives ["Corporate issuer", "Unclassified"], and
+   * requiring every label to be a known category read that as a genuine sector
+   * breakdown — which then replaced the sector chart with a single bar.
+   */
+  const fsec = await import(join(outDir, "lib/fund-sec.js"));
+  check("issuer categories are recognised as such",
+    fsec.isIssuerCategorySet(["Corporate issuer", "Registered fund"]));
+  check("and still are beside unclassified holdings",
+    fsec.isIssuerCategorySet(["Corporate issuer", "Unclassified", "Registered fund"]));
+  check("real sectors are not mistaken for them",
+    !fsec.isIssuerCategorySet(["Materials", "Financials", "Unclassified"]));
+  check("nothing classified at all is not a categorisation",
+    !fsec.isIssuerCategorySet(["Unclassified"]) && !fsec.isIssuerCategorySet([]));
+
   check("the range stops where finance stops",
     f13.isPortfolioFiler(6000) && f13.isPortfolioFiler(6799)
     && !f13.isPortfolioFiler(5999) && !f13.isPortfolioFiler(6800));

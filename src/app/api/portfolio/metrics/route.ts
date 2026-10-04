@@ -21,6 +21,7 @@ import { guardDemoGuest, resolvePortfolioActor } from "@/lib/portfolio-actor";
 import { estimateHistoricalRiskFromYahoo, readPortfolioState } from "@/lib/db";
 import { computeMetrics, displayHoldingLabel, type PortfolioHolding, type RiskWindow } from "@/lib/portfolio";
 import { runMonteCarlo, stressScenarios } from "@/lib/quant";
+import { isIssuerCategorySet } from "@/lib/fund-sec";
 import { lookThroughPortfolio } from "@/lib/lookthrough-service";
 
 export const runtime = "nodejs";
@@ -212,6 +213,19 @@ export async function GET(request: NextRequest) {
           })),
           byCountry: lookThrough.byCountry.slice(0, 15),
           bySector: lookThrough.bySector.slice(0, 15),
+          /*
+           * Whether that is a sector breakdown at all.
+           *
+           * N-PORT classifies the issuer and not the business, so for a fund
+           * resolved from a filing every line reads "Corporate issuer". The
+           * look-through sector mix is therefore better than the wrapper's for
+           * an issuer file that carries real sectors and worse for a filing
+           * that does not, and the page needs to know which it has rather than
+           * replacing a sector chart with one category at 100%.
+           */
+          sectorsAreIssuerCategories: isIssuerCategorySet(
+            lookThrough.bySector.map((item) => item.label),
+          ),
           byAssetClass: lookThrough.byAssetClass.slice(0, 10),
           unresolved: lookThrough.unresolved,
           sources: lookThrough.sources,

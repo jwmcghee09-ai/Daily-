@@ -93,7 +93,7 @@ const series = (values, from = 0) =>
   // The point of the whole exercise: blending the pieces reproduces the fund,
   // so the portfolio's own risk figures cannot move.
   check("blending the pieces back gives the fund's own return",
-    dates.every((d, i) =>
+    dates.every((d) =>
       near(0.3 * apple.get(d) + 0.2 * msft.get(d) + 0.5 * tail.get(d), fund.get(d))),
     "exact to 1e-9");
 }

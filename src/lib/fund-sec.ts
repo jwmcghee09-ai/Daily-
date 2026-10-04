@@ -159,10 +159,20 @@ export const NPORT_ISSUER_CATEGORIES: Readonly<Record<string, string>> = {
   O: "Other",
 };
 
-/** Whether a set of labels is N-PORT issuer categories rather than sectors. */
+/**
+ * Whether a set of labels is N-PORT issuer categories rather than sectors.
+ *
+ * "Unclassified" is ignored, not counted against. A portfolio mixing a filing
+ * with directly-held shares that carry no sector produces
+ * ["Corporate issuer", "Unclassified", "Registered fund"], and requiring every
+ * label to be a known category read that as a real sector breakdown — which
+ * then replaced the sector chart with one bar.
+ */
 export function isIssuerCategorySet(labels: readonly string[]): boolean {
   const known = new Set(Object.values(NPORT_ISSUER_CATEGORIES));
-  const present = labels.filter((l) => String(l ?? "").trim().length > 0);
+  const present = labels
+    .map((l) => String(l ?? "").trim())
+    .filter((l) => l.length > 0 && l.toLowerCase() !== "unclassified");
   return present.length > 0 && present.every((l) => known.has(l));
 }
 
