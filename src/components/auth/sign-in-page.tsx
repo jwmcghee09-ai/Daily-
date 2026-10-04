@@ -38,6 +38,7 @@ export default function SignInPage({
   verificationState,
   initialSubMode,
   initialResetToken,
+  nextPath,
 }: {
   authenticatedUser: { email: string; displayName: string } | null;
   initialMode: AuthMode;
@@ -45,6 +46,18 @@ export default function SignInPage({
   verificationState: string | null;
   initialSubMode?: string;
   initialResetToken?: string;
+  /**
+   * Where to go once signed in, instead of the dashboard.
+   *
+   * Set when something sent the user here mid-flow and needs them back —
+   * connecting an AI assistant is the first: it lands on the authorization
+   * endpoint, finds no session, and the person must return to the exact request
+   * they interrupted or the connection silently fails.
+   *
+   * Validated server-side to a same-origin path; an open redirect on a sign-in
+   * page is a phishing primitive.
+   */
+  nextPath?: string | null;
 }) {
   const router = useRouter();
   const [authMode, setAuthMode] = useState<AuthMode>(initialMode);
@@ -188,6 +201,13 @@ export default function SignInPage({
       setPassword("");
       setAcceptTerms(false);
       setBanner({ tone: "success", message: `Welcome, ${normalizedUser.displayName}.` });
+
+      if (nextPath) {
+        // A full navigation, not a client-side push: the destination may be a
+        // route handler rather than a page.
+        window.location.assign(nextPath);
+        return;
+      }
 
       if (selectedPlan === "free") {
         router.push("/dashboard?mode=account");

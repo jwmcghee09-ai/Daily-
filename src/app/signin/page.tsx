@@ -18,6 +18,17 @@ export default async function SignInRoute(props: { searchParams: SearchParams })
   const token = readSingleParam(searchParams.token);
   const initialSubMode = flow === "reset" ? "reset" : "default";
   const initialResetToken = flow === "reset" && token ? token : "";
+  /*
+   * Where to return after signing in.
+   *
+   * Only a same-origin path, and never one that starts with "//" — a protocol-
+   * relative URL reads as a path and navigates off-site, which is how a sign-in
+   * page becomes a phishing redirect.
+   */
+  const requestedNext = readSingleParam(searchParams.next);
+  const nextPath = requestedNext && requestedNext.startsWith("/") && !requestedNext.startsWith("//")
+    ? requestedNext
+    : null;
 
   return (
     <SignInPage
@@ -27,6 +38,7 @@ export default async function SignInRoute(props: { searchParams: SearchParams })
       verificationState={readSingleParam(searchParams.verified)}
       initialSubMode={initialSubMode}
       initialResetToken={initialResetToken}
+      nextPath={nextPath}
     />
   );
 }

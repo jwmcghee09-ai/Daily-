@@ -417,6 +417,65 @@ function initSchema(db: DatabaseSync): void {
      * with no US or ASX composite listing, which stays inside its fund's own
      * price series rather than being priced wrongly.
      */
+    /*
+     * OAuth 2.1, so an AI client can reach the account without a terminal.
+     *
+     * The MCP connector used to be a zip you downloaded, unzipped and ran a
+     * setup command for. A remote MCP server is a URL pasted into a settings
+     * box — but only if something can issue it tokens, and the client registers
+     * itself rather than being configured by hand (RFC 7591), because Claude
+     * has no way to know about SPECTRE in advance and a human should not have
+     * to broker that.
+     *
+     * Three tables: who registered, codes in flight, and tokens issued. All of
+     * it sits on top of the accounts that already exist — authorising is a
+     * signed-in user pressing a button, not a second identity system.
+     */
+    CREATE TABLE IF NOT EXISTS oauth_clients (
+      client_id TEXT PRIMARY KEY,
+      client_secret_hash TEXT NOT NULL DEFAULT '',
+      client_name TEXT NOT NULL DEFAULT '',
+      redirect_uris TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    );
+
+    /*
+     * Authorization codes. Single use and short lived, holding the PKCE
+     * challenge the client must prove it knows, and the resource the resulting
+     * token is for — a token minted for one resource must not work at another.
+     */
+    CREATE TABLE IF NOT EXISTS oauth_codes (
+      code_hash TEXT PRIMARY KEY,
+      client_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      redirect_uri TEXT NOT NULL,
+      code_challenge TEXT NOT NULL,
+      scope TEXT NOT NULL DEFAULT '',
+      resource TEXT NOT NULL DEFAULT '',
+      expires_at TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    );
+
+    /*
+     * Access and refresh tokens, stored as hashes: a leaked database should not
+     * hand over working credentials. The audience is checked on every MCP request
+     * — a token issued for something else must be refused, which is the whole
+     * point of the resource parameter.
+     */
+    CREATE TABLE IF NOT EXISTS oauth_tokens (
+      token_hash TEXT PRIMARY KEY,
+      kind TEXT NOT NULL,
+      client_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      scope TEXT NOT NULL DEFAULT '',
+      audience TEXT NOT NULL DEFAULT '',
+      expires_at TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_oauth_tokens_user ON oauth_tokens (user_id);
+    CREATE INDEX IF NOT EXISTS idx_oauth_tokens_expiry ON oauth_tokens (expires_at);
+
     CREATE TABLE IF NOT EXISTS security_symbols (
       id_key TEXT PRIMARY KEY,
       symbol TEXT NOT NULL DEFAULT '',
@@ -5342,6 +5401,194 @@ export function readInstrumentKind(ticker: string): StoredInstrumentKind | null 
     exchange: row.exchange ?? "",
     basis: row.basis ?? "",
   };
+}
+
+// ── OAuth storage ───────────────────────────────────────────────────────────
+//
+// Credentials are stored hashed and nothing here returns a usable token: the
+// caller holds the only copy from the moment it is minted. Expiry is checked on
+// read rather than swept, so a stale row can never be honoured even if the
+// sweep has not run.
+
+export interface StoredOAuthClient {
+  clientId: string;
+  clientSecretHash: string;
+  clientName: string;
+  redirectUris: string;
+}
+
+export function writeOAuthClient(entry: StoredOAuthClient): void {
+  getDb()
+    .prepare(
+      `INSERT INTO oauth_clients (client_id, client_secret_hash, client_name, redirect_uris, created_at)
+       VALUES (?, ?, ?, ?, ?)
+       ON CONFLICT(client_id) DO UPDATE SET
+         client_secret_hash = excluded.client_secret_hash,
+         client_name = excluded.client_name,
+         redirect_uris = excluded.redirect_uris`,
+    )
+    .run(
+      entry.clientId,
+      entry.clientSecretHash,
+      entry.clientName.slice(0, 200),
+      entry.redirectUris.slice(0, 4000),
+      new Date().toISOString(),
+    );
+}
+
+export function readOAuthClient(clientId: string): StoredOAuthClient | null {
+  const row = getDb()
+    .prepare("SELECT client_id, client_secret_hash, client_name, redirect_uris FROM oauth_clients WHERE client_id = ?")
+    .get(clientId) as
+      | { client_id: string; client_secret_hash: string; client_name: string; redirect_uris: string }
+      | undefined;
+  if (!row) return null;
+  return {
+    clientId: row.client_id,
+    clientSecretHash: row.client_secret_hash ?? "",
+    clientName: row.client_name ?? "",
+    redirectUris: row.redirect_uris ?? "[]",
+  };
+}
+
+export interface StoredOAuthCode {
+  codeHash: string;
+  clientId: string;
+  userId: string;
+  redirectUri: string;
+  codeChallenge: string;
+  scope: string;
+  resource: string;
+  expiresAt: string;
+}
+
+export function writeOAuthCode(entry: StoredOAuthCode): void {
+  getDb()
+    .prepare(
+      `INSERT INTO oauth_codes
+         (code_hash, client_id, user_id, redirect_uri, code_challenge, scope, resource, expires_at, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    )
+    .run(
+      entry.codeHash, entry.clientId, entry.userId, entry.redirectUri,
+      entry.codeChallenge, entry.scope, entry.resource, entry.expiresAt,
+      new Date().toISOString(),
+    );
+}
+
+/**
+ * Read a code and delete it in the same breath.
+ *
+ * Single use is the point: an authorization code replayed is an account taken
+ * over. Deleting before the caller has a chance to fail means a code cannot be
+ * redeemed twice even if the exchange throws halfway through.
+ */
+export function consumeOAuthCode(codeHash: string): StoredOAuthCode | null {
+  const db = getDb();
+  const row = db
+    .prepare(
+      `SELECT code_hash, client_id, user_id, redirect_uri, code_challenge, scope, resource, expires_at
+       FROM oauth_codes WHERE code_hash = ?`,
+    )
+    .get(codeHash) as
+      | { code_hash: string; client_id: string; user_id: string; redirect_uri: string;
+          code_challenge: string; scope: string; resource: string; expires_at: string }
+      | undefined;
+
+  db.prepare("DELETE FROM oauth_codes WHERE code_hash = ?").run(codeHash);
+  // Opportunistic: codes are tiny and expire in ten minutes, so there is no
+  // reason to keep yesterday's around.
+  db.prepare("DELETE FROM oauth_codes WHERE expires_at < ?").run(new Date().toISOString());
+
+  if (!row) return null;
+  if (new Date(row.expires_at).getTime() <= Date.now()) return null;
+
+  return {
+    codeHash: row.code_hash,
+    clientId: row.client_id,
+    userId: row.user_id,
+    redirectUri: row.redirect_uri,
+    codeChallenge: row.code_challenge,
+    scope: row.scope ?? "",
+    resource: row.resource ?? "",
+    expiresAt: row.expires_at,
+  };
+}
+
+export interface StoredOAuthToken {
+  tokenHash: string;
+  kind: "access" | "refresh";
+  clientId: string;
+  userId: string;
+  scope: string;
+  audience: string;
+  expiresAt: string;
+}
+
+export function writeOAuthToken(entry: StoredOAuthToken): void {
+  getDb()
+    .prepare(
+      `INSERT INTO oauth_tokens (token_hash, kind, client_id, user_id, scope, audience, expires_at, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT(token_hash) DO UPDATE SET
+         expires_at = excluded.expires_at`,
+    )
+    .run(
+      entry.tokenHash, entry.kind, entry.clientId, entry.userId,
+      entry.scope, entry.audience, entry.expiresAt, new Date().toISOString(),
+    );
+}
+
+/** A live token of the requested kind, or null — expiry is enforced here. */
+export function readOAuthToken(tokenHash: string, kind: "access" | "refresh"): StoredOAuthToken | null {
+  const row = getDb()
+    .prepare(
+      `SELECT token_hash, kind, client_id, user_id, scope, audience, expires_at
+       FROM oauth_tokens WHERE token_hash = ? AND kind = ?`,
+    )
+    .get(tokenHash, kind) as
+      | { token_hash: string; kind: string; client_id: string; user_id: string;
+          scope: string; audience: string; expires_at: string }
+      | undefined;
+  if (!row) return null;
+  if (new Date(row.expires_at).getTime() <= Date.now()) return null;
+
+  return {
+    tokenHash: row.token_hash,
+    kind: row.kind === "refresh" ? "refresh" : "access",
+    clientId: row.client_id,
+    userId: row.user_id,
+    scope: row.scope ?? "",
+    audience: row.audience ?? "",
+    expiresAt: row.expires_at,
+  };
+}
+
+export function revokeOAuthToken(tokenHash: string): void {
+  getDb().prepare("DELETE FROM oauth_tokens WHERE token_hash = ?").run(tokenHash);
+}
+
+/** Everything a user has granted, for a settings screen and for revoking. */
+export function listOAuthGrants(userId: string): Array<{ clientId: string; clientName: string; createdAt: string }> {
+  const rows = getDb()
+    .prepare(
+      `SELECT t.client_id AS client_id, MIN(t.created_at) AS created_at,
+              COALESCE(c.client_name, '') AS client_name
+       FROM oauth_tokens t
+       LEFT JOIN oauth_clients c ON c.client_id = t.client_id
+       WHERE t.user_id = ? AND t.kind = 'refresh' AND t.expires_at > ?
+       GROUP BY t.client_id`,
+    )
+    .all(userId, new Date().toISOString()) as
+      Array<{ client_id: string; created_at: string; client_name: string }>;
+  return rows.map((r) => ({ clientId: r.client_id, clientName: r.client_name, createdAt: r.created_at }));
+}
+
+export function revokeOAuthGrant(userId: string, clientId: string): number {
+  const result = getDb()
+    .prepare("DELETE FROM oauth_tokens WHERE user_id = ? AND client_id = ?")
+    .run(userId, clientId) as { changes?: number };
+  return Number(result.changes || 0);
 }
 
 // ── Security identifiers ────────────────────────────────────────────────────

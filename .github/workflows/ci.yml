@@ -182,6 +182,12 @@ jobs:
       - name: Endpoint stress (auth, rate limits, injection, races)
         run: node scripts/stress-all.mjs http://localhost:3457
 
+      # Discovery, registration, PKCE, consent, token exchange, rotation and the
+      # MCP conversation itself. Each step is a place where being subtly wrong
+      # yields a connector that looks connected and does nothing.
+      - name: Remote MCP server (OAuth + Streamable HTTP)
+        run: node scripts/test-mcp-remote.mjs http://localhost:3457
+
       # Both email suites need a signed-in account to read the forwarding
       # address, so make one and hand them its session.
       - name: Inbound email pipeline
