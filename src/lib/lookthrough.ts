@@ -86,6 +86,16 @@ export interface EffectivePosition {
    * direct for a portfolio holding $11,500 of Apple outright.
    */
   directValue: number;
+  /*
+   * Which directly-held lines contributed that value, by their own ticker.
+   *
+   * The mirror of `via` for the direct side. Needed because identity is settled
+   * during the fold and cannot be recovered afterwards: anything wanting to
+   * price this security has to know which imported line it came from, since
+   * that line carries the market it trades on — BHP is BHP.AX, Apple is AAPL —
+   * and the fund's own record of it carries an ISIN and nothing else.
+   */
+  directFrom: string[];
   /** Which wrappers contributed, and how much from each. */
   via: Array<{ fundTicker: string; value: number }>;
 }
@@ -220,9 +230,11 @@ export function buildEffectiveBook(
     rawKey: string,
     // directValue is derived from whether this arrived through a fund, so it
     // is never passed in.
-    seed: Omit<EffectivePosition, "key" | "weightPct" | "via" | "value" | "directValue">,
+    seed: Omit<EffectivePosition, "key" | "weightPct" | "via" | "value" | "directValue" | "directFrom">,
     value: number,
     viaFund: string | null,
+    /** The imported line this came from, when it did not come through a fund. */
+    directFrom?: string,
   ) => {
     // Fold onto the same issuer when one is already known under another
     // identifier, so a ticker and an ISIN for one company do not split.
@@ -234,6 +246,9 @@ export function buildEffectiveBook(
     if (existing) {
       existing.value += value;
       if (!viaFund) existing.directValue += value;
+      if (directFrom && !existing.directFrom.includes(directFrom)) {
+        existing.directFrom.push(directFrom);
+      }
       // A security held directly anywhere is a direct holding, even if other
       // dollars of it arrived through a fund.
       existing.direct = existing.direct || seed.direct;
@@ -256,6 +271,7 @@ export function buildEffectiveBook(
       ...seed,
       value,
       directValue: viaFund ? 0 : value,
+      directFrom: directFrom ? [directFrom] : [],
       weightPct: 0,
       via: viaFund ? [{ fundTicker: viaFund, value }] : [],
     });
@@ -278,7 +294,7 @@ export function buildEffectiveBook(
         name: holding.name,
         sector: holding.sector,
         direct: true,
-      }, value, null);
+      }, value, null, holding.ticker);
 
       if (composition) {
         unresolved.push({
@@ -305,7 +321,7 @@ export function buildEffectiveBook(
     if (reported <= EPSILON) {
       add(constituentKey({ ticker: holding.ticker, name: holding.name }), {
         ticker: holding.ticker, name: holding.name, sector: holding.sector, direct: true,
-      }, value, null);
+      }, value, null, holding.ticker);
       unresolved.push({
         ticker: holding.ticker, name: holding.name, value,
         reason: "Reported constituent weights summed to zero",
@@ -339,7 +355,7 @@ export function buildEffectiveBook(
           : holding.name,
         sector: holding.sector,
         direct: true,
-      }, residual, null);
+      }, residual, null, holding.ticker);
     }
 
     if (coveredValue <= EPSILON) {

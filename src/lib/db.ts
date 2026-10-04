@@ -234,6 +234,15 @@ export interface PriceRefreshResult {
 export interface HistoricalRiskEstimateResult {
   source: "yahoo_estimate";
   lessAccurateThanSnapshots: true;
+  /*
+   * Which book every figure here describes.
+   *
+   * "holdings" counts an ETF as one position. "lookthrough" counts the
+   * companies inside it, so the correlation matrix and the risk contributions
+   * name securities. Stated rather than implied, because the two can disagree
+   * and a reader needs to know which they are looking at.
+   */
+  basis: "holdings" | "lookthrough";
   note: string;
   benchmarkSymbol: string;
   benchmarkName: string;
@@ -400,6 +409,22 @@ function initSchema(db: DatabaseSync): void {
      * load, and it exists at all because the panel used to assume everything
      * was a fund and offer to read BHP's portfolio.
      */
+    /*
+     * ISIN and CUSIP to a Yahoo symbol.
+     *
+     * A fact about the security, not about any portfolio, so keyed by the
+     * identifier and shared. A blank symbol is a remembered miss: a security
+     * with no US or ASX composite listing, which stays inside its fund's own
+     * price series rather than being priced wrongly.
+     */
+    CREATE TABLE IF NOT EXISTS security_symbols (
+      id_key TEXT PRIMARY KEY,
+      symbol TEXT NOT NULL DEFAULT '',
+      market TEXT NOT NULL DEFAULT '',
+      name TEXT NOT NULL DEFAULT '',
+      checked_at TEXT NOT NULL
+    );
+
     CREATE TABLE IF NOT EXISTS instrument_kinds (
       ticker TEXT PRIMARY KEY,
       kind TEXT NOT NULL,
@@ -2318,15 +2343,484 @@ export function resetAllSessionMovers(): { resetCount: number } {
   return { resetCount: Number(result.changes || 0) };
 }
 
+// ── The look-through risk basis ─────────────────────────────────────────────
+
+/**
+ * The two things every risk figure below is computed from.
+ *
+ * Volatility, drawdown, VaR, CVaR, Cornish-Fisher VaR, beta, tracking error,
+ * Sharpe, Sortino, skew, the correlation matrix, the regime read and the
+ * per-holding contributions all derive from a set of weights and a set of
+ * aligned daily return series. Nothing else. So swapping what those two
+ * contain — wrappers, or the securities inside them — moves every one of them
+ * without touching a line of the arithmetic.
+ */
+interface RiskBasis {
+  valueByTicker: Map<string, { ticker: string; source: DataSource; value: number; label: string }>;
+  returnsByTicker: Map<string, Map<string, number>>;
+  failedTickers: string[];
+  nonLiveLabels: Set<string>;
+  outlierReturnsRemoved: number;
+  notes: string[];
+}
+
+/**
+ * How many securities get their own price series.
+ *
+ * Every directly-held line is priced regardless — those are what the account
+ * actually contains, and dropping one would change the portfolio. The cap
+ * applies to fund constituents, largest first, because a fund's long tail is
+ * already represented: whatever is not priced individually stays inside the
+ * fund's own series, which is exactly where it was.
+ */
+const LOOKTHROUGH_PRICED_CAP = 30;
+
+/**
+ * A fund is only split apart when enough of it is left over to carry the rest.
+ *
+ * The tail series is derived by subtracting the priced constituents from the
+ * fund's own return and dividing by what remains. As that remainder shrinks the
+ * division amplifies everything the subtraction could not account for — fees,
+ * tracking error, a quarter-old weight, the premium to NAV — until the tail is
+ * noise with a large weight. Below the floor the fund's value is attributed
+ * entirely to its priced constituents instead.
+ */
+const TAIL_FLOOR = 0.1;
+
+/** Yahoo tolerates this many at once; the retry path handles the rest. */
+const SERIES_CONCURRENCY = 6;
+
+/** Returns by date for one symbol, in AUD, cleaned the same way as everywhere. */
+async function returnsForSymbol(
+  symbol: string,
+  market: "us" | "asx" | "crypto",
+  range: string,
+  audUsdByDate: ReadonlyMap<string, number>,
+): Promise<{ returns: Map<string, number>; outliers: number } | null> {
+  const raw = market === "crypto"
+    ? await fetchCryptoSeriesFromYahoo(symbol, range)
+    : market === "us"
+      ? await fetchUsSeriesFromYahoo(symbol, range)
+      : await fetchAsxSeriesFromYahoo(symbol, range);
+  if (!raw || raw.length < 2) return null;
+
+  const series = (market === "us" || market === "crypto") && audUsdByDate.size > 0
+    ? convertSeriesToAud(raw, audUsdByDate)
+    : raw;
+  if (series.length < 2) return null;
+
+  const rawReturns = calculateReturnsFromPrices(series);
+  const cleaned = cleanReturnsForRisk(rawReturns);
+  if (cleaned.length < 1) return null;
+
+  return {
+    returns: new Map(
+      cleaned
+        .filter((p) => p.date.length > 0 && Number.isFinite(p.value))
+        .map((p) => [p.date, p.value]),
+    ),
+    outliers: Math.max(0, rawReturns.length - cleaned.length),
+  };
+}
+
+/** Run an async mapper over a list with a bounded number in flight. */
+async function mapBounded<T, R>(
+  items: readonly T[],
+  limit: number,
+  fn: (item: T) => Promise<R>,
+): Promise<R[]> {
+  const out = new Array<R>(items.length);
+  let next = 0;
+  const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    for (;;) {
+      const i = next;
+      next += 1;
+      if (i >= items.length) return;
+      out[i] = await fn(items[i]);
+    }
+  });
+  await Promise.all(workers);
+  return out;
+}
+
+/**
+ * What a fund does that its priced constituents do not explain.
+ *
+ * A fund's return is the weighted average of everything it holds, so once some
+ * of those holdings have their own price series the rest follows by
+ * subtraction:
+ *
+ *     r_tail = (r_fund - SUM w_i * r_i) / tailShare
+ *
+ * where w_i are the constituents' weights in the fund and tailShare is what is
+ * left. This is what keeps the reconstruction exact: blend the priced
+ * constituents back with this series at these weights and the fund's own return
+ * comes out, so the portfolio's volatility and VaR are unchanged by the
+ * decomposition and only the attribution moves.
+ *
+ * What it is not is a traded series. It absorbs everything the subtraction
+ * cannot account for — the fund's fee, its tracking error, its premium to NAV,
+ * a weight that is a quarter old — and then divides all of it by tailShare. So
+ * the line reads more volatile than the securities in it really are, by roughly
+ * 1/tailShare, which is why the fund is kept whole when tailShare is small.
+ *
+ * A date any constituent is missing cannot be decomposed and is left out,
+ * rather than charging the gap to the tail.
+ */
+export function deriveTailReturns(
+  fundReturns: ReadonlyMap<string, number>,
+  constituents: readonly { weight: number; returns: ReadonlyMap<string, number> }[],
+  tailShare: number,
+): Map<string, number> {
+  const out = new Map<string, number>();
+  if (!(tailShare > 0)) return out;
+
+  for (const [date, fundReturn] of fundReturns) {
+    if (!Number.isFinite(fundReturn)) continue;
+    let explained = 0;
+    let complete = true;
+    for (const c of constituents) {
+      const r = c.returns.get(date);
+      if (r == null || !Number.isFinite(r)) { complete = false; break; }
+      explained += c.weight * r;
+    }
+    if (!complete) continue;
+    const tail = (fundReturn - explained) / tailShare;
+    if (Number.isFinite(tail)) out.set(date, tail);
+  }
+  return out;
+}
+
+/**
+ * The risk basis measured on the securities inside the funds.
+ *
+ * The arithmetic that makes this honest is one line. A fund's return is the
+ * weighted average of what it holds, so once the priced constituents are known
+ * the rest of the fund follows by subtraction:
+ *
+ *     r_tail = (r_fund - SUM over priced i of w_i * r_i) / (1 - SUM w_i)
+ *
+ * That matters because it keeps the reconstruction exact. The portfolio built
+ * from priced securities plus derived tails has, by construction, the same
+ * return series as the portfolio built from the wrappers — so the headline
+ * volatility and VaR should barely move, and anything that moves a lot is a
+ * fault rather than a discovery. What changes is the attribution: the
+ * correlation matrix and the risk contributions name companies, and a security
+ * held both directly and inside a fund appears once, at its real weight.
+ *
+ * Returns null when nothing could be resolved, and the caller falls back to the
+ * wrapper basis rather than showing nothing.
+ */
+async function buildLookThroughRiskBasis(
+  userId: string,
+  range: string,
+): Promise<RiskBasis | null> {
+  const holdings = readPortfolioState(userId).holdings.filter((h) => Number(h.value) > 0);
+  if (holdings.length === 0) return null;
+
+  const { lookThroughCached } = await import("@/lib/lookthrough-service");
+  const { normaliseTicker } = await import("@/lib/lookthrough");
+  const { resolveSymbols, securityIdKey } = await import("@/lib/security-symbol");
+
+  const book = await lookThroughCached(
+    holdings.map((h) => ({ ticker: h.ticker, name: h.name, value: h.value, source: h.source })),
+    userId,
+  );
+  if (!book.hasLookThrough || book.positions.length === 0) return null;
+
+  // How each imported line is priced today. The authority on a directly-held
+  // security's symbol and market is the line the user imported, not a filing.
+  const byHoldingTicker = new Map<string, { symbol: string; market: "us" | "asx" | "crypto"; label: string }>();
+  const nonLiveLabels = new Set<string>();
+  for (const h of holdings) {
+    const source = normalizeSource(h.source);
+    if (source === "tax" || source === "savings") continue;
+    const pricing = getHoldingPricingDescriptor(h);
+    const symbol = sanitizeString(pricing.refreshableTicker || h.ticker, "").toUpperCase();
+    if (!symbol || !(Number(h.value) > 0)) continue;
+
+    if (pricing.mode !== "live") {
+      const rawTicker = sanitizeString(h.ticker, "").toUpperCase();
+      const name = sanitizeString(h.name, "");
+      nonLiveLabels.add(
+        isSyntheticTicker(rawTicker) && name ? name : (rawTicker || name || String(source)).toUpperCase(),
+      );
+      continue;
+    }
+    byHoldingTicker.set(normaliseTicker(h.ticker), {
+      symbol,
+      market: source === "crypto" ? "crypto" : source === "us" ? "us" : "asx",
+      label: source === "crypto" ? `${symbol} (crypto)` : symbol,
+    });
+  }
+
+  const valueOfHolding = new Map<string, number>();
+  for (const h of holdings) {
+    const t = normaliseTicker(h.ticker);
+    valueOfHolding.set(t, (valueOfHolding.get(t) ?? 0) + (Number(h.value) || 0));
+  }
+
+  /*
+   * Which positions to price.
+   *
+   * A directly-held line first and unconditionally: it is in the account, it is
+   * priced today, and leaving it out would be a regression. Then the largest
+   * fund constituents up to the cap. A position that is both — Apple held
+   * outright and inside an S&P 500 tracker — is one position and is priced once.
+   */
+  const ranked = [...book.positions]
+    .filter((p) => Number.isFinite(p.value) && p.value > 0)
+    .sort((a, b) => b.value - a.value);
+
+  const directFirst = ranked.filter((p) => p.directFrom.some((t) => byHoldingTicker.has(normaliseTicker(t))));
+  const rest = ranked.filter((p) => !directFirst.includes(p));
+  const candidates = [
+    ...directFirst,
+    ...rest.slice(0, Math.max(0, LOOKTHROUGH_PRICED_CAP - directFirst.length)),
+  ];
+
+  // Identifiers for the ones with no imported line behind them: a filing names
+  // them by ISIN and CUSIP and never by ticker.
+  const needMapping = candidates.filter(
+    (p) => !p.directFrom.some((t) => byHoldingTicker.has(normaliseTicker(t))),
+  );
+  const mapped = await resolveSymbols(
+    needMapping.map((p) => ({ isin: p.isin, cusip: p.cusip })),
+    { maxRequests: 6 },
+  ).catch(() => new Map());
+
+  interface Priced { key: string; label: string; symbol: string; market: "us" | "asx" | "crypto" }
+  const priced = new Map<string, Priced>();
+  for (const p of candidates) {
+    const own = p.directFrom
+      .map((t) => byHoldingTicker.get(normaliseTicker(t)))
+      .find((x) => x !== undefined);
+    if (own) {
+      priced.set(p.key, { key: p.key, label: p.name || own.label, symbol: own.symbol, market: own.market });
+      continue;
+    }
+    const idKey = securityIdKey({ isin: p.isin, cusip: p.cusip });
+    const hit = idKey ? mapped.get(idKey) : undefined;
+    if (hit) priced.set(p.key, { key: p.key, label: p.name || hit.symbol, symbol: hit.symbol, market: hit.market });
+  }
+
+  if (priced.size === 0) return null;
+
+  // Every fund the book resolved needs its own series too, both to derive its
+  // tail and to fall back on if the decomposition cannot be trusted.
+  const fundTickers = [...new Set(book.sources.map((s) => normaliseTicker(s.fundTicker)))]
+    .filter((t) => byHoldingTicker.has(t));
+
+  const needsFx = [...priced.values()].some((p) => p.market !== "asx")
+    || fundTickers.some((t) => byHoldingTicker.get(t)?.market !== "asx");
+  const audUsdByDate = needsFx ? await fetchAudUsdByDate(range) : new Map<string, number>();
+
+  const notes: string[] = [];
+  if (needsFx && audUsdByDate.size === 0) {
+    notes.push("AUD/USD history was unavailable, so US returns are measured in USD while their "
+      + "weights are in AUD — currency movement is missing from these figures.");
+  }
+
+  let outlierReturnsRemoved = 0;
+  const failedTickers: string[] = [];
+
+  const securitySeries = new Map<string, Map<string, number>>();
+  const fetched = await mapBounded([...priced.values()], SERIES_CONCURRENCY, async (p) =>
+    ({ p, got: await returnsForSymbol(p.symbol, p.market, range, audUsdByDate).catch(() => null) }));
+  for (const { p, got } of fetched) {
+    if (!got) { failedTickers.push(p.label); continue; }
+    securitySeries.set(p.key, got.returns);
+    outlierReturnsRemoved += got.outliers;
+  }
+
+  const fundSeries = new Map<string, Map<string, number>>();
+  const fundFetched = await mapBounded(fundTickers, SERIES_CONCURRENCY, async (t) => {
+    const own = byHoldingTicker.get(t)!;
+    return { t, got: await returnsForSymbol(own.symbol, own.market, range, audUsdByDate).catch(() => null) };
+  });
+  for (const { t, got } of fundFetched) {
+    if (!got) continue;
+    fundSeries.set(t, got.returns);
+    outlierReturnsRemoved += got.outliers;
+  }
+
+  // ── Assemble ──────────────────────────────────────────────────────────────
+  const valueByTicker: RiskBasis["valueByTicker"] = new Map();
+  const returnsByTicker: RiskBasis["returnsByTicker"] = new Map();
+
+  const addValue = (key: string, label: string, ticker: string, source: DataSource, value: number) => {
+    const existing = valueByTicker.get(key);
+    valueByTicker.set(key, {
+      ticker, source, label,
+      value: (existing?.value ?? 0) + value,
+    });
+  };
+  const marketToSource = (m: "us" | "asx" | "crypto"): DataSource =>
+    m === "crypto" ? "crypto" : m === "us" ? "us" : "asx";
+
+  /*
+   * The effective position a directly-held line fed.
+   *
+   * `directFrom` is recorded during the fold, where the issuer-name match has
+   * already decided that the user's AAPL and a filing's US0378331005 are one
+   * company. Reading it back is how the direct parcel lands on the same key as
+   * the fund's slice of the same company.
+   */
+  const positionFor = (holdingTicker: string) =>
+    book.positions.find((p) => p.directFrom.some((t) => normaliseTicker(t) === holdingTicker));
+
+  let decomposed = 0;
+  let keptWhole = 0;
+
+  for (const holding of holdings) {
+    const ticker = normaliseTicker(holding.ticker);
+    const own = byHoldingTicker.get(ticker);
+    const value = Number(holding.value) || 0;
+    if (!own || value <= 0) continue;
+
+    const isResolvedFund = fundSeries.has(ticker);
+    if (!isResolvedFund) {
+      /*
+       * Not a fund, or a fund whose own series could not be read. Either way it
+       * stands as itself — but under the effective book's key for it, not under
+       * its own ticker.
+       *
+       * That distinction is the whole point. A portfolio holding NVIDIA
+       * outright and an S&P 500 tracker has one NVIDIA exposure, and keying the
+       * direct parcel separately split it in two: the risk table showed "NVDA
+       * 12.4%" beside "NVIDIA Corp. 5.0%" and the correlation matrix carried
+       * both, which is the understatement this engine exists to remove,
+       * reintroduced one layer down.
+       */
+      const position = positionFor(ticker);
+      const pricedHere = position ? priced.get(position.key) : undefined;
+      if (position && pricedHere && securitySeries.has(position.key)) {
+        addValue(position.key, position.name || own.label, pricedHere.symbol,
+          marketToSource(pricedHere.market), value);
+        returnsByTicker.set(position.key, securitySeries.get(position.key)!);
+        continue;
+      }
+
+      // Past the priced cap, or unpriceable from the book: price it on its own,
+      // since a line the account actually holds must never drop out.
+      const got = await returnsForSymbol(own.symbol, own.market, range, audUsdByDate).catch(() => null);
+      if (!got) { failedTickers.push(own.label); continue; }
+      outlierReturnsRemoved += got.outliers;
+      const key = position?.key ?? `${marketToSource(own.market)}:${own.symbol}`;
+      addValue(key, position?.name || own.label, own.symbol, marketToSource(own.market), value);
+      returnsByTicker.set(key, got.returns);
+      continue;
+    }
+
+    // What this fund routed to securities we can price.
+    const contributions: Array<{ key: string; value: number }> = [];
+    for (const p of book.positions) {
+      const slice = p.via.find((v) => normaliseTicker(v.fundTicker) === ticker);
+      if (!slice || !(slice.value > 0)) continue;
+      if (!securitySeries.has(p.key)) continue;
+      contributions.push({ key: p.key, value: slice.value });
+    }
+
+    const pricedShare = contributions.reduce((sum, c) => sum + c.value, 0) / value;
+    if (!(pricedShare > 0)) {
+      const key = `${marketToSource(own.market)}:${own.symbol}`;
+      addValue(key, own.label, own.symbol, marketToSource(own.market), value);
+      returnsByTicker.set(key, fundSeries.get(ticker)!);
+      keptWhole += 1;
+      continue;
+    }
+
+    const tailShare = 1 - Math.min(1, pricedShare);
+    const rescale = tailShare <= TAIL_FLOOR;
+
+    for (const c of contributions) {
+      const p = priced.get(c.key)!;
+      addValue(c.key, p.label, p.symbol, marketToSource(p.market), rescale ? c.value / pricedShare : c.value);
+      returnsByTicker.set(c.key, securitySeries.get(c.key)!);
+    }
+
+    if (!rescale) {
+      /*
+       * The rest of the fund, as its own line, with the series the subtraction
+       * leaves. Named for what it is: everything in the fund that is not shown
+       * separately, which includes the long tail and anything the filing did
+       * not cover.
+       */
+      const fundReturns = fundSeries.get(ticker)!;
+      const tail = deriveTailReturns(
+        fundReturns,
+        contributions.map((c) => ({ weight: c.value / value, returns: securitySeries.get(c.key)! })),
+        tailShare,
+      );
+
+      if (tail.size >= 2) {
+        const key = `tail:${ticker}`;
+        addValue(key, `${ticker} — rest of the fund`, ticker, marketToSource(own.market), value * tailShare);
+        returnsByTicker.set(key, tail);
+      } else {
+        // Could not decompose: keep the fund whole rather than lose its value.
+        for (const c of contributions) {
+          valueByTicker.delete(c.key);
+          returnsByTicker.delete(c.key);
+        }
+        const key = `${marketToSource(own.market)}:${own.symbol}`;
+        addValue(key, own.label, own.symbol, marketToSource(own.market), value);
+        returnsByTicker.set(key, fundReturns);
+        keptWhole += 1;
+        continue;
+      }
+    }
+    decomposed += 1;
+  }
+
+  // Anything with a weight but no series would silently drop out of the blend.
+  for (const key of [...valueByTicker.keys()]) {
+    if (!returnsByTicker.has(key)) valueByTicker.delete(key);
+  }
+
+  if (returnsByTicker.size === 0) return null;
+
+  notes.push(
+    `Measured on ${returnsByTicker.size} securities rather than ${holdings.length} holdings: `
+    + `${decomposed} fund${decomposed === 1 ? "" : "s"} broken into constituents`
+    + (keptWhole > 0 ? `, ${keptWhole} kept whole` : "")
+    + ". Whatever is not priced separately stays in one line per fund, derived from the fund's "
+    + "own price history, so the portfolio totals match the holdings view exactly while the "
+    + "attribution names companies. That line is a remainder rather than a traded security: it "
+    + "carries the fund's fee and tracking error as well as its untouched holdings, so its own "
+    + "volatility reads higher than the shares inside it.",
+  );
+  if (needsFx && audUsdByDate.size > 0) {
+    notes.push("US returns are converted to AUD through AUD/USD.");
+  }
+
+  return {
+    valueByTicker, returnsByTicker, failedTickers, nonLiveLabels, outlierReturnsRemoved, notes,
+  };
+}
+
+export interface HistoricalRiskOptions {
+  /**
+   * "lookthrough" measures the securities inside each fund, falling back to
+   * "holdings" when nothing could be resolved — a portfolio of shares has no
+   * look-through to do and must still get its numbers.
+   */
+  basis?: "holdings" | "lookthrough";
+}
+
 export async function estimateHistoricalRiskFromYahoo(
   userId: string,
   riskWindow: RiskWindow = "3M",
+  options: HistoricalRiskOptions = {},
 ): Promise<HistoricalRiskEstimateResult> {
   const db = getDb();
   const scopedPattern = userLikePattern(userId);
   const windowSettings = RISK_WINDOW_SETTINGS[riskWindow];
   const benchmarkSymbol = "^AXJO";
   const benchmarkName = "ASX 200";
+  // Set to "lookthrough" only once a look-through basis has actually been
+  // built, so the figures never claim a basis they were not computed on.
+  let usedBasis: "holdings" | "lookthrough" = "holdings";
 
   const rows = db
     .prepare(`
@@ -2342,6 +2836,7 @@ export async function estimateHistoricalRiskFromYahoo(
     return {
       source: "yahoo_estimate",
       lessAccurateThanSnapshots: true,
+      basis: usedBasis,
       note: "Estimated from Yahoo historical market performance. This is less accurate than your own portfolio snapshot history. No holdings available yet.",
       benchmarkSymbol,
       benchmarkName,
@@ -2379,7 +2874,7 @@ export async function estimateHistoricalRiskFromYahoo(
     };
   }
 
-  const valueByTicker = new Map<string, { ticker: string; source: DataSource; value: number; label: string }>();
+  let valueByTicker = new Map<string, { ticker: string; source: DataSource; value: number; label: string }>();
   const nonLiveLabels = new Set<string>();
   for (const row of rows) {
     const source = normalizeSource(row.source);
@@ -2417,15 +2912,40 @@ export async function estimateHistoricalRiskFromYahoo(
     });
   }
 
-  const returnsByTicker = new Map<string, Map<string, number>>();
-  const failedTickers: string[] = [];
+  let returnsByTicker = new Map<string, Map<string, number>>();
+  let failedTickers: string[] = [];
   let outlierReturnsRemoved = 0;
+  const basisNotes: string[] = [];
+
+  /*
+   * The securities inside the funds, where they can be had.
+   *
+   * Attempted before the wrapper series are fetched, because when it succeeds
+   * those fetches are not needed — the basis builder reads each fund's own
+   * series itself, to derive the part of the fund it does not price
+   * individually. Falls through to the wrapper basis when nothing resolves,
+   * which is the normal case for a portfolio of ordinary shares.
+   */
+  const lookThroughBasis = options.basis === "lookthrough"
+    ? await buildLookThroughRiskBasis(userId, windowSettings.yahooRange).catch(() => null)
+    : null;
+
+  if (lookThroughBasis) {
+    valueByTicker = lookThroughBasis.valueByTicker;
+    returnsByTicker = lookThroughBasis.returnsByTicker;
+    failedTickers = lookThroughBasis.failedTickers;
+    for (const label of lookThroughBasis.nonLiveLabels) nonLiveLabels.add(label);
+    outlierReturnsRemoved = lookThroughBasis.outlierReturnsRemoved;
+    basisNotes.push(...lookThroughBasis.notes);
+    usedBasis = "lookthrough";
+  }
 
   /*
    * US and crypto series are quoted in USD; everything else here is in AUD, and
    * so are the weights. Fetched once and only when something needs it.
    */
-  const needsFx = [...valueByTicker.values()].some((h) => h.source === "us" || h.source === "crypto");
+  const needsFx = !lookThroughBasis
+    && [...valueByTicker.values()].some((h) => h.source === "us" || h.source === "crypto");
   const audUsdByDate = needsFx
     ? await fetchAudUsdByDate(windowSettings.yahooRange)
     : new Map<string, number>();
@@ -2436,7 +2956,7 @@ export async function estimateHistoricalRiskFromYahoo(
       + "while their weights are in AUD — currency movement is missing from these figures.";
   }
 
-  for (const [key, holding] of valueByTicker.entries()) {
+  for (const [key, holding] of (lookThroughBasis ? [] : valueByTicker.entries())) {
     const raw = holding.source === "crypto"
       ? await fetchCryptoSeriesFromYahoo(holding.ticker, windowSettings.yahooRange)
       : holding.source === "us"
@@ -2474,6 +2994,7 @@ export async function estimateHistoricalRiskFromYahoo(
     return {
       source: "yahoo_estimate",
       lessAccurateThanSnapshots: true,
+      basis: usedBasis,
       note: "Estimated from Yahoo historical market performance. This is less accurate than your own portfolio snapshot history. Could not fetch enough history for current tickers.",
       benchmarkSymbol,
       benchmarkName,
@@ -2523,6 +3044,7 @@ export async function estimateHistoricalRiskFromYahoo(
     return {
       source: "yahoo_estimate",
       lessAccurateThanSnapshots: true,
+      basis: usedBasis,
       note: "Estimated from Yahoo historical market performance. This is less accurate than your own portfolio snapshot history. Not enough date-aligned return points available.",
       benchmarkSymbol,
       benchmarkName,
@@ -2701,6 +3223,9 @@ export async function estimateHistoricalRiskFromYahoo(
     "This is less accurate than your own portfolio snapshot history.",
   ];
 
+  // What the figures were measured on, before anything about how.
+  noteParts.push(...basisNotes);
+
   // Said once, where it matters: these figures are AUD-denominated throughout,
   // or they say why they are not.
   if (currencyNote) noteParts.push(currencyNote);
@@ -2742,6 +3267,7 @@ export async function estimateHistoricalRiskFromYahoo(
   return {
     source: "yahoo_estimate",
     lessAccurateThanSnapshots: true,
+    basis: usedBasis,
     note: noteParts.join(" "),
     benchmarkSymbol,
     benchmarkName,
@@ -4816,6 +5342,63 @@ export function readInstrumentKind(ticker: string): StoredInstrumentKind | null 
     exchange: row.exchange ?? "",
     basis: row.basis ?? "",
   };
+}
+
+// ── Security identifiers ────────────────────────────────────────────────────
+
+export interface StoredSecuritySymbol {
+  key: string;
+  symbol: string;
+  market: string;
+  name: string;
+}
+
+/*
+ * A primary listing barely moves, so a hit is kept for a year. A miss is kept
+ * for a day: most misses are a rate limit rather than a security with no
+ * listing, and remembering one for a year would make a busy minute permanent.
+ */
+const SECURITY_SYMBOL_TTL_MS = 365 * 24 * 60 * 60 * 1000;
+const SECURITY_SYMBOL_MISS_TTL_MS = 24 * 60 * 60 * 1000;
+
+export function readSecuritySymbol(key: string): StoredSecuritySymbol | null {
+  const row = getDb()
+    .prepare("SELECT id_key, symbol, market, name, checked_at FROM security_symbols WHERE id_key = ?")
+    .get(key) as
+      | { id_key: string; symbol: string; market: string; name: string; checked_at: string }
+      | undefined;
+  if (!row) return null;
+
+  const age = Date.now() - new Date(row.checked_at).getTime();
+  const ttl = row.symbol ? SECURITY_SYMBOL_TTL_MS : SECURITY_SYMBOL_MISS_TTL_MS;
+  if (!Number.isFinite(age) || age >= ttl) return null;
+
+  return {
+    key: row.id_key,
+    symbol: row.symbol ?? "",
+    market: row.market ?? "",
+    name: row.name ?? "",
+  };
+}
+
+export function writeSecuritySymbol(entry: StoredSecuritySymbol): void {
+  getDb()
+    .prepare(
+      `INSERT INTO security_symbols (id_key, symbol, market, name, checked_at)
+       VALUES (?, ?, ?, ?, ?)
+       ON CONFLICT(id_key) DO UPDATE SET
+         symbol = excluded.symbol,
+         market = excluded.market,
+         name = excluded.name,
+         checked_at = excluded.checked_at`,
+    )
+    .run(
+      entry.key.slice(0, 64),
+      String(entry.symbol ?? "").slice(0, 32),
+      String(entry.market ?? "").slice(0, 16),
+      String(entry.name ?? "").slice(0, 200),
+      new Date().toISOString(),
+    );
 }
 
 export function writeInstrumentKind(entry: StoredInstrumentKind): void {

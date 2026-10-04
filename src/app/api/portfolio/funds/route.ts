@@ -140,6 +140,7 @@ function toPositions(constituents: readonly FundConstituent[], fundValue: number
       direct: false,
       // Everything here arrived through the fund being inspected, by definition.
       directValue: 0,
+      directFrom: [],
       via: [],
     };
   });

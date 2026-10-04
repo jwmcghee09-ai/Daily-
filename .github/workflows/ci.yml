@@ -131,6 +131,8 @@ jobs:
         run: node scripts/test-lookthrough.mjs
       - name: Fund or company
         run: node scripts/test-instrument-kind.mjs
+      - name: Effective-book risk decomposition
+        run: node scripts/test-effective-risk.mjs
       - name: Per-holding risk
         run: node scripts/test-holding-risk.mjs
       - name: Contract-note parser

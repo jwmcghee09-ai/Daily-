@@ -112,7 +112,19 @@ export async function GET(request: NextRequest) {
   let historicalRiskError: string | null = null;
   try {
     historicalRisk = await Promise.race([
-      estimateHistoricalRiskFromYahoo(actor.userId, riskWindow),
+      /*
+       * Measured on the securities inside the funds.
+       *
+       * The portfolio's own volatility and VaR should barely move — it is the
+       * same portfolio, and the basis builder keeps the reconstruction exact by
+       * deriving each fund's unpriced remainder from the fund's own series.
+       * What changes is the attribution: the correlation matrix and the risk
+       * contributions name companies instead of product codes, and a company
+       * held both directly and inside a tracker counts once at its real weight.
+       *
+       * Falls back to the holdings basis on its own when nothing resolves.
+       */
+      estimateHistoricalRiskFromYahoo(actor.userId, riskWindow, { basis: "lookthrough" }),
       new Promise<null>((resolve) => setTimeout(() => resolve(null), RISK_TIMEOUT_MS)),
     ]);
     if (historicalRisk === null) historicalRiskError = "Timed out fetching price history.";
