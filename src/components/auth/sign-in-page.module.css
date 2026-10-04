@@ -246,19 +246,30 @@
   color: #0f0f10;
 }
 
-/* ── Form card URL bar ── */
+/*
+ * ── Form card URL bar ──
+ *
+ * This read #2e10c6 — a saturated indigo band across the top of the sign-in
+ * card on an otherwise warm-white page, with muted lavender text on it that
+ * was barely legible. A leftover from the conversion to the light palette: on
+ * the old dark theme a dark chrome bar with dim text was right, and recolouring
+ * the page left this surface behind at full saturation.
+ *
+ * It is meant to read as browser chrome above the form, so it is a shade
+ * lighter than the card rather than a different colour from it.
+ */
 .cardTop {
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 11px 20px;
-  background: #2e10c6;
+  background: rgba(255, 255, 255, 0.62);
   border-bottom: 1px solid rgba(57, 57, 65, 0.09);
 }
 
 .cardUrl {
   text-align: center;
-  color: rgba(139, 135, 165, 0.55);
+  color: #76767f;
   font-size: 11px;
   letter-spacing: 0.05em;
   font-family: var(--font-geist-mono), monospace;
@@ -534,13 +545,18 @@
 }
 
 /* ── Plan picker ── */
+/*
+ * The same leftover, on the registration flow's plan picker — and worse there,
+ * because its legend is #55555e, a dark grey, which on saturated indigo was
+ * all but invisible.
+ */
 .planPicker {
   display: grid;
   gap: 8px;
   padding: 14px;
   border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 14px;
-  background: #2e10c6;
+  background: rgba(255, 255, 255, 0.62);
 }
 
 .planPicker legend {

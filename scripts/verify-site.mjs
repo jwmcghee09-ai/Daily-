@@ -209,5 +209,70 @@ if (hiddenForever.length) {
   ok("landing page: nothing is left permanently invisible");
 }
 
+/*
+ * ── 6. No dark-theme surfaces left over on a light page ──
+ *
+ * Converting the app from dark to light recoloured text and left some
+ * backgrounds behind at full saturation. The sign-in card wore a #2e10c6 band
+ * across its top with dim lavender text on it, its plan picker sat on the same
+ * indigo under dark grey text, and the dip-alert inputs were #4336a1 behind
+ * near-black type. All three were legible-ish, none of them errored, and each
+ * had been shipping since the conversion.
+ *
+ * The rule: on these light surfaces a background may be dark, and it may be
+ * saturated, but not both — unless it is a brand hue. A deliberately dark panel
+ * is a near-neutral charcoal and passes; a semantic dot or badge is small and
+ * light enough to pass; a leftover from a purple-and-indigo dark theme is
+ * neither and fails.
+ */
+const BRAND_HUE = (h) => h <= 35 || h >= 340;
+
+function hsl(hex) {
+  const parts = hex.length === 4
+    ? hex.slice(1).split("").map((c) => parseInt(c + c, 16))
+    : [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  const [r, g, b] = parts.map((v) => v / 255);
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  const d = max - min;
+  let h = 0;
+  if (d !== 0) {
+    h = max === r ? ((g - b) / d + (g < b ? 6 : 0)) : max === g ? ((b - r) / d + 2) : ((r - g) / d + 4);
+    h *= 60;
+  }
+  return { h, s: d === 0 ? 0 : d / (1 - Math.abs(2 * l - 1)), l };
+}
+
+/*
+ * Semantic colours that are meant to be what they are: the green "live" dot,
+ * the traffic-light window dots on the mock browser chrome, the amber marker on
+ * the 52-week range. Listed by value so adding one is a decision rather than a
+ * silence.
+ */
+const SEMANTIC = new Set(["#0a7d3c", "#23b338", "#c68d10", "#c67b10", "#f52014"]);
+
+for (const surface of PALETTE_SURFACES) {
+  const path = join(root, surface);
+  if (!existsSync(path)) continue;
+  const css = readFileSync(path, "utf8");
+  const strays = [];
+  for (const match of css.matchAll(/background(?:-color)?:\s*(#[0-9a-fA-F]{3}|#[0-9a-fA-F]{6})\b/g)) {
+    const hex = match[1].toLowerCase();
+    if (SEMANTIC.has(hex)) continue;
+    const { h, s, l } = hsl(hex);
+    if (s > 0.4 && l < 0.62 && !BRAND_HUE(h)) {
+      const line = css.slice(0, match.index).split("\n").length;
+      strays.push(`${hex} at line ${line}`);
+    }
+  }
+  if (strays.length) {
+    fail(`${surface}: dark saturated non-brand background(s) — ${strays.join(", ")}. `
+      + "Left over from the dark theme; light-theme text is unreadable on these.");
+  } else {
+    ok(`${surface}: no dark-theme surfaces left behind`);
+  }
+}
+
 console.log(failures ? `\n${failures} check(s) FAILED` : "\nAll site guardrails passed");
 process.exit(failures ? 1 : 0);

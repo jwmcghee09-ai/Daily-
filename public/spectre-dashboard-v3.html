@@ -678,8 +678,11 @@ canvas{width:100%!important;height:220px;display:block}
 .alert-badge.off{color:var(--muted);background:rgba(0, 0, 0, 0.018);border:1px solid var(--border2)}
 .alert-form{display:grid;grid-template-columns:1fr 1fr auto;gap:.65rem;padding:18px 22px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);align-items:end}
 .field-lbl{font-family:var(--mono);font-size:.54rem;letter-spacing:.08em;font-weight:700;text-transform:uppercase;color:var(--muted);margin-bottom:.35rem}
-.field-input{background:#4336a1;border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:.78rem;padding:.6rem .85rem;outline:none;width:100%;transition:border-color .2s}
-.field-input::placeholder{color:rgba(89, 71, 143, .4)}
+/* Was #4336a1 — a saturated purple behind an input whose text colour is
+   var(--text), near-black. Another surface the light conversion missed; an
+   input has to look like somewhere you can type. */
+.field-input{background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:.78rem;padding:.6rem .85rem;outline:none;width:100%;transition:border-color .2s}
+.field-input::placeholder{color:var(--muted)}
 .field-input:focus{border-color:rgba(245, 32, 20, .55);box-shadow: 0 1px 2px rgba(15, 15, 17, 0.04);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
 table{width:100%;border-collapse:collapse}
 thead tr{border-bottom:1px solid var(--border)}
