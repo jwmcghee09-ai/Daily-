@@ -126,16 +126,64 @@ export function parse13fInfoTable(xml: string): { constituents: FundConstituent[
   return { constituents, totalValue };
 }
 
+/**
+ * Who may be looked through, and who merely files a form.
+ *
+ * NVIDIA files a 13F. It reported $63bn of stakes — Intel, SpaceX, CoreWeave —
+ * against $320bn of balance-sheet assets, which the coverage arithmetic read as
+ * 19.8% and allocated accordingly. Berkshire's is 23.7% on the same measure, so
+ * the ratio cannot tell them apart; and NVIDIA trades at many times book, so
+ * against its market value those stakes are nearer 1%. The result was a
+ * portfolio where a direct NVIDIA shareholding appeared as 8.7% of "NVIDIA
+ * Corp — not covered by the filing" plus slices of Intel and SpaceX. The user
+ * owns NVIDIA.
+ *
+ * Market capitalisation would be the right denominator and is not reliably
+ * available: the quote endpoints that carry it answer 401, and SEC's XBRL
+ * shares-outstanding concept is stale for exactly the filers that matter
+ * (Berkshire's last value is from 2011).
+ *
+ * So the test is what the entity is FOR, taken from the SIC code the SEC
+ * assigns it. Finance, insurance and real estate — 6000 to 6799 — is where
+ * holding companies and investment vehicles live: Berkshire is 6331, Loews is
+ * 6331, NVIDIA is 3674 and Apple is 3571.
+ *
+ * It errs toward leaving a holding whole. Icahn Enterprises is a genuine
+ * investment vehicle carrying SIC 2911, Petroleum Refining, so it will not be
+ * looked through — a miss, and the safe kind: the holding stays what the user
+ * bought instead of being replaced by an invented portfolio.
+ */
+const SIC_FINANCE_MIN = 6000;
+const SIC_FINANCE_MAX = 6799;
+
+/** Whether a SIC code describes an entity that exists to hold securities. */
+export function isPortfolioFiler(sic: number | null | undefined): boolean {
+  return typeof sic === "number" && Number.isFinite(sic)
+    && sic >= SIC_FINANCE_MIN && sic <= SIC_FINANCE_MAX;
+}
+
+/**
+ * Below this, the filing describes too little of the holding to be worth
+ * splitting it apart; the residual line would be most of the position anyway.
+ */
+const MIN_COVERAGE_PCT = 10;
+
 /** The most recent 13F-HR for a filer, as an archive directory. */
-async function latest13fDirectory(cik: number): Promise<{ directory: string; filingDate: string } | null> {
+async function latest13fDirectory(
+  cik: number,
+): Promise<{ directory: string; filingDate: string; sic: number | null } | null> {
   const padded = String(cik).padStart(10, "0");
   const res = await secFetch(`https://data.sec.gov/submissions/CIK${padded}.json`, 25000);
   if (!res.ok) return null;
   const body = (await res.json()) as {
+    sic?: string | number;
     filings?: { recent?: { form?: string[]; accessionNumber?: string[]; filingDate?: string[] } };
   };
   const recent = body.filings?.recent;
   if (!recent?.form) return null;
+
+  const sicRaw = Number(body.sic);
+  const sic = Number.isFinite(sicRaw) && sicRaw > 0 ? sicRaw : null;
 
   for (let i = 0; i < recent.form.length; i += 1) {
     if (recent.form[i] !== "13F-HR") continue;
@@ -144,6 +192,7 @@ async function latest13fDirectory(cik: number): Promise<{ directory: string; fil
     return {
       directory: `https://www.sec.gov/Archives/edgar/data/${cik}/${accession}`,
       filingDate: recent.filingDate?.[i] ?? "",
+      sic,
     };
   }
   return null;
@@ -219,6 +268,13 @@ export async function fetch13fComposition(ticker: string): Promise<Form13FResult
   const filing = await latest13fDirectory(cik);
   if (!filing) return null;
 
+  /*
+   * An operating company's 13F is not a description of the company. Checked
+   * before the information table is fetched, so a semiconductor maker that
+   * happens to file one costs one request rather than four.
+   */
+  if (!isPortfolioFiler(filing.sic)) return null;
+
   const xml = await fetchInfoTable(filing.directory);
   if (!xml) return null;
 
@@ -239,6 +295,10 @@ export async function fetch13fComposition(ticker: string): Promise<Form13FResult
   const coveragePct = totalAssets && totalAssets > 0
     ? Math.min(100, (reportedValue / totalAssets) * 100)
     : null;
+
+  // No honest denominator, or a filing that barely touches the holding: in
+  // both cases the holding is better left as itself.
+  if (coveragePct == null || coveragePct < MIN_COVERAGE_PCT) return null;
 
   return {
     constituents,

@@ -131,7 +131,7 @@ const hold = (ticker, value, name = ticker) => ({ ticker, name, value });
   check("and names the funds it also arrives through",
     bhp.via.map((v) => v.fundTicker).sort().join(",") === "A200,VAS");
 
-  const hidden = lt.hiddenConcentration(r, holdings);
+  const hidden = lt.hiddenConcentration(r);
   const bhpHidden = hidden.find((h) => h.ticker === "BHP");
   check("hidden concentration reports direct vs effective",
     near(bhpHidden.directPct, 10) && near(bhpHidden.effectivePct, 19),
@@ -140,6 +140,42 @@ const hold = (ticker, value, name = ticker) => ({ ticker, name, value });
   check("HHI measured on securities, not on wrappers",
     near(lt.effectiveHhi(r.positions), 19 * 19 + 81 * 81, 1e-6),
     String(Math.round(lt.effectiveHhi(r.positions))));
+}
+
+/*
+ * The case above passes for the wrong reason: the direct line and the fund's
+ * constituent both carry the ticker BHP, so any key matches. Real sources do
+ * not agree — an N-PORT filing identifies Apple by ISIN and carries no ticker,
+ * while the user's imported line carries AAPL and no ISIN. The fold joins them
+ * on the issuer name, and directPct used to be recovered afterwards by key,
+ * which missed: a portfolio holding $11,500 of Apple outright was reported as
+ * 15.3% effective against 0% direct.
+ */
+{
+  const sp500 = [
+    { name: "Apple, Inc.", isin: "US0378331005", weightPct: 40 },
+    { name: "Microsoft Corp.", isin: "US5949181045", weightPct: 60 },
+  ];
+  const r = lt.buildEffectiveBook(
+    [hold("IVV", 5000), hold("AAPL", 5000, "Apple Inc")],
+    new Map([fund("IVV", sp500)]),
+  );
+
+  const apple = r.positions.find((p) => /apple/i.test(p.name));
+  check("a ticker and an ISIN for one company are one position",
+    near(apple.value, 7000) && near(apple.weightPct, 70), `${apple?.value} (${apple?.weightPct}%)`);
+  check("and the directly held parcel is counted as direct",
+    near(apple.directValue, 5000), String(apple?.directValue));
+
+  const hidden = lt.hiddenConcentration(r);
+  const appleHidden = hidden.find((h) => /apple/i.test(h.name));
+  check("hidden concentration states the real direct share, not zero",
+    near(appleHidden.directPct, 50) && near(appleHidden.effectivePct, 70),
+    `${appleHidden?.directPct}% direct vs ${appleHidden?.effectivePct}% real`);
+
+  const msft = r.positions.find((p) => /microsoft/i.test(p.name));
+  check("a security held only through the fund has no direct value",
+    near(msft.directValue, 0), String(msft?.directValue));
 }
 
 // ── Overlap ───────────────────────────────────────────────────────────────
@@ -405,6 +441,32 @@ const hold = (ticker, value, name = ticker) => ({ ticker, name, value });
     f13.parse13fInfoTable("<x></x>").constituents.length === 0);
   check("13F positions are marked as US equity",
     constituents.every((c) => c.assetClass === "EC" && c.country === "US"));
+
+  /*
+   * Who gets looked through.
+   *
+   * Filing a 13F is not the test. NVIDIA files one — $63bn of stakes in Intel,
+   * SpaceX and CoreWeave — and against its $320bn of balance-sheet assets the
+   * coverage arithmetic read 19.8%, barely below Berkshire's 23.7%. So a direct
+   * NVIDIA shareholding was being replaced by a residual line plus slices of
+   * Intel and SpaceX. The ratio cannot separate them; what the entity is for
+   * can, and the SEC already assigns that.
+   */
+  check("Berkshire is a portfolio filer (SIC 6331, insurance)",
+    f13.isPortfolioFiler(6331));
+  check("so is Loews, the same code",
+    f13.isPortfolioFiler(6331));
+  check("an investment office qualifies (SIC 6726)",
+    f13.isPortfolioFiler(6726));
+  check("NVIDIA does not (SIC 3674, semiconductors)",
+    !f13.isPortfolioFiler(3674));
+  check("nor Apple (SIC 3571, electronic computers)",
+    !f13.isPortfolioFiler(3571));
+  check("a missing code declines rather than assumes",
+    !f13.isPortfolioFiler(null) && !f13.isPortfolioFiler(undefined) && !f13.isPortfolioFiler(NaN));
+  check("the range stops where finance stops",
+    f13.isPortfolioFiler(6000) && f13.isPortfolioFiler(6799)
+    && !f13.isPortfolioFiler(5999) && !f13.isPortfolioFiler(6800));
 }
 
 // ── Bloomberg market codes ────────────────────────────────────────────────

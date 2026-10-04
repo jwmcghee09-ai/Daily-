@@ -486,6 +486,25 @@ function initSchema(db: DatabaseSync): void {
    */
   db.exec("DELETE FROM fund_compositions WHERE route = '13f' AND coverage_pct IS NULL;");
 
+  /*
+   * Every cached 13F predates the rule that a 13F filer must actually be in the
+   * business of holding securities. A row for an operating company that happens
+   * to file one — NVIDIA, which reported $63bn of stakes — splits a direct
+   * shareholding into a residual line plus slices of Intel and SpaceX. Dropped
+   * so each is resolved again under the SIC check, which keeps Berkshire and
+   * declines NVIDIA. Stored once per ticker and cheap to refill.
+   */
+  const resolverRow = db
+    .prepare("SELECT value FROM meta WHERE key = 'fund_resolver_version'")
+    .get() as { value?: string } | undefined;
+  if (Number(resolverRow?.value ?? 0) < 5) {
+    db.exec("DELETE FROM fund_compositions WHERE route = '13f';");
+    db.prepare(
+      "INSERT INTO meta (key, value) VALUES ('fund_resolver_version', '5') "
+      + "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+    ).run();
+  }
+
   const hasResolverVersion = db
     .prepare("SELECT 1 AS ok FROM pragma_table_info('fund_resolution_misses') WHERE name = 'resolver_version'")
     .get() as { ok: number } | undefined;
@@ -4662,8 +4681,9 @@ export function listFundCompositions(userId = ""): Array<{
  *   2 — + Form 13F
  *   3 — + Betashares daily holdings
  *   4 — + IHVV, and IEM pointed at the right US fund
+ *   5 — 13F restricted to filers whose business is holding securities
  */
-export const FUND_RESOLVER_VERSION = 4;
+export const FUND_RESOLVER_VERSION = 5;
 
 /** True when this ticker was recently checked, by this resolver, and missed. */
 export function isRecentResolutionMiss(ticker: string): boolean {

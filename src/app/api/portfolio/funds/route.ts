@@ -138,6 +138,8 @@ function toPositions(constituents: readonly FundConstituent[], fundValue: number
       sector: c.sector,
       assetClass: c.assetClass,
       direct: false,
+      // Everything here arrived through the fund being inspected, by definition.
+      directValue: 0,
       via: [],
     };
   });

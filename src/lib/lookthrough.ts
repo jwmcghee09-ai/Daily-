@@ -75,6 +75,17 @@ export interface EffectivePosition {
   assetClass?: string;
   /** True when every dollar of this came from a line the user holds directly. */
   direct: boolean;
+  /*
+   * Of `value`, how much arrived from a line the user holds directly.
+   *
+   * Recorded during the fold rather than recovered afterwards. Identity is
+   * settled here — a fund's Apple carries an ISIN, the user's carries a ticker,
+   * and the issuer-name match is what joins them — so any later attempt to ask
+   * "how much of this was held directly?" by re-deriving a key gets it wrong.
+   * It did: hiddenConcentration reported Apple at 15.3% effective against 0%
+   * direct for a portfolio holding $11,500 of Apple outright.
+   */
+  directValue: number;
   /** Which wrappers contributed, and how much from each. */
   via: Array<{ fundTicker: string; value: number }>;
 }
@@ -207,7 +218,9 @@ export function buildEffectiveBook(
 
   const add = (
     rawKey: string,
-    seed: Omit<EffectivePosition, "key" | "weightPct" | "via" | "value">,
+    // directValue is derived from whether this arrived through a fund, so it
+    // is never passed in.
+    seed: Omit<EffectivePosition, "key" | "weightPct" | "via" | "value" | "directValue">,
     value: number,
     viaFund: string | null,
   ) => {
@@ -220,6 +233,7 @@ export function buildEffectiveBook(
     const existing = byKey.get(key);
     if (existing) {
       existing.value += value;
+      if (!viaFund) existing.directValue += value;
       // A security held directly anywhere is a direct holding, even if other
       // dollars of it arrived through a fund.
       existing.direct = existing.direct || seed.direct;
@@ -241,6 +255,7 @@ export function buildEffectiveBook(
       key,
       ...seed,
       value,
+      directValue: viaFund ? 0 : value,
       weightPct: 0,
       via: viaFund ? [{ fundTicker: viaFund, value }] : [],
     });
@@ -463,21 +478,15 @@ export function effectiveHhi(positions: readonly EffectivePosition[]): number {
  */
 export function hiddenConcentration(
   result: LookThroughResult,
-  holdings: readonly LookThroughInput[],
   minPct = 1,
 ): Array<{ name: string; ticker?: string; directPct: number; effectivePct: number; via: string[] }> {
-  const directValue = new Map<string, number>();
-  for (const h of holdings) {
-    const key = constituentKey({ ticker: h.ticker, name: h.name });
-    directValue.set(key, (directValue.get(key) ?? 0) + (Number(h.value) || 0));
-  }
-
   const out = [];
   for (const p of result.positions) {
     if (p.weightPct < minPct) continue;
     if (p.via.length === 0) continue; // nothing arrived through a fund
-    const direct = directValue.get(p.key) ?? 0;
-    const directPct = result.totalValue > 0 ? (direct / result.totalValue) * 100 : 0;
+    // The fold's own figure. Re-deriving it from a key misses every security
+    // the two sources identify differently, which is most of them.
+    const directPct = result.totalValue > 0 ? (p.directValue / result.totalValue) * 100 : 0;
     if (p.weightPct - directPct < 0.25) continue; // immaterial
     out.push({
       name: p.name,

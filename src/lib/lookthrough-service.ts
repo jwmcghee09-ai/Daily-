@@ -159,7 +159,7 @@ export async function lookThroughPortfolio(
     byCountry: exposureBy(result.positions, "country"),
     bySector: exposureBy(result.positions, "sector"),
     byAssetClass: exposureBy(result.positions, "assetClass"),
-    hidden: hiddenConcentration(result, holdings),
+    hidden: hiddenConcentration(result),
     hasLookThrough: compositions.size > 0,
   };
 }
