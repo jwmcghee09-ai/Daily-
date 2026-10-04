@@ -1442,6 +1442,48 @@ async function fetchAsx200SeriesFromYahoo(range: string): Promise<DatedPricePoin
   return fetchYahooSeriesBySymbol("^AXJO", range);
 }
 
+/*
+ * One currency, before anything is blended.
+ *
+ * Holdings are valued in AUD — the price refresh converts US positions through
+ * AUD/USD already — but the return series feeding the risk figures were taken
+ * raw: an Australian portfolio with a fifth of its money in US shares had that
+ * fifth's weight in AUD and its daily return in USD, and the two were summed.
+ * The missing piece is the currency's own movement, which for AUD/USD runs
+ * around 8-10% annualised, so the portfolio's volatility and VaR were
+ * understated by whatever that contributes rather than by nothing.
+ *
+ * It also has to be right before a fund can be decomposed into its holdings.
+ * Deriving a fund's unpriced tail by subtracting its priced constituents only
+ * works if both sides are quoted in the same currency; otherwise the FX moves
+ * land in the residual and the tail series becomes noise.
+ */
+function convertSeriesToAud(
+  usdSeries: readonly DatedPricePoint[],
+  audUsdByDate: ReadonlyMap<string, number>,
+): DatedPricePoint[] {
+  const out: DatedPricePoint[] = [];
+  for (const point of usdSeries) {
+    const rate = audUsdByDate.get(point.date);
+    // A day the FX series does not cover is dropped rather than carried at the
+    // wrong rate. Date alignment downstream already handles a shorter series.
+    if (rate == null || !Number.isFinite(rate) || rate <= 0) continue;
+    // AUDUSD=X is USD per AUD, so USD / rate gives AUD.
+    out.push({ date: point.date, close: point.close / rate });
+  }
+  return out;
+}
+
+/** AUD/USD daily closes, keyed by date. Empty when the series is unavailable. */
+async function fetchAudUsdByDate(range: string): Promise<Map<string, number>> {
+  const series = await fetchYahooSeriesBySymbol("AUDUSD=X", range);
+  const out = new Map<string, number>();
+  for (const point of series ?? []) {
+    if (Number.isFinite(point.close) && point.close > 0) out.set(point.date, point.close);
+  }
+  return out;
+}
+
 function calculateReturnsFromPrices(prices: DatedPricePoint[]): DatedReturnPoint[] {
   const returns: DatedReturnPoint[] = [];
 
@@ -2379,12 +2421,32 @@ export async function estimateHistoricalRiskFromYahoo(
   const failedTickers: string[] = [];
   let outlierReturnsRemoved = 0;
 
+  /*
+   * US and crypto series are quoted in USD; everything else here is in AUD, and
+   * so are the weights. Fetched once and only when something needs it.
+   */
+  const needsFx = [...valueByTicker.values()].some((h) => h.source === "us" || h.source === "crypto");
+  const audUsdByDate = needsFx
+    ? await fetchAudUsdByDate(windowSettings.yahooRange)
+    : new Map<string, number>();
+  let currencyNote: string | null = null;
+  if (needsFx && audUsdByDate.size === 0) {
+    // Rather than silently blend two currencies, say that is what happened.
+    currencyNote = "AUD/USD history was unavailable, so US holdings' returns are measured in USD "
+      + "while their weights are in AUD — currency movement is missing from these figures.";
+  }
+
   for (const [key, holding] of valueByTicker.entries()) {
-    const series = holding.source === "crypto"
+    const raw = holding.source === "crypto"
       ? await fetchCryptoSeriesFromYahoo(holding.ticker, windowSettings.yahooRange)
       : holding.source === "us"
         ? await fetchUsSeriesFromYahoo(holding.ticker, windowSettings.yahooRange)
         : await fetchAsxSeriesFromYahoo(holding.ticker, windowSettings.yahooRange);
+
+    const quotedInUsd = holding.source === "us" || holding.source === "crypto";
+    const series = raw && quotedInUsd && audUsdByDate.size > 0
+      ? convertSeriesToAud(raw, audUsdByDate)
+      : raw;
 
     if (!series || series.length < 2) {
       failedTickers.push(holding.label);
@@ -2638,6 +2700,14 @@ export async function estimateHistoricalRiskFromYahoo(
     `Estimated from Yahoo adjusted-close history with date-aligned returns and current portfolio weights (${windowSettings.label} window).`,
     "This is less accurate than your own portfolio snapshot history.",
   ];
+
+  // Said once, where it matters: these figures are AUD-denominated throughout,
+  // or they say why they are not.
+  if (currencyNote) noteParts.push(currencyNote);
+  else if (needsFx) {
+    noteParts.push("US and crypto returns are converted to AUD through AUD/USD, so currency "
+      + "movement counts toward these figures as it does in the account.");
+  }
 
   if (portfolioReturns.length < 20) {
     noteParts.push("VaR needs at least 20 return points in the selected window.");
