@@ -160,5 +160,54 @@ const missing = [...new Set(usedClasses.filter((c) => !definedClasses.has(c)))];
 if (missing.length) fail(`landing-page.tsx uses undefined classes: ${missing.join(", ")}`);
 else ok(`landing page: all ${new Set(usedClasses).size} referenced classes exist`);
 
+/*
+ * ── 5. Nothing on the landing page may be hidden waiting for a class that
+ *       nobody adds ──
+ *
+ * The scroll-reveal animation was removed and its observer with it, so every
+ * reveal class was flattened to opacity 1. .revealTilt was missed, because it
+ * is declared twelve hundred lines below the others: it kept `opacity: 0` and
+ * a `.revealTilt.visible` rule to undo it, and since nothing adds .visible any
+ * more, the four cards carrying it were invisible for good. The Dashboard
+ * Preview section shipped as a heading above eight hundred pixels of nothing,
+ * and nothing failed — no error, no warning, valid CSS, correct markup.
+ *
+ * Two rules, so the same silence cannot happen twice:
+ *   - a selector compounding .visible is dead weight, since nothing adds it
+ *   - a class used in the markup must not resolve to opacity 0 with no
+ *     mechanism to raise it
+ */
+const VISIBLE_COMPOUND = /\.[A-Za-z0-9_-]+\.visible\b/g;
+const deadVisible = [...cssModule.matchAll(VISIBLE_COMPOUND)].map((m) => m[0]);
+if (!tsx.includes("styles.visible") && deadVisible.length) {
+  fail(`landing page: ${deadVisible.length} rule(s) depend on .visible, which nothing adds — `
+    + `${[...new Set(deadVisible)].slice(0, 3).join(", ")}. Content behind them never appears.`);
+} else {
+  ok("landing page: no rule waits on a class nothing adds");
+}
+
+// Every class the markup uses, checked for a bare `opacity: 0` in its own
+// block. Scroll-driven elements are exempt by name: their opacity is set from
+// JavaScript on scroll, which this cannot see, and each is verified to reach
+// opacity 1 in a browser.
+const SCROLL_DRIVEN = new Set(["stickyPreview", "stickyPanel", "aiConsoleReveal"]);
+const hiddenForever = [];
+for (const cls of new Set(usedClasses)) {
+  if (SCROLL_DRIVEN.has(cls)) continue;
+  // The block that defines this class on its own, not as part of a compound.
+  const block = new RegExp(`^\\.${cls}\\s*\\{([^}]*)\\}`, "m").exec(cssModule);
+  if (!block) continue;
+  if (!/opacity:\s*0\s*;/.test(block[1])) continue;
+  // An animation or transition that ends visible is a fade-in, not a trap.
+  if (/animation:/.test(block[1])) continue;
+  hiddenForever.push(cls);
+}
+if (hiddenForever.length) {
+  fail(`landing page: ${hiddenForever.join(", ")} set opacity 0 with nothing to raise it — `
+    + "whatever carries them never renders.");
+} else {
+  ok("landing page: nothing is left permanently invisible");
+}
+
 console.log(failures ? `\n${failures} check(s) FAILED` : "\nAll site guardrails passed");
 process.exit(failures ? 1 : 0);

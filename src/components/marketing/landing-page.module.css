@@ -1422,17 +1422,13 @@
   transform: none;
 }
 
-.visible {
-  opacity: 1;
-  transform: none;
-}
-
-/* Section headings get a slightly longer, spring-feel transition */
-.sectionLabel.visible,
-.sectionTitle.visible,
-.sectionSub.visible {
-  transition-duration: 0.8s;
-}
+/*
+ * .visible is dead. Nothing adds it — the observer that did was removed with
+ * the animation it drove — so a rule that depends on it never applies, and a
+ * class hidden until it arrives is hidden for ever. The remaining rules are
+ * kept out of the stylesheet entirely rather than left as a trap; a guardrail
+ * in scripts/verify-site.mjs now fails the build if one comes back.
+ */
 
 /* ─── Dark panel cascade — keep these panels dark on the light page ─── */
 .dashboardCard,
@@ -2689,17 +2685,22 @@
   .commandHint { display: none; }
 }
 
-/* Perspective tilt-in reveal for major cards */
+/*
+ * Neutralised with the rest of the reveals, and missed the first time.
+ *
+ * This rule sits twelve hundred lines below the others, so when the scroll
+ * observer was removed .reveal, .revealLeft, .revealRight, .revealScale and
+ * .revealUp were all flattened and this one was not. Nothing adds .visible any
+ * more, so every card carrying this class stayed at opacity 0 for good: the
+ * whole Dashboard Preview section rendered its heading above eight hundred
+ * pixels of nothing.
+ *
+ * The class stays because the markup references it. It does nothing, which is
+ * the point — content is present when the page is.
+ */
 .revealTilt {
-  opacity: 0;
-  transform: perspective(950px) rotateX(10deg) translateY(34px);
-  transform-origin: center bottom;
-  transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1), transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.revealTilt.visible {
   opacity: 1;
-  transform: perspective(950px) rotateX(0deg) translateY(0);
+  transform: none;
 }
 
 /* Deeper card presence on hover — lift with layered shadow */
@@ -2733,7 +2734,6 @@
 @media (prefers-reduced-motion: reduce) {
   .orb, .lifecycleChip, .caret, .caretSm { animation: none !important; }
   .tiltCard { transition: none; }
-  .revealTilt { opacity: 1; transform: none; transition: none; }
 }
 
 /* ═══════════════════════════════════════════════════════════════
