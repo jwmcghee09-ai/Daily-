@@ -104,7 +104,18 @@ export interface ChatProvider {
   model: string;
 }
 
-const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
+/*
+ * Overridable, as the OpenAI SDK's own OPENAI_BASE_URL is.
+ *
+ * Needed to point at a compatible gateway or a self-hosted model, and it is
+ * what makes the prompt testable: without it there is no way to see what the
+ * product actually sends, which is how the user's question came to be buried
+ * in a context blob and ignored for as long as it was.
+ */
+const OPENAI_URL = (() => {
+  const base = String(process.env.OPENAI_BASE_URL || "").trim().replace(/\/+$/, "");
+  return base ? `${base}/chat/completions` : "https://api.openai.com/v1/chat/completions";
+})();
 const GROQ_CHAT_URL = `${GROQ_BASE}/chat/completions`;
 const DEFAULT_OPENAI_MODEL = "gpt-4o-mini";
 

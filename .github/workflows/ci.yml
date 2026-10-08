@@ -138,6 +138,21 @@ jobs:
       # wrong sign, on every quote the product shows.
       - name: Previous close
         run: node scripts/test-yahoo-quote.mjs
+
+      # The Ask AI panel answered the same generic report whatever was typed.
+      # This stands a mock provider in front of the route and reads what the
+      # product actually sends, which is the only way that is visible.
+      - name: Ask AI answers the question asked
+        run: |
+          npx next start -p 3458 > /tmp/ai-server.log 2>&1 &
+          for i in $(seq 1 60); do
+            if [ "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3458/ || true)" = "200" ]; then break; fi
+            sleep 1
+          done
+          node scripts/test-ai-question.mjs http://localhost:3458 4599
+        env:
+          OPENAI_API_KEY: mock-key
+          OPENAI_BASE_URL: http://127.0.0.1:4599/v1
       - name: Per-holding risk
         run: node scripts/test-holding-risk.mjs
       - name: Contract-note parser

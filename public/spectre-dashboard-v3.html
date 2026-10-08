@@ -1051,8 +1051,21 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 .ai-hero-sub{font-size:.92rem;color:var(--muted);margin:0 0 2.2rem;max-width:500px;line-height:1.7}
 
 /* Input card */
-.ai-input-card{width:100%;background:linear-gradient(180deg,rgba(231, 229, 228, .97),rgba(0, 0, 0, 0.432));border:1px solid rgba(245, 101, 20, .14);border-radius:18px;padding:20px 20px 16px;backdrop-filter:blur(12px);box-shadow: 0 1px 2px rgba(15, 15, 17, 0.04);transition:border-color .25s,box-shadow .25s}
-.ai-input-card:focus-within{border-color:rgba(245, 32, 20, .4);box-shadow: 0 1px 2px rgba(15, 15, 17, 0.04);min-height:90px;background:transparent;border:none;outline:none;resize:none;color:var(--text);font-family:var(--sans);font-size:1rem;line-height:1.6;padding:0;caret-color:var(--purple-hi)}
+/* The bottom stop was rgba(0,0,0,.432) — the card faded into a dark smear on
+   a light page. Another surface the light conversion left behind. */
+.ai-input-card{width:100%;background:linear-gradient(180deg,#ffffff,rgba(246,244,243,.96));border:1px solid rgba(245, 101, 20, .18);border-radius:18px;padding:20px 20px 16px;box-shadow:0 1px 2px rgba(15,15,17,.04),0 10px 30px rgba(15,15,17,.05);transition:border-color .25s,box-shadow .25s}
+/*
+ * These were one rule.
+ *
+ * Everything from min-height onwards belongs to .ai-input-textarea and its
+ * selector had been lost, so the declarations landed inside the card's
+ * :focus-within instead. Two faults from one missing line: the textarea had no
+ * styling at all and rendered as a bare browser box, grey border and resize
+ * grip included, in the middle of the card; and focusing the card set it to
+ * background:transparent;border:none, so the card vanished as you typed.
+ */
+.ai-input-card:focus-within{border-color:rgba(245, 32, 20, .4);box-shadow:0 1px 2px rgba(15,15,17,.04),0 10px 30px rgba(245,32,20,.07)}
+.ai-input-textarea{display:block;width:100%;min-height:90px;background:transparent;border:none;outline:none;resize:none;color:var(--text);font-family:var(--sans);font-size:1rem;line-height:1.6;padding:0;caret-color:#f52014}
 .ai-input-textarea::placeholder{color:rgba(79, 71, 65, .45)}
 .ai-input-footer{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding-top:12px;border-top:1px solid rgba(0, 0, 0, .07);flex-wrap:wrap}
 .ai-input-chips{display:flex;flex-wrap:wrap;gap:.3rem}

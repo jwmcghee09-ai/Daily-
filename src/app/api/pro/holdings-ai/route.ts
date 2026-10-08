@@ -453,10 +453,29 @@ function buildHoldingsSummary(userId: string) {
 
 // ── Prompt ─────────────────────────────────────────────────────────────────────
 
+/**
+ * What the model is asked to do.
+ *
+ * This used to open with the output schema and reach "address the user's
+ * specific question" on line thirty-four, between a rule about confidence
+ * scores and one about sentence length. Combined with a context blob carrying
+ * the question as one field among fifty, an instruction to cover every ticker
+ * in a sixty-seven position book, and a 4,096-token ceiling, the result was a
+ * standard report: the same portfolio summary whatever anyone typed.
+ *
+ * So the question leads, and the report supports the answer rather than the
+ * other way round.
+ */
 function buildSystemPrompt(): string {
   return (
     "You are SPECTRE's portfolio analytics engine for Australian investors. " +
     "You provide general financial information and data analysis only — NOT financial product advice. " +
+    "\n\nTHE QUESTION COMES FIRST. The user's question is in the final message. " +
+    "Answer THAT question, about THIS portfolio, using the data provided. " +
+    "If they ask about one holding, write about that holding. If they ask what is driving returns, " +
+    "name the positions that moved and by how much. If they ask something the data cannot answer, " +
+    "say so plainly and answer what you can. A generic portfolio summary in response to a specific " +
+    "question is a failure, however well written.\n\n" +
     "Output valid JSON only — no markdown, no prose outside the JSON object. " +
     'Use this exact schema: {"answer":"string","portfolioDrivers":["string"],"holdingBreakdown":[{"ticker":"string","summary":"string","influences":["string"],"riskFlags":["string"],"confidence":0}],"riskChecks":["string"],"nextActions":["string"]}. ' +
     "\n\nCRITICAL COMPLIANCE RULES (Australian financial services law):\n" +
@@ -484,10 +503,14 @@ function buildSystemPrompt(): string {
     "- DO reference current market levels from the snapshot where relevant\n" +
     "- If a signal is flagged as Yahoo estimate or fallback, mention that it is lower-confidence rather than stating it as exact fact\n" +
     "- Prefer holdings-specific research items, then sector-level items, then broad market context\n" +
-    "- holdingBreakdown must cover all tickers in holdings, sorted by weightPct descending\n" +
+    "- holdingBreakdown covers the holdings that bear on the question: those named in it, those "
+    + "driving what was asked about, and the largest positions otherwise. Up to 12 entries, sorted by "
+    + "weightPct descending. It supports the answer and does not replace one — enumerating every "
+    + "position at the answer's expense is the wrong trade\n" +
     "- riskFlags use standard labels: Concentration, FX Risk, Sector Overlap, High Volatility, Correlation Risk, Drawdown Risk, Liquidity Risk\n" +
     "- confidence: 85-100 when market price + cost base both available; 50-75 when estimated or stale\n" +
-    "- answer field: minimum 150 words, address the user's specific question directly\n" +
+    "- answer field: 150 words minimum, and it must read as a reply to what was actually asked — "
+    + "someone asking about one stock should not get a tour of their whole book\n" +
     "- Keep sentences short and operator-focused\n" +
     "- If conversationHistory is present in the context, use it to maintain continuity — refer back to prior exchanges naturally without restating them verbatim"
   );
@@ -932,12 +955,23 @@ export async function POST(request: Request) {
   const groqKey = String(process.env.GROQ_API_KEY || "").trim();
   const openAiModel = OPENAI_MODELS[entitlements.planTier] ?? "gpt-4o-mini";
 
+  /*
+   * This route picks its own models by plan tier, so it keeps its own provider
+   * list rather than calling resolveChatProviders — but it must honour the same
+   * base-URL overrides, or pointing the app at a compatible gateway silently
+   * moves every surface except this one.
+   */
+  const groqBase = String(process.env.GROQ_BASE_URL || "").trim().replace(/\/+$/, "")
+    || "https://api.groq.com/openai/v1";
+  const openAiBase = String(process.env.OPENAI_BASE_URL || "").trim().replace(/\/+$/, "")
+    || "https://api.openai.com/v1";
+
   const providers: { name: string; url: string; key: string; model: string }[] = [];
   if (groqKey && ASK_AI_PROVIDER !== "openai") {
-    providers.push({ name: "Groq", url: "https://api.groq.com/openai/v1/chat/completions", key: groqKey, model: GROQ_AI_MODEL });
+    providers.push({ name: "Groq", url: `${groqBase}/chat/completions`, key: groqKey, model: GROQ_AI_MODEL });
   }
   if (openAiKey && ASK_AI_PROVIDER !== "groq") {
-    providers.push({ name: "OpenAI", url: "https://api.openai.com/v1/chat/completions", key: openAiKey, model: openAiModel });
+    providers.push({ name: "OpenAI", url: `${openAiBase}/chat/completions`, key: openAiKey, model: openAiModel });
   }
   if (providers.length === 0) {
     return NextResponse.json(
@@ -975,13 +1009,34 @@ export async function POST(request: Request) {
         },
         body: JSON.stringify({
           model: provider.model,
-          max_tokens: 4096,
+          /*
+           * Room to answer.
+           *
+           * At 4,096 the breakdown and the answer competed for the same budget,
+           * and the breakdown — one entry per holding, sixty-seven of them —
+           * won. The cap on entries above does most of the work; this makes
+           * sure a thorough answer is not rationed on top of it.
+           */
+          max_tokens: 8192,
           stream: true,
           temperature: 0.1,
           response_format: { type: "json_object" },
           messages: [
             { role: "system", content: buildSystemPrompt() },
             { role: "user", content: JSON.stringify(context) },
+            /*
+             * The question again, on its own, last.
+             *
+             * It is inside the context too, as one key among fifty, which is
+             * how a specific question came back as the same generic report
+             * every time. Repeating it as the final message costs a few tokens
+             * and makes it the thing being answered rather than a detail of
+             * the data.
+             */
+            {
+              role: "user",
+              content: `The question to answer, in the user's own words:\n\n${question}`,
+            },
           ],
         }),
       });

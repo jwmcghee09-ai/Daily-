@@ -274,5 +274,65 @@ for (const surface of PALETTE_SURFACES) {
   }
 }
 
+/*
+ * ── 7. No form-field declarations stranded on a container rule ──
+ *
+ * The Ask AI card lost a selector. Everything meant for .ai-input-textarea —
+ * min-height, resize, caret-color, the transparent background — was swallowed
+ * into .ai-input-card:focus-within above it, which produced two faults from one
+ * missing line: the textarea had no styling at all and rendered as a bare
+ * browser box with a grey border and a resize grip, and focusing the card set
+ * it to background:transparent;border:none so the card disappeared as you
+ * typed. Valid CSS, no warning, shipped.
+ *
+ * `resize` and `caret-color` apply only to editable fields, so finding either
+ * on a selector that is not one means a rule has been merged into its
+ * neighbour.
+ */
+const FIELD_ONLY = /(^|[;{])\s*(resize|caret-color)\s*:/;
+/*
+ * The exemption is tested on the selector's LAST token, with pseudo-classes
+ * removed. A looser match on the whole string let .ai-input-card:focus-within
+ * through on the strength of "-input" in the card's own name — which is the
+ * exact rule the check exists to catch.
+ */
+function targetsAField(selector) {
+  const last = selector.split(/[\s>+~]+/).filter(Boolean).pop() ?? "";
+  const bare = last.replace(/::?[a-z-]+(\([^)]*\))?/gi, "");
+  return /(^|[.#-])(textarea|input|select|field)$/i.test(bare)
+    || /\[contenteditable/i.test(last);
+}
+
+for (const surface of PALETTE_SURFACES) {
+  const path = join(root, surface);
+  if (!existsSync(path)) continue;
+  const css = readFileSync(path, "utf8");
+  /*
+   * An id selector is only a container if the markup says so. These files carry
+   * their own HTML, so #chat-in can be looked up rather than guessed at — and
+   * it is a textarea, which the first version of this check called a fault.
+   */
+  const fieldIds = new Set(
+    [...css.matchAll(/<(?:textarea|input|select)\b[^>]*\bid=["']([^"']+)["']/g)].map((m) => m[1]),
+  );
+  const stranded = [];
+  for (const match of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+    const selector = match[1].split("\n").pop().trim();
+    if (!FIELD_ONLY.test(match[2])) continue;
+    if (targetsAField(selector)) continue;
+    // Every id named in the selector resolving to a real field means the rule
+    // is where it belongs.
+    const ids = [...selector.matchAll(/#([A-Za-z0-9_-]+)/g)].map((m) => m[1]);
+    if (ids.length > 0 && ids.every((id) => fieldIds.has(id))) continue;
+    stranded.push(selector.slice(0, 60));
+  }
+  if (stranded.length) {
+    fail(`${surface}: resize/caret-color on a non-field selector — ${stranded.join(", ")}. `
+      + "A rule has been merged into its neighbour and something has lost its styling.");
+  } else {
+    ok(`${surface}: no field styles stranded on a container`);
+  }
+}
+
 console.log(failures ? `\n${failures} check(s) FAILED` : "\nAll site guardrails passed");
 process.exit(failures ? 1 : 0);
