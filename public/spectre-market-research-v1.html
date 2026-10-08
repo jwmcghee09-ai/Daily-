@@ -2860,7 +2860,18 @@ h3 { font-size: 1.15rem; }
   display: none; flex-direction: column; align-items: center; text-align: center;
   padding: 3rem 1.5rem 4rem; gap: 0;
 }
-html.starter-mode .starter-gate-panel { display: flex; }
+/*
+ * The one thing a gated page must still show.
+ *
+ * This rule was being beaten by the sibling catch-all below: the panel sits
+ * after .bottom-grid in the DOM, so `.bottom-grid ~ div { display:none
+ * !important }` hid it along with everything else. A free account therefore saw
+ * the page stop dead after the chart with no explanation and no way to upgrade
+ * — the panel written to explain exactly that was the one thing certain to be
+ * hidden. The catch-alls now exclude it, and it carries !important of its own
+ * so no later blanket rule can take it out again.
+ */
+html.starter-mode .starter-gate-panel { display: flex !important; }
 html.starter-mode .workspace-hero       { display: none !important; }
 html.starter-mode .market-pulse-strip   { display: none !important; }
 html.starter-mode #starter-banner       { display: none !important; }
@@ -2870,8 +2881,8 @@ html.starter-mode .rtab:not([data-tab="overview"]):not([data-tab="equities"]):no
 html.starter-mode .rtab:not([data-tab="overview"]):not([data-tab="equities"]):not([data-tab="macro"])::after { content: ' 🔒'; font-size: .6rem; vertical-align: middle; }
 html.starter-mode .main-grid            { display: none !important; }
 html.starter-mode .bottom-grid          { display: none !important; }
-html.starter-mode .bottom-grid ~ div,
-html.starter-mode .bottom-grid ~ section { display: none !important; }
+html.starter-mode .bottom-grid ~ div:not(#starter-gate-panel):not(.starter-gate-panel),
+html.starter-mode .bottom-grid ~ section:not(#starter-gate-panel) { display: none !important; }
 html.starter-mode #macro-section        { display: none !important; }
 html.starter-mode .hero-lock-wrap       { display: none !important; }
 .sgp-badge {
