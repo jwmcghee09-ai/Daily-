@@ -250,11 +250,22 @@ async function fetchYahooQuote(symbol: string): Promise<{ price: number | null; 
       if (!res.ok) continue;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const data = (await res.json()) as any;
-      const meta = data?.chart?.result?.[0]?.meta ?? {};
+      const result = data?.chart?.result?.[0];
+      const meta = result?.meta ?? {};
       const price = typeof meta.regularMarketPrice === "number" ? meta.regularMarketPrice : null;
       if (price === null) continue;
+      /*
+       * The series, not chartPreviousClose, which is the close before the
+       * requested range. This figure goes into the prompt, so getting it wrong
+       * does not merely mislead a reader — it is stated to the model as fact
+       * and comes back as confident commentary on a move that did not happen.
+       * See src/lib/yahoo-quote.ts.
+       */
+      const closeSeries = ((result?.indicators?.quote?.[0]?.close ?? []) as (number | null)[])
+        .filter((c): c is number => typeof c === "number" && Number.isFinite(c) && c > 0);
       const prevClose =
-        typeof meta.previousClose === "number" ? meta.previousClose
+        closeSeries.length > 1 ? closeSeries[closeSeries.length - 2]
+        : typeof meta.previousClose === "number" ? meta.previousClose
         : typeof meta.chartPreviousClose === "number" ? meta.chartPreviousClose
         : null;
       return { price, prevClose };

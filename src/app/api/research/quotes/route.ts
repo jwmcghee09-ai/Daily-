@@ -169,10 +169,20 @@ async function fetchQuote(symbol: string): Promise<QuoteData> {
       const price: number | null = typeof meta.regularMarketPrice === "number" ? meta.regularMarketPrice : null;
       if (price === null) continue;
 
+      /*
+       * The series, not the metadata.
+       *
+       * This request asks for a year of bars so the 52-week high and low come
+       * from the same call, and chartPreviousClose is therefore the close from
+       * a year ago. Preferring it turned every "today" figure on the research
+       * page into a twelve-month move: BHP +46.07%, oil +46.47%, AUD/USD
+       * +5.71%, against real days of -2.02%, +3.78% and -0.36%.
+       */
       const prevClose: number | null =
-        typeof meta.previousClose === "number" ? meta.previousClose
+        closes.length > 1 ? closes[closes.length - 2]
+        : typeof meta.previousClose === "number" ? meta.previousClose
         : typeof meta.chartPreviousClose === "number" ? meta.chartPreviousClose
-        : closes.length > 1 ? closes[closes.length - 2] : null;
+        : null;
       const yearHigh: number | null =
         typeof meta.fiftyTwoWeekHigh === "number" ? meta.fiftyTwoWeekHigh
         : closes.length > 0 ? Math.max(...closes) : null;

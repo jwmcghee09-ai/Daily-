@@ -281,9 +281,15 @@ async function yahooQuote(symbol: string): Promise<{ price: number | null; prevC
     if (!res.ok) return { price: null, prevClose: null, name: null };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const data = (await res.json()) as any;
-    const meta = data?.chart?.result?.[0]?.meta ?? {};
+    const result = data?.chart?.result?.[0];
+    const meta = result?.meta ?? {};
     const price = typeof meta.regularMarketPrice === "number" ? meta.regularMarketPrice : null;
-    const prevClose = typeof meta.previousClose === "number" ? meta.previousClose
+    // chartPreviousClose is the close BEFORE the requested range, not
+    // yesterday's, so the series is preferred. See src/lib/yahoo-quote.ts.
+    const seriesCloses = (result?.indicators?.quote?.[0]?.close ?? [])
+      .filter((c: number | null): c is number => typeof c === "number" && Number.isFinite(c) && c > 0);
+    const prevClose = seriesCloses.length > 1 ? seriesCloses[seriesCloses.length - 2]
+      : typeof meta.previousClose === "number" ? meta.previousClose
       : typeof meta.chartPreviousClose === "number" ? meta.chartPreviousClose : null;
     const name = meta.shortName ?? meta.longName ?? null;
     return { price, prevClose, name };

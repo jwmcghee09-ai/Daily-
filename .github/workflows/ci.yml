@@ -133,6 +133,11 @@ jobs:
         run: node scripts/test-instrument-kind.mjs
       - name: Effective-book risk decomposition
         run: node scripts/test-effective-risk.mjs
+      # Yahoo's chartPreviousClose is the close before the requested range, not
+      # yesterday's. Preferring it reported a year's move as a day's, with the
+      # wrong sign, on every quote the product shows.
+      - name: Previous close
+        run: node scripts/test-yahoo-quote.mjs
       - name: Per-holding risk
         run: node scripts/test-holding-risk.mjs
       - name: Contract-note parser

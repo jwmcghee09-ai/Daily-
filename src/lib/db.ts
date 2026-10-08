@@ -1328,12 +1328,22 @@ function extractAsxQuote(result: YahooChartResult | undefined): AsxQuoteData {
 
   return {
     price: Number.isFinite(regular) && regular > 0 ? regular : latestClose,
+    /*
+     * The series first. chartPreviousClose is the close before the requested
+     * range, not yesterday's — at the 5d range this fetcher uses, that is about
+     * six trading days back, and on BHP it reported +1.54% where the real day
+     * was -2.02%: wrong size and wrong sign. This value is written to every
+     * holding, so it reaches the day-change figure, the ticker and the holdings
+     * table. See src/lib/yahoo-quote.ts.
+     */
     prevClose:
-      Number.isFinite(metaPrevClose) && metaPrevClose > 0
-        ? metaPrevClose
-        : Number.isFinite(chartPrevClose) && chartPrevClose > 0
-          ? chartPrevClose
-          : seriesPrevClose,
+      seriesPrevClose != null
+        ? seriesPrevClose
+        : Number.isFinite(metaPrevClose) && metaPrevClose > 0
+          ? metaPrevClose
+          : Number.isFinite(chartPrevClose) && chartPrevClose > 0
+            ? chartPrevClose
+            : null,
     openPrice: Number.isFinite(marketOpen) && marketOpen > 0 ? marketOpen : null,
   };
 }

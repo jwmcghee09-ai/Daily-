@@ -5081,7 +5081,12 @@ function buildMovers() {
     if (!container) return;
     const items = DATA.usMovers[key] ?? [];
     if (!items.length) {
-      container.innerHTML = '<div class="mover-list"><div style="font-size:0.72rem;color:var(--sl-muted);padding:8px 0;">—</div></div>';
+      // An em-dash in an empty box tells a reader nothing except that something
+      // is broken. Three panels on this page need a provider key that was never
+      // set, and saying so is both true and actionable.
+      container.innerHTML = '<div class="mover-list"><div style="font-size:0.72rem;color:var(--sl-muted);padding:8px 0;line-height:1.6;">'
+        + 'US movers need a market-data provider key, which is not configured for this deployment.'
+        + '</div></div>';
       return;
     }
     container.innerHTML = '<div class="mover-list">' + items.map(m => {
@@ -5907,7 +5912,7 @@ function renderFx(fx) {
   const el = document.getElementById('fmp-fx-grid');
   if (!el) return;
   const valid = fx.filter(f => f.rate);
-  if (!valid.length) { noData(el, 'No FX data.'); return; }
+  if (!valid.length) { noData(el, 'Currency pairs need a market-data provider key, which is not configured for this deployment.'); return; }
   fx = valid;
   el.innerHTML = fx.map(f => `
     <div class="fx-row">
@@ -5939,7 +5944,7 @@ function renderCommodities(commodities) {
 function renderEconomicCalendar(events) {
   const el = document.getElementById('fmp-econ-list');
   if (!el) return;
-  if (!events.length) { el.innerHTML = '<div style="color:var(--sl-muted);font-size:0.72rem;">No upcoming events.</div>'; return; }
+  if (!events.length) { el.innerHTML = '<div style="color:var(--sl-muted);font-size:0.72rem;line-height:1.6;">The economic calendar needs a market-data provider key, which is not configured for this deployment.</div>'; return; }
   el.innerHTML = events.map(e => {
     const date = e.date ? new Date(e.date).toLocaleDateString('en-AU',{day:'numeric',month:'short'}) : '—';
     const flag = COUNTRY_FLAGS[e.country] || e.country;

@@ -25,12 +25,20 @@ async function yahooQuote(symbol: string): Promise<YahooQuote | null> {
     );
     if (!res.ok) return null;
     const data = await res.json() as {
-      chart?: { result?: Array<{ meta?: { regularMarketPrice?: number; previousClose?: number; chartPreviousClose?: number } }> };
+      chart?: { result?: Array<{ meta?: { regularMarketPrice?: number; previousClose?: number; chartPreviousClose?: number }; indicators?: { quote?: Array<{ close?: (number | null)[] }> } }> };
     };
-    const meta = data?.chart?.result?.[0]?.meta;
+    const result = data?.chart?.result?.[0];
+    const meta = result?.meta;
     if (!meta?.regularMarketPrice) return null;
     const price = meta.regularMarketPrice;
-    const prev = meta.previousClose ?? meta.chartPreviousClose ?? price;
+    // chartPreviousClose is the close BEFORE the requested range rather than
+    // yesterday's, which made this a multi-day move labelled as a daily one.
+    // See src/lib/yahoo-quote.ts.
+    const closeSeries = (result?.indicators?.quote?.[0]?.close ?? [])
+      .filter((c: number | null): c is number => typeof c === "number" && Number.isFinite(c) && c > 0);
+    const prev = closeSeries.length > 1
+      ? closeSeries[closeSeries.length - 2]
+      : meta.previousClose ?? meta.chartPreviousClose ?? price;
     return { price, prev, change: price - prev, changePct: prev > 0 ? ((price - prev) / prev) * 100 : 0 };
   } catch { return null; }
 }
