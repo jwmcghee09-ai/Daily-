@@ -1,0 +1,374 @@
+/* ═══════════════════════════════════════════════════════════
+   Connect page — same language as the dashboard and sign-in:
+   warm off-white ground, white cards, mono labels in caps,
+   the brand ramp used sparingly and never as a wash.
+   ═══════════════════════════════════════════════════════════ */
+
+.page {
+  min-height: 100vh;
+  background: #f8f6f8;
+  color: #0f0f10;
+  font-family: var(--font-geist-sans), "Avenir Next", sans-serif;
+}
+
+.shell {
+  max-width: 940px;
+  margin: 0 auto;
+  padding: 28px 24px 96px;
+}
+
+/* ── Top bar ── */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 56px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.brandMark { display: block; }
+
+.brandText {
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  background: linear-gradient(90deg, #ee2d1b, #f55314);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.backLink {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #55555e;
+  text-decoration: none;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 999px;
+  padding: 0.45rem 1rem;
+  transition: border-color 0.2s, color 0.2s;
+}
+.backLink:hover { border-color: rgba(245, 32, 20, 0.4); color: #0f0f10; }
+
+/* ── Masthead ── */
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.56rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #c7300f;
+  border: 1px solid rgba(245, 32, 20, 0.28);
+  border-radius: 999px;
+  padding: 0.35rem 0.85rem;
+  margin-bottom: 1.1rem;
+}
+.eyebrow::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #f52014;
+}
+
+.title {
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-size: clamp(2rem, 4.4vw, 3rem);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.08;
+  margin: 0 0 0.9rem;
+}
+.titleAccent {
+  background: linear-gradient(90deg, #ee2d1b, #f55314);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.lede {
+  font-size: 1.02rem;
+  line-height: 1.7;
+  color: #4b4b55;
+  max-width: 62ch;
+  margin: 0 0 2.6rem;
+}
+
+/* ── Section headings ── */
+.sectionLabel {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #76767f;
+  margin: 3.2rem 0 0.7rem;
+}
+
+.sectionTitle {
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-size: 1.45rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  margin: 0 0 0.6rem;
+}
+
+.sectionSub {
+  font-size: 0.93rem;
+  line-height: 1.7;
+  color: #55555e;
+  margin: 0 0 1.5rem;
+  max-width: 64ch;
+}
+
+/* ── The endpoint, the one thing to copy ── */
+.urlCard {
+  background: #fff;
+  border: 1px solid rgba(245, 101, 20, 0.22);
+  border-radius: 16px;
+  padding: 18px 20px;
+  box-shadow: 0 1px 2px rgba(15, 15, 17, 0.04), 0 12px 32px rgba(15, 15, 17, 0.05);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.urlLabel {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.55rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #76767f;
+  width: 100%;
+}
+
+.urlValue {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.95rem;
+  color: #0f0f10;
+  word-break: break-all;
+  flex: 1;
+  min-width: 260px;
+}
+
+.copyBtn {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(90deg, #ee2d1b, #f55314);
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 0.55rem 1.2rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: filter 0.2s;
+}
+.copyBtn:hover { filter: brightness(1.06); }
+.copyBtn:disabled { filter: none; opacity: 0.75; cursor: default; }
+
+/* ── Client cards ── */
+.clientGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 14px;
+  margin-top: 1.4rem;
+}
+
+.clientCard {
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.09);
+  border-radius: 14px;
+  padding: 20px 22px 22px;
+  box-shadow: 0 1px 2px rgba(15, 15, 17, 0.03);
+  transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+.clientCard:hover {
+  border-color: rgba(245, 32, 20, 0.28);
+  transform: translateY(-2px);
+  box-shadow: 0 1px 2px rgba(15, 15, 17, 0.04), 0 12px 28px rgba(15, 15, 17, 0.06);
+}
+
+.clientHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 0.9rem;
+}
+
+.clientName {
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-size: 1.02rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.clientTag {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.5rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #76767f;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 999px;
+  padding: 0.22rem 0.6rem;
+  white-space: nowrap;
+}
+
+.steps {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 0.89rem;
+  line-height: 1.75;
+  color: #4b4b55;
+}
+.steps li { margin-bottom: 0.2rem; }
+.steps strong { color: #0f0f10; font-weight: 600; }
+
+.snippet {
+  margin: 0.8rem 0 0;
+  padding: 11px 13px;
+  border-radius: 9px;
+  background: #f6f4f3;
+  border: 1px solid rgba(0, 0, 0, 0.07);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.72rem;
+  line-height: 1.65;
+  color: #2a2a31;
+  /* Wrap rather than scroll: the URL is the part that matters and a horizontal
+     scrollbar inside a card hides exactly the end of it. pre-wrap keeps the
+     JSON indentation while letting the long line break. */
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ── Notes, tools, plain prose ── */
+.note {
+  font-size: 0.89rem;
+  line-height: 1.75;
+  color: #55555e;
+  margin: 1.4rem 0 0;
+  max-width: 64ch;
+}
+
+.inlineCode {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.86em;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 5px;
+  padding: 0.1em 0.4em;
+}
+
+.link { color: #c7300f; text-decoration: none; border-bottom: 1px solid rgba(199, 48, 15, 0.3); }
+.link:hover { border-bottom-color: #c7300f; }
+
+.toolTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.87rem;
+  margin-top: 1.2rem;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.09);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.toolTable th {
+  text-align: left;
+  padding: 11px 16px;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.52rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #76767f;
+  background: rgba(0, 0, 0, 0.02);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+.toolTable td {
+  padding: 11px 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.055);
+  color: #4b4b55;
+  line-height: 1.6;
+}
+.toolTable tr:last-child td { border-bottom: 0; }
+.toolName {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.8rem;
+  color: #0f0f10;
+  white-space: nowrap;
+}
+
+/* ── Connected list ── */
+.connCard {
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.09);
+  border-radius: 12px;
+  padding: 6px 4px;
+  margin-top: 1rem;
+}
+.connRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.055);
+}
+.connRow:last-child { border-bottom: 0; }
+.connName { font-size: 0.92rem; font-weight: 600; }
+.connSince {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.55rem;
+  letter-spacing: 0.08em;
+  color: #76767f;
+  text-transform: uppercase;
+}
+.disconnect {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.55rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #c7300f;
+  background: none;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 999px;
+  padding: 0.35rem 0.85rem;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+.disconnect:hover { border-color: rgba(245, 32, 20, 0.45); }
+
+.ok {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #0a7d3c;
+  margin-top: 0.9rem;
+}
+
+.divider {
+  height: 1px;
+  background: rgba(0, 0, 0, 0.08);
+  margin: 3.4rem 0 0;
+}
+
+@media (max-width: 640px) {
+  .shell { padding: 20px 18px 72px; }
+  .topbar { margin-bottom: 36px; }
+}
