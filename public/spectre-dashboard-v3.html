@@ -4330,9 +4330,20 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
       usageEl.className = "ai-usage-counter";
     }
 
-    if (questionInput.value.trim().length === 0) {
-      questionInput.value = HOLDINGS_AI_DEFAULT_QUESTION;
-    }
+    /*
+     * The box is not pre-filled any more.
+     *
+     * This used to write the default question into the textarea as real
+     * content whenever it was empty — and this is a render, called on eight
+     * paths including every chunk of a streaming reply. So the field never
+     * showed its own placeholder, you had to delete a sentence before asking
+     * anything, and clearing it to type put the sentence straight back under
+     * your cursor on the next render.
+     *
+     * Nothing is lost by dropping it: the placeholder says what the box is for,
+     * the chips below offer five starting points, and the route already
+     * substitutes its own default when a question arrives empty.
+     */
 
     if (state.holdingsAiError) {
       errorEl.hidden = false;
@@ -5506,7 +5517,9 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
       state.holdingsAiStreamText = "";
       const questionInput = document.getElementById("pro-ai-question");
       if (questionInput instanceof HTMLTextAreaElement) {
-        questionInput.value = HOLDINGS_AI_DEFAULT_QUESTION;
+        // Resetting the demo empties the box rather than seeding it, so the
+        // placeholder is what a returning visitor sees.
+        questionInput.value = "";
       }
       renderAlerts();
       renderPortfolio();

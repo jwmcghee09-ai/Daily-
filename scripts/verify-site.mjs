@@ -334,5 +334,25 @@ for (const surface of PALETTE_SURFACES) {
   }
 }
 
+/*
+ * ── 8. The Ask AI box is not pre-filled ──
+ *
+ * It used to be, from inside a render that runs on eight paths including every
+ * chunk of a streaming reply. The field never showed its placeholder, you had
+ * to delete a sentence before asking your own question, and clearing it put
+ * the sentence back under your cursor. The route already defaults an empty
+ * question, so writing one into the input buys nothing and costs that.
+ */
+{
+  const dashboard = readFileSync(join(root, "public/spectre-dashboard-v3.html"), "utf8");
+  const prefills = [...dashboard.matchAll(/questionInput\.value\s*=\s*HOLDINGS_AI_DEFAULT_QUESTION/g)];
+  if (prefills.length) {
+    fail(`dashboard: the Ask AI box is pre-filled with the default question in ${prefills.length} place(s). `
+      + "Let the placeholder show; the route supplies a default when none is typed.");
+  } else {
+    ok("dashboard: the Ask AI box is left for the user to fill");
+  }
+}
+
 console.log(failures ? `\n${failures} check(s) FAILED` : "\nAll site guardrails passed");
 process.exit(failures ? 1 : 0);
