@@ -34,26 +34,22 @@ const hardMissing = report("Required env", required);
 report("Recommended env", optionalButRecommended);
 
 // Which way this deployment points on access, said plainly rather than left to
-// be discovered. Growth mode is on when the flag says so, and also when no
-// Stripe configuration exists — with no checkout, denying access would lock out
-// every user of a product none of them could buy.
+// be discovered. Growth mode is the default: every account gets the whole
+// product free unless FOUNDING_FREE_ACCESS is explicitly switched off. It is
+// not conditional on Stripe — the previous version switched itself off the
+// moment billing was configured, which quietly put every account on the free
+// tier while the flag meant to prevent that sat in a file the host ignores.
 const flag = String(process.env.FOUNDING_FREE_ACCESS || "").trim().toLowerCase();
-const billingConfigured = Boolean(
-  String(process.env.STRIPE_SECRET_KEY || "").trim()
-  && (String(process.env.STRIPE_PRO_PRICE_ID || "").trim()
-    || String(process.env.STRIPE_PRICE_STARTER_MONTHLY || "").trim()),
-);
-const freeAccess = ["1", "true", "on", "yes"].includes(flag)
-  || (!["0", "false", "off", "no"].includes(flag) && !billingConfigured);
+const freeAccess = !["0", "false", "off", "no"].includes(flag);
 
 console.log(
   freeAccess
-    ? `Access tier: every account gets Pro free (${flag ? "FOUNDING_FREE_ACCESS is set" : "no Stripe configuration, so nobody could pay"})`
-    : "Access tier: paid tiers enforced — set FOUNDING_FREE_ACCESS=1 to give the product away",
+    ? `Access tier: every account gets Pro free (${flag ? "FOUNDING_FREE_ACCESS is set" : "the default"})`
+    : "Access tier: paid tiers enforced — FOUNDING_FREE_ACCESS is switched off",
 );
-if (!flag) {
-  console.log("  FOUNDING_FREE_ACCESS is not set. Set it explicitly before configuring Stripe, "
-    + "or access flips the day billing is turned on.");
+if (freeAccess && !flag) {
+  console.log("  This is the default. Set FOUNDING_FREE_ACCESS=0 when you start charging; "
+    + "configuring Stripe alone will not change it.");
 }
 
 console.log("Checklist: docs/CUSTOMER_LAUNCH_CHECKLIST.md");

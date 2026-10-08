@@ -4048,35 +4048,25 @@ export function markPriceDipAlertTriggered(userId: string, ticker: string, trigg
 }
 
 export function isFoundingFreeAccess(): boolean {
-  // Growth mode: every account gets the full product free.
-  //
-  // Set FOUNDING_FREE_ACCESS=1 to turn it on deliberately. That is opt-in by
-  // design: giving the product away should be a decision somebody made, not
-  // what happens when a variable goes missing.
-  const flag = (process.env.FOUNDING_FREE_ACCESS || "").trim().toLowerCase();
-  if (["1", "true", "on", "yes"].includes(flag)) return true;
-  if (["0", "false", "off", "no"].includes(flag)) return false;
-
   /*
-   * Unset is the dangerous case, so it is decided by whether there is anything
-   * to protect.
+   * Growth mode: every account gets the whole product, free.
    *
-   * Failing closed guards revenue — but only if a customer could pay in the
-   * first place. With no Stripe configuration there is no checkout, so refusing
-   * access locks every user out of a product none of them can buy, which is not
-   * caution, it is an outage. That is not hypothetical: FOUNDING_FREE_ACCESS
-   * lives in render.yaml, and this deployment turned out not to read that file
-   * at all.
+   * On by default, deliberately, and not conditional on anything. The previous
+   * version was opt-in via FOUNDING_FREE_ACCESS with a fallback that switched
+   * itself off the moment Stripe was configured — reasonable logic that did the
+   * wrong thing here, because the flag lives in render.yaml and this deployment
+   * does not read that file, while the Stripe keys are set in the dashboard and
+   * are. The result was every account except the allowlisted one landing on the
+   * free tier: most of the research terminal hidden, imports capped at four
+   * holdings, five AI questions a month.
    *
-   * Once billing exists the old reasoning holds and access must be granted on
-   * purpose, so this returns false the moment Stripe is configured.
+   * So the default is the decision rather than a consequence of which variables
+   * happen to be present. Charging is the change that needs an explicit act:
+   * set FOUNDING_FREE_ACCESS=0 and paid tiers are enforced again. Nothing else
+   * turns this off — not a Stripe key, not a deploy, not a missing variable.
    */
-  const billingConfigured = Boolean(
-    String(process.env.STRIPE_SECRET_KEY ?? "").trim()
-    && (String(process.env.STRIPE_PRO_PRICE_ID ?? "").trim()
-      || String(process.env.STRIPE_PRICE_STARTER_MONTHLY ?? "").trim()),
-  );
-  return !billingConfigured;
+  const flag = (process.env.FOUNDING_FREE_ACCESS || "").trim().toLowerCase();
+  return !["0", "false", "off", "no"].includes(flag);
 }
 
 export function readUserEntitlements(userId: string): UserEntitlements {

@@ -15,8 +15,11 @@ services:
         value: production
       - key: SQLITE_DB_PATH
         value: /var/data/aladdin.sqlite
-      # Growth mode — every account gets the full product free. Remove this
-      # entry (or set it to 0) when paid tiers go live.
+      # Growth mode is the application's default now, so this entry is a
+      # statement of intent rather than the thing that switches it on — which
+      # matters, because this service takes its configuration from the Render
+      # dashboard and not from this file. Set it to "0" there when paid tiers
+      # go live; configuring Stripe alone no longer changes access.
       - key: FOUNDING_FREE_ACCESS
         value: "1"
       - key: BACKUP_OUTPUT_DIR

@@ -138,6 +138,11 @@ jobs:
       # wrong sign, on every quote the product shows.
       - name: Previous close
         run: node scripts/test-yahoo-quote.mjs
+      # Every account gets the whole product free, by default. That broke once
+      # because the flag granting it lived in a file the host ignores while the
+      # Stripe key that revoked it lived in one the host reads.
+      - name: Entitlements
+        run: node scripts/test-entitlements.mjs
 
       # The Ask AI panel answered the same generic report whatever was typed.
       # This stands a mock provider in front of the route and reads what the
