@@ -39,28 +39,36 @@ const spaceGrotesk = localFont({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://spectre-assets.com"),
+  /*
+   * These are the page as a search result and as a link in a chat, which is
+   * where most people meet it first. They kept the old hero line —
+   * "plan like an investor, run it like a machine" — for a while after the
+   * homepage stopped saying it, so the card and the page disagreed. Change
+   * them together with the hero.
+   */
   title: "SPECTRE — AI Portfolio Intelligence for Australian Investors",
   description:
-    "Import your broker, super, and crypto holdings. SPECTRE scores your real risk in 60 seconds and answers questions in plain English. Free while we grow — no card.",
+    "Import your broker, super and crypto. SPECTRE looks inside your ETFs and funds using SEC filings, scores your real risk in 60 seconds, and answers questions about what you actually own.",
   keywords: [
     "portfolio tracker australia", "asx portfolio", "ai portfolio analysis",
+    "etf look through", "etf holdings breakdown", "13f", "n-port",
     "risk score", "commsec import", "super tracking", "monte carlo portfolio",
   ],
   openGraph: {
     type: "website",
     url: "https://spectre-assets.com",
     siteName: "SPECTRE",
-    title: "SPECTRE — Plan like an investor. Run it like a machine.",
+    title: "SPECTRE — A spreadsheet can't answer questions. A chatbot can't see your money.",
     description:
-      "AI portfolio intelligence for Australian investors. Risk scoring, live research, and an AI that can actually see what you own. Free while we grow.",
+      "AI portfolio intelligence for Australian investors. It looks inside your funds from SEC filings, so your risk score is built on the stocks you really own.",
     images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "SPECTRE — AI Portfolio Intelligence" }],
     locale: "en_AU",
   },
   twitter: {
     card: "summary_large_image",
-    title: "SPECTRE — Plan like an investor. Run it like a machine.",
+    title: "SPECTRE — A spreadsheet can't answer questions. A chatbot can't see your money.",
     description:
-      "AI portfolio intelligence for Australian investors. Free while we grow — no card required.",
+      "Import everything, see inside your funds, and ask your portfolio anything. Free while we grow — no card required.",
     images: ["/og-image.png"],
   },
 };
@@ -77,7 +85,18 @@ const cloudflareAnalyticsToken = process.env.NEXT_PUBLIC_CF_WEB_ANALYTICS_TOKEN?
 const cloudflareBeaconConfig = cloudflareAnalyticsToken
   ? JSON.stringify({ token: cloudflareAnalyticsToken })
   : null;
-const metaPixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID?.trim() || null;
+/*
+ * One pixel, in one place.
+ *
+ * There were two: a hardcoded block inside <head> and this env-driven one as a
+ * direct child of <html>, both with id="meta-pixel". Next dedupes by id so the
+ * second never injected, which made NEXT_PUBLIC_META_PIXEL_ID look configurable
+ * while the hardcoded id was the one that always fired — and a <Script> outside
+ * <body> is not a place React will keep putting things. The id stays as the
+ * default so tracking behaves exactly as before; it is public by design and
+ * visible in any page source.
+ */
+const metaPixelId = process.env.NEXT_PUBLIC_META_PIXEL_ID?.trim() || "942949321933981";
 const metaPixelScript = metaPixelId
   ? `
     !function(f,b,e,v,n,t,s)
@@ -100,21 +119,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <head>
-        <Script id="meta-pixel" strategy="afterInteractive">{`
-          !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-          n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
-          n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
-          t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
-          document,'script','https://connect.facebook.net/en_US/fbevents.js');
-          fbq('init', '942949321933981');
-          fbq('track', 'PageView');
-        `}</Script>
-        <noscript>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img height="1" width="1" style={{display:"none"}} src="https://www.facebook.com/tr?id=942949321933981&ev=PageView&noscript=1" alt="" />
-        </noscript>
-      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${spaceGrotesk.variable}`}
       >
@@ -134,18 +138,18 @@ export default function RootLayout({
             />
           </noscript>
         ) : null}
+        {metaPixelScript ? (
+          <Script id="meta-pixel" strategy="afterInteractive" dangerouslySetInnerHTML={{ __html: metaPixelScript }} />
+        ) : null}
+        {cloudflareBeaconConfig ? (
+          <Script
+            defer
+            src="https://static.cloudflareinsights.com/beacon.min.js"
+            data-cf-beacon={cloudflareBeaconConfig}
+            strategy="afterInteractive"
+          />
+        ) : null}
       </body>
-      {metaPixelScript ? (
-        <Script id="meta-pixel" strategy="afterInteractive" dangerouslySetInnerHTML={{ __html: metaPixelScript }} />
-      ) : null}
-      {cloudflareBeaconConfig ? (
-        <Script
-          defer
-          src="https://static.cloudflareinsights.com/beacon.min.js"
-          data-cf-beacon={cloudflareBeaconConfig}
-          strategy="afterInteractive"
-        />
-      ) : null}
     </html>
   );
 }

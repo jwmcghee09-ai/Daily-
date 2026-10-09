@@ -354,5 +354,151 @@ for (const surface of PALETTE_SURFACES) {
   }
 }
 
+/*
+ * ── 9. The homepage's numbers agree with the demo workspace ──
+ *
+ * Every figure on the landing page is a mock, which made each section's numbers
+ * someone's free choice, and they diverged: the ticker had BHP at 45.82 up 1.2%
+ * while the research panel below it had 57.54 down 2.7%, CBA was down 0.4% in
+ * one place and up 0.4% in another, and the hero showed a $1.27M book beside a
+ * connector example quoting $54,428. Nothing was broken and nothing looked
+ * broken — but reading two of them together tells a visitor the numbers in a
+ * risk product are decoration, and a finance reader does read them together.
+ *
+ * The fix was to source them all from the demo portfolio a visitor actually
+ * lands in. This keeps them there: the price and day move the page prints for a
+ * demo holding must be the price and day move that holding has, and the total
+ * must be the arithmetic of the seed.
+ */
+{
+  const demo = readFileSync(join(root, "src/lib/demo-portfolio.ts"), "utf8");
+  const seeds = new Map();
+  for (const line of demo.split("\n")) {
+    const m = line.match(
+      /ticker:\s*"([A-Z0-9.\-]+)".*?units:\s*([\d.]+),\s*price:\s*([\d.]+),\s*prevClose:\s*([\d.]+)/,
+    );
+    if (m) seeds.set(m[1], { units: +m[2], price: +m[3], prevClose: +m[4] });
+  }
+  if (seeds.size < 8) {
+    fail(`demo-portfolio.ts: only parsed ${seeds.size} seed holdings — the guardrail below is not reading them`);
+  }
+
+  // What the page prints, and which demo holding each claim is about.
+  const claims = [
+    ["ticker strip", "BHP", /\["BHP", "([\d.]+)", "([+\-][\d.]+)%"/],
+    ["ticker strip", "CBA", /\["CBA", "([\d.]+)", "([+\-][\d.]+)%"/],
+    ["ticker strip", "IVV", /\["IVV", "([\d.]+)", "([+\-][\d.]+)%"/],
+    ["ticker strip", "MQG", /\["MQG", "([\d.]+)", "([+\-][\d.]+)%"/],
+    ["ticker strip", "VAS", /\["VAS", "([\d.]+)", "([+\-][\d.]+)%"/],
+    ["research panel", "BHP", /\["BHP", "([\d.]+)", "([+\-][\d.]+)%", (?:true|false)\]/],
+    ["research panel", "CBA", /\["CBA", "([\d.]+)", "([+\-][\d.]+)%", (?:true|false)\]/],
+  ];
+
+  let drift = [];
+  for (const [where, ticker, pattern] of claims) {
+    const seed = seeds.get(ticker);
+    if (!seed) { drift.push(`${ticker} is not in the demo seed`); continue; }
+    const m = tsx.match(pattern);
+    if (!m) { drift.push(`${where}: no ${ticker} row found`); continue; }
+
+    if (Math.abs(+m[1] - seed.price) > 0.011) {
+      drift.push(`${where}: ${ticker} priced ${m[1]}, demo holds it at ${seed.price}`);
+    }
+    const truth = ((seed.price - seed.prevClose) / seed.prevClose) * 100;
+    if (Math.abs(+m[2] - truth) > 0.06) {
+      drift.push(`${where}: ${ticker} moved ${m[2]}%, demo implies ${truth.toFixed(2)}%`);
+    }
+  }
+
+  // The headline total, which is the one a reader checks against the demo.
+  const total = [...seeds.values()].reduce((sum, h) => sum + h.units * h.price, 0);
+  const shown = tsx.match(/label="Portfolio Value" value="\$([\d,]+)"/);
+  if (!shown) {
+    drift.push("no Portfolio Value stat card found in the hero");
+  } else if (Math.abs(Number(shown[1].replace(/,/g, "")) - total) > 1) {
+    drift.push(`hero: portfolio value $${shown[1]}, demo seed totals $${total.toFixed(2)}`);
+  }
+
+  if (drift.length) {
+    fail("landing page disagrees with the demo workspace it links to:\n    - " + drift.join("\n    - "));
+  } else {
+    ok(`landing page: all ${claims.length} quoted figures and the total match demo-portfolio.ts`);
+  }
+}
+
+/*
+ * ── 10. The homepage does not advertise the paper-trading agent ──
+ *
+ * Myrmidon is a separate thing from the portfolio product this page sells, and
+ * putting an autonomous trader on the marketing page set an expectation the
+ * signup flow does not meet. It was a feature card, a lifecycle chip reading
+ * "Automate", and two typed commands in the hero that were trade instructions.
+ */
+{
+  /*
+   * Comments stripped first. This check failed on the comment explaining why
+   * the trade instructions were removed, which is a note to the next reader,
+   * not a promise to a visitor. What matters is what the page renders.
+   */
+  const rendered = tsx
+    .replace(/\{\s*\/\*[\s\S]*?\*\/\s*\}/g, "")
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/^\s*\/\/.*$/gm, "");
+
+  const banned = [/myrmidon/i, /autonomous trader/i, /paper money/i, /\bTake profit\b/i, /\bBuy the dip\b/i];
+  const present = banned.filter((p) => p.test(rendered)).map((p) => String(p));
+  if (present.length) {
+    fail(`landing-page.tsx advertises automated trading again: ${present.join(", ")}`);
+  } else {
+    ok("landing page: no automated-trading claims");
+  }
+}
+
+/*
+ * ── 11. Claims the product has to keep ──
+ *
+ * The connector bullet said "twelve tools" when there were ten, and said the
+ * holdings "stay on your machine" after the hosted connector shipped, which
+ * made it plainly untrue. Both were accurate when written. This ties the two
+ * claims most likely to rot to the thing they describe.
+ */
+{
+  const mcpTools = readFileSync(join(root, "src/lib/mcp-tools.ts"), "utf8");
+  const toolCount = new Set([...mcpTools.matchAll(/name:\s*"([a-z_]+)"/g)].map((m) => m[1])).size;
+  const words = { 9: "Nine", 10: "Ten", 11: "Eleven", 12: "Twelve", 13: "Thirteen" };
+  const word = words[toolCount];
+
+  /*
+   * Every mention has to be right, not just one of them.
+   *
+   * The page states the count in two places — a feature card and a connector
+   * bullet — and an earlier version of this check passed as soon as it found a
+   * correct one anywhere, so a stale "twelve" beside a fresh "ten" went
+   * through. Collect them all instead.
+   */
+  const counts = [...tsx.matchAll(/\b(Nine|Ten|Eleven|Twelve|Thirteen) tools\b/gi)].map((m) => m[0]);
+
+  if (!word) {
+    fail(`mcp-tools.ts exposes ${toolCount} tools and this check has no word for that — add one`);
+  } else if (!counts.length) {
+    fail(`landing page never states the tool count; mcp-tools.ts exposes ${toolCount}`);
+  } else {
+    const wrong = counts.filter((c) => c.toLowerCase() !== `${word.toLowerCase()} tools`);
+    if (wrong.length) {
+      fail(`landing page says ${[...new Set(wrong)].map((w) => `"${w}"`).join(", ")} `
+        + `but mcp-tools.ts exposes ${toolCount} — expected "${word} tools"`);
+    } else {
+      ok(`landing page: all ${counts.length} tool-count mentions match the ${toolCount} in mcp-tools.ts`);
+    }
+  }
+
+  if (/never handed to a third party|stays on your machine/i.test(tsx)) {
+    fail("landing page claims holdings never leave your machine. The hosted MCP connector sends them "
+      + "to the assistant the user connects, so say that instead.");
+  } else {
+    ok("landing page: no local-only claim contradicting the hosted connector");
+  }
+}
+
 console.log(failures ? `\n${failures} check(s) FAILED` : "\nAll site guardrails passed");
 process.exit(failures ? 1 : 0);

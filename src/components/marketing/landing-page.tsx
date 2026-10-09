@@ -24,19 +24,47 @@ type WorkflowStep = MarketingCard & {
   number: string;
 };
 
+/*
+ * Every figure on this page comes from one dataset: the demo workspace in
+ * src/lib/demo-portfolio.ts.
+ *
+ * It used to come from wherever each section was written. The ticker said BHP
+ * 45.82 up 1.2% while the research panel below said 57.54 down 2.7%; CBA was
+ * down 0.4% in one and up 0.4% in the other; the hero claimed a $1.27M book and
+ * the connector example a $54,428 one. Any of those read alone is fine. Read
+ * together — which is what a finance person does — they say the numbers are
+ * decoration, and that is a bad first impression for a risk tool.
+ *
+ * So the prices and day moves below are DEMO_HOLDINGS' price and prevClose, the
+ * totals are that portfolio's actual arithmetic, and a visitor who clicks
+ * through to the demo sees the same book. scripts/verify-site.mjs asserts the
+ * agreement, because this is the kind of thing that drifts back silently.
+ */
 const tickerItems = [
   ["BHP", "45.82", "+1.2%", "up"],
-  ["CBA", "131.44", "-0.4%", "dn"],
+  ["CBA", "131.44", "+0.4%", "up"],
+  ["IVV", "68.31", "-0.3%", "dn"],
   ["AUD/USD", "0.629", "+0.2%", "up"],
-  ["GOLD", "3112", "+0.8%", "up"],
+  ["GOLD", "3,112", "+0.8%", "up"],
   ["WTI", "69.86", "-1.9%", "dn"],
-  ["BTC", "84.2k", "+1.4%", "up"],
-  ["ETH", "1,965", "+2.3%", "up"],
+  ["BTC", "84.2k", "-1.8%", "dn"],
+  ["ETH", "3,140", "+0.6%", "up"],
   ["CSL", "288.10", "+0.7%", "up"],
   ["MQG", "218.75", "+1.4%", "up"],
+  ["VAS", "104.60", "+0.6%", "up"],
   ["FMG", "18.44", "-2.1%", "dn"],
   ["VIX", "21.4", "-6.1%", "dn"],
 ] as const;
+
+/*
+ * The lifecycle chips under the hero.
+ *
+ * "Automate" used to be the last one, pointing at the paper-trading agent. That
+ * is a different product from the one this page is selling, so the step that
+ * replaced it is the one that makes the rest of the page work: looking through
+ * the wrappers before anything is scored.
+ */
+const LIFECYCLE_STEPS = ["Import", "Look Inside", "Score", "Ask", "Watch"] as const;
 
 const workflowSteps: readonly WorkflowStep[] = [
   {
@@ -47,8 +75,8 @@ const workflowSteps: readonly WorkflowStep[] = [
   },
   {
     number: "02 — NORMALIZE",
-    title: "Build Portfolio Context",
-    copy: "SPECTRE merges holdings, prices, sectors, account buckets, snapshots, and benchmark context into one AI-ready workspace.",
+    title: "One view of everything.",
+    copy: "SPECTRE merges holdings, prices, sectors, account buckets, snapshots, and benchmark context into one workspace — then looks inside your funds so the view is of securities, not wrappers.",
     icon: <GridIcon />,
     alt: true,
   },
@@ -73,7 +101,7 @@ const primaryClients: readonly McpClient[] = [
     name: "Claude",
     note: "Desktop app",
     mark: <ClaudeMark />,
-    copy: "One command writes the connector into Claude Desktop, leaving your other connections alone.",
+    copy: "Paste the SPECTRE URL into Settings → Connectors, or run it locally with one command.",
   },
   {
     name: "ChatGPT",
@@ -94,52 +122,58 @@ const otherClients: readonly McpClient[] = [
 const features: readonly MarketingCard[] = [
   {
     title: "AI Portfolio Analyst",
-    copy: "Ask in plain English. Answers come from your real holdings, not guesses.",
+    copy: "Ask in plain English. Answers come from your holdings, not guesses.",
     icon: <PulseIcon />,
+  },
+  {
+    title: "Fund Look-Through",
+    copy: "See the stocks inside your ETFs and funds, straight from SEC filings.",
+    icon: <LayersIcon />,
+    alt: true,
   },
   {
     title: "Import Anything",
     copy: "CommSec, Selfwealth, Stake, super, ETFs, funds, crypto, bullion.",
     icon: <UploadIcon />,
-    alt: true,
   },
   {
     title: "Forward a Contract Note",
     copy: "Email the broker confirmation to SPECTRE. The trade files itself.",
     icon: <BellIcon />,
+    alt: true,
   },
   {
     title: "Quant Risk Engine",
     copy: "VaR 95, CVaR, beta, Sharpe, drawdown, correlation — computed, not estimated.",
     icon: <ShieldIcon />,
-    alt: true,
   },
   {
     title: "Monte Carlo & Stress",
     copy: "500 paths to p10/p50/p90, plus a GFC-scale shock against your book.",
     icon: <ClockIcon />,
+    alt: true,
   },
   {
     title: "Advanced Scanner",
     copy: "ADX, MACD, Bollinger squeeze, ATR and strength against the ASX 200.",
     icon: <GridIcon />,
-    alt: true,
   },
   {
     title: "Research Terminal",
     copy: "ASX movers, news, macro, rates and commodities in one place.",
     icon: <BarsIcon />,
-  },
-  {
-    title: "Myrmidon Agent",
-    copy: "An autonomous trader on paper money. Every decision shown before it runs.",
-    icon: <UsersIcon />,
     alt: true,
   },
   {
+    title: "Dip Alerts",
+    copy: "Name a drop worth knowing about and SPECTRE emails you when it happens.",
+    icon: <UsersIcon />,
+  },
+  {
     title: "Connect Your Own AI",
-    copy: "Twelve tools over MCP. Claude reads your portfolio from your machine.",
+    copy: "Ten tools over MCP. Your assistant reads your portfolio, including inside the funds.",
     icon: <LockIcon />,
+    alt: true,
   },
 ] as const;
 
@@ -171,7 +205,7 @@ const sessionMovers = [
 const securityCards: readonly MarketingCard[] = [
   {
     title: "No data selling",
-    copy: "Your portfolio is used only to generate your workspace. We don't share or sell it.",
+    copy: "Your holdings are used only to build your workspace. We don't share or sell them. Site analytics are separate and never carry portfolio data — the privacy policy names every tool.",
     icon: <UsersIcon />,
   },
   {
@@ -182,7 +216,7 @@ const securityCards: readonly MarketingCard[] = [
   },
   {
     title: "Secure accounts",
-    copy: "scrypt password hashing, secure cookies, and Stripe-hosted checkout.",
+    copy: "scrypt password hashing, secure session cookies, and no card details on file anywhere.",
     icon: <LockIcon />,
   },
   {
@@ -202,7 +236,12 @@ const faqs = [
   {
     question: "Is my financial data safe?",
     answer:
-      "Yes. SPECTRE uses modern password hashing, HTTPS with CSP and HSTS headers, encrypted backups, and Stripe-hosted checkout. Your portfolio data is never sold or shared.",
+      "SPECTRE uses modern password hashing, HTTPS with CSP and HSTS headers, and encrypted backups, and your portfolio data is never sold or shared. Like most sites we do run third-party analytics on the marketing pages — they see page views, never holdings — and the privacy policy lists them by name.",
+  },
+  {
+    question: "Can SPECTRE see inside my ETFs and managed funds?",
+    answer:
+      "Usually, yes. US-registered funds and ETFs resolve to their full portfolio from SEC N-PORT filings, and ASX feeders like IVV and IHVV resolve through the US fund they hold. Betashares publishes a complete daily holdings file, so their funds resolve in full too. Vanguard Australia and VanEck publish their largest positions rather than the whole portfolio, so those resolve partway and SPECTRE shows you how much of the fund it accounted for instead of pretending to the rest. Anything else, upload the fund's holdings file and it resolves from that. Every breakdown is stamped with the date of the filing it came from.",
   },
   {
     question: "What is the SPECTRE risk score?",
@@ -408,6 +447,7 @@ export default function LandingPage({
 
           <div className={styles.navLinks}>
             <a href="#ai">AI</a>
+            <a href="#funds">Funds</a>
             <a href="#scanner">Scanner</a>
             <a href="#connect">Connect</a>
             <a href="#features">Features</a>
@@ -455,12 +495,18 @@ export default function LandingPage({
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/spectre-wordmark.svg" alt="SPECTRE" className={styles.heroWordmarkImg} />
             </h1>
+            {/* The strongest line on the page used to be buried in the
+                comparison section two thirds of the way down. It says what
+                SPECTRE is by saying what the two things you already tried
+                can't do, which "plan like an investor, run it like a machine"
+                did not. */}
             <p className={`${styles.heroTag} ${styles.reveal}`}>
-              Plan like an investor. Run it like a machine<span className={styles.caret} aria-hidden="true" />
+              A spreadsheet can’t answer questions.<br />
+              A chatbot can’t see your money<span className={styles.caret} aria-hidden="true" />
             </p>
             <p className={`${styles.heroSub} ${styles.reveal}`}>
-              Import your broker, super, and crypto holdings. SPECTRE scores your real risk in 60 seconds
-              and answers questions in plain English — because it can actually see what you own.
+              Import your broker, super and crypto. SPECTRE looks inside your funds, scores your real
+              risk in 60 seconds, and answers questions about what you actually own.
             </p>
             <div className={`${styles.heroActions} ${styles.reveal}`}>
               <Link href="/signin?mode=register&plan=free" className={`${styles.button} ${styles.primaryButton} ${styles.heroButton}`}>
@@ -471,10 +517,10 @@ export default function LandingPage({
               </Link>
             </div>
             <div className={`${styles.lifecycle} ${styles.reveal}`}>
-              {["Import", "Score", "Ask", "Watch", "Automate"].map((step, i) => (
+              {LIFECYCLE_STEPS.map((step, i) => (
                 <span key={step} className={styles.lifecycleStep}>
                   <span className={styles.lifecycleChip} style={{ animationDelay: `${i * 0.9}s` }}>{step}</span>
-                  {i < 4 && <span className={styles.lifecycleArrow}>→</span>}
+                  {i < LIFECYCLE_STEPS.length - 1 && <span className={styles.lifecycleArrow}>→</span>}
                 </span>
               ))}
             </div>
@@ -493,9 +539,10 @@ export default function LandingPage({
             <TypeCommandBar />
 
             <div className={styles.dashboardStats}>
-              <StatCard label="Portfolio Value" value="$1.27M" sub="+2.1% MTD" tone="up" />
-              <StatCard label="Import Sources" value="8" sub="Broker, super, crypto, bullion" />
-              <StatCard label="AI Coverage" value="24" sub="Holdings + research context" />
+              {/* The demo book, to the cent. See the note on tickerItems. */}
+              <StatCard label="Portfolio Value" value="$314,320" sub="+1.7% MTD" tone="up" />
+              <StatCard label="Accounts Linked" value="7" sub="Broker, super, crypto, bullion" />
+              <StatCard label="Funds Resolved" value="2 of 3" sub="IVV · VAS · one awaiting a file" />
               <StatCard label="Monte Carlo" value="500" sub="1Y simulation paths" />
             </div>
 
@@ -559,7 +606,7 @@ export default function LandingPage({
         <div className={styles.container}>
           <div className={styles.statsGrid}>
             {[
-              { val: "8", label: "Import Sources" },
+              { val: "9", label: "Import Sources" },
               { val: "12+", label: "Risk Signals" },
               { val: "500", label: "Monte Carlo Paths" },
               { val: "3", label: "Quant · AI · Research" },
@@ -581,7 +628,7 @@ export default function LandingPage({
               Ask your portfolio<br /><span>anything.</span>
             </h2>
             <p className={`${styles.aiRevealSub} ${styles.reveal}`}>
-              This isn’t generic finance chat. Before answering, SPECTRE reads your actual holdings, live prices, your risk numbers, and the research feed — so “why am I down today?” gets a real answer, with your tickers in it.
+              This isn’t generic finance chat. Before answering, SPECTRE reads your holdings, the stocks inside your funds, live prices, your risk numbers, and the research feed — so “why am I down today?” names your tickers.
             </p>
           </div>
           <div ref={aiConsoleRef} className={styles.aiConsoleReveal}>
@@ -601,11 +648,11 @@ export default function LandingPage({
               <div className={styles.miniGrid} style={{ marginTop: "14px" }}>
                 <div className={styles.miniCard}>
                   <div className={styles.smallLabel}>What AI Reads</div>
-                  <p>Holdings, weights, live quotes, sector mix, benchmark risk, research signals, and snapshot history.</p>
+                  <p>Holdings, the stocks inside your funds, weights, live quotes, sector mix, benchmark risk, research signals, and snapshot history.</p>
                 </div>
                 <div className={styles.miniCard}>
                   <div className={styles.smallLabel}>What AI Returns</div>
-                  <p>Portfolio drivers, holding-level explanations, risk flags, next actions, and confidence-based follow-up checks.</p>
+                  <p>Portfolio drivers, holding-level explanations, risk flags, and things worth checking — never an instruction to trade. SPECTRE surfaces; you decide.</p>
                 </div>
               </div>
               <div className={styles.aiRevealCta}>
@@ -614,6 +661,135 @@ export default function LandingPage({
                 </Link>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <Divider />
+
+      {/*
+       * Fund look-through.
+       *
+       * This is the thing nothing else in the category does, and until now the
+       * homepage did not mention it once — a visitor could read the whole page
+       * and never learn that SPECTRE opens the wrappers. It goes directly after
+       * "ask your portfolio anything", because being able to see inside the
+       * funds is what makes those answers different from a chatbot's.
+       *
+       * Every claim here is one the engine actually makes good on. The coverage
+       * card is deliberately the least flattering of the four and is staying:
+       * someone who signs up believing their whole book resolves, and finds out
+       * afterwards that it does not, is worse than someone who never signed up.
+       */}
+      <section className={styles.section} id="funds">
+        <div className={styles.container}>
+          <div className={`${styles.sectionLabel} ${styles.reveal}`}>Fund Look-Through</div>
+          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`}>See inside your funds.</h2>
+          <p className={`${styles.sectionSub} ${styles.reveal}`}>
+            Own ETFs or managed funds? SPECTRE reads each fund’s filings and breaks it down to the stocks
+            it holds — N-PORT for funds and ETFs, 13F for institutional managers. Hold three tech-heavy
+            ETFs and you’ll see exactly how much Nvidia you really own.
+          </p>
+
+          <div className={styles.connectSplit}>
+            <div className={`${styles.connectTerm} ${styles.revealScale}`}>
+              <div className={styles.scanTermBar}>SPECTRE // INSIDE YOUR FUNDS</div>
+              <div className={styles.lookBody}>
+                <div className={styles.lookFund}>
+                  <div className={styles.lookFundHead}>
+                    <span className={styles.lookFundSym}>IVV</span>
+                    <span className={styles.lookFundName}>iShares Core S&amp;P 500 ETF</span>
+                    <span className={styles.lookFundVal}>$28,690</span>
+                  </div>
+                  <div className={styles.lookFundMeta}>
+                    507 holdings · SEC N-PORT · as of 30 Jun 2026
+                  </div>
+                  <div className={styles.lookRows}>
+                    {[
+                      ["NVDA", "NVIDIA", "7.6%", "$2,180"],
+                      ["AAPL", "Apple", "6.6%", "$1,894"],
+                      ["MSFT", "Microsoft", "6.2%", "$1,779"],
+                      ["AMZN", "Amazon", "4.0%", "$1,148"],
+                      ["META", "Meta Platforms", "2.7%", "$775"],
+                    ].map(([sym, name, weight, value]) => (
+                      <div key={sym} className={styles.lookRow}>
+                        <span className={styles.lookRowSym}>{sym}</span>
+                        <span className={styles.lookRowName}>{name}</span>
+                        <span className={styles.lookRowWeight}>{weight}</span>
+                        <span className={styles.lookRowVal}>{value}</span>
+                      </div>
+                    ))}
+                    <div className={styles.lookRowRest}>+ 502 more names</div>
+                  </div>
+                </div>
+
+                <div className={styles.lookFund}>
+                  <div className={styles.lookFundHead}>
+                    <span className={styles.lookFundSym}>VAS</span>
+                    <span className={styles.lookFundName}>Vanguard Australian Shares ETF</span>
+                    <span className={styles.lookFundVal}>$9,937</span>
+                  </div>
+                  {/* Vanguard publishes its largest positions, not the whole
+                      portfolio, so the weights are allocated as far as they go
+                      and the remainder stays as VAS. Never rescaled to 100%:
+                      that would report CBA at 30% of the fund. */}
+                  <div className={styles.lookFundMeta}>
+                    Top holdings from Vanguard Australia · 33% of the fund accounted for
+                  </div>
+                  <div className={styles.lookRows}>
+                    {[
+                      ["CBA", "Commonwealth Bank", "9.8%", "$974"],
+                      ["BHP", "BHP Group", "8.4%", "$835"],
+                      ["CSL", "CSL Limited", "5.6%", "$556"],
+                      ["NAB", "National Australia Bank", "4.9%", "$487"],
+                      ["WBC", "Westpac", "4.4%", "$437"],
+                    ].map(([sym, name, weight, value]) => (
+                      <div key={sym} className={styles.lookRow}>
+                        <span className={styles.lookRowSym}>{sym}</span>
+                        <span className={styles.lookRowName}>{name}</span>
+                        <span className={styles.lookRowWeight}>{weight}</span>
+                        <span className={styles.lookRowVal}>{value}</span>
+                      </div>
+                    ))}
+                    <div className={styles.lookRowRest}>Remaining 67% stays as VAS — not guessed at</div>
+                  </div>
+                </div>
+
+                <div className={styles.lookCallout}>
+                  <span className={styles.lookCalloutTag}>OVERLAP</span>
+                  <div>
+                    <strong>You own more CBA than your account says.</strong>
+                    <p>
+                      $15,773 held directly plus $974 inside VAS is <strong>$16,747</strong> — 5.3% of the
+                      book, not the 5.0% the holdings table shows. Your risk score uses the 5.3%.
+                    </p>
+                  </div>
+                </div>
+
+                <div className={styles.scanDisclaimer}>
+                  Filing-dated, not live. SPECTRE surfaces; you decide.
+                </div>
+              </div>
+            </div>
+
+            <ul className={styles.connectList}>
+              {[
+                ["Your true exposure", "Holdings are merged across every fund you own, so hidden overlap and true concentration show up in your risk score instead of hiding behind a ticker."],
+                ["Holding companies too", "Hold Berkshire or another listed investment company and SPECTRE reads its 13F to show the equities inside it — counting only the share of the company that sleeve really is."],
+                ["Dated, not live", "Filings are published with a delay of up to a couple of months. Every breakdown shows the date of the filing it came from, and partial coverage is labelled as partial."],
+                ["Coverage", "US-registered funds, ETFs and managers resolve in full from SEC filings, and ASX feeders like IVV and IHVV resolve through the US fund they hold. Betashares publishes a full daily file. Vanguard Australia and VanEck publish their largest positions only, so those resolve partway. Anything else, upload the fund's holdings file."],
+              ].map(([title, copy]) => (
+                <li key={title} className={styles.reveal}>
+                  <strong>{title}</strong> — {copy}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className={styles.researchCtaRow}>
+            <Link href="/dashboard?demo=1" className={`${styles.button} ${styles.primaryButton}`}>
+              Open a Fund in the Demo →
+            </Link>
           </div>
         </div>
       </section>
@@ -713,7 +889,7 @@ export default function LandingPage({
           </h2>
           <p className={`${styles.sectionSub} ${styles.reveal}`}>
             SPECTRE speaks the Model Context Protocol, so you can plug Claude, ChatGPT or a model running
-            on your own machine straight into your portfolio. Your AI reads the real numbers — computed by
+            on your own machine straight into your portfolio. Your AI reads numbers computed by
             us, never guessed by it — and you keep using the assistant you already pay for.
           </p>
 
@@ -751,7 +927,8 @@ export default function LandingPage({
           </div>
 
           <p className={`${styles.connectFootnote} ${styles.reveal}`}>
-            Any MCP client works — these are simply the common ones. Setup is one command.
+            Any MCP client works — these are simply the common ones. Paste one URL, or run it on your own
+            machine. <Link href="/mcp-setup">Setup instructions →</Link>
           </p>
 
           <div className={styles.connectSplit}>
@@ -761,13 +938,13 @@ export default function LandingPage({
                 <div className={styles.connectAsk}>› How is my portfolio positioned right now?</div>
                 <div className={styles.connectToolRow}>
                   <span className={styles.connectTool}>get_portfolio ✓</span>
+                  <span className={styles.connectTool}>portfolio_funds ✓</span>
                   <span className={styles.connectTool}>portfolio_risk ✓</span>
-                  <span className={styles.connectTool}>market_scan ✓</span>
                 </div>
                 <div className={styles.connectReply}>
-                  Your book is <strong>$54,428</strong>, down <strong>1.5%</strong> today. It&rsquo;s concentrated —
-                  BHP alone is <strong>33.6%</strong>, and the top three are <strong>76%</strong>. BHP also gapped
-                  down <strong>4.6%</strong> and sits at RSI 30&hellip;
+                  Your book is <strong>$314,320</strong>, flat on the day. It&rsquo;s concentrated — super alone is
+                  <strong> 35.6%</strong> and the top three lines are <strong>58%</strong>. Looking through IVV and
+                  VAS, your real CBA exposure is <strong>5.3%</strong>, not the 5.0% your holdings table shows&hellip;
                 </div>
               </div>
             </div>
@@ -776,9 +953,9 @@ export default function LandingPage({
               {[
                 ["Your numbers, not its guesses", "Risk, momentum and concentration are computed in code before your model ever sees them."],
                 ["Always current", "It reads your live holdings every time you ask, so imports and edits show up immediately."],
-                ["Stays on your machine", "The connector runs locally. Your holdings are never handed to a third party."],
+                ["You choose who sees it", "Connect over a URL, or run the connector on your own machine. Either way your holdings go only to the assistant you connect them to, and nowhere else."],
                 ["No extra AI bill", "You bring your own model, so there's nothing metered on our side."],
-                ["Twelve tools", "Holdings, risk, Monte Carlo, the scanner, news, movers and macro — all callable."],
+                ["Ten tools", "Holdings, fund look-through, risk, the scanner, news, movers and macro — all callable."],
               ].map(([title, copy]) => (
                 <li key={title} className={styles.reveal}>
                   <strong>{title}</strong> — {copy}
@@ -808,7 +985,7 @@ export default function LandingPage({
                 ["VIX", "21.4", "-6.1%", false],
                 ["GOLD", "3,112", "+0.8%", true],
                 ["WTI", "69.86", "-1.9%", false],
-                ["BTC", "84.2k", "+1.4%", true],
+                ["BTC", "84.2k", "-1.8%", false],
               ].map(([label, val, delta, up]) => (
                 <div key={label as string} className={styles.researchTapeCard}>
                   <span className={styles.researchTapeLabel}>{label}</span>
@@ -821,7 +998,7 @@ export default function LandingPage({
               <div className={styles.researchPane}>
                 <div className={styles.researchPaneTitle}>ASX Top Constituents</div>
                 {[
-                  ["BHP", "57.54", "-2.7%", false],
+                  ["BHP", "45.82", "+1.2%", true],
                   ["CBA", "131.44", "+0.4%", true],
                   ["CSL", "288.10", "+0.7%", true],
                   ["MQG", "218.75", "+1.4%", true],
@@ -865,7 +1042,7 @@ export default function LandingPage({
               </div>
             </div>
             <div className={styles.researchWindowFoot}>
-              Live view of the actual research page — every card above is a real feed inside SPECTRE.
+              Every card above is a live feed inside SPECTRE, drawn as the research page draws it.
             </div>
           </div>
 
@@ -895,7 +1072,7 @@ export default function LandingPage({
               See Research Demo
             </a>
             <Link href="/signin?mode=register&plan=free" className={`${styles.button} ${styles.outlineButton}`}>
-              Free While We Grow
+              Create Free Account
             </Link>
           </div>
         </div>
@@ -1003,7 +1180,7 @@ export default function LandingPage({
       <section className={styles.section} id="features">
         <div className={styles.container}>
           <div className={`${styles.sectionLabel} ${styles.reveal}`}>Features</div>
-          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`}>Nine tools that actually talk to each other.</h2>
+          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`}>Ten tools that actually talk to each other.</h2>
 
           <div className={styles.featureGrid}>
             {features.map((feature) => (
@@ -1022,7 +1199,7 @@ export default function LandingPage({
       <section className={styles.section} id="charts">
         <div className={styles.container}>
           <div className={`${styles.sectionLabel} ${styles.reveal}`}>Dashboard Preview</div>
-          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`}>What the live system actually tracks.</h2>
+          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`}>What SPECTRE tracks.</h2>
 
           <div className={styles.chartsGrid}>
             <article className={`${styles.chartCard} ${styles.chartTall} ${styles.revealTilt}`}>
@@ -1198,13 +1375,14 @@ export default function LandingPage({
       <section className={styles.section}>
         <div className={styles.container}>
           <div className={`${styles.sectionLabel} ${styles.reveal}`}>Why SPECTRE?</div>
-          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`}>A spreadsheet can’t answer questions. A chatbot can’t see your money.</h2>
+          {/* This section's old headline is now the hero. */}
+          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`}>So why not just a spreadsheet and a chatbot?</h2>
 
           <div className={styles.compareGrid}>
             <div className={`${styles.compareColumn} ${styles.revealLeft}`}>
               <div className={styles.compareHead}>Other Approaches</div>
               <CompareItem tone="bad">Generic chat tools with no view of your actual holdings</CompareItem>
-              <CompareItem tone="bad">Portfolio apps with charts but no real research context</CompareItem>
+              <CompareItem tone="bad">Portfolio apps with charts but no research context</CompareItem>
               <CompareItem tone="bad">Manual spreadsheets for super, crypto, bullion, and broker accounts</CompareItem>
               <CompareItem tone="bad">No Monte Carlo, benchmark sensitivity, or tail-risk layer</CompareItem>
               <CompareItem tone="bad">No alerts, snapshots, or memory between decisions</CompareItem>
@@ -1291,6 +1469,7 @@ export default function LandingPage({
                 <li><a href="#workflow">How It Works</a></li>
                 <li><a href="#features">Features</a></li>
                 <li><a href="#ai">AI Analysis</a></li>
+                <li><a href="#funds">Fund Look-Through</a></li>
                 <li><a href="#start">Start Now</a></li>
                 <li><Link href="/dashboard?demo=1">Live Demo</Link></li>
               </ul>
@@ -1321,12 +1500,20 @@ function Divider() {
   return <hr className={styles.divider} />;
 }
 
+/*
+ * What the hero's command bar types out.
+ *
+ * Two of these used to be trade instructions — "buy the dip when SPY falls 3%",
+ * "take profit on anything up 10%" — which belonged to the paper-trading agent
+ * and promised a homepage visitor something this product does not do. Replaced
+ * with questions it does answer.
+ */
 const COMMAND_PHRASES = [
   "Why is my portfolio down today?",
-  "Buy the dip when SPY falls 3% or more",
-  "How concentrated am I in banks?",
+  "How much Nvidia do I own through my ETFs?",
+  "How concentrated am I in banks, really?",
   "Alert me if BHP drops 5% in a week",
-  "Take profit on anything up 10%",
+  "What overlaps between VAS and my direct holdings?",
 ] as const;
 
 function TypeCommandBar() {
@@ -1466,6 +1653,17 @@ function UploadIcon() {
       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
       <polyline points="17 8 12 3 7 8" />
       <line x1="12" y1="3" x2="12" y2="15" />
+    </svg>
+  );
+}
+
+/** Stacked planes, for the one feature that is about seeing through a layer. */
+function LayersIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <polygon points="12 2 22 8 12 14 2 8 12 2" />
+      <polyline points="2 13 12 19 22 13" />
+      <polyline points="2 17.5 12 23.5 22 17.5" />
     </svg>
   );
 }

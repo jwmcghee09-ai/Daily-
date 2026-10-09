@@ -3912,3 +3912,168 @@
 @media (max-width: 560px) {
   .brandKnot { height: 23px; width: 23px; }
 }
+
+/*
+ * The fund look-through panel.
+ *
+ * Built to read like the drill-down in the product rather than a marketing
+ * graphic: a fund line, the filing it came from, then the securities it
+ * resolved to, indented so the nesting is the point. It shares .connectTerm's
+ * frame so the two product mocks on this page look like the same product.
+ */
+.lookBody {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.lookFund {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lookFundHead {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.lookFundSym {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 13px;
+  font-weight: 600;
+  color: #0d0d11;
+}
+
+.lookFundName {
+  font-size: 12.5px;
+  color: #54545d;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lookFundVal {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 13px;
+  font-weight: 600;
+  color: #0d0d11;
+  white-space: nowrap;
+}
+
+/* The as-of line. Small, but it is the honest part of the whole feature. */
+.lookFundMeta {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  color: #71717a;
+}
+
+/* The rule down the left is the look-through: these rows belong to the line
+   above them, and nothing else on the page is drawn this way. */
+.lookRows {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 2px;
+  padding-left: 14px;
+  border-left: 2px solid rgba(245, 57, 20, 0.3);
+}
+
+.lookRow {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) 46px 64px;
+  gap: 8px;
+  align-items: baseline;
+  font-size: 12.5px;
+}
+
+.lookRowSym {
+  font-family: var(--font-geist-mono), monospace;
+  font-weight: 600;
+  color: #0d0d11;
+}
+
+.lookRowName {
+  color: #54545d;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lookRowWeight {
+  font-family: var(--font-geist-mono), monospace;
+  color: #71717a;
+  text-align: right;
+}
+
+.lookRowVal {
+  font-family: var(--font-geist-mono), monospace;
+  color: #0d0d11;
+  text-align: right;
+}
+
+.lookRowRest {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  color: #9a9aa4;
+  padding-top: 2px;
+}
+
+.lookCallout {
+  display: flex;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(245, 57, 20, 0.26);
+  background: rgba(245, 57, 20, 0.05);
+}
+
+.lookCalloutTag {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  padding: 3px 7px;
+  height: fit-content;
+  border-radius: 999px;
+  background: #f53914;
+  color: #fff;
+  white-space: nowrap;
+}
+
+.lookCallout strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #0d0d11;
+  margin-bottom: 4px;
+}
+
+.lookCallout p {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: #54545d;
+}
+
+.lookCallout p strong {
+  display: inline;
+  margin: 0;
+  font-size: inherit;
+}
+
+/* At phone width the name column is what has to go; the ticker, the weight and
+   the dollar figure are the three things worth reading. */
+@media (max-width: 560px) {
+  .lookRow {
+    grid-template-columns: 48px minmax(0, 1fr) 58px;
+  }
+  .lookRowName {
+    display: none;
+  }
+}
