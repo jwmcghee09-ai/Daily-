@@ -134,11 +134,47 @@ export async function getDemoGuestContext(): Promise<DemoGuestContext | null> {
   return toContext(userId, expiresAt);
 }
 
+/**
+ * Reclaim the workspaces of guests whose half hour is up.
+ *
+ * Expiry used to be checked only when a guest came back with their own cookie,
+ * which cleans up after the people who return and never after the people who
+ * do not — and almost nobody does. Each abandoned workspace is eleven holdings
+ * and a hundred and eighty snapshots, so they accumulate for as long as the
+ * disk lasts.
+ *
+ * Run when a new guest is created, which is exactly when the rows are being
+ * added, so the cost sits with the thing causing it. Bounded per call so a busy
+ * minute cannot turn one request into a long scan.
+ */
+export function sweepExpiredDemoGuests(limit = 40): number {
+  const db = getDb();
+  const rows = db
+    .prepare(
+      "SELECT key, value FROM meta WHERE key LIKE 'demo\\_guest\\_%::' || ? ESCAPE '\\' LIMIT ?",
+    )
+    .all(DEMO_GUEST_EXPIRES_KEY, limit) as Array<{ key: string; value: string }>;
+
+  let swept = 0;
+  const now = Date.now();
+  for (const row of rows) {
+    const expiry = new Date(row.value).getTime();
+    if (Number.isFinite(expiry) && expiry > now) continue;
+    const userId = row.key.split("::")[0];
+    if (!sanitizeGuestId(userId)) continue;
+    clearDemoGuestWorkspace(userId);
+    swept += 1;
+  }
+  return swept;
+}
+
 export function createDemoGuestContext(): DemoGuestContext {
   const userId = `demo_guest_${crypto.randomBytes(12).toString("hex")}`;
   const expiresAt = new Date(Date.now() + DEMO_GUEST_TTL_MS).toISOString();
   setMeta(scopeKey(userId, DEMO_GUEST_EXPIRES_KEY), expiresAt);
   setMeta(scopeKey(userId, DEMO_GUEST_UPLOAD_COUNT_KEY), "0");
+  // Pay for the rows being added by clearing some that are no longer owed.
+  try { sweepExpiredDemoGuests(); } catch { /* never fail a visitor over tidying */ }
   seedDemoPortfolio(userId);
   return toContext(userId, expiresAt);
 }

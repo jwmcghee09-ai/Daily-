@@ -28,6 +28,8 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 90;
 
 const SERVER_INFO = { name: "spectre", version: "2.0.0" };
+/** Generous for a protocol whose largest message carries a ticker. */
+const MAX_BODY_BYTES = 1024 * 1024;
 const SUPPORTED_PROTOCOLS = ["2025-06-18", "2025-03-26", "2024-11-05"];
 const DEFAULT_PROTOCOL = "2025-06-18";
 
@@ -148,9 +150,33 @@ export async function POST(request: Request) {
     ));
   }
 
+  /*
+   * A ceiling on the body.
+   *
+   * Protocol messages are small — an initialize is a few hundred bytes and the
+   * largest tool call here carries a ticker. Without a cap the server allocates
+   * whatever a caller sends: six megabytes parsed fine in testing, and nothing
+   * stopped sixty. Checked against the declared length first so an oversized
+   * body is refused before it is read.
+   */
+  const declaredBytes = Number(request.headers.get("content-length") ?? "0");
+  if (Number.isFinite(declaredBytes) && declaredBytes > MAX_BODY_BYTES) {
+    return cors(NextResponse.json(
+      { error: "payload_too_large", error_description: "MCP messages are limited to 1MB." },
+      { status: 413 },
+    ));
+  }
+
   let message: { jsonrpc?: string; id?: unknown; method?: string; params?: Record<string, unknown> };
   try {
-    message = await request.json();
+    const raw = await request.text();
+    if (new TextEncoder().encode(raw).length > MAX_BODY_BYTES) {
+      return cors(NextResponse.json(
+        { error: "payload_too_large", error_description: "MCP messages are limited to 1MB." },
+        { status: 413 },
+      ));
+    }
+    message = JSON.parse(raw);
   } catch {
     return rpcError(null, -32700, "Parse error: body must be JSON.", 400);
   }

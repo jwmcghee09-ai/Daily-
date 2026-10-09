@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { clearPortfolioData, clearPortfolioSource, readPortfolioState } from "@/lib/db";
 import { attachDemoGuestCookie, clearDemoGuestCookie, clearDemoGuestWorkspace, createDemoGuestContext, getDemoGuestContext, resetDemoGuestPortfolio } from "@/lib/demo-guest";
+import { consumeRateLimit } from "@/lib/rate-limit";
+import { getClientAddress } from "@/lib/auth";
 
 export const runtime = "nodejs";
 
@@ -22,6 +24,30 @@ export async function GET(request: Request) {
        * sample holdings so the server has the same book the page is drawing.
        */
       const existing = await getDemoGuestContext();
+
+      /*
+       * Creating a workspace writes rows; returning to one does not.
+       *
+       * So only creation is rated, and a visitor already holding a cookie is
+       * never turned away. Without this a request with no cookie seeded eleven
+       * holdings and a hundred and eighty snapshots every time it arrived —
+       * about thirty kilobytes, with nothing stopping a loop from repeating it,
+       * which is roughly thirty-five thousand requests to fill the disk this
+       * service runs on. A crawler following the demo link would have done it
+       * slowly and by accident.
+       */
+      if (!existing) {
+        const limit = consumeRateLimit(`demo:start:${getClientAddress(request)}`, 8, 60 * 60 * 1000);
+        if (!limit.allowed) {
+          // Not an error: the page falls back to its own sample and the visitor
+          // still sees a working demo, minus the server-side panels.
+          return NextResponse.json(
+            { state: null, demoGuest: null, throttled: true },
+            { status: 200, headers: { "Retry-After": String(limit.retryAfterSec) } },
+          );
+        }
+      }
+
       const demoGuest = existing ?? createDemoGuestContext();
 
       const response = NextResponse.json({

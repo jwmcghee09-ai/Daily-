@@ -213,6 +213,14 @@ jobs:
       - name: Remote MCP server (OAuth + Streamable HTTP)
         run: node scripts/test-mcp-remote.mjs http://localhost:3457
 
+      # Adversarial pass over the newest surfaces: refresh-token races, codes
+      # redeemed by the wrong client, near-miss redirect URIs, oversized and
+      # malformed MCP bodies, cross-account session ids, and the demo workspace,
+      # which once seeded eleven holdings per cookieless request with nothing
+      # stopping a loop.
+      - name: Surface stress (OAuth, MCP, demo, classifier)
+        run: node scripts/stress-surfaces.mjs http://localhost:3457
+
       # Both email suites need a signed-in account to read the forwarding
       # address, so make one and hand them its session.
       - name: Inbound email pipeline
