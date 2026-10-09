@@ -124,6 +124,9 @@ export async function lookThroughPortfolio(
         || /\.(AX|AU)$/i.test(holding.ticker);
       const resolved = await resolveFund(holding.ticker, {
         market: australian ? "asx" : undefined,
+        // Passed so the resolver does not look a crypto or cash line up as a
+        // listed symbol and cache that answer for every other account.
+        source: holding.source,
       });
       if (resolved && resolved.constituents.length > 0) {
         compositions.set(symbol, resolved);

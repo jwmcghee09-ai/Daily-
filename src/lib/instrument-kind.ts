@@ -29,7 +29,15 @@
  */
 import { ASX_TO_US_FUND } from "@/lib/fund-crosslist";
 
-export type InstrumentKind = "fund" | "company" | "index" | "unknown";
+export type InstrumentKind =
+  | "fund"
+  | "company"
+  | "index"
+  /** Bitcoin is not a wrapper around anything. */
+  | "crypto"
+  /** Cash, savings, bullion — a balance or a bar, with no constituents. */
+  | "asset"
+  | "unknown";
 
 export interface InstrumentIdentity {
   /** Normalised, suffix stripped. */
@@ -42,8 +50,37 @@ export interface InstrumentIdentity {
   basis: string;
 }
 
+/**
+ * What an import's own source settles, without asking anyone.
+ *
+ * Returns null when the source says nothing useful. Exported because the
+ * ticker-keyed cache is shared across every account, so a caller that reads the
+ * cache first has to apply this before it: BTC is a crypto line in one book and
+ * a US-listed trust in another, and whichever was classified first was being
+ * handed to everyone. The source is both authoritative and free, so it wins.
+ */
+export function kindFromSource(source: string | undefined): InstrumentIdentity["kind"] | null {
+  switch (String(source ?? "")) {
+    case "crypto": return "crypto";
+    case "savings":
+    case "tax":
+    case "gold": return "asset";
+    default: return null;
+  }
+}
+
 export interface ClassifyOptions {
   market?: "asx" | "us";
+  /**
+   * Which import the holding came from.
+   *
+   * Decisive for the kinds that are not securities at all. Without it the
+   * ticker is all there is to go on, and a ticker is ambiguous across markets:
+   * a crypto line reading BTC was being looked up as a US symbol and coming
+   * back "Grayscale Bitcoin Mini Trust ETF" — a real fund, the wrong asset, and
+   * then offered to the user as something to look inside.
+   */
+  source?: string;
   /** False to answer only from cache — for paths that must not block. */
   allowNetwork?: boolean;
 }
@@ -167,6 +204,26 @@ export async function classifyInstrument(
   };
   if (!symbol) return unknown;
 
+  /*
+   * Some sources settle it outright.
+   *
+   * Cash, a savings balance, allocated bullion and a crypto position are not
+   * wrappers and have no holdings file in existence. Deciding from the import's
+   * own source is both certain and free, and it stops the lookup that produced
+   * the wrong answer: these are checked before any cache or network, so a
+   * ticker that collides with a listed one cannot win.
+   */
+  const fromSource = kindFromSource(options.source);
+  if (fromSource) {
+    return {
+      ticker: symbol,
+      kind: fromSource,
+      name: null,
+      exchange: null,
+      basis: `imported as ${options.source}`,
+    };
+  }
+
   const cached = await cachedInstrumentKind(symbol);
   if (cached) return cached;
 
@@ -287,6 +344,10 @@ export function unresolvedReason(kind: InstrumentKind): string {
       return "Ordinary shares — you own this company directly, so there is nothing inside it to look through.";
     case "index":
       return "An index, not a holding with constituents you own.";
+    case "crypto":
+      return "A crypto position — you hold the asset itself, so there is nothing inside it to look through.";
+    case "asset":
+      return "Cash or metal held directly — there is nothing inside it to look through. It still counts toward your totals and every weight.";
     case "fund":
       return "A fund whose holdings file we cannot read yet. Upload it, or use Fetch where the issuer "
         + "publishes a page we can read.";

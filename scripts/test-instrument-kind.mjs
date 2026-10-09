@@ -170,6 +170,44 @@ const classify = (ticker, options) => {
     /upload/i.test(kinds.unresolvedReason("fund")));
 }
 
+/*
+ * ── What the import's own source settles ──
+ *
+ * The kind cache is keyed by ticker and shared across every account, which is
+ * right for "is IVV a fund" and wrong for a symbol that means different things
+ * in different books. A crypto line reading BTC was looked up as a US symbol,
+ * came back "Grayscale Bitcoin Mini Trust ETF", was cached under BTC, and was
+ * then served to everyone — the demo offered to look inside someone's Bitcoin.
+ *
+ * The source is free and certain, so it is consulted before the cache and
+ * before any lookup.
+ */
+{
+  check("a crypto line is crypto, whatever a US ticker of that name is",
+    kinds.kindFromSource("crypto") === "crypto");
+  check("savings and tax lines are the asset itself",
+    kinds.kindFromSource("savings") === "asset" && kinds.kindFromSource("tax") === "asset");
+  check("so is allocated bullion", kinds.kindFromSource("gold") === "asset");
+
+  check("a listed source settles nothing on its own",
+    kinds.kindFromSource("asx") === null && kinds.kindFromSource("us") === null);
+  check("and neither does a fund or super line, which may really have a file",
+    kinds.kindFromSource("fund") === null && kinds.kindFromSource("super") === null);
+  check("nor a missing source", kinds.kindFromSource(undefined) === null && kinds.kindFromSource("") === null);
+
+  const btc = await classify("BTC", { source: "crypto" });
+  check("so classifying BTC as crypto never reaches the exchange",
+    btc.kind === "crypto" && asked.length === 0, `${btc.kind}, asked ${asked.join(",") || "nothing"}`);
+
+  check("cash is told it has nothing inside it, and not asked for a file",
+    /nothing inside/i.test(kinds.unresolvedReason("asset"))
+    && !/upload/i.test(kinds.unresolvedReason("asset")),
+    kinds.unresolvedReason("asset"));
+  check("and so is a crypto position",
+    /nothing inside/i.test(kinds.unresolvedReason("crypto"))
+    && !/upload/i.test(kinds.unresolvedReason("crypto")));
+}
+
 // ── The cross-listing map ──────────────────────────────────────────────────
 //
 // Each entry claims the ASX ticker gives you a claim on the US fund's actual

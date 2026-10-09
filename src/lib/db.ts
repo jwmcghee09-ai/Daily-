@@ -2002,6 +2002,32 @@ export class NoValidHoldingsError extends Error {
   }
 }
 
+/**
+ * Replace a workspace's value history with a given series.
+ *
+ * Only the demo needs this: an import records one point, and a risk engine
+ * cannot say anything about volatility or drawdown from one point. A real
+ * account builds its history by existing over time, which a visitor evaluating
+ * the product in ninety seconds cannot do.
+ */
+export function writeSnapshotSeries(
+  userId: string,
+  series: ReadonlyArray<{ date: string; value: number }>,
+): void {
+  const db = getDb();
+  db.prepare("DELETE FROM snapshots WHERE date LIKE ?").run(userLikePattern(userId));
+
+  const insert = db.prepare(
+    "INSERT INTO snapshots (date, value, composition) VALUES (?, ?, ?) "
+    + "ON CONFLICT(date) DO UPDATE SET value = excluded.value",
+  );
+  for (const point of series) {
+    const value = sanitizeBoundedNumber(point.value, 0);
+    if (!(value > 0)) continue;
+    insert.run(scopeId(userId, point.date), value, "");
+  }
+}
+
 export function saveImport(userId: string, source: DataSource, holdings: PortfolioHolding[]): PortfolioState {
   const db = getDb();
   const normalizedSource: DataSource = normalizeSource(source);

@@ -45,6 +45,8 @@ export interface ResolveOptions {
   uploaded?: ReadonlyMap<string, FundComposition>;
   /** Treat the ticker as Australian when it carries no suffix. */
   market?: "asx" | "us";
+  /** The import this came from, which settles the kinds that are not securities. */
+  source?: string;
 }
 
 /**
@@ -83,12 +85,13 @@ export async function resolveFund(
    * to the 13F route, which is the one built for companies.
    */
   const identity = await import("@/lib/instrument-kind")
-    .then((m) => m.classifyInstrument(ticker, { market: isAsx ? "asx" : options.market }))
+    .then((m) => m.classifyInstrument(ticker, { market: isAsx ? "asx" : options.market, source: options.source }))
     .catch(() => null);
   const isCompany = identity?.kind === "company" && !ASX_TO_US_FUND[symbol];
 
-  // An index is a benchmark, not a holding with constituents anyone owns.
-  if (identity?.kind === "index") return null;
+  // An index is a benchmark; cash, metal and crypto are the asset itself.
+  // None of them has constituents, so none is worth a request.
+  if (identity && ["index", "crypto", "asset"].includes(identity.kind)) return null;
 
   if (isAsx) {
     // The issuer's own file first: it is the fund itself, daily, and dated.

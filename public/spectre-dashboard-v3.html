@@ -6308,6 +6308,32 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
       + " and it moves up.</div>";
   }
 
+  /**
+   * Cash, metal and crypto.
+   *
+   * Listed, because a reader counting their holdings against this panel should
+   * find all of them, and because these do count toward every total above. Not
+   * offered an upload, because there is no file: you hold the thing itself.
+   */
+  function heldDirectRows(items) {
+    if (!items.length) return "";
+    var total = items.reduce(function (sum, i) { return sum + (Number(i.value) || 0); }, 0);
+    return '<div class="fund-shares-h">Assets held outright \u2014 ' + items.length
+      + (items.length === 1 ? " position" : " positions") + " \u00b7 " + money(total)
+      + "<span>Cash, metal and crypto. You hold these directly, so there is nothing inside them \u2014 "
+      + "they still count toward your totals and every weight.</span></div>"
+      + items.map(function (i) {
+        return '<div class="fund-row unres share" data-ticker="' + esc(i.ticker) + '">'
+          + '<div class="fund-head" style="cursor:default" title="' + esc(i.kindBasis || "") + '">'
+          + '<span class="fund-code">' + esc(i.ticker) + "</span>"
+          + "<span><span class=\"fund-name\">" + esc(i.label) + "</span>"
+          + '<span class="fund-sub">' + (i.kind === "crypto" ? "Crypto position" : "Held outright")
+          + "</span></span>"
+          + '<span class="fund-val">' + money(i.value) + "</span>"
+          + "</div></div>";
+      }).join("");
+  }
+
   window.loadYourFunds = function loadYourFunds(force) {
     if (loaded && !force) return;
     loaded = true;
@@ -6357,7 +6383,13 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
         // user for a document that does not exist. Anything not positively
         // identified stays with the funds, where the upload is still offered,
         // since that is the safe direction to be wrong in.
-        + unresolved.filter(function (u) { return u.kind !== "company"; }).map(function (u) {
+        + unresolved.filter(function (u) {
+            // Only things that could have constituents belong in the list that
+            // asks for a holdings file. Cash, bullion and a crypto position
+            // cannot, and a savings balance offered an "upload its file" prompt
+            // reads as the product not knowing what it is looking at.
+            return u.kind !== "company" && u.kind !== "crypto" && u.kind !== "asset";
+          }).map(function (u) {
           return '<div class="fund-row unres" data-ticker="' + esc(u.ticker) + '">'
             + '<div class="fund-head" style="cursor:default">'
             + '<span class="fund-code">' + esc(u.ticker) + "</span>"
@@ -6374,7 +6406,10 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
             + '<button type="button" class="fund-up" data-upload="' + esc(u.ticker) + '">Upload</button>'
             + "</span></div></div>";
         }).join("")
-        + shareRows(unresolved.filter(function (u) { return u.kind === "company"; }));
+        + shareRows(unresolved.filter(function (u) { return u.kind === "company"; }))
+        + heldDirectRows(unresolved.filter(function (u) {
+            return u.kind === "crypto" || u.kind === "asset";
+          }));
 
         var count = document.getElementById("funds-count");
         if (count) {

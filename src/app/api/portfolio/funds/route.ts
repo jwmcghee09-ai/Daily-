@@ -23,6 +23,7 @@ import { isIssuerCategorySet } from "@/lib/fund-sec";
 import {
   cachedInstrumentKind,
   classifyInstrument,
+  kindFromSource,
   unresolvedReason,
   type InstrumentIdentity,
 } from "@/lib/instrument-kind";
@@ -58,7 +59,7 @@ const CLASSIFY_CONCURRENCY = 4;
  * skipped, so anything already known still comes back named.
  */
 async function identify(
-  wanted: readonly { ticker: string; market: "asx" | "us" | undefined }[],
+  wanted: readonly { ticker: string; market: "asx" | "us" | undefined; source: string }[],
 ): Promise<Map<string, InstrumentIdentity>> {
   const out = new Map<string, InstrumentIdentity>();
   let spent = 0;
@@ -69,6 +70,28 @@ async function identify(
       const next = queue.shift();
       if (!next) return;
 
+      /*
+       * The import's own source first, ahead of the cache.
+       *
+       * That cache is keyed by ticker and shared by every account, which is
+       * right for "is IVV a fund" and wrong for anything whose symbol collides
+       * across markets. BTC is a crypto line here and a US-listed trust
+       * elsewhere, and whichever was looked up first was being served to
+       * everyone — the demo showed Bitcoin as "Grayscale Bitcoin Mini Trust
+       * ETF" and offered to look inside it.
+       */
+      const fromSource = kindFromSource(next.source);
+      if (fromSource) {
+        out.set(next.ticker, {
+          ticker: next.ticker,
+          kind: fromSource,
+          name: null,
+          exchange: null,
+          basis: `imported as ${next.source}`,
+        });
+        continue;
+      }
+
       // A cached answer costs nothing, so it does not consume the budget —
       // which matters on a long book, where otherwise the first twelve
       // already-known holdings would use up the allowance meant for the
@@ -78,7 +101,7 @@ async function identify(
 
       const allowNetwork = spent < MAX_LIVE_CLASSIFICATIONS;
       if (allowNetwork) spent += 1;
-      const identity = await classifyInstrument(next.ticker, { market: next.market, allowNetwork })
+      const identity = await classifyInstrument(next.ticker, { market: next.market, source: next.source, allowNetwork })
         .catch(() => null);
       if (identity) out.set(next.ticker, identity);
     }
@@ -189,7 +212,7 @@ export async function GET(request: NextRequest) {
     if (!cached || cached.constituents.length === 0) {
       // Why it is not here, not just that it is not — "upload its holdings
       // file" is the wrong instruction for a mining company.
-      const identity = await classifyInstrument(wanted, { market: marketOf(holding) })
+      const identity = await classifyInstrument(wanted, { market: marketOf(holding), source: String(holding.source ?? "") })
         .catch(() => null);
       return NextResponse.json(
         {
@@ -328,7 +351,7 @@ export async function GET(request: NextRequest) {
   const identities = await identify(
     [...missing]
       .sort((a, b) => (Number(b.value) || 0) - (Number(a.value) || 0))
-      .map((h) => ({ ticker: normaliseTicker(h.ticker), market: marketOf(h) })),
+      .map((h) => ({ ticker: normaliseTicker(h.ticker), market: marketOf(h), source: String(h.source ?? "") })),
   );
 
   return NextResponse.json({
@@ -352,7 +375,7 @@ export async function GET(request: NextRequest) {
         // Whether the issuer's page can be read on request, so the UI offers
         // fetching only where there is something to fetch. Never for a
         // company: there is no holdings page to render.
-        fetchable: kind !== "company" && hasIssuerPage(ticker),
+        fetchable: kind === "fund" || kind === "unknown" ? hasIssuerPage(ticker) : false,
       };
     }),
   });

@@ -1,7 +1,8 @@
 import crypto from "node:crypto";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { clearPortfolioData, getDb, readPortfolioState } from "@/lib/db";
+import { clearPortfolioData, getDb, readPortfolioState, saveImport, writeSnapshotSeries } from "@/lib/db";
+import { demoHoldings, demoSnapshots } from "@/lib/demo-portfolio";
 
 export const DEMO_GUEST_COOKIE_NAME = "spectre_demo_guest";
 export const DEMO_GUEST_TTL_MS = 30 * 60 * 1000;
@@ -138,7 +139,48 @@ export function createDemoGuestContext(): DemoGuestContext {
   const expiresAt = new Date(Date.now() + DEMO_GUEST_TTL_MS).toISOString();
   setMeta(scopeKey(userId, DEMO_GUEST_EXPIRES_KEY), expiresAt);
   setMeta(scopeKey(userId, DEMO_GUEST_UPLOAD_COUNT_KEY), "0");
+  seedDemoPortfolio(userId);
   return toContext(userId, expiresAt);
+}
+
+/**
+ * Write the sample portfolio into a guest's own workspace.
+ *
+ * The demo used to keep its portfolio in the browser alone, which meant the
+ * server saw an empty account and every panel computed server-side — the fund
+ * look-through, the risk engine, per-holding contributions — had nothing to say
+ * and hid itself. A visitor saw the half of the product that needs no data.
+ *
+ * Seeding it here means the demo runs the same code a real account does, by
+ * reading its own holdings back through the same endpoints. Grouped by source
+ * because saveImport replaces one source at a time, which is how a real import
+ * behaves.
+ */
+export function seedDemoPortfolio(userId: string): void {
+  const holdings = demoHoldings();
+  const bySource = new Map<string, typeof holdings>();
+  for (const holding of holdings) {
+    const list = bySource.get(holding.source) ?? [];
+    list.push(holding);
+    bySource.set(holding.source, list);
+  }
+
+  for (const [source, list] of bySource) {
+    try {
+      saveImport(userId, source as (typeof holdings)[number]["source"], list);
+    } catch {
+      // One bad group must not cost the visitor the whole demo.
+    }
+  }
+
+  // saveImport records a single point per import; the risk figures want a
+  // history, so the sample's own curve is written over the top.
+  const total = holdings.reduce((sum, h) => sum + (Number(h.value) || 0), 0);
+  try {
+    writeSnapshotSeries(userId, demoSnapshots(total));
+  } catch {
+    // Risk falls back to the Yahoo estimate without it.
+  }
 }
 
 /**
