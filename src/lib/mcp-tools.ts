@@ -42,7 +42,8 @@ export const MCP_TOOLS: readonly McpTool[] = [
       + "changed, re-read fresh on every call. Use this whenever they refer to 'my portfolio' or "
       + "'my holdings'. Returns every holding: listed securities, cash balances, and anything "
       + "without a public quote such as super or unlisted funds, which carry the value the account "
-      + "holds. totalValue and every weight cover all of it.",
+      + "holds. totalValue and every weight cover all of it. This lists the wrappers as the user holds "
+      + "them; to see the companies INSIDE a fund, ETF or their super, call portfolio_funds.",
     inputSchema: { type: "object", properties: {} },
   },
   {
@@ -65,11 +66,16 @@ export const MCP_TOOLS: readonly McpTool[] = [
   {
     name: "portfolio_funds",
     description:
-      "What is inside the user's funds. Without a ticker, lists the funds they hold that have been "
-      + "resolved into constituents, plus the holdings that could not be and why — including which "
-      + "are ordinary shares with nothing inside them. With a ticker, returns that one fund's "
-      + "holdings, its own sector or issuer-type mix, and the user's money in each company through "
-      + "it. Use it when asked what a fund contains, or whether two funds overlap.",
+      "What is inside the user's funds, ETFs AND their superannuation — the thing a general-purpose "
+      + "assistant cannot see. SPECTRE resolves each wrapper to the companies inside it: US funds and "
+      + "ETFs from SEC filings, Australian super from the fund's regulated portfolio holdings "
+      + "disclosure. ALWAYS call this when the user asks what is inside their super, their ETFs or a "
+      + "managed fund, how much of a company they really own across everything, or whether two "
+      + "holdings overlap — do not answer those from the plain holdings list, which only shows the "
+      + "wrapper. Without a ticker, lists every resolved wrapper with a `vehicle` field (super / etf / "
+      + "managed-fund / company / share) plus the holdings not yet resolved and why. With a ticker, "
+      + "returns that one wrapper's holdings, its own sector or issuer-type mix, and the user's money "
+      + "in each company through it.",
     inputSchema: {
       type: "object",
       properties: {

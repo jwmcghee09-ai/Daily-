@@ -81,6 +81,60 @@ export function demoHoldings(): PortfolioHolding[] {
 }
 
 /**
+ * The super balance, looked through to the companies inside it.
+ *
+ * This is the demo's whole reason to exist for the look-through story that a
+ * user's own ChatGPT cannot tell: "AustralianSuper Balanced" is a lump on every
+ * other tool, and here it resolves to CBA, BHP, the global mega-caps — and in
+ * particular to more CBA, which the demo also holds directly, so the overlap
+ * the risk score corrects for is visible.
+ *
+ * Deliberately PARTIAL. A real balanced option is roughly a third listed
+ * equities and the rest unlisted property, infrastructure, fixed income and
+ * cash, none of which has a company-level line. So the weights below are shares
+ * of the WHOLE fund, they sum to about a third, coveragePct says so, and the
+ * engine keeps the other two thirds as the super balance rather than scaling
+ * these up and overstating every company. The honest partial answer is the one
+ * worth demonstrating.
+ */
+export function demoSuperComposition(): {
+  ticker: string; fundName: string; route: string; source: string; asOf: string;
+  coveragePct: number; coverageNote: string;
+  constituents: Array<{ name: string; ticker?: string; weightPct: number; country?: string; sector?: string }>;
+} {
+  const constituents = [
+    { name: "Commonwealth Bank of Australia", ticker: "CBA", weightPct: 4.2, country: "AU", sector: "Financials" },
+    { name: "BHP Group Ltd", ticker: "BHP", weightPct: 3.6, country: "AU", sector: "Materials" },
+    { name: "CSL Ltd", ticker: "CSL", weightPct: 2.8, country: "AU", sector: "Health Care" },
+    { name: "National Australia Bank Ltd", ticker: "NAB", weightPct: 2.3, country: "AU", sector: "Financials" },
+    { name: "Westpac Banking Corp", ticker: "WBC", weightPct: 2.1, country: "AU", sector: "Financials" },
+    { name: "Macquarie Group Ltd", ticker: "MQG", weightPct: 1.7, country: "AU", sector: "Financials" },
+    { name: "Apple Inc", ticker: "AAPL", weightPct: 1.9, country: "US", sector: "Information Technology" },
+    { name: "Microsoft Corp", ticker: "MSFT", weightPct: 1.8, country: "US", sector: "Information Technology" },
+    { name: "NVIDIA Corp", ticker: "NVDA", weightPct: 1.6, country: "US", sector: "Information Technology" },
+    { name: "Amazon.com Inc", ticker: "AMZN", weightPct: 1.1, country: "US", sector: "Consumer Discretionary" },
+    { name: "Alphabet Inc", ticker: "GOOGL", weightPct: 1.0, country: "US", sector: "Communication Services" },
+  ];
+  const coveragePct = Number(
+    constituents.reduce((sum, c) => sum + c.weightPct, 0).toFixed(1),
+  );
+  return {
+    ticker: "SUPBAL",
+    fundName: "Balanced Super Option",
+    route: "uploaded",
+    source: "Super portfolio holdings disclosure",
+    asOf: new Date(Date.now() - 95 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+    coveragePct,
+    coverageNote:
+      `The listed-equity sleeve of a balanced option, from the fund's portfolio holdings disclosure. `
+      + `It is about ${coveragePct.toFixed(0)}% of the balance; the rest is unlisted property, `
+      + "infrastructure, fixed income and cash, which carry no company-level breakdown and stay as "
+      + "your super.",
+    constituents,
+  };
+}
+
+/**
  * A value history to sit behind the risk figures.
  *
  * Deterministic from the total, so two visitors see the same demo and a

@@ -1,8 +1,8 @@
 import crypto from "node:crypto";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { clearPortfolioData, getDb, readPortfolioState, saveImport, writeSnapshotSeries } from "@/lib/db";
-import { demoHoldings, demoSnapshots } from "@/lib/demo-portfolio";
+import { clearPortfolioData, getDb, readPortfolioState, saveImport, writeFundComposition, writeSnapshotSeries } from "@/lib/db";
+import { demoHoldings, demoSnapshots, demoSuperComposition } from "@/lib/demo-portfolio";
 
 export const DEMO_GUEST_COOKIE_NAME = "spectre_demo_guest";
 export const DEMO_GUEST_TTL_MS = 30 * 60 * 1000;
@@ -207,6 +207,17 @@ export function seedDemoPortfolio(userId: string): void {
     } catch {
       // One bad group must not cost the visitor the whole demo.
     }
+  }
+
+  // The super balance's own holdings, so the demo can look inside it the way a
+  // real account does once its disclosure is uploaded. Scoped to this guest and
+  // swept with it, exactly like an upload. Without it the demo's single most
+  // distinctive feature — seeing inside super — has nothing to show.
+  try {
+    const comp = demoSuperComposition();
+    writeFundComposition({ ...comp, userId });
+  } catch {
+    // The look-through panel degrades to "upload your disclosure" without it.
   }
 
   // saveImport records a single point per import; the risk figures want a

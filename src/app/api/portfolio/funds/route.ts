@@ -34,6 +34,7 @@ import {
   type FundConstituent,
 } from "@/lib/lookthrough";
 import { displayHoldingLabel, isSyntheticTicker } from "@/lib/portfolio";
+import { classifyVehicle, vehicleLabel } from "@/lib/vehicle";
 
 export const runtime = "nodejs";
 
@@ -214,6 +215,7 @@ export async function GET(request: NextRequest) {
       // file" is the wrong instruction for a mining company.
       const identity = await classifyInstrument(wanted, { market: marketOf(holding), source: String(holding.source ?? "") })
         .catch(() => null);
+      const vehicle = classifyVehicle({ source: holding.source, kind: identity?.kind });
       return NextResponse.json(
         {
           ticker: wanted,
@@ -222,7 +224,15 @@ export async function GET(request: NextRequest) {
           resolved: false,
           kind: identity?.kind ?? "unknown",
           kindBasis: identity?.basis ?? null,
-          reason: unresolvedReason(identity?.kind ?? "unknown"),
+          vehicle,
+          vehicleLabel: vehicleLabel(vehicle),
+          // A super line that hasn't been resolved needs its own instruction:
+          // the holdings it can be looked through from are its fund's regulated
+          // disclosure, not a filing SPECTRE can fetch.
+          reason: vehicle === "super"
+            ? "This is your super. Download your fund's portfolio holdings disclosure (every APRA-regulated "
+              + "fund publishes one) and upload it here to see the companies inside your balance."
+            : unresolvedReason(identity?.kind ?? "unknown"),
         },
         { status: 200 },
       );
@@ -251,11 +261,14 @@ export async function GET(request: NextRequest) {
       (sum, c) => sum + (Number.isFinite(c.weightPct) ? Math.max(0, c.weightPct) : 0), 0);
     const weightsAccountedFor = reportedSum > 0 ? reportedSum : null;
 
+    const vehicle = classifyVehicle({ source: holding.source, route: cached.route });
     return NextResponse.json({
       ticker: wanted,
       label: cached.fundName || holdingName(holding.ticker, holding.name),
       value: holding.value,
       resolved: true,
+      vehicle,
+      vehicleLabel: vehicleLabel(vehicle),
       source: cached.source,
       asOf: cached.asOf,
       route: cached.route,
@@ -297,6 +310,8 @@ export async function GET(request: NextRequest) {
     ticker: string;
     label: string;
     value: number;
+    vehicle: ReturnType<typeof classifyVehicle>;
+    vehicleLabel: string;
     source: string;
     asOf: string;
     route: string;
@@ -315,10 +330,13 @@ export async function GET(request: NextRequest) {
 
     const positions = toPositions(cached.constituents as FundConstituent[], holding.value);
     const sectors = exposureBy(positions, "sector");
+    const vehicle = classifyVehicle({ source: holding.source, route: cached.route });
     funds.push({
       ticker,
       label: cached.fundName || holdingName(holding.ticker, holding.name),
       value: holding.value,
+      vehicle,
+      vehicleLabel: vehicleLabel(vehicle),
       source: cached.source,
       asOf: cached.asOf,
       route: cached.route,
@@ -361,6 +379,7 @@ export async function GET(request: NextRequest) {
       const ticker = normaliseTicker(h.ticker);
       const identity = identities.get(ticker);
       const kind = identity?.kind ?? "unknown";
+      const vehicle = classifyVehicle({ source: h.source, kind });
       return {
         ticker,
         // The issuer's own name where a lookup found one: "iShares S&P 500 AUD
@@ -368,10 +387,15 @@ export async function GET(request: NextRequest) {
         label: identity?.name || holdingName(h.ticker, h.name),
         value: h.value,
         kind,
+        vehicle,
+        vehicleLabel: vehicleLabel(vehicle),
         /** How that was decided, so a wrong label can be traced. */
         kindBasis: identity?.basis ?? null,
         exchange: identity?.exchange ?? null,
-        reason: unresolvedReason(kind),
+        reason: vehicle === "super"
+          ? "This is your super. Upload your fund's portfolio holdings disclosure (APRA requires every "
+            + "fund to publish one) to see the companies inside your balance."
+          : unresolvedReason(kind),
         // Whether the issuer's page can be read on request, so the UI offers
         // fetching only where there is something to fetch. Never for a
         // company: there is no holdings page to render.
