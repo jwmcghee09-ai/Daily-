@@ -39,6 +39,12 @@ export const ASX_TO_US_FUND: Readonly<Record<string, string>> = {
   // It was previously mapped to IEMG — a different fund tracking MSCI EM IMI,
   // which adds small caps and roughly 1,300 extra constituents.
   IEM: "EEM",
+  // Feeder, same shape as IVV: its holdings file is a single line — the US
+  // iShares Global 100 ETF (also IOO, NYSE Arca) — at 99.96% of the fund
+  // (Morningstar via InvestSMART, Aug 2026), with the remainder cash. The US
+  // fund files N-PORT, so this reads the ~100 S&P Global 100 companies the
+  // money is actually in. Verified one at a time, like every entry here.
+  IOO: "IOO",
 
   /*
    * Deliberately absent, having once been here:

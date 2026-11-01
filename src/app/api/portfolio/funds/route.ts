@@ -35,6 +35,7 @@ import {
 } from "@/lib/lookthrough";
 import { displayHoldingLabel, isSyntheticTicker } from "@/lib/portfolio";
 import { classifyVehicle, vehicleLabel } from "@/lib/vehicle";
+import { detectIssuer } from "@/lib/fund-issuers";
 
 export const runtime = "nodejs";
 
@@ -216,6 +217,12 @@ export async function GET(request: NextRequest) {
       const identity = await classifyInstrument(wanted, { market: marketOf(holding), source: String(holding.source ?? "") })
         .catch(() => null);
       const vehicle = classifyVehicle({ source: holding.source, kind: identity?.kind });
+      // Where we recognise the issuer, say where its file lives rather than a
+      // bare "upload something". Never for a company or a share — they have no
+      // holdings file, and an issuer name in "BHP Group" would misfire.
+      const issuer = vehicle === "etf" || vehicle === "managed-fund"
+        ? detectIssuer(identity?.name || holding.name, wanted)
+        : null;
       return NextResponse.json(
         {
           ticker: wanted,
@@ -226,13 +233,15 @@ export async function GET(request: NextRequest) {
           kindBasis: identity?.basis ?? null,
           vehicle,
           vehicleLabel: vehicleLabel(vehicle),
+          issuer: issuer?.issuer ?? null,
+          issuerHoldingsUrl: issuer?.holdingsUrl ?? null,
           // A super line that hasn't been resolved needs its own instruction:
           // the holdings it can be looked through from are its fund's regulated
           // disclosure, not a filing SPECTRE can fetch.
           reason: vehicle === "super"
             ? "This is your super. Download your fund's portfolio holdings disclosure (every APRA-regulated "
               + "fund publishes one) and upload it here to see the companies inside your balance."
-            : unresolvedReason(identity?.kind ?? "unknown"),
+            : issuer?.guidance ?? unresolvedReason(identity?.kind ?? "unknown"),
         },
         { status: 200 },
       );
@@ -380,6 +389,9 @@ export async function GET(request: NextRequest) {
       const identity = identities.get(ticker);
       const kind = identity?.kind ?? "unknown";
       const vehicle = classifyVehicle({ source: h.source, kind });
+      const issuer = vehicle === "etf" || vehicle === "managed-fund"
+        ? detectIssuer(identity?.name || h.name, ticker)
+        : null;
       return {
         ticker,
         // The issuer's own name where a lookup found one: "iShares S&P 500 AUD
@@ -389,13 +401,15 @@ export async function GET(request: NextRequest) {
         kind,
         vehicle,
         vehicleLabel: vehicleLabel(vehicle),
+        issuer: issuer?.issuer ?? null,
+        issuerHoldingsUrl: issuer?.holdingsUrl ?? null,
         /** How that was decided, so a wrong label can be traced. */
         kindBasis: identity?.basis ?? null,
         exchange: identity?.exchange ?? null,
         reason: vehicle === "super"
           ? "This is your super. Upload your fund's portfolio holdings disclosure (APRA requires every "
             + "fund to publish one) to see the companies inside your balance."
-          : unresolvedReason(kind),
+          : issuer?.guidance ?? unresolvedReason(kind),
         // Whether the issuer's page can be read on request, so the UI offers
         // fetching only where there is something to fetch. Never for a
         // company: there is no holdings page to render.

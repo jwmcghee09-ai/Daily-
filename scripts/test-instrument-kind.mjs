@@ -220,6 +220,8 @@ const classify = (ticker, options) => {
     map.IHVV === "IVV", String(map.IHVV));
   check("IEM points at EEM, whose index it tracks, not IEMG's",
     map.IEM === "EEM", String(map.IEM));
+  check("IOO is a feeder into the US iShares Global 100 ETF, also IOO",
+    map.IOO === "IOO", String(map.IOO));
   check("IWLD is absent: it holds 635 stocks of its own, not URTH's",
     !("IWLD" in map), String(map.IWLD));
   check("IHOO is absent: hedged does not mean feeder, and it replicates itself",

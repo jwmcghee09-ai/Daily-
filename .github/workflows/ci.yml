@@ -140,6 +140,16 @@ jobs:
       # folds through, overlap included.
       - name: Super look-through
         run: node scripts/test-super-lookthrough.mjs
+      # The structured vendor feed (FMP) is the only new source that returns
+      # holdings rather than pointing at them, so it is held to the rule that a
+      # gated tier, a rate limit or an unreadable body resolves to nothing, never
+      # to a wrong portfolio.
+      - name: FMP holdings resolver
+        run: node scripts/test-fund-fmp.mjs
+      # Identifying a fund's issuer and where its file lives — identity only,
+      # never holdings, and silent rather than wrong.
+      - name: Fund issuer identification
+        run: node scripts/test-fund-issuers.mjs
       # Yahoo's chartPreviousClose is the close before the requested range, not
       # yesterday's. Preferring it reported a year's move as a day's, with the
       # wrong sign, on every quote the product shows.

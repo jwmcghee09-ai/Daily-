@@ -24,6 +24,7 @@
 import type { FundComposition, FundConstituent } from "@/lib/lookthrough";
 import { fetchNportComposition } from "@/lib/fund-sec";
 import { fetch13fComposition } from "@/lib/fund-13f";
+import { fetchFmpHoldings } from "@/lib/fund-fmp";
 import { fetchBetasharesComposition } from "@/lib/fund-asx";
 import { ASX_TO_US_FUND, AUD_HEDGED_FEEDERS } from "@/lib/fund-crosslist";
 import { normaliseTicker } from "@/lib/lookthrough";
@@ -34,7 +35,7 @@ import { normaliseTicker } from "@/lib/lookthrough";
  */
 export { ASX_TO_US_FUND } from "@/lib/fund-crosslist";
 
-export type ResolutionRoute = "sec" | "cross-listed" | "uploaded" | "13f" | "issuer";
+export type ResolutionRoute = "sec" | "cross-listed" | "uploaded" | "13f" | "issuer" | "fmp";
 
 export interface ResolvedFund extends FundComposition {
   route: ResolutionRoute;
@@ -100,6 +101,14 @@ export async function resolveFund(
 
     const usEquivalent = ASX_TO_US_FUND[symbol];
     if (usEquivalent) {
+      // The AUD/USD hedge on a hedged feeder is a real position this look-through
+      // cannot see; said once here so both the N-PORT and FMP answers carry it.
+      const hedgeNote = AUD_HEDGED_FEEDERS.has(symbol)
+        ? `These are ${usEquivalent}'s holdings, which this fund owns through its units in it. `
+          + "The AUD/USD forwards that hedge the currency are a separate position and are not "
+          + "shown — the companies are right, the currency exposure is not represented."
+        : undefined;
+
       const sec = await fetchNportComposition(usEquivalent).catch(() => null);
       if (sec) {
         return {
@@ -112,11 +121,22 @@ export async function resolveFund(
           fundName: undefined,
           source: `SEC N-PORT via ${usEquivalent}`,
           route: "cross-listed",
-          coverageNote: AUD_HEDGED_FEEDERS.has(symbol)
-            ? `These are ${usEquivalent}'s holdings, which this fund owns through its units in it. `
-              + "The AUD/USD forwards that hedge the currency are a separate position and are not "
-              + "shown — the companies are right, the currency exposure is not represented."
-            : undefined,
+          coverageNote: hedgeNote,
+        };
+      }
+
+      // The US twin's filing could not be read this time. Its holdings are a
+      // structured lookup away, and reading them is still reading the user's
+      // actual holdings — the feeder owns that exact fund.
+      const fmp = await fetchFmpHoldings(usEquivalent).catch(() => null);
+      if (fmp && fmp.constituents.length > 0) {
+        return {
+          ...fmp,
+          fundTicker: symbol,
+          fundName: undefined,
+          source: `${fmp.source} via ${usEquivalent}`,
+          route: "cross-listed",
+          coverageNote: [hedgeNote, fmp.coverageNote].filter(Boolean).join(" ") || undefined,
         };
       }
     }
@@ -127,6 +147,12 @@ export async function resolveFund(
 
   const sec = isCompany ? null : await fetchNportComposition(symbol).catch(() => null);
   if (sec) return { ...sec, route: "sec" };
+
+  // A registered fund N-PORT could not answer for, from the structured vendor
+  // feed. After the filing, never before it, and never for a company — a
+  // company's "holdings" from an ETF endpoint would be empty anyway.
+  const fmp = isCompany ? null : await fetchFmpHoldings(symbol).catch(() => null);
+  if (fmp && fmp.constituents.length > 0) return { ...fmp, route: "fmp" };
 
   /*
    * Not a registered fund — but it may still be a vehicle held for the
