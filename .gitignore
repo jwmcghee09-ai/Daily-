@@ -57,7 +57,12 @@ backups/
 
 # Screenshots and local captures
 screenshots/
+# Ad-hoc PNGs (debug captures, exports) are ignored, but the brand assets the
+# site actually serves are committed — og-image was force-added once and
+# apple-touch-icon was simply lost to this rule, which 404'd it in production.
 public/*.png
+!public/og-image.png
+!public/apple-touch-icon.png
 .claude/
 
 # Electron build output
