@@ -66,6 +66,50 @@ const tickerItems = [
  */
 const LIFECYCLE_STEPS = ["Import", "Look Inside", "Score", "Ask", "Watch"] as const;
 
+/*
+ * The hero's rotating line and the selling-points band below both say one
+ * thing: SPECTRE is what turns the AI you already use into something that can
+ * actually advise you — by handing it the data and the maths a chatbot cannot
+ * get on its own. Every claim here is one the product makes good on elsewhere
+ * on the page, so the cycle is proof points, not slogans.
+ */
+const HERO_ROTATING = [
+  "eyes inside your funds.",
+  "your true concentration.",
+  "numbers that are right.",
+  "your whole net worth.",
+  "an alert when it matters.",
+] as const;
+
+type ValueProp = { title: string; copy: string; icon: ReactNode };
+const VALUE_PROPS: readonly ValueProp[] = [
+  {
+    title: "Sees inside your funds",
+    copy: "Your AI reads each ETF and super fund's filings and breaks it down to the companies you really own — not just the ticker.",
+    icon: <LayersIcon />,
+  },
+  {
+    title: "Knows your true concentration",
+    copy: "Overlap across funds and super surfaces, so your AI sees you hold 5.3% CBA, not the 5.0% your holdings table shows.",
+    icon: <PulseIcon />,
+  },
+  {
+    title: "Quotes numbers that are right",
+    copy: "VaR, beta, drawdown and correlation are computed in code and handed over — not a chatbot's confident guess.",
+    icon: <ShieldIcon />,
+  },
+  {
+    title: "Reads your whole book",
+    copy: "Super, broker, crypto and bullion, merged into one picture your AI can reason over instead of a screenshot at a time.",
+    icon: <GridIcon />,
+  },
+  {
+    title: "Never loses the thread",
+    copy: "It re-reads your live holdings on every question and watches for the drops you asked about. A chatbot forgets; SPECTRE doesn't.",
+    icon: <BellIcon />,
+  },
+] as const;
+
 const workflowSteps: readonly WorkflowStep[] = [
   {
     number: "01 — IMPORT",
@@ -487,7 +531,7 @@ export default function LandingPage({
 
           <div className={styles.heroIntro}>
             <div className={`${styles.heroKicker} ${styles.reveal}`}>
-              <span>AI PORTFOLIO INTELLIGENCE</span>
+              <span>THE CONNECTOR FOR YOUR AI</span>
               <span className={styles.heroKickerDot} />
               <span>AUSTRALIA</span>
             </div>
@@ -505,9 +549,14 @@ export default function LandingPage({
               A chatbot can’t see your money<span className={styles.caret} aria-hidden="true" />
             </p>
             <p className={`${styles.heroSub} ${styles.reveal}`}>
-              Import your broker, super and crypto. SPECTRE looks inside your funds, scores your real
-              risk in 60 seconds, and answers questions about what you actually own.
+              SPECTRE connects to the AI you already use — Claude, ChatGPT, or a model on your own
+              machine — and gives it what a chatbot can’t get on its own: your real holdings, the
+              companies inside your funds, and numbers that are actually right.
             </p>
+            <div className={`${styles.heroGive} ${styles.reveal}`} aria-hidden="true">
+              <span className={styles.heroGiveLead}>Give your AI</span>
+              <RotatingWord words={HERO_ROTATING} />
+            </div>
             <div className={`${styles.heroActions} ${styles.reveal}`}>
               <Link href="/signin?mode=register&plan=free" className={`${styles.button} ${styles.primaryButton} ${styles.heroButton}`}>
                 Get Started Free
@@ -619,6 +668,16 @@ export default function LandingPage({
           </div>
         </div>
       </div>
+
+      <section className={styles.valueBandSection}>
+        <div className={styles.container}>
+          <div className={`${styles.valueBandHead} ${styles.reveal}`}>
+            <div className={styles.sectionLabel}>Why connect it</div>
+            <h2 className={styles.valueBandTitle}>Five things your AI can’t do without SPECTRE.</h2>
+          </div>
+          <ValuePropCycler props={VALUE_PROPS} />
+        </div>
+      </section>
 
       <section className={styles.aiRevealSection} id="ai" ref={aiSectionRef}>
         <div className={styles.container}>
@@ -883,15 +942,17 @@ export default function LandingPage({
 
       <section className={styles.section} id="connect">
         <div className={styles.container}>
-          <div className={`${styles.sectionLabel} ${styles.reveal}`}>Bring Your Own AI</div>
+          <div className={`${styles.sectionLabel} ${styles.reveal}`}>The Connector</div>
           <h2 className={`${styles.sectionTitle} ${styles.revealUp}`}>
-            Connect your favourite frontier model.
+            Make the AI you already use your financial analyst.
           </h2>
           <p className={`${styles.sectionSub} ${styles.reveal}`}>
-            SPECTRE speaks the Model Context Protocol, so you can plug Claude, ChatGPT or a model running
-            on your own machine straight into your portfolio. Your AI reads numbers computed by
-            us, never guessed by it — and you keep using the assistant you already pay for.
+            SPECTRE speaks the Model Context Protocol, so Claude, ChatGPT or a model on your own machine
+            plugs straight into your portfolio. Your assistant stops guessing about your money and starts
+            reading the real thing — computed by us, including the companies inside your funds.
           </p>
+
+          <ConnectorDiagram />
 
           {/* The two most people already have get the room; the rest are there
               to show this is an open protocol, not a two-vendor deal. */}
@@ -1498,6 +1559,151 @@ export default function LandingPage({
 
 function Divider() {
   return <hr className={styles.divider} />;
+}
+
+/**
+ * The hero's rotating phrase.
+ *
+ * Cross-fades through the things SPECTRE gives a connected AI. Honours
+ * prefers-reduced-motion by standing still on the first phrase — a line that
+ * swaps itself out is exactly what that setting exists to stop.
+ */
+function RotatingWord({ words }: { words: readonly string[] }) {
+  const [index, setIndex] = useState(0);
+  const [shown, setShown] = useState(true);
+
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const hold = window.setInterval(() => {
+      setShown(false);
+      window.setTimeout(() => {
+        setIndex((i) => (i + 1) % words.length);
+        setShown(true);
+      }, 320);
+    }, 2600);
+    return () => window.clearInterval(hold);
+  }, [words.length]);
+
+  // Reserve the width of the longest phrase so the line never reflows as it
+  // cycles, which would jump the buttons below it on every change.
+  const longest = words.reduce((a, b) => (b.length > a.length ? b : a), "");
+  return (
+    <span className={styles.rotWordWrap}>
+      <span className={styles.rotWordGhost} aria-hidden="true">{longest}</span>
+      <span className={`${styles.rotWord} ${shown ? styles.rotWordIn : ""}`}>{words[index]}</span>
+    </span>
+  );
+}
+
+/**
+ * The auto-cycling selling-points band.
+ *
+ * The "cycle through the main selling points" the page is built around: it
+ * advances itself, a reader can click a dot to pin one, and it pauses on hover
+ * so nobody loses the line they are reading. Reduced motion stops the auto-
+ * advance and leaves the dots to drive it by hand.
+ */
+function ValuePropCycler({ props }: { props: readonly ValueProp[] }) {
+  const [active, setActive] = useState(0);
+  const [paused, setPaused] = useState(false);
+
+  useEffect(() => {
+    if (paused) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const timer = window.setInterval(() => setActive((i) => (i + 1) % props.length), 3600);
+    return () => window.clearInterval(timer);
+  }, [paused, props.length]);
+
+  return (
+    <div
+      className={styles.valueCycler}
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+    >
+      <div className={styles.valueStage}>
+        {props.map((p, i) => (
+          <article
+            key={p.title}
+            className={`${styles.valueCard} ${i === active ? styles.valueCardActive : ""}`}
+            aria-hidden={i === active ? undefined : true}
+          >
+            <div className={`${styles.iconWrap} ${styles.valueIcon}`}>{p.icon}</div>
+            <div className={styles.valueCardText}>
+              <h3>{p.title}</h3>
+              <p>{p.copy}</p>
+            </div>
+          </article>
+        ))}
+      </div>
+      <div className={styles.valueDots} role="tablist" aria-label="Selling points">
+        {props.map((p, i) => (
+          <button
+            key={p.title}
+            type="button"
+            role="tab"
+            aria-selected={i === active}
+            aria-label={p.title}
+            className={`${styles.valueDot} ${i === active ? styles.valueDotActive : ""}`}
+            onClick={() => setActive(i)}
+          />
+        ))}
+      </div>
+      <div className={styles.valueTrack} aria-hidden="true">
+        <div
+          key={`${active}-${paused}`}
+          className={`${styles.valueTrackFill} ${paused ? styles.valueTrackPaused : ""}`}
+        />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The connector diagram: your AI, SPECTRE in the middle, your money.
+ *
+ * Inline SVG so it is crisp at any size and themes with the page, and laid out
+ * as three columns that stack on a phone. It shows the one idea the page is
+ * about — the assistant on the left can only see what SPECTRE in the middle
+ * reads from your accounts on the right — without a screenshot to go stale.
+ */
+function ConnectorDiagram() {
+  const left = ["Claude", "ChatGPT", "Cursor", "Your model"];
+  const gives = ["Looks inside your funds", "Your true, merged book", "Real risk, computed", "Live — re-read every ask"];
+  const right = ["Broker & shares", "Superannuation", "Crypto & bullion", "SEC & issuer filings"];
+  return (
+    <div className={styles.diagram}>
+      <div className={`${styles.diagramCol} ${styles.diagramAi}`}>
+        <div className={styles.diagramColLabel}>The AI you already use</div>
+        {left.map((n) => (
+          <div key={n} className={styles.diagramChip}>{n}</div>
+        ))}
+      </div>
+
+      <div className={styles.diagramFlow} aria-hidden="true">
+        <span className={styles.diagramArrow}>→</span>
+        <div className={styles.diagramHub}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/spectre-mark.svg" alt="" className={styles.diagramHubMark} />
+          <span className={styles.diagramHubName}>SPECTRE</span>
+          <span className={styles.diagramHubNote}>10 tools · MCP</span>
+        </div>
+        <span className={styles.diagramArrow}>→</span>
+      </div>
+
+      <div className={`${styles.diagramCol} ${styles.diagramData}`}>
+        <div className={styles.diagramColLabel}>Your money</div>
+        {right.map((n) => (
+          <div key={n} className={styles.diagramChip}>{n}</div>
+        ))}
+      </div>
+
+      <ul className={styles.diagramGives}>
+        {gives.map((g) => (
+          <li key={g}>{g}</li>
+        ))}
+      </ul>
+    </div>
+  );
 }
 
 /*

@@ -200,6 +200,12 @@ for (const cls of new Set(usedClasses)) {
   if (!/opacity:\s*0\s*;/.test(block[1])) continue;
   // An animation or transition that ends visible is a fade-in, not a trap.
   if (/animation:/.test(block[1])) continue;
+  // The active-modifier pattern: a base class hidden at rest, raised to opacity
+  // 1 by a companion class toggled in the markup (.valueCard -> .valueCardActive,
+  // .rotWord -> .rotWordIn). Safe exactly when such a companion exists and
+  // raises it, which is what this checks rather than trusting the name alone.
+  const raiser = new RegExp(`\\.${cls}[A-Z][\\w-]*\\s*\\{[^}]*opacity:\\s*1`, "m");
+  if (raiser.test(cssModule)) continue;
   hiddenForever.push(cls);
 }
 if (hiddenForever.length) {

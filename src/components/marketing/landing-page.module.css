@@ -4077,3 +4077,253 @@
     display: none;
   }
 }
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * Connector repositioning: the hero's rotating line, the auto-cycling
+ * selling-points band, and the AI ↔ SPECTRE ↔ money diagram.
+ * ───────────────────────────────────────────────────────────────────────── */
+
+/* The hero's "Give your AI <rotating>" line. */
+.heroGive {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
+  font-family: var(--font-space-grotesk), var(--font-geist-sans), sans-serif;
+  font-size: clamp(17px, 2.1vw, 22px);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.heroGiveLead { color: #0d0d11; }
+
+/* A ghost copy of the longest phrase holds the width so the buttons below
+   never jump as the visible phrase cross-fades over it. */
+.rotWordWrap { position: relative; display: inline-block; }
+.rotWordGhost { visibility: hidden; white-space: nowrap; }
+.rotWord {
+  position: absolute;
+  left: 0;
+  top: 0;
+  white-space: nowrap;
+  color: var(--accent);
+  opacity: 0;
+  transform: translateY(7px);
+  transition: opacity 0.32s ease, transform 0.32s ease;
+}
+.rotWordIn { opacity: 1; transform: translateY(0); }
+
+/* The selling-points band. */
+.valueBandSection {
+  padding: 72px 0;
+  background: #f1f1f3;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.valueBandHead {
+  text-align: center;
+  max-width: 680px;
+  margin: 0 auto 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+.valueBandTitle {
+  font-family: var(--font-space-grotesk), var(--font-geist-sans), sans-serif;
+  font-size: clamp(23px, 3vw, 38px);
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  color: #0d0d11;
+  margin: 0;
+}
+
+.valueCycler { max-width: 680px; margin: 0 auto; }
+.valueStage {
+  position: relative;
+  min-height: 188px;
+}
+.valueCard {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  padding: 30px 32px;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(15, 15, 17, 0.04);
+  opacity: 0;
+  transform: translateY(12px) scale(0.99);
+  transition: opacity 0.45s ease, transform 0.45s ease;
+  pointer-events: none;
+}
+.valueCardActive {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+.valueIcon {
+  margin: 0;
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+}
+.valueCardText h3 {
+  font-family: var(--font-space-grotesk), var(--font-geist-sans), sans-serif;
+  font-size: clamp(18px, 2.2vw, 23px);
+  letter-spacing: -0.01em;
+  color: #0d0d11;
+  margin: 2px 0 8px;
+}
+.valueCardText p {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--muted);
+  margin: 0;
+}
+
+.valueDots {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 22px;
+}
+.valueDot {
+  width: 9px;
+  height: 9px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: var(--borderStrong);
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+.valueDot:hover { transform: scale(1.2); }
+.valueDotActive { background: var(--accent); }
+
+/* The thin auto-advance progress bar; re-keyed on each advance so it restarts. */
+.valueTrack {
+  max-width: 220px;
+  height: 2px;
+  margin: 16px auto 0;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.valueTrackFill {
+  height: 100%;
+  width: 100%;
+  background: var(--accent);
+  transform-origin: left center;
+  animation: valueGrow 3.6s linear forwards;
+}
+.valueTrackPaused { animation-play-state: paused; }
+@keyframes valueGrow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+/* The connector diagram. */
+.diagram {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 18px;
+  margin: 44px auto 8px;
+  max-width: 940px;
+}
+.diagramCol {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: #ffffff;
+}
+.diagramAi { background: #ffffff; }
+.diagramData { background: #fbfbfc; }
+.diagramColLabel {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 2px;
+}
+.diagramChip {
+  padding: 9px 13px;
+  border-radius: 11px;
+  background: #f3f3f5;
+  border: 1px solid var(--border);
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #26262c;
+}
+.diagramFlow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.diagramArrow {
+  color: var(--accent);
+  font-size: 22px;
+  line-height: 1;
+}
+.diagramHub {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 18px 16px;
+  border-radius: 18px;
+  background: linear-gradient(140deg, #141418, #0b0b0f);
+  box-shadow: 0 10px 30px rgba(245, 57, 20, 0.22);
+  min-width: 120px;
+}
+.diagramHubMark { width: 34px; height: 34px; }
+.diagramHubName {
+  font-family: var(--font-space-grotesk), var(--font-geist-sans), sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #fff;
+  font-size: 15px;
+}
+.diagramHubNote {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: #ff8b6e;
+}
+.diagramGives {
+  grid-column: 1 / -1;
+  list-style: none;
+  margin: 20px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+.diagramGives li {
+  font-size: 12.5px;
+  color: #26262c;
+  padding: 7px 13px;
+  border-radius: 999px;
+  background: var(--accentDim);
+  border: 1px solid rgba(255, 75, 51, 0.2);
+}
+
+/* The arrows point down when the three columns stack on a phone. */
+@media (max-width: 760px) {
+  .diagram { grid-template-columns: 1fr; gap: 14px; }
+  .diagramFlow { flex-direction: row; gap: 14px; }
+  .diagramArrow { transform: rotate(90deg); }
+  .valueCard { flex-direction: column; gap: 14px; padding: 24px; }
+  .valueStage { min-height: 246px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .valueTrackFill { animation: none; transform: scaleX(1); }
+  .rotWord { transition: none; }
+}
