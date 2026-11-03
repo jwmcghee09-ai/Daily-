@@ -57,16 +57,6 @@ const tickerItems = [
 ] as const;
 
 /*
- * The lifecycle chips under the hero.
- *
- * "Automate" used to be the last one, pointing at the paper-trading agent. That
- * is a different product from the one this page is selling, so the step that
- * replaced it is the one that makes the rest of the page work: looking through
- * the wrappers before anything is scored.
- */
-const LIFECYCLE_STEPS = ["Import", "Look Inside", "Score", "Ask", "Watch"] as const;
-
-/*
  * The hero's rotating line and the selling-points band below both say one
  * thing: SPECTRE is what turns the AI you already use into something that can
  * actually advise you — by handing it the data and the maths a chatbot cannot
@@ -331,6 +321,38 @@ export default function LandingPage({
   const aiSectionRef = useRef<HTMLElement>(null);
   const [activeStickyPanel, setActiveStickyPanel] = useState(0);
 
+  /*
+   * Scroll reveal, the safe way.
+   *
+   * The old global reveal animation was removed because it left eighty-odd
+   * elements hidden until JavaScript ran, so a slow or scriptless load showed a
+   * blank page. This version is opt-in by class and gated on a root flag added
+   * only once JS is live: without that flag the items are fully visible, so
+   * nothing can be trapped invisible. A reader with reduced motion never sees it
+   * at all. Each item reveals once and is then let go.
+   */
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const root = document.documentElement;
+    root.classList.add("srOn");
+    const items = [...document.querySelectorAll<HTMLElement>(`.${styles.srItem}`)];
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          entry.target.classList.add(styles.srIn);
+          io.unobserve(entry.target);
+        }
+      },
+      { threshold: 0.12, rootMargin: "0px 0px -8% 0px" },
+    );
+    items.forEach((el) => io.observe(el));
+    return () => {
+      io.disconnect();
+      root.classList.remove("srOn");
+    };
+  }, []);
+
   // Mouse-tilt on the hero dashboard card (fine pointers only)
   useEffect(() => {
     const zone = heroProductRef.current;
@@ -565,15 +587,7 @@ export default function LandingPage({
                 See Live Demo →
               </Link>
             </div>
-            <div className={`${styles.lifecycle} ${styles.reveal}`}>
-              {LIFECYCLE_STEPS.map((step, i) => (
-                <span key={step} className={styles.lifecycleStep}>
-                  <span className={styles.lifecycleChip} style={{ animationDelay: `${i * 0.9}s` }}>{step}</span>
-                  {i < LIFECYCLE_STEPS.length - 1 && <span className={styles.lifecycleArrow}>→</span>}
-                </span>
-              ))}
-            </div>
-            <p className={`${styles.reveal}`} style={{ fontSize: "0.75rem", color: "var(--muted)", marginTop: "1rem", letterSpacing: "0.04em" }}>
+            <p className={`${styles.reveal} ${styles.heroFinePrint}`}>
               Built for Australian investors · No card required · Cancel anytime
             </p>
 
@@ -671,11 +685,13 @@ export default function LandingPage({
 
       <section className={styles.valueBandSection}>
         <div className={styles.container}>
-          <div className={`${styles.valueBandHead} ${styles.reveal}`}>
+          <div className={`${styles.valueBandHead} ${styles.reveal} ${styles.srItem}`}>
             <div className={styles.sectionLabel}>Why connect it</div>
             <h2 className={styles.valueBandTitle}>Five things your AI can’t do without SPECTRE.</h2>
           </div>
-          <ValuePropCycler props={VALUE_PROPS} />
+          <div className={styles.srItem}>
+            <ValuePropCycler props={VALUE_PROPS} />
+          </div>
         </div>
       </section>
 
@@ -845,6 +861,8 @@ export default function LandingPage({
             </ul>
           </div>
 
+          <HiddenExposureChart />
+
           <div className={styles.researchCtaRow}>
             <Link href="/dashboard?demo=1" className={`${styles.button} ${styles.primaryButton}`}>
               Open a Fund in the Demo →
@@ -856,7 +874,7 @@ export default function LandingPage({
       <section className={styles.scannerSection} id="scanner">
         <div className={styles.container}>
           <div className={styles.scannerInner}>
-            <div className={`${styles.scannerCard} ${styles.revealScale}`}>
+            <div className={`${styles.scannerCard} ${styles.revealScale} ${styles.srItem}`}>
               <div className={styles.scanTermBar}>SPECTRE // SCANNER — LIVE FOR EVERY ACCOUNT</div>
               <div className={styles.scannerCardBody}>
                 <div className={styles.scanHead}>
@@ -865,33 +883,52 @@ export default function LandingPage({
                   <span className={styles.scanPx}>3.42 AUD</span>
                   <span className={styles.scanDeltaUp}>+6.8% today</span>
                 </div>
-                <svg className={styles.scanSpark} viewBox="0 0 400 64" preserveAspectRatio="none" aria-hidden="true">
-                  <path
-                    d="M0,44 L30,47 L60,42 L90,49 L120,45 L150,50 L180,44 L210,40 L240,42 L270,36 L300,38 L330,30 L360,24 L385,16 L400,10"
-                    fill="none" stroke="#4ade80" strokeWidth="2.4" strokeLinecap="round"
+
+                <ScannerChart />
+
+                <div className={styles.scanGauges}>
+                  <Gauge
+                    label="RSI 14"
+                    value="71"
+                    pct={71}
+                    zoneStart={70}
+                    tone="warn"
+                    lo="0"
+                    hi="100"
+                    caption="Overbought above 70"
                   />
-                </svg>
+                  <Gauge
+                    label="52-Week Range"
+                    value="$3.42"
+                    pct={92}
+                    lo="$2.41"
+                    hi="$3.53"
+                    caption="Near the 52-week high"
+                  />
+                </div>
+
                 <div className={styles.scanStats}>
                   {[
-                    ["RSI 14", "71"],
-                    ["30D CHANGE", "+18.4%"],
-                    ["VS 52W HIGH", "-3.1%"],
-                    ["VOLUME", "3.2× avg"],
-                  ].map(([label, val]) => (
+                    ["30D CHANGE", "+18.4%", "up"],
+                    ["VOLUME", "3.2× avg", "up"],
+                    ["ATR 14", "4.1%", ""],
+                    ["50D TREND", "Rising", "up"],
+                  ].map(([label, val, tone]) => (
                     <div key={label} className={styles.scanStat}>
                       <span className={styles.scanStatLabel}>{label}</span>
-                      <span className={styles.scanStatVal}>{val}</span>
+                      <span className={`${styles.scanStatVal} ${tone === "up" ? styles.up : ""}`}>{val}</span>
                     </div>
                   ))}
                 </div>
-                <div className={`${styles.scanFlag} ${styles.scanFlagAlert} ${styles.reveal}`}>
+
+                <div className={`${styles.scanFlag} ${styles.scanFlagAlert}`}>
                   <span className={styles.scanFlagTag}>ALERT</span>
                   <div>
                     <strong>Volume 3.2× the 20-day average</strong>
                     <p>Unusual activity — something moved the crowd today. Check announcements before acting.</p>
                   </div>
                 </div>
-                <div className={`${styles.scanFlag} ${styles.scanFlagWatch} ${styles.reveal}`}>
+                <div className={`${styles.scanFlag} ${styles.scanFlagWatch}`}>
                   <span className={styles.scanFlagTag}>WATCH</span>
                   <div>
                     <strong>RSI 71 — running hot</strong>
@@ -904,7 +941,7 @@ export default function LandingPage({
               </div>
             </div>
 
-            <div className={styles.scannerCopy}>
+            <div className={`${styles.scannerCopy} ${styles.srItem}`}>
               <div className={`${styles.scannerBadge} ${styles.reveal}`}>
                 <span className={styles.scannerLiveDot} />
                 Live Now · Free For Everyone
@@ -1671,7 +1708,7 @@ function ConnectorDiagram() {
   const gives = ["Looks inside your funds", "Your true, merged book", "Real risk, computed", "Live — re-read every ask"];
   const right = ["Broker & shares", "Superannuation", "Crypto & bullion", "SEC & issuer filings"];
   return (
-    <div className={styles.diagram}>
+    <div className={`${styles.diagram} ${styles.srItem}`}>
       <div className={`${styles.diagramCol} ${styles.diagramAi}`}>
         <div className={styles.diagramColLabel}>The AI you already use</div>
         {left.map((n) => (
@@ -1702,6 +1739,125 @@ function ConnectorDiagram() {
           <li key={g}>{g}</li>
         ))}
       </ul>
+    </div>
+  );
+}
+
+/**
+ * The scanner's price chart.
+ *
+ * A richer draw than the old bare sparkline: a recessive grid, a filled area
+ * under the price, a lagging 50-day moving average so the "50D TREND: Rising"
+ * stat has something to point at, and a marker on the last price. Inline SVG,
+ * one accent hue, grid in the faintest ink — the dataviz defaults.
+ */
+function ScannerChart() {
+  const price = "M0,92 L24,88 L48,90 L72,80 L96,84 L120,74 L144,78 L168,66 L192,70 L216,58 L240,60 L264,48 L288,52 L312,40 L336,34 L360,30 L384,20 L400,16";
+  const area = `${price} L400,108 L0,108 Z`;
+  const ma = "M0,96 C60,92 90,86 120,84 S190,74 240,66 S320,46 400,30";
+  return (
+    <svg className={styles.scanChart} viewBox="0 0 400 112" preserveAspectRatio="none" role="img" aria-label="PLS.AX price, one year, rising">
+      <defs>
+        <linearGradient id="scanFill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#ff4b33" stopOpacity="0.22" />
+          <stop offset="100%" stopColor="#ff4b33" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      {[24, 48, 72, 96].map((y) => (
+        <line key={y} x1="0" y1={y} x2="400" y2={y} className={styles.scanGrid} vectorEffect="non-scaling-stroke" />
+      ))}
+      <path d={area} fill="url(#scanFill)" />
+      <path d={ma} className={styles.scanMa} fill="none" vectorEffect="non-scaling-stroke" />
+      <path d={price} className={styles.scanLine} fill="none" vectorEffect="non-scaling-stroke" />
+      <circle cx="396" cy="16" r="3.5" className={styles.scanDot} vectorEffect="non-scaling-stroke" />
+    </svg>
+  );
+}
+
+/**
+ * A labelled gauge: a track, a fill to `pct`, an optional tinted zone (RSI's
+ * overbought band), and low/high ends. Identity is carried by the label and the
+ * numbers, never by colour alone.
+ */
+function Gauge({
+  label, value, pct, zoneStart, tone, lo, hi, caption,
+}: {
+  label: string; value: string; pct: number; zoneStart?: number;
+  tone?: "warn"; lo: string; hi: string; caption: string;
+}) {
+  const clamped = Math.max(0, Math.min(100, pct));
+  return (
+    <div className={styles.gauge}>
+      <div className={styles.gaugeHead}>
+        <span className={styles.gaugeLabel}>{label}</span>
+        <span className={`${styles.gaugeValue} ${tone === "warn" ? styles.gaugeValueWarn : ""}`}>{value}</span>
+      </div>
+      <div className={styles.gaugeTrack}>
+        {zoneStart !== undefined ? (
+          <div className={styles.gaugeZone} style={{ left: `${zoneStart}%`, right: 0 }} />
+        ) : null}
+        <div
+          className={`${styles.gaugeFill} ${tone === "warn" ? styles.gaugeFillWarn : ""}`}
+          style={{ width: `${clamped}%` }}
+        />
+        <div className={styles.gaugeMarker} style={{ left: `${clamped}%` }} />
+      </div>
+      <div className={styles.gaugeEnds}>
+        <span>{lo}</span>
+        <span className={styles.gaugeCaption}>{caption}</span>
+        <span>{hi}</span>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * What a holdings table hides.
+ *
+ * The single most important thing look-through does, drawn: for each exposure,
+ * the weight your statement shows versus the weight once SPECTRE reads through
+ * your funds to the companies inside. One hue — the accent bar is the real
+ * figure — and a tick for what the statement claimed, so the gap is the story.
+ * Single series plus a reference tick: no categorical palette to get wrong.
+ */
+function HiddenExposureChart() {
+  const SCALE = 18;
+  const rows: Array<{ label: string; statement: number; real: number }> = [
+    { label: "Commonwealth Bank", statement: 5.0, real: 5.3 },
+    { label: "Australian banks", statement: 11.4, real: 16.2 },
+    { label: "US mega-cap tech", statement: 6.1, real: 13.8 },
+    { label: "BHP Group", statement: 4.2, real: 5.1 },
+  ];
+  return (
+    <div className={`${styles.hiddenChart} ${styles.srItem}`}>
+      <div className={styles.hiddenChartHead}>
+        <div>
+          <div className={styles.sectionLabel}>Look-through, visualised</div>
+          <h3 className={styles.hiddenChartTitle}>What your holdings table hides.</h3>
+        </div>
+        <div className={styles.hiddenKey}>
+          <span className={styles.hiddenKeyReal}>Looked through</span>
+          <span className={styles.hiddenKeyStatement}>On your statement</span>
+        </div>
+      </div>
+      <div className={styles.hiddenRows}>
+        {rows.map((r) => (
+          <div key={r.label} className={styles.hiddenRow}>
+            <span className={styles.hiddenRowLabel}>{r.label}</span>
+            <div className={styles.hiddenBarTrack}>
+              <div className={styles.hiddenBarReal} style={{ width: `${(r.real / SCALE) * 100}%` }} />
+              <div className={styles.hiddenTick} style={{ left: `${(r.statement / SCALE) * 100}%` }} />
+            </div>
+            <span className={styles.hiddenRowVals}>
+              <strong>{r.real.toFixed(1)}%</strong>
+              <span className={styles.hiddenRowGap}>+{(r.real - r.statement).toFixed(1)} hidden</span>
+            </span>
+          </div>
+        ))}
+      </div>
+      <p className={styles.hiddenChartFoot}>
+        Your risk score runs on the looked-through figure, because that is the exposure you actually carry.
+      </p>
     </div>
   );
 }
