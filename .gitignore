@@ -63,6 +63,7 @@ screenshots/
 public/*.png
 !public/og-image.png
 !public/apple-touch-icon.png
+!public/product-dashboard.png
 .claude/
 
 # Electron build output

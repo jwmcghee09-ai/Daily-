@@ -571,9 +571,7 @@ export default function LandingPage({
               A chatbot can’t see your money<span className={styles.caret} aria-hidden="true" />
             </p>
             <p className={`${styles.heroSub} ${styles.reveal}`}>
-              SPECTRE connects to the AI you already use — Claude, ChatGPT, or a model on your own
-              machine — and gives it what a chatbot can’t get on its own: your real holdings, the
-              companies inside your funds, and numbers that are actually right.
+              SPECTRE plugs into the AI you already use and gives it what a chatbot can’t get on its own: your real holdings, the companies inside your funds, and numbers that are right.
             </p>
             <div className={`${styles.heroGive} ${styles.reveal}`} aria-hidden="true">
               <span className={styles.heroGiveLead}>Give your AI</span>
@@ -695,6 +693,29 @@ export default function LandingPage({
         </div>
       </section>
 
+      {/* A real screenshot of the product, not a drawing of it — the "photo"
+          the page was missing. One image, one line. */}
+      <section className={styles.shotSection}>
+        <div className={styles.container}>
+          <div className={`${styles.shotFrame} ${styles.srItem}`}>
+            <div className={styles.shotBar}>
+              <span className={styles.shotDot} /><span className={styles.shotDot} /><span className={styles.shotDot} />
+              <span className={styles.shotUrl}>spectre-assets.com / dashboard</span>
+            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/product-dashboard.png"
+              alt="The SPECTRE dashboard: a $314,320 demo portfolio with its risk score and snapshot"
+              className={styles.shotImg}
+              width={1760}
+              height={611}
+              loading="lazy"
+            />
+          </div>
+          <p className={styles.shotCaption}>Your whole portfolio, scored — the real dashboard, from the live demo.</p>
+        </div>
+      </section>
+
       <section className={styles.aiRevealSection} id="ai" ref={aiSectionRef}>
         <div className={styles.container}>
           <div className={styles.aiRevealHead}>
@@ -703,7 +724,7 @@ export default function LandingPage({
               Ask your portfolio<br /><span>anything.</span>
             </h2>
             <p className={`${styles.aiRevealSub} ${styles.reveal}`}>
-              This isn’t generic finance chat. Before answering, SPECTRE reads your holdings, the stocks inside your funds, live prices, your risk numbers, and the research feed — so “why am I down today?” names your tickers.
+              It reads your holdings, the stocks inside your funds, live prices and your risk numbers first — so “why am I down today?” comes back with your tickers in it.
             </p>
           </div>
           <div ref={aiConsoleRef} className={styles.aiConsoleReveal}>
@@ -723,11 +744,11 @@ export default function LandingPage({
               <div className={styles.miniGrid} style={{ marginTop: "14px" }}>
                 <div className={styles.miniCard}>
                   <div className={styles.smallLabel}>What AI Reads</div>
-                  <p>Holdings, the stocks inside your funds, weights, live quotes, sector mix, benchmark risk, research signals, and snapshot history.</p>
+                  <p>Holdings, the stocks inside your funds, live quotes, sector mix, benchmark risk and history.</p>
                 </div>
                 <div className={styles.miniCard}>
                   <div className={styles.smallLabel}>What AI Returns</div>
-                  <p>Portfolio drivers, holding-level explanations, risk flags, and things worth checking — never an instruction to trade. SPECTRE surfaces; you decide.</p>
+                  <p>Drivers, risk flags and things worth checking — never an instruction to trade.</p>
                 </div>
               </div>
               <div className={styles.aiRevealCta}>
@@ -761,9 +782,7 @@ export default function LandingPage({
           <div className={`${styles.sectionLabel} ${styles.reveal}`}>Fund Look-Through</div>
           <h2 className={`${styles.sectionTitle} ${styles.revealUp}`}>See inside your funds.</h2>
           <p className={`${styles.sectionSub} ${styles.reveal}`}>
-            Own ETFs or managed funds? SPECTRE reads each fund’s filings and breaks it down to the stocks
-            it holds — N-PORT for funds and ETFs, 13F for institutional managers. Hold three tech-heavy
-            ETFs and you’ll see exactly how much Nvidia you really own.
+            SPECTRE reads each fund’s SEC filings and breaks it down to the stocks inside. Hold three tech-heavy ETFs and you’ll see how much Nvidia you really own.
           </p>
 
           <div className={styles.connectSplit}>
@@ -849,10 +868,10 @@ export default function LandingPage({
 
             <ul className={styles.connectList}>
               {[
-                ["Your true exposure", "Holdings are merged across every fund you own, so hidden overlap and true concentration show up in your risk score instead of hiding behind a ticker."],
-                ["Holding companies too", "Hold Berkshire or another listed investment company and SPECTRE reads its 13F to show the equities inside it — counting only the share of the company that sleeve really is."],
-                ["Dated, not live", "Filings are published with a delay of up to a couple of months. Every breakdown shows the date of the filing it came from, and partial coverage is labelled as partial."],
-                ["Coverage", "US-registered funds, ETFs and managers resolve in full from SEC filings, and ASX feeders like IVV and IHVV resolve through the US fund they hold. Betashares publishes a full daily file. Vanguard Australia and VanEck publish their largest positions only, so those resolve partway. Anything else, upload the fund's holdings file."],
+                ["Your true exposure", "Overlap across funds surfaces in your risk score instead of hiding behind a ticker."],
+                ["Holding companies too", "Hold Berkshire and SPECTRE reads its 13F to show the stocks inside it."],
+                ["Dated, not live", "Every breakdown is stamped with the filing date, and partial coverage is labelled as partial."],
+                ["Coverage", "US funds and ASX feeders resolve in full from SEC filings; Betashares from its daily file. Vanguard and VanEck resolve partway. Anything else, upload the file."],
               ].map(([title, copy]) => (
                 <li key={title} className={styles.reveal}>
                   <strong>{title}</strong> — {copy}
@@ -951,14 +970,13 @@ export default function LandingPage({
                 <span>Free, for everyone.</span>
               </h2>
               <p className={`${styles.scanSub} ${styles.reveal}`}>
-                Free on every account. Search any stock and SPECTRE checks a year of price, volume,
-                momentum, and volatility history — then flags what looks unusual.
+                Search any stock and SPECTRE checks a year of price, volume and volatility — then flags what looks unusual.
               </p>
               <ul className={styles.scanList}>
                 {[
-                  ["Search any stock", "Type BHP, CBA, NVDA — ASX tickers resolve first, and US or global markets work too."],
-                  ["Possible anomalies only", "RSI extremes, volume spikes, price gaps, 52-week levels, trend breaks, and volatility bursts. Flags, not orders."],
-                  ["You have the final say", "The scanner never trades and never tells you what to do. It surfaces the signal; you make the call."],
+                  ["Search any stock", "ASX first, US and global markets too."],
+                  ["Possible anomalies only", "RSI extremes, volume spikes, 52-week levels, trend breaks. Flags, not orders."],
+                  ["You have the final say", "It never trades. It surfaces the signal; you make the call."],
                 ].map(([title, copy]) => (
                   <li key={title} className={styles.reveal}>
                     <strong>{title}</strong> — {copy}
@@ -984,9 +1002,7 @@ export default function LandingPage({
             Make the AI you already use your financial analyst.
           </h2>
           <p className={`${styles.sectionSub} ${styles.reveal}`}>
-            SPECTRE speaks the Model Context Protocol, so Claude, ChatGPT or a model on your own machine
-            plugs straight into your portfolio. Your assistant stops guessing about your money and starts
-            reading the real thing — computed by us, including the companies inside your funds.
+            Over the Model Context Protocol, Claude, ChatGPT or your own model plugs straight into your portfolio — and starts reading the real thing instead of guessing.
           </p>
 
           <ConnectorDiagram />
@@ -1049,9 +1065,9 @@ export default function LandingPage({
 
             <ul className={styles.connectList}>
               {[
-                ["Your numbers, not its guesses", "Risk, momentum and concentration are computed in code before your model ever sees them."],
-                ["Always current", "It reads your live holdings every time you ask, so imports and edits show up immediately."],
-                ["You choose who sees it", "Connect over a URL, or run the connector on your own machine. Either way your holdings go only to the assistant you connect them to, and nowhere else."],
+                ["Your numbers, not its guesses", "Risk and concentration are computed in code before your model sees them."],
+                ["Always current", "It reads your live holdings on every question."],
+                ["You choose who sees it", "Over a URL or on your own machine — your holdings reach only the assistant you connect."],
                 ["No extra AI bill", "You bring your own model, so there's nothing metered on our side."],
                 ["Ten tools", "Holdings, fund look-through, risk, the scanner, news, movers and macro — all callable."],
               ].map(([title, copy]) => (
@@ -1071,7 +1087,7 @@ export default function LandingPage({
           <div className={`${styles.sectionLabel} ${styles.reveal}`}>Research Terminal</div>
           <h2 className={`${styles.sectionTitle} ${styles.revealUp}`}>The market data behind every answer.</h2>
           <p className={`${styles.sectionSub} ${styles.reveal}`}>
-            The same feeds the AI reads: ASX equities, macro, earnings, crypto, commodities, treasury curves, and positioning data — open to explore on your own.
+            The same feeds the AI reads — ASX, macro, earnings, crypto, commodities — open to explore yourself.
           </p>
 
           <div className={`${styles.researchWindow} ${styles.revealScale}`}>
@@ -1644,9 +1660,12 @@ function ValuePropCycler({ props }: { props: readonly ValueProp[] }) {
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
 
+  // Rotates for everyone, including reduced-motion — swapping which card is
+  // shown is a content change, not a motion flourish, and a reader with reduced
+  // motion was seeing a band that never moved. The fade and the progress fill
+  // are what reduced motion drops (in CSS); the rotation itself stays.
   useEffect(() => {
     if (paused) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const timer = window.setInterval(() => setActive((i) => (i + 1) % props.length), 3600);
     return () => window.clearInterval(timer);
   }, [paused, props.length]);
