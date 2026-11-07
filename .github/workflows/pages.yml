@@ -1,5 +1,9 @@
 name: Deploy Nodal Systems site to GitHub Pages
 
+# Publishes to https://jwmcghee09-ai.github.io/Daily-/
+#   /            Nodal Systems (nodal-systems/ on this branch)
+#   /powersite/  PowerSite (powersite/ on the claude/vigilant-brahmagupta-2aiap2 branch)
+
 on:
   push:
     branches: [claude/nodal-systems-ai-servers-imyya4]
@@ -19,9 +23,29 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: claude/vigilant-brahmagupta-2aiap2
+          path: ps
+      - uses: oven-sh/setup-bun@v2
+      - name: Build PowerSite as a static site
+        working-directory: ps/powersite
+        env:
+          STATIC_BASE: /Daily-/powersite/
+          # Set a repository variable FORM_ENDPOINT (e.g. your Formspree URL) to turn the sign-up forms on.
+          VITE_FORM_ENDPOINT: ${{ vars.FORM_ENDPOINT }}
+        run: |
+          bun install --frozen-lockfile
+          bun run build
+      - name: Assemble site
+        run: |
+          mkdir -p _site
+          cp -r nodal-systems/. _site/
+          cp -r ps/powersite/dist/client _site/powersite
+          touch _site/.nojekyll
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: nodal-systems
+          path: _site
       - id: deployment
         uses: actions/deploy-pages@v4
