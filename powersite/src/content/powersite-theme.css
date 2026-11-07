@@ -1,0 +1,99 @@
+/* PowerSite dark/red theme — overrides the uploaded base styles */
+html:root:not(#_){
+  --bg:#0b0b0d;--alt:#111114;--ink:#f1ecea;--muted:#9b9396;--rule:#26232a;
+  --band:#0b0b0d;--band-ink:#fff;--band-muted:#b8adb0;
+  --accent:#e5322d;--accent-ink:#fff;--link:#ff6b62;--ok:#ff8a80;color-scheme:dark}
+html body{background:var(--bg);font-size:17px;line-height:1.65}
+html body nav{position:sticky;top:0;z-index:30;background:color-mix(in oklab,var(--bg) 82%,transparent);backdrop-filter:blur(14px)}
+html body nav .in{padding-block:20px}
+html body .links a.active{color:var(--accent)}
+html body .btn{border-radius:2px;padding:14px 22px;letter-spacing:.01em}
+html body .btn.d{background:var(--accent);color:var(--accent-ink)}
+html body .btn.o{border-color:color-mix(in oklab,var(--band-ink) 40%,transparent)}
+html body section{padding-block:140px}
+html body .sechead{margin-bottom:56px;gap:16px}
+html body .sechead h2{font-size:clamp(2.2rem,4.6vw,3.4rem);letter-spacing:-.02em;line-height:1.02}
+html body .eyebrow{font-family:var(--mono);font-size:.78rem;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);display:block;margin-bottom:18px}
+
+/* photo hero */
+html body .hero{position:relative;overflow:hidden;min-height:calc(100vh - 80px);display:grid;align-items:end;background:#000}
+html body .hero .ph{position:absolute;inset:-6% 0 0;background-size:cover;background-position:center;opacity:.55;transform:translateY(var(--py,0));will-change:transform}
+html body .hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 30%,var(--bg) 100%),linear-gradient(90deg,var(--bg) 0%,transparent 70%)}
+html body .hero .in{position:relative;z-index:1;padding-block:120px 110px;gap:28px;width:100%}
+html body .hero h1{font-size:clamp(2.8rem,7vw,5.6rem);letter-spacing:-.035em;line-height:.98;max-width:16ch}
+html body .hero p{font-size:1.2rem;max-width:56ch}
+html body .search{margin-top:28px;background:color-mix(in oklab,var(--alt) 85%,transparent);border:1px solid var(--rule);backdrop-filter:blur(8px);padding:20px;gap:16px}
+
+html body .stats .in{padding-block:40px}
+html body .stat{padding-block:30px}
+html body .stat b{font-size:2.8rem;color:var(--ink)}
+html body .stat:first-child b{color:var(--accent)}
+
+/* page header for inner pages */
+html body .pagehead{padding-block:160px 60px;border-bottom:1px solid var(--rule)}
+html body .pagehead h1{font-size:clamp(2.8rem,7vw,5.2rem);letter-spacing:-.035em;line-height:.98;max-width:18ch}
+html body .pagehead p{color:var(--muted);font-size:1.2rem;max-width:58ch;margin-top:24px}
+
+/* split photo rows */
+html body .split{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center}
+html body .split.rev>figure{order:2}
+html body .split figure{margin:0;overflow:hidden;aspect-ratio:4/3}
+html body .split img{width:100%;height:100%;object-fit:cover;transform:scale(1.08);transition:transform 1.4s cubic-bezier(.2,.7,.2,1)}
+html body .split.in-view img{transform:scale(1)}
+html body .split h2{font-size:clamp(2rem,4vw,3rem);letter-spacing:-.02em;line-height:1.05}
+html body .split p{color:var(--muted);margin-top:20px;max-width:46ch}
+html body .split .btn{margin-top:32px}
+@media (max-width:860px){html body .split{grid-template-columns:1fr;gap:36px}html body .split.rev>figure{order:0}html body section{padding-block:90px}}
+
+html body .types,html body .grid{gap:24px}
+html body .type{padding:32px;gap:14px;border-radius:2px}
+html body .type,html body .card,html body .plan,html body .tbl,html body form.f{background:var(--alt);border-radius:2px;transition:border-color .3s}
+html body .type:hover,html body .card:hover{border-color:color-mix(in oklab,var(--accent) 60%,var(--rule))}
+html body .edge{gap:72px}
+html body .steps{gap:28px}
+html body .sides{gap:72px}
+html body .side{gap:20px;padding-top:28px}
+html body .side ol{gap:16px}
+html body .forms{gap:40px}
+html body form.f{padding:40px;gap:18px}
+html body .tab[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+html body .steps li::before{border-color:var(--accent);color:var(--accent)}
+html body .side,html body form.f.renter{border-color:var(--ink)}
+html body .sources{padding-block:80px}
+
+/* closing CTA band */
+html body .cta-band{border-top:1px solid var(--rule);text-align:left}
+html body .cta-band h2{font-size:clamp(2.4rem,6vw,4.4rem);letter-spacing:-.03em;line-height:1;max-width:18ch}
+html body .cta-band .ctas{margin-top:40px}
+
+html body footer{border-top:1px solid var(--rule);background:var(--bg)}
+html body footer .in{padding-block:56px}
+
+/* scroll reveal */
+html body .rv{opacity:0;transform:translateY(40px);transition:opacity .9s ease,transform .9s cubic-bezier(.2,.7,.2,1)}
+html body .rv.in-view{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){html body .rv{opacity:1;transform:none;transition:none}html body .hero .ph{transform:none}}
+
+/* pricing */
+html body .price{gap:20px}
+html body .price.featured{border-color:var(--accent)}
+html body .price .eyebrow{margin-bottom:0}
+html body .price .amt b{font-family:var(--head);font-size:3rem;font-weight:700;letter-spacing:-.02em;line-height:1}
+html body .price .amt span{color:var(--muted)}
+html body .price ul{margin:0;padding-left:18px;display:grid;gap:8px;color:var(--muted);font-size:.95rem}
+html body .price .btn{justify-self:start;margin-top:8px}
+html body .price .btn.o{color:var(--ink)}
+
+/* project size band */
+html body .focus .in{display:grid;grid-template-columns:1fr 1fr;gap:72px;align-items:center}
+html body .focus .range{font-family:var(--head);font-size:clamp(2.8rem,7vw,5rem);font-weight:700;letter-spacing:-.03em;line-height:1}
+html body .focus .range em{font-style:normal;color:var(--accent)}
+html body .focus p{color:var(--muted);margin-top:16px;max-width:52ch}
+html body .focus .btn{margin-top:28px}
+@media (max-width:860px){html body .focus .in{grid-template-columns:1fr;gap:28px}}
+
+/* footer links */
+html body footer .flinks{display:flex;flex-wrap:wrap;gap:8px 20px}
+html body footer .flinks a{color:var(--band-muted);text-decoration:none}
+html body footer .flinks a:hover{color:var(--band-ink)}
+html body .focus h2{font-size:clamp(1.8rem,3.4vw,2.6rem);letter-spacing:-.02em;line-height:1.05}
