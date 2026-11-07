@@ -1,0 +1,56 @@
+name: Deploy sites to GitHub Pages
+
+# Publishes to https://jwmcghee09-ai.github.io/Daily-/
+#   /            Nodal Systems (from the claude/nodal-systems-ai-servers-imyya4 branch, unchanged)
+#   /powersite/  PowerSite (built from powersite/ on this branch)
+# A repo has one Pages site, so both are deployed together to keep Nodal Systems online.
+
+on:
+  push:
+    branches: [claude/vigilant-brahmagupta-2aiap2]
+    paths: ["powersite/**", ".github/workflows/pages.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: claude/nodal-systems-ai-servers-imyya4
+          path: nodal
+      - uses: oven-sh/setup-bun@v2
+      - name: Build PowerSite as a static site
+        working-directory: powersite
+        env:
+          STATIC_BASE: /Daily-/powersite/
+          # Set a repository variable FORM_ENDPOINT (e.g. your Formspree URL) to turn the sign-up forms on.
+          VITE_FORM_ENDPOINT: ${{ vars.FORM_ENDPOINT }}
+        run: |
+          bun install --frozen-lockfile
+          bun run build
+      - name: Assemble site
+        run: |
+          mkdir -p _site
+          cp -r nodal/nodal-systems/. _site/
+          cp -r powersite/dist/client _site/powersite
+          touch _site/.nojekyll
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -64,7 +64,9 @@ export function Site({ children }: { children: ReactNode }) {
 }
 
 export function Html({ html }: { html: string }) {
-  return <div style={{ display: "contents" }} dangerouslySetInnerHTML={{ __html: html }} />;
+  // The copy fragments use root links like href="/get-started"; point them at the site's base path.
+  const based = html.replace(/href="\/(?!\/)/g, `href="${import.meta.env.BASE_URL}`);
+  return <div style={{ display: "contents" }} dangerouslySetInnerHTML={{ __html: based }} />;
 }
 
 export function PageHead({ eyebrow, title, intro }: { eyebrow: string; title: string; intro?: string }) {
