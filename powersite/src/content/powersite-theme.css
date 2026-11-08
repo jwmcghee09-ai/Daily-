@@ -140,3 +140,27 @@ html body .faq h3:first-child{margin-top:0}
 html body .prose{max-width:68ch;display:grid;gap:20px;color:var(--muted);font-size:1.05rem}
 html body .prose h2{color:var(--ink);font-size:clamp(1.8rem,3.4vw,2.4rem);letter-spacing:-.02em;margin-top:24px}
 html body .prose b{color:var(--ink);font-weight:600}
+
+/* the problem */
+html body .problem{border-top:1px solid var(--rule)}
+html body .probs{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:24px;counter-reset:p}
+html body .probs li{counter-increment:p;background:var(--alt);border:1px solid var(--rule);border-radius:2px;padding:32px;display:grid;gap:14px;align-content:start}
+html body .probs li::before{content:"0" counter(p);font-family:var(--mono);color:var(--accent);font-size:.85rem;letter-spacing:.1em}
+html body .probs b{font-family:var(--head);font-size:1.45rem;line-height:1.1;letter-spacing:-.01em}
+html body .probs p{color:var(--muted);font-size:.97rem}
+html body .paths{margin-top:56px;display:grid;gap:28px}
+html body .path .eyebrow{margin-bottom:10px}
+html body .path .track{display:flex;gap:4px}
+html body .path .track span{flex:1;padding:14px 12px;font-size:.88rem;font-weight:500;background:var(--alt);border:1px solid var(--rule);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html body .path.slow .track span:nth-child(2),html body .path.slow .track span:nth-child(3){flex:3;color:var(--muted);background:repeating-linear-gradient(135deg,var(--alt) 0 10px,color-mix(in oklab,var(--rule) 70%,var(--alt)) 10px 20px)}
+html body .path.fast .track{max-width:56%}
+html body .path.fast .track span{background:color-mix(in oklab,var(--accent) 22%,var(--alt));border-color:color-mix(in oklab,var(--accent) 50%,var(--rule));color:var(--ink)}
+html body .path p{color:var(--muted);font-size:.92rem;margin-top:10px}
+html body .probclose{margin-top:48px;font-family:var(--head);font-size:clamp(1.4rem,2.6vw,1.9rem);line-height:1.2;max-width:34ch;color:var(--ink)}
+@media (max-width:860px){
+  html body .probs{grid-template-columns:1fr}
+  html body .path .track{flex-direction:column}
+  html body .path.fast .track{max-width:none}
+  html body .path .track span,html body .path.slow .track span:nth-child(2),html body .path.slow .track span:nth-child(3){flex:none;white-space:normal}
+  html body .path.slow .track span:nth-child(2),html body .path.slow .track span:nth-child(3){padding-block:28px}
+}

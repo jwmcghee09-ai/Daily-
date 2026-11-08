@@ -21,6 +21,74 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
+function Src({ n }: { n: number }) {
+  return <sup><a href={`#src${n}`}>{n}</a></sup>;
+}
+
+/** The problem PowerSite solves, before the solution sections. */
+function Problem() {
+  return (
+    <section className="problem" id="problem">
+      <div className="in">
+        <div className="sechead">
+          <span className="eyebrow">The problem</span>
+          <h2>Everyone needs power. The grid can't connect them fast enough.</h2>
+          <p>
+            Data centres, batteries and EV chargers are arriving faster than the networks can build for them. The equipment ships
+            in weeks. Getting a new connection to plug it into is the slow part.
+          </p>
+        </div>
+        <ol className="probs">
+          <li>
+            <b>Everyone is queuing for the same wires</b>
+            <p>
+              Ausgrid alone has 7.5 GW of data centre connections in its pipeline, with 5.2 GW still being assessed.<Src n={2} />{" "}
+              Transgrid has had more than 10 GW of enquiries within 12 km of Sydney West, and says its main Western Sydney
+              network is largely exhausted beyond 2033. New loads there may not connect without major upgrades.<Src n={6} />
+            </p>
+          </li>
+          <li>
+            <b>Meanwhile, power already connected sits unused</b>
+            <p>
+              Factories shrink, cold stores close and depots run below what they were built for. Their supply stays connected and
+              paid for, but mostly idle. Regional networks have room too: Essential Energy told the NSW inquiry its network is
+              "underutilised".<Src n={2} />
+            </p>
+          </li>
+          <li>
+            <b>And nobody lists it</b>
+            <p>
+              Network capacity maps show substations, not a carpark corner you can lease. Property listings give square metres, not
+              kVA. Big brokers chase hyperscale sites. So a developer who needs 200 kVA and four car bays has no way to find the
+              owner who has exactly that.
+            </p>
+          </li>
+        </ol>
+        <div className="paths" aria-label="Two ways to power a project">
+          <div className="path slow">
+            <span className="eyebrow">New connection</span>
+            <div className="track">
+              <span>Apply</span><span>Join the queue</span><span>Network upgrade</span><span>Connect</span>
+            </div>
+            <p>Can take years where the network is full.</p>
+          </div>
+          <div className="path fast">
+            <span className="eyebrow">Existing supply, through PowerSite</span>
+            <div className="track">
+              <span>Find a matched site</span><span>Pad and cabling</span><span>Connect</span>
+            </div>
+            <p>Mostly site works and approvals. Often weeks to a few months.</p>
+          </div>
+        </div>
+        <p className="probclose">
+          PowerSite finds the space where the power is already there, checks how much is spare, and introduces the owner to
+          the developer who needs it.
+        </p>
+      </div>
+    </section>
+  );
+}
+
 function Home() {
   const navigate = useNavigate();
   useEffect(() => {
@@ -39,6 +107,7 @@ function Home() {
     <Site>
       <Html html={heroHtml} />
       <Html html={stats} />
+      <Problem />
       <Html html={spaces} />
       <section className="focus"><div className="in">
         <div className="range"><em>50&nbsp;kVA</em> to<br />10&nbsp;MW</div>
