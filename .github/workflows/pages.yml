@@ -2,7 +2,7 @@ name: Deploy Nodal Systems site to GitHub Pages
 
 # Publishes to https://jwmcghee09-ai.github.io/Daily-/
 #   /            Nodal Systems (nodal-systems/ on this branch)
-#   /powersite/  PowerSite (powersite/ on the claude/vigilant-brahmagupta-2aiap2 branch)
+#   /powersite/  PowerSite (powersite/ at the commit in .github/powersite-version)
 
 on:
   push:
@@ -23,9 +23,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # PowerSite is published at the exact commit named in .github/powersite-version
+      # (from the claude/vigilant-brahmagupta-2aiap2 branch). Change that line to release a new version.
+      - id: psver
+        run: echo "sha=$(tr -d '[:space:]' < .github/powersite-version)" >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@v4
         with:
-          ref: claude/vigilant-brahmagupta-2aiap2
+          ref: ${{ steps.psver.outputs.sha }}
           path: ps
       - uses: oven-sh/setup-bun@v2
       - name: Build PowerSite as a static site
