@@ -164,3 +164,27 @@ html body .probclose{margin-top:48px;font-family:var(--head);font-size:clamp(1.4
   html body .path .track span,html body .path.slow .track span:nth-child(2),html body .path.slow .track span:nth-child(3){flex:none;white-space:normal}
   html body .path.slow .track span:nth-child(2),html body .path.slow .track span:nth-child(3){padding-block:28px}
 }
+
+/* problem: connection timeline */
+html body .subhead{font-family:var(--mono);font-size:.8rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin:64px 0 24px;font-weight:500}
+html body .sechead + .subhead{margin-top:8px}
+html body .timeline{list-style:none;margin:0;padding:0;display:grid;gap:0;counter-reset:t;max-width:900px}
+html body .timeline li{counter-increment:t;position:relative;padding:0 0 32px 64px;display:grid;gap:6px}
+html body .timeline li::before{content:counter(t);position:absolute;left:0;top:-2px;width:40px;height:40px;border-radius:50%;border:1px solid var(--accent);color:var(--accent);font-family:var(--mono);font-size:.9rem;display:grid;place-items:center;background:var(--bg);z-index:1}
+html body .timeline li::after{content:"";position:absolute;left:20px;top:38px;bottom:0;width:1px;background:var(--rule)}
+html body .timeline li:last-child::after{display:none}
+html body .timeline li.up::before{border-style:dashed}
+html body .timeline .th{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 14px}
+html body .timeline b{font-family:var(--head);font-size:1.35rem;letter-spacing:-.01em}
+html body .chip{font-family:var(--mono);font-size:.75rem;padding:3px 8px;border:1px solid color-mix(in oklab,var(--accent) 55%,var(--rule));color:var(--ink);background:color-mix(in oklab,var(--accent) 14%,transparent);white-space:nowrap}
+html body .timeline .who{font-size:.82rem;color:var(--muted);font-family:var(--mono)}
+html body .timeline p{color:var(--muted);max-width:70ch;font-size:.97rem}
+html body .sum{margin-top:8px;max-width:70ch;background:var(--alt);border-left:3px solid var(--accent);padding:20px 24px;color:var(--muted)}
+html body .sum b{color:var(--ink)}
+html body .hard{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+html body .hard div{border-top:2px solid var(--accent);padding-top:16px;display:grid;gap:8px;align-content:start}
+html body .hard b{font-family:var(--head);font-size:1.2rem;line-height:1.15}
+html body .hard p{color:var(--muted);font-size:.94rem}
+html body .problem .paths{margin-top:0}
+@media (max-width:960px){html body .hard{grid-template-columns:1fr 1fr}}
+@media (max-width:540px){html body .hard{grid-template-columns:1fr} html body .timeline li{padding-left:56px} html body .chip{white-space:normal}}

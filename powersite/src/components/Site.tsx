@@ -17,7 +17,7 @@ export const contactEmail: string = import.meta.env["VITE_CONTACT_EMAIL"] ?? "";
 function useReveal(deps: unknown) {
   useEffect(() => {
     const els = document.querySelectorAll<HTMLElement>(
-      "main .sechead, main .probs li, main .paths, main .focus .in, main .type, main .card, main .split, main .side, main form.f, main .plan, main .steps li, main .stat, main .cta-band .in, main .pagehead .in",
+      "main .sechead, main .probs li, main .paths, main .timeline li, main .hard div, main .sum, main .focus .in, main .type, main .card, main .split, main .side, main form.f, main .plan, main .steps li, main .stat, main .cta-band .in, main .pagehead .in",
     );
     const io = new IntersectionObserver(
       (es) => es.forEach((e) => e.isIntersecting && (e.target.classList.add("in-view"), io.unobserve(e.target))),
