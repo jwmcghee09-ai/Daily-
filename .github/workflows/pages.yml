@@ -43,6 +43,8 @@ jobs:
           cp -r nodal-systems/. _site/
           cp -r ps/powersite/dist/client _site/powersite
           touch _site/.nojekyll
+          # Pages has one 404 page for the whole site (Nodal's). Send missing PowerSite pages to PowerSite's home instead.
+          sed -i 's#<head>#<head><script>if(location.pathname.indexOf("/Daily-/powersite/")===0)location.replace("/Daily-/powersite/")</script>#' _site/404.html
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
