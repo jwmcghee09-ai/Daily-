@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { css } from "@/content/fragments";
 
 const nav = [
@@ -7,8 +7,11 @@ const nav = [
   { to: "/edge-data-centres", label: "Edge data centres" },
   { to: "/how-it-works", label: "How it works" },
   { to: "/pricing", label: "Pricing" },
-  { to: "/get-started", label: "List your space" },
+  { to: "/about", label: "About" },
 ] as const;
+
+/** Shown in the footer and on the About page when set (VITE_CONTACT_EMAIL). */
+export const contactEmail: string = import.meta.env["VITE_CONTACT_EMAIL"] ?? "";
 
 /** Adds .rv reveal-on-scroll to sections, cards and photo rows on every page. */
 function useReveal(deps: unknown) {
@@ -34,19 +37,26 @@ function useReveal(deps: unknown) {
 
 export function Site({ children }: { children: ReactNode }) {
   const path = useRouterState({ select: (s) => s.location.pathname });
+  const [open, setOpen] = useState(false);
   useReveal(path);
+  useEffect(() => setOpen(false), [path]);
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: css }} />
-      <nav>
+      <nav className={open ? "open" : undefined}>
         <div className="in">
           <Link to="/" className="logo"><i />PowerSite</Link>
-          <div className="links">
+          <div className="links" id="site-menu">
             {nav.map((n) => (
               <Link key={n.to} to={n.to} activeProps={{ className: "active" }}>{n.label}</Link>
             ))}
+            <Link to="/get-started" hash="host" className="btn o host">List your space</Link>
             <Link to="/get-started" hash="rent" className="btn d">Find space</Link>
           </div>
+          <button type="button" className="menu-btn" aria-expanded={open} aria-controls="site-menu"
+            aria-label={open ? "Close menu" : "Open menu"} onClick={() => setOpen((o) => !o)}>
+            <span /><span /><span />
+          </button>
         </div>
       </nav>
       <main>{children}</main>
@@ -55,6 +65,8 @@ export function Site({ children }: { children: ReactNode }) {
           <div><strong>PowerSite</strong><br />Spare space and power, NSW.</div>
           <div className="flinks">
             {nav.map((n) => <Link key={n.to} to={n.to}>{n.label}</Link>)}
+            <Link to="/get-started" hash="host">List your space</Link>
+            {contactEmail && <a href={`mailto:${contactEmail}`}>{contactEmail}</a>}
           </div>
           <div style={{ maxWidth: "48ch" }}>Power figures on listings are estimates. Always confirm with your network provider before signing anything.</div>
         </div>

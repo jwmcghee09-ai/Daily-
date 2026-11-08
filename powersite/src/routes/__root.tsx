@@ -81,7 +81,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      
+      { property: "og:site_name", content: "PowerSite" },
+      { name: "theme-color", content: "#0b0b0d" },
+      ...(import.meta.env["VITE_SITE_URL"]
+        ? [
+            { property: "og:image", content: `${import.meta.env["VITE_SITE_URL"]}og.jpg` },
+            { property: "og:image:width", content: "1200" },
+            { property: "og:image:height", content: "630" },
+            { name: "twitter:image", content: `${import.meta.env["VITE_SITE_URL"]}og.jpg` },
+          ]
+        : []),
     ],
     links: [
       {

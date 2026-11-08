@@ -97,3 +97,46 @@ html body footer .flinks{display:flex;flex-wrap:wrap;gap:8px 20px}
 html body footer .flinks a{color:var(--band-muted);text-decoration:none}
 html body footer .flinks a:hover{color:var(--band-ink)}
 html body .focus h2{font-size:clamp(1.8rem,3.4vw,2.6rem);letter-spacing:-.02em;line-height:1.05}
+
+/* nav: outline button + phone menu */
+html body nav .btn{padding:10px 16px}
+html body nav .btn.o{color:var(--ink)}
+html body .menu-btn{display:none;background:none;border:1px solid var(--rule);border-radius:2px;width:44px;height:44px;padding:0;cursor:pointer;flex-direction:column;justify-content:center;align-items:center;gap:5px}
+html body .menu-btn span{display:block;width:20px;height:2px;background:var(--ink);transition:transform .2s,opacity .2s}
+html body nav.open .menu-btn span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+html body nav.open .menu-btn span:nth-child(2){opacity:0}
+html body nav.open .menu-btn span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+@media (max-width:1060px){
+  html body .menu-btn{display:flex}
+  html body nav .in{flex-wrap:wrap}
+  html body .links{display:none;order:3;width:100%;flex-direction:column;align-items:stretch;gap:0;padding-top:12px}
+  html body nav.open .links{display:flex}
+  html body .links a:not(.btn){display:block;padding:14px 0;border-bottom:1px solid var(--rule);font-size:1.05rem}
+  html body .links .btn{margin-top:12px;text-align:center}
+}
+
+/* phone hero: get both buttons onto the first screen */
+@media (max-width:600px){
+  html body .hero{min-height:0}
+  html body .hero .in{padding-block:64px 56px;gap:20px}
+  html body .hero h1{font-size:clamp(2.3rem,10vw,2.9rem)}
+  html body .hero p{font-size:1.02rem}
+  html body .hero .ctas .btn{flex:1 1 100%;text-align:center}
+  html body .pagehead{padding-block:96px 44px}
+}
+
+/* FAQ */
+html body .faq{display:grid;gap:12px;max-width:820px}
+html body .faq details{background:var(--alt);border:1px solid var(--rule);border-radius:2px;padding:0 24px}
+html body .faq summary{cursor:pointer;padding:20px 0;font-family:var(--head);font-size:1.2rem;font-weight:600;list-style:none;display:flex;justify-content:space-between;gap:16px}
+html body .faq summary::-webkit-details-marker{display:none}
+html body .faq summary::after{content:"+";color:var(--accent);font-family:var(--mono)}
+html body .faq details[open] summary::after{content:"\2212"}
+html body .faq details p{color:var(--muted);padding-bottom:20px;max-width:70ch}
+html body .faq h3{font-size:.8rem;font-family:var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin:28px 0 4px}
+html body .faq h3:first-child{margin-top:0}
+
+/* about */
+html body .prose{max-width:68ch;display:grid;gap:20px;color:var(--muted);font-size:1.05rem}
+html body .prose h2{color:var(--ink);font-size:clamp(1.8rem,3.4vw,2.4rem);letter-spacing:-.02em;margin-top:24px}
+html body .prose b{color:var(--ink);font-weight:600}
