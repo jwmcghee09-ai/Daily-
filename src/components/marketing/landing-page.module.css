@@ -4611,3 +4611,147 @@
   font-size: 13.5px;
   color: var(--muted);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * MOBILE OVERHAUL
+ * The page read well on desktop but on a phone it ran ~30 screens long, had no
+ * way to navigate (the section links were display:none with nothing to replace
+ * them), and the big section padding left oceans of whitespace. This block adds
+ * a real mobile menu and tightens the whole page for a phone.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── The mobile menu button (hamburger) ── */
+.navToggle {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 42px;
+  height: 42px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #fff;
+  cursor: pointer;
+}
+.navToggleBar {
+  display: block;
+  width: 100%;
+  height: 2px;
+  border-radius: 2px;
+  background: #0d0d11;
+  transition: transform 0.26s ease, opacity 0.2s ease;
+}
+.navToggleBar1 { transform: translateY(7px) rotate(45deg); }
+/* Collapses to nothing when the menu is open (forming the X) — scaleX rather
+   than opacity so it is unambiguously a toggle, not a hidden element. */
+.navToggleBar2 { transform: scaleX(0); }
+.navToggleBar3 { transform: translateY(-7px) rotate(-45deg); }
+
+/* ── The drop-down menu panel ── */
+.mobileMenu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  flex-direction: column;
+  padding: 10px 20px calc(18px + var(--safeBottom, 0px));
+  background: rgba(244, 244, 246, 0.98);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 18px 40px -20px rgba(17, 17, 22, 0.35);
+}
+.mobileMenuOpen { display: flex; }
+.mobileMenuLink {
+  padding: 15px 6px;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  color: #0d0d11;
+  text-decoration: none;
+  border-bottom: 1px solid var(--border);
+}
+.mobileMenuLink:active { color: var(--accent); }
+.mobileMenuActions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+.mobileMenuActions .button { width: 100%; justify-content: center; padding: 15px; }
+
+@media (max-width: 960px) {
+  /* The two inline nav buttons give way to the hamburger + menu. */
+  .navActions { display: none; }
+  .navToggle { display: flex; }
+}
+
+/* ── Tightening the whole page for a phone ── */
+@media (max-width: 700px) {
+  /* The single biggest win: 120px section padding was a quarter-screen of
+     whitespace top and bottom. */
+  .section { padding: 56px 0; }
+  .valueBandSection { padding: 48px 0; }
+  .aiRevealSection { padding: 52px 0; }
+  .scannerSection { padding: 52px 0; }
+  .ctaSection { padding: 56px 0; }
+  .statsStrip { padding: 26px 0; }
+  .shotSection { padding: 20px 0; }
+
+  /* The hero was a full tall screen plus a big dashboard mock; bring it in. */
+  .hero {
+    min-height: auto;
+    padding: calc(var(--navHeight) + var(--tickerHeight) + 36px + var(--safeTop)) 0 44px;
+  }
+  .heroProduct { margin-top: 36px; }
+
+  /* The monospace tagline wrapped awkwardly and ran large; size it to the
+     phone and give it room to breathe. */
+  .heroTag {
+    font-size: clamp(16px, 5.2vw, 21px) !important;
+    line-height: 1.4;
+  }
+  .heroSub { font-size: 15.5px; line-height: 1.6; }
+  .heroGive { font-size: 16px; }
+
+  /* Heavy display headings trimmed so they don't eat three lines. */
+  .sectionTitle { font-size: clamp(23px, 6.6vw, 30px) !important; }
+  .aiRevealTitle { font-size: clamp(26px, 8vw, 34px) !important; }
+  .valueBandTitle { font-size: clamp(22px, 6.8vw, 29px) !important; }
+  .scanTitle { font-size: clamp(23px, 6.6vw, 30px) !important; }
+
+  /* Section intro paragraphs: a touch smaller, tighter. */
+  .sectionSub, .aiRevealSub, .scanSub { font-size: 15px; line-height: 1.6; }
+
+  /* The sticky workflow can't do its scroll-pinned trick on a phone. On desktop
+     all three text panels are stacked in one grid cell and revealed by scroll;
+     here we unpin the section, drop the preview column, and let the three
+     panels flow as ordinary stacked blocks. */
+  .stickyWrap { height: auto; }
+  .stickyInner {
+    position: static;
+    height: auto;
+    display: block;
+    overflow: visible;
+    grid-template-columns: none;
+  }
+  .stickyLeft { display: none; }
+  .stickyRight { display: block; padding: 0 20px; }
+  .stickyPanels { display: block; }
+  .stickyPanel {
+    grid-column: auto;
+    grid-row: auto;
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+    padding: 24px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .stickyPanel:last-child { border-bottom: none; }
+
+  /* Comfortable tap targets and no cramped two-up rows. */
+  .heroActions .button { width: 100%; justify-content: center; }
+  .heroActions { gap: 12px; }
+}

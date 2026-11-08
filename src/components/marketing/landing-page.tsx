@@ -312,6 +312,7 @@ export default function LandingPage({
   checkoutPlan: CheckoutPlan;
 }) {
   const [activeFaqIndex, setActiveFaqIndex] = useState(0);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const heroProductRef = useRef<HTMLDivElement>(null);
   const heroCardRef = useRef<HTMLDivElement>(null);
   const orbsRef = useRef<HTMLDivElement>(null);
@@ -525,6 +526,39 @@ export default function LandingPage({
               Sign In
             </Link>
             <Link href="/signin?mode=register&plan=free" className={`${styles.button} ${styles.primaryButton}`}>
+              Get Started Free
+            </Link>
+          </div>
+
+          {/* The mobile menu button — the section links and sign-in were simply
+              display:none on a phone, leaving no way to navigate. */}
+          <button
+            type="button"
+            className={styles.navToggle}
+            aria-label={mobileNavOpen ? "Close menu" : "Open menu"}
+            aria-expanded={mobileNavOpen}
+            onClick={() => setMobileNavOpen((o) => !o)}
+          >
+            <span className={`${styles.navToggleBar} ${mobileNavOpen ? styles.navToggleBar1 : ""}`} />
+            <span className={`${styles.navToggleBar} ${mobileNavOpen ? styles.navToggleBar2 : ""}`} />
+            <span className={`${styles.navToggleBar} ${mobileNavOpen ? styles.navToggleBar3 : ""}`} />
+          </button>
+        </div>
+
+        <div className={`${styles.mobileMenu} ${mobileNavOpen ? styles.mobileMenuOpen : ""}`}>
+          {[
+            ["#ai", "AI"], ["#funds", "Funds"], ["#scanner", "Scanner"],
+            ["#connect", "Connect"], ["#features", "Features"], ["#start", "Start"],
+          ].map(([href, label]) => (
+            <a key={href} href={href} className={styles.mobileMenuLink} onClick={() => setMobileNavOpen(false)}>
+              {label}
+            </a>
+          ))}
+          <div className={styles.mobileMenuActions}>
+            <Link href="/signin" className={`${styles.button} ${styles.outlineButton}`} onClick={() => setMobileNavOpen(false)}>
+              Sign In
+            </Link>
+            <Link href="/signin?mode=register&plan=free" className={`${styles.button} ${styles.primaryButton}`} onClick={() => setMobileNavOpen(false)}>
               Get Started Free
             </Link>
           </div>
