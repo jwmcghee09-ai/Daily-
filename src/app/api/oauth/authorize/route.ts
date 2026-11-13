@@ -22,6 +22,7 @@ import {
   MCP_SCOPE,
   issueAuthorizationCode,
   loadClient,
+  originOf,
   resourceIdentifier,
 } from "@/lib/oauth";
 
@@ -125,7 +126,13 @@ export async function GET(request: Request) {
   const user = await getAuthenticatedUser();
   if (!user) {
     // Sign in, then come straight back to this exact request.
-    const signIn = new URL("/signin", url.origin);
+    //
+    // Built from originOf, not url.origin: behind the deploy host's proxy
+    // request.url carries the internal bind address (0.0.0.0:10000), so a
+    // redirect to url.origin sent the user to an unreachable host and the whole
+    // connector sign-in dead-ended. originOf honours the forwarded host, the
+    // same way the OAuth discovery metadata does.
+    const signIn = new URL("/signin", originOf(request));
     signIn.searchParams.set("next", `${url.pathname}${url.search}`);
     return NextResponse.redirect(signIn.toString(), 302);
   }
@@ -206,7 +213,8 @@ export async function POST(request: Request) {
 
   const user = await getAuthenticatedUser();
   if (!user) {
-    const signIn = new URL("/signin", url.origin);
+    // originOf, not url.origin — see the note on the GET handler's sign-in.
+    const signIn = new URL("/signin", originOf(request));
     signIn.searchParams.set("next", `/api/oauth/authorize${url.search.replace(/&?approve=1/, "")}`);
     return NextResponse.redirect(signIn.toString(), 302);
   }

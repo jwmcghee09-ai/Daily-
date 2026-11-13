@@ -8,6 +8,7 @@
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { listOAuthGrants, revokeOAuthGrant } from "@/lib/db";
+import { originOf } from "@/lib/oauth";
 
 export const runtime = "nodejs";
 
@@ -31,8 +32,9 @@ export async function POST(request: Request) {
 
   const removed = revokeOAuthGrant(user.id, clientId);
 
-  // A form post wants the page back, not JSON.
-  const back = new URL("/mcp-setup", new URL(request.url).origin);
+  // A form post wants the page back, not JSON. originOf, not request.url's
+  // origin, which behind the deploy proxy is the internal bind address.
+  const back = new URL("/mcp-setup", originOf(request));
   back.searchParams.set("revoked", removed > 0 ? "1" : "0");
   return NextResponse.redirect(back.toString(), 303);
 }

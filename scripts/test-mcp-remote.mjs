@@ -151,6 +151,21 @@ const authorizeUrl = (overrides = {}) => {
     anon.status === 302 && (anon.headers.get("location") || "").includes("/signin"),
     (anon.headers.get("location") || "").slice(0, 60));
 
+  // The sign-in redirect must follow the forwarded host, not the internal one.
+  // Behind the deploy proxy request.url carries the container's bind address
+  // (0.0.0.0:10000), so a redirect built from it sent the user to an
+  // unreachable host and the whole connector sign-in dead-ended. This asserts
+  // the forwarded host wins — the bug would send them to the request host.
+  // The resource must match the forwarded host too, or the request is refused
+  // as a wrong audience before it ever reaches the sign-in step.
+  const proxied = await fetch(authorizeUrl({ resource: "https://proxy.example.com/api/mcp" }), {
+    headers: { "X-Forwarded-Host": "proxy.example.com", "X-Forwarded-Proto": "https" },
+    redirect: "manual",
+  });
+  const proxiedLoc = proxied.headers.get("location") || "";
+  check("the sign-in redirect honours the forwarded host, not the internal bind address",
+    proxiedLoc.startsWith("https://proxy.example.com/signin"), proxiedLoc.slice(0, 70));
+
   const consent = await fetch(authorizeUrl(), { headers: { Cookie: cookie } });
   const html = await consent.text();
   check("a signed-in user is shown a consent screen, not an automatic grant",
