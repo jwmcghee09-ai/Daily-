@@ -417,8 +417,10 @@ for (const surface of PALETTE_SURFACES) {
   }
 
   // The headline total, which is the one a reader checks against the demo.
+  // Matched loosely so it survives the hero markup moving between a <StatCard
+  // label=… value=…/> and an array row like ["Portfolio Value", "$314,320", …].
   const total = [...seeds.values()].reduce((sum, h) => sum + h.units * h.price, 0);
-  const shown = tsx.match(/label="Portfolio Value" value="\$([\d,]+)"/);
+  const shown = tsx.match(/Portfolio Value"[,\s]+(?:value=)?"\$([\d,]+)"/);
   if (!shown) {
     drift.push("no Portfolio Value stat card found in the hero");
   } else if (Math.abs(Number(shown[1].replace(/,/g, "")) - total) > 1) {

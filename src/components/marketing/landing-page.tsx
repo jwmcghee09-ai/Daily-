@@ -605,70 +605,95 @@ export default function LandingPage({
           </div>
 
           <div ref={heroProductRef} className={styles.heroProduct}>
-          <div ref={heroCardRef} className={`${styles.dashboardCard} ${styles.tiltCard}`}>
-            <div className={styles.dashboardHeader}>
-              <div className={styles.dashboardUrl}>spectre-assets.com / dashboard</div>
-            </div>
+          <div ref={heroCardRef} className={`${styles.dashMock} ${styles.tiltCard}`}>
+            <aside className={styles.dashSidebar}>
+              <div className={styles.dashBrand}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/spectre-mark.svg" alt="" aria-hidden="true" className={styles.dashBrandMark} />
+                <span>SPECTRE</span>
+              </div>
+              <div className={styles.dashUrl}>spectre-assets.com / dashboard</div>
+              <nav className={styles.dashNav}>
+                <span className={`${styles.dashNavItem} ${styles.dashNavActive}`}><GridIcon /> Dashboard</span>
+                <span className={styles.dashNavItem}><ShieldIcon /> Risk engine</span>
+                <span className={styles.dashNavItem}><LayersIcon /> Inside funds</span>
+                <span className={styles.dashNavItem}><BarsIcon /> Monte Carlo</span>
+              </nav>
+              <div className={styles.dashLock}><LockIcon /> Read-only AI access</div>
+            </aside>
 
-            <TypeCommandBar />
+            <div className={styles.dashMain}>
+              <div className={styles.dashTop}>
+                <span className={styles.dashTopLabel}>7 accounts · broker, super, crypto, bullion</span>
+                <span className={styles.dashDemoTag}>Demo data</span>
+              </div>
 
-            <div className={styles.dashboardStats}>
-              {/* The demo book, to the cent. See the note on tickerItems. */}
-              <StatCard label="Portfolio Value" value="$314,320" sub="+1.7% MTD" tone="up" />
-              <StatCard label="Accounts Linked" value="7" sub="Broker, super, crypto, bullion" />
-              <StatCard label="Funds Resolved" value="2 of 3" sub="IVV · VAS · one awaiting a file" />
-              <StatCard label="Monte Carlo" value="500" sub="1Y simulation paths" />
-            </div>
+              <div className={styles.dashKpis}>
+                {[
+                  ["Portfolio Value", "$314,320", "+1.7% MTD", true],
+                  ["Accounts Linked", "7", "Broker, super, crypto, bullion", false],
+                  ["Funds Resolved", "2 of 3", "IVV · VAS · one awaiting a file", false],
+                  ["Monte Carlo", "500", "1Y simulation paths", false],
+                ].map(([label, value, sub, up]) => (
+                  <div key={label as string} className={styles.dashKpi}>
+                    <div className={styles.dashKpiLabel}>{label}</div>
+                    <div className={styles.dashKpiValue}>{value}</div>
+                    <div className={`${styles.dashKpiSub} ${up ? styles.up : ""}`}>{sub}</div>
+                  </div>
+                ))}
+              </div>
 
-            <div className={styles.dashboardCharts}>
-              <div className={styles.chartBox}>
-                <div className={styles.chartTitle}>AI Risk Snapshot — 72 / 100 (Elevated)</div>
-                <svg className={styles.sparkline} viewBox="0 0 400 60" aria-hidden="true">
-                  <defs>
-                    <linearGradient id="landingLineGrad" x1="0" y1="0" x2="1" y2="0">
-                      <stop offset="0%" stopColor="#e0231c" />
-                      <stop offset="100%" stopColor="#e0231c" />
-                    </linearGradient>
-                    <linearGradient id="landingFillGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#e0231c" stopOpacity="0.28" />
-                      <stop offset="100%" stopColor="#e0231c" stopOpacity="0" />
-                    </linearGradient>
-                  </defs>
-                  <path
-                    d="M0,48 L60,42 L120,45 L180,35 L240,30 L300,22 L360,28 L400,20"
-                    fill="none"
-                    stroke="url(#landingLineGrad)"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                  />
-                  <path
-                    d="M0,48 L60,42 L120,45 L180,35 L240,30 L300,22 L360,28 L400,20 L400,60 L0,60Z"
-                    fill="url(#landingFillGrad)"
-                  />
-                </svg>
-                <div className={styles.riskMeta}>Concentration · VaR95 · Expected Shortfall · Beta · Tracking Error</div>
-                <div className={styles.riskBar}>
-                  <div className={styles.riskBarFill} />
+              <div className={styles.dashBody}>
+                <div className={styles.dashBodyL}>
+                  <div className={styles.dashChartHead}>AI Risk Snapshot — 72 / 100 (Elevated)</div>
+                  <div className={styles.dashRiskBar}>
+                    <div className={styles.dashRiskFill} />
+                    <span className={styles.dashRiskMark}>72</span>
+                  </div>
+                  <div className={styles.dashRiskMeta}>Concentration · VaR95 · Expected Shortfall · Beta · Tracking Error</div>
+
+                  <div className={styles.dashChartHead}>Drawdown (12-month)</div>
+                  <svg className={styles.dashDrawdown} viewBox="0 0 520 150" preserveAspectRatio="none" aria-hidden="true">
+                    <defs>
+                      <linearGradient id="ddFill" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#e0231c" stopOpacity="0.14" />
+                        <stop offset="100%" stopColor="#e0231c" stopOpacity="0" />
+                      </linearGradient>
+                    </defs>
+                    <path d="M0,24 L58,44 L116,78 L174,58 L232,96 L290,138 L348,96 L406,110 L464,74 L520,58 L520,150 L0,150 Z" fill="url(#ddFill)" />
+                    <path d="M0,24 L58,44 L116,78 L174,58 L232,96 L290,138 L348,96 L406,110 L464,74 L520,58" fill="none" stroke="#e0231c" strokeWidth="2.4" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+                  </svg>
+                  <div className={styles.dashDrawMax}>Max −11%</div>
+                </div>
+
+                <div className={styles.dashBodyR}>
+                  <div className={styles.dashChartHead}>Source Mix</div>
+                  <div className={styles.dashDonutWrap}>
+                    <svg width="118" height="118" viewBox="0 0 42 42" className={styles.dashDonut} aria-hidden="true">
+                      <circle className={styles.dashDonutTrack} cx="21" cy="21" r="15.915" fill="transparent" strokeWidth="6" />
+                      {/* ASX 32, Super 28, Funds 16, Crypto+Bullion 24 — distinct hues, like the
+                          design. r=15.915 gives circumference ~100 so dasharray reads as percent;
+                          offset 25 starts the first segment at 12 o'clock, the rest accumulate. */}
+                      <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="#dc2626" strokeWidth="6" strokeDasharray="32 68" strokeDashoffset="25" />
+                      <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="#16a34a" strokeWidth="6" strokeDasharray="28 72" strokeDashoffset="-7" />
+                      <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="#eab308" strokeWidth="6" strokeDasharray="16 84" strokeDashoffset="-35" />
+                      <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="#2563eb" strokeWidth="6" strokeDasharray="24 76" strokeDashoffset="-51" />
+                      <text x="21" y="20" className={styles.dashDonutNum}>7</text>
+                      <text x="21" y="26" className={styles.dashDonutCap}>accounts</text>
+                    </svg>
+                    <div className={styles.dashLegend}>
+                      <LegendItem color="#dc2626" label="ASX Equities" value="32%" />
+                      <LegendItem color="#16a34a" label="Super" value="28%" />
+                      <LegendItem color="#eab308" label="Funds / ETFs" value="16%" />
+                      <LegendItem color="#2563eb" label="Crypto + Bullion" value="24%" />
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div className={styles.chartBox}>
-                <div className={styles.chartTitle}>Source Mix</div>
-                <div className={styles.donutWrap}>
-                  <svg width="88" height="88" viewBox="0 0 80 80" aria-hidden="true">
-                    <circle cx="40" cy="40" r="28" fill="none" stroke="#111318" strokeWidth="16" />
-                    <circle cx="40" cy="40" r="28" fill="none" stroke="#e0231c" strokeWidth="16" strokeDasharray="81 95" strokeDashoffset="24" transform="rotate(-90 40 40)" />
-                    <circle cx="40" cy="40" r="28" fill="none" stroke="#e0231c" strokeWidth="16" strokeDasharray="50 95" strokeDashoffset="-57" transform="rotate(-90 40 40)" />
-                    <circle cx="40" cy="40" r="28" fill="none" stroke="#f0948a" strokeWidth="16" strokeDasharray="28 95" strokeDashoffset="-107" transform="rotate(-90 40 40)" />
-                    <circle cx="40" cy="40" r="28" fill="none" stroke="#f9472a" strokeWidth="16" strokeDasharray="18 95" strokeDashoffset="-135" transform="rotate(-90 40 40)" />
-                  </svg>
-                  <div className={styles.legend}>
-                    <LegendItem color="#e0231c" label="ASX Equities" value="32%" />
-                    <LegendItem color="#e0231c" label="Super" value="28%" />
-                    <LegendItem color="#f0948a" label="Funds / ETFs" value="16%" />
-                    <LegendItem color="#f9472a" label="Crypto + Bullion" value="24%" />
-                  </div>
-                </div>
+              <div className={styles.dashAlert}>
+                <PulseIcon />
+                <span><strong>Alert me if</strong> CBA drops 5% this week — SPECTRE watches and emails you when it happens.</span>
               </div>
             </div>
           </div>
@@ -1798,73 +1823,6 @@ function HiddenExposureChart() {
   );
 }
 
-/*
- * What the hero's command bar types out.
- *
- * Two of these used to be trade instructions — "buy the dip when SPY falls 3%",
- * "take profit on anything up 10%" — which belonged to the paper-trading agent
- * and promised a homepage visitor something this product does not do. Replaced
- * with questions it does answer.
- */
-const COMMAND_PHRASES = [
-  "Why is my portfolio down today?",
-  "How much Nvidia do I own through my ETFs?",
-  "How concentrated am I in banks, really?",
-  "Alert me if BHP drops 5% in a week",
-  "What overlaps between VAS and my direct holdings?",
-] as const;
-
-function TypeCommandBar() {
-  const textRef = useRef<HTMLSpanElement>(null);
-
-  useEffect(() => {
-    const el = textRef.current;
-    if (!el) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      el.textContent = COMMAND_PHRASES[0];
-      return;
-    }
-    let phrase = 0;
-    let pos = 0;
-    let deleting = false;
-    let timer = 0;
-    const tick = () => {
-      const full = COMMAND_PHRASES[phrase % COMMAND_PHRASES.length];
-      if (!deleting) {
-        pos += 1;
-        el.textContent = full.slice(0, pos);
-        if (pos >= full.length) {
-          deleting = true;
-          timer = window.setTimeout(tick, 1700);
-          return;
-        }
-        timer = window.setTimeout(tick, 34 + Math.random() * 40);
-      } else {
-        pos -= 2;
-        el.textContent = full.slice(0, Math.max(pos, 0));
-        if (pos <= 0) {
-          deleting = false;
-          phrase += 1;
-          timer = window.setTimeout(tick, 420);
-          return;
-        }
-        timer = window.setTimeout(tick, 14);
-      }
-    };
-    timer = window.setTimeout(tick, 900);
-    return () => window.clearTimeout(timer);
-  }, []);
-
-  return (
-    <div className={styles.commandBar}>
-      <span className={styles.commandPrompt}>›</span>
-      <span ref={textRef} className={styles.commandText} />
-      <span className={styles.caretSm} aria-hidden="true" />
-      <span className={styles.commandHint}>ask anything</span>
-    </div>
-  );
-}
-
 function StatCounter({ value }: { value: string }) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -1900,26 +1858,6 @@ function StatCounter({ value }: { value: string }) {
     <div ref={ref} className={styles.statStatVal}>
       {value}
     </div>
-  );
-}
-
-function StatCard({
-  label,
-  value,
-  sub,
-  tone,
-}: {
-  label: string;
-  value: string;
-  sub: string;
-  tone?: "up" | "down";
-}) {
-  return (
-    <article className={styles.statCard}>
-      <div className={styles.statLabel}>{label}</div>
-      <div className={styles.statValue}>{value}</div>
-      <div className={tone === "up" ? styles.up : tone === "down" ? styles.down : styles.statSub}>{sub}</div>
-    </article>
   );
 }
 
