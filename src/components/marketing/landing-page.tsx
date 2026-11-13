@@ -57,20 +57,9 @@ const tickerItems = [
 ] as const;
 
 /*
- * The hero's rotating line and the selling-points band below both say one
- * thing: SPECTRE is what turns the AI you already use into something that can
- * actually advise you — by handing it the data and the maths a chatbot cannot
- * get on its own. Every claim here is one the product makes good on elsewhere
- * on the page, so the cycle is proof points, not slogans.
+ * The selling-points band: the proof points SPECTRE delivers to a connected AI.
+ * Every claim here is one the product makes good on elsewhere on the page.
  */
-const HERO_ROTATING = [
-  "eyes inside your funds.",
-  "your true concentration.",
-  "numbers that are right.",
-  "your whole net worth.",
-  "an alert when it matters.",
-] as const;
-
 type ValueProp = { title: string; copy: string; icon: ReactNode };
 const VALUE_PROPS: readonly ValueProp[] = [
   {
@@ -591,26 +580,16 @@ export default function LandingPage({
               <span className={styles.heroKickerDot} />
               <span>AUSTRALIA</span>
             </div>
-            <h1 className={`${styles.heroWordmark} ${styles.reveal}`} aria-label="SPECTRE">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/spectre-wordmark.svg" alt="SPECTRE" className={styles.heroWordmarkImg} />
+            <h1 className={`${styles.heroHeadline} ${styles.reveal}`}>
+              Plug your AI into<br />
+              <span className={styles.heroHeadlineAccent}>your real portfolio.</span>
             </h1>
-            {/* The strongest line on the page used to be buried in the
-                comparison section two thirds of the way down. It says what
-                SPECTRE is by saying what the two things you already tried
-                can't do, which "plan like an investor, run it like a machine"
-                did not. */}
-            <p className={`${styles.heroTag} ${styles.reveal}`}>
-              A spreadsheet can’t answer questions.<br />
-              A chatbot can’t see your money<span className={styles.caret} aria-hidden="true" />
-            </p>
             <p className={`${styles.heroSub} ${styles.reveal}`}>
-              SPECTRE plugs into the AI you already use and gives it what a chatbot can’t get on its own: your real holdings, the companies inside your funds, and numbers that are right.
+              SPECTRE is the connector between the AI you already use — Claude, ChatGPT, or a model on
+              your own machine — and your money. One link gives it your real holdings, the companies
+              inside your funds, and risk numbers that are actually right.
             </p>
-            <div className={`${styles.heroGive} ${styles.reveal}`} aria-hidden="true">
-              <span className={styles.heroGiveLead}>Give your AI</span>
-              <RotatingWord words={HERO_ROTATING} />
-            </div>
+            <ConnectorDiagram />
             <div className={`${styles.heroActions} ${styles.reveal}`}>
               <Link href="/signin?mode=register&plan=free" className={`${styles.button} ${styles.primaryButton} ${styles.heroButton}`}>
                 Get Started Free
@@ -647,12 +626,12 @@ export default function LandingPage({
                 <svg className={styles.sparkline} viewBox="0 0 400 60" aria-hidden="true">
                   <defs>
                     <linearGradient id="landingLineGrad" x1="0" y1="0" x2="1" y2="0">
-                      <stop offset="0%" stopColor="#ff3f34" />
-                      <stop offset="100%" stopColor="#ff4a26" />
+                      <stop offset="0%" stopColor="#e0231c" />
+                      <stop offset="100%" stopColor="#e0231c" />
                     </linearGradient>
                     <linearGradient id="landingFillGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#ff4a26" stopOpacity="0.28" />
-                      <stop offset="100%" stopColor="#ff4a26" stopOpacity="0" />
+                      <stop offset="0%" stopColor="#e0231c" stopOpacity="0.28" />
+                      <stop offset="100%" stopColor="#e0231c" stopOpacity="0" />
                     </linearGradient>
                   </defs>
                   <path
@@ -678,15 +657,15 @@ export default function LandingPage({
                 <div className={styles.donutWrap}>
                   <svg width="88" height="88" viewBox="0 0 80 80" aria-hidden="true">
                     <circle cx="40" cy="40" r="28" fill="none" stroke="#111318" strokeWidth="16" />
-                    <circle cx="40" cy="40" r="28" fill="none" stroke="#ff3f34" strokeWidth="16" strokeDasharray="81 95" strokeDashoffset="24" transform="rotate(-90 40 40)" />
-                    <circle cx="40" cy="40" r="28" fill="none" stroke="#ff4a26" strokeWidth="16" strokeDasharray="50 95" strokeDashoffset="-57" transform="rotate(-90 40 40)" />
-                    <circle cx="40" cy="40" r="28" fill="none" stroke="#ff8b6e" strokeWidth="16" strokeDasharray="28 95" strokeDashoffset="-107" transform="rotate(-90 40 40)" />
+                    <circle cx="40" cy="40" r="28" fill="none" stroke="#e0231c" strokeWidth="16" strokeDasharray="81 95" strokeDashoffset="24" transform="rotate(-90 40 40)" />
+                    <circle cx="40" cy="40" r="28" fill="none" stroke="#e0231c" strokeWidth="16" strokeDasharray="50 95" strokeDashoffset="-57" transform="rotate(-90 40 40)" />
+                    <circle cx="40" cy="40" r="28" fill="none" stroke="#f0948a" strokeWidth="16" strokeDasharray="28 95" strokeDashoffset="-107" transform="rotate(-90 40 40)" />
                     <circle cx="40" cy="40" r="28" fill="none" stroke="#f9472a" strokeWidth="16" strokeDasharray="18 95" strokeDashoffset="-135" transform="rotate(-90 40 40)" />
                   </svg>
                   <div className={styles.legend}>
-                    <LegendItem color="#ff3f34" label="ASX Equities" value="32%" />
-                    <LegendItem color="#ff4a26" label="Super" value="28%" />
-                    <LegendItem color="#ff8b6e" label="Funds / ETFs" value="16%" />
+                    <LegendItem color="#e0231c" label="ASX Equities" value="32%" />
+                    <LegendItem color="#e0231c" label="Super" value="28%" />
+                    <LegendItem color="#f0948a" label="Funds / ETFs" value="16%" />
                     <LegendItem color="#f9472a" label="Crypto + Bullion" value="24%" />
                   </div>
                 </div>
@@ -721,8 +700,14 @@ export default function LandingPage({
             <div className={styles.sectionLabel}>Why connect it</div>
             <h2 className={styles.valueBandTitle}>Five things your AI can’t do without SPECTRE.</h2>
           </div>
-          <div className={styles.srItem}>
-            <ValuePropCycler props={VALUE_PROPS} />
+          <div className={`${styles.valueGrid} ${styles.srItem}`}>
+            {VALUE_PROPS.map((p) => (
+              <article key={p.title} className={styles.valueGridCard}>
+                <div className={`${styles.iconWrap} ${styles.valueIcon}`}>{p.icon}</div>
+                <h3>{p.title}</h3>
+                <p>{p.copy}</p>
+              </article>
+            ))}
           </div>
         </div>
       </section>
@@ -1038,8 +1023,6 @@ export default function LandingPage({
           <p className={`${styles.sectionSub} ${styles.reveal}`}>
             Over the Model Context Protocol, Claude, ChatGPT or your own model plugs straight into your portfolio — and starts reading the real thing instead of guessing.
           </p>
-
-          <ConnectorDiagram />
 
           {/* The two most people already have get the room; the rest are there
               to show this is an open protocol, not a two-vendor deal. */}
@@ -1649,106 +1632,6 @@ function Divider() {
 }
 
 /**
- * The hero's rotating phrase.
- *
- * Cross-fades through the things SPECTRE gives a connected AI. Honours
- * prefers-reduced-motion by standing still on the first phrase — a line that
- * swaps itself out is exactly what that setting exists to stop.
- */
-function RotatingWord({ words }: { words: readonly string[] }) {
-  const [index, setIndex] = useState(0);
-  const [shown, setShown] = useState(true);
-
-  useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const hold = window.setInterval(() => {
-      setShown(false);
-      window.setTimeout(() => {
-        setIndex((i) => (i + 1) % words.length);
-        setShown(true);
-      }, 320);
-    }, 2600);
-    return () => window.clearInterval(hold);
-  }, [words.length]);
-
-  // Reserve the width of the longest phrase so the line never reflows as it
-  // cycles, which would jump the buttons below it on every change.
-  const longest = words.reduce((a, b) => (b.length > a.length ? b : a), "");
-  return (
-    <span className={styles.rotWordWrap}>
-      <span className={styles.rotWordGhost} aria-hidden="true">{longest}</span>
-      <span className={`${styles.rotWord} ${shown ? styles.rotWordIn : ""}`}>{words[index]}</span>
-    </span>
-  );
-}
-
-/**
- * The auto-cycling selling-points band.
- *
- * The "cycle through the main selling points" the page is built around: it
- * advances itself, a reader can click a dot to pin one, and it pauses on hover
- * so nobody loses the line they are reading. Reduced motion stops the auto-
- * advance and leaves the dots to drive it by hand.
- */
-function ValuePropCycler({ props }: { props: readonly ValueProp[] }) {
-  const [active, setActive] = useState(0);
-  const [paused, setPaused] = useState(false);
-
-  // Rotates for everyone, including reduced-motion — swapping which card is
-  // shown is a content change, not a motion flourish, and a reader with reduced
-  // motion was seeing a band that never moved. The fade and the progress fill
-  // are what reduced motion drops (in CSS); the rotation itself stays.
-  useEffect(() => {
-    if (paused) return;
-    const timer = window.setInterval(() => setActive((i) => (i + 1) % props.length), 3600);
-    return () => window.clearInterval(timer);
-  }, [paused, props.length]);
-
-  return (
-    <div
-      className={styles.valueCycler}
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-    >
-      <div className={styles.valueStage}>
-        {props.map((p, i) => (
-          <article
-            key={p.title}
-            className={`${styles.valueCard} ${i === active ? styles.valueCardActive : ""}`}
-            aria-hidden={i === active ? undefined : true}
-          >
-            <div className={`${styles.iconWrap} ${styles.valueIcon}`}>{p.icon}</div>
-            <div className={styles.valueCardText}>
-              <h3>{p.title}</h3>
-              <p>{p.copy}</p>
-            </div>
-          </article>
-        ))}
-      </div>
-      <div className={styles.valueDots} role="tablist" aria-label="Selling points">
-        {props.map((p, i) => (
-          <button
-            key={p.title}
-            type="button"
-            role="tab"
-            aria-selected={i === active}
-            aria-label={p.title}
-            className={`${styles.valueDot} ${i === active ? styles.valueDotActive : ""}`}
-            onClick={() => setActive(i)}
-          />
-        ))}
-      </div>
-      <div className={styles.valueTrack} aria-hidden="true">
-        <div
-          key={`${active}-${paused}`}
-          className={`${styles.valueTrackFill} ${paused ? styles.valueTrackPaused : ""}`}
-        />
-      </div>
-    </div>
-  );
-}
-
-/**
  * The connector diagram: your AI, SPECTRE in the middle, your money.
  *
  * Inline SVG so it is crisp at any size and themes with the page, and laid out
@@ -1812,8 +1695,8 @@ function ScannerChart() {
     <svg className={styles.scanChart} viewBox="0 0 400 112" preserveAspectRatio="none" role="img" aria-label="PLS.AX price, one year, rising">
       <defs>
         <linearGradient id="scanFill" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#ff4b33" stopOpacity="0.22" />
-          <stop offset="100%" stopColor="#ff4b33" stopOpacity="0" />
+          <stop offset="0%" stopColor="#e8392c" stopOpacity="0.22" />
+          <stop offset="100%" stopColor="#e8392c" stopOpacity="0" />
         </linearGradient>
       </defs>
       {[24, 48, 72, 96].map((y) => (

@@ -13,18 +13,18 @@
 .page {
   overflow-x: hidden; /* fallback */
   overflow-x: clip;  /* clip doesn't create a scroll container, so position:sticky keeps working */
-  --bg: #f6f6f7;
+  --bg: #fbfbfc;
   --surface: #ffffff;
   --surface2: #fbfbfc;
   --surface3: rgba(15, 15, 17, 0.03);
-  --border: #e3e3e7;
+  --border: #e5e5ea;
   --borderStrong: #cbcbcb;
-  --text: #0f0f11;
-  --muted: #5c5c66;
-  --accent: #ff4b33;
-  --accent2: #ff4b33;
-  --accentDim: rgba(255, 75, 51, 0.09);
-  --accent2Dim: rgba(255, 75, 51, 0.09);
+  --text: #24252c;
+  --muted: #64656f;
+  --accent: #e0231c;
+  --accent2: #c4150f;
+  --accentDim: rgba(224, 35, 28, 0.08);
+  --accent2Dim: rgba(224, 35, 28, 0.08);
   --danger: #c92a2a;
   --dangerDim: rgba(201, 42, 42, 0.08);
   --radius: 14px;
@@ -93,7 +93,7 @@
   font-weight: 700;
   letter-spacing: 0.14em;
   text-decoration: none;
-  background: linear-gradient(90deg, #f52014 0%, #f53914 35%, #f53914 72%, #f54114 100%);
+  background: linear-gradient(90deg, #c4150f 0%, #e0231c 35%, #e0231c 72%, #ec382c 100%);
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
@@ -128,7 +128,7 @@
 
 .navLinks a:hover,
 .navLinks a.active {
-  color: #f52014;
+  color: #c4150f;
 }
 
 .navLinks a:hover::after,
@@ -171,7 +171,7 @@
 
 .primaryButton {
   color: #0f0f0f;
-  background: linear-gradient(135deg, #f52014 0%, #f53914 45%, #f53914 100%);
+  background: linear-gradient(135deg, #c4150f 0%, #e0231c 45%, #e0231c 100%);
   box-shadow: 0 1px 2px rgba(15, 15, 17, 0.04);
 }
 
@@ -183,7 +183,7 @@
 .ghostButton,
 .outlineButton {
   border-color: rgba(245, 32, 20, 0.35);
-  color: #f52014;
+  color: #c4150f;
   background: rgba(245, 32, 20, 0.06);
 }
 
@@ -306,9 +306,9 @@
   border-radius: 999px;
   background: radial-gradient(
     ellipse 56% 46% at 50% 42%,
-    rgba(255, 75, 51, 0.20) 0%,
-    rgba(255, 75, 51, 0.09) 38%,
-    rgba(255, 75, 51, 0) 68%
+    rgba(224, 35, 28, 0.20) 0%,
+    rgba(224, 35, 28, 0.09) 38%,
+    rgba(224, 35, 28, 0) 68%
   );
   filter: blur(14px);
   pointer-events: none;
@@ -395,7 +395,7 @@
 }
 
 .heroTitle span {
-  background: linear-gradient(90deg, #f52014, #f53914 42%, #f53914 82%, #f54114);
+  background: linear-gradient(90deg, #c4150f, #e0231c 42%, #e0231c 82%, #ec382c);
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
@@ -1024,7 +1024,7 @@
 }
 
 .moverUp {
-  background: linear-gradient(90deg, var(--accent), #f53914);
+  background: linear-gradient(90deg, var(--accent), #e0231c);
 }
 
 .moverDown {
@@ -1159,7 +1159,7 @@
   transform: translateX(-50%);
   padding: 4px 14px;
   border-radius: 999px;
-  background: linear-gradient(90deg, #f53914, #f53914, #f54114);
+  background: linear-gradient(90deg, #e0231c, #e0231c, #ec382c);
   color: #0f0f0f;
   font-size: 11px;
   font-weight: 700;
@@ -2249,7 +2249,7 @@
 }
 
 .aiRevealTitle span {
-  background: linear-gradient(90deg, #f52014, #f53914 40%, #f53914 80%, #f54114);
+  background: linear-gradient(90deg, #c4150f, #e0231c 40%, #e0231c 80%, #ec382c);
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
@@ -2359,7 +2359,7 @@
   font-weight: 600;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: #f54114;
+  color: #ec382c;
   border: 1px solid rgba(245, 65, 20, 0.35);
   background: rgba(245, 57, 20, 0.08);
   border-radius: 999px;
@@ -2371,7 +2371,7 @@
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #f54114;
+  background: #ec382c;
   animation: myrmPulse 1.6s ease-in-out infinite;
 }
 
@@ -2390,7 +2390,7 @@
 }
 
 .scanTitle span {
-  background: linear-gradient(90deg, #f52014 0%, #f53914 40%, #f53914 85%);
+  background: linear-gradient(90deg, #c4150f 0%, #e0231c 40%, #e0231c 85%);
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
@@ -2425,7 +2425,7 @@
   content: "▸";
   position: absolute;
   left: 0;
-  color: #f52014;
+  color: #c4150f;
 }
 
 .scanList li strong {
@@ -2448,7 +2448,7 @@
   letter-spacing: 0.12em;
   color: #0f0f0f;
   padding: 10px 16px;
-  background: linear-gradient(90deg, #f52014 0%, #f53914 35%, #f53914 72%, #f54114 100%);
+  background: linear-gradient(90deg, #c4150f 0%, #e0231c 35%, #e0231c 72%, #ec382c 100%);
 }
 
 .scanTermBody {
@@ -2521,7 +2521,7 @@
   height: 3px;
   width: 0;
   z-index: 1200;
-  background: linear-gradient(90deg, #f52014 0%, #f53914 40%, #f53914 80%, #f54114 100%);
+  background: linear-gradient(90deg, #c4150f 0%, #e0231c 40%, #e0231c 80%, #ec382c 100%);
   box-shadow: 0 1px 2px rgba(15, 15, 17, 0.04);
   pointer-events: none;
 }
@@ -2591,7 +2591,7 @@
   width: 0.55em;
   height: 0.078em;
   margin-left: 0.12em;
-  background: linear-gradient(90deg, #f53914, #f53914);
+  background: linear-gradient(90deg, #e0231c, #e0231c);
   vertical-align: baseline;
   animation: caretBlink 1.1s step-end infinite;
 }
@@ -2632,7 +2632,7 @@
 
 @keyframes chipGlow {
   0%, 22%, 100% { border-color: rgba(245, 32, 20, 0.22); color: #4d4d56; background: rgba(245, 32, 20, 0.05); }
-  8% { border-color: rgba(245, 32, 20, 0.75); color: #f52014; background: rgba(245, 32, 20, 0.12); }
+  8% { border-color: rgba(245, 32, 20, 0.75); color: #c4150f; background: rgba(245, 32, 20, 0.12); }
 }
 
 .lifecycleArrow {
@@ -2661,7 +2661,7 @@
 }
 
 .commandPrompt {
-  color: #f52a14;
+  color: #d11a14;
   font-family: var(--font-geist-mono), monospace;
   font-weight: 700;
   font-size: 15px;
@@ -2680,7 +2680,7 @@
   display: inline-block;
   width: 8px;
   height: 16px;
-  background: #f52a14;
+  background: #d11a14;
   flex-shrink: 0;
   animation: caretBlink 1s step-end infinite;
 }
@@ -2784,7 +2784,7 @@
 .heroKickerDot {
   width: 6px;
   height: 6px;
-  background: #f53914;
+  background: #e0231c;
   animation: myrmPulse 1.8s ease-in-out infinite;
 }
 
@@ -2797,7 +2797,7 @@
   letter-spacing: 0.045em;
   margin: 0 0 20px;
   text-align: center;
-  background: linear-gradient(180deg, #f53d14 0%, #f53914 42%, #f52014 100%);
+  background: linear-gradient(180deg, #ec382c 0%, #e0231c 42%, #c4150f 100%);
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
@@ -2818,8 +2818,8 @@
   background: radial-gradient(
     ellipse 50% 44% at 50% 50%,
     rgba(255, 92, 51, 0.30) 0%,
-    rgba(255, 75, 51, 0.12) 46%,
-    rgba(255, 75, 51, 0) 72%
+    rgba(224, 35, 28, 0.12) 46%,
+    rgba(224, 35, 28, 0) 72%
   );
   filter: blur(26px);
   z-index: -1;
@@ -2837,7 +2837,7 @@
 
 .heroTag .caret,
 .heroTag > .caret {
-  background: #f53914;
+  background: #e0231c;
   height: 0.1em;
   width: 0.6em;
 }
@@ -2880,17 +2880,17 @@
   font-family: 'Unbounded', sans-serif !important;
   font-weight: 700;
   font-size: clamp(30px, 4.2vw, 52px);
-  background: linear-gradient(180deg, #f53d14, #f52014);
+  background: linear-gradient(180deg, #ec382c, #c4150f);
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
 }
 
-/* ── Soft curves (fireart-style black & orange) ── */
+/* ── Tight corners, modern-SaaS (matches the product's refreshed design) ── */
 .dashboardCard,
 .aiConsoleRevealInner,
 .scanTerm,
-.ctaPanel { border-radius: 28px !important; overflow: hidden; }
+.ctaPanel { border-radius: 12px !important; overflow: hidden; }
 
 .chartCard,
 .planCard,
@@ -2903,12 +2903,13 @@
 .aiConsole,
 .faqItem,
 .chartBox,
-.statCard { border-radius: 22px !important; }
+.statCard { border-radius: 10px !important; }
 
 .previewUploadZone,
 .scanTrade,
-.commandBar { border-radius: 16px !important; }
+.commandBar { border-radius: 8px !important; }
 
+/* Buttons and chips go from pills to the design's 6px square-ish corners. */
 .button,
 .primaryButton,
 .outlineButton,
@@ -2918,10 +2919,10 @@
 .lifecycleChip,
 .chartBadge,
 .scanTool,
-.tickerItem { border-radius: 999px !important; }
+.tickerItem { border-radius: 6px !important; }
 
 .iconWrap,
-.researchTileIcon { border-radius: 16px !important; }
+.researchTileIcon { border-radius: 10px !important; }
 
 .scanTermBar { border-radius: 0 !important; }
 
@@ -2973,7 +2974,7 @@
 }
 
 .primaryButton {
-  background: linear-gradient(135deg, #f53914, #f52014);
+  background: linear-gradient(135deg, #e0231c, #c4150f);
   color: #0f0f0f;
   box-shadow: 0 1px 2px rgba(15, 15, 17, 0.04);
 }
@@ -2990,7 +2991,7 @@
   background: transparent;
 }
 
-.outlineButton:hover { border-color: #f53914; color: #f53a14; }
+.outlineButton:hover { border-color: #e0231c; color: #e0231c; }
 
 /* Nav: black bar, hairline bottom */
 .nav {
@@ -3003,7 +3004,7 @@
   font-weight: 400;
   font-size: 24px;
   letter-spacing: 0.08em;
-  background: linear-gradient(180deg, #f53d14, #f52014);
+  background: linear-gradient(180deg, #ec382c, #c4150f);
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
@@ -3033,7 +3034,7 @@
 
 @keyframes chipGlow {
   0%, 22%, 100% { border-color: #cfcfd4; color: #6c6c74; background: #f3f3f5; }
-  8% { border-color: #f53914; color: #f53d14; background: #efebe8; }
+  8% { border-color: #e0231c; color: #ec382c; background: #efebe8; }
 }
 
 /* Command bar: square terminal strip */
@@ -3073,7 +3074,7 @@
   letter-spacing: 0.16em;
   padding: 8px 16px;
   border-radius: 999px;
-  background: linear-gradient(135deg, #f53914, #f52014);
+  background: linear-gradient(135deg, #e0231c, #c4150f);
   color: #0f0f0f;
 }
 
@@ -3111,7 +3112,7 @@
   letter-spacing: 0.2em;
   padding: 8px 18px;
   border-radius: 999px;
-  background: linear-gradient(135deg, #f53914, #f52014);
+  background: linear-gradient(135deg, #e0231c, #c4150f);
   color: #0f0f0f;
   margin-bottom: 26px;
 }
@@ -3123,7 +3124,7 @@
   letter-spacing: 0.03em;
   line-height: 1;
   margin: 0 0 20px;
-  background: linear-gradient(180deg, #f53d14, #f52014);
+  background: linear-gradient(180deg, #ec382c, #c4150f);
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
@@ -3325,12 +3326,12 @@
 }
 
 .scanFlagAlert .scanFlagTag {
-  color: #f52114;
+  color: #c4150f;
   background: rgba(245, 32, 20, 0.14);
 }
 
 .scanFlagWatch .scanFlagTag {
-  color: #f54114;
+  color: #ec382c;
   background: rgba(245, 57, 20, 0.14);
 }
 
@@ -3460,7 +3461,7 @@
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: #f53914;
+  color: #e0231c;
   margin-bottom: 11px;
 }
 
@@ -3502,7 +3503,7 @@
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: #f52014;
+  background: #c4150f;
   flex-shrink: 0;
   margin-top: 6px;
 }
@@ -3913,7 +3914,7 @@
   content: "▸";
   position: absolute;
   left: 0;
-  color: #f53914;
+  color: #e0231c;
 }
 
 .connectList li strong {
@@ -4085,7 +4086,7 @@
   padding: 3px 7px;
   height: fit-content;
   border-radius: 999px;
-  background: #f53914;
+  background: #e0231c;
   color: #fff;
   white-space: nowrap;
 }
@@ -4338,7 +4339,7 @@
   font-family: var(--font-geist-mono), monospace;
   font-size: 10px;
   letter-spacing: 0.06em;
-  color: #ff8b6e;
+  color: #f0948a;
 }
 .diagramGives {
   grid-column: 1 / -1;
@@ -4356,7 +4357,7 @@
   padding: 7px 13px;
   border-radius: 999px;
   background: var(--accentDim);
-  border: 1px solid rgba(255, 75, 51, 0.2);
+  border: 1px solid rgba(224, 35, 28, 0.2);
 }
 
 /* The arrows point down when the three columns stack on a phone. */
@@ -4406,8 +4407,8 @@
 }
 .scanGrid { stroke: rgba(17, 17, 22, 0.06); stroke-width: 1; }
 .scanMa { stroke: rgba(92, 92, 102, 0.55); stroke-width: 1.4; stroke-dasharray: 4 4; }
-.scanLine { stroke: #ff4b33; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
-.scanDot { fill: #ff4b33; stroke: #ffffff; stroke-width: 2; }
+.scanLine { stroke: #e8392c; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.scanDot { fill: #e8392c; stroke: #ffffff; stroke-width: 2; }
 
 .scanGauges {
   display: grid;
@@ -4451,7 +4452,7 @@
   bottom: 0;
   left: 0;
   border-radius: 999px;
-  background: #ff4b33;
+  background: #e8392c;
 }
 .gaugeFillWarn { background: #ea580c; }
 .gaugeMarker {
@@ -4504,7 +4505,7 @@
 .hiddenKeyReal, .hiddenKeyStatement { display: flex; align-items: center; gap: 7px; color: var(--muted); }
 .hiddenKeyReal::before {
   content: "";
-  width: 14px; height: 9px; border-radius: 3px; background: #ff4b33;
+  width: 14px; height: 9px; border-radius: 3px; background: #e8392c;
 }
 .hiddenKeyStatement::before {
   content: "";
@@ -4529,7 +4530,7 @@
   position: absolute;
   top: 0; left: 0; bottom: 0;
   border-radius: 6px;
-  background: linear-gradient(90deg, #ff6242, #ff4b33);
+  background: linear-gradient(90deg, #e8473a, #e8392c);
 }
 /* The statement tick: what your holdings table claimed, so the gap to the
    accent bar's end is the hidden exposure. */
@@ -4754,4 +4755,89 @@
   /* Comfortable tap targets and no cramped two-up rows. */
   .heroActions .button { width: 100%; justify-content: center; }
   .heroActions { gap: 12px; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * DESIGN REFRESH — the cleaner, Space-Grotesk + crimson direction.
+ * Headlines move to Space Grotesk, the hero loses the Anton wordmark for a
+ * plain text headline, and the display numbers drop the Unbounded gradient
+ * for a flat Space Grotesk figure. Colours and radii were swapped inline.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+.heroHeadline {
+  font-family: var(--font-space-grotesk), "Space Grotesk", sans-serif;
+  font-weight: 500;
+  font-size: clamp(38px, 7.2vw, 66px);
+  line-height: 1.04;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  margin: 14px 0 22px;
+  text-align: center;
+}
+.heroHeadlineAccent { color: var(--accent); }
+
+/* Every display heading on the page shares the one family. */
+.sectionTitle,
+.aiRevealTitle,
+.scanTitle,
+.valueBandTitle,
+.stickyPanelTitle,
+.hiddenChartTitle,
+.ctaPanel h2 {
+  font-family: var(--font-space-grotesk), "Space Grotesk", sans-serif !important;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+/* The stat strip numbers: flat crimson Space Grotesk, no gradient fill. */
+.statStatVal {
+  font-family: var(--font-space-grotesk), "Space Grotesk", sans-serif !important;
+  font-weight: 600 !important;
+  background: none !important;
+  -webkit-background-clip: border-box !important;
+  background-clip: border-box !important;
+  color: var(--accent) !important;
+}
+
+/* A hair more contrast on buttons to match the design's solid crimson. */
+.primaryButton {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.primaryButton:hover { background: var(--accent2); border-color: var(--accent2); }
+
+/* The selling points as a static grid of cards (replacing the auto-cycler). */
+.valueGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(188px, 1fr));
+  gap: 16px;
+  max-width: 1120px;
+  margin: 0 auto;
+}
+.valueGridCard {
+  padding: 24px 22px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #ffffff;
+  text-align: left;
+}
+.valueGridCard .valueIcon { margin: 0 0 14px; width: 42px; height: 42px; }
+.valueGridCard h3 {
+  font-family: var(--font-space-grotesk), "Space Grotesk", sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 7px;
+}
+.valueGridCard p {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--muted);
+  margin: 0;
+}
+
+/* Buttons go sentence-case, matching the refreshed design's clean nav. */
+.button, .primaryButton, .outlineButton, .ghostButton, .heroButton {
+  text-transform: none !important;
+  letter-spacing: -0.005em !important;
 }
