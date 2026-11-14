@@ -4712,14 +4712,14 @@
   }
   .heroProduct { margin-top: 36px; }
 
-  /* The monospace tagline wrapped awkwardly and ran large; size it to the
-     phone and give it room to breathe. */
-  .heroTag {
-    font-size: clamp(16px, 5.2vw, 21px) !important;
-    line-height: 1.4;
+  /* The hero headline at its 38px desktop minimum reads as oversized on a
+     phone; bring it down and tighten the line. */
+  .heroHeadline {
+    font-size: clamp(27px, 8vw, 36px) !important;
+    line-height: 1.1;
+    margin: 10px 0 18px;
   }
   .heroSub { font-size: 15.5px; line-height: 1.6; }
-  .heroGive { font-size: 16px; }
 
   /* Heavy display headings trimmed so they don't eat three lines. */
   .sectionTitle { font-size: clamp(23px, 6.6vw, 30px) !important; }

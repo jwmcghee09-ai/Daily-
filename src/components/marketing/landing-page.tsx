@@ -323,6 +323,10 @@ export default function LandingPage({
    */
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    // Off on phones: a reveal-on-scroll reads as the page loading one section
+    // at a time on a small screen, which is worse than no animation. Without
+    // the srOn flag every item stays fully visible.
+    if (window.matchMedia("(max-width: 760px)").matches) return;
     const root = document.documentElement;
     root.classList.add("srOn");
     const items = [...document.querySelectorAll<HTMLElement>(`.${styles.srItem}`)];
