@@ -4362,11 +4362,15 @@
 
 /* The arrows point down when the three columns stack on a phone. */
 @media (max-width: 760px) {
-  .diagram { grid-template-columns: 1fr; gap: 14px; }
-  .diagramFlow { flex-direction: row; gap: 14px; }
+  /* Stack the three columns and run the flow straight down the middle: an
+     arrow, the SPECTRE hub, an arrow — instead of arrows floating on either
+     side of the hub. */
+  .diagram { grid-template-columns: 1fr; gap: 10px; justify-items: center; }
+  .diagramCol { width: 100%; max-width: 420px; }
+  .diagramFlow { flex-direction: column; gap: 8px; }
   .diagramArrow { transform: rotate(90deg); }
-  .valueCard { flex-direction: column; gap: 14px; padding: 24px; }
-  .valueStage { min-height: 246px; }
+  .diagramHub { min-width: 150px; }
+  .diagramGives { margin-top: 6px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -5003,13 +5007,26 @@
 .dashAlert svg { width: 15px; height: 15px; stroke: var(--accent); flex-shrink: 0; }
 .dashAlert strong { color: var(--text); font-weight: 600; }
 
-/* Stack sidebar above the workspace on narrow screens. */
+/* On a phone the sidebar becomes a clean title strip: brand on the left, the
+   read-only badge on the right, the URL beneath. The nav items are decorative
+   on a marketing mock, so they're hidden rather than crammed into a wrap row. */
 @media (max-width: 760px) {
   .dashMock { flex-direction: column; }
-  .dashSidebar { width: 100%; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding: 14px 16px; }
-  .dashSidebar .dashUrl { margin: 0; width: 100%; order: 3; }
-  .dashNav { flex-direction: row; flex-wrap: wrap; }
+  .dashSidebar {
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 14px;
+    padding: 14px 16px;
+  }
+  .dashSidebar .dashUrl { margin: 2px 0 0; width: 100%; order: 3; }
+  .dashNav { display: none; }
   .dashLock { margin: 0 0 0 auto; padding: 0; border: none; }
-  .dashKpis { grid-template-columns: 1fr 1fr; }
-  .dashBody { grid-template-columns: 1fr; }
+  .dashKpis { grid-template-columns: 1fr 1fr; gap: 14px; }
+  .dashBody { grid-template-columns: 1fr; gap: 18px; }
+  /* The 72 is already in the heading text; the floating marker only collides
+     with the wrapped heading here, so drop it on small screens. */
+  .dashRiskMark { display: none; }
+  .dashRiskBar { margin-top: 4px; }
 }
