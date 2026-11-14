@@ -5030,3 +5030,46 @@
   .dashRiskMark { display: none; }
   .dashRiskBar { margin-top: 4px; }
 }
+
+/* ── Dark "All features" band (refreshed design) ── */
+.featuresDark { background: #17171b; }
+.featuresHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 40px;
+  flex-wrap: wrap;
+  margin-bottom: 44px;
+}
+.featuresKicker { color: #8a8a94 !important; }
+.featuresTitle { color: #ffffff !important; margin: 0; }
+.featuresNote {
+  max-width: 300px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: #a5a5ae;
+  margin: 6px 0 0;
+}
+.featuresGrid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 34px 28px;
+}
+.featCol { border-top: 1px solid rgba(255, 255, 255, 0.14); padding-top: 20px; min-width: 0; }
+.featIcon { margin-bottom: 15px; }
+.featIcon svg { width: 22px; height: 22px; fill: none; stroke: var(--accent); stroke-width: 1.8; }
+.featCol h3 {
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0 0 8px;
+}
+.featCol p { font-size: 13.5px; line-height: 1.55; color: #a5a5ae; margin: 0; }
+
+@media (max-width: 980px) { .featuresGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 620px) {
+  .featuresGrid { grid-template-columns: 1fr 1fr; gap: 24px 18px; }
+  .featuresHead { margin-bottom: 30px; }
+  .featuresNote { max-width: none; }
+}

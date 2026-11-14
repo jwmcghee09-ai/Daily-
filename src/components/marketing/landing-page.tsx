@@ -1333,15 +1333,20 @@ export default function LandingPage({
 
       <Divider />
 
-      <section className={styles.section} id="features">
+      <section className={`${styles.section} ${styles.featuresDark}`} id="features">
         <div className={styles.container}>
-          <div className={`${styles.sectionLabel} ${styles.reveal}`}>Features</div>
-          <h2 className={`${styles.sectionTitle} ${styles.revealUp}`}>Ten tools that actually talk to each other.</h2>
+          <div className={`${styles.featuresHead} ${styles.srItem}`}>
+            <div>
+              <div className={`${styles.sectionLabel} ${styles.featuresKicker}`}>Everything included</div>
+              <h2 className={`${styles.sectionTitle} ${styles.featuresTitle}`}>All features, for everyone.</h2>
+            </div>
+            <p className={styles.featuresNote}>No tiers. The full toolkit is unlocked the moment you sign up.</p>
+          </div>
 
-          <div className={styles.featureGrid}>
+          <div className={`${styles.featuresGrid} ${styles.srItem}`}>
             {features.map((feature) => (
-              <article key={feature.title} className={`${styles.featureItem} ${styles.reveal}`}>
-                <div className={`${styles.iconWrap} ${feature.alt ? styles.iconAlt : ""}`}>{feature.icon}</div>
+              <article key={feature.title} className={styles.featCol}>
+                <div className={styles.featIcon}>{feature.icon}</div>
                 <h3>{feature.title}</h3>
                 <p>{feature.copy}</p>
               </article>
