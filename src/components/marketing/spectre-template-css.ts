@@ -61,6 +61,11 @@ export const SPECTRE_TEMPLATE_CSS = String.raw`
  * page tables are small and want neither. */
 .spectre-page table { min-width: 0; }
 .spectre-page th { position: static; top: auto; z-index: auto; background: transparent; }
+/* globals.css also sets a bare td colour of near-black for the app data tables;
+ * on the dark landing that makes the fund-table cells invisible. The fund table
+ * does not set its own cell colour, so pin it to the light foreground. */
+.spectre-page td { color: var(--foreground); border-color: var(--border); }
+.spectre-page tr:hover td { background: transparent; }
 
 /* --- Checkout banner (kept from the real app's homepage) --- */
 .spectre-page .checkout-banner { margin: 16px 0 0; padding: 12px 16px; border-radius: 6px; font-size: 13px; border: 1px solid var(--border); background: var(--card); color: var(--foreground); }
