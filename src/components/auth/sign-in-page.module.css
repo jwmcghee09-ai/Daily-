@@ -6,8 +6,8 @@
 .page {
   min-height: 100vh;
   background:  
-    #f8f6f8;
-  color: #0f0f10;
+    #0e0e11;
+  color: #f1f1f3;
   font-family: var(--font-geist-sans), "Avenir Next", sans-serif;
 }
 
@@ -17,8 +17,8 @@
   top: 0;
   z-index: 20;
   height: 56px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-  background: rgba(235, 233, 232, 0.94);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(18, 18, 22, 0.86);
   backdrop-filter: blur(28px) saturate(1.4);
   -webkit-backdrop-filter: blur(28px) saturate(1.4);
 }
@@ -102,12 +102,12 @@
 /* ── Side card: dark, like landing page product preview ── */
 .sideCard {
   position: relative;
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 20px;
-  background: rgba(239, 239, 239, 0.94);
+  background: rgba(23, 23, 27, 0.94);
   overflow: hidden;
   padding: 36px;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.081), 0 4px 16px rgba(57, 57, 65, 0.1);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.4), 0 4px 16px rgba(0, 0, 0, 0.3);
 }
 
 .sideCard::before {
@@ -121,11 +121,11 @@
 /* ── Form card: dark, clean ── */
 .formCard {
   position: relative;
-  border: 1px solid rgba(57, 57, 65, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 20px;
-  background: #ebebee;
+  background: #17171b;
   overflow: hidden;
-  box-shadow: 0 8px 40px rgba(57, 57, 65, 0.09), 0 1px 0 rgba(57, 57, 65, 0.08);
+  box-shadow: 0 8px 40px rgba(255, 255, 255, 0.09), 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .formCard::before {
@@ -145,7 +145,7 @@
   border-radius: 999px;
   border: 1px solid transparent;
   background:
-    linear-gradient(rgba(239, 239, 239, 1), rgba(239, 239, 239, 1)) padding-box,
+    linear-gradient(rgba(27, 27, 32, 1), rgba(27, 27, 32, 1)) padding-box,
     linear-gradient(90deg, #ee2d1b, #f52e14) border-box;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -170,7 +170,7 @@
   font-weight: 700;
   line-height: 1.1;
   letter-spacing: -0.03em;
-  color: #0f0f10;
+  color: #f1f1f3;
 }
 
 .sideCard h1 span {
@@ -181,7 +181,7 @@
 }
 
 .sideCard > p {
-  color: #55555e;
+  color: #9a9aa5;
   font-size: 14px;
   line-height: 1.7;
   margin-bottom: 0;
@@ -198,8 +198,8 @@
   display: flex;
   gap: 10px;
   padding: 9px 0;
-  border-bottom: 1px solid rgba(87, 16, 198, 0.1);
-  color: #55555e;
+  border-bottom: 1px solid rgba(224, 35, 28, 0.1);
+  color: #9a9aa5;
   font-size: 13.5px;
   line-height: 1.5;
 }
@@ -221,7 +221,7 @@
   gap: 8px;
   margin-top: 24px;
   padding-top: 20px;
-  border-top: 1px solid rgba(87, 16, 198, 0.1);
+  border-top: 1px solid rgba(224, 35, 28, 0.1);
 }
 
 .sideMeta div {
@@ -231,19 +231,19 @@
 }
 
 .sideMeta span {
-  color: rgba(95, 81, 133, 0.45);
+  color: rgba(154, 154, 165, 0.45);
   font-size: 12.5px;
 }
 
 .sideMeta a {
-  color: #55555e;
+  color: #9a9aa5;
   text-decoration: none;
   font-size: 12.5px;
   transition: color 0.15s;
 }
 
 .sideMeta a:hover {
-  color: #0f0f10;
+  color: #f1f1f3;
 }
 
 /*
@@ -263,8 +263,8 @@
   align-items: center;
   justify-content: center;
   padding: 11px 20px;
-  background: rgba(255, 255, 255, 0.62);
-  border-bottom: 1px solid rgba(57, 57, 65, 0.09);
+  background: rgba(23, 23, 27, 0.74);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
 }
 
 .cardUrl {
@@ -288,13 +288,13 @@
   border-radius: 999px;
   border: 1px solid transparent;
   background:
-    linear-gradient(#f8f6f8, #f8f6f8) padding-box,
+    linear-gradient(#0e0e11, #0e0e11) padding-box,
     linear-gradient(90deg, #ee2d1b, #f52e14) border-box;
   text-transform: uppercase;
   letter-spacing: 0.09em;
   font-size: 10.5px;
   font-weight: 700;
-  color: #55555e;
+  color: #9a9aa5;
 }
 
 .sectionLabel::before {
@@ -312,12 +312,12 @@
   font-size: 24px;
   font-weight: 700;
   letter-spacing: -0.02em;
-  color: #0f0f10;
+  color: #f1f1f3;
 }
 
 .cardBody > p,
 .cardBody p {
-  color: #55555e;
+  color: #9a9aa5;
   font-size: 14px;
   line-height: 1.6;
 }
@@ -362,7 +362,7 @@
 }
 
 .formGrid span {
-  color: #55555e;
+  color: #9a9aa5;
   font-size: 13px;
   font-weight: 600;
 }
@@ -371,10 +371,10 @@
   width: 100%;
   height: 46px;
   padding: 0 14px;
-  border: 1px solid rgba(57, 57, 65, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 10px;
-  background: #ebebee;
-  color: #0f0f10;
+  background: #17171b;
+  color: #f1f1f3;
   font-size: 15px;
   font-family: inherit;
   transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
@@ -386,9 +386,9 @@
 
 .formGrid input:focus {
   outline: 0;
-  background: #ebebee;
+  background: #17171b;
   border-color: rgba(245, 32, 20, 0.5);
-  box-shadow: 0 1px 2px rgba(15, 15, 17, 0.04);
+  box-shadow: 0 1px 2px rgba(255, 255, 255, 0.04);
 }
 
 .passwordRow {
@@ -399,10 +399,10 @@
 
 .toggleButton {
   padding: 0 16px;
-  border: 1px solid rgba(57, 57, 65, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 10px;
-  background: #ebebee;
-  color: #55555e;
+  background: #17171b;
+  color: #9a9aa5;
   font-size: 13px;
   font-weight: 600;
   font-family: inherit;
@@ -412,8 +412,8 @@
 
 .toggleButton:hover {
   border-color: rgba(245, 32, 20, 0.4);
-  color: #0f0f10;
-  background: #ebebee;
+  color: #f1f1f3;
+  background: #17171b;
 }
 
 /* ── Buttons ── */
@@ -440,31 +440,31 @@
 }
 
 .primaryButton {
-  color: #0f0f0f;
+  color: #f1f1f3;
   background: linear-gradient(135deg, #ee2d1b 0%, #f52e14 45%, #f52e14 100%);
-  box-shadow: 0 1px 2px rgba(15, 15, 17, 0.04);
+  box-shadow: 0 1px 2px rgba(255, 255, 255, 0.04);
   border: none;
 }
 
 .primaryButton:hover {
-  box-shadow: 0 1px 2px rgba(15, 15, 17, 0.04);
+  box-shadow: 0 1px 2px rgba(255, 255, 255, 0.04);
   filter: brightness(1.07);
 }
 
 .ghostButton {
-  border-color: rgba(0, 0, 0, 0.14);
-  color: #0f0f10;
+  border-color: rgba(255, 255, 255, 0.14);
+  color: #f1f1f3;
   background: transparent;
 }
 
 .ghostButton:hover {
-  background: rgba(0, 0, 0, 0.04);
-  border-color: rgba(57, 57, 65, 0.36);
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.36);
 }
 
 .outlineButton {
-  border-color: rgba(0, 0, 0, 0.14);
-  color: #0f0f10;
+  border-color: rgba(255, 255, 255, 0.14);
+  color: #f1f1f3;
   background: transparent;
 }
 
@@ -522,13 +522,13 @@
   justify-content: center;
   margin-top: 16px;
   padding-top: 16px;
-  border-top: 1px solid rgba(57, 57, 65, 0.09);
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
 }
 
 .textButton {
   border: 0;
   background: transparent;
-  color: #55555e;
+  color: #9a9aa5;
   font-size: 13.5px;
   font-weight: 500;
   font-family: inherit;
@@ -539,7 +539,7 @@
 
 .textButton:hover,
 .textButton:focus-visible {
-  color: #0f0f10;
+  color: #f1f1f3;
   transform: translateY(-1px);
   outline: 0;
 }
@@ -547,20 +547,20 @@
 /* ── Plan picker ── */
 /*
  * The same leftover, on the registration flow's plan picker — and worse there,
- * because its legend is #55555e, a dark grey, which on saturated indigo was
+ * because its legend is #9a9aa5, a dark grey, which on saturated indigo was
  * all but invisible.
  */
 .planPicker {
   display: grid;
   gap: 8px;
   padding: 14px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.62);
+  background: rgba(23, 23, 27, 0.74);
 }
 
 .planPicker legend {
-  color: #55555e;
+  color: #9a9aa5;
   font-size: 13px;
   font-weight: 600;
   padding: 0;
@@ -578,9 +578,9 @@
   column-gap: 10px;
   row-gap: 4px;
   padding: 11px 13px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 10px;
-  background: #ebebee;
+  background: #17171b;
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
 }
@@ -593,7 +593,7 @@
 .planOptionActive {
   border-color: rgba(245, 32, 20, 0.42) !important;
   background: rgba(245, 32, 20, 0.06) !important;
-  box-shadow: 0 1px 2px rgba(15, 15, 17, 0.04);
+  box-shadow: 0 1px 2px rgba(255, 255, 255, 0.04);
 }
 
 .planOptionInner {
@@ -607,13 +607,13 @@
 .planOptionName {
   font-size: 13.5px;
   font-weight: 700;
-  color: #0f0f10;
+  color: #f1f1f3;
 }
 
 .planOptionPrice {
   font-size: 11.5px;
   font-weight: 500;
-  color: #55555e;
+  color: #9a9aa5;
   font-family: var(--font-geist-mono), monospace;
   white-space: nowrap;
 }
@@ -626,7 +626,7 @@
   width: 100%;
   padding-left: 26px;
   font-size: 11.5px;
-  color: #55555e;
+  color: #9a9aa5;
   line-height: 1.5;
 }
 
@@ -639,7 +639,7 @@
   width: 15px;
   height: 15px;
   border-radius: 50%;
-  border: 2px solid rgba(0, 0, 0, 0.14);
+  border: 2px solid rgba(255, 255, 255, 0.14);
   flex-shrink: 0;
   transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
 }
@@ -647,7 +647,7 @@
 .planOptionActive::before {
   border-color: #ee2d1b;
   background: radial-gradient(circle, #ee2d1b 40%, transparent 42%);
-  box-shadow: 0 1px 2px rgba(15, 15, 17, 0.04);
+  box-shadow: 0 1px 2px rgba(255, 255, 255, 0.04);
 }
 
 /* ── Terms row ── */
@@ -663,7 +663,7 @@
   margin-top: 3px;
   flex-shrink: 0;
   accent-color: #ee2d1b;
-  border: 1px solid rgba(57, 57, 65, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 4px;
   cursor: pointer;
 }
@@ -671,7 +671,7 @@
 .termsRow span {
   font-size: 13px;
   line-height: 1.6;
-  color: #55555e;
+  color: #9a9aa5;
 }
 
 .termsRow a {
@@ -706,7 +706,7 @@
 }
 
 .resetStepDivider {
-  color: rgba(57, 57, 65, 0.18);
+  color: rgba(255, 255, 255, 0.18);
   font-size: 10px;
 }
 
@@ -727,14 +727,14 @@
 .modeCard {
   margin-top: 14px;
   padding: 13px 15px;
-  border: 1px solid rgba(57, 57, 65, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 12px;
-  background: #ebebee;
+  background: #17171b;
 }
 
 .modeCardTitle {
   margin-bottom: 8px;
-  color: #0f0f10;
+  color: #f1f1f3;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.1em;
@@ -752,7 +752,7 @@
 .modeCardList li {
   position: relative;
   padding-left: 16px;
-  color: #55555e;
+  color: #9a9aa5;
   font-size: 13px;
   line-height: 1.6;
 }
@@ -828,5 +828,5 @@
   padding: 5px 12px;
   border-radius: 999px;
   background: linear-gradient(135deg, #f52e14, #ee2d1b);
-  color: #0f0f0f;
+  color: #f1f1f3;
 }
