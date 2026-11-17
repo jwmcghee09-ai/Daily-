@@ -18,11 +18,11 @@ const HTML = `<!DOCTYPE html>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;overflow:hidden}
-body{background:#f6f6f7;background-attachment:fixed;color:#504691;font-family:'DM Mono','Courier New',monospace;font-size:13.5px;display:flex;flex-direction:column}
+body{background:#0e0e11;background-attachment:fixed;color:#504691;font-family:'DM Mono','Courier New',monospace;font-size:13.5px;display:flex;flex-direction:column}
 body::before{
   content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   background:
-    #f6f6f7;
+    #0e0e11;
 }
 body>*{position:relative;z-index:1}
 
@@ -30,24 +30,24 @@ body>*{position:relative;z-index:1}
    gradient, where an orange mark would vanish. */
 .brand-mark{display:block;width:20px;height:20px;flex-shrink:0}
 #topbar{background:rgba(237, 237, 237, .92);border-bottom:1px solid rgba(245, 51, 20, .22);padding:9px 18px;display:flex;align-items:center;gap:16px;font-size:11.5px;color:#888888;flex-shrink:0;backdrop-filter:blur(10px)}
-.fkey{color:#f2f2f4;background:#f53314;padding:3px 9px;border-radius:6px;font-weight:500;font-size:11px;cursor:pointer;font-family:'DM Mono',monospace}
+.fkey{color:#1b1b20;background:#f53314;padding:3px 9px;border-radius:6px;font-weight:500;font-size:11px;cursor:pointer;font-family:'DM Mono',monospace}
 .fkey:hover{background:#f53514}
 .flabel{color:#777777}
 #topbar .right{margin-left:auto;display:flex;gap:16px;align-items:center}
 #clock{color:#f53314;font-size:13px;font-weight:bold;letter-spacing:.05em}
 #conn{font-size:12px;color:#f53314}
 
-#titlebar{background:linear-gradient(90deg,#ee2d1b 0%,#f52e14 35%,#f52e14 72%,#f53614 100%);color:#0f0f0f;padding:10px 18px;display:flex;justify-content:space-between;align-items:center;font-weight:600;font-size:15px;letter-spacing:.1em;flex-shrink:0;font-family:'Space Grotesk',sans-serif}
+#titlebar{background:linear-gradient(90deg,#ee2d1b 0%,#f52e14 35%,#f52e14 72%,#f53614 100%);color:#f3f3f5;padding:10px 18px;display:flex;justify-content:space-between;align-items:center;font-weight:600;font-size:15px;letter-spacing:.1em;flex-shrink:0;font-family:'Space Grotesk',sans-serif}
 
 #metrics{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;padding:14px 18px 2px;flex-shrink:0}
-.mc{padding:13px 16px;background:#ebebee;border:1px solid rgba(245, 51, 20, .18);border-radius:12px}
+.mc{padding:13px 16px;background:#17171b;border:1px solid rgba(245, 51, 20, .18);border-radius:12px}
 .mc:last-child{border-right:1px solid rgba(245, 51, 20, .18)}
 .ml{font-size:9.5px;text-transform:uppercase;color:rgba(245, 57, 20, .55);letter-spacing:.12em;margin-bottom:5px}
 .mv{font-size:22px;font-weight:bold;color:#f53314;line-height:1.1}
 .ms{font-size:11px;color:#999999;margin-top:3px}
 
 /* strategy banner */
-#strat-bar{background:#ebebee;border:1px solid rgba(245, 51, 20, .14);border-radius:10px;margin:10px 18px 0;padding:8px 15px;font-size:11px;color:#888888;flex-shrink:0;display:flex;gap:12px;align-items:center;min-height:22px}
+#strat-bar{background:#17171b;border:1px solid rgba(245, 51, 20, .14);border-radius:10px;margin:10px 18px 0;padding:8px 15px;font-size:11px;color:#888888;flex-shrink:0;display:flex;gap:12px;align-items:center;min-height:22px}
 #strat-bar .strat-label{color:#f53314;font-size:9px;text-transform:uppercase;letter-spacing:.1em;flex-shrink:0}
 #strat-text{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 #lessons-wrap{flex-shrink:0;color:#aaaaaa;font-size:10px}
@@ -56,11 +56,11 @@ body>*{position:relative;z-index:1}
 #main{display:grid;grid-template-columns:340px 1fr 400px;flex:1;min-height:0;gap:14px;padding:14px 18px}
 
 /* panels */
-#left{display:flex;flex-direction:column;min-height:0;overflow:hidden;background:#f2f2f4;border:1px solid rgba(245, 51, 20, .18);border-radius:14px}
-#center{display:flex;flex-direction:column;min-height:0;background:#f2f2f4;border:1px solid rgba(245, 51, 20, .18);border-radius:14px;overflow:hidden}
-#chat-panel{display:flex;flex-direction:column;min-height:0;background:#f2f2f4;border:1px solid rgba(245, 51, 20, .18);border-radius:14px;overflow:hidden}
+#left{display:flex;flex-direction:column;min-height:0;overflow:hidden;background:#1b1b20;border:1px solid rgba(245, 51, 20, .18);border-radius:14px}
+#center{display:flex;flex-direction:column;min-height:0;background:#1b1b20;border:1px solid rgba(245, 51, 20, .18);border-radius:14px;overflow:hidden}
+#chat-panel{display:flex;flex-direction:column;min-height:0;background:#1b1b20;border:1px solid rgba(245, 51, 20, .18);border-radius:14px;overflow:hidden}
 
-.ph{background:#ebebee;border-bottom:1px solid rgba(245, 51, 20, .12);padding:9px 14px;color:rgba(245, 57, 20, .85);font-size:10px;letter-spacing:.14em;text-transform:uppercase;flex-shrink:0}
+.ph{background:#17171b;border-bottom:1px solid rgba(245, 51, 20, .12);padding:9px 14px;color:rgba(245, 57, 20, .85);font-size:10px;letter-spacing:.14em;text-transform:uppercase;flex-shrink:0}
 .ph::before{content:'';display:inline-block;width:14px;height:1px;background:linear-gradient(90deg,#f52e14,#f53614);margin-right:8px;vertical-align:middle}
 
 /* position buckets */
@@ -76,10 +76,10 @@ body>*{position:relative;z-index:1}
 /* chat */
 #chat-msgs{flex:1;overflow-y:auto;min-height:0;padding:14px 14px 8px;display:flex;flex-direction:column;gap:12px}
 .cmsg-u{align-self:flex-end;background:rgba(245, 51, 20, .12);border:1px solid rgba(245, 51, 20, .28);border-radius:12px 12px 3px 12px;padding:9px 13px;max-width:92%;font-size:12.5px;color:#504691;white-space:pre-wrap;word-break:break-word}
-.cmsg-a{align-self:flex-start;background:rgba(0, 0, 0, .03);border:1px solid rgba(245, 51, 20, .12);border-radius:3px 12px 12px 12px;padding:9px 13px;max-width:94%;font-size:12.5px;color:#504691;white-space:pre-wrap;word-break:break-word;line-height:1.5}
+.cmsg-a{align-self:flex-start;background:rgba(255, 255, 255, .03);border:1px solid rgba(245, 51, 20, .12);border-radius:3px 12px 12px 12px;padding:9px 13px;max-width:94%;font-size:12.5px;color:#504691;white-space:pre-wrap;word-break:break-word;line-height:1.5}
 .cmsg-sys{color:#aaaaaa;font-size:12px;text-align:center;padding:2px 0;font-style:italic}
 #chat-input-row{display:flex;gap:8px;padding:12px;border-top:1px solid #dcdce0;flex-shrink:0}
-#chat-in{flex:1;background:rgba(0, 0, 0, .04);border:1px solid rgba(245, 51, 20, .25);border-radius:10px;color:#504691;font-family:'Courier New',monospace;font-size:13px;padding:9px 11px;resize:none;min-height:44px;max-height:110px;overflow-y:auto;outline:none}
+#chat-in{flex:1;background:rgba(255, 255, 255, .04);border:1px solid rgba(245, 51, 20, .25);border-radius:10px;color:#504691;font-family:'Courier New',monospace;font-size:13px;padding:9px 11px;resize:none;min-height:44px;max-height:110px;overflow-y:auto;outline:none}
 #chat-in:focus{border-color:#f53314}
 #chat-send{background:linear-gradient(135deg,rgba(245, 32, 20, .25),rgba(245, 101, 20, .2));border:1px solid rgba(245, 51, 20, .5);border-radius:10px;color:#f53314;font-family:'Courier New',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:9px 16px;cursor:pointer;white-space:nowrap;align-self:flex-end}
 #chat-send:hover{background:#dcdce0}
@@ -93,13 +93,13 @@ body>*{position:relative;z-index:1}
 #log-panel{display:none;flex-direction:column;flex-shrink:0;border-top:2px solid #dcdce0;height:270px}
 #log-panel.lp-open{display:flex}
 #log-content{flex:1;overflow-y:auto;padding:8px 12px;font-size:11.5px}
-.log-row{border-bottom:1px solid #f2f2f4;padding:8px 0;cursor:pointer;line-height:1.4}
+.log-row{border-bottom:1px solid #1b1b20;padding:8px 0;cursor:pointer;line-height:1.4}
 .log-row:hover{background:#f8f6f8}
-.log-exp{display:none;font-size:9px;color:#999999;white-space:pre-wrap;word-break:break-word;max-height:100px;overflow-y:auto;padding:4px 0;border-top:1px solid #f2f2f4;margin-top:3px;line-height:1.55}
+.log-exp{display:none;font-size:9px;color:#999999;white-space:pre-wrap;word-break:break-word;max-height:100px;overflow-y:auto;padding:4px 0;border-top:1px solid #1b1b20;margin-top:3px;line-height:1.55}
 /* strategy panel */
 #strategy-panel{display:none;flex-direction:column;flex-shrink:0;border-top:2px solid #dcdce0;height:520px}
 .sbanner{border:1px solid;border-radius:5px;padding:9px 12px;font-size:11.5px;line-height:1.6;margin-bottom:12px}
-.sbanner-off{border-color:#d4d4d9;background:#f2f2f4;color:#777777}
+.sbanner-off{border-color:#33333b;background:#1b1b20;color:#777777}
 .sbanner-on{border-color:#ccffcc;background:#f2fff0;color:#10c66d}
 .sbanner-auto{border-color:#ffc5c5;background:#fff0f0;color:#f51414}
 .snum{display:inline-block;width:14px;height:14px;line-height:14px;text-align:center;border-radius:50%;background:#f53314;color:#f7f7f7;font-size:9px;font-weight:bold;margin-right:5px}
@@ -109,10 +109,10 @@ body>*{position:relative;z-index:1}
 #strategy-content{flex:1;overflow-y:auto;padding:12px 14px;font-size:11.5px}
 .sfield{display:flex;align-items:center;gap:8px;margin-bottom:8px}
 .sfield label{color:#aaaaaa;font-size:10px;text-transform:uppercase;letter-spacing:.05em;width:96px;flex-shrink:0}
-.sfield select,.sfield input[type=text],.sfield input[type=number]{flex:1;background:#f8f6f8;border:1px solid #d4d4d9;border-radius:2px;color:#504691;font-family:'Courier New',monospace;font-size:12px;padding:6px 8px;outline:none;min-width:0}
+.sfield select,.sfield input[type=text],.sfield input[type=number]{flex:1;background:#f8f6f8;border:1px solid #33333b;border-radius:2px;color:#504691;font-family:'Courier New',monospace;font-size:12px;padding:6px 8px;outline:none;min-width:0}
 .sfield select:focus,.sfield input:focus{border-color:#f53314}
 .sfield input[type=checkbox]{accent-color:#f53314}
-#strat-custom-prompt{width:100%;background:#f8f6f8;border:1px solid #d4d4d9;border-radius:4px;color:#504691;font-family:'Courier New',monospace;font-size:12px;padding:8px 10px;resize:vertical;min-height:60px;outline:none;box-sizing:border-box}
+#strat-custom-prompt{width:100%;background:#f8f6f8;border:1px solid #33333b;border-radius:4px;color:#504691;font-family:'Courier New',monospace;font-size:12px;padding:8px 10px;resize:vertical;min-height:60px;outline:none;box-sizing:border-box}
 .sbtn{background:#dfd7d5;border:1px solid #f53314;border-radius:4px;color:#f53314;font-family:'Courier New',monospace;font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:7px 14px;cursor:pointer}
 .sbtn:hover{background:#dcdce0}
 .sbtn:disabled{opacity:.4;cursor:default}
@@ -122,14 +122,14 @@ body>*{position:relative;z-index:1}
 .spill-on{color:#10c66d;border-color:#ccffcc;background:#f2fff0}
 .spill-off{color:#aaaaaa;border-color:#dddddd;background:#f8f6f8}
 .spill-auto{color:#f51414;border-color:#ffc5c5;background:#fff0f0;font-weight:bold}
-.ptrade{border:1px solid #d4d4d9;border-radius:5px;padding:9px 11px;margin-bottom:8px;background:#f8f6f8}
-.srun{border-bottom:1px solid #f2f2f4;padding:7px 0;cursor:pointer;line-height:1.4}
+.ptrade{border:1px solid #33333b;border-radius:5px;padding:9px 11px;margin-bottom:8px;background:#f8f6f8}
+.srun{border-bottom:1px solid #1b1b20;padding:7px 0;cursor:pointer;line-height:1.4}
 .srun:hover{background:#f8f6f8}
 .srun-exp{display:none;font-size:9px;color:#999999;white-space:pre-wrap;word-break:break-word;padding:3px 0;line-height:1.5}
 
 /* tables */
 table{width:100%;border-collapse:collapse;font-size:12.5px}
-th{padding:8px 12px;text-align:left;font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;color:rgba(245, 57, 20, .5);border-bottom:1px solid rgba(245, 51, 20, .12);position:sticky;top:0;background:#f2f2f4}
+th{padding:8px 12px;text-align:left;font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;color:rgba(245, 57, 20, .5);border-bottom:1px solid rgba(245, 51, 20, .12);position:sticky;top:0;background:#1b1b20}
 td{padding:8px 12px;border-bottom:1px solid rgba(245, 51, 20, .05);vertical-align:middle}
 tr:hover td{background:rgba(245, 51, 20, .05)}
 
@@ -165,7 +165,7 @@ tr:hover td{background:rgba(245, 51, 20, .05)}
   <span class="fkey" onclick="focusChat()">F8</span><span class="flabel">CHAT</span>
   <span class="fkey" onclick="toggleLog()">F9</span><span class="flabel">LOG</span>
   <span class="fkey" onclick="toggleStrategy()">F10</span><span class="flabel">STRATEGY</span>
-  <a href="/strategy" style="color:#f53314;font-size:11px;letter-spacing:.05em;text-decoration:none;border:1px solid #d4d4d9;border-radius:3px;padding:2px 8px">STRATEGY PAGE ↗</a>
+  <a href="/strategy" style="color:#f53314;font-size:11px;letter-spacing:.05em;text-decoration:none;border:1px solid #33333b;border-radius:3px;padding:2px 8px">STRATEGY PAGE ↗</a>
   <span id="strat-status-pill" class="spill spill-off" style="margin-left:4px">BOT OFF</span>
   <div class="right">
     <span id="conn">CONNECTING…</span>
@@ -280,9 +280,9 @@ tr:hover td{background:rgba(245, 51, 20, .05)}
   </div>
 </div>
 
-<div id="help-overlay" style="display:none;position:fixed;inset:0;background:rgba(255, 255, 255, 0.94);z-index:100;overflow-y:auto" onclick="if(event.target===this)toggleHelp()">
-  <div style="max-width:760px;margin:5vh auto;background:#f2f2f4;border:1px solid #f53314;border-radius:10px;overflow:hidden">
-    <div style="background:linear-gradient(90deg,#ee2d1b 0%,#f52e14 35%,#f52e14 72%,#f53614 100%);color:#0f0f0f;padding:12px 20px;font-weight:bold;font-size:15px;display:flex;justify-content:space-between;align-items:center">WHAT AM I LOOKING AT? <button onclick="toggleHelp()" style="background:none;border:1px solid rgba(0, 0, 0, .5);border-radius:4px;color:#0f0f0f;font-family:'Courier New',monospace;font-size:11px;padding:4px 10px;cursor:pointer">CLOSE (ESC)</button></div>
+<div id="help-overlay" style="display:none;position:fixed;inset:0;background:rgba(18, 18, 22, 0.86);z-index:100;overflow-y:auto" onclick="if(event.target===this)toggleHelp()">
+  <div style="max-width:760px;margin:5vh auto;background:#1b1b20;border:1px solid #f53314;border-radius:10px;overflow:hidden">
+    <div style="background:linear-gradient(90deg,#ee2d1b 0%,#f52e14 35%,#f52e14 72%,#f53614 100%);color:#f3f3f5;padding:12px 20px;font-weight:bold;font-size:15px;display:flex;justify-content:space-between;align-items:center">WHAT AM I LOOKING AT? <button onclick="toggleHelp()" style="background:none;border:1px solid rgba(255, 255, 255, .5);border-radius:4px;color:#f3f3f5;font-family:'Courier New',monospace;font-size:11px;padding:4px 10px;cursor:pointer">CLOSE (ESC)</button></div>
     <div style="padding:20px 22px;font-size:13px;line-height:1.8;color:#444444">
       <p style="margin-bottom:14px">This is your <span style="color:#f53514">paper trading terminal</span> — a practice account with fake money on the real US market, managed with the help of an AI called Myrmidon. No real dollars are at risk.</p>
       <div style="color:#f53314;font-size:11px;letter-spacing:.1em;margin:16px 0 8px">THE NUMBERS UP TOP</div>
