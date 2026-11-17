@@ -1,0 +1,4 @@
+ezdxf>=1.4
+anthropic>=2.9      # only for `design` (AI brief -> spec)
+requests>=2.31      # only for `upload` (Onshape)
+# cadquery>=2.8     # optional: enables STEP/STL 3D export
