@@ -5073,3 +5073,70 @@
   .featuresHead { margin-bottom: 30px; }
   .featuresNote { max-width: none; }
 }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Laptop reveal — "the laptop open thing". A 3D laptop that opens its lid as
+   you scroll, revealing the real dashboard, then floats live stat chips in.
+   Ported from the Lovable prototype; its own dark band so the crimson glow
+   reads. Dynamic transforms are applied inline from the component.
+   ───────────────────────────────────────────────────────────────────────── */
+.laptopReveal { height: 300vh; position: relative; background: #0a0a0e; color: #f5f5f7; }
+.lrSticky {
+  position: sticky; top: 0; height: 100vh;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 28px; perspective: 2000px; overflow: hidden; padding: 0 16px;
+}
+.lrGlow {
+  position: absolute; width: min(900px, 92vw); height: 600px; border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(224, 35, 28, 0.42), transparent 70%);
+  filter: blur(40px); pointer-events: none; will-change: opacity, transform;
+}
+.lrCaption {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: rgba(245, 245, 247, 0.6); margin: 0; position: relative; text-align: center;
+}
+.lrDot {
+  width: 8px; height: 8px; border-radius: 50%; background: #e0231c;
+  box-shadow: 0 0 0 0 rgba(224, 35, 28, 0.6); animation: lrPulse 1.8s infinite;
+}
+@keyframes lrPulse {
+  0% { box-shadow: 0 0 0 0 rgba(224, 35, 28, 0.55); }
+  70% { box-shadow: 0 0 0 12px rgba(224, 35, 28, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(224, 35, 28, 0); }
+}
+.lrAfter { font-size: 24px; font-weight: 500; text-align: center; margin: 0; position: relative; color: #f5f5f7; }
+.laptopStage { position: relative; width: min(880px, 86vw); transform-style: preserve-3d; will-change: transform; }
+.laptop { position: relative; transform-style: preserve-3d; }
+.laptopLid {
+  position: relative; transform-origin: center bottom; transform-style: preserve-3d;
+  background: linear-gradient(160deg, #20202a, #141418);
+  border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 18px 18px 4px 4px;
+  padding: 2%; aspect-ratio: 16 / 10.4;
+  box-shadow: 0 40px 100px -30px rgba(224, 35, 28, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  will-change: transform;
+}
+.laptopScreen { position: relative; width: 100%; height: 100%; background: #0b0b0f; border-radius: 6px; overflow: hidden; }
+.laptopScreen > img { width: 100%; height: 100%; object-fit: cover; object-position: top; display: block; transform-origin: top center; will-change: transform, opacity, filter; }
+.screenBoot { position: absolute; inset: 0; display: grid; place-items: center; background: #0b0b0f; }
+.screenBoot > span { font-size: clamp(22px, 4vw, 44px); font-weight: 700; letter-spacing: 0.04em; color: #f5f5f7; text-shadow: 0 0 30px rgba(224, 35, 28, 0.6); }
+.brandDot { color: #e0231c; }
+.screenShine { position: absolute; inset: 0; width: 40%; background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.1), transparent); pointer-events: none; }
+.laptopBase { position: relative; height: 20px; width: 114%; margin-left: -7%; background: linear-gradient(#20202a, #141418); border-radius: 2px 2px 20px 20px; border: 1px solid rgba(255, 255, 255, 0.1); }
+.laptopBase span { position: absolute; left: 50%; top: 0; width: 16%; height: 6px; transform: translateX(-50%); background: #0b0b0f; border-radius: 0 0 8px 8px; opacity: 0.7; }
+.laptopShadow { position: absolute; left: 0; right: 0; bottom: -40px; height: 40px; background: radial-gradient(closest-side, rgba(0, 0, 0, 0.6), transparent); filter: blur(8px); }
+.lrChip {
+  position: absolute; display: grid; gap: 2px; min-width: 150px; padding: 12px 16px;
+  border-radius: 14px; background: rgba(22, 22, 28, 0.85); border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px); box-shadow: 0 20px 40px -20px rgba(224, 35, 28, 0.5);
+  will-change: transform, opacity;
+}
+.lrChip small { font-size: 11px; color: rgba(245, 245, 247, 0.6); text-transform: uppercase; letter-spacing: 0.08em; }
+.lrChip strong { font-size: 20px; color: #f5f5f7; }
+.lrChip em { font-style: normal; font-size: 12px; color: #ff6a5f; }
+@media (max-width: 760px) {
+  .lrChip { display: none; }
+  .laptopReveal { height: 220vh; }
+  .lrAfter { font-size: 17px; }
+  .lrCaption { font-size: 11px; }
+}

@@ -741,28 +741,8 @@ export default function LandingPage({
         </div>
       </section>
 
-      {/* A real screenshot of the product, not a drawing of it — the "photo"
-          the page was missing. One image, one line. */}
-      <section className={styles.shotSection}>
-        <div className={styles.container}>
-          <div className={`${styles.shotFrame} ${styles.srItem}`}>
-            <div className={styles.shotBar}>
-              <span className={styles.shotDot} /><span className={styles.shotDot} /><span className={styles.shotDot} />
-              <span className={styles.shotUrl}>spectre-assets.com / dashboard</span>
-            </div>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/product-dashboard.png"
-              alt="The SPECTRE dashboard: a $314,320 demo portfolio with its risk score and snapshot"
-              className={styles.shotImg}
-              width={1760}
-              height={611}
-              loading="lazy"
-            />
-          </div>
-          <p className={styles.shotCaption}>Your whole portfolio, scored — the real dashboard, from the live demo.</p>
-        </div>
-      </section>
+      {/* The real product, revealed on a laptop that opens as you scroll. */}
+      <LaptopReveal />
 
       <section className={styles.aiRevealSection} id="ai" ref={aiSectionRef}>
         <div className={styles.container}>
@@ -1663,6 +1643,114 @@ export default function LandingPage({
 
 function Divider() {
   return <hr className={styles.divider} />;
+}
+
+/**
+ * "The laptop open thing" — a scroll-driven laptop that opens its lid to reveal
+ * the real SPECTRE dashboard, then floats a few live stat chips in. Ported from
+ * John's Lovable prototype. Self-contained scroll listener (rAF-throttled, so it
+ * doesn't ride the page's srOn reveal system); respects reduced-motion by
+ * snapping straight to the fully-open state. Chips hide and the scroll track
+ * shortens on phones (see the module CSS), so it reads cleanly at 390px.
+ */
+function LaptopReveal() {
+  const [p, setP] = useState(0);
+  useEffect(() => {
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const el = document.getElementById("laptop-reveal");
+    let raf = 0;
+    const onScroll = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        // Reduced motion: snap to the fully-open state and stop tracking scroll.
+        if (reduce) {
+          setP(1);
+          return;
+        }
+        if (!el) return;
+        const r = el.getBoundingClientRect();
+        const total = r.height - window.innerHeight;
+        setP(Math.min(1, Math.max(0, -r.top / (total * 0.8))));
+      });
+    };
+    onScroll();
+    if (reduce) return () => cancelAnimationFrame(raf);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      cancelAnimationFrame(raf);
+    };
+  }, []);
+  const ease = (t: number) => 1 - Math.pow(1 - Math.min(1, Math.max(0, t)), 3);
+  const open = ease(p / 0.6);
+  const settle = ease((p - 0.35) / 0.5);
+  const chips = ease((p - 0.65) / 0.35);
+  const lid = -100 + open * 100;
+  const tiltX = 28 - settle * 28;
+  const tiltY = -18 + settle * 18;
+  const scale = 0.7 + settle * 0.32;
+  const screenIn = ease((p - 0.2) / 0.35);
+  const chipData: [string, string, string, number, number][] = [
+    ["Portfolio value", "$314,320", "+11.1%", -1, -0.6],
+    ["Risk score", "11 / 100", "Controlled", 1, -0.4],
+    ["1-day VaR", "−1.3%", "95% conf.", -1, 0.55],
+    ["AI connected", "Claude", "10 tools", 1, 0.5],
+  ];
+  return (
+    <section id="laptop-reveal" className={styles.laptopReveal} aria-label="SPECTRE dashboard on a laptop">
+      <div className={styles.lrSticky}>
+        <div className={styles.lrGlow} style={{ opacity: open * 0.9, transform: `scale(${0.6 + open * 0.6})` }} />
+        <p className={styles.lrCaption} style={{ opacity: 1 - open * 1.4, transform: `translateY(${-open * 30}px)` }}>
+          <span className={styles.lrDot} />Scroll to open your SPECTRE dashboard
+        </p>
+        <div className={styles.laptopStage} style={{ transform: `scale(${scale}) rotateX(${tiltX}deg) rotateY(${tiltY}deg)` }}>
+          <div className={styles.laptop}>
+            <div className={styles.laptopLid} style={{ transform: `rotateX(${lid}deg)` }}>
+              <div className={styles.laptopScreen}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/spectre-dashboard-preview.jpg"
+                  alt="SPECTRE portfolio dashboard with metrics, history and allocation"
+                  width={1440}
+                  height={900}
+                  loading="lazy"
+                  style={{ opacity: screenIn, transform: `scale(${1.15 - settle * 0.15})`, filter: `blur(${(1 - screenIn) * 8}px)` }}
+                />
+                <div className={styles.screenBoot} style={{ opacity: 1 - ease((p - 0.15) / 0.3) }}>
+                  <span>SPECTRE<span className={styles.brandDot}>.</span></span>
+                </div>
+                <div className={styles.screenShine} style={{ transform: `translateX(${-120 + settle * 260}%)` }} />
+              </div>
+            </div>
+            <div className={styles.laptopBase}><span /></div>
+            <div className={styles.laptopShadow} style={{ opacity: 0.4 + open * 0.6 }} />
+          </div>
+          {chipData.map(([l, v, sub, sx, sy], i) => (
+            <div
+              key={l}
+              className={styles.lrChip}
+              style={{
+                left: sx < 0 ? "-6%" : "auto",
+                right: sx > 0 ? "-6%" : "auto",
+                top: `${50 + sy * 60}%`,
+                opacity: ease((chips - i * 0.12) / 0.6),
+                transform: `translate(${(1 - ease((chips - i * 0.12) / 0.6)) * sx * 80}px, -50%) translateZ(60px)`,
+              }}
+            >
+              <small>{l}</small>
+              <strong>{v}</strong>
+              <em>{sub}</em>
+            </div>
+          ))}
+        </div>
+        <p className={styles.lrAfter} style={{ opacity: chips, transform: `translateY(${(1 - chips) * 24}px)` }}>
+          Your whole book, risk and research in one dashboard.
+        </p>
+      </div>
+    </section>
+  );
 }
 
 /**
