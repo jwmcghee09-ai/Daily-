@@ -55,6 +55,13 @@ export const SPECTRE_TEMPLATE_CSS = String.raw`
  * Restore the ring by forcing the donut's own circles back to no fill. */
 .spectre-page .donut circle { fill: none; }
 
+/* Neutralize global table styles from app globals.css that leak in: a bare
+ * table rule forcing min-width 900px (blew the step tables out to the right)
+ * and a sticky light-grey th (the white band across the header). The landing
+ * page tables are small and want neither. */
+.spectre-page table { min-width: 0; }
+.spectre-page th { position: static; top: auto; z-index: auto; background: transparent; }
+
 /* --- Checkout banner (kept from the real app's homepage) --- */
 .spectre-page .checkout-banner { margin: 16px 0 0; padding: 12px 16px; border-radius: 6px; font-size: 13px; border: 1px solid var(--border); background: var(--card); color: var(--foreground); }
 .spectre-page .checkout-banner.success { border-color: var(--spectre-teal); }
