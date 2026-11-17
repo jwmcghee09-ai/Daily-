@@ -10,24 +10,24 @@ export const SPECTRE_TEMPLATE_CSS = String.raw`
 
 /* --- Design tokens: SPECTRE dark theme (from the Lovable styles.css) --- */
 .spectre-page {
-  --background: oklch(0.21 0 0);
-  --foreground: oklch(0.9 0 0);
-  --card: oklch(0.275 0 0);
-  --card-foreground: oklch(0.9 0 0);
-  --primary: oklch(0.55 0.24 27);
+  --background: oklch(0.14 0.004 25);
+  --foreground: oklch(0.92 0 0);
+  --card: oklch(0.185 0.004 25);
+  --card-foreground: oklch(0.92 0 0);
+  --primary: oklch(0.56 0.235 27);
   --primary-foreground: oklch(0.98 0 0);
-  --muted: oklch(0.325 0.002 150);
-  --muted-foreground: oklch(0.73 0 0);
-  --accent: oklch(0.32 0.03 27);
-  --accent-foreground: oklch(0.9 0 0);
-  --border: oklch(0.4 0 0);
-  --ring: oklch(0.55 0.24 27);
+  --muted: oklch(0.26 0.004 25);
+  --muted-foreground: oklch(0.72 0 0);
+  --accent: oklch(0.3 0.04 27);
+  --accent-foreground: oklch(0.92 0 0);
+  --border: oklch(0.31 0.004 25);
+  --ring: oklch(0.56 0.235 27);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-  --spectre-dark: oklch(0.17 0 0);
+  --spectre-dark: oklch(0.1 0.003 25);
   --spectre-dark-muted: oklch(0.6 0.005 60);
   --spectre-dark-line: oklch(0.325 0.002 150);
   --spectre-teal: oklch(0.72 0.13 165);
@@ -452,6 +452,25 @@ export const SPECTRE_TEMPLATE_CSS = String.raw`
 .risk-summary-table thead { color:var(--muted-foreground); }
 .risk-summary-table td { text-align:right; color:var(--foreground); font-weight:600; }
 @media(max-width:760px){.fund-source-strip > a{margin-left:0}.fund-source-strip{gap:14px}}
+
+/* ============================================================================
+ * Innovative dark backdrop: a near-black page with a faint graph-paper grid
+ * and a crimson radial glow behind the hero, both masked so they're strongest
+ * at the top and fade down the page. Overlay sits behind the content via a
+ * fixed ::before; .spectre-page is a stacking context and its children ride
+ * above it. Placed after template.css so it wins.
+ * ========================================================================== */
+.spectre-page { position: relative; z-index: 0; background: var(--background); isolation: isolate; }
+.spectre-page > * { position: relative; z-index: 1; }
+.spectre-page::before {
+  content: ""; position: absolute; left: 0; right: 0; top: 0; height: 1180px; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 58% 46% at 50% 18%, color-mix(in oklab, var(--primary) 22%, transparent), transparent 72%),
+    linear-gradient(color-mix(in oklab, var(--foreground) 5.5%, transparent) 1px, transparent 1px) 0 0 / 56px 56px,
+    linear-gradient(90deg, color-mix(in oklab, var(--foreground) 5.5%, transparent) 1px, transparent 1px) 0 0 / 56px 56px;
+  -webkit-mask-image: radial-gradient(ellipse 100% 64% at 50% 12%, #000 34%, transparent 84%);
+          mask-image: radial-gradient(ellipse 100% 64% at 50% 12%, #000 34%, transparent 84%);
+}
 
 /* ============================================================================
  * Phone mitigations (mobile-only, layered on top): the page's standing rule is
