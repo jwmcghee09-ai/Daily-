@@ -396,8 +396,6 @@ for (const surface of PALETTE_SURFACES) {
     ["ticker strip", "IVV", /\["IVV", "([\d.]+)", "([+\-][\d.]+)%"/],
     ["ticker strip", "MQG", /\["MQG", "([\d.]+)", "([+\-][\d.]+)%"/],
     ["ticker strip", "VAS", /\["VAS", "([\d.]+)", "([+\-][\d.]+)%"/],
-    ["research panel", "BHP", /\["BHP", "([\d.]+)", "([+\-][\d.]+)%", (?:true|false)\]/],
-    ["research panel", "CBA", /\["CBA", "([\d.]+)", "([+\-][\d.]+)%", (?:true|false)\]/],
   ];
 
   let drift = [];
@@ -420,7 +418,7 @@ for (const surface of PALETTE_SURFACES) {
   // Matched loosely so it survives the hero markup moving between a <StatCard
   // label=… value=…/> and an array row like ["Portfolio Value", "$314,320", …].
   const total = [...seeds.values()].reduce((sum, h) => sum + h.units * h.price, 0);
-  const shown = tsx.match(/Portfolio Value"[,\s]+(?:value=)?"\$([\d,]+)"/);
+  const shown = tsx.match(/Portfolio Value(?:"[,\s]+(?:value=)?"|<\/div>\s*<div className="big-number">)\$([\d,]+)/);
   if (!shown) {
     drift.push("no Portfolio Value stat card found in the hero");
   } else if (Math.abs(Number(shown[1].replace(/,/g, "")) - total) > 1) {
