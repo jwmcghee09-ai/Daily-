@@ -429,6 +429,10 @@ export default function LandingPage({
   }, []);
 
   useEffect(() => {
+    // Phones get a static, fully-visible layout (forced in the module CSS):
+    // no scroll-driven fade/scale and no pinned sections, so the page scrolls
+    // smoothly instead of revealing itself section by section.
+    if (window.matchMedia("(max-width: 760px)").matches) return;
     const onScroll = () => {
       const compactMotion = window.innerWidth <= 960;
       const heroProduct = heroProductRef.current;
@@ -1656,14 +1660,18 @@ function Divider() {
 function LaptopReveal() {
   const [p, setP] = useState(0);
   useEffect(() => {
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    // Phones get the laptop statically open (the section is un-pinned in CSS),
+    // so the page scrolls smoothly instead of holding on a pinned section.
+    const still =
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
+      window.matchMedia("(max-width: 760px)").matches;
     const el = document.getElementById("laptop-reveal");
     let raf = 0;
     const onScroll = () => {
       cancelAnimationFrame(raf);
       raf = requestAnimationFrame(() => {
-        // Reduced motion: snap to the fully-open state and stop tracking scroll.
-        if (reduce) {
+        // Snap to the fully-open state and stop tracking scroll.
+        if (still) {
           setP(1);
           return;
         }
@@ -1674,7 +1682,7 @@ function LaptopReveal() {
       });
     };
     onScroll();
-    if (reduce) return () => cancelAnimationFrame(raf);
+    if (still) return () => cancelAnimationFrame(raf);
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll);
     return () => {

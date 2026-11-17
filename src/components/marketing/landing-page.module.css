@@ -5140,3 +5140,45 @@
   .lrAfter { font-size: 17px; }
   .lrCaption { font-size: 11px; }
 }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Phones: a static, smooth-scrolling page. The desktop layout leans on
+   scroll-driven fades (.heroProduct, .aiConsoleReveal start dim/invisible and
+   brighten as you scroll) and two tall PINNED sections (.stickyWrap workflow,
+   .laptopReveal). On a phone that reads as "loading section by section". Here
+   we force those elements fully visible and let the pinned sections flow
+   normally, so the whole page is just one smooth vertical scroll. Placed last
+   so it wins the cascade over the earlier 960/640 mobile rules.
+   ───────────────────────────────────────────────────────────────────────── */
+@media (max-width: 760px) {
+  /* Kill the scroll-driven fade/scale — show these at rest, fully visible. */
+  .heroProduct { opacity: 1 !important; transform: none !important; }
+  .aiConsoleReveal { opacity: 1 !important; transform: none !important; }
+
+  /* Un-pin the laptop reveal: normal height, laptop shown statically open. */
+  .laptopReveal { height: auto; }
+  .lrSticky { position: static; height: auto; min-height: 0; padding: 52px 16px 56px; gap: 18px; }
+
+  /* Un-pin the workflow story: flow its three steps top-to-bottom, each as a
+     normal block (copy, then its preview card). display:contents flattens the
+     two columns so copy/preview can be interleaved with `order`. */
+  .stickyWrap { height: auto; }
+  .stickyInner {
+    position: static; height: auto; overflow: visible;
+    display: flex; flex-direction: column; gap: 30px;
+    border: none; background: transparent;
+  }
+  .stickyLeft, .stickyRight, .stickyPanels { display: contents; }
+  .stickyLeft, .stickyRight { padding: 0; border: none; background: transparent; }
+  .stickyPreview, .stickyPanel {
+    grid-column: auto; grid-row: auto;
+    opacity: 1 !important; transform: none !important;
+    pointer-events: auto; width: 100%;
+  }
+  .stickyRight .stickyPanel:nth-child(1) { order: 1; }
+  .stickyLeft  .stickyPreview:nth-child(1) { order: 2; }
+  .stickyRight .stickyPanel:nth-child(2) { order: 3; }
+  .stickyLeft  .stickyPreview:nth-child(2) { order: 4; }
+  .stickyRight .stickyPanel:nth-child(3) { order: 5; }
+  .stickyLeft  .stickyPreview:nth-child(3) { order: 6; }
+}
