@@ -8,7 +8,10 @@ import json
 from dataclasses import dataclass, field, asdict
 from pathlib import Path
 
-PART_TYPES = ("plate", "bracket", "shaft", "flange", "enclosure")
+STANDARD_TYPES = ("plate", "bracket", "shaft", "flange", "enclosure")
+# Implicit / additive-manufacturing parts (see computational.py)
+COMPUTATIONAL_TYPES = ("gyroid_block", "lattice_block")
+PART_TYPES = STANDARD_TYPES + COMPUTATIONAL_TYPES
 
 
 @dataclass

@@ -1,4 +1,7 @@
-ezdxf>=1.4
-anthropic>=2.9      # only for `design` (AI brief -> spec)
-requests>=2.31      # only for `upload` (Onshape)
-# cadquery>=2.8     # optional: enables STEP/STL 3D export
+ezdxf>=1.4          # 2D DXF drawings
+numpy>=1.26
+scikit-image>=0.22  # marching cubes for lattice / gyroid parts
+flask>=3.0          # web interface
+anthropic>=2.9      # AI design (brief -> spec)
+requests>=2.31      # Onshape upload
+cadquery>=2.4       # 3D STEP/STL for standard parts (optional, large install)

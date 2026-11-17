@@ -1,32 +1,214 @@
 {
   "name": "Small Belt Conveyor Drive",
-  "description": "Drive end for a 300 mm belt conveyor: motor plate, bearing flange, drive shaft, guard enclosure and mounting brackets.",
+  "description": "Drive end for a 300 mm belt conveyor: motor plate, bearing flange, drive shaft, guard enclosure and mounting brackets. Includes 3D-printed gyroid cooling block and lattice supports.",
   "units": "mm",
   "parts": [
-    {"id": "P1", "name": "Motor mounting plate", "type": "plate", "material": "S275 steel",
-     "params": {"width": 200, "length": 250, "thickness": 10, "hole_diameter": 12, "hole_margin": 20}},
-    {"id": "P2", "name": "Bearing flange", "type": "flange", "material": "S275 steel",
-     "params": {"outer_diameter": 140, "inner_diameter": 52, "thickness": 15,
-                "bolt_circle_diameter": 110, "bolt_count": 4, "bolt_hole_diameter": 11}},
-    {"id": "P3", "name": "Drive shaft", "type": "shaft", "material": "EN8 steel",
-     "params": {"diameter": 30, "length": 420, "step_diameter": 25, "step_length": 60}},
-    {"id": "P4", "name": "Frame bracket", "type": "bracket", "material": "S275 steel", "quantity": 4,
-     "params": {"width": 50, "leg_a": 80, "leg_b": 70, "thickness": 6, "hole_diameter": 10}},
-    {"id": "P5", "name": "Chain guard", "type": "enclosure", "material": "Aluminium 5052",
-     "params": {"width": 160, "length": 320, "height": 90, "wall": 2.5}}
+    {
+      "id": "P1",
+      "name": "Motor mounting plate",
+      "type": "plate",
+      "material": "S275 steel",
+      "params": {
+        "width": 200,
+        "length": 250,
+        "thickness": 10,
+        "hole_diameter": 12,
+        "hole_margin": 20
+      }
+    },
+    {
+      "id": "P2",
+      "name": "Bearing flange",
+      "type": "flange",
+      "material": "S275 steel",
+      "params": {
+        "outer_diameter": 140,
+        "inner_diameter": 52,
+        "thickness": 15,
+        "bolt_circle_diameter": 110,
+        "bolt_count": 4,
+        "bolt_hole_diameter": 11
+      }
+    },
+    {
+      "id": "P3",
+      "name": "Drive shaft",
+      "type": "shaft",
+      "material": "EN8 steel",
+      "params": {
+        "diameter": 30,
+        "length": 420,
+        "step_diameter": 25,
+        "step_length": 60
+      }
+    },
+    {
+      "id": "P4",
+      "name": "Frame bracket",
+      "type": "bracket",
+      "material": "S275 steel",
+      "quantity": 4,
+      "params": {
+        "width": 50,
+        "leg_a": 80,
+        "leg_b": 70,
+        "thickness": 6,
+        "hole_diameter": 10
+      }
+    },
+    {
+      "id": "P5",
+      "name": "Chain guard",
+      "type": "enclosure",
+      "material": "Aluminium 5052",
+      "params": {
+        "width": 160,
+        "length": 320,
+        "height": 90,
+        "wall": 2.5
+      }
+    },
+    {
+      "id": "P6",
+      "name": "Motor cooling block (gyroid)",
+      "type": "gyroid_block",
+      "material": "AlSi10Mg (printed)",
+      "params": {
+        "width": 60,
+        "length": 80,
+        "height": 25,
+        "cell_size": 12,
+        "wall": 1.2,
+        "skin": 1.5
+      }
+    },
+    {
+      "id": "P7",
+      "name": "Lattice idler support",
+      "type": "lattice_block",
+      "material": "Ti-6Al-4V (printed)",
+      "quantity": 2,
+      "params": {
+        "width": 60,
+        "length": 60,
+        "height": 30,
+        "cell_size": 15,
+        "strut_diameter": 2.5,
+        "skin": 2
+      }
+    }
   ],
   "tasks": [
-    {"id": "T1", "name": "Requirements & loads", "duration_days": 2},
-    {"id": "T2", "name": "Concept design", "duration_days": 3, "depends_on": ["T1"]},
-    {"id": "T3", "name": "Shaft & bearing calcs", "duration_days": 2, "depends_on": ["T2"]},
-    {"id": "T4", "name": "Detail CAD", "duration_days": 4, "depends_on": ["T3"]},
-    {"id": "T5", "name": "Order motor & bearings", "duration_days": 10, "depends_on": ["T3"]},
-    {"id": "T6", "name": "Machine shaft", "duration_days": 3, "depends_on": ["T4"], "part_id": "P3"},
-    {"id": "T7", "name": "Laser-cut plate & brackets", "duration_days": 2, "depends_on": ["T4"], "part_id": "P1"},
-    {"id": "T8", "name": "Machine flange", "duration_days": 2, "depends_on": ["T4"], "part_id": "P2"},
-    {"id": "T9", "name": "Fabricate guard", "duration_days": 3, "depends_on": ["T4"], "part_id": "P5"},
-    {"id": "T10", "name": "Assembly", "duration_days": 2, "depends_on": ["T5", "T6", "T7", "T8"]},
-    {"id": "T11", "name": "Fit guard", "duration_days": 1, "depends_on": ["T9", "T10"]},
-    {"id": "T12", "name": "Commissioning test", "duration_days": 2, "depends_on": ["T11"]}
+    {
+      "id": "T1",
+      "name": "Requirements & loads",
+      "duration_days": 2
+    },
+    {
+      "id": "T2",
+      "name": "Concept design",
+      "duration_days": 3,
+      "depends_on": [
+        "T1"
+      ]
+    },
+    {
+      "id": "T3",
+      "name": "Shaft & bearing calcs",
+      "duration_days": 2,
+      "depends_on": [
+        "T2"
+      ]
+    },
+    {
+      "id": "T4",
+      "name": "Detail CAD",
+      "duration_days": 4,
+      "depends_on": [
+        "T3"
+      ]
+    },
+    {
+      "id": "T5",
+      "name": "Order motor & bearings",
+      "duration_days": 10,
+      "depends_on": [
+        "T3"
+      ]
+    },
+    {
+      "id": "T6",
+      "name": "Machine shaft",
+      "duration_days": 3,
+      "depends_on": [
+        "T4"
+      ],
+      "part_id": "P3"
+    },
+    {
+      "id": "T7",
+      "name": "Laser-cut plate & brackets",
+      "duration_days": 2,
+      "depends_on": [
+        "T4"
+      ],
+      "part_id": "P1"
+    },
+    {
+      "id": "T8",
+      "name": "Machine flange",
+      "duration_days": 2,
+      "depends_on": [
+        "T4"
+      ],
+      "part_id": "P2"
+    },
+    {
+      "id": "T9",
+      "name": "Fabricate guard",
+      "duration_days": 3,
+      "depends_on": [
+        "T4"
+      ],
+      "part_id": "P5"
+    },
+    {
+      "id": "T13",
+      "name": "3D-print cooling block & supports",
+      "duration_days": 4,
+      "depends_on": [
+        "T4"
+      ],
+      "part_id": "P6"
+    },
+    {
+      "id": "T10",
+      "name": "Assembly",
+      "duration_days": 2,
+      "depends_on": [
+        "T5",
+        "T6",
+        "T7",
+        "T8",
+        "T13"
+      ]
+    },
+    {
+      "id": "T11",
+      "name": "Fit guard",
+      "duration_days": 1,
+      "depends_on": [
+        "T9",
+        "T10"
+      ]
+    },
+    {
+      "id": "T12",
+      "name": "Commissioning test",
+      "duration_days": 2,
+      "depends_on": [
+        "T11"
+      ]
+    }
   ]
 }

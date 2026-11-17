@@ -209,6 +209,10 @@ def build_solid(part: Part):
 
 # ------------------------------------------------------------------ driver
 def export_part(part: Part, out_dir: Path, formats=("dxf", "scad", "step", "stl")) -> list[str]:
+    """Write CAD files for one part; returns the file names written."""
+    if part.type not in DEFAULTS:  # implicit / lattice parts are meshed, not B-rep modelled
+        from . import computational
+        return computational.export_part(part, out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     written = []
     if "dxf" in formats:

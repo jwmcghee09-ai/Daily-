@@ -8,6 +8,7 @@ import json
 
 from .spec import PART_TYPES, Project
 from .cad import DEFAULTS
+from .computational import COMPUTATIONAL_DEFAULTS
 
 MODEL = "claude-opus-5-5"
 
@@ -48,6 +49,9 @@ Turn the user's brief into a buildable project plan and a parts list.
 
 Parts: use only these parametric part types, with these parameters (all mm):
 {json.dumps(DEFAULTS, indent=1)}
+Additive-manufacturing (3D-printed) parts, for lightweight or heat-exchange
+needs; cell_size is the lattice period, wall/strut_diameter the feature size:
+{json.dumps(COMPUTATIONAL_DEFAULTS, indent=1)}
 Choose realistic dimensions for the stated loads and purpose; give every parameter
 of each part you use. Use ids like "P1", "P2".
 

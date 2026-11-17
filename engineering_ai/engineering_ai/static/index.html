@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Engineering AI</title>
+<style>
+  :root {
+    --bg: #f5f6f8; --panel: #ffffff; --ink: #1b1f24; --muted: #5d6673; --line: #dfe3e8;
+    --accent: #1f6feb; --accent-ink: #ffffff; --crit: #c93c37; --crit-bg: #fbeceb;
+    --ok: #1a7f37; --code: #f0f2f5; --viewer: #eef1f5;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0f1216; --panel: #171b21; --ink: #e6e9ee; --muted: #9aa4b1; --line: #2a313a;
+      --accent: #4c8dff; --accent-ink: #0b0d10; --crit: #ff7b72; --crit-bg: #3a1d1c;
+      --ok: #56d364; --code: #1e242c; --viewer: #1b2027; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  header { padding: 18px 24px; border-bottom: 1px solid var(--line); background: var(--panel);
+    display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+  header h1 { font-size: 20px; margin: 0; }
+  header p { margin: 0; color: var(--muted); }
+  main { display: grid; grid-template-columns: minmax(300px, 400px) 1fr; gap: 20px; padding: 20px 24px;
+    max-width: 1500px; margin: 0 auto; }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; padding: 16px; } }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; }
+  .panel + .panel { margin-top: 16px; }
+  h2 { font-size: 15px; margin: 0 0 10px; }
+  label { display: block; font-size: 13px; color: var(--muted); margin: 10px 0 4px; }
+  textarea, input { width: 100%; border: 1px solid var(--line); border-radius: 8px; background: var(--bg);
+    color: var(--ink); padding: 9px 10px; font: inherit; }
+  textarea.code { font: 12px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; min-height: 300px; }
+  button, .btn { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line);
+    background: var(--panel); color: var(--ink); border-radius: 8px; padding: 8px 12px; font: inherit;
+    font-size: 14px; cursor: pointer; text-decoration: none; }
+  button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+  button:disabled { opacity: .55; cursor: progress; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; align-items: center; }
+  .hint { font-size: 13px; color: var(--muted); margin: 6px 0 0; }
+  .msg { margin-top: 10px; font-size: 14px; padding: 8px 10px; border-radius: 8px; display: none; white-space: pre-wrap; }
+  .msg.err { display: block; background: var(--crit-bg); color: var(--crit); }
+  .msg.info { display: block; background: var(--code); color: var(--muted); }
+  .empty { color: var(--muted); text-align: center; padding: 60px 20px; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 12px 0; }
+  .stat { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+  .stat b { display: block; font-size: 22px; }
+  .stat span { color: var(--muted); font-size: 13px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .chip { background: var(--crit-bg); color: var(--crit); border-radius: 999px; padding: 2px 10px; font-size: 13px; }
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin: 16px 0 14px; overflow-x: auto; }
+  .tab { border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: none; padding: 8px 12px; color: var(--muted); }
+  .tab.active { color: var(--ink); border-bottom-color: var(--accent); font-weight: 600; }
+  .view { display: none; } .view.active { display: block; }
+  .scroll { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th { color: var(--muted); font-weight: 600; font-size: 13px; }
+  tr.crit td:first-child { box-shadow: inset 3px 0 var(--crit); }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .mermaid { background: #fff; border-radius: 8px; padding: 10px; overflow-x: auto; }
+  .parts { display: grid; grid-template-columns: minmax(240px, 320px) 1fr; gap: 14px; }
+  @media (max-width: 1100px) { .parts { grid-template-columns: 1fr; } }
+  .plist { display: flex; flex-direction: column; gap: 8px; max-height: 520px; overflow-y: auto; }
+  .pcard { border: 1px solid var(--line); border-radius: 8px; padding: 10px; cursor: pointer; text-align: left; display: block; width: 100%; }
+  .pcard.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .pcard small { color: var(--muted); display: block; }
+  .tag { font-size: 11px; border: 1px solid var(--line); border-radius: 4px; padding: 0 5px; margin-left: 4px; color: var(--muted); }
+  #viewer { position: relative; height: 520px; border-radius: 8px; background: var(--viewer); overflow: hidden; }
+  #viewer .label { position: absolute; left: 12px; top: 10px; font-size: 13px; color: var(--muted); pointer-events: none; }
+  .files { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .files a { font-size: 12px; padding: 3px 8px; }
+  .cad-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; align-items: start; }
+  code { overflow-wrap: anywhere; font-size: 12px; background: var(--code); padding: 0 4px; border-radius: 4px; }
+  .cad-grid .panel { margin: 0; }
+  .cad-grid h3 { margin: 0 0 4px; font-size: 15px; }
+  .cad-grid p { margin: 0 0 10px; color: var(--muted); font-size: 13px; }
+  select { border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); padding: 8px; font: inherit; width: 100%; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Engineering AI</h1>
+  <p>Describe a project, then get a project map, a critical-path schedule and CAD files.</p>
+</header>
+
+<main>
+  <section>
+    <div class="panel">
+      <h2>1 · Describe the project</h2>
+      <textarea id="brief" rows="5" placeholder="e.g. Wall-mounted hoist bracket for a 250 kg load, steel, bolted to concrete, with a 3D-printed lattice cable guide"></textarea>
+      <div class="row">
+        <button class="primary" id="btnDesign">Generate with AI</button>
+        <button id="btnExample">Load example</button>
+      </div>
+      <p class="hint" id="aiHint"></p>
+      <div class="msg" id="designMsg"></div>
+    </div>
+
+    <div class="panel">
+      <h2>2 · Review the spec</h2>
+      <p class="hint">Edit any dimension, task or dependency, then build.</p>
+      <textarea id="spec" class="code" spellcheck="false" placeholder="Project spec (JSON) appears here"></textarea>
+      <label for="start">Start date</label>
+      <input type="date" id="start">
+      <div class="row"><button class="primary" id="btnBuild">Build plan &amp; CAD</button></div>
+      <div class="msg" id="buildMsg"></div>
+    </div>
+  </section>
+
+  <section class="panel" id="results">
+    <div class="empty" id="emptyState">Results appear here after you build a project.<br>Click <b>Load example</b>, then <b>Build</b>, to try it.</div>
+    <div id="out" hidden>
+      <h2 id="pName" style="font-size:18px"></h2>
+      <p class="hint" id="pDesc"></p>
+      <div class="stats">
+        <div class="stat"><b id="sDur"></b><span>working days</span></div>
+        <div class="stat"><b id="sFinish"></b><span>finish date</span></div>
+        <div class="stat"><b id="sTasks"></b><span>tasks</span></div>
+        <div class="stat"><b id="sParts"></b><span>parts</span></div>
+      </div>
+      <div class="chips" id="crit"></div>
+
+      <div class="tabs" role="tablist">
+        <button class="tab active" data-view="vMap">Project map</button>
+        <button class="tab" data-view="vGantt">Gantt</button>
+        <button class="tab" data-view="vTable">Schedule</button>
+        <button class="tab" data-view="vParts">Parts &amp; 3D</button>
+        <button class="tab" data-view="vCad">Send to CAD</button>
+      </div>
+
+      <div class="view active" id="vMap"><div class="mermaid" id="flow"></div>
+        <p class="hint">Red tasks are on the critical path: any delay to them delays the whole project.</p></div>
+      <div class="view" id="vGantt"><div class="mermaid" id="gantt"></div></div>
+      <div class="view" id="vTable"><div class="scroll"><table id="tbl"></table></div>
+        <p class="hint">ES/EF = earliest start/finish, LS/LF = latest start/finish (days from start). Slack = how long a task can slip without delaying the project.</p></div>
+
+      <div class="view" id="vParts">
+        <div class="parts">
+          <div class="plist" id="plist"></div>
+          <div><div id="viewer"><span class="label" id="vLabel"></span></div>
+            <p class="hint">Drag to rotate, scroll to zoom.</p></div>
+        </div>
+      </div>
+
+      <div class="view" id="vCad">
+        <div class="cad-grid">
+          <div class="panel"><h3>Everything</h3><p>All CAD files, scripts, PicoGK project and report.</p>
+            <a class="btn" id="zAll">Download all (.zip)</a></div>
+          <div class="panel"><h3>Fusion 360</h3><p>Unzip, then in Fusion go to Utilities › Scripts and Add-Ins › + and pick <code>connectors/fusion360/EngineeringAIImport</code>. Run it to import every STEP part.</p>
+            <a class="btn" id="zFusion">Fusion 360 package</a></div>
+          <div class="panel"><h3>FreeCAD</h3><p>Unzip, then in FreeCAD go to Macro › Macros… and run <code>connectors/freecad/ImportProject.FCMacro</code>.</p>
+            <a class="btn" id="zFreecad">FreeCAD package</a></div>
+          <div class="panel"><h3>SolidWorks</h3><p>Unzip, then go to Tools › Macro › Run and pick <code>connectors/solidworks/ImportParts.swb</code>. It saves SLDPRT files.</p>
+            <a class="btn" id="zSw">SolidWorks package</a></div>
+          <div class="panel"><h3>PicoGK (LEAP 71)</h3><p>The voxel kernel behind Noyron. Needs .NET 9 on Windows or an Apple-silicon Mac. Unzip, then run <code>dotnet run</code> in <code>picogk/</code>.</p>
+            <a class="btn" id="zPico">PicoGK project</a></div>
+          <div class="panel"><h3>Onshape (direct upload)</h3>
+            <p id="onHint">Needs ONSHAPE_ACCESS_KEY / ONSHAPE_SECRET_KEY set where the server runs. IDs are in the document URL: /documents/<b>doc</b>/w/<b>workspace</b>.</p>
+            <select id="onFile"></select>
+            <label for="onDoc">Document ID</label><input id="onDoc">
+            <label for="onWs">Workspace ID</label><input id="onWs">
+            <div class="row"><button id="btnOnshape">Upload</button></div>
+            <div class="msg" id="onMsg"></div></div>
+        </div>
+        <p class="hint">AutoCAD, Siemens NX, Inventor and most other CAD programs open the STEP and DXF files in the parts folder directly.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from "three";
+import { STLLoader } from "three/addons/loaders/STLLoader.js";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.esm.min.mjs";
+
+mermaid.initialize({ startOnLoad: false, theme: "default", securityLevel: "strict" });
+const $ = (id) => document.getElementById(id);
+let run = null;
+
+function msg(el, text, kind = "err") { el.className = "msg " + (text ? kind : ""); el.textContent = text || ""; }
+async function api(url, body) {
+  const r = await fetch(url, body ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) } : {});
+  const data = await r.json().catch(() => ({ error: "Server error " + r.status }));
+  if (!r.ok) throw new Error(data.error || "Request failed");
+  return data;
+}
+async function busy(btn, label, fn) {
+  const old = btn.textContent; btn.disabled = true; btn.textContent = label;
+  try { await fn(); } finally { btn.disabled = false; btn.textContent = old; }
+}
+
+$("start").value = new Date().toISOString().slice(0, 10);
+api("/api/status").then((s) => {
+  $("aiHint").textContent = s.ai ? "AI design is ready (Claude)." :
+    "No ANTHROPIC_API_KEY found on the server, so AI design is off. You can still load the example or write a spec.";
+  if (!s.onshape) $("onHint").textContent += " (Keys not set yet.)";
+});
+
+$("btnExample").onclick = async () => { $("spec").value = JSON.stringify(await api("/api/example"), null, 2); msg($("designMsg"), ""); };
+$("btnDesign").onclick = () => busy($("btnDesign"), "Designing… (up to a few minutes)", async () => {
+  msg($("designMsg"), "");
+  try {
+    const spec = await api("/api/design", { brief: $("brief").value });
+    $("spec").value = JSON.stringify(spec, null, 2);
+    msg($("designMsg"), "Spec generated. Review it, then click Build.", "info");
+  } catch (e) { msg($("designMsg"), e.message); }
+});
+$("btnBuild").onclick = () => busy($("btnBuild"), "Building…", async () => {
+  msg($("buildMsg"), "");
+  let spec;
+  try { spec = JSON.parse($("spec").value); } catch (e) { return msg($("buildMsg"), "Spec is not valid JSON: " + e.message); }
+  try { run = await api("/api/build", { spec, start: $("start").value }); render(run); }
+  catch (e) { msg($("buildMsg"), e.message); }
+});
+
+document.querySelectorAll(".tab").forEach((t) => t.onclick = () => {
+  document.querySelectorAll(".tab").forEach((x) => x.classList.toggle("active", x === t));
+  document.querySelectorAll(".view").forEach((v) => v.classList.toggle("active", v.id === t.dataset.view));
+  if (t.dataset.view === "vParts") resize();
+  if (t.dataset.view === "vGantt") drawMermaid("gantt", run.gantt);
+});
+
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const fmt = (n) => Number.isInteger(n) ? n : n.toFixed(1);
+let mCount = 0;
+async function drawMermaid(id, src) {
+  const { svg } = await mermaid.render("m" + (mCount++), src);
+  $(id).innerHTML = svg;
+}
+const fileUrl = (name, dl) => `/runs/${run.run_id}/files/${name}${dl ? "?dl=1" : ""}`;
+
+function render(r) {
+  $("emptyState").hidden = true; $("out").hidden = false;
+  $("pName").textContent = r.name; $("pDesc").textContent = r.description;
+  $("sDur").textContent = fmt(r.duration_days); $("sFinish").textContent = r.finish;
+  $("sTasks").textContent = r.tasks.length; $("sParts").textContent = r.parts.length;
+  $("crit").innerHTML = "<span class='hint' style='margin:0 4px 0 0'>Critical path:</span>" +
+    r.critical_path.map((n) => `<span class="chip">${esc(n)}</span>`).join("<span class='hint'>→</span>");
+  drawMermaid("flow", r.flowchart);
+  if ($("vGantt").classList.contains("active")) drawMermaid("gantt", r.gantt);
+
+  $("tbl").innerHTML = "<tr><th>Task</th><th>Depends on</th><th>Days</th><th>ES</th><th>EF</th><th>LS</th><th>LF</th><th>Slack</th></tr>" +
+    r.tasks.map((t) => `<tr class="${t.critical ? "crit" : ""}"><td>${esc(t.name)}</td><td>${esc(t.depends_on.join(", "))}</td>` +
+      ["duration", "es", "ef", "ls", "lf", "slack"].map((k) => `<td class="num">${fmt(t[k])}</td>`).join("") + "</tr>").join("");
+
+  $("plist").innerHTML = r.parts.map((p, i) => `<button class="pcard" data-i="${i}"><b>${esc(p.name)}</b>
+      <span class="tag">${esc(p.type)}</span><small>${esc(p.material)} · qty ${p.quantity}</small>
+      <small>${Object.entries(p.params).map(([k, v]) => `${esc(k)} ${fmt(v)}`).join(" · ")}</small>
+      <div class="files">${p.files.map((f) => `<a class="btn" href="${fileUrl("parts/" + f, true)}">${esc(f.split(".").pop().toUpperCase())}</a>`).join("")}</div></button>`).join("");
+  document.querySelectorAll(".pcard").forEach((c) => c.onclick = (e) => { if (e.target.tagName !== "A") showPart(+c.dataset.i); });
+
+  const base = `/runs/${r.run_id}/bundle/`;
+  $("zAll").href = base + "all.zip"; $("zFusion").href = base + "fusion360.zip"; $("zFreecad").href = base + "freecad.zip";
+  $("zSw").href = base + "solidworks.zip"; $("zPico").href = base + "picogk.zip";
+  $("onFile").innerHTML = r.parts.flatMap((p) => p.files.filter((f) => /\.(step|stl)$/.test(f)).map((f) => `<option>${esc(f)}</option>`)).join("");
+  showPart(0);
+}
+
+// ---------- 3D viewer
+const viewerEl = $("viewer");
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setPixelRatio(window.devicePixelRatio);
+viewerEl.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100000);
+const controls = new OrbitControls(camera, renderer.domElement);
+scene.add(new THREE.HemisphereLight(0xffffff, 0x445566, 1.6));
+const sun = new THREE.DirectionalLight(0xffffff, 1.6); sun.position.set(1, 2, 1.5); scene.add(sun);
+const material = new THREE.MeshStandardMaterial({ color: 0x8fb3d9, metalness: 0.35, roughness: 0.45 });
+let current = null;
+function resize() {
+  const w = viewerEl.clientWidth, h = viewerEl.clientHeight; if (!w) return;
+  renderer.setSize(w, h); camera.aspect = w / h; camera.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe(viewerEl);
+(function loop() { requestAnimationFrame(loop); controls.update(); renderer.render(scene, camera); })();
+
+function showPart(i) {
+  document.querySelectorAll(".pcard").forEach((c) => c.classList.toggle("active", +c.dataset.i === i));
+  const p = run.parts[i]; const stl = p.files.find((f) => f.endsWith(".stl"));
+  if (current) { scene.remove(current); current.geometry.dispose(); current = null; }
+  if (!stl) { $("vLabel").textContent = "No 3D preview (install cadquery for STEP/STL export)."; return; }
+  $("vLabel").textContent = "Loading " + p.name + "…";
+  new STLLoader().load(fileUrl("parts/" + stl), (geo) => {
+    geo.computeVertexNormals(); geo.center();
+    current = new THREE.Mesh(geo, material); current.rotation.x = -Math.PI / 2; scene.add(current);
+    geo.computeBoundingSphere(); const r = geo.boundingSphere.radius;
+    camera.position.set(r * 1.6, r * 1.3, r * 1.9); controls.target.set(0, 0, 0); controls.update();
+    $("vLabel").textContent = `${p.name} (${p.type})`;
+  }, undefined, () => { $("vLabel").textContent = "Could not load " + stl; });
+}
+
+$("btnOnshape").onclick = () => busy($("btnOnshape"), "Uploading…", async () => {
+  msg($("onMsg"), "");
+  try {
+    await api("/api/onshape", { run_id: run.run_id, file: $("onFile").value, document: $("onDoc").value, workspace: $("onWs").value });
+    msg($("onMsg"), "Uploaded. Open the document in Onshape to see the new tab.", "info");
+  } catch (e) { msg($("onMsg"), e.message); }
+});
+</script>
+</body>
+</html>
