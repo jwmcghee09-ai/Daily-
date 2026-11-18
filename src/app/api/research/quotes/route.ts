@@ -5,7 +5,6 @@ export const runtime = "nodejs";
 
 const ASX_TICKERS = ["BHP","CBA","CSL","WES","ANZ","NAB","FMG","RIO","MQG","WBC","WDS","TLS","ALL","GMG","STO"];
 
-const FMP_BASE = "https://financialmodelingprep.com/stable";
 
 const YAHOO_HEADERS = {
   "User-Agent": "Mozilla/5.0 (compatible; SPECTRE/1.0)",
@@ -55,119 +54,6 @@ interface QuotesPayload {
   };
 }
 
-async function fetchAsxConstituents(apiKey: string): Promise<AsxConstituentQuote[]> {
-  if (!apiKey) return [];
-  const query = new URLSearchParams({
-    exchange: "ASX",
-    country: "AU",
-    isEtf: "false",
-    isFund: "false",
-    isActivelyTrading: "true",
-    limit: "200",
-    apikey: apiKey,
-  });
-
-  try {
-    const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), 10_000);
-    const res = await fetch(`${FMP_BASE}/company-screener?${query.toString()}`, {
-      cache: "no-store",
-      signal: ctrl.signal,
-    });
-    clearTimeout(t);
-    if (!res.ok) return [];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const data = (await res.json()) as any[];
-    if (!Array.isArray(data)) return [];
-    return data
-      .map((item) => {
-        const rawSymbol = typeof item.symbol === "string" ? item.symbol.toUpperCase() : null;
-        if (!rawSymbol) return null;
-        const symbol = rawSymbol.endsWith(".AX") ? rawSymbol : `${rawSymbol}.AX`;
-        const price = typeof item.price === "number" ? item.price : null;
-        const change = typeof item.change === "number" ? item.change : null;
-        return {
-          symbol,
-          price,
-          prevClose: price != null && change != null ? price - change : null,
-          yearHigh: typeof item.yearHigh === "number" ? item.yearHigh : null,
-          yearLow: typeof item.yearLow === "number" ? item.yearLow : null,
-          pe: typeof item.pe === "number" ? item.pe : null,
-          divYield: typeof item.dividendYield === "number" ? item.dividendYield : null,
-          name: typeof item.companyName === "string" ? item.companyName : symbol.replace(".AX", ""),
-          marketCap: typeof item.marketCap === "number" ? item.marketCap : null,
-          sector: typeof item.sector === "string" ? item.sector : null,
-          volume: typeof item.volume === "number" ? item.volume : null,
-          exchange: typeof item.exchangeShortName === "string" ? item.exchangeShortName : null,
-        };
-      })
-      .filter((item): item is AsxConstituentQuote => item !== null)
-      .sort((a, b) => (b.marketCap ?? 0) - (a.marketCap ?? 0));
-  } catch {
-    return [];
-  }
-}
-
-// FMP source for ASX stocks. /profile carries the rich metadata (52-week range,
-// dividend, name), but its `change` field is unreliable for ASX intraday — out
-// of ASX hours it comes back ~0, which made every stock's day move render as
-// 0.0%. The real price, previousClose and change come from /quote, which reports
-// previousClose directly. We fetch both in parallel and prefer /quote for the
-// live figures; if /quote is unavailable the profile path still works as before.
-async function fetchFmpProfile(ticker: string, apiKey: string): Promise<QuoteData | null> {
-  if (!apiKey) return null;
-  const symbol = `${ticker}.AX`;
-  const getFirst = async (path: string) => {
-    const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), 8_000);
-    try {
-      const res = await fetch(`${FMP_BASE}/${path}?symbol=${symbol}&apikey=${apiKey}`, {
-        cache: "no-store", signal: ctrl.signal,
-      });
-      clearTimeout(t);
-      if (!res.ok) return null;
-      const data = await res.json();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return Array.isArray(data) && data.length > 0 ? (data[0] as any) : null;
-    } catch { clearTimeout(t); return null; }
-  };
-  try {
-    const [p, q] = await Promise.all([getFirst("profile"), getFirst("quote")]);
-    if (!p && !q) return null;
-    // Price: prefer the live quote, fall back to the profile.
-    const price: number | null =
-      q && typeof q.price === "number" ? q.price
-      : p && typeof p.price === "number" ? p.price
-      : null;
-    if (price === null) return null;
-    // previousClose: /quote reports it directly; otherwise derive it from a
-    // change field (quote first, then the stale profile change as a last resort).
-    let prevClose: number | null = null;
-    if (q && typeof q.previousClose === "number" && q.previousClose > 0) prevClose = q.previousClose;
-    else if (q && typeof q.change === "number") prevClose = price - q.change;
-    else if (p && typeof p.change === "number") prevClose = price - p.change;
-    // 52-week range: /quote has numeric fields; /profile has a "lo-hi" string.
-    let yearHigh: number | null = q && typeof q.yearHigh === "number" ? q.yearHigh : null;
-    let yearLow: number | null = q && typeof q.yearLow === "number" ? q.yearLow : null;
-    if ((yearHigh === null || yearLow === null) && p && typeof p.range === "string" && p.range.includes("-")) {
-      const parts = p.range.split("-");
-      if (yearLow === null) yearLow = parseFloat(parts[0]) || null;
-      if (yearHigh === null) yearHigh = parseFloat(parts[1]) || null;
-    }
-    const pe: number | null =
-      q && typeof q.pe === "number" && Number.isFinite(q.pe) ? q.pe
-      : p && typeof p.pe === "number" && Number.isFinite(p.pe) ? p.pe
-      : null;
-    // lastDividend from FMP is annual dividend in AUD — compute yield
-    let divYield: number | null = null;
-    if (p && typeof p.lastDividend === "number" && p.lastDividend > 0 && price > 0) {
-      divYield = (p.lastDividend / price) * 100;
-    }
-    const name: string | null = (p && p.companyName) ?? (q && q.name) ?? null;
-    return { symbol, price, prevClose, yearHigh, yearLow, pe, divYield, name };
-  } catch { return null; }
-}
-
 // Try query2 first, fall back to query1 on any failure
 async function fetchQuote(symbol: string): Promise<QuoteData> {
   for (const host of ["query2.finance.yahoo.com", "query1.finance.yahoo.com"]) {
@@ -191,17 +77,19 @@ async function fetchQuote(symbol: string): Promise<QuoteData> {
       if (price === null) continue;
 
       /*
-       * The series, not the metadata.
+       * Previous close for the day move.
        *
-       * This request asks for a year of bars so the 52-week high and low come
-       * from the same call, and chartPreviousClose is therefore the close from
-       * a year ago. Preferring it turned every "today" figure on the research
-       * page into a twelve-month move: BHP +46.07%, oil +46.47%, AUD/USD
-       * +5.71%, against real days of -2.02%, +3.78% and -0.36%.
+       * meta.previousClose is the actual prior trading-day close and is what
+       * pairs with regularMarketPrice for "today". Prefer it. The year-of-bars
+       * series is here for the 52-week range; its second-to-last close is only a
+       * safe stand-in when today's bar is already in the series — out of market
+       * hours it can be two days old (that is what made the ASX 200 read -2.46%
+       * instead of a real day). meta.chartPreviousClose is the close from a year
+       * ago, so it stays last.
        */
       const prevClose: number | null =
-        closes.length > 1 ? closes[closes.length - 2]
-        : typeof meta.previousClose === "number" ? meta.previousClose
+        typeof meta.previousClose === "number" && meta.previousClose > 0 ? meta.previousClose
+        : closes.length > 1 ? closes[closes.length - 2]
         : typeof meta.chartPreviousClose === "number" ? meta.chartPreviousClose
         : null;
       const yearHigh: number | null =
@@ -254,53 +142,6 @@ async function fetchCryptoFromCoinGecko(): Promise<{ btc: QuoteData | null; eth:
   }
 }
 
-async function fetchCryptoFromFmp(apiKey: string): Promise<{ btc: QuoteData | null; eth: QuoteData | null; sol: QuoteData | null }> {
-  if (!apiKey) return { btc: null, eth: null, sol: null };
-  const symbols = [
-    { key: "btc", symbol: "BTCUSD", out: "BTC-USD", name: "Bitcoin" },
-    { key: "eth", symbol: "ETHUSD", out: "ETH-USD", name: "Ethereum" },
-    { key: "sol", symbol: "SOLUSD", out: "SOL-USD", name: "Solana" },
-  ] as const;
-
-  const results = await Promise.allSettled(symbols.map(async (item) => {
-    const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), 8_000);
-    const res = await fetch(`${FMP_BASE}/quote?symbol=${item.symbol}&apikey=${apiKey}`, {
-      cache: "no-store",
-      signal: ctrl.signal,
-    });
-    clearTimeout(t);
-    if (!res.ok) return { key: item.key, quote: null };
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const data = (await res.json()) as any[];
-    const row = Array.isArray(data) ? data[0] : null;
-    if (!row || typeof row.price !== "number") return { key: item.key, quote: null };
-    const price = row.price as number;
-    const change = typeof row.change === "number" ? row.change : null;
-    const prevClose = change != null ? price - change : null;
-    return {
-      key: item.key,
-      quote: {
-        symbol: item.out,
-        price,
-        prevClose,
-        yearHigh: null,
-        yearLow: null,
-        pe: null,
-        divYield: null,
-        name: item.name,
-      } satisfies QuoteData,
-    };
-  }));
-
-  const out = { btc: null, eth: null, sol: null } as { btc: QuoteData | null; eth: QuoteData | null; sol: QuoteData | null };
-  for (const result of results) {
-    if (result.status !== "fulfilled" || !result.value.quote) continue;
-    out[result.value.key] = result.value.quote;
-  }
-  return out;
-}
-
 // Frankfurter (ECB data) — primary source for AUD/USD rate
 async function fetchAudUsdFromFrankfurter(): Promise<number | null> {
   try {
@@ -338,109 +179,59 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(quotesCache.data, { headers: isDemo ? DEMO_CACHE_HEADERS : DEFAULT_HEADERS });
   }
 
-  const fmpApiKey = process.env.FMP_API_KEY ?? "";
   const extraSymbols = ["^AXJO", "^AORD", "AUDUSD=X", "^VIX", "BTC-USD", "ETH-USD", "SOL-USD", "XAUUSD=X", "GC=F", "CL=F"];
+  const asxSymbols = ASX_TICKERS.map((t) => `${t}.AX`);
 
-  const [fmpAsxResults, asxConstituents, extraQuotes, fmpCrypto, coingecko, frankfurterAudUsd] = await Promise.all([
-    // Use FMP profile as primary source for ASX stocks (more reliable than Yahoo for AU exchange)
-    Promise.all(ASX_TICKERS.map((t) => fetchFmpProfile(t, fmpApiKey))),
-    fetchAsxConstituents(fmpApiKey),
+  // All market data comes from free, key-less sources: Yahoo Finance for ASX
+  // stocks, indices, gold and oil (its daily series gives a real previous close,
+  // so day changes are accurate), CoinGecko for crypto, and Frankfurter (ECB)
+  // for AUD/USD. No paid provider.
+  const [asxQuotes, extraQuotes, coingecko, frankfurterAudUsd] = await Promise.all([
+    Promise.all(asxSymbols.map(fetchQuote)),
     Promise.all(extraSymbols.map(fetchQuote)),
-    fetchCryptoFromFmp(fmpApiKey),
     fetchCryptoFromCoinGecko(),
     fetchAudUsdFromFrankfurter(),
   ]);
 
-  const bySymbol: Record<string, QuoteData> = Object.fromEntries(extraQuotes.map((q) => [q.symbol, q]));
-
-  // Merge FMP ASX profiles — fall back to Yahoo Finance if FMP returned null
-  const yahooFallbackSymbols = ASX_TICKERS
-    .filter((_, i) => fmpAsxResults[i] === null)
-    .map((t) => `${t}.AX`);
-
-  const yahooFallbackQuotes = yahooFallbackSymbols.length > 0
-    ? await Promise.all(yahooFallbackSymbols.map(fetchQuote))
-    : [];
-
-  for (const q of yahooFallbackQuotes) bySymbol[q.symbol] = q;
-
-  for (let i = 0; i < ASX_TICKERS.length; i++) {
-    const fmpQ = fmpAsxResults[i];
-    const sym = `${ASX_TICKERS[i]}.AX`;
-    if (fmpQ) {
-      bySymbol[sym] = fmpQ;
-    } else if (!bySymbol[sym]) {
-      bySymbol[sym] = nullQuote(sym);
-    }
+  const bySymbol: Record<string, QuoteData> = Object.fromEntries(
+    [...extraQuotes, ...asxQuotes].map((q) => [q.symbol, q]),
+  );
+  for (const t of ASX_TICKERS) {
+    const sym = `${t}.AX`;
+    if (!bySymbol[sym]) bySymbol[sym] = nullQuote(sym);
   }
 
-  // Prefer FMP for BTC/ETH/SOL, then CoinGecko, then Yahoo
-  if (fmpCrypto.btc) bySymbol["BTC-USD"] = fmpCrypto.btc;
-  else if (coingecko.btc) bySymbol["BTC-USD"] = coingecko.btc;
-  if (fmpCrypto.eth) bySymbol["ETH-USD"] = fmpCrypto.eth;
-  else if (coingecko.eth) bySymbol["ETH-USD"] = coingecko.eth;
-  if (fmpCrypto.sol) bySymbol["SOL-USD"] = fmpCrypto.sol;
-  else if (coingecko.sol) bySymbol["SOL-USD"] = coingecko.sol;
+  // Crypto from CoinGecko (free)
+  if (coingecko.btc) bySymbol["BTC-USD"] = coingecko.btc;
+  if (coingecko.eth) bySymbol["ETH-USD"] = coingecko.eth;
+  if (coingecko.sol) bySymbol["SOL-USD"] = coingecko.sol;
 
-  // Use FMP AUDUSD rate if available, else Frankfurter, else Yahoo
-  const fmpAudUsd = await (async () => {
-    if (!fmpApiKey) return null;
-    try {
-      const ctrl = new AbortController();
-      const t = setTimeout(() => ctrl.abort(), 6_000);
-      const res = await fetch(`${FMP_BASE}/quote?symbol=AUDUSD&apikey=${fmpApiKey}`, { cache: "no-store", signal: ctrl.signal });
-      clearTimeout(t);
-      if (!res.ok) return null;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const data = (await res.json()) as any[];
-      const rate = data?.[0]?.price;
-      return typeof rate === "number" && rate > 0 ? rate : null;
-    } catch { return null; }
-  })();
-
-  const audUsdRate = fmpAudUsd ?? frankfurterAudUsd;
-  if (audUsdRate !== null) {
+  // AUD/USD from Frankfurter (ECB), keeping Yahoo's previous close for the day move.
+  if (frankfurterAudUsd !== null) {
     bySymbol["AUDUSD=X"] = {
-      ...bySymbol["AUDUSD=X"],
-      price: audUsdRate,
-      prevClose: bySymbol["AUDUSD=X"]?.prevClose ?? audUsdRate,
+      ...(bySymbol["AUDUSD=X"] ?? nullQuote("AUDUSD=X")),
+      symbol: "AUDUSD=X",
+      price: frankfurterAudUsd,
+      prevClose: bySymbol["AUDUSD=X"]?.prevClose ?? frankfurterAudUsd,
+      name: bySymbol["AUDUSD=X"]?.name ?? "AUD/USD",
     };
   }
 
   // Gold stays in USD so the live cards match the macro gold chart (GC=F / XAUUSD context).
   const goldUsd = bySymbol["XAUUSD=X"]?.price ? bySymbol["XAUUSD=X"] : bySymbol["GC=F"];
 
-  const mergedAsxConstituents = asxConstituents.map((item) => {
-    const live = bySymbol[item.symbol];
-    if (!live) return item;
-    return {
-      ...item,
-      price: live.price ?? item.price,
-      prevClose: live.prevClose ?? item.prevClose,
-      yearHigh: live.yearHigh ?? item.yearHigh,
-      yearLow: live.yearLow ?? item.yearLow,
-      pe: live.pe ?? item.pe,
-      divYield: live.divYield ?? item.divYield,
-      name: live.name ?? item.name,
-    };
-  });
-
-  const fallbackAsxConstituents: AsxConstituentQuote[] = ASX_TICKERS.map((ticker) => {
+  // ASX constituents straight from the Yahoo quotes. Sector is filled in by the
+  // page's own ticker→sector map; market cap, PE and dividend are not in the free
+  // feed, so they are left null (the UI shows "—").
+  const asxConstituents: AsxConstituentQuote[] = ASX_TICKERS.map((ticker) => {
     const q = bySymbol[`${ticker}.AX`] ?? nullQuote(`${ticker}.AX`);
-    return {
-      ...q,
-      marketCap: null,
-      sector: null,
-      volume: null,
-      exchange: "ASX",
-      name: q.name ?? ticker,
-    };
+    return { ...q, name: q.name ?? ticker, marketCap: null, sector: null, volume: null, exchange: "ASX" };
   });
 
   const payload: QuotesPayload = {
     fetchedAt: new Date().toISOString(),
     asx: Object.fromEntries(ASX_TICKERS.map((t) => [t, bySymbol[`${t}.AX`]])),
-    asxConstituents: mergedAsxConstituents.length > 0 ? mergedAsxConstituents : fallbackAsxConstituents,
+    asxConstituents,
     indices: {
       asx200: bySymbol["^AXJO"],
       allOrds: bySymbol["^AORD"],

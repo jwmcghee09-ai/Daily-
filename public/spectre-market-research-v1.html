@@ -6884,24 +6884,33 @@ function populateEquitiesTab() {
     asx200ChgEl.className = 'eq-summary-sub ' + (pct >= 0 ? 'pos' : 'neg');
   }
 
-  // Best / Worst sector from FMP sector performance
-  if (fmp?.sectorPerformance?.length) {
-    const sectors = fmp.sectorPerformance.map(s => ({
-      name: s.sector || s.name || '',
-      pct: parseFloat(s.changesPercentage ?? s.changePct ?? 0),
-    })).filter(s => s.name);
-    sectors.sort((a, b) => b.pct - a.pct);
-    const best = sectors[0];
-    const worst = sectors[sectors.length - 1];
+  // Sector performance computed from the live ASX constituents, grouped by the
+  // page's ticker→sector map and averaged. Free data, consistent with the stock
+  // rows — replaces the old paid sector-performance feed.
+  const sectorPerf = (() => {
+    const acc = {};
+    (equities || []).forEach(q => {
+      const sec = SECTOR_MAP[q.symbol];
+      const pct = equityChangePct(q);
+      if (!sec || pct == null) return;
+      (acc[sec] = acc[sec] || []).push(pct);
+    });
+    return Object.entries(acc)
+      .map(([name, arr]) => ({ name, pct: arr.reduce((s, v) => s + v, 0) / arr.length }))
+      .sort((a, b) => b.pct - a.pct);
+  })();
+
+  // Best / Worst sector
+  if (sectorPerf.length) {
+    const best = sectorPerf[0];
+    const worst = sectorPerf[sectorPerf.length - 1];
     const bestEl = document.getElementById('eq-best-sector');
     const bestChgEl = document.getElementById('eq-best-sector-chg');
     const worstEl = document.getElementById('eq-worst-sector');
     const worstChgEl = document.getElementById('eq-worst-sector-chg');
-    // Shorten long sector names
-    const shortSector = n => n.replace('Real Estate','RE').replace('Consumer Defensive','Con Def').replace('Consumer Cyclical','Con Cyc').replace('Basic Materials','Materials').replace('Communication Services','Comms').replace('Financial Services','Financials').replace('Healthcare','Health');
-    if (bestEl)    bestEl.textContent    = shortSector(best.name);
+    if (bestEl)    bestEl.textContent    = best.name;
     if (bestChgEl) bestChgEl.textContent = (best.pct >= 0 ? '+' : '') + best.pct.toFixed(2) + '%';
-    if (worstEl)    worstEl.textContent    = shortSector(worst.name);
+    if (worstEl)    worstEl.textContent    = worst.name;
     if (worstChgEl) worstChgEl.textContent = (worst.pct >= 0 ? '+' : '') + worst.pct.toFixed(2) + '%';
   }
 
@@ -6928,12 +6937,11 @@ function populateEquitiesTab() {
     if (yieldEl) yieldEl.textContent = totalWeight > 0 ? (weightedSum / totalWeight).toFixed(2) + '%' : '—';
   }
 
-  // Sector bar chart
-  if (fmp?.sectorPerformance?.length) {
-    const sectors = fmp.sectorPerformance.slice(0, 11);
-    const labels = sectors.map(s => s.sector || s.name || '');
-    const values = sectors.map(s => parseFloat(s.changesPercentage ?? s.changePct ?? 0));
-    const colors = values.map(v => v >= 0 ? 'rgba(245, 32, 20, 0.85)' : 'rgba(243, 22, 22, 0.8)');
+  // Sector bar chart (from the computed sector performance)
+  if (sectorPerf.length) {
+    const labels = sectorPerf.map(s => s.name);
+    const values = sectorPerf.map(s => s.pct);
+    const colors = values.map(v => v >= 0 ? 'rgba(61, 214, 140, 0.85)' : 'rgba(245, 32, 20, 0.85)');
     makeCjsBarChart('eq-sector-chart', labels, values, colors);
   } else {
     setChartEmpty('eq-sector-chart', 'No sector data available', 90);
