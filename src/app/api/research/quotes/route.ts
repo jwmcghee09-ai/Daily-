@@ -108,42 +108,63 @@ async function fetchAsxConstituents(apiKey: string): Promise<AsxConstituentQuote
   }
 }
 
-// FMP /profile — primary source for ASX stocks (returns price, changePct, 52wk range, marketCap, divYield)
+// FMP source for ASX stocks. /profile carries the rich metadata (52-week range,
+// dividend, name), but its `change` field is unreliable for ASX intraday — out
+// of ASX hours it comes back ~0, which made every stock's day move render as
+// 0.0%. The real price, previousClose and change come from /quote, which reports
+// previousClose directly. We fetch both in parallel and prefer /quote for the
+// live figures; if /quote is unavailable the profile path still works as before.
 async function fetchFmpProfile(ticker: string, apiKey: string): Promise<QuoteData | null> {
   if (!apiKey) return null;
-  try {
+  const symbol = `${ticker}.AX`;
+  const getFirst = async (path: string) => {
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), 8_000);
-    const res = await fetch(`${FMP_BASE}/profile?symbol=${ticker}.AX&apikey=${apiKey}`, {
-      cache: "no-store", signal: ctrl.signal,
-    });
-    clearTimeout(t);
-    if (!res.ok) return null;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const data = (await res.json()) as any[];
-    if (!Array.isArray(data) || data.length === 0) return null;
-    const p = data[0];
-    const price: number | null = typeof p.price === "number" ? p.price : null;
+    try {
+      const res = await fetch(`${FMP_BASE}/${path}?symbol=${symbol}&apikey=${apiKey}`, {
+        cache: "no-store", signal: ctrl.signal,
+      });
+      clearTimeout(t);
+      if (!res.ok) return null;
+      const data = await res.json();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return Array.isArray(data) && data.length > 0 ? (data[0] as any) : null;
+    } catch { clearTimeout(t); return null; }
+  };
+  try {
+    const [p, q] = await Promise.all([getFirst("profile"), getFirst("quote")]);
+    if (!p && !q) return null;
+    // Price: prefer the live quote, fall back to the profile.
+    const price: number | null =
+      q && typeof q.price === "number" ? q.price
+      : p && typeof p.price === "number" ? p.price
+      : null;
     if (price === null) return null;
-    // Compute prevClose from change: prevClose = price - change
-    const change: number | null = typeof p.change === "number" ? p.change : null;
-    const prevClose: number | null = change !== null ? price - change : null;
-    // Parse "lo-hi" range string
-    let yearHigh: number | null = null;
-    let yearLow: number | null = null;
-    if (typeof p.range === "string" && p.range.includes("-")) {
+    // previousClose: /quote reports it directly; otherwise derive it from a
+    // change field (quote first, then the stale profile change as a last resort).
+    let prevClose: number | null = null;
+    if (q && typeof q.previousClose === "number" && q.previousClose > 0) prevClose = q.previousClose;
+    else if (q && typeof q.change === "number") prevClose = price - q.change;
+    else if (p && typeof p.change === "number") prevClose = price - p.change;
+    // 52-week range: /quote has numeric fields; /profile has a "lo-hi" string.
+    let yearHigh: number | null = q && typeof q.yearHigh === "number" ? q.yearHigh : null;
+    let yearLow: number | null = q && typeof q.yearLow === "number" ? q.yearLow : null;
+    if ((yearHigh === null || yearLow === null) && p && typeof p.range === "string" && p.range.includes("-")) {
       const parts = p.range.split("-");
-      yearLow = parseFloat(parts[0]) || null;
-      yearHigh = parseFloat(parts[1]) || null;
+      if (yearLow === null) yearLow = parseFloat(parts[0]) || null;
+      if (yearHigh === null) yearHigh = parseFloat(parts[1]) || null;
     }
-    const pe: number | null = typeof p.pe === "number" && Number.isFinite(p.pe) ? p.pe : null;
+    const pe: number | null =
+      q && typeof q.pe === "number" && Number.isFinite(q.pe) ? q.pe
+      : p && typeof p.pe === "number" && Number.isFinite(p.pe) ? p.pe
+      : null;
     // lastDividend from FMP is annual dividend in AUD — compute yield
     let divYield: number | null = null;
-    if (typeof p.lastDividend === "number" && p.lastDividend > 0 && price > 0) {
+    if (p && typeof p.lastDividend === "number" && p.lastDividend > 0 && price > 0) {
       divYield = (p.lastDividend / price) * 100;
     }
-    const name: string | null = p.companyName ?? null;
-    return { symbol: `${ticker}.AX`, price, prevClose, yearHigh, yearLow, pe, divYield, name };
+    const name: string | null = (p && p.companyName) ?? (q && q.name) ?? null;
+    return { symbol, price, prevClose, yearHigh, yearLow, pe, divYield, name };
   } catch { return null; }
 }
 
