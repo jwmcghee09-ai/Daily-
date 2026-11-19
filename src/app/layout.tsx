@@ -39,6 +39,14 @@ const spaceGrotesk = localFont({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://spectre-assets.com"),
+  // Installable (PWA) app: the manifest + service worker let people add SPECTRE
+  // to their dock/home screen and run it in its own window.
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "SPECTRE",
+  },
   /*
    * These are the page as a search result and as a link in a chat, which is
    * where most people meet it first. They kept the old hero line —
@@ -149,6 +157,10 @@ export default function RootLayout({
             strategy="afterInteractive"
           />
         ) : null}
+        {/* Register the PWA service worker so SPECTRE is installable as an app. */}
+        <Script id="sw-register" strategy="afterInteractive" dangerouslySetInnerHTML={{
+          __html: `if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){});});}`,
+        }} />
       </body>
     </html>
   );

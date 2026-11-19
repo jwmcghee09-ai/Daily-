@@ -528,7 +528,7 @@ export default function LandingPage({
             <div className="hero-actions">
               <Link href={REGISTER} className="cta">Get Started Free <ArrowRight /></Link>
               <Link href={DEMO} className="cta cta-outline">Explore Demo</Link>
-              <Link href="/download" className="cta cta-outline"><Download />Download the app</Link>
+              <Link href="/download" className="cta cta-outline"><Download />Get the app</Link>
             </div>
             <p className="hero-note"><Check />Built for Australian investors · No card required · Cancel anytime</p>
             <HeroCharts />
