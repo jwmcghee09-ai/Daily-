@@ -1077,6 +1077,23 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 .ai-connect-title{font-family:var(--sans);font-size:.86rem;font-weight:600;color:var(--text)}
 .ai-connect-sub{font-family:var(--sans);font-size:.76rem;line-height:1.5;color:var(--muted)}
 .ai-connect-go{margin-left:auto;font-family:var(--mono);font-size:1.1rem;color:var(--muted);flex:none}
+.ai-connect-panel{max-width:720px;margin:.9rem 0 0;padding:16px 18px;background:#17171b;border:1px solid rgba(255,255,255,.09);border-radius:14px;display:flex;flex-direction:column;gap:14px;text-align:left}
+.ai-connect-head{display:flex;align-items:flex-start;gap:.85rem}
+.ai-connect-url{display:flex;align-items:center;gap:.6rem;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:.55rem .7rem}
+.ai-connect-url code{font-family:var(--mono);font-size:.74rem;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.ai-connect-copy{font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;color:#fff;background:linear-gradient(135deg,#ee2d1b,#f55314);border:0;border-radius:7px;padding:.4rem .9rem;cursor:pointer;flex:none}
+.ai-connect-copy:hover{opacity:.92}
+.ai-connect-steps{display:grid;gap:9px}
+.ai-connect-steps > div{display:flex;gap:.6rem;font-family:var(--sans);font-size:.76rem;line-height:1.5;color:var(--muted)}
+.ai-connect-steps b{font-family:var(--mono);font-size:.56rem;letter-spacing:.08em;text-transform:uppercase;color:#f53914;flex:none;width:58px;padding-top:.1rem}
+.ai-connect-steps strong{color:var(--text);font-weight:600}
+.ai-connect-connected{display:flex;flex-direction:column;gap:6px;border-top:1px solid rgba(255,255,255,.08);padding-top:12px}
+.ai-connected-head{font-family:var(--mono);font-size:.56rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted2)}
+.ai-connected-row{display:flex;align-items:center;justify-content:space-between;gap:.75rem;font-family:var(--sans);font-size:.78rem;color:var(--text)}
+.ai-connected-remove{font-family:var(--mono);font-size:.56rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:transparent;border:1px solid rgba(255,255,255,.14);border-radius:6px;padding:.28rem .7rem;cursor:pointer}
+.ai-connected-remove:hover{color:#f53914;border-color:rgba(245,57,20,.4)}
+.ai-connect-more{font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;color:var(--muted2);text-decoration:none}
+.ai-connect-more:hover{color:#f53914}
 .ai-input-chips{display:flex;flex-wrap:wrap;gap:.3rem}
 .ai-input-actions{display:flex;align-items:center;gap:.5rem;flex-shrink:0}
 .ai-refresh-btn{font-family:var(--mono);font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);background:transparent;border:1px solid var(--border2);border-radius:999px;padding:.4rem .85rem;cursor:pointer;transition:all .15s;white-space:nowrap}
@@ -1547,16 +1564,27 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
         people most likely to want it — the ones on this page — were the least
         likely to find it.
       -->
-      <a class="ai-connect-card" href="/mcp-setup">
-        <span class="ai-connect-icon" aria-hidden="true">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-        </span>
-        <span class="ai-connect-body">
-          <span class="ai-connect-title">Use your own AI instead</span>
-          <span class="ai-connect-sub">Connect Claude, ChatGPT, Cursor or VS Code straight to this portfolio — one URL, read-only.</span>
-        </span>
-        <span class="ai-connect-go" aria-hidden="true">&rsaquo;</span>
-      </a>
+      <div class="ai-connect-panel" id="ai-connect-panel">
+        <div class="ai-connect-head">
+          <span class="ai-connect-icon" aria-hidden="true">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          </span>
+          <span class="ai-connect-body">
+            <span class="ai-connect-title">Connect your own AI</span>
+            <span class="ai-connect-sub">Point Claude, ChatGPT, Cursor or VS Code straight at this portfolio — one URL, read-only. You sign in to SPECTRE to approve it.</span>
+          </span>
+        </div>
+        <div class="ai-connect-url">
+          <code id="mcp-url-text">https://spectre-assets.com/api/mcp</code>
+          <button type="button" id="mcp-url-copy" class="ai-connect-copy">Copy</button>
+        </div>
+        <div class="ai-connect-steps">
+          <div><b>Claude</b><span>Settings → Connectors → <strong>Add custom connector</strong> → paste the URL → sign in &amp; Allow access.</span></div>
+          <div><b>ChatGPT</b><span>Turn on <strong>Developer mode</strong>, then Settings → Connectors → add from the URL → sign in.</span></div>
+        </div>
+        <div class="ai-connect-connected" id="ai-connected-list" hidden></div>
+        <a class="ai-connect-more" href="/mcp-setup">Cursor, VS Code, Claude Code &amp; the run-it-locally option &rsaquo;</a>
+      </div>
 
       <div class="console-ai-error" id="pro-ai-error" hidden></div>
 
@@ -1589,6 +1617,39 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
     </div><!-- /ai-hero-inner -->
   </div><!-- /ai-page-layout -->
 </div>
+
+<script>(function(){
+  // "Connect your AI" panel on the AI tab: copy the MCP URL and manage which
+  // assistants are linked (read from /api/oauth/connections; hidden in demo /
+  // when signed out, where that endpoint 401s).
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  function apiPath(p){ if(new URLSearchParams(location.search).get('demo')==='1'){return p+(p.indexOf('?')<0?'?':'&')+'demo=1';} return p; }
+  function fallbackCopy(text,done){try{var ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);done();}catch(e){}}
+  var copyBtn=document.getElementById('mcp-url-copy');
+  if(copyBtn){copyBtn.addEventListener('click',function(){
+    var t=document.getElementById('mcp-url-text');var url=t?t.textContent.trim():'';
+    function done(){copyBtn.textContent='Copied';setTimeout(function(){copyBtn.textContent='Copy';},1600);}
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(url).then(done).catch(function(){fallbackCopy(url,done);});}else{fallbackCopy(url,done);}
+  });}
+  function render(list){
+    var el=document.getElementById('ai-connected-list');if(!el)return;
+    if(!list||!list.length){el.hidden=true;el.innerHTML='';return;}
+    el.hidden=false;
+    el.innerHTML='<div class="ai-connected-head">Connected assistants</div>'+list.map(function(c){
+      return '<div class="ai-connected-row"><span>'+esc(c.clientName||'Connected assistant')+'</span><button type="button" class="ai-connected-remove" data-client="'+esc(c.clientId)+'">Disconnect</button></div>';
+    }).join('');
+    el.querySelectorAll('.ai-connected-remove').forEach(function(b){
+      b.addEventListener('click',function(){
+        b.textContent='…';b.disabled=true;
+        fetch(apiPath('/api/oauth/connections'),{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'client_id='+encodeURIComponent(b.getAttribute('data-client')),redirect:'manual'}).then(load).catch(load);
+      });
+    });
+  }
+  function load(){
+    fetch(apiPath('/api/oauth/connections'),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.connections)render(d.connections);}).catch(function(){});
+  }
+  load();
+})();</script>
 
 <!-- RESEARCH TAB — link to research terminal -->
 <div class="wrap" data-page="research" style="padding:0;max-width:none">
