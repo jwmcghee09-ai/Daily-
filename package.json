@@ -64,9 +64,10 @@
     "files": [
       "electron/**/*"
     ],
+    "artifactName": "SPECTRE-${os}-${arch}.${ext}",
     "mac": {
       "category": "public.app-category.finance",
-      "icon": "electron/icons/icon.icns",
+      "icon": "electron/icons/icon.png",
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
       "entitlements": "electron/entitlements.mac.plist",
@@ -98,6 +99,10 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true
     },
-    "publish": null
+    "publish": {
+      "provider": "github",
+      "owner": "jwmcghee09-ai",
+      "repo": "Daily-"
+    }
   }
 }

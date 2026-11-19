@@ -1,0 +1,50 @@
+name: Desktop Release
+
+# Builds the SPECTRE desktop app (a native shell around the hosted site) into
+# installers and publishes them to a GitHub Release. The web app ships via
+# GitLab→Render; this is the separate desktop-distribution step.
+#
+# Trigger it by pushing a version tag, e.g.:
+#   git tag v1.0.0 && git push origin v1.0.0
+# or run it by hand from the Actions tab (workflow_dispatch), which publishes a
+# release for the version in package.json.
+#
+# The installers are UNSIGNED — users get a one-time "unidentified developer"
+# (macOS) / SmartScreen (Windows) prompt. To remove that, add an Apple Developer
+# ID and a Windows code-signing certificate as repo secrets and wire them here.
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            args: "--mac"
+          - os: windows-latest
+            args: "--win"
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22.13.0"
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build and publish installers
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # No signing certs configured — build unsigned rather than fail.
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+        run: npx --no-install electron-builder ${{ matrix.args }} --publish always

@@ -506,7 +506,7 @@ export default function LandingPage({
               <img src="/spectre-mark.svg" alt="" aria-hidden="true" width={29} height={29} />
               SPECTRE<span className="brand-dot">.</span>
             </Link>
-            <div className="nav-links"><a href="#ai">AI</a><a href="#funds">Funds</a><a href="#scanner">Scanner</a><a href="#connect">Connect</a><Link href={RESEARCH}>Research</Link><Link href={DEMO}>Demo</Link></div>
+            <div className="nav-links"><a href="#ai">AI</a><a href="#funds">Funds</a><a href="#scanner">Scanner</a><a href="#connect">Connect</a><Link href={RESEARCH}>Research</Link><Link href={DEMO}>Demo</Link><Link href="/download">Get the app</Link></div>
             <div className="nav-actions">
               <Link href={SIGNIN} className="cta cta-ghost">Sign In</Link>
               <Link href={REGISTER} className="cta">Get Started Free</Link>
@@ -744,7 +744,7 @@ export default function LandingPage({
         <footer className="spectre-footer spectre-container">
           <div className="footer-top">
             <div><Link className="spectre-brand" href="/">SPECTRE<span className="brand-dot">.</span></Link><p className="flow-caption" style={{ maxWidth: 380 }}>AI portfolio intelligence for Australian investors managing multi-source portfolios across quant, research, and live monitoring.</p></div>
-            <div className="footer-links"><a href="#ai">AI Analysis</a><Link href={DEMO}>Demo</Link><Link href={RESEARCH}>Research</Link><a href="/terms">Terms of Service</a><a href="/privacy">Privacy Policy</a><a href="mailto:admin@spectre-assets.com">admin@spectre-assets.com</a></div>
+            <div className="footer-links"><a href="#ai">AI Analysis</a><Link href={DEMO}>Demo</Link><Link href={RESEARCH}>Research</Link><Link href="/download">Desktop app</Link><a href="/terms">Terms of Service</a><a href="/privacy">Privacy Policy</a><a href="mailto:admin@spectre-assets.com">admin@spectre-assets.com</a></div>
           </div>
           <div className="footer-bottom">
             <p>Disclaimer: SPECTRE provides informational analytics only. Not financial, investment, tax, or legal advice. No result is guaranteed to be complete, current, or accurate. Use at your own risk.</p>
