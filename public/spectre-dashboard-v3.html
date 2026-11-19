@@ -1662,7 +1662,8 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
       <div class="sec-line"></div>
       <span class="sec-label" id="uploads-source-count">8 sources</span>
     </div>
-    <input id="upload-file-input" type="file" accept=".csv,.tsv,.psv,.txt,.json,.xlsx,.xls,.xlsm,.xlsb,.numbers,.ods,text/csv,text/tab-separated-values,application/json,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,application/vnd.ms-excel.sheet.macroEnabled.12,application/vnd.ms-excel.sheet.binary.macroEnabled.12,application/vnd.oasis.opendocument.spreadsheet,application/x-iwork-numbers-sffnumbers" style="display:none" />
+    <p class="upload-hint" style="font-family:var(--mono);font-size:.62rem;letter-spacing:.04em;color:var(--muted2);margin:-.4rem 0 1rem">Export a CSV or XLSX — or just drop a <strong style="color:var(--text)">screenshot of your holdings</strong> and SPECTRE reads it for you.</p>
+    <input id="upload-file-input" type="file" accept=".csv,.tsv,.psv,.txt,.json,.xlsx,.xls,.xlsm,.xlsb,.numbers,.ods,.png,.jpg,.jpeg,.webp,.gif,text/csv,text/tab-separated-values,application/json,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,application/vnd.ms-excel.sheet.macroEnabled.12,application/vnd.ms-excel.sheet.binary.macroEnabled.12,application/vnd.oasis.opendocument.spreadsheet,application/x-iwork-numbers-sffnumbers,image/png,image/jpeg,image/webp,image/gif" style="display:none" />
     <div class="upload-grid">
       <div class="upload-card" data-source="super">
         <div class="upload-num">01 — Super</div>
@@ -5700,7 +5701,8 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
   }
 
   const TEXT_UPLOAD_EXTENSIONS = new Set(["csv", "txt", "tsv", "psv", "json"]);
-  const SUPPORTED_UPLOAD_EXTENSIONS = new Set(["csv", "txt", "tsv", "psv", "json", "xlsx", "xls", "xlsm", "xlsb", "numbers", "ods"]);
+  const IMAGE_UPLOAD_EXTENSIONS = new Set(["png", "jpg", "jpeg", "webp", "gif"]);
+  const SUPPORTED_UPLOAD_EXTENSIONS = new Set(["csv", "txt", "tsv", "psv", "json", "xlsx", "xls", "xlsm", "xlsb", "numbers", "ods", "png", "jpg", "jpeg", "webp", "gif"]);
 
   function getFileExtension(fileName) {
     const dotIndex = fileName.lastIndexOf(".");
@@ -5752,7 +5754,7 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
       payload.fileBase64 = arrayBufferToBase64(arrayBuffer);
     }
 
-    showToast("Uploading report...");
+    showToast(IMAGE_UPLOAD_EXTENSIONS.has(extension) ? "Reading your screenshot…" : "Uploading report...");
     try {
       const payloadResponse = await apiJson(state.demoMode ? "/api/import/csv?demo=1" : "/api/import/csv", {
         method: "POST",

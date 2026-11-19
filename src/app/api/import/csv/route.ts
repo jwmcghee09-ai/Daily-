@@ -16,11 +16,14 @@ import { consumeRateLimit } from "@/lib/rate-limit";
 export const runtime = "nodejs";
 
 const MAX_IMPORT_FILE_BYTES = 2 * 1024 * 1024;
-const MAX_IMPORT_BODY_BYTES = 4 * 1024 * 1024;
+const MAX_IMPORT_IMAGE_BYTES = 8 * 1024 * 1024;
+const MAX_IMPORT_BODY_BYTES = 12 * 1024 * 1024;
 const TEXT_UPLOAD_EXTENSIONS = new Set(["csv", "txt", "tsv", "psv", "json"]);
 const WORKBOOK_UPLOAD_EXTENSIONS = new Set(["xlsx", "xls", "xlsm", "xlsb", "numbers", "ods"]);
-const SUPPORTED_UPLOAD_EXTENSIONS = new Set([...TEXT_UPLOAD_EXTENSIONS, ...WORKBOOK_UPLOAD_EXTENSIONS]);
-const SUPPORTED_UPLOAD_FORMATS_LABEL = "CSV, TSV, PSV, TXT, JSON, XLSX, XLS, XLSM, XLSB, NUMBERS, or ODS";
+// Screenshots of a broker / super / crypto / bullion app, read with a vision model.
+const IMAGE_UPLOAD_EXTENSIONS = new Set(["png", "jpg", "jpeg", "webp", "gif"]);
+const SUPPORTED_UPLOAD_EXTENSIONS = new Set([...TEXT_UPLOAD_EXTENSIONS, ...WORKBOOK_UPLOAD_EXTENSIONS, ...IMAGE_UPLOAD_EXTENSIONS]);
+const SUPPORTED_UPLOAD_FORMATS_LABEL = "CSV, TSV, PSV, TXT, JSON, XLSX, XLS, XLSM, XLSB, NUMBERS, ODS, or a screenshot (PNG, JPG, WEBP)";
 const INVALID_UPLOAD_FORMAT_MESSAGE = `Does not accept this file type. Please convert to - ${SUPPORTED_UPLOAD_FORMATS_LABEL}.`;
 
 interface ImportCsvPayload {
@@ -72,6 +75,95 @@ function decodeBase64File(fileBase64: string): Buffer {
   } catch {
     return Buffer.alloc(0);
   }
+}
+
+function imageMimeFor(extension: string): string {
+  switch (extension) {
+    case "jpg":
+    case "jpeg":
+      return "image/jpeg";
+    case "webp":
+      return "image/webp";
+    case "gif":
+      return "image/gif";
+    default:
+      return "image/png";
+  }
+}
+
+const VISION_SYSTEM_PROMPT =
+  `You read a screenshot of an investment account (a broker, super fund, crypto exchange, or bullion dealer — app or website) and extract the holdings it shows.
+Return ONLY a JSON object of the form {"holdings": [ ... ]}. Each holding is an object with these keys; use null when a value is not visible, and NEVER invent numbers:
+- "ticker": the symbol or code (e.g. "BHP", "AAPL", "BTC", "VAS"); for a fund use its code, for crypto the coin symbol.
+- "name": the security or fund name.
+- "units": quantity / shares / units / coins held, as a number.
+- "price": current price per unit, as a number.
+- "value": current market value of the position, as a number.
+- "costBase": cost base / purchase cost if shown, as a number.
+- "account": the account, platform, or wallet name if shown.
+Numbers must be plain — no currency symbols, thousands separators, or % signs. Skip totals, subtotals, cash lines, and summary rows. If the image shows no holdings, return {"holdings": []}.`;
+
+/**
+ * Read holdings out of a portfolio screenshot with a vision model, returning
+ * rows in the same shape the CSV path produces so they flow through
+ * parseRowsToHoldings unchanged. Uses the app's existing OpenAI configuration.
+ */
+async function extractHoldingRowsFromImage(
+  fileBase64: string,
+  extension: string,
+): Promise<{ rows: CsvRow[]; error: string | null }> {
+  const apiKey = String(process.env.OPENAI_API_KEY || "").trim();
+  if (!apiKey) {
+    return { rows: [], error: "Screenshot import isn't set up on this server yet." };
+  }
+  const base = String(process.env.OPENAI_BASE_URL || "https://api.openai.com/v1").replace(/\/$/, "");
+  const model = String(process.env.OPENAI_VISION_MODEL || "gpt-4o").trim();
+  const dataUri = `data:${imageMimeFor(extension)};base64,${fileBase64}`;
+
+  let res: Response;
+  try {
+    res = await fetch(`${base}/chat/completions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+      signal: AbortSignal.timeout(45_000),
+      body: JSON.stringify({
+        model,
+        temperature: 0,
+        response_format: { type: "json_object" },
+        messages: [
+          { role: "system", content: VISION_SYSTEM_PROMPT },
+          {
+            role: "user",
+            content: [
+              { type: "text", text: "Extract the holdings from this screenshot." },
+              { type: "image_url", image_url: { url: dataUri, detail: "high" } },
+            ],
+          },
+        ],
+      }),
+    });
+  } catch {
+    return { rows: [], error: "The screenshot reader timed out. Please try again." };
+  }
+  if (!res.ok) {
+    return { rows: [], error: "Couldn't read the screenshot right now. Please try again in a moment." };
+  }
+
+  let content = "";
+  try {
+    const data = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
+    content = data.choices?.[0]?.message?.content ?? "";
+  } catch {
+    return { rows: [], error: "Couldn't read the screenshot." };
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(content);
+  } catch {
+    return { rows: [], error: "Couldn't make sense of the screenshot. Try a clearer, closer image." };
+  }
+  return { rows: coerceJsonRows(parsed), error: null };
 }
 
 function parseWorkbookToCsvCandidates(fileBuffer: Buffer): ImportCandidate[] {
@@ -311,28 +403,54 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid source. Must be 'super', 'asx', 'us', 'gold', 'index', 'fund', 'crypto', 'tax', or 'savings'." }, { status: 400 });
     }
 
-    const normalizedInput = toImportCandidates(payload);
-    if (normalizedInput.error) {
-      const status = normalizedInput.error.includes("too large") ? 413 : 400;
-      return NextResponse.json({ error: normalizedInput.error }, { status });
-    }
-
     let bestHoldings: PortfolioHolding[] = [];
     let bestTotalRows = 0;
     let parsedAnyCandidate = false;
 
-    for (const candidate of normalizedInput.candidates) {
-      const parsed = parseCandidateRows(candidate.text);
-      parsedAnyCandidate = parsedAnyCandidate || parsed.parsedAny;
+    const uploadFileName = typeof payload.fileName === "string" ? payload.fileName.trim() : "";
+    const isImageUpload = IMAGE_UPLOAD_EXTENSIONS.has(getExtension(uploadFileName));
 
-      if (parsed.rows.length === 0) {
-        continue;
+    if (isImageUpload) {
+      // Screenshot path: read the holdings out of the image with a vision model,
+      // then run the exact same row → holding pipeline as a CSV.
+      const imageBase64 = typeof payload.fileBase64 === "string" ? payload.fileBase64.trim() : "";
+      if (!imageBase64) {
+        return NextResponse.json({ error: "Screenshot content is required." }, { status: 400 });
+      }
+      const imageBuffer = decodeBase64File(imageBase64);
+      if (imageBuffer.length === 0) {
+        return NextResponse.json({ error: "The screenshot could not be decoded." }, { status: 400 });
+      }
+      if (imageBuffer.length > MAX_IMPORT_IMAGE_BYTES) {
+        return NextResponse.json({ error: "Screenshot is too large. Max 8MB." }, { status: 413 });
+      }
+      const extracted = await extractHoldingRowsFromImage(imageBase64, getExtension(uploadFileName));
+      if (extracted.error) {
+        return NextResponse.json({ error: extracted.error }, { status: 502 });
+      }
+      parsedAnyCandidate = true;
+      bestHoldings = parseRowsToHoldings(extracted.rows, payload.source).filter(isValidParsedHolding);
+      bestTotalRows = extracted.rows.length;
+    } else {
+      const normalizedInput = toImportCandidates(payload);
+      if (normalizedInput.error) {
+        const status = normalizedInput.error.includes("too large") ? 413 : 400;
+        return NextResponse.json({ error: normalizedInput.error }, { status });
       }
 
-      const holdings = parseRowsToHoldings(parsed.rows, payload.source).filter(isValidParsedHolding);
-      if (holdings.length > bestHoldings.length) {
-        bestHoldings = holdings;
-        bestTotalRows = parsed.rows.length;
+      for (const candidate of normalizedInput.candidates) {
+        const parsed = parseCandidateRows(candidate.text);
+        parsedAnyCandidate = parsedAnyCandidate || parsed.parsedAny;
+
+        if (parsed.rows.length === 0) {
+          continue;
+        }
+
+        const holdings = parseRowsToHoldings(parsed.rows, payload.source).filter(isValidParsedHolding);
+        if (holdings.length > bestHoldings.length) {
+          bestHoldings = holdings;
+          bestTotalRows = parsed.rows.length;
+        }
       }
     }
 
@@ -341,7 +459,10 @@ export async function POST(request: Request) {
     }
 
     if (bestHoldings.length === 0) {
-      return NextResponse.json({ error: "No valid holdings were found in this file." }, { status: 400 });
+      return NextResponse.json(
+        { error: isImageUpload ? "No holdings could be read from that screenshot. Try a clearer, closer image." : "No valid holdings were found in this file." },
+        { status: 400 },
+      );
     }
 
     const userId = sessionUser?.id || demoGuest?.userId || "";
