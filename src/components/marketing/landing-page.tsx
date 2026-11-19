@@ -20,7 +20,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
-  ArrowRight, ArrowDown, BarChart3, Brain, Check, ChevronDown, Database, Eye, FileSpreadsheet,
+  ArrowRight, ArrowDown, BarChart3, Brain, Check, ChevronDown, Database, Download, Eye, FileSpreadsheet,
   Layers, Lock, Newspaper, PieChart, Plug, Search, Server, ShieldCheck, Sparkles, Target,
   Trash2, TrendingUp, Wallet, X,
 } from "lucide-react";
@@ -528,6 +528,7 @@ export default function LandingPage({
             <div className="hero-actions">
               <Link href={REGISTER} className="cta">Get Started Free <ArrowRight /></Link>
               <Link href={DEMO} className="cta cta-outline">Explore Demo</Link>
+              <Link href="/download" className="cta cta-outline"><Download />Download the app</Link>
             </div>
             <p className="hero-note"><Check />Built for Australian investors · No card required · Cancel anytime</p>
             <HeroCharts />

@@ -49,6 +49,8 @@ export const SPECTRE_TEMPLATE_CSS = String.raw`
 .spectre-page .btn-ghost { display: inline-flex; align-items: center; gap: 8px; font-family: inherit; cursor: pointer; border: 0; background: transparent; color: inherit; font-weight: 500; }
 .spectre-page .mb-6 { margin-bottom: 24px; }
 .spectre-page button { font-family: inherit; }
+/* Three hero CTAs (incl. Download) wrap instead of overflowing on narrow screens. */
+.spectre-page .hero-actions { flex-wrap: wrap; }
 
 /* The .tone-N classes set fill (for bars and legend dots), but the Source Mix
  * donut is a stroked ring whose <circle fill="none"> is overridden by that CSS.
