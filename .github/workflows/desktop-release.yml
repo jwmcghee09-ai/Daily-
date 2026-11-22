@@ -16,6 +16,16 @@ name: Desktop Release
 on:
   push:
     tags: ["v*"]
+    # Temporary: lets the build be kicked off from the working branch, since
+    # this environment can't push version tags (GitHub returns 403 on tag refs)
+    # and workflow_dispatch isn't available (the repo's default branch is a
+    # different project). Builds only when desktop files change. Revert to
+    # tags-only once native-installer releases are set up from the default branch.
+    branches: ["claude/review-spectre-repo-ezHA3"]
+    paths:
+      - "electron/**"
+      - "package.json"
+      - ".github/workflows/desktop-release.yml"
   workflow_dispatch:
 
 permissions:
