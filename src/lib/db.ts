@@ -2122,9 +2122,11 @@ export function saveImport(userId: string, source: DataSource, holdings: Portfol
 /**
  * Like saveImport, but each holding carries its own, individually-classified
  * source — an "auto" import where the AI (or a fallback heuristic) decided what
- * every holding is. Replaces the bucket of every source present in the batch
- * and inserts the mixed rows in a single transaction with one snapshot, so a
- * single file of stocks + crypto + super lands in the right categories at once.
+ * every holding is. Merges rather than replacing: only the holdings being
+ * (re)imported are swapped out, matched by ticker across every category, and
+ * everything else is kept. A single file of stocks + crypto + super lands in the
+ * right categories in one transaction with one snapshot, and importing one more
+ * holding never wipes a category or double-counts a ticker that moved category.
  */
 export function saveImportMulti(userId: string, holdings: PortfolioHolding[]): PortfolioState {
   const db = getDb();
@@ -2138,8 +2140,6 @@ export function saveImportMulti(userId: string, holdings: PortfolioHolding[]): P
     throw new NoValidHoldingsError(holdings.length);
   }
 
-  const sourcesPresent = Array.from(new Set(cleanedHoldings.map((holding) => holding.source)));
-
   const nowIso = new Date().toISOString();
   const sessionDate = toSydneyDateKey(new Date(nowIso));
   const scopedSnapshotAt = scopeId(userId, nowIso);
@@ -2147,9 +2147,15 @@ export function saveImportMulti(userId: string, holdings: PortfolioHolding[]): P
   db.exec("BEGIN IMMEDIATE");
 
   try {
-    const del = db.prepare("DELETE FROM holdings WHERE source = ? AND id LIKE ?");
-    for (const src of sourcesPresent) {
-      del.run(src, scopedPattern);
+    // Merge, don't bucket-replace. Remove only the holdings being (re)imported,
+    // matched by ticker across every category, then insert the new rows. This
+    // keeps unrelated holdings intact (no wiped categories) and guarantees a
+    // ticker can't end up counted in two categories if classification differs
+    // between imports (no doubled values).
+    const delByTicker = db.prepare("DELETE FROM holdings WHERE ticker = ? AND id LIKE ?");
+    const incomingTickers = Array.from(new Set(cleanedHoldings.map((holding) => holding.ticker)));
+    for (const ticker of incomingTickers) {
+      delByTicker.run(ticker, scopedPattern);
     }
 
     const insert = db.prepare(`
