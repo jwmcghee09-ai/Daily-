@@ -14,14 +14,14 @@ export const SPECTRE_TEMPLATE_CSS = String.raw`
   --foreground: oklch(0.92 0 0);
   --card: oklch(0.185 0.004 25);
   --card-foreground: oklch(0.92 0 0);
-  --primary: oklch(0.665 0.195 40);
+  --primary: #f52e14;
   --primary-foreground: oklch(0.99 0 0);
   --muted: oklch(0.26 0.004 25);
   --muted-foreground: oklch(0.72 0 0);
-  --accent: oklch(0.32 0.055 40);
+  --accent: oklch(0.32 0.06 30);
   --accent-foreground: oklch(0.92 0 0);
   --border: oklch(0.31 0.004 25);
-  --ring: oklch(0.665 0.195 40);
+  --ring: #f52e14;
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -33,7 +33,7 @@ export const SPECTRE_TEMPLATE_CSS = String.raw`
   --spectre-teal: oklch(0.72 0.13 165);
   --spectre-blue: oklch(0.68 0.11 245);
   --spectre-gold: oklch(0.78 0.13 85);
-  --spectre-chart-fill: oklch(0.665 0.195 40 / 0.16);
+  --spectre-chart-fill: rgba(245, 46, 20, 0.16);
   --spectre-shadow: 0 20px 65px oklch(0 0 0 / 0.45);
   min-height: 100vh;
   overflow-x: clip; /* clip the scrolling tape etc.; clip (not hidden) keeps position:sticky working */
