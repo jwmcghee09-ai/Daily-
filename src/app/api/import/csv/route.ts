@@ -2,7 +2,7 @@ import Papa from "papaparse";
 import * as XLSX from "xlsx";
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
-import { countUserHoldings, readUserEntitlements, saveImport, saveImportMulti } from "@/lib/db";
+import { countUserHoldings, readUserEntitlements, refreshAsxPrices, saveImport, saveImportMulti } from "@/lib/db";
 import {
   attachDemoGuestCookie,
   createDemoGuestContext,
@@ -61,6 +61,14 @@ function parseBody(rawBody: string): ImportCsvPayload {
   }
 
   return parsed as ImportCsvPayload;
+}
+
+// A positive number from an LLM/CSV cell, else null. Used to tell whether a
+// described holding came with a price/value or only a unit count.
+function numericCell(value: unknown): number | null {
+  if (value === null || value === undefined || value === "") return null;
+  const n = Number(value);
+  return Number.isFinite(n) && n > 0 ? n : null;
 }
 
 function getExtension(fileName: string): string {
@@ -602,6 +610,9 @@ export async function POST(request: Request) {
     let bestHoldings: PortfolioHolding[] = [];
     let bestTotalRows = 0;
     let parsedAnyCandidate = false;
+    // Set when a described holding had no price/value (e.g. "10 Apple shares"),
+    // so we price it live after saving instead of dropping it.
+    let needsLivePricing = false;
 
     const uploadFileName = typeof payload.fileName === "string" ? payload.fileName.trim() : "";
     const isImageUpload = IMAGE_UPLOAD_EXTENSIONS.has(getExtension(uploadFileName));
@@ -620,8 +631,22 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: extracted.error }, { status: 502 });
       }
       parsedAnyCandidate = true;
-      bestHoldings = parseRowsToHoldings(extracted.rows, buildSource).filter(isValidParsedHolding);
-      bestTotalRows = extracted.rows.length;
+      // People describe holdings by quantity, not price ("10 Apple shares").
+      // Give a price-less, value-less row a provisional value (= its unit count)
+      // so it survives parsing; refreshAsxPrices below replaces it with the real
+      // live value. Cash-like rows (a stated dollar balance) already have a value.
+      const describedRows = extracted.rows.map((row) => {
+        const hasPrice = numericCell(row.price) !== null;
+        const hasValue = numericCell(row.value) !== null;
+        const units = numericCell(row.units);
+        if (!hasPrice && !hasValue && units !== null) {
+          needsLivePricing = true;
+          return { ...row, value: String(units) };
+        }
+        return row;
+      });
+      bestHoldings = parseRowsToHoldings(describedRows, buildSource).filter(isValidParsedHolding);
+      bestTotalRows = describedRows.length;
     } else if (isImageUpload) {
       // Screenshot path: read the holdings out of the image with a vision model,
       // then run the exact same row → holding pipeline as a CSV.
@@ -689,6 +714,17 @@ export async function POST(request: Request) {
       state = saveImportMulti(userId, bestHoldings);
     } else {
       state = saveImport(userId, payload.source as DataSource, bestHoldings);
+    }
+
+    // Described holdings given by quantity only were saved with a provisional
+    // value — price them live now so the user sees real figures immediately.
+    if (needsLivePricing && userId) {
+      try {
+        const refreshed = await refreshAsxPrices(userId);
+        if (refreshed?.state) state = refreshed.state;
+      } catch {
+        // Keep provisional values; the next dashboard refresh will price them.
+      }
     }
     const rejectedRows = Math.max(0, bestTotalRows - bestHoldings.length);
     // A short list of what was read in, so the UI can echo "I added: AAPL ×10…"
