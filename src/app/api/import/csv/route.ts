@@ -2,7 +2,7 @@ import Papa from "papaparse";
 import * as XLSX from "xlsx";
 import { NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth";
-import { countUserHoldings, readUserEntitlements, saveImport } from "@/lib/db";
+import { countUserHoldings, readUserEntitlements, saveImport, saveImportMulti } from "@/lib/db";
 import {
   attachDemoGuestCookie,
   createDemoGuestContext,
@@ -164,6 +164,106 @@ async function extractHoldingRowsFromImage(
     return { rows: [], error: "Couldn't make sense of the screenshot. Try a clearer, closer image." };
   }
   return { rows: coerceJsonRows(parsed), error: null };
+}
+
+// ── Auto-classification: let the AI decide what each holding is ────────────
+const VALID_SOURCES = new Set(["super", "asx", "us", "gold", "index", "fund", "crypto", "tax", "savings"]);
+
+const DEFAULT_ACCOUNT: Record<DataSource, string> = {
+  super: "Superannuation",
+  savings: "Savings Account",
+  tax: "Tax Records",
+  gold: "ABC Bullion",
+  index: "Index Holdings",
+  fund: "Mutual Funds",
+  crypto: "Crypto Wallet",
+  us: "Global Holdings",
+  asx: "Brokerage",
+};
+
+const CRYPTO_SYMBOLS = new Set([
+  "BTC", "ETH", "SOL", "XRP", "ADA", "DOGE", "DOT", "MATIC", "POL", "LTC", "BCH", "LINK", "AVAX", "UNI",
+  "ATOM", "XLM", "ALGO", "TRX", "SHIB", "BNB", "USDT", "USDC", "DAI", "NEAR", "APT", "ARB", "OP", "SUI",
+  "PEPE", "TON", "FIL", "ICP", "HBAR", "VET", "INJ", "RNDR", "RENDER", "GRT", "AAVE", "MKR", "SAND", "MANA",
+  "AXS", "FTM", "EGLD", "XMR", "ETC", "THETA", "XTZ", "EOS", "CRO", "QNT", "KAS", "TAO", "WLD", "JUP", "SEI",
+]);
+
+/** A fast, free guess used when the AI is unavailable or skips a holding. */
+function classifySourceHeuristic(ticker: string, name: string): DataSource {
+  const rawT = (ticker || "").toUpperCase();
+  const t = rawT.replace(/\.AX$/, "").replace(/[-/](AUD|USD|USDT|USDC)$/, "").trim();
+  const hay = `${rawT} ${name || ""}`.toLowerCase();
+  if (/\b(gold|silver|platinum|palladium|bullion|xau|xag)\b|perth mint|abc bullion|pmgold/.test(hay)) return "gold";
+  if (CRYPTO_SYMBOLS.has(t) || /\b(bitcoin|ethereum|crypto|binance|solana|cardano|polkadot|dogecoin|coinbase|kraken|coinspot)\b|\bcoin\b/.test(hay)) return "crypto";
+  if (/\b(super|superannuation|pension|retirement|smsf)\b/.test(hay)) return "super";
+  if (/\betf\b|\bindex\b|index fund|vanguard|ishares|betashares|\bspdr\b|\bvas\b|\bvgs\b|\bivv\b|\bstw\b|\bndq\b|\ba200\b|\bvts\b|\bveu\b/.test(hay)) return "index";
+  if (/managed fund|mutual fund|\bfund\b|wholesale fund/.test(hay)) return "fund";
+  if (rawT.endsWith(".AX")) return "asx";
+  if (/\b(nasdaq|nyse)\b/.test(hay)) return "us";
+  return "asx";
+}
+
+const CLASSIFY_SYSTEM_PROMPT =
+  `You sort investment holdings into categories. Return ONLY JSON of the form {"holdings":[{"i":1,"category":"asx"}, ...]} — one entry per holding, keeping its number. Categories:
+- "asx": shares on the Australian Securities Exchange (e.g. BHP, CBA, CSL, MQG).
+- "us": shares on US or other overseas markets (e.g. AAPL, MSFT, NVDA, TSLA).
+- "crypto": cryptocurrencies and tokens (e.g. BTC, ETH, SOL).
+- "gold": physical gold, silver or other bullion.
+- "index": index ETFs (e.g. VAS, IVV, VGS, A200, NDQ).
+- "fund": managed or mutual funds that are not simple index ETFs.
+- "super": superannuation balances or investment options.
+- "savings": cash or savings accounts.
+- "tax": tax or franking records.
+Pick the single best category for each. When unsure between asx and us, use the ticker's real listing exchange.`;
+
+/** Assign each holding's source by asking the AI; fall back to the heuristic. */
+async function classifyHoldingSources(holdings: PortfolioHolding[]): Promise<void> {
+  if (holdings.length === 0) return;
+  const aiSources: (DataSource | null)[] = holdings.map(() => null);
+  const apiKey = String(process.env.OPENAI_API_KEY || "").trim();
+  if (apiKey) {
+    try {
+      const base = String(process.env.OPENAI_BASE_URL || "https://api.openai.com/v1").replace(/\/$/, "");
+      const model = String(process.env.OPENAI_CLASSIFY_MODEL || "gpt-4o-mini").trim();
+      const list = holdings.map((h, i) => `${i + 1}. ${h.ticker} — ${h.name}`).join("\n");
+      const res = await fetch(`${base}/chat/completions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+        signal: AbortSignal.timeout(30_000),
+        body: JSON.stringify({
+          model,
+          temperature: 0,
+          response_format: { type: "json_object" },
+          messages: [
+            { role: "system", content: CLASSIFY_SYSTEM_PROMPT },
+            { role: "user", content: `Classify these holdings:\n${list}` },
+          ],
+        }),
+      });
+      if (res.ok) {
+        const data = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
+        const parsed = JSON.parse(data.choices?.[0]?.message?.content ?? "{}") as { holdings?: Array<{ i?: number; category?: string }> };
+        for (const row of parsed.holdings ?? []) {
+          const idx = typeof row.i === "number" ? row.i - 1 : -1;
+          const cat = String(row.category || "").toLowerCase();
+          if (idx >= 0 && idx < holdings.length && VALID_SOURCES.has(cat)) {
+            aiSources[idx] = cat as DataSource;
+          }
+        }
+      }
+    } catch {
+      // Fall back to the heuristic below.
+    }
+  }
+  holdings.forEach((holding, i) => {
+    const classified = aiSources[i] ?? classifySourceHeuristic(holding.ticker, holding.name);
+    if (classified !== holding.source) {
+      // Replace a neutral default account so the category reads right; a real
+      // account name carried from the file is left alone.
+      if (holding.account === DEFAULT_ACCOUNT.asx) holding.account = DEFAULT_ACCOUNT[classified];
+      holding.source = classified;
+    }
+  });
 }
 
 function parseWorkbookToCsvCandidates(fileBuffer: Buffer): ImportCandidate[] {
@@ -399,9 +499,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid JSON payload." }, { status: 400 });
     }
 
-    if (!isValidSource(payload.source)) {
-      return NextResponse.json({ error: "Invalid source. Must be 'super', 'asx', 'us', 'gold', 'index', 'fund', 'crypto', 'tax', or 'savings'." }, { status: 400 });
+    // "auto" means: don't make the user pick a category — extract the holdings,
+    // then let the AI classify what each one is (see below).
+    const isAuto = payload.source === "auto";
+    if (!isAuto && !isValidSource(payload.source)) {
+      return NextResponse.json({ error: "Invalid source. Must be 'auto', 'super', 'asx', 'us', 'gold', 'index', 'fund', 'crypto', 'tax', or 'savings'." }, { status: 400 });
     }
+    // While extracting, auto holdings are built under a neutral source; their real
+    // source is assigned by classification before they are saved.
+    const buildSource: DataSource = isAuto ? "asx" : (payload.source as DataSource);
 
     let bestHoldings: PortfolioHolding[] = [];
     let bestTotalRows = 0;
@@ -429,7 +535,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: extracted.error }, { status: 502 });
       }
       parsedAnyCandidate = true;
-      bestHoldings = parseRowsToHoldings(extracted.rows, payload.source).filter(isValidParsedHolding);
+      bestHoldings = parseRowsToHoldings(extracted.rows, buildSource).filter(isValidParsedHolding);
       bestTotalRows = extracted.rows.length;
     } else {
       const normalizedInput = toImportCandidates(payload);
@@ -446,7 +552,7 @@ export async function POST(request: Request) {
           continue;
         }
 
-        const holdings = parseRowsToHoldings(parsed.rows, payload.source).filter(isValidParsedHolding);
+        const holdings = parseRowsToHoldings(parsed.rows, buildSource).filter(isValidParsedHolding);
         if (holdings.length > bestHoldings.length) {
           bestHoldings = holdings;
           bestTotalRows = parsed.rows.length;
@@ -466,7 +572,16 @@ export async function POST(request: Request) {
     }
 
     const userId = sessionUser?.id || demoGuest?.userId || "";
-    const state = saveImport(userId, payload.source, bestHoldings);
+
+    let state;
+    if (isAuto) {
+      // Let the AI decide what each holding is, then save them grouped into the
+      // right categories (stocks, crypto, super, funds, …) in one go.
+      await classifyHoldingSources(bestHoldings);
+      state = saveImportMulti(userId, bestHoldings);
+    } else {
+      state = saveImport(userId, payload.source as DataSource, bestHoldings);
+    }
     const rejectedRows = Math.max(0, bestTotalRows - bestHoldings.length);
 
     if (!demoGuest) {

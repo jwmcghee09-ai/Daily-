@@ -2103,6 +2103,91 @@ export function saveImport(userId: string, source: DataSource, holdings: Portfol
   return readPortfolioState(userId);
 }
 
+/**
+ * Like saveImport, but each holding carries its own, individually-classified
+ * source — an "auto" import where the AI (or a fallback heuristic) decided what
+ * every holding is. Replaces the bucket of every source present in the batch
+ * and inserts the mixed rows in a single transaction with one snapshot, so a
+ * single file of stocks + crypto + super lands in the right categories at once.
+ */
+export function saveImportMulti(userId: string, holdings: PortfolioHolding[]): PortfolioState {
+  const db = getDb();
+  const scopedPattern = userLikePattern(userId);
+
+  const cleanedHoldings = holdings
+    .map((holding, index) => sanitizeHolding(holding, normalizeSource(holding.source), index))
+    .filter((holding): holding is PortfolioHolding => Boolean(holding));
+
+  if (cleanedHoldings.length === 0) {
+    throw new NoValidHoldingsError(holdings.length);
+  }
+
+  const sourcesPresent = Array.from(new Set(cleanedHoldings.map((holding) => holding.source)));
+
+  const nowIso = new Date().toISOString();
+  const sessionDate = toSydneyDateKey(new Date(nowIso));
+  const scopedSnapshotAt = scopeId(userId, nowIso);
+
+  db.exec("BEGIN IMMEDIATE");
+
+  try {
+    const del = db.prepare("DELETE FROM holdings WHERE source = ? AND id LIKE ?");
+    for (const src of sourcesPresent) {
+      del.run(src, scopedPattern);
+    }
+
+    const insert = db.prepare(`
+      INSERT INTO holdings (
+        id, source, account, ticker, name, units, price, prev_close, session_open, session_date, value, cost_base, sector, report_date, imported_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    for (const holding of cleanedHoldings) {
+      insert.run(
+        scopeId(userId, holding.id),
+        holding.source,
+        holding.account,
+        holding.ticker,
+        holding.name,
+        holding.units,
+        holding.price,
+        sanitizeNumber(holding.prevClose, holding.price),
+        sanitizeNumber(holding.sessionOpen, holding.price),
+        sessionDate,
+        holding.value,
+        holding.costBase,
+        holding.sector,
+        holding.reportDate,
+        holding.importedAt,
+      );
+    }
+
+    const totalRow = db
+      .prepare("SELECT COALESCE(SUM(value), 0) AS total_value FROM holdings WHERE id LIKE ?")
+      .get(scopedPattern) as { total_value: number };
+
+    db.prepare(`
+      INSERT INTO snapshots (date, value, composition)
+      VALUES (?, ?, ?)
+      ON CONFLICT(date) DO UPDATE SET value = excluded.value, composition = excluded.composition
+    `).run(
+      scopedSnapshotAt,
+      sanitizeNumber(totalRow.total_value),
+      compositionFingerprint(db, userId),
+    );
+
+    pruneSnapshotsForUser(db, userId, SNAPSHOT_RETENTION_DAYS);
+    setScopedMetaValue(db, userId, UPDATED_AT_KEY, nowIso);
+
+    db.exec("COMMIT");
+  } catch (error) {
+    db.exec("ROLLBACK");
+    throw error;
+  }
+
+  return readPortfolioState(userId);
+}
+
 export async function refreshAsxPrices(userId: string): Promise<PriceRefreshResult> {
   const db = getDb();
   const scopedPattern = userLikePattern(userId);

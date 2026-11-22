@@ -475,6 +475,15 @@ body.has-onboard .hero{padding-top:1.5rem}
 
 /* ── UPLOAD GRID ── */
 .upload-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.upload-auto{margin-bottom:14px;padding:1.5rem 1.8rem;background:linear-gradient(135deg,rgba(224,35,28,.12),rgba(245,83,20,.05));border:1px solid rgba(245,57,20,.35)}
+.upload-auto:hover{border-color:rgba(245,57,20,.6)}
+.upload-auto-badge{font-family:var(--mono);font-size:.56rem;letter-spacing:.14em;text-transform:uppercase;color:#f53914;font-weight:700}
+.upload-auto-title{font-family:var(--disp);font-size:1.25rem;font-weight:600;color:var(--text);margin-top:.3rem}
+.upload-auto-desc{font-size:.8rem;line-height:1.6;color:var(--muted);margin-top:.35rem;max-width:620px}
+.upload-auto-desc strong{color:var(--text);font-weight:600}
+.upload-auto .upload-action{align-self:flex-start;margin-top:.9rem;background:linear-gradient(135deg,#ee2d1b,#f55314);border-radius:7px;padding:.5rem 1.1rem;font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700}
+.upload-or{font-family:var(--mono);font-size:.56rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:4px 0 12px;display:flex;align-items:center;gap:12px}
+.upload-or::before,.upload-or::after{content:'';flex:1;height:1px;background:var(--border)}
 .upload-card{position:relative;overflow:hidden;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.6rem 1.8rem;box-shadow:var(--shadow);transition:transform .25s,border-color .25s,box-shadow .25s;cursor:pointer;display:flex;flex-direction:column;gap:.35rem}
 .upload-card::before{content:'';position:absolute;inset:0 0 auto;height:1px;background:linear-gradient(90deg,rgba(245, 32, 20, .6),rgba(245, 101, 20, .4),transparent 80%)}
 .upload-card:hover{transform:translateY(-2px);border-color:var(--border2);box-shadow: 0 1px 2px rgba(255, 255, 255, 0.04);font-size:.52rem;letter-spacing:.18em;text-transform:uppercase;color:var(--orange);font-weight:700}
@@ -1726,6 +1735,13 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
     </div>
     <p class="upload-hint" style="font-family:var(--mono);font-size:.62rem;letter-spacing:.04em;color:var(--muted2);margin:-.4rem 0 1rem">Export a CSV or XLSX — or just drop a <strong style="color:var(--text)">screenshot of your holdings</strong> and SPECTRE reads it for you.</p>
     <input id="upload-file-input" type="file" accept=".csv,.tsv,.psv,.txt,.json,.xlsx,.xls,.xlsm,.xlsb,.numbers,.ods,.png,.jpg,.jpeg,.webp,.gif,text/csv,text/tab-separated-values,application/json,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,application/vnd.ms-excel.sheet.macroEnabled.12,application/vnd.ms-excel.sheet.binary.macroEnabled.12,application/vnd.oasis.opendocument.spreadsheet,application/x-iwork-numbers-sffnumbers,image/png,image/jpeg,image/webp,image/gif" style="display:none" />
+    <div class="upload-card upload-auto" data-source="auto">
+      <div class="upload-auto-badge">✦ Smart import — recommended</div>
+      <div class="upload-auto-title">Upload anything, we&rsquo;ll sort it</div>
+      <div class="upload-auto-desc">Drop a CSV, spreadsheet or <strong>screenshot</strong> with all your holdings together. The AI reads it and files each one — shares, crypto, super, ETFs, bullion — so you don&rsquo;t pick a category.</div>
+      <div class="upload-action" style="color:#fff">Upload holdings &rarr;</div>
+    </div>
+    <div class="upload-or">or upload one type at a time</div>
     <div class="upload-grid">
       <div class="upload-card" data-source="super">
         <div class="upload-num">01 — Super</div>
@@ -5835,12 +5851,13 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
       }
       await loadHistoricalRisk();
       renderPortfolio();
+      const importedLabel = state.uploadSource === "auto" ? "Holdings imported & sorted" : `${state.uploadSource.toUpperCase()} report imported`;
       if (state.demoMode) {
         const remaining = getDemoUploadsRemaining();
         applyUploadChrome();
-        showToast(`${state.uploadSource.toUpperCase()} report imported. ${remaining} guest upload${remaining === 1 ? "" : "s"} left.`);
+        showToast(`${importedLabel}. ${remaining} guest upload${remaining === 1 ? "" : "s"} left.`);
       } else {
-        showToast(`${state.uploadSource.toUpperCase()} report imported.`);
+        showToast(`${importedLabel}.`);
       }
     } catch (error) {
       if (error instanceof Error && error.upgradeRequired) {
