@@ -196,7 +196,10 @@ Return ONLY a JSON object of the form {"holdings": [ ... ]}. Each holding is an 
 - "price": price per unit, as a number, only if they state one.
 - "value": total current dollar value of the position, as a number, only if they state one.
 - "account": the platform, super fund, wallet, or account if mentioned.
-Numbers must be plain — no currency symbols, thousands separators, or % signs. Do NOT infer or report cost base, purchase price, profit/loss or returns even if mentioned — only the current holding. For a cash-like balance (savings, a super balance in dollars), set units to 1 and value to the dollar amount. If no holdings are described, return {"holdings": []}.`;
+Numbers must be plain — no currency symbols, thousands separators, or % signs. Do NOT infer or report cost base, purchase price, profit/loss or returns even if mentioned — only the current holding.
+For a cash-like balance (savings, or a super balance in dollars), set units to 1 and value to the dollar amount.
+For a managed or mutual fund that is NOT listed on a stock exchange (APIR-coded funds, "managed fund", "wholesale fund"), its unit price cannot be looked up, so capture the current dollar value: if the person gives a dollar amount set units to 1 and value to that amount; only fall back to a unit count if that is all they provide.
+If no holdings are described, return {"holdings": []}.`;
 
 /**
  * Turn a plain-English description of holdings into rows in the same shape the

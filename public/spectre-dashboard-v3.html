@@ -1043,13 +1043,15 @@ footer{padding:2.2rem 0;border-top:1px solid var(--border);position:relative;z-i
 .upload-describe-btn{margin-top:.7rem;width:100%;background:linear-gradient(135deg,#ee2d1b,#f55314);color:#fff;border:0;border-radius:9px;padding:.7rem;font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700;cursor:pointer;transition:opacity .15s}
 .upload-describe-btn:hover{opacity:.9}
 .upload-describe-btn:disabled{opacity:.5;cursor:not-allowed}
-.upload-modal-feedback{margin-top:1rem;font-size:.8rem;line-height:1.55;color:var(--muted);display:none}
-.upload-modal-feedback.show{display:block}
-.upload-modal-feedback.ok{color:var(--text)}
-.upload-modal-feedback.err{color:#ff6b6b}
-.upload-modal-feedback ul{margin:.45rem 0 0;padding-left:1.1rem}
-.upload-modal-feedback li{margin:.15rem 0}
-.upload-modal-feedback strong{color:var(--text)}
+.upload-chat{display:none;flex-direction:column;gap:.5rem;margin:0 0 .9rem;max-height:240px;overflow-y:auto}
+.upload-chat.show{display:flex}
+.chat-msg{max-width:90%;padding:.55rem .72rem;border-radius:11px;font-size:.82rem;line-height:1.5;white-space:pre-wrap;word-break:break-word}
+.chat-msg.ai{align-self:flex-start;background:var(--bg,#0e0e11);border:1px solid var(--border);color:var(--text);border-bottom-left-radius:3px}
+.chat-msg.user{align-self:flex-end;background:linear-gradient(135deg,rgba(238,45,27,.22),rgba(245,83,20,.14));border:1px solid rgba(245,57,20,.3);color:var(--text);border-bottom-right-radius:3px}
+.chat-msg.thinking{color:var(--muted);font-style:italic}
+.chat-msg ul{margin:.35rem 0 0;padding-left:1.1rem}
+.chat-msg li{margin:.12rem 0}
+.chat-msg strong{color:var(--text)}
 .upgrade-btn-primary{background:var(--accent,#f52e14);color:#f3f3f5;border:none}
 .upgrade-btn-secondary{background:transparent;color:var(--muted2,#777777);border:1px solid rgba(81, 64, 150, .2)}
 
@@ -2673,11 +2675,11 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
 
     <div class="upload-or"><span>or describe them</span></div>
 
+    <div class="upload-chat" id="upload-chat" aria-live="polite"></div>
+
     <textarea id="upload-describe-input" class="upload-describe-field" rows="3"
       placeholder="e.g. 10 Apple shares, 0.5 Bitcoin, about $25k in AustralianSuper, 200 VAS units — handy if a screenshot won't read."></textarea>
     <button type="button" class="upload-describe-btn" id="upload-describe-btn">Add these holdings</button>
-
-    <div class="upload-modal-feedback" id="upload-modal-feedback"></div>
   </div>
 </div>
 
@@ -5872,8 +5874,8 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
       }
       await loadHistoricalRisk();
       renderPortfolio();
-      if (document.getElementById("upload-overlay")?.classList.contains("open")) {
-        showUploadSummary(Array.isArray(payloadResponse.importedSummary) ? payloadResponse.importedSummary : []);
+      if (uploadModalOpen()) {
+        addUploadChatMessage(uploadSummaryHtml(Array.isArray(payloadResponse.importedSummary) ? payloadResponse.importedSummary : []), "ai");
       }
       const importedLabel = state.uploadSource === "auto" ? "Holdings imported & sorted" : `${state.uploadSource.toUpperCase()} report imported`;
       if (state.demoMode) {
@@ -5888,10 +5890,16 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
         showUpgradeModal();
       } else {
         const message = error instanceof Error ? error.message : "Upload failed.";
-        const isInvalidTypeMessage =
-          message.toLowerCase().includes("unsupported file type") ||
-          message.toLowerCase().includes("does not accept this file type");
-        showToast(message, "error", isInvalidTypeMessage ? INVALID_UPLOAD_MESSAGE_TTL_MS : 2600);
+        // If the import popup is open, talk back in the conversation so the user
+        // can just describe the holding instead of chasing a toast.
+        if (uploadModalOpen()) {
+          addUploadErrorToChat(message);
+        } else {
+          const isInvalidTypeMessage =
+            message.toLowerCase().includes("unsupported file type") ||
+            message.toLowerCase().includes("does not accept this file type");
+          showToast(message, "error", isInvalidTypeMessage ? INVALID_UPLOAD_MESSAGE_TTL_MS : 2600);
+        }
       }
     } finally {
       state.uploadSource = null;
@@ -5902,7 +5910,7 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
   function openUploadModal() {
     const overlay = document.getElementById("upload-overlay");
     if (!overlay) { uploadInput.click(); return; } // graceful fallback: plain picker
-    setUploadFeedback("", "");
+    clearUploadChat();
     const input = document.getElementById("upload-describe-input");
     if (input instanceof HTMLTextAreaElement) input.value = "";
     overlay.classList.add("open");
@@ -5912,18 +5920,44 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
     document.getElementById("upload-overlay")?.classList.remove("open");
   }
 
-  function setUploadFeedback(message, kind) {
-    const fb = document.getElementById("upload-modal-feedback");
-    if (!fb) return;
-    if (!message) { fb.className = "upload-modal-feedback"; fb.innerHTML = ""; return; }
-    fb.className = `upload-modal-feedback show ${kind || ""}`.trim();
-    fb.innerHTML = message;
+  function uploadModalOpen() {
+    return !!document.getElementById("upload-overlay")?.classList.contains("open");
   }
 
-  function showUploadSummary(list) {
+  function clearUploadChat() {
+    const chat = document.getElementById("upload-chat");
+    if (chat) { chat.innerHTML = ""; chat.classList.remove("show"); }
+  }
+
+  // Append a message bubble to the import conversation. `html` is markup we
+  // build ourselves; any user/AI/server text is escaped before it gets here.
+  function addUploadChatMessage(html, who) {
+    const chat = document.getElementById("upload-chat");
+    if (!chat) return null;
+    chat.classList.add("show");
+    const msg = document.createElement("div");
+    msg.className = `chat-msg ${who === "user" ? "user" : "ai"}`;
+    msg.innerHTML = html;
+    chat.appendChild(msg);
+    chat.scrollTop = chat.scrollHeight;
+    return msg;
+  }
+
+  function setUploadThinking(on) {
+    const chat = document.getElementById("upload-chat");
+    if (!chat) return;
+    const existing = chat.querySelector(".chat-msg.thinking");
+    if (on) {
+      if (!existing) { const m = addUploadChatMessage("Reading your holdings…", "ai"); if (m) m.classList.add("thinking"); }
+    } else if (existing) {
+      existing.remove();
+    }
+  }
+
+  function uploadSummaryHtml(list) {
     const rows = Array.isArray(list) ? list : [];
     const total = rows.length;
-    if (total === 0) { setUploadFeedback("Imported — open your portfolio to see it.", "ok"); return; }
+    if (total === 0) return "Imported — open your portfolio to see it.";
     const items = rows.slice(0, 12).map((h) => {
       const units = Number(h.units);
       const unitStr = Number.isFinite(units) && units > 0 ? ` · ${units.toLocaleString("en-AU", { maximumFractionDigits: 4 })} units` : "";
@@ -5931,24 +5965,35 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
       return `<li><strong>${escapeHtml(h.ticker || h.name || "—")}</strong>${unitStr}${src}</li>`;
     }).join("");
     const more = total > 12 ? `<li>…and ${total - 12} more</li>` : "";
-    setUploadFeedback(`Added ${total} holding${total === 1 ? "" : "s"} — the AI sorted each into its category:<ul>${items}${more}</ul>`, "ok");
+    return `Done — added ${total} holding${total === 1 ? "" : "s"} and sorted each into its category:<ul>${items}${more}</ul>`;
   }
 
-  // "Describe it to the AI" fallback: send a plain-English holdings description
-  // to the same import endpoint and echo back what it understood.
+  // When an upload/description fails, surface it as an AI message in the chat so
+  // the user can just reply with what the file was, instead of a vanishing toast.
+  function addUploadErrorToChat(message) {
+    const base = escapeHtml(message || "I couldn't read any holdings from that.");
+    addUploadChatMessage(`${base}<br><span style="color:var(--muted)">Tell me what it is and I'll add it — e.g. &ldquo;10 Apple shares, 0.5 Bitcoin, $25k in AustralianSuper&rdquo;.</span>`, "ai");
+    const input = document.getElementById("upload-describe-input");
+    if (input instanceof HTMLTextAreaElement) input.focus();
+  }
+
+  // "Describe it to the AI": send the plain-English holdings to the import
+  // endpoint and carry the conversation on with the result.
   async function describeHoldings() {
     const input = document.getElementById("upload-describe-input");
     const desc = input instanceof HTMLTextAreaElement ? input.value.trim() : "";
-    if (!desc) { setUploadFeedback("Type what you hold first — e.g. \"10 Apple shares, 0.5 Bitcoin\".", "err"); return; }
+    if (!desc) { addUploadChatMessage("Type what you hold first — e.g. “10 Apple shares, 0.5 Bitcoin”.", "ai"); return; }
     if (state.demoMode && getDemoUploadsRemaining() <= 0) {
-      setUploadFeedback("Demo limit reached. Create an account for unlimited imports.", "err"); return;
+      addUploadChatMessage("You've hit the demo limit. Create a free account for unlimited imports.", "ai"); return;
     }
     if (!state.demoMode && state.sessionUser?.planTier === "none" && (state.portfolio?.holdings?.length ?? 0) >= 4) {
       closeUploadModal(); showUpgradeModal(); return;
     }
+    addUploadChatMessage(escapeHtml(desc), "user");
+    if (input instanceof HTMLTextAreaElement) input.value = "";
     const btn = document.getElementById("upload-describe-btn");
     if (btn instanceof HTMLButtonElement) { btn.disabled = true; btn.textContent = "Reading…"; }
-    setUploadFeedback("Reading your holdings…", "");
+    setUploadThinking(true);
     try {
       const resp = await apiJson(state.demoMode ? "/api/import/csv?demo=1" : "/api/import/csv", {
         method: "POST",
@@ -5964,12 +6009,13 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
       if (state.demoMode) { state.demoGuest = resp.demoGuest || state.demoGuest; await loadAlerts(); applyUploadChrome(); }
       await loadHistoricalRisk();
       renderPortfolio();
-      showUploadSummary(resp.importedSummary);
-      if (input instanceof HTMLTextAreaElement) input.value = "";
+      setUploadThinking(false);
+      addUploadChatMessage(uploadSummaryHtml(resp.importedSummary), "ai");
       showToast("Holdings added & sorted.");
     } catch (error) {
+      setUploadThinking(false);
       if (error instanceof Error && error.upgradeRequired) { closeUploadModal(); showUpgradeModal(); }
-      else setUploadFeedback(error instanceof Error ? error.message : "Couldn't add those holdings. Try rewording it.", "err");
+      else addUploadErrorToChat(error instanceof Error ? error.message : "I couldn't add those holdings. Try naming each one and how many units.");
     } finally {
       if (btn instanceof HTMLButtonElement) { btn.disabled = false; btn.textContent = "Add these holdings"; }
     }
