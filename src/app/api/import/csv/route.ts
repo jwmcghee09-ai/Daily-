@@ -99,9 +99,8 @@ Return ONLY a JSON object of the form {"holdings": [ ... ]}. Each holding is an 
 - "units": quantity / shares / units / coins held, as a number.
 - "price": current price per unit, as a number.
 - "value": current market value of the position, as a number.
-- "costBase": cost base / purchase cost if shown, as a number.
 - "account": the account, platform, or wallet name if shown.
-Numbers must be plain — no currency symbols, thousands separators, or % signs. Skip totals, subtotals, cash lines, and summary rows. If the image shows no holdings, return {"holdings": []}.`;
+Numbers must be plain — no currency symbols, thousands separators, or % signs. Do NOT report cost base, purchase price, profit/loss or returns even if the screenshot shows them — only current holdings. Skip totals, subtotals, cash lines, and summary rows. If the image shows no holdings, return {"holdings": []}.`;
 
 /**
  * Read holdings out of a portfolio screenshot with a vision model, returning
@@ -163,7 +162,18 @@ async function extractHoldingRowsFromImage(
   } catch {
     return { rows: [], error: "Couldn't make sense of the screenshot. Try a clearer, closer image." };
   }
-  return { rows: coerceJsonRows(parsed), error: null };
+  // A screenshot shows current holdings, not what you paid. Drop any cost /
+  // purchase / profit field so performance is never fabricated from a guessed
+  // cost base — the cost base defaults to the current value (zero P/L) instead.
+  const rows = coerceJsonRows(parsed).map((row) => {
+    const clean: CsvRow = {};
+    for (const [key, cell] of Object.entries(row)) {
+      if (/cost|purchase|avg|average|book|profit|gain|loss|pnl|p[/.]l|return/i.test(key)) continue;
+      clean[key] = cell;
+    }
+    return clean;
+  });
+  return { rows, error: null };
 }
 
 // ── Auto-classification: let the AI decide what each holding is ────────────

@@ -5131,21 +5131,33 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
 
     const perfList = document.querySelector(".perf-list");
     if (perfList) {
-      const topPnl = [...holdings]
-        .map((holding) => ({ ticker: holding.ticker || "—", name: holding.name || "Unnamed", pnl: (holding.value || 0) - (holding.costBase || 0) }))
+      // Only holdings where we actually know the cost base. A screenshot import
+      // has no purchase price, so cost base defaults to the current value — those
+      // are excluded rather than shown as a misleading $0 (or a fabricated gain).
+      const withCost = holdings
+        .filter((holding) => {
+          const cost = Number(holding.costBase);
+          const val = Number(holding.value) || 0;
+          return Number.isFinite(cost) && cost > 0 && Math.abs(cost - val) > 0.5;
+        })
+        .map((holding) => ({ ticker: holding.ticker || "—", name: holding.name || "Unnamed", pnl: (Number(holding.value) || 0) - Number(holding.costBase) }))
         .sort((a, b) => b.pnl - a.pnl)
         .slice(0, 5);
-      perfList.innerHTML = topPnl
-        .map((item) => {
-          const tone = item.pnl >= 0 ? "pos" : "neg";
-          return `
+      if (withCost.length === 0) {
+        perfList.innerHTML = `<div class="perf-row" style="justify-content:center"><div class="perf-name" style="text-align:center;line-height:1.6;white-space:normal">No cost base in this import — add your purchase prices (a CSV with a cost column) to see gains &amp; losses.</div></div>`;
+      } else {
+        perfList.innerHTML = withCost
+          .map((item) => {
+            const tone = item.pnl >= 0 ? "pos" : "neg";
+            return `
             <div class="perf-row">
               <div><div class="perf-ticker">${escapeHtml(item.ticker)}</div><div class="perf-name">${escapeHtml(item.name)}</div></div>
               <div class="perf-val ${tone}">${formatSignedCurrency(item.pnl)}</div>
             </div>
           `;
-        })
-        .join("");
+          })
+          .join("");
+      }
     }
 
     const stressCards = Array.from(document.querySelectorAll(".stress-card"));
