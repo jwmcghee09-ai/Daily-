@@ -31,6 +31,9 @@ interface ImportCsvPayload {
   csvText?: unknown;
   fileName?: unknown;
   fileBase64?: unknown;
+  // Natural-language fallback: the user describes their holdings in plain
+  // English (e.g. when a screenshot won't parse) and the AI structures them.
+  description?: unknown;
 }
 
 interface ImportCandidate {
@@ -165,6 +168,83 @@ async function extractHoldingRowsFromImage(
   // A screenshot shows current holdings, not what you paid. Drop any cost /
   // purchase / profit field so performance is never fabricated from a guessed
   // cost base — the cost base defaults to the current value (zero P/L) instead.
+  const rows = coerceJsonRows(parsed).map((row) => {
+    const clean: CsvRow = {};
+    for (const [key, cell] of Object.entries(row)) {
+      if (/cost|purchase|avg|average|book|profit|gain|loss|pnl|p[/.]l|return/i.test(key)) continue;
+      clean[key] = cell;
+    }
+    return clean;
+  });
+  return { rows, error: null };
+}
+
+const DESCRIBE_SYSTEM_PROMPT =
+  `You turn a person's plain-English description of their investments into structured holdings.
+Return ONLY a JSON object of the form {"holdings": [ ... ]}. Each holding is an object with these keys; use null when the person didn't say, and NEVER invent numbers:
+- "ticker": the symbol or code (e.g. "BHP", "AAPL", "BTC", "VAS"). If they give only a company or fund name you confidently know, use its ticker; if unsure, use null.
+- "name": the security, fund, or asset name as they described it.
+- "units": quantity / shares / units / coins held, as a number.
+- "price": price per unit, as a number, only if they state one.
+- "value": total current dollar value of the position, as a number, only if they state one.
+- "account": the platform, super fund, wallet, or account if mentioned.
+Numbers must be plain — no currency symbols, thousands separators, or % signs. Do NOT infer or report cost base, purchase price, profit/loss or returns even if mentioned — only the current holding. For a cash-like balance (savings, a super balance in dollars), set units to 1 and value to the dollar amount. If no holdings are described, return {"holdings": []}.`;
+
+/**
+ * Turn a plain-English description of holdings into rows in the same shape the
+ * CSV/screenshot paths produce, so they flow through parseRowsToHoldings
+ * unchanged. The "describe it to the AI" fallback for when a screenshot won't
+ * parse. Uses the app's existing OpenAI configuration.
+ */
+async function extractHoldingRowsFromText(
+  description: string,
+): Promise<{ rows: CsvRow[]; error: string | null }> {
+  const apiKey = String(process.env.OPENAI_API_KEY || "").trim();
+  if (!apiKey) {
+    return { rows: [], error: "Describe-your-holdings import isn't set up on this server yet." };
+  }
+  const base = String(process.env.OPENAI_BASE_URL || "https://api.openai.com/v1").replace(/\/$/, "");
+  const model = String(process.env.OPENAI_CLASSIFY_MODEL || "gpt-4o-mini").trim();
+
+  let res: Response;
+  try {
+    res = await fetch(`${base}/chat/completions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+      signal: AbortSignal.timeout(30_000),
+      body: JSON.stringify({
+        model,
+        temperature: 0,
+        response_format: { type: "json_object" },
+        messages: [
+          { role: "system", content: DESCRIBE_SYSTEM_PROMPT },
+          { role: "user", content: description },
+        ],
+      }),
+    });
+  } catch {
+    return { rows: [], error: "The assistant timed out. Please try again." };
+  }
+  if (!res.ok) {
+    return { rows: [], error: "Couldn't process that right now. Please try again in a moment." };
+  }
+
+  let content = "";
+  try {
+    const data = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
+    content = data.choices?.[0]?.message?.content ?? "";
+  } catch {
+    return { rows: [], error: "Couldn't read the assistant's reply." };
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(content);
+  } catch {
+    return { rows: [], error: "Couldn't make sense of that. Try naming each holding and how many units — e.g. \"10 Apple shares, 0.5 Bitcoin\"." };
+  }
+  // Same guard as the screenshot path: never accept a cost/purchase/P&L field,
+  // so performance is never fabricated from a described (or guessed) cost base.
   const rows = coerceJsonRows(parsed).map((row) => {
     const clean: CsvRow = {};
     for (const [key, cell] of Object.entries(row)) {
@@ -525,8 +605,24 @@ export async function POST(request: Request) {
 
     const uploadFileName = typeof payload.fileName === "string" ? payload.fileName.trim() : "";
     const isImageUpload = IMAGE_UPLOAD_EXTENSIONS.has(getExtension(uploadFileName));
+    const description = typeof payload.description === "string" ? payload.description.trim() : "";
+    const hasCsvText = typeof payload.csvText === "string" && payload.csvText.trim().length > 0;
+    const isDescribe = description.length > 0 && !isImageUpload && !hasCsvText;
 
-    if (isImageUpload) {
+    if (isDescribe) {
+      // "Describe it to the AI" fallback — structure the plain-English holdings
+      // with the same row → holding → classify pipeline as a file/screenshot.
+      if (description.length > 2000) {
+        return NextResponse.json({ error: "That description is too long. Please keep it under 2000 characters." }, { status: 400 });
+      }
+      const extracted = await extractHoldingRowsFromText(description);
+      if (extracted.error) {
+        return NextResponse.json({ error: extracted.error }, { status: 502 });
+      }
+      parsedAnyCandidate = true;
+      bestHoldings = parseRowsToHoldings(extracted.rows, buildSource).filter(isValidParsedHolding);
+      bestTotalRows = extracted.rows.length;
+    } else if (isImageUpload) {
       // Screenshot path: read the holdings out of the image with a vision model,
       // then run the exact same row → holding pipeline as a CSV.
       const imageBase64 = typeof payload.fileBase64 === "string" ? payload.fileBase64.trim() : "";
@@ -575,10 +671,12 @@ export async function POST(request: Request) {
     }
 
     if (bestHoldings.length === 0) {
-      return NextResponse.json(
-        { error: isImageUpload ? "No holdings could be read from that screenshot. Try a clearer, closer image." : "No valid holdings were found in this file." },
-        { status: 400 },
-      );
+      const emptyMessage = isDescribe
+        ? "I couldn't pick out any holdings from that. Try naming each one and how many units — e.g. \"10 Apple shares, 0.5 Bitcoin, $25k in AustralianSuper\"."
+        : isImageUpload
+          ? "No holdings could be read from that screenshot. Try a clearer, closer image — or describe them in words instead."
+          : "No valid holdings were found in this file.";
+      return NextResponse.json({ error: emptyMessage }, { status: 400 });
     }
 
     const userId = sessionUser?.id || demoGuest?.userId || "";
@@ -593,9 +691,17 @@ export async function POST(request: Request) {
       state = saveImport(userId, payload.source as DataSource, bestHoldings);
     }
     const rejectedRows = Math.max(0, bestTotalRows - bestHoldings.length);
+    // A short list of what was read in, so the UI can echo "I added: AAPL ×10…"
+    // (especially useful for the describe-it-to-the-AI path).
+    const importedSummary = bestHoldings.map((holding) => ({
+      ticker: holding.ticker,
+      name: holding.name,
+      units: holding.units,
+      source: holding.source,
+    }));
 
     if (!demoGuest) {
-      return NextResponse.json({ ...state, rejectedRows });
+      return NextResponse.json({ ...state, rejectedRows, importedSummary });
     }
 
     // Atomic check-and-increment — returns null if already at the limit
@@ -611,6 +717,7 @@ export async function POST(request: Request) {
     const response = NextResponse.json({
       ...state,
       rejectedRows,
+      importedSummary,
       demoGuest: updatedGuest,
     });
     attachDemoGuestCookie(response, updatedGuest.userId, updatedGuest.expiresAt);
