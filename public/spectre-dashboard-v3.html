@@ -1731,7 +1731,7 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
     <div class="sec-head">
       <h2 class="sec-title">Data Uploads</h2>
       <div class="sec-line"></div>
-      <span class="sec-label" id="uploads-source-count">8 sources</span>
+      <span class="sec-label" id="uploads-source-count">Smart import</span>
     </div>
     <p class="upload-hint" style="font-family:var(--mono);font-size:.62rem;letter-spacing:.04em;color:var(--muted2);margin:-.4rem 0 1rem">Export a CSV or XLSX — or just drop a <strong style="color:var(--text)">screenshot of your holdings</strong> and SPECTRE reads it for you.</p>
     <input id="upload-file-input" type="file" accept=".csv,.tsv,.psv,.txt,.json,.xlsx,.xls,.xlsm,.xlsb,.numbers,.ods,.png,.jpg,.jpeg,.webp,.gif,text/csv,text/tab-separated-values,application/json,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,application/vnd.ms-excel.sheet.macroEnabled.12,application/vnd.ms-excel.sheet.binary.macroEnabled.12,application/vnd.oasis.opendocument.spreadsheet,application/x-iwork-numbers-sffnumbers,image/png,image/jpeg,image/webp,image/gif" style="display:none" />
@@ -1739,58 +1739,7 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
       <div class="upload-auto-badge">✦ Smart import — recommended</div>
       <div class="upload-auto-title">Upload anything, we&rsquo;ll sort it</div>
       <div class="upload-auto-desc">Drop a CSV, spreadsheet or <strong>screenshot</strong> with all your holdings together. The AI reads it and files each one — shares, crypto, super, ETFs, bullion — so you don&rsquo;t pick a category.</div>
-      <div class="upload-action" style="color:#fff">Upload holdings &rarr;</div>
-    </div>
-    <div class="upload-or">or upload one type at a time</div>
-    <div class="upload-grid">
-      <div class="upload-card" data-source="super">
-        <div class="upload-num">01 — Super</div>
-        <div class="upload-title">Super Report</div>
-        <div class="upload-desc">Upload your superannuation holdings export CSV.</div>
-        <div class="upload-action">Upload File</div>
-      </div>
-      <div class="upload-card" data-source="asx">
-        <div class="upload-num">02 — ASX</div>
-        <div class="upload-title">ASX Holdings</div>
-        <div class="upload-desc">Upload brokerage or watchlist holdings export.</div>
-        <div class="upload-action">Upload File</div>
-      </div>
-      <div class="upload-card" data-source="index">
-        <div class="upload-num">03 — Index</div>
-        <div class="upload-title">Index Report</div>
-        <div class="upload-desc">Upload index or benchmark positions CSV.</div>
-        <div class="upload-action">Upload File</div>
-      </div>
-      <div class="upload-card" data-source="fund">
-        <div class="upload-num">04 — Funds</div>
-        <div class="upload-title">Mutual Fund</div>
-        <div class="upload-desc">Upload managed fund or ETF holdings export.</div>
-        <div class="upload-action">Upload File</div>
-      </div>
-      <div class="upload-card" data-source="crypto">
-        <div class="upload-num">05 — Crypto</div>
-        <div class="upload-title">Crypto Report</div>
-        <div class="upload-desc">Upload crypto holdings or exchange export CSV.</div>
-        <div class="upload-action">Upload File</div>
-      </div>
-      <div class="upload-card" data-source="savings">
-        <div class="upload-num">06 — Savings</div>
-        <div class="upload-title">Savings Report</div>
-        <div class="upload-desc">Upload savings account report or transaction export.</div>
-        <div class="upload-action">Upload File</div>
-      </div>
-      <div class="upload-card" data-source="tax">
-        <div class="upload-num">07 — Tax</div>
-        <div class="upload-title">Tax Report</div>
-        <div class="upload-desc">Upload tax report or transaction export (CSV/XLSX/XLS/NUMBERS/ODS).</div>
-        <div class="upload-action">Upload File</div>
-      </div>
-      <div class="upload-card" data-source="gold">
-        <div class="upload-num">08 — Bullion</div>
-        <div class="upload-title">ABC Bullion</div>
-        <div class="upload-desc">Upload ABC Bullion gold and silver holdings CSV.</div>
-        <div class="upload-action">Upload File</div>
-      </div>
+      <div class="upload-action" style="color:#fff">Upload holdings</div>
     </div>
   </section>
 </div>
@@ -2977,8 +2926,8 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
       const remaining = getDemoUploadsRemaining();
       if (sourceCount) {
         sourceCount.textContent = hasDemoGuestWorkspace()
-          ? `8 sources · ${remaining} guest upload${remaining === 1 ? "" : "s"} left`
-          : "8 sources · Sample portfolio loaded";
+          ? `Smart import · ${remaining} guest upload${remaining === 1 ? "" : "s"} left`
+          : "Smart import · Sample portfolio loaded";
       }
       uploads.forEach((card) => {
         const disabled = remaining <= 0;
@@ -2986,20 +2935,20 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
         card.setAttribute("aria-disabled", disabled ? "true" : "false");
         const action = card.querySelector(".upload-action");
         if (action) {
-          action.textContent = disabled ? "Demo Limit Reached" : "Upload File";
+          action.textContent = disabled ? "Demo Limit Reached" : "Upload holdings";
         }
       });
       return;
     }
 
     if (sourceCount) {
-      sourceCount.textContent = "8 sources";
+      sourceCount.textContent = "Smart import";
     }
     uploads.forEach((card) => {
       card.style.opacity = "";
       card.removeAttribute("aria-disabled");
       const action = card.querySelector(".upload-action");
-      if (action) action.textContent = "Upload File";
+      if (action) action.textContent = "Upload holdings";
     });
   }
 
