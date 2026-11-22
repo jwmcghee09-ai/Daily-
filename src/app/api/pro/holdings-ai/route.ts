@@ -65,6 +65,7 @@ interface HoldingPromptSummary {
   units: number;
   marketValue: number;
   costBase: number;
+  costBaseKnown: boolean;
   unrealizedPnl: number;
   unrealizedPnlPct: number;
   dayChangeAmount: number;
@@ -364,9 +365,12 @@ function buildHoldingsSummary(userId: string) {
     const dayChangeAmount = units > 0 && prevClose > 0 ? units * (holding.price - prevClose) : 0;
     const baseForDayPct = units > 0 && prevClose > 0 ? units * prevClose : 0;
     const dayChangePct = baseForDayPct > 0 ? (dayChangeAmount / baseForDayPct) * 100 : 0;
-    const pnl = holding.value - holding.costBase;
-    const pnlPct = holding.costBase > 0 ? (pnl / holding.costBase) * 100 : 0;
-    const avgCost = units > 0 ? holding.costBase / units : 0;
+    // Cost base is only real if the import supplied it; otherwise it was
+    // defaulted to the current value and P/L would be fabricated market drift.
+    const costKnown = holding.costBaseKnown === true && holding.costBase > 0;
+    const pnl = costKnown ? holding.value - holding.costBase : 0;
+    const pnlPct = costKnown && holding.costBase > 0 ? (pnl / holding.costBase) * 100 : 0;
+    const avgCost = costKnown && units > 0 ? holding.costBase / units : 0;
 
     const existing = grouped.get(ticker);
     if (!existing) {
@@ -378,6 +382,7 @@ function buildHoldingsSummary(userId: string) {
         units,
         marketValue: holding.value,
         costBase: holding.costBase,
+        costBaseKnown: costKnown,
         unrealizedPnl: pnl,
         unrealizedPnlPct: pnlPct,
         dayChangeAmount,
@@ -393,6 +398,7 @@ function buildHoldingsSummary(userId: string) {
 
     const nextUnits = existing.units + units;
     const nextMarketValue = existing.marketValue + holding.value;
+    const bothCostKnown = existing.costBaseKnown && costKnown;
     const nextCostBase = existing.costBase + holding.costBase;
     const nextDayChangeAmount = existing.dayChangeAmount + dayChangeAmount;
     const nextPrevBase = existing._prevBase + baseForDayPct;
@@ -400,12 +406,13 @@ function buildHoldingsSummary(userId: string) {
     existing.units = nextUnits;
     existing.marketValue = nextMarketValue;
     existing.costBase = nextCostBase;
-    existing.unrealizedPnl = nextMarketValue - nextCostBase;
-    existing.unrealizedPnlPct = nextCostBase > 0 ? ((nextMarketValue - nextCostBase) / nextCostBase) * 100 : 0;
+    existing.costBaseKnown = bothCostKnown;
+    existing.unrealizedPnl = bothCostKnown ? nextMarketValue - nextCostBase : 0;
+    existing.unrealizedPnlPct = bothCostKnown && nextCostBase > 0 ? ((nextMarketValue - nextCostBase) / nextCostBase) * 100 : 0;
     existing.dayChangeAmount = nextDayChangeAmount;
     existing.dayChangePct = nextPrevBase > 0 ? (nextDayChangeAmount / nextPrevBase) * 100 : existing.dayChangePct;
     existing._prevBase = nextPrevBase;
-    existing.avgCost = nextUnits > 0 ? nextCostBase / nextUnits : 0;
+    existing.avgCost = bothCostKnown && nextUnits > 0 ? nextCostBase / nextUnits : 0;
     existing.lastPrice = holding.price;
     existing.prevClose = prevClose > 0 ? prevClose : existing.prevClose;
     if (existing.source !== holding.source) existing.source = "mixed";
@@ -427,12 +434,12 @@ function buildHoldingsSummary(userId: string) {
     sector: h.sector,
     units: toRounded(h.units, 4),
     marketValue: toRounded(h.marketValue),
-    costBase: toRounded(h.costBase),
-    unrealizedPnl: toRounded(h.unrealizedPnl),
-    unrealizedPnlPct: toRounded(h.unrealizedPnlPct),
+    costBase: h.costBaseKnown ? toRounded(h.costBase) : null,
+    unrealizedPnl: h.costBaseKnown ? toRounded(h.unrealizedPnl) : null,
+    unrealizedPnlPct: h.costBaseKnown ? toRounded(h.unrealizedPnlPct) : null,
     dayChangeAmount: toRounded(h.dayChangeAmount),
     dayChangePct: toRounded(h.dayChangePct),
-    avgCost: toRounded(h.avgCost, 4),
+    avgCost: h.costBaseKnown ? toRounded(h.avgCost, 4) : null,
     lastPrice: toRounded(h.lastPrice, 4),
     prevClose: toRounded(h.prevClose, 4),
     weightPct: toRounded(h.weightPct),

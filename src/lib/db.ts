@@ -60,6 +60,7 @@ interface HoldingRow {
   session_date: string;
   value: number;
   cost_base: number;
+  cost_base_known: number;
   sector: string;
   report_date: string;
   imported_at: string;
@@ -341,6 +342,7 @@ function initSchema(db: DatabaseSync): void {
       session_date TEXT NOT NULL DEFAULT '',
       value REAL NOT NULL,
       cost_base REAL NOT NULL,
+      cost_base_known INTEGER NOT NULL DEFAULT 0,
       sector TEXT NOT NULL,
       report_date TEXT NOT NULL,
       imported_at TEXT NOT NULL
@@ -557,6 +559,17 @@ function initSchema(db: DatabaseSync): void {
       .prepare("SELECT 1 AS ok FROM pragma_table_info('fund_compositions') WHERE name = ?")
       .get(column) as { ok: number } | undefined;
     if (!present) db.exec(ddl);
+  }
+
+  // Added after holdings shipped. Existing rows predate the "is the cost base
+  // real?" flag, so they default to 0 (unknown) — P/L is hidden for them until
+  // re-imported, which is the honest default (we can't recover whether an old
+  // cost base was a real purchase price or a defaulted copy of the value).
+  {
+    const present = db
+      .prepare("SELECT 1 AS ok FROM pragma_table_info('holdings') WHERE name = 'cost_base_known'")
+      .get() as { ok: number } | undefined;
+    if (!present) db.exec("ALTER TABLE holdings ADD COLUMN cost_base_known INTEGER NOT NULL DEFAULT 0;");
   }
 
   /*
@@ -1053,6 +1066,7 @@ function sanitizeHolding(raw: PortfolioHolding, source: DataSource, index: numbe
     prevClose: sanitizeBoundedNumber(raw.prevClose, sanitizeBoundedNumber(raw.price, 0)),
     value,
     costBase: sanitizeBoundedNumber(raw.costBase, value),
+    costBaseKnown: raw.costBaseKnown === true,
     sector: sanitizeString(
       raw.sector,
       source === "super"
@@ -1906,7 +1920,7 @@ export function readPortfolioState(userId = LOCAL_USER_ID): PortfolioState {
 
   const holdingRows = db
     .prepare(`
-      SELECT id, source, account, ticker, name, units, price, prev_close, session_open, session_date, value, cost_base, sector, report_date, imported_at
+      SELECT id, source, account, ticker, name, units, price, prev_close, session_open, session_date, value, cost_base, cost_base_known, sector, report_date, imported_at
       FROM holdings
       WHERE id LIKE ?
       ORDER BY value DESC, ticker ASC
@@ -1943,6 +1957,7 @@ export function readPortfolioState(userId = LOCAL_USER_ID): PortfolioState {
         sessionOpen: sanitizeNumber(row.session_open),
         value: sanitizeNumber(row.value),
         costBase: sanitizeNumber(row.cost_base),
+        costBaseKnown: Number(row.cost_base_known) === 1,
         sector: row.sector,
         reportDate: row.report_date,
         importedAt: row.imported_at,
@@ -2052,8 +2067,8 @@ export function saveImport(userId: string, source: DataSource, holdings: Portfol
 
     const insert = db.prepare(`
       INSERT INTO holdings (
-        id, source, account, ticker, name, units, price, prev_close, session_open, session_date, value, cost_base, sector, report_date, imported_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        id, source, account, ticker, name, units, price, prev_close, session_open, session_date, value, cost_base, cost_base_known, sector, report_date, imported_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     for (const holding of cleanedHoldings) {
@@ -2070,6 +2085,7 @@ export function saveImport(userId: string, source: DataSource, holdings: Portfol
         sessionDate,
         holding.value,
         holding.costBase,
+        holding.costBaseKnown ? 1 : 0,
         holding.sector,
         holding.reportDate,
         holding.importedAt,
@@ -2138,8 +2154,8 @@ export function saveImportMulti(userId: string, holdings: PortfolioHolding[]): P
 
     const insert = db.prepare(`
       INSERT INTO holdings (
-        id, source, account, ticker, name, units, price, prev_close, session_open, session_date, value, cost_base, sector, report_date, imported_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        id, source, account, ticker, name, units, price, prev_close, session_open, session_date, value, cost_base, cost_base_known, sector, report_date, imported_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     for (const holding of cleanedHoldings) {
@@ -2156,6 +2172,7 @@ export function saveImportMulti(userId: string, holdings: PortfolioHolding[]): P
         sessionDate,
         holding.value,
         holding.costBase,
+        holding.costBaseKnown ? 1 : 0,
         holding.sector,
         holding.reportDate,
         holding.importedAt,

@@ -74,6 +74,7 @@ export function demoHoldings(): PortfolioHolding[] {
     prevClose: h.prevClose,
     value: Number((h.units * h.price).toFixed(2)),
     costBase: h.costBase,
+    costBaseKnown: true,
     sector: h.sector,
     reportDate,
     importedAt,

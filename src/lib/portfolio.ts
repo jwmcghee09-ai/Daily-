@@ -16,6 +16,12 @@ export interface PortfolioHolding {
   sessionOpen?: number;
   value: number;
   costBase: number;
+  // True only when the import actually supplied a purchase/cost figure. When it
+  // is false or absent, costBase is defaulted to the current value and must be
+  // treated as UNKNOWN — never used to show a gain/loss. (Value is refreshed to
+  // the live price while costBase stays frozen, so a defaulted cost base would
+  // turn post-import market drift into a fabricated profit.)
+  costBaseKnown?: boolean;
   sector: string;
   reportDate: string;
   importedAt: string;
@@ -561,7 +567,8 @@ function parseCryptoTradeRows(rows: CsvRow[], importedAt: string): PortfolioHold
         return null;
       }
 
-      const costBase = entry.costBase > 0 ? entry.costBase : value;
+      const costBaseKnown = entry.costBase > 0;
+      const costBase = costBaseKnown ? entry.costBase : value;
       const holding: PortfolioHolding = {
         id: `crypto-${slug(entry.account)}-${slug(entry.ticker)}-${entry.reportDate}-${index}`,
         source: "crypto",
@@ -573,6 +580,7 @@ function parseCryptoTradeRows(rows: CsvRow[], importedAt: string): PortfolioHold
         prevClose: price,
         value,
         costBase,
+        costBaseKnown,
         sector: "Crypto",
         reportDate: entry.reportDate,
         importedAt,
@@ -667,7 +675,8 @@ function toHolding(
     price = value / units;
   }
 
-  if (!Number.isFinite(costBase) || costBase <= 0) {
+  const costBaseKnown = Number.isFinite(costBase) && costBase > 0;
+  if (!costBaseKnown) {
     costBase = value;
   }
 
@@ -705,6 +714,7 @@ function toHolding(
     prevClose: Number.isFinite(price) ? price : 0,
     value,
     costBase,
+    costBaseKnown,
     sector,
     reportDate,
     importedAt,
@@ -877,8 +887,15 @@ export function computeMetrics(
   riskWindow: RiskWindow = "3M",
 ): PortfolioMetrics {
   const totalValue = sum(holdings.map((item) => item.value));
-  const totalCost = sum(holdings.map((item) => item.costBase));
-  const pnl = totalValue - totalCost;
+  // P/L is computed only over holdings whose cost base the user actually gave
+  // us. An unknown cost base is defaulted to the current value, so including it
+  // would turn post-import price drift into a fabricated gain/loss.
+  const costedHoldings = holdings.filter(
+    (item) => item.costBaseKnown === true && Number(item.costBase) > 0,
+  );
+  const totalCost = sum(costedHoldings.map((item) => item.costBase));
+  const investedValue = sum(costedHoldings.map((item) => item.value));
+  const pnl = investedValue - totalCost;
   const pnlPct = totalCost > 0 ? (pnl / totalCost) * 100 : 0;
 
   const sortedHoldings = [...holdings].sort((a, b) => b.value - a.value);

@@ -128,6 +128,8 @@ export async function POST(request: NextRequest) {
         prevClose: existing?.prevClose ?? trade.unitPrice,
         value: units * (existing?.price ?? trade.unitPrice),
         costBase,
+        // Trades carry a real purchase price, so this cost base is genuine.
+        costBaseKnown: true,
         sector: existing?.sector ?? "",
         reportDate: trade.tradeDate ?? existing?.reportDate ?? "",
         importedAt: new Date().toISOString(),

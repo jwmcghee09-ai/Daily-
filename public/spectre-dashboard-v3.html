@@ -3057,16 +3057,16 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
     const reportDate = now.toISOString().slice(0, 10);
     const importedAt = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString();
     const holdings = [
-      { id: "demo-super-balanced", source: "super", account: "AustralianSuper", ticker: "SUPBAL", name: "Balanced Super Option", units: 1, price: 112000, prevClose: 112000, value: 112000, costBase: 104500, sector: "Super", reportDate, importedAt },
-      { id: "demo-asx-cba", source: "asx", account: "CommSec", ticker: "CBA", name: "Commonwealth Bank", units: 120, price: 131.44, prevClose: 130.92, value: 15772.8, costBase: 14820, sector: "Banks", reportDate, importedAt },
-      { id: "demo-asx-bhp", source: "asx", account: "CommSec", ticker: "BHP", name: "BHP Group", units: 280, price: 45.82, prevClose: 45.28, value: 12829.6, costBase: 11984, sector: "Materials", reportDate, importedAt },
-      { id: "demo-asx-mqg", source: "asx", account: "CommSec", ticker: "MQG", name: "Macquarie Group", units: 35, price: 218.75, prevClose: 215.72, value: 7656.25, costBase: 7035, sector: "Financials", reportDate, importedAt },
-      { id: "demo-crypto-btc", source: "crypto", account: "Kraken", ticker: "BTC", name: "Bitcoin", units: 0.42, price: 84200, prevClose: 85740, value: 35364, costBase: 28000, sector: "Crypto", reportDate, importedAt },
-      { id: "demo-crypto-eth", source: "crypto", account: "Kraken", ticker: "ETH", name: "Ethereum", units: 7.5, price: 3140, prevClose: 3121.27, value: 23550, costBase: 18750, sector: "Crypto", reportDate, importedAt },
-      { id: "demo-gold", source: "gold", account: "ABC Bullion", ticker: "ABC-AU", name: "Allocated Gold Holdings", units: 7.8, price: 4490, prevClose: 4472, value: 35022, costBase: 31200, sector: "Precious Metals", reportDate, importedAt },
-      { id: "demo-savings", source: "savings", account: "Offset Saver", ticker: "SAVINGSCASH", name: "Savings Cash Position", units: 1, price: 18450, prevClose: 18450, value: 18450, costBase: 18450, sector: "Savings", reportDate, importedAt },
-      { id: "demo-index", source: "index", account: "Vanguard", ticker: "VAS", name: "Vanguard Australian Shares ETF", units: 95, price: 104.6, prevClose: 103.95, value: 9937, costBase: 9120, sector: "Index", reportDate, importedAt },
-      { id: "demo-fund", source: "fund", account: "Managed Funds", ticker: "GGF", name: "Global Growth Fund", units: 220, price: 68.4, prevClose: 67.9, value: 15048, costBase: 13750, sector: "Managed Fund", reportDate, importedAt },
+      { id: "demo-super-balanced", source: "super", account: "AustralianSuper", ticker: "SUPBAL", name: "Balanced Super Option", units: 1, price: 112000, prevClose: 112000, value: 112000, costBase: 104500, sector: "Super", costBaseKnown: true, reportDate, importedAt },
+      { id: "demo-asx-cba", source: "asx", account: "CommSec", ticker: "CBA", name: "Commonwealth Bank", units: 120, price: 131.44, prevClose: 130.92, value: 15772.8, costBase: 14820, sector: "Banks", costBaseKnown: true, reportDate, importedAt },
+      { id: "demo-asx-bhp", source: "asx", account: "CommSec", ticker: "BHP", name: "BHP Group", units: 280, price: 45.82, prevClose: 45.28, value: 12829.6, costBase: 11984, sector: "Materials", costBaseKnown: true, reportDate, importedAt },
+      { id: "demo-asx-mqg", source: "asx", account: "CommSec", ticker: "MQG", name: "Macquarie Group", units: 35, price: 218.75, prevClose: 215.72, value: 7656.25, costBase: 7035, sector: "Financials", costBaseKnown: true, reportDate, importedAt },
+      { id: "demo-crypto-btc", source: "crypto", account: "Kraken", ticker: "BTC", name: "Bitcoin", units: 0.42, price: 84200, prevClose: 85740, value: 35364, costBase: 28000, sector: "Crypto", costBaseKnown: true, reportDate, importedAt },
+      { id: "demo-crypto-eth", source: "crypto", account: "Kraken", ticker: "ETH", name: "Ethereum", units: 7.5, price: 3140, prevClose: 3121.27, value: 23550, costBase: 18750, sector: "Crypto", costBaseKnown: true, reportDate, importedAt },
+      { id: "demo-gold", source: "gold", account: "ABC Bullion", ticker: "ABC-AU", name: "Allocated Gold Holdings", units: 7.8, price: 4490, prevClose: 4472, value: 35022, costBase: 31200, sector: "Precious Metals", costBaseKnown: true, reportDate, importedAt },
+      { id: "demo-savings", source: "savings", account: "Offset Saver", ticker: "SAVINGSCASH", name: "Savings Cash Position", units: 1, price: 18450, prevClose: 18450, value: 18450, costBase: 18450, sector: "Savings", costBaseKnown: true, reportDate, importedAt },
+      { id: "demo-index", source: "index", account: "Vanguard", ticker: "VAS", name: "Vanguard Australian Shares ETF", units: 95, price: 104.6, prevClose: 103.95, value: 9937, costBase: 9120, sector: "Index", costBaseKnown: true, reportDate, importedAt },
+      { id: "demo-fund", source: "fund", account: "Managed Funds", ticker: "GGF", name: "Global Growth Fund", units: 220, price: 68.4, prevClose: 67.9, value: 15048, costBase: 13750, sector: "Managed Fund", costBaseKnown: true, reportDate, importedAt },
     ];
     const totalValue = holdings.reduce((acc, holding) => acc + Number(holding.value || 0), 0);
 
@@ -3445,14 +3445,20 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
 
   function computeMetrics(holdings, snapshots, riskWindow) {
     const totalValue = sum(holdings.map((item) => Number(item.value) || 0));
-    const totalCost = sum(holdings.map((item) => Number(item.costBase) || 0));
-    const pnl = totalValue - totalCost;
+    // P/L only over holdings whose cost base the user actually provided. An
+    // unknown cost base defaults to the current value, and value is refreshed to
+    // the live price while cost base stays frozen — counting it would show pure
+    // market drift since import as a fabricated gain/loss.
+    const costedHoldings = holdings.filter((item) => item.costBaseKnown === true && (Number(item.costBase) || 0) > 0);
+    const totalCost = sum(costedHoldings.map((item) => Number(item.costBase) || 0));
+    const investedValue = sum(costedHoldings.map((item) => Number(item.value) || 0));
+    const pnl = investedValue - totalCost;
     const pnlPct = totalCost > 0 ? (pnl / totalCost) * 100 : 0;
     const sortedHoldings = [...holdings].sort((a, b) => (b.value || 0) - (a.value || 0));
     const topHoldings = sortedHoldings.slice(0, 8).map((holding) => ({
       ...holding,
       weightPct: totalValue > 0 ? ((holding.value || 0) / totalValue) * 100 : 0,
-      pnl: (holding.value || 0) - (holding.costBase || 0),
+      pnl: holding.costBaseKnown === true ? (holding.value || 0) - (Number(holding.costBase) || 0) : null,
     }));
 
     const concentrationValues = holdings
@@ -4775,12 +4781,16 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
     const goldWeightOz = sum(goldHoldings.map((holding) => (Number.isFinite(holding.units) ? Number(holding.units) : 0)));
     const silverWeightOz = sum(silverHoldings.map((holding) => (Number.isFinite(holding.units) ? Number(holding.units) : 0)));
     const goldValue = sum(goldHoldings.map((holding) => Number(holding.value) || 0));
-    const goldCost = sum(goldHoldings.map((holding) => Number(holding.costBase) || 0));
     const silverValue = sum(silverHoldings.map((holding) => Number(holding.value) || 0));
-    const silverCost = sum(silverHoldings.map((holding) => Number(holding.costBase) || 0));
+    // Bullion P&L only over bars whose purchase cost we actually know; otherwise
+    // cost defaults to value and drifts into a fake gain after a price refresh.
+    const goldCosted = goldHoldings.filter((holding) => holding.costBaseKnown === true && Number(holding.costBase) > 0);
+    const silverCosted = silverHoldings.filter((holding) => holding.costBaseKnown === true && Number(holding.costBase) > 0);
+    const goldPnl = goldCosted.length > 0 ? sum(goldCosted.map((h) => (Number(h.value) || 0) - (Number(h.costBase) || 0))) : null;
+    const silverPnl = silverCosted.length > 0 ? sum(silverCosted.map((h) => (Number(h.value) || 0) - (Number(h.costBase) || 0))) : null;
     const sourceCount = new Set(holdings.map((holding) => String(holding.source || "other"))).size;
     const withPrice = holdings.filter((holding) => Number.isFinite(holding.price) && holding.price > 0).length;
-    const withCost = holdings.filter((holding) => Number.isFinite(holding.costBase) && holding.costBase > 0).length;
+    const withCost = holdings.filter((holding) => holding.costBaseKnown === true && Number(holding.costBase) > 0).length;
     const stale = holdings.filter((holding) => !Number.isFinite(holding.price) || holding.price <= 0).length;
     const confidence = metrics.dailyReturns.length >= 63 ? "High" : metrics.dailyReturns.length >= 20 ? "Medium" : "Low";
     const signalRiskBars = [
@@ -5065,12 +5075,12 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
 
     setText("bullion-gold-weight", `${goldWeightOz.toLocaleString("en-AU", { maximumFractionDigits: 2 })} oz`);
     setText("bullion-gold-value", formatCurrency(goldValue));
-    setText("bullion-gold-pnl", formatSignedCurrency(goldValue - goldCost));
+    setText("bullion-gold-pnl", goldPnl === null ? "—" : formatSignedCurrency(goldPnl));
     setText("bullion-silver-weight", `${silverWeightOz.toLocaleString("en-AU", { maximumFractionDigits: 2 })} oz`);
     setText("bullion-silver-value", formatCurrency(silverValue));
-    setText("bullion-silver-pnl", formatSignedCurrency(silverValue - silverCost));
-    setClass("bullion-gold-pnl", `bullion-val ${(goldValue - goldCost) >= 0 ? "accent" : ""}`.trim());
-    setClass("bullion-silver-pnl", `bullion-val ${(silverValue - silverCost) >= 0 ? "accent" : ""}`.trim());
+    setText("bullion-silver-pnl", silverPnl === null ? "—" : formatSignedCurrency(silverPnl));
+    setClass("bullion-gold-pnl", `bullion-val ${goldPnl !== null && goldPnl >= 0 ? "accent" : ""}`.trim());
+    setClass("bullion-silver-pnl", `bullion-val ${silverPnl !== null && silverPnl >= 0 ? "accent" : ""}`.trim());
 
     const riskWindowText = state.riskWindow;
     const points = metrics.riskPointsUsed;
@@ -5135,11 +5145,7 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
       // has no purchase price, so cost base defaults to the current value — those
       // are excluded rather than shown as a misleading $0 (or a fabricated gain).
       const withCost = holdings
-        .filter((holding) => {
-          const cost = Number(holding.costBase);
-          const val = Number(holding.value) || 0;
-          return Number.isFinite(cost) && cost > 0 && Math.abs(cost - val) > 0.5;
-        })
+        .filter((holding) => holding.costBaseKnown === true && Number(holding.costBase) > 0)
         .map((holding) => ({ ticker: holding.ticker || "—", name: holding.name || "Unnamed", pnl: (Number(holding.value) || 0) - Number(holding.costBase) }))
         .sort((a, b) => b.pnl - a.pnl)
         .slice(0, 5);
@@ -5487,11 +5493,15 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
     tbody.innerHTML = sorted
       .slice(0, 80)
       .map((holding) => {
-        const pnl = (holding.value || 0) - (holding.costBase || 0);
+        // Only show a cost base / P&L when the user actually gave us the cost.
+        // Otherwise it's unknown (defaulted to value) and showing it would
+        // fabricate a gain from post-import price drift.
+        const costKnown = holding.costBaseKnown === true && Number(holding.costBase) > 0;
+        const pnl = costKnown ? (holding.value || 0) - (Number(holding.costBase) || 0) : null;
         const source = String(holding.source || "").toLowerCase();
         const badgeClass = SOURCE_BADGE[source] || "fund";
         const sourceLabel = SOURCE_LABEL[source] || source.toUpperCase();
-        const chipTone = pnl >= 0 ? "pos" : "neg";
+        const chipTone = pnl === null ? "" : pnl >= 0 ? "pos" : "neg";
         const pricingMode = String(holding.pricingMode || "file").toLowerCase();
         const pricingLabel = escapeHtml(holding.pricingLabel || "From uploaded report");
         return `
@@ -5504,8 +5514,8 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
             <td>${Number.isFinite(holding.units) && holding.units > 0 ? Number(holding.units).toLocaleString("en-AU", { maximumFractionDigits: 4 }) : "—"}</td>
             <td class="val">${Number.isFinite(holding.price) && holding.price > 0 ? formatCurrency(holding.price, { decimals: 2 }) : "—"}</td>
             <td class="val">${formatCurrency(holding.value || 0)}</td>
-            <td>${Number.isFinite(holding.costBase) ? formatCurrency(holding.costBase) : "—"}</td>
-            <td class="${pnl >= 0 ? 'val-pos' : 'val-neg'}">${formatSignedCurrency(pnl)}</td>
+            <td>${costKnown ? formatCurrency(holding.costBase) : "—"}</td>
+            <td class="${pnl === null ? '' : pnl >= 0 ? 'val-pos' : 'val-neg'}">${pnl === null ? "—" : formatSignedCurrency(pnl)}</td>
           </tr>
         `;
       })
