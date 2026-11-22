@@ -1,11 +1,11 @@
 import Link from "next/link";
-import InstallButton from "./install-button";
+import DownloadButtons from "./download-buttons";
 
 export const metadata = {
-  title: "Get the SPECTRE app",
+  title: "Download the SPECTRE app",
   description:
-    "Install SPECTRE as an app — your whole portfolio-intelligence workspace in its own window, "
-    + "on your dock, taskbar or home screen. Or use it in your browser.",
+    "Download SPECTRE for Mac or Windows — your whole portfolio-intelligence workspace in its own "
+    + "window, on your dock or taskbar. Or add the lightweight web app.",
 };
 
 const CSS = `
@@ -33,6 +33,17 @@ const CSS = `
 .dl-note-row svg{width:17px;height:17px;flex:none;color:var(--primary);margin-top:2px}
 .dl-back{margin-top:34px;font-family:var(--font-geist-mono),monospace;font-size:12px;color:var(--muted);text-decoration:none;display:inline-block}
 .dl-back:hover{color:var(--primary)}
+.dl-cta{display:flex;flex-direction:column;align-items:center}
+.dl-alts{margin-top:15px;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);flex-wrap:wrap;justify-content:center}
+.dl-alts a{color:var(--muted);text-decoration:none;border-bottom:1px solid var(--border);padding-bottom:1px}
+.dl-alts a:hover{color:var(--text)}
+.dl-firstrun{margin-top:18px;font-size:13px;line-height:1.65;color:var(--muted);max-width:470px}
+.dl-firstrun b{color:var(--text);font-weight:600}
+.dl-webapp{margin-top:24px;font-size:13px;color:var(--muted)}
+.dl-webapp summary{cursor:pointer;color:var(--muted);list-style:none;font-family:var(--font-geist-mono),monospace;font-size:12px;letter-spacing:.03em}
+.dl-webapp summary::-webkit-details-marker{display:none}
+.dl-webapp summary:hover{color:var(--text)}
+.dl-webapp-body{margin-top:18px}
 @media (max-width:520px){.dl-btn{width:100%}}
 `;
 
@@ -48,13 +59,13 @@ export default function DownloadPage() {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/spectre-app-icon.png" alt="SPECTRE app icon" className="dl-icon" width={96} height={96} />
         <div className="dl-kicker">The SPECTRE app</div>
-        <h1 className="dl-title">Install <span>SPECTRE</span>.</h1>
+        <h1 className="dl-title">Download <span>SPECTRE</span>.</h1>
         <p className="dl-sub">
-          Add SPECTRE to your Mac, Windows PC or phone and it runs in its own window — on your dock,
-          taskbar or home screen, a click away. Same account, same everything.
+          The desktop app for Mac and Windows — your whole portfolio-intelligence workspace in its
+          own window, on your dock or taskbar. Same account, same everything.
         </p>
 
-        <InstallButton />
+        <DownloadButtons />
 
         <div className="dl-note">
           <div className="dl-note-row"><Dot /><span><b>It runs like a real app.</b> Its own window, your dock/taskbar icon, full-screen — no browser tabs or address bar.</span></div>
