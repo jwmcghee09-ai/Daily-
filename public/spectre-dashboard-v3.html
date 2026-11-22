@@ -6470,8 +6470,11 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
         + (showAll ? "Show top 20" : "Show all " + all.length) + "</button>"
       : "";
 
-    var notes = ['Weights are the fund\u2019s own, from ' + esc(d.source) + ", effective " + esc(d.asOf)
-      + " \u2014 not today. Your money column is your share of each company through this holding."];
+    var isAiEstimate = String(d.source || "").toLowerCase().indexOf("ai estimate") !== -1;
+    var notes = [isAiEstimate
+      ? "These weights are an AI estimate of what this fund holds, from its known strategy \u2014 not the fund\u2019s official holdings. Your money column is the estimated share of each line through this holding."
+      : 'Weights are the fund\u2019s own, from ' + esc(d.source) + ", effective " + esc(d.asOf)
+        + " \u2014 not today. Your money column is your share of each company through this holding."];
     if (d.coverageNote) notes.unshift('<span class="fund-warn">\u26a0 ' + esc(d.coverageNote) + "</span>");
     // Shown only when the issuer's own weights do not add up, so a file that
     // lost a chunk between their server and this page cannot look complete.

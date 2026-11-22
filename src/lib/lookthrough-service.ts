@@ -18,6 +18,7 @@ import {
   writeFundComposition,
 } from "@/lib/db";
 import { resolveFund } from "@/lib/fund-holdings";
+import { fetchAiComposition } from "@/lib/fund-ai";
 import {
   buildEffectiveBook,
   effectiveHhi,
@@ -141,8 +142,30 @@ export async function lookThroughPortfolio(
           coverageNote: resolved.coverageNote,
         });
       } else {
-        // Not a fund, or a fund with no public filing. Both are normal.
-        recordResolutionMiss(symbol, "No public constituent data");
+        // No structured source could answer. For a genuine fund holding, fall
+        // back to an AI estimate from the fund's name so "see inside your funds"
+        // still shows a breakdown (labelled as an estimate, route "ai"). For a
+        // plain share, record the miss as before — we never AI-guess a stock's
+        // "holdings".
+        const fundLike = holding.source === "fund" || holding.source === "index" || holding.source === "super";
+        const aiComp = fundLike
+          ? await fetchAiComposition(holding.ticker, holding.name).catch(() => null)
+          : null;
+        if (aiComp && aiComp.constituents.length > 0) {
+          compositions.set(symbol, aiComp);
+          writeFundComposition({
+            ticker: symbol,
+            fundName: aiComp.fundName,
+            route: "ai",
+            source: aiComp.source,
+            asOf: aiComp.asOf,
+            constituents: aiComp.constituents,
+            coveragePct: aiComp.coveragePct,
+            coverageNote: aiComp.coverageNote,
+          });
+        } else {
+          recordResolutionMiss(symbol, "No public constituent data");
+        }
       }
     } catch (error) {
       // A network failure must not be cached as "not a fund" — that would make
