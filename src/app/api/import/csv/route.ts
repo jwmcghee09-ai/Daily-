@@ -189,17 +189,20 @@ async function extractHoldingRowsFromImage(
 
 const DESCRIBE_SYSTEM_PROMPT =
   `You turn a person's plain-English description of their investments into structured holdings.
-Return ONLY a JSON object of the form {"holdings": [ ... ]}. Each holding is an object with these keys; use null when the person didn't say, and NEVER invent numbers:
-- "ticker": an exchange symbol ONLY if the person gives one (e.g. "BHP", "AAPL", "BTC", "VAS") or it is unambiguous for a single stock or coin they named. For a managed, index, or mutual fund named in words (e.g. "Vanguard High Growth Index", "Magellan Global Fund"), set ticker to null — do NOT guess a stock ticker, since those are valued from the dollar amount, not a live symbol.
-- "name": the security, fund, or asset name as they described it.
+
+MOST IMPORTANT RULE: whenever the person names an investment together with a quantity (units/shares/coins) OR a dollar amount, you MUST return it as a holding. Never drop a holding — and never return an empty list — just because you don't recognise it or can't find a ticker. A missing ticker is fine; a dropped holding is not.
+
+Return ONLY a JSON object of the form {"holdings": [ ... ]}. Each holding has these keys; use null when the person didn't say, and NEVER invent numbers:
+- "name": the security, fund or asset name as they described it. ALWAYS fill this in.
+- "ticker": an exchange symbol only if the person gives one (e.g. "BHP", "AAPL", "BTC", "VAS") or it is obvious for a single well-known stock or coin they named. For a managed, index or mutual fund named in words ("Vanguard High Growth Index", "Magellan Global Fund"), set ticker to null — do NOT guess a stock ticker. A null ticker is expected and fine; still return the holding with its name.
 - "units": quantity / shares / units / coins held, as a number.
 - "price": price per unit, as a number, only if they state one.
 - "value": total current dollar value of the position, as a number, only if they state one.
-- "account": the platform, super fund, wallet, or account if mentioned.
-Numbers must be plain — no currency symbols, thousands separators, or % signs. Do NOT infer or report cost base, purchase price, profit/loss or returns even if mentioned — only the current holding.
+- "account": the platform, super fund, wallet or account if mentioned.
+
+Numbers must be plain — no currency symbols, thousands separators or % signs. Do NOT infer or report cost base, purchase price, profit/loss or returns even if mentioned — only the current holding.
 For a cash-like balance (savings, or a super balance in dollars), set units to 1 and value to the dollar amount.
-For a managed or mutual fund that is NOT listed on a stock exchange (APIR-coded funds, "managed fund", "wholesale fund"), its unit price cannot be looked up, so capture the current dollar value: if the person gives a dollar amount set units to 1 and value to that amount; only fall back to a unit count if that is all they provide.
-If no holdings are described, return {"holdings": []}.`;
+Only return {"holdings": []} if the message truly describes no investment at all.`;
 
 /**
  * Turn a plain-English description of holdings into rows in the same shape the
@@ -215,7 +218,10 @@ async function extractHoldingRowsFromText(
     return { rows: [], error: "Describe-your-holdings import isn't set up on this server yet." };
   }
   const base = String(process.env.OPENAI_BASE_URL || "https://api.openai.com/v1").replace(/\/$/, "");
-  const model = String(process.env.OPENAI_CLASSIFY_MODEL || "gpt-4o-mini").trim();
+  // A describe is the fallback for when a screenshot won't read, so reliability
+  // matters more than cost here: use the stronger model, which extracts named
+  // funds consistently where the mini model dropped them.
+  const model = String(process.env.OPENAI_DESCRIBE_MODEL || "gpt-4o").trim();
 
   let res: Response;
   try {
