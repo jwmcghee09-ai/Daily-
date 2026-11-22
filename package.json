@@ -1,6 +1,6 @@
 {
   "name": "aladdin-web",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "main": "electron/main.js",
   "engines": {
@@ -57,6 +57,7 @@
   "build": {
     "appId": "com.spectre.portfolio",
     "productName": "SPECTRE",
+    "afterPack": "scripts/electron-afterpack.cjs",
     "copyright": "Copyright © 2025 SPECTRE",
     "directories": {
       "output": "dist-electron"
@@ -68,7 +69,7 @@
     "mac": {
       "category": "public.app-category.finance",
       "icon": "electron/icons/icon.png",
-      "hardenedRuntime": true,
+      "hardenedRuntime": false,
       "gatekeeperAssess": false,
       "entitlements": "electron/entitlements.mac.plist",
       "entitlementsInherit": "electron/entitlements.mac.plist",
