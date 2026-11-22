@@ -273,6 +273,52 @@ async function extractHoldingRowsFromText(
   return { rows, error: null };
 }
 
+/**
+ * Deterministic single-holding fallback for when the model returns nothing from
+ * a clear description. Pulls a dollar value, a unit count and a name out of the
+ * text so a plainly-stated fund ("Vanguard High Growth Index, 4748 units worth
+ * $18000") is never lost to the model's judgement.
+ */
+function parseDescriptionFallback(text: string): CsvRow | null {
+  const raw = String(text || "").trim();
+  if (raw.length < 3) return null;
+
+  const num = (s: string): number | null => {
+    const n = Number(s.replace(/,/g, ""));
+    return Number.isFinite(n) && n > 0 ? n : null;
+  };
+
+  let value: number | null = null;
+  const dollar = raw.match(/\$\s*([\d][\d,]*(?:\.\d+)?)/)
+    || raw.match(/\b(?:worth|valued?(?:\s*at)?)\s*\$?\s*([\d][\d,]*(?:\.\d+)?)/i)
+    || raw.match(/\b([\d][\d,]*(?:\.\d+)?)\s*(?:dollars|aud)\b/i);
+  if (dollar) value = num(dollar[1]);
+
+  let units: number | null = null;
+  const unit = raw.match(/\b([\d][\d,]*(?:\.\d+)?)\s*(?:units?|shares?|coins?)\b/i);
+  if (unit) units = num(unit[1]);
+
+  if (value === null && units === null) return null;
+
+  const name = raw
+    .replace(/\$\s*[\d][\d,]*(?:\.\d+)?/g, " ")
+    .replace(/\b[\d][\d,]*(?:\.\d+)?\s*(?:units?|shares?|coins?|dollars|aud)\b/gi, " ")
+    .replace(/\b(?:worth|valued?(?:\s*at)?|currently|about|approximately)\b/gi, " ")
+    .replace(/[,.;:]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    // Strip leading filler so "of the Platinum Fund" -> "Platinum Fund".
+    .replace(/^(?:i\s+(?:have|own|hold)\s+)?(?:of\s+|the\s+|a\s+|an\s+|in\s+|my\s+)+/i, "")
+    .trim();
+
+  if (name.length < 3) return null;
+
+  const row: CsvRow = { name };
+  if (units !== null) row.units = String(units);
+  if (value !== null) row.value = String(value);
+  return row;
+}
+
 // ── Auto-classification: let the AI decide what each holding is ────────────
 const VALID_SOURCES = new Set(["super", "asx", "us", "gold", "index", "fund", "crypto", "tax", "savings"]);
 
@@ -638,6 +684,12 @@ export async function POST(request: Request) {
       const extracted = await extractHoldingRowsFromText(description);
       if (extracted.error) {
         return NextResponse.json({ error: extracted.error }, { status: 502 });
+      }
+      // The model occasionally returns nothing for a clearly-described single
+      // fund. Fall back to a deterministic parse so it is never silently lost.
+      if (extracted.rows.length === 0) {
+        const fallbackRow = parseDescriptionFallback(description);
+        if (fallbackRow) extracted.rows = [fallbackRow];
       }
       parsedAnyCandidate = true;
       // People describe holdings by quantity, not price ("10 Apple shares").
