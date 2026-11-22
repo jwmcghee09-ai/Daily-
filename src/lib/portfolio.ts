@@ -645,8 +645,16 @@ function toHolding(
       : source === "crypto"
         ? `CRYPTO-${index + 1}`
           : name);
-  const ticker = normalizeTicker(tickerCandidate);
+  let ticker = normalizeTicker(tickerCandidate);
   const maxTickerLength = source === "asx" ? 8 : source === "crypto" ? 20 : 16;
+
+  // A long fund name with no exchange ticker (e.g. "Vanguard High Growth Index")
+  // would otherwise be dropped. Derive a short code from the name so the holding
+  // survives; a non-exchange code won't match a live symbol, so the user's
+  // supplied value is preserved rather than repriced against the wrong stock.
+  if (ticker && ticker.length > maxTickerLength) {
+    ticker = deriveTickerCode(tickerCandidate, maxTickerLength);
+  }
 
   if (!ticker || ticker.length > maxTickerLength) {
     return null;
@@ -811,6 +819,21 @@ function normalizeTicker(value: string): string {
     .replace(/\s+/g, "")
     .replace(/[^A-Z0-9.-]/g, "")
     .slice(0, 20);
+}
+
+// A short display code derived from a long name (e.g. "Vanguard High Growth
+// Index" -> "VHGI"), used when a holding has no real ticker so it is kept rather
+// than dropped. Prefers the initials of each word; falls back to a truncation.
+function deriveTickerCode(raw: string, maxLen: number): string {
+  const words = String(raw)
+    .toUpperCase()
+    .replace(/[^A-Z0-9 ]/g, " ")
+    .split(/\s+/)
+    .filter(Boolean);
+  const initials = words.map((word) => word[0]).join("");
+  if (initials.length >= 2 && initials.length <= maxLen) return initials;
+  const compact = words.join("");
+  return compact.slice(0, maxLen) || initials.slice(0, maxLen);
 }
 
 function toCryptoBaseSymbol(value: string): string {

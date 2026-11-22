@@ -46,4 +46,14 @@ const mMixed = computeMetrics([drifted, knownDrift], []);
 check("mixed portfolio P/L counts only the known holding", mMixed.pnl === 700);
 check("mixed portfolio total value still counts both", mMixed.totalValue === 3000);
 
+// 5) A managed fund with a long name and NO ticker, but a dollar value, must be
+//    kept (with a short derived code), not dropped.
+const fund = parseRowsToHoldings(
+  [{ name: "Vanguard High Growth Index", units: "4748", value: "10736.65" }],
+  "fund",
+);
+check("long-named fund is kept, not dropped", fund.length === 1);
+check("fund gets a short derived code", fund[0].ticker.length >= 2 && fund[0].ticker.length <= 16);
+check("fund keeps its stated market value", Math.round(fund[0].value) === 10737);
+
 console.log("\nAll cost-base-known checks passed");

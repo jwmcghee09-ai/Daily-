@@ -190,7 +190,7 @@ async function extractHoldingRowsFromImage(
 const DESCRIBE_SYSTEM_PROMPT =
   `You turn a person's plain-English description of their investments into structured holdings.
 Return ONLY a JSON object of the form {"holdings": [ ... ]}. Each holding is an object with these keys; use null when the person didn't say, and NEVER invent numbers:
-- "ticker": the symbol or code (e.g. "BHP", "AAPL", "BTC", "VAS"). If they give only a company or fund name you confidently know, use its ticker; if unsure, use null.
+- "ticker": an exchange symbol ONLY if the person gives one (e.g. "BHP", "AAPL", "BTC", "VAS") or it is unambiguous for a single stock or coin they named. For a managed, index, or mutual fund named in words (e.g. "Vanguard High Growth Index", "Magellan Global Fund"), set ticker to null — do NOT guess a stock ticker, since those are valued from the dollar amount, not a live symbol.
 - "name": the security, fund, or asset name as they described it.
 - "units": quantity / shares / units / coins held, as a number.
 - "price": price per unit, as a number, only if they state one.
