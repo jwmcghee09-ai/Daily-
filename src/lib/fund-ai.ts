@@ -18,10 +18,11 @@ export const AI_FUND_DISCLAIMER =
   + "Check the fund's latest factsheet or PDS before relying on it.";
 
 const AI_FUND_PROMPT =
-  `You are a fund-research analyst. Given a managed fund, ETF or super option by NAME (and maybe a code), return your best estimate of what an investor owns inside it.
+  `You are a fund-research analyst. Given a managed fund, ETF or super option by its NAME and/or its exchange TICKER CODE, return your best estimate of what an investor owns inside it.
 Return ONLY JSON: {"recognised": boolean, "asOfYear": number|null, "constituents": [{"name": string, "weightPct": number, "assetClass": string|null, "sector": string|null, "country": string|null, "ticker": string|null}]}.
 Rules:
-- If you do not recognise the fund, or cannot give a reasonable breakdown, return {"recognised": false, "constituents": []}. NEVER invent a fund you don't know.
+- Identify the fund from whichever you recognise — its name OR its ticker. Many ASX and US ETF codes are well known: e.g. IHVV / IVV = iShares S&P 500, VAS = Vanguard Australian Shares, VGS = Vanguard International Shares, A200 = Betashares Australia 200, NDQ = Betashares Nasdaq 100, VDHG = Vanguard Diversified High Growth. If you recognise the ticker, use it even when the name is just the code.
+- If you genuinely do not recognise the fund or ticker, or cannot give a reasonable breakdown, return {"recognised": false, "constituents": []}. NEVER invent a fund you don't know.
 - For a DIVERSIFIED / multi-asset fund (e.g. "Vanguard High Growth Index", "AustralianSuper Balanced"), break it down by ASSET CLASS and REGION — e.g. "Australian shares", "International shares", "Global bonds", "Cash" — each with an approximate weightPct and an assetClass, because it holds thousands of underlying securities.
 - For a CONCENTRATED equity fund (e.g. "Magellan Global Fund"), list its typical TOP HOLDINGS (companies) with an approximate weightPct, a ticker where well known, sector and country (ISO alpha-2).
 - weightPct are percentages that should sum to roughly 100 (they need not be exact).
@@ -47,8 +48,10 @@ export async function fetchAiComposition(ticker: string, name: string): Promise<
   if (!apiKey) return null;
 
   const fundName = String(name || "").trim();
-  // Need a real name to research; a bare ticker or code isn't enough to trust.
-  if (fundName.length < 4) return null;
+  const code = String(ticker || "").trim();
+  // Need a name or a ticker to research. A well-known ETF code (IHVV, VAS, …) is
+  // enough on its own — the model recognises those even with no descriptive name.
+  if (fundName.length < 4 && code.length < 3) return null;
 
   const base = String(process.env.OPENAI_BASE_URL || "https://api.openai.com/v1").replace(/\/$/, "");
   const model = String(process.env.OPENAI_FUND_MODEL || "gpt-4o").trim();
@@ -65,7 +68,7 @@ export async function fetchAiComposition(ticker: string, name: string): Promise<
         response_format: { type: "json_object" },
         messages: [
           { role: "system", content: AI_FUND_PROMPT },
-          { role: "user", content: `Fund name: ${fundName}${ticker ? `\nCode: ${ticker}` : ""}` },
+          { role: "user", content: `Ticker / code: ${code || "(none)"}\nName: ${fundName || "(only the code is known)"}` },
         ],
       }),
     });

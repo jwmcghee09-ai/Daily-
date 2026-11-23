@@ -5491,8 +5491,10 @@ export function listFundCompositions(userId = ""): Array<{
  *   5 — 13F restricted to filers whose business is holding securities
  *   6 — + FMP structured holdings fallback, and IOO added to the feeder map
  *   7 — + AI estimate fallback for funds with no structured source
+ *   8 — AI fallback recognises well-known ETF tickers (IHVV, VAS, …) and runs
+ *       for cross-listed ETFs; retry funds the bare-ticker AI had missed
  */
-export const FUND_RESOLVER_VERSION = 7;
+export const FUND_RESOLVER_VERSION = 8;
 
 /** True when this ticker was recently checked, by this resolver, and missed. */
 export function isRecentResolutionMiss(ticker: string): boolean {

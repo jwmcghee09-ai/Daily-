@@ -17,7 +17,7 @@ import {
   recordResolutionMiss,
   writeFundComposition,
 } from "@/lib/db";
-import { resolveFund } from "@/lib/fund-holdings";
+import { resolveFund, ASX_TO_US_FUND } from "@/lib/fund-holdings";
 import { fetchAiComposition } from "@/lib/fund-ai";
 import {
   buildEffectiveBook,
@@ -147,7 +147,10 @@ export async function lookThroughPortfolio(
         // still shows a breakdown (labelled as an estimate, route "ai"). For a
         // plain share, record the miss as before — we never AI-guess a stock's
         // "holdings".
-        const fundLike = holding.source === "fund" || holding.source === "index" || holding.source === "super";
+        // A genuine fund by category, or a cross-listed ETF (e.g. IHVV -> IVV)
+        // that may have been labelled as a plain ASX listing. Never a bare share.
+        const fundLike = holding.source === "fund" || holding.source === "index" || holding.source === "super"
+          || Boolean(ASX_TO_US_FUND[symbol]);
         const aiComp = fundLike
           ? await fetchAiComposition(holding.ticker, holding.name).catch(() => null)
           : null;
