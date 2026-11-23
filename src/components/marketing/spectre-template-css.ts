@@ -8,33 +8,35 @@ export const SPECTRE_TEMPLATE_CSS = String.raw`
  * below; regenerate it from the source if the design changes.
  * ========================================================================== */
 
-/* --- Design tokens: SPECTRE dark theme (from the Lovable styles.css) --- */
+/* --- Design tokens: SPECTRE light theme — clean white, generous space, with
+ * crimson kept as the single brand accent and the product mock-ups left on dark
+ * "device" chrome for contrast (white page, dark screenshots). --- */
 .spectre-page {
-  --background: oklch(0.14 0.004 25);
-  --foreground: oklch(0.92 0 0);
-  --card: oklch(0.185 0.004 25);
-  --card-foreground: oklch(0.92 0 0);
+  --background: #ffffff;
+  --foreground: oklch(0.21 0.01 25);
+  --card: #ffffff;
+  --card-foreground: oklch(0.21 0.01 25);
   --primary: #f52e14;
-  --primary-foreground: oklch(0.99 0 0);
-  --muted: oklch(0.26 0.004 25);
-  --muted-foreground: oklch(0.72 0 0);
-  --accent: oklch(0.32 0.06 30);
-  --accent-foreground: oklch(0.92 0 0);
-  --border: oklch(0.31 0.004 25);
+  --primary-foreground: #ffffff;
+  --muted: oklch(0.972 0.002 255);
+  --muted-foreground: oklch(0.505 0.014 255);
+  --accent: oklch(0.966 0.028 22);
+  --accent-foreground: oklch(0.34 0.09 25);
+  --border: oklch(0.912 0.004 255);
   --ring: #f52e14;
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-  --spectre-dark: oklch(0.1 0.003 25);
-  --spectre-dark-muted: oklch(0.6 0.005 60);
-  --spectre-dark-line: oklch(0.325 0.002 150);
-  --spectre-teal: oklch(0.72 0.13 165);
-  --spectre-blue: oklch(0.68 0.11 245);
-  --spectre-gold: oklch(0.78 0.13 85);
-  --spectre-chart-fill: rgba(245, 46, 20, 0.16);
-  --spectre-shadow: 0 20px 65px oklch(0 0 0 / 0.45);
+  --spectre-dark: oklch(0.17 0.006 25);
+  --spectre-dark-muted: oklch(0.72 0.005 60);
+  --spectre-dark-line: oklch(0.32 0.004 25);
+  --spectre-teal: oklch(0.63 0.12 165);
+  --spectre-blue: oklch(0.56 0.13 250);
+  --spectre-gold: oklch(0.70 0.13 75);
+  --spectre-chart-fill: rgba(245, 46, 20, 0.10);
+  --spectre-shadow: 0 24px 60px -30px oklch(0.21 0.03 25 / 0.26);
   min-height: 100vh;
   overflow-x: clip; /* clip the scrolling tape etc.; clip (not hidden) keeps position:sticky working */
 }
@@ -89,7 +91,7 @@ export const SPECTRE_TEMPLATE_CSS = String.raw`
 .nav-links a:hover { color: var(--primary); }
 .nav-actions { gap: 8px; }
 .spectre-page .cta { border-radius: 6px; height: 46px; padding: 0 23px; font-size: 13px; box-shadow: none; }
-.hero-intro { padding: 65px 0 44px; text-align: center; }
+.hero-intro { padding: 94px 0 62px; text-align: center; }
 .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 600; color: var(--muted-foreground); text-transform: uppercase; }
 .eyebrow svg { width: 14px; height: 14px; color: var(--primary); }
 .hero-intro h1 { font-size: 72px; letter-spacing: -0.02em; line-height: 1.08; font-weight: 500; margin: 20px 0 18px; }
@@ -159,8 +161,8 @@ export const SPECTRE_TEMPLATE_CSS = String.raw`
 .source-strip p { font-size: 11px; color: var(--muted-foreground); }
 .source-names { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 42px; margin-top: 23px; font-size: 20px; font-weight: 600; color: var(--muted-foreground); }
 .source-names span:nth-child(2) { font-style: italic; }
-.section-pad { padding: 92px 0; }
-.section-heading { display: flex; align-items: end; justify-content: space-between; gap: 50px; margin-bottom: 38px; }
+.section-pad { padding: 124px 0; }
+.section-heading { display: flex; align-items: end; justify-content: space-between; gap: 50px; margin-bottom: 50px; }
 .section-heading h2,.section-copy h2 { font-size: 40px; line-height: 1.15; font-weight: 500; margin-top: 15px; }
 .section-heading > p { font-size: 14px; line-height: 1.7; color: var(--muted-foreground); max-width: 340px; }
 .product-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
@@ -374,7 +376,7 @@ export const SPECTRE_TEMPLATE_CSS = String.raw`
 @media (max-width:760px) { .hero-connector { flex-direction: column; } .hc-col { grid-template-columns: repeat(2,1fr); width: 100%; } .hc-col small { grid-column: 1/-1; text-align: center; } .hc-line { min-height: 28px; width: 1px; flex: none; } .hc-line i { top: 0; bottom: 0; left: 50%; right: auto; border-top: 0; border-left: 1.5px dashed var(--primary); } .hc-line em { align-self: center; } }
 
 .hero-intro { position: relative; }
-.hero-intro::before { content: ""; position: absolute; inset: -40px 10% auto; height: 420px; background: radial-gradient(closest-side, color-mix(in oklab, var(--primary) 22%, transparent), transparent); pointer-events: none; z-index: -1; }
+.hero-intro::before { content: ""; position: absolute; inset: -40px 6% auto; height: 440px; background: radial-gradient(closest-side, color-mix(in oklab, var(--primary) 11%, transparent), transparent); pointer-events: none; z-index: -1; }
 .hero-charts { display: grid; grid-template-columns: 1.6fr 1fr 1fr; gap: 14px; margin-top: 44px; text-align: left; }
 .hcard { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 16px; box-shadow: 0 20px 40px -24px color-mix(in oklab, var(--primary) 40%, transparent); }
 .hcard-head { display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; color: var(--muted-foreground); margin-bottom: 12px; }
@@ -470,13 +472,8 @@ export const SPECTRE_TEMPLATE_CSS = String.raw`
 .spectre-page { position: relative; z-index: 0; background: var(--background); isolation: isolate; }
 .spectre-page > * { position: relative; z-index: 1; }
 .spectre-page::before {
-  content: ""; position: absolute; left: 0; right: 0; top: 0; height: 1180px; z-index: 0; pointer-events: none;
-  background:
-    radial-gradient(ellipse 58% 46% at 50% 18%, color-mix(in oklab, var(--primary) 22%, transparent), transparent 72%),
-    linear-gradient(color-mix(in oklab, var(--foreground) 5.5%, transparent) 1px, transparent 1px) 0 0 / 56px 56px,
-    linear-gradient(90deg, color-mix(in oklab, var(--foreground) 5.5%, transparent) 1px, transparent 1px) 0 0 / 56px 56px;
-  -webkit-mask-image: radial-gradient(ellipse 100% 64% at 50% 12%, #000 34%, transparent 84%);
-          mask-image: radial-gradient(ellipse 100% 64% at 50% 12%, #000 34%, transparent 84%);
+  content: ""; position: absolute; left: 0; right: 0; top: 0; height: 720px; z-index: 0; pointer-events: none;
+  background: radial-gradient(ellipse 62% 52% at 50% 0%, color-mix(in oklab, var(--primary) 7%, transparent), transparent 68%);
 }
 
 /* ============================================================================

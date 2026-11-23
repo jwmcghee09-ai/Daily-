@@ -21,8 +21,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   ArrowRight, ArrowDown, BarChart3, Brain, Check, ChevronDown, Database, Download, Eye, FileSpreadsheet,
-  Layers, Lock, Newspaper, PieChart, Plug, Search, Server, ShieldCheck, Sparkles, Target,
-  Trash2, TrendingUp, Wallet, X,
+  Layers, Lock, Newspaper, PieChart, Plug, Search, ShieldCheck, Sparkles, Target,
+  TrendingUp, Wallet, X,
 } from "lucide-react";
 import { SPECTRE_TEMPLATE_CSS } from "./spectre-template-css";
 
@@ -699,9 +699,9 @@ export default function LandingPage({
         </section>
 
         <section className="connect-band section-pad spectre-container">
-          <Heading eyebrow="Security" title="Your data stays yours." />
+          <Heading eyebrow="Privacy & security" title="Your portfolio is yours alone." text="Your holdings power your private workspace and your AI's answers — nothing else. We never sell your data, every connection to your accounts is read-only, and you can erase everything in one click." />
           <div className="note-grid four">
-            {[[Database, "No data selling", "Holdings are used only to build your workspace. Site analytics never carry portfolio data."], [Trash2, "Delete anytime", "Clear holdings, snapshots, and alerts from the dashboard whenever you want."], [Lock, "Secure accounts", "scrypt password hashing, secure session cookies, and no card details on file."], [Server, "Hardened hosting", "HTTPS with CSP, HSTS, anti-framing headers, and encrypted backups."]].map(([I, t, d]) => {
+            {[[Lock, "Two-factor sign-in", "Protect your account with an authenticator app (TOTP) and one-time recovery codes, on top of scrypt-hashed passwords and secure, http-only session cookies."], [Eye, "Read-only by design", "SPECTRE connects to your broker, super and exchanges read-only. It can analyse your positions — it can never move money or place a trade."], [Database, "We never sell your data", "Your holdings build your workspace and your AI's answers, and nothing more. Product analytics never carry portfolio data."], [ShieldCheck, "Encrypted & deletable", "HTTPS with CSP, HSTS and anti-framing headers, encrypted backups, and one-click deletion of holdings, snapshots and alerts."]].map(([I, t, d]) => {
               const Icon = I as typeof Lock;
               return <div key={t as string}><Icon className="note-icon" /><h4>{t as string}</h4><p>{d as string}</p></div>;
             })}
