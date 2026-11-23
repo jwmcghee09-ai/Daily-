@@ -676,6 +676,10 @@ canvas{width:100%!important;height:220px;display:block}
 #universe-detail .ud-v{font-size:.82rem;color:var(--text);margin-top:.35rem}
 #universe-detail .ud-s{font-size:.68rem;color:var(--muted);margin-top:.15rem}
 #universe-detail .ud-x{position:absolute;top:.35rem;right:.5rem;color:var(--muted);cursor:pointer;font-size:.9rem;line-height:1}
+#universe-modes{position:absolute;top:12px;left:50%;transform:translateX(-50%);display:none;gap:.25rem;z-index:5;background:rgba(10,10,13,.7);border:1px solid var(--border);border-radius:999px;padding:.25rem}
+#universe-modes.show{display:flex}
+#universe-modes button{background:transparent;border:0;color:var(--muted);font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;font-weight:700;padding:.3rem .8rem;border-radius:999px;cursor:pointer}
+#universe-modes button.active{background:linear-gradient(135deg,#ee2d1b,#f55314);color:#fff}
 @media(max-width:700px){#universe-wrap{height:430px}#universe-legend{max-width:90%}#universe-breakdown{width:150px;font-size:.6rem}}
 .signal-badge{display:inline-flex;align-items:center;justify-content:center;padding:.22rem .62rem;border-radius:999px;background:rgba(245, 32, 20, .14);color:var(--purple-hi);font-family:var(--mono);font-size:.52rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}
 .signal-badge.orange{background:rgba(245, 101, 20, .12);color:var(--orange)}
@@ -2107,10 +2111,14 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
       <span class="sec-label">3D &middot; interactive</span>
     </div>
     <p class="settings-note" style="margin:.2rem 0 .9rem;font-size:.78rem;color:var(--muted);line-height:1.7">
-      Every holding as a world &mdash; clustered and coloured by sector, sized by what it&rsquo;s worth. When your funds are looked through, these are the real companies inside them. Drag to orbit, scroll to zoom, hover for the detail.
+      Your portfolio in 3D. <strong>Landscape</strong> raises a terrain where the peaks are where your money piles up; <strong>Web</strong> shows how it connects (you &rarr; funds &rarr; the companies inside them). Drag to orbit, scroll to zoom, hover or click for the detail.
     </p>
     <div id="universe-wrap">
       <canvas id="universe-canvas"></canvas>
+      <div id="universe-modes">
+        <button type="button" data-mode="land" class="active">Landscape</button>
+        <button type="button" data-mode="web">Web</button>
+      </div>
       <div id="universe-tip"></div>
       <div id="universe-legend"></div>
       <div id="universe-breakdown"></div>
@@ -7442,7 +7450,124 @@ async function startStripeCheckout(plan, triggerEl) {
   var THREE_SRC = "/vendor/three-r128.min.js";
   var BLOOM_SRC = "/vendor/three-bloom-r128.js";
   var colorCache = {};
-  var started = false, loading = false, animId = null, scene, camera, renderer, composer, bloom, raycaster, mouse, meshes = [];
+  var started = false, loading = false, animId = null, mode = "land", scene, camera, renderer, composer, bloom, raycaster, mouse, meshes = [], stepFn = null, inputReady = false, hoveredObj = null, curTotal = 0;
+  var oRot = { x: 0.3, y: 0.3 }, oDist = 200, oDrag = false, oLx = 0, oLy = 0, oDownX = 0, oDownY = 0, oAuto = true, oMinD = 60, oMaxD = 600, oTarget = [0,0,0], oClampLow = -1.35;
+  function viridis(t){
+    t = Math.max(0, Math.min(1, t));
+    var S = [[68,1,84],[72,40,120],[62,74,137],[49,104,142],[38,130,142],[31,158,137],[53,183,121],[109,205,89],[180,222,44],[253,231,37]];
+    var x = t*(S.length-1), i = Math.floor(x), f = x-i, a = S[i], b = S[Math.min(i+1, S.length-1)];
+    return [(a[0]+(b[0]-a[0])*f)/255, (a[1]+(b[1]-a[1])*f)/255, (a[2]+(b[2]-a[2])*f)/255];
+  }
+  function updateCam(){
+    camera.position.set(oTarget[0] + Math.sin(oRot.y)*Math.cos(oRot.x)*oDist, oTarget[1] + Math.sin(oRot.x)*oDist, oTarget[2] + Math.cos(oRot.y)*Math.cos(oRot.x)*oDist);
+    camera.lookAt(oTarget[0], oTarget[1], oTarget[2]);
+  }
+  function uniHover(e){
+    if (!camera) return;
+    var canvas = document.getElementById("universe-canvas"), rect = canvas.getBoundingClientRect(), tip = document.getElementById("universe-tip");
+    mouse.x = ((e.clientX-rect.left)/rect.width)*2-1; mouse.y = -((e.clientY-rect.top)/rect.height)*2+1;
+    raycaster.setFromCamera(mouse, camera);
+    var hit = raycaster.intersectObjects(meshes)[0];
+    hoveredObj = hit ? hit.object : null;
+    if (hit){
+      var d = hit.object.userData;
+      tip.innerHTML = '<div class="tip-t">'+esc(d.label)+'</div><div class="tip-v">'+money(d.value)+'</div><div class="tip-s">'+esc(d.sector)+(d.via?' &middot; via '+esc(d.via):'')+'</div>';
+      tip.style.opacity = 1;
+      var tx = e.clientX-rect.left+14, ty = e.clientY-rect.top+14;
+      tip.style.left = Math.min(tx, rect.width-180)+"px"; tip.style.top = Math.min(ty, rect.height-70)+"px";
+      canvas.style.cursor = "pointer";
+    } else { tip.style.opacity = 0; if (!oDrag) canvas.style.cursor = "grab"; }
+  }
+  function uniPick(e){
+    if (!camera) return;
+    var canvas = document.getElementById("universe-canvas"), rect = canvas.getBoundingClientRect(), det = document.getElementById("universe-detail");
+    mouse.x = ((e.clientX-rect.left)/rect.width)*2-1; mouse.y = -((e.clientY-rect.top)/rect.height)*2+1;
+    raycaster.setFromCamera(mouse, camera);
+    var hit = raycaster.intersectObjects(meshes)[0];
+    if (!det) return;
+    if (hit){ var d = hit.object.userData, pct = curTotal>0 ? (d.value/curTotal*100).toFixed(1) : "0";
+      det.innerHTML = '<span class="ud-x">&times;</span><div class="ud-t">'+esc(d.label)+'</div><div class="ud-n">'+esc(d.name||"")+'</div><div class="ud-v">'+money(d.value)+' &middot; '+pct+'% of portfolio</div><div class="ud-s">'+esc(d.sector)+(d.via?' &middot; via '+esc(d.via):'')+'</div>';
+      det.classList.add("show");
+      det.querySelector(".ud-x").addEventListener("click", function(){ det.classList.remove("show"); });
+    } else det.classList.remove("show");
+  }
+  function setupInput(){
+    if (inputReady) return; inputReady = true;
+    raycaster = new window.THREE.Raycaster(); mouse = new window.THREE.Vector2();
+    var canvas = document.getElementById("universe-canvas");
+    canvas.addEventListener("pointerdown", function(e){ oDrag=true; oAuto=false; oLx=e.clientX; oLy=e.clientY; oDownX=e.clientX; oDownY=e.clientY; canvas.style.cursor="grabbing"; });
+    window.addEventListener("pointerup", function(e){ if (oDrag && Math.abs(e.clientX-oDownX)<5 && Math.abs(e.clientY-oDownY)<5) uniPick(e); oDrag=false; canvas.style.cursor="grab"; });
+    window.addEventListener("pointermove", function(e){ if (oDrag){ oRot.y += (e.clientX-oLx)*0.006; oRot.x += (e.clientY-oLy)*0.006; oRot.x = Math.max(oClampLow, Math.min(1.45, oRot.x)); oLx=e.clientX; oLy=e.clientY; } uniHover(e); });
+    canvas.addEventListener("wheel", function(e){ e.preventDefault(); oDist = Math.max(oMinD, Math.min(oMaxD, oDist + e.deltaY*(oDist/1400))); }, { passive:false });
+    window.addEventListener("resize", function(){ if (!renderer || !camera) return; var wrap=document.getElementById("universe-wrap"), w=wrap.clientWidth, h=wrap.clientHeight; camera.aspect=w/h; camera.updateProjectionMatrix(); renderer.setSize(w,h,false); if (composer) composer.setSize(w,h); });
+  }
+  function loop(){ animId = requestAnimationFrame(loop); if (stepFn) stepFn(); }
+  function ensureRenderer(canvas, DPR){ if (!renderer){ renderer = new window.THREE.WebGLRenderer({ canvas: canvas, antialias: true }); renderer.setPixelRatio(DPR); } }
+  function teardown(){
+    stepFn = null; hoveredObj = null;
+    if (scene){ scene.traverse(function(o){ if (o.geometry && o.geometry.dispose) o.geometry.dispose(); if (o.material){ (Array.isArray(o.material)?o.material:[o.material]).forEach(function(m){ if (m.map && m.map.dispose) m.map.dispose(); if (m.dispose) m.dispose(); }); } }); }
+    scene = null; composer = null; var det = document.getElementById("universe-detail"); if (det) det.classList.remove("show");
+  }
+  function populatePanels(sectors, bySector, total, ranked){
+    var leg = document.getElementById("universe-legend");
+    if (leg){ leg.innerHTML = sectors.slice(0,10).map(function(s){ return '<span class="lg"><i style="background:'+cssHex(sectorColor(s))+'"></i>'+esc(s)+'</span>'; }).join(""); leg.classList.add("show"); }
+    var bd = document.getElementById("universe-breakdown");
+    if (bd){
+      var rows = sectors.map(function(s){ return { s: s, v: bySector[s].reduce(function(a,x){return a+x.value;},0) }; }).sort(function(a,b){ return b.v - a.v; });
+      var html = '<h4>Sectors</h4>';
+      rows.forEach(function(x){ var pct = total>0 ? x.v/total*100 : 0, col = cssHex(sectorColor(x.s));
+        html += '<div class="ub-row"><i style="background:'+col+'"></i><span class="ub-n">'+esc(x.s)+'</span><span class="ub-p">'+pct.toFixed(0)+'%</span></div><div class="ub-bar"><span style="width:'+Math.max(2,pct).toFixed(1)+'%;background:'+col+'"></span></div>';
+      });
+      html += '<h4 style="margin-top:.55rem">Biggest positions</h4>';
+      ranked.slice(0,6).forEach(function(p){ html += '<div class="ub-row"><i style="background:'+cssHex(sectorColor(p.sector))+'"></i><span class="ub-n">'+esc(p.label)+'</span><span class="ub-p">'+money(p.value)+'</span></div>'; });
+      bd.innerHTML = html; bd.classList.add("show");
+    }
+  }
+  function prep(){
+    var wrap = document.getElementById("universe-wrap");
+    var pts = dataPoints();
+    if (!pts.length){ document.getElementById("universe-empty").style.display = "block"; return null; }
+    document.getElementById("universe-empty").style.display = "none";
+    var bySector = {}; pts.forEach(function(p){ (bySector[p.sector] = bySector[p.sector] || []).push(p); });
+    var sectors = Object.keys(bySector).sort(function(a,b){ return bySector[b].reduce(function(s,x){return s+x.value;},0) - bySector[a].reduce(function(s,x){return s+x.value;},0); });
+    colorCache = {}; sectors.forEach(function(s, i){ colorCache[s] = SECTOR_PAL[i % SECTOR_PAL.length]; });
+    var ranked = pts.slice().sort(function(a,b){ return b.value - a.value; });
+    return { wrap: wrap, canvas: document.getElementById("universe-canvas"), T: window.THREE, pts: pts, bySector: bySector, sectors: sectors, ranked: ranked,
+      total: pts.reduce(function(s,p){return s+p.value;}, 0), maxVal: Math.max.apply(null, pts.map(function(p){return p.value;}).concat([1])),
+      W: wrap.clientWidth, H: wrap.clientHeight, DPR: Math.min(window.devicePixelRatio||1, 2) };
+  }
+  function buildLandscape(){
+    var d = prep(); if (!d) return; var T = d.T;
+    scene = new T.Scene(); scene.background = new T.Color(0x0a0a12);
+    camera = new T.PerspectiveCamera(50, d.W/d.H, 0.1, 6000);
+    ensureRenderer(d.canvas, d.DPR); renderer.setSize(d.W, d.H, false); renderer.setClearColor(0x0a0a12, 1);
+    scene.add(new T.AmbientLight(0xffffff, 0.6));
+    var dl = new T.DirectionalLight(0xffffff, 0.95); dl.position.set(60,150,50); scene.add(dl);
+    var dl2 = new T.DirectionalLight(0xff8a50, 0.25); dl2.position.set(-90,50,-60); scene.add(dl2);
+    var ranked = d.ranked, maxVal = d.maxVal, golden = Math.PI*(3-Math.sqrt(5));
+    ranked.forEach(function(p,i){ var rr = 15*Math.sqrt(i), a = i*golden; p._hx = rr*Math.cos(a); p._hz = rr*Math.sin(a); p._amp = 7 + 33*Math.sqrt(p.value/maxVal); p._sig = 11 + 7*Math.cbrt(p.value/maxVal); });
+    function heightAt(x,z){ var h = 2.2*Math.sin(x*0.07)*Math.cos(z*0.07) + 1.2*Math.sin((x+z)*0.045);
+      for (var i=0;i<ranked.length;i++){ var p=ranked[i], dx=x-p._hx, dz=z-p._hz; h += p._amp*Math.exp(-(dx*dx+dz*dz)/(2*p._sig*p._sig)); } return h; }
+    var N = 80, HS = 90, verts=[], cols=[], idx=[], hs=[], hmin=1e9, hmax=-1e9, ix, jz, x, z, hh;
+    for (jz=0; jz<N; jz++){ for (ix=0; ix<N; ix++){ x=-HS+ix/(N-1)*2*HS; z=-HS+jz/(N-1)*2*HS; hh=heightAt(x,z); verts.push(x,hh,z); hs.push(hh); if (hh<hmin)hmin=hh; if (hh>hmax)hmax=hh; } }
+    for (var kk=0;kk<hs.length;kk++){ var tN=(hs[kk]-hmin)/Math.max(1e-6,hmax-hmin), c=viridis(tN); cols.push(c[0],c[1],c[2]); }
+    for (jz=0; jz<N-1; jz++){ for (ix=0; ix<N-1; ix++){ var a2=jz*N+ix, b2=a2+1, c3=a2+N, d3=c3+1; idx.push(a2,c3,b2, b2,c3,d3); } }
+    var geo=new T.BufferGeometry(); geo.setAttribute("position", new T.Float32BufferAttribute(verts,3)); geo.setAttribute("color", new T.Float32BufferAttribute(cols,3)); geo.setIndex(idx); geo.computeVertexNormals();
+    scene.add(new T.Mesh(geo, new T.MeshStandardMaterial({ vertexColors:true, roughness:0.72, metalness:0.06, side:T.DoubleSide })));
+    scene.add(new T.LineSegments(new T.WireframeGeometry(geo), new T.LineBasicMaterial({ color:0x0a0a12, transparent:true, opacity:0.14, depthWrite:false })));
+    meshes = [];
+    ranked.forEach(function(p){ var pk=new T.Mesh(new T.SphereGeometry(Math.max(3, p._sig*0.7),8,8), new T.MeshBasicMaterial({ visible:false })); pk.position.set(p._hx, heightAt(p._hx,p._hz), p._hz); pk.userData=p; scene.add(pk); meshes.push(pk); });
+    ranked.slice(0, Math.min(ranked.length,14)).forEach(function(p){ var nl=nodeLabel(p.label); nl.position.set(p._hx, heightAt(p._hx,p._hz)+6, p._hz); scene.add(nl); });
+    curTotal = d.total; oTarget=[0, Math.max(8, hmax*0.18), 0]; oRot={ x:0.74, y:0.5 }; oDist=Math.round(HS*2.75); oMinD=HS*1.0; oMaxD=HS*4; oClampLow=0.18; oAuto=true;
+    populatePanels(d.sectors, d.bySector, d.total, d.ranked);
+    stepFn = function(){ if (oAuto) oRot.y += 0.0011; updateCam(); renderer.render(scene, camera); };
+  }
+  function start(m){
+    teardown(); mode = m;
+    var btns = document.querySelectorAll("#universe-modes button");
+    for (var i=0;i<btns.length;i++) btns[i].classList.toggle("active", btns[i].getAttribute("data-mode")===m);
+    if (m === "web") buildWeb(); else buildLandscape();
+  }
 
   function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); }
   function money(v){ try { return "A$"+Number(v).toLocaleString("en-AU",{maximumFractionDigits:0}); } catch(e){ return "A$"+Math.round(v||0); } }
@@ -7504,31 +7629,16 @@ async function startStripeCheckout(plan, triggerEl) {
       .filter(function(p){ return p.value > 0; });
   }
 
-  function build(){
-    var wrap = document.getElementById("universe-wrap"), canvas = document.getElementById("universe-canvas");
-    if (!wrap || !canvas || !window.THREE || !window.THREE.EffectComposer) return;
-    var T = window.THREE, pts = dataPoints();
-    if (!pts.length){ document.getElementById("universe-empty").style.display = "block"; return; }
-
-    var W = wrap.clientWidth, H = wrap.clientHeight, DPR = Math.min(window.devicePixelRatio || 1, 2);
+  function buildWeb(){
+    var d = prep(); if (!d) return;
+    var T = d.T, pts = d.pts, bySector = d.bySector, sectors = d.sectors, ranked = d.ranked, total = d.total, maxVal = d.maxVal, W = d.W, H = d.H, DPR = d.DPR;
     scene = new T.Scene(); scene.background = new T.Color(0x07070a);
     camera = new T.PerspectiveCamera(55, W/H, 0.1, 5000);
-    renderer = new T.WebGLRenderer({ canvas: canvas, antialias: true });
-    renderer.setPixelRatio(DPR); renderer.setSize(W, H, false); renderer.setClearColor(0x07070a, 1);
+    ensureRenderer(d.canvas, DPR); renderer.setSize(W, H, false); renderer.setClearColor(0x07070a, 1);
     composer = new T.EffectComposer(renderer);
     composer.addPass(new T.RenderPass(scene, camera));
     bloom = new T.UnrealBloomPass(new T.Vector2(W, H), 1.35, 0.7, 0.015);
     composer.addPass(bloom); composer.setPixelRatio(DPR); composer.setSize(W, H);
-
-    var bySector = {}; pts.forEach(function(p){ (bySector[p.sector] = bySector[p.sector] || []).push(p); });
-    var sectors = Object.keys(bySector).sort(function(a,b){
-      return bySector[b].reduce(function(s,x){return s+x.value;},0) - bySector[a].reduce(function(s,x){return s+x.value;},0);
-    });
-    // Assign each sector a distinct palette colour by value rank (so adjacent
-    // sectors never collide on the hash and stay easy to tell apart).
-    colorCache = {}; sectors.forEach(function(s, i){ colorCache[s] = SECTOR_PAL[i % SECTOR_PAL.length]; });
-    var maxVal = Math.max.apply(null, pts.map(function(p){return p.value;}).concat([1]));
-    var total = pts.reduce(function(s,p){return s+p.value;}, 0);
     var R = 46 + Math.sqrt(pts.length) * 7;
     var ORIGIN = new T.Vector3(0,0,0);
 
@@ -7552,8 +7662,7 @@ async function startStripeCheckout(plan, triggerEl) {
       var g = Math.max(0.1, Math.min(1, bright));
       lineC.push(1.0*g, 0.80*g, 0.34*g, 1.0*g, 0.46*g, 0.10*g);
     }
-    var ranked = pts.slice().sort(function(a,b){ return b.value - a.value; });
-    var labelSet = {}; ranked.slice(0, Math.min(ranked.length, 26)).forEach(function(p, idx){ labelSet[idx] = true; p._labeled = true; });
+    ranked.slice(0, Math.min(ranked.length, 26)).forEach(function(p){ p._labeled = true; });
     pts.forEach(function(p){
       var r = 1.1 + 5.5*Math.cbrt(p.value/maxVal), col = sectorColor(p.sector);
       var m = glowNode(r, col);
@@ -7586,85 +7695,21 @@ async function startStripeCheckout(plan, triggerEl) {
     scene.add(halo);
     var globe = globeShell(R * 1.32); scene.add(globe);
 
-    raycaster = new T.Raycaster(); mouse = new T.Vector2();
-    var rot = { x: 0.22, y: 0.3 }, dist = Math.round(R * 2.9), drag = false, lx = 0, ly = 0, auto = true, hovered = null, grown = 0, t = 0;
-    var minD = R * 1.25, maxD = R * 5.5;
+    curTotal = total; oTarget = [0,0,0]; oRot = { x: 0.22, y: 0.3 }; oDist = Math.round(R * 2.9);
+    oMinD = R * 1.25; oMaxD = R * 5.5; oClampLow = -1.35; oAuto = true;
+    populatePanels(sectors, bySector, total, ranked);
 
-    var downX = 0, downY = 0;
-    canvas.addEventListener("pointerdown", function(e){ drag = true; auto = false; lx = e.clientX; ly = e.clientY; downX = e.clientX; downY = e.clientY; canvas.style.cursor = "grabbing"; });
-    window.addEventListener("pointerup", function(e){
-      if (drag && Math.abs(e.clientX-downX) < 5 && Math.abs(e.clientY-downY) < 5) pick(e);
-      drag = false; canvas.style.cursor = "grab";
-    });
-    window.addEventListener("pointermove", function(e){
-      if (drag){ rot.y += (e.clientX-lx)*0.006; rot.x += (e.clientY-ly)*0.006; rot.x = Math.max(-1.35, Math.min(1.35, rot.x)); lx = e.clientX; ly = e.clientY; }
-      hover(e);
-    });
-    function pick(e){
-      var rect = canvas.getBoundingClientRect();
-      mouse.x = ((e.clientX-rect.left)/rect.width)*2-1; mouse.y = -((e.clientY-rect.top)/rect.height)*2+1;
-      raycaster.setFromCamera(mouse, camera);
-      var hit = raycaster.intersectObjects(meshes)[0], det = document.getElementById("universe-detail");
-      if (!det) return;
-      if (hit){
-        var d = hit.object.userData, pct = total > 0 ? (d.value/total*100).toFixed(1) : "0";
-        det.innerHTML = '<span class="ud-x">&times;</span><div class="ud-t">'+esc(d.label)+'</div><div class="ud-n">'+esc(d.name||"")+'</div><div class="ud-v">'+money(d.value)+' &middot; '+pct+'% of portfolio</div><div class="ud-s">'+esc(d.sector)+(d.via?' &middot; via '+esc(d.via):'')+'</div>';
-        det.classList.add("show");
-        det.querySelector(".ud-x").addEventListener("click", function(){ det.classList.remove("show"); });
-      } else { det.classList.remove("show"); }
-    }
-    canvas.addEventListener("wheel", function(e){ e.preventDefault(); dist = Math.max(minD, Math.min(maxD, dist + e.deltaY * (dist/1400))); }, { passive: false });
-
-    function hover(e){
-      if (!renderer) return;
-      var rect = canvas.getBoundingClientRect();
-      mouse.x = ((e.clientX-rect.left)/rect.width)*2-1; mouse.y = -((e.clientY-rect.top)/rect.height)*2+1;
-      raycaster.setFromCamera(mouse, camera);
-      var hit = raycaster.intersectObjects(meshes)[0], tip = document.getElementById("universe-tip");
-      hovered = hit ? hit.object : null;
-      if (hit){
-        var d = hit.object.userData;
-        tip.innerHTML = '<div class="tip-t">'+esc(d.label)+'</div><div class="tip-v">'+money(d.value)+'</div><div class="tip-s">'+esc(d.sector)+(d.via?' &middot; via '+esc(d.via):'')+'</div>';
-        tip.style.opacity = 1;
-        var tx = e.clientX-rect.left+14, ty = e.clientY-rect.top+14;
-        tip.style.left = Math.min(tx, rect.width-180)+"px"; tip.style.top = Math.min(ty, rect.height-70)+"px";
-        canvas.style.cursor = "pointer";
-      } else { tip.style.opacity = 0; if (!drag) canvas.style.cursor = "grab"; }
-    }
-
-    function frame(){
-      animId = requestAnimationFrame(frame); t += 0.016;
-      if (grown < 1) grown = Math.min(1, grown + 0.016);
-      meshes.forEach(function(m){ var b = grown >= 1 ? 1 : Math.max(0.001, Math.min(1, grown - m._t)); m.scale.setScalar(b * (m === hovered ? 1.5 : 1)); });
+    var grown = 0, tt = 0;
+    stepFn = function(){
+      tt += 0.016; if (grown < 1) grown = Math.min(1, grown + 0.016);
+      meshes.forEach(function(m){ var b = grown >= 1 ? 1 : Math.max(0.001, Math.min(1, grown - m._t)); m.scale.setScalar(b * (m === hoveredObj ? 1.5 : 1)); });
       lm.opacity = grown * 0.92;
-      halo.scale.setScalar(1 + 0.1*Math.sin(t*2.2));
-      if (auto) rot.y += 0.0013;
-      camera.position.set(Math.sin(rot.y)*Math.cos(rot.x)*dist, Math.sin(rot.x)*dist, Math.cos(rot.y)*Math.cos(rot.x)*dist);
-      camera.lookAt(0,0,0);
+      halo.scale.setScalar(1 + 0.1*Math.sin(tt*2.2));
+      if (oAuto) oRot.y += 0.0013;
+      updateCam();
       globe.rotation.y += 0.0005;
       composer.render();
-    }
-    frame();
-
-    var leg = document.getElementById("universe-legend");
-    if (leg){ leg.innerHTML = '<span class="lg"><i style="background:#fff2cc"></i>You</span>' + (Object.keys(funds).length ? '<span class="lg"><i style="background:#ff7a18"></i>Funds</span>' : '') + sectors.slice(0,9).map(function(s){ return '<span class="lg"><i style="background:'+cssHex(sectorColor(s))+'"></i>'+esc(s)+'</span>'; }).join(""); leg.classList.add("show"); }
-
-    var bd = document.getElementById("universe-breakdown");
-    if (bd){
-      var rows = sectors.map(function(s){ return { s: s, v: bySector[s].reduce(function(a,x){return a+x.value;},0) }; }).sort(function(a,b){ return b.v - a.v; });
-      var html = '<h4>Sectors</h4>';
-      rows.forEach(function(x){ var pct = total>0 ? x.v/total*100 : 0, col = cssHex(sectorColor(x.s));
-        html += '<div class="ub-row"><i style="background:'+col+'"></i><span class="ub-n">'+esc(x.s)+'</span><span class="ub-p">'+pct.toFixed(0)+'%</span></div><div class="ub-bar"><span style="width:'+Math.max(2,pct).toFixed(1)+'%;background:'+col+'"></span></div>';
-      });
-      html += '<h4 style="margin-top:.55rem">Biggest positions</h4>';
-      ranked.slice(0,6).forEach(function(p){ html += '<div class="ub-row"><i style="background:'+cssHex(sectorColor(p.sector))+'"></i><span class="ub-n">'+esc(p.label)+'</span><span class="ub-p">'+money(p.value)+'</span></div>'; });
-      bd.innerHTML = html; bd.classList.add("show");
-    }
-
-    window.addEventListener("resize", function(){
-      if (!renderer || !composer) return; var w = wrap.clientWidth, h = wrap.clientHeight;
-      camera.aspect = w/h; camera.updateProjectionMatrix(); renderer.setSize(w, h, false); composer.setSize(w, h);
-    });
+    };
   }
 
   function loadScript(src, cb){
@@ -7683,13 +7728,22 @@ async function startStripeCheckout(plan, triggerEl) {
     if (started) return; started = true;
     var btn = document.getElementById("universe-launch");
     if (btn) btn.textContent = "Loading…";
-    loadThree(function(){ if (btn) btn.style.display = "none"; build(); });
+    loadThree(function(){
+      if (btn) btn.style.display = "none";
+      var modes = document.getElementById("universe-modes"); if (modes) modes.classList.add("show");
+      setupInput(); loop(); start(mode);
+    });
   }
 
   function init(){
     var btn = document.getElementById("universe-launch");
     if (!btn) return;
     btn.addEventListener("click", launch);
+    var modes = document.getElementById("universe-modes");
+    if (modes) modes.addEventListener("click", function(e){
+      var b = e.target && e.target.closest ? e.target.closest("button[data-mode]") : null;
+      if (b && started && b.getAttribute("data-mode") !== mode) start(b.getAttribute("data-mode"));
+    });
     // Auto-launch when the panel scrolls into view (once), so it feels alive.
     if ("IntersectionObserver" in window) {
       var io = new IntersectionObserver(function(entries){
