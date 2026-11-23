@@ -7452,9 +7452,10 @@ async function startStripeCheckout(plan, triggerEl) {
   var colorCache = {};
   var started = false, loading = false, animId = null, mode = "land", scene, camera, renderer, composer, bloom, raycaster, mouse, meshes = [], stepFn = null, inputReady = false, hoveredObj = null, curTotal = 0;
   var oRot = { x: 0.3, y: 0.3 }, oDist = 200, oDrag = false, oLx = 0, oLy = 0, oDownX = 0, oDownY = 0, oAuto = true, oMinD = 60, oMaxD = 600, oTarget = [0,0,0], oClampLow = -1.35;
-  function viridis(t){
+  function heat(t){
     t = Math.max(0, Math.min(1, t));
-    var S = [[68,1,84],[72,40,120],[62,74,137],[49,104,142],[38,130,142],[31,158,137],[53,183,121],[109,205,89],[180,222,44],[253,231,37]];
+    // SPECTRE thermal ramp: deep-crimson valleys -> orange -> incandescent gold peaks.
+    var S = [[14,5,9],[48,9,15],[96,16,19],[158,30,21],[214,56,23],[246,96,24],[255,140,36],[255,184,74],[255,222,150],[255,246,224]];
     var x = t*(S.length-1), i = Math.floor(x), f = x-i, a = S[i], b = S[Math.min(i+1, S.length-1)];
     return [(a[0]+(b[0]-a[0])*f)/255, (a[1]+(b[1]-a[1])*f)/255, (a[2]+(b[2]-a[2])*f)/255];
   }
@@ -7538,23 +7539,23 @@ async function startStripeCheckout(plan, triggerEl) {
   }
   function buildLandscape(){
     var d = prep(); if (!d) return; var T = d.T;
-    scene = new T.Scene(); scene.background = new T.Color(0x0a0a12);
+    scene = new T.Scene(); scene.background = new T.Color(0x0b0608); scene.fog = new T.FogExp2(0x0b0608, 0.0019);
     camera = new T.PerspectiveCamera(50, d.W/d.H, 0.1, 6000);
-    ensureRenderer(d.canvas, d.DPR); renderer.setSize(d.W, d.H, false); renderer.setClearColor(0x0a0a12, 1);
-    scene.add(new T.AmbientLight(0xffffff, 0.6));
-    var dl = new T.DirectionalLight(0xffffff, 0.95); dl.position.set(60,150,50); scene.add(dl);
-    var dl2 = new T.DirectionalLight(0xff8a50, 0.25); dl2.position.set(-90,50,-60); scene.add(dl2);
+    ensureRenderer(d.canvas, d.DPR); renderer.setSize(d.W, d.H, false); renderer.setClearColor(0x0b0608, 1);
+    scene.add(new T.AmbientLight(0xffd8c0, 0.55));
+    var dl = new T.DirectionalLight(0xffe9d2, 1.0); dl.position.set(60,150,50); scene.add(dl);
+    var dl2 = new T.DirectionalLight(0xff3a1e, 0.38); dl2.position.set(-90,50,-60); scene.add(dl2);
     var ranked = d.ranked, maxVal = d.maxVal, golden = Math.PI*(3-Math.sqrt(5));
     ranked.forEach(function(p,i){ var rr = 15*Math.sqrt(i), a = i*golden; p._hx = rr*Math.cos(a); p._hz = rr*Math.sin(a); p._amp = 7 + 33*Math.sqrt(p.value/maxVal); p._sig = 11 + 7*Math.cbrt(p.value/maxVal); });
     function heightAt(x,z){ var h = 2.2*Math.sin(x*0.07)*Math.cos(z*0.07) + 1.2*Math.sin((x+z)*0.045);
       for (var i=0;i<ranked.length;i++){ var p=ranked[i], dx=x-p._hx, dz=z-p._hz; h += p._amp*Math.exp(-(dx*dx+dz*dz)/(2*p._sig*p._sig)); } return h; }
     var N = 80, HS = 90, verts=[], cols=[], idx=[], hs=[], hmin=1e9, hmax=-1e9, ix, jz, x, z, hh;
     for (jz=0; jz<N; jz++){ for (ix=0; ix<N; ix++){ x=-HS+ix/(N-1)*2*HS; z=-HS+jz/(N-1)*2*HS; hh=heightAt(x,z); verts.push(x,hh,z); hs.push(hh); if (hh<hmin)hmin=hh; if (hh>hmax)hmax=hh; } }
-    for (var kk=0;kk<hs.length;kk++){ var tN=(hs[kk]-hmin)/Math.max(1e-6,hmax-hmin), c=viridis(tN); cols.push(c[0],c[1],c[2]); }
+    for (var kk=0;kk<hs.length;kk++){ var tN=(hs[kk]-hmin)/Math.max(1e-6,hmax-hmin), c=heat(tN); cols.push(c[0],c[1],c[2]); }
     for (jz=0; jz<N-1; jz++){ for (ix=0; ix<N-1; ix++){ var a2=jz*N+ix, b2=a2+1, c3=a2+N, d3=c3+1; idx.push(a2,c3,b2, b2,c3,d3); } }
     var geo=new T.BufferGeometry(); geo.setAttribute("position", new T.Float32BufferAttribute(verts,3)); geo.setAttribute("color", new T.Float32BufferAttribute(cols,3)); geo.setIndex(idx); geo.computeVertexNormals();
     scene.add(new T.Mesh(geo, new T.MeshStandardMaterial({ vertexColors:true, roughness:0.72, metalness:0.06, side:T.DoubleSide })));
-    scene.add(new T.LineSegments(new T.WireframeGeometry(geo), new T.LineBasicMaterial({ color:0x0a0a12, transparent:true, opacity:0.14, depthWrite:false })));
+    scene.add(new T.LineSegments(new T.WireframeGeometry(geo), new T.LineBasicMaterial({ color:0xff7a2a, transparent:true, opacity:0.06, blending:T.AdditiveBlending, depthWrite:false })));
     meshes = [];
     ranked.forEach(function(p){ var pk=new T.Mesh(new T.SphereGeometry(Math.max(3, p._sig*0.7),8,8), new T.MeshBasicMaterial({ visible:false })); pk.position.set(p._hx, heightAt(p._hx,p._hz), p._hz); pk.userData=p; scene.add(pk); meshes.push(pk); });
     ranked.slice(0, Math.min(ranked.length,14)).forEach(function(p){ var nl=nodeLabel(p.label); nl.position.set(p._hx, heightAt(p._hx,p._hz)+6, p._hz); scene.add(nl); });
@@ -7571,8 +7572,10 @@ async function startStripeCheckout(plan, triggerEl) {
 
   function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); }
   function money(v){ try { return "A$"+Number(v).toLocaleString("en-AU",{maximumFractionDigits:0}); } catch(e){ return "A$"+Math.round(v||0); } }
-  var GOLD = 0xffb020, AMBER = 0xff7a18, COREC = 0xfff2cc, HOTC = 0xff5a1e;
-  var SECTOR_PAL = [0xffb020, 0x3ba0ff, 0x4ade80, 0xa855f7, 0xf472b6, 0x22d3ee, 0xf97316, 0xeab308, 0xf43f5e, 0x84cc16, 0x818cf8, 0x2dd4bf, 0xfb923c, 0x34d399];
+  var GOLD = 0xff7a1e, AMBER = 0xffb020, COREC = 0xfff2cc, HOTC = 0xff3a1e;
+  // SPECTRE ember spectrum: crimson/orange/gold brand tones with a few electric
+  // cyan/blue HUD accents (sci-fi orange-and-teal) to keep sectors legible.
+  var SECTOR_PAL = [0xff5a1e, 0xffb020, 0xff2d55, 0x22d3ee, 0xff8a3d, 0xffd60a, 0xf43f5e, 0x3ba0ff, 0xff6b35, 0xffe08a, 0xc71e4f, 0x7cf5ff, 0xff9f1c, 0xb07cff];
   function sectorColor(sec){
     var k = String(sec||"Other"); if (colorCache[k] != null) return colorCache[k];
     var h = 0; for (var i=0;i<k.length;i++) h = (h*31 + k.charCodeAt(i)) >>> 0;
@@ -7632,9 +7635,9 @@ async function startStripeCheckout(plan, triggerEl) {
   function buildWeb(){
     var d = prep(); if (!d) return;
     var T = d.T, pts = d.pts, bySector = d.bySector, sectors = d.sectors, ranked = d.ranked, total = d.total, maxVal = d.maxVal, W = d.W, H = d.H, DPR = d.DPR;
-    scene = new T.Scene(); scene.background = new T.Color(0x07070a);
+    scene = new T.Scene(); scene.background = new T.Color(0x08050a); scene.fog = new T.FogExp2(0x08050a, 0.0011);
     camera = new T.PerspectiveCamera(55, W/H, 0.1, 5000);
-    ensureRenderer(d.canvas, DPR); renderer.setSize(W, H, false); renderer.setClearColor(0x07070a, 1);
+    ensureRenderer(d.canvas, DPR); renderer.setSize(W, H, false); renderer.setClearColor(0x08050a, 1);
     composer = new T.EffectComposer(renderer);
     composer.addPass(new T.RenderPass(scene, camera));
     bloom = new T.UnrealBloomPass(new T.Vector2(W, H), 1.35, 0.7, 0.015);
