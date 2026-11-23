@@ -17,7 +17,7 @@
  * Lovable layout, which is already responsive).
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import {
   ArrowRight, ArrowDown, BarChart3, Brain, Check, ChevronDown, Database, Download, Eye, FileSpreadsheet,
@@ -66,7 +66,7 @@ function HeroCharts() {
       </div>
       <div className="hcard">
         <div className="hcard-head"><span>Risk signals</span><strong>Sample data</strong></div>
-        <table className="risk-summary-table"><thead><tr><th>Signal</th><th>Value</th></tr></thead><tbody>{[["1-day VaR (95%)", "−1.3%"], ["Beta vs ASX 200", "1.18"], ["Max drawdown", "−12.1%"], ["Top-10 concentration", "57%"]].map(([n, v]) => <tr key={n}><th scope="row">{n}</th><td>{v}</td></tr>)}</tbody></table>
+        <table className="risk-summary-table"><thead><tr><th>Signal</th><th>Value</th></tr></thead><tbody>{[["1-day VaR (95%)", "−1.3%", "Value at Risk — the most your portfolio would likely lose in a single day, 95% of the time."], ["Beta vs ASX 200", "1.18", "How much your portfolio moves with the ASX 200. Above 1 means it swings more than the market."], ["Max drawdown", "−12.1%", "The largest peak-to-trough fall over the period — your worst stretch so far."], ["Top-10 concentration", "57%", "How much of the portfolio sits in its ten biggest positions. Higher means less diversified."]].map(([n, v, tip]) => <tr key={n}><th scope="row"><Tip tip={tip}>{n}</Tip></th><td>{v}</td></tr>)}</tbody></table>
       </div>
     </div>
   );
@@ -162,7 +162,7 @@ function PhotoStory() {
       </div>
       <div className="ps-charts">
         <div className="hcard">
-          <div className="hcard-head"><span>Sector exposure: you vs ASX 200</span><strong>Look-through</strong></div>
+          <div className="hcard-head"><span>Sector exposure: you vs ASX 200</span><strong><Tip tip="Seeing the individual companies held inside your ETFs and managed funds — not just the fund names.">Look-through</Tip></strong></div>
           <div className="sector-bars">{sectors.map(([n, a, b]) => (
             <div key={n} className="sb-row"><span>{n}</span><div className="sb-track"><i className="you" style={{ width: `${a * 2.6}%` }} /><i className="idx" style={{ width: `${b * 2.6}%` }} /></div><b>{a}%</b></div>
           ))}</div>
@@ -438,6 +438,13 @@ function Heading({ eyebrow, title, text, id }: { eyebrow: string; title: string;
   return <div className="section-heading" id={id}><div><span className="eyebrow">{eyebrow}</span><h2>{title}</h2></div>{text && <p>{text}</p>}</div>;
 }
 
+// Inline glossary tooltip: a dashed term that explains itself on hover/focus.
+// `align="left"` anchors the card to the term's left edge near page margins.
+function Tip({ children, tip, align, down }: { children: ReactNode; tip: string; align?: "left"; down?: boolean }) {
+  const cls = ["tip", align === "left" ? "tip-left" : "", down ? "tip-down" : ""].filter(Boolean).join(" ");
+  return <span className={cls} tabIndex={0} data-tip={tip}>{children}</span>;
+}
+
 const REVEAL_SELECTOR = ".spectre-page section, .product-item, .why-item, .feature-list article, .workflow-step, .note-grid > div, .metrics-strip > div, .compare > div";
 
 function useScrollReveal() {
@@ -499,20 +506,24 @@ export default function LandingPage({
       <style dangerouslySetInnerHTML={{ __html: SPECTRE_TEMPLATE_CSS }} />
       <main className="spectre-page">
         <Tape />
-        <div className="spectre-container">
-          <nav className="spectre-nav">
-            <Link className="spectre-brand" href="/">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/spectre-mark.svg" alt="" aria-hidden="true" width={29} height={29} />
-              SPECTRE<span className="brand-dot">.</span>
-            </Link>
-            <div className="nav-links"><a href="#ai">AI</a><a href="#funds">Funds</a><a href="#scanner">Scanner</a><a href="#connect">Connect</a><Link href={RESEARCH}>Research</Link><Link href={DEMO}>Demo</Link><Link href="/download">Get the app</Link></div>
-            <div className="nav-actions">
-              <Link href={SIGNIN} className="cta cta-ghost">Sign In</Link>
-              <Link href={REGISTER} className="cta">Get Started Free</Link>
-            </div>
-          </nav>
+        <div className="nav-wrap">
+          <div className="spectre-container">
+            <nav className="spectre-nav">
+              <Link className="spectre-brand" href="/">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/spectre-mark.svg" alt="" aria-hidden="true" width={29} height={29} />
+                SPECTRE<span className="brand-dot">.</span>
+              </Link>
+              <div className="nav-links"><a href="#ai">AI</a><a href="#funds">Funds</a><a href="#scanner">Scanner</a><a href="#connect">Connect</a><Link href={RESEARCH}>Research</Link><Link href={DEMO}>Demo</Link><Link href="/download">Get the app</Link></div>
+              <div className="nav-actions">
+                <Link href={SIGNIN} className="cta cta-ghost">Sign In</Link>
+                <Link href={REGISTER} className="cta">Get Started Free</Link>
+              </div>
+            </nav>
+          </div>
+        </div>
 
+        <div className="spectre-container">
           <header className="hero-intro">
             {checkoutMessage ? <div className={`checkout-banner ${checkoutState === "success" ? "success" : ""}`}>{checkoutMessage}</div> : null}
             <span className="eyebrow"><Plug />The connector for your AI · Australia</span>
@@ -520,9 +531,9 @@ export default function LandingPage({
             <p>One link gives your AI your real holdings, the companies inside your funds, and risk numbers that are actually right.</p>
             <div className="hero-connector" aria-label="How SPECTRE connects">
               <div className="hc-col"><small>Your AI</small><span>Claude</span><span>ChatGPT</span><span>Cursor</span><span>Ollama</span></div>
-              <div className="hc-line"><i /><em>MCP</em></div>
+              <div className="hc-line"><i /><em><Tip down tip="Model Context Protocol — the open standard that lets an AI assistant plug straight into an outside tool or data source.">MCP</Tip></em></div>
               <div className="hc-hub"><strong>SPECTRE<span className="brand-dot">.</span></strong><small>10 tools</small></div>
-              <div className="hc-line"><i /><em>read-only</em></div>
+              <div className="hc-line"><i /><em><Tip down tip="SPECTRE can read your positions to analyse them. It can never move money or place a trade.">read-only</Tip></em></div>
               <div className="hc-col"><small>Your money</small><span>Broker</span><span>Super</span><span>Crypto & bullion</span><span>Fund filings</span></div>
             </div>
             <div className="hero-actions">
@@ -536,7 +547,7 @@ export default function LandingPage({
         </div>
         <section id="funds" className="section-pad spectre-container">
           <Heading eyebrow="Fund look-through" title="Your funds. The companies underneath." text="Reveal overlapping companies across ETFs, managed funds and super. Match dated issuer holdings or SEC N-PORT to the exact fund; use manager 13F only where independently verified as applicable." />
-          <div className="fund-source-strip"><span><Database />SEC N-PORT</span><span><FileSpreadsheet />Manager 13F · partial</span><span><Search />Official fund research</span><Link href={REGISTER} className="cta cta-outline btn-sm">Look through my funds <ArrowRight /></Link></div>
+          <div className="fund-source-strip"><span><Database /><Tip tip="A monthly portfolio filing US funds submit to the SEC — the full list of exactly what the fund holds." align="left">SEC N-PORT</Tip></span><span><FileSpreadsheet /><Tip tip="A quarterly filing of a manager's US-listed holdings. It covers only reportable US securities, so it's a partial view of the fund." align="left">Manager 13F · partial</Tip></span><span><Search />Official fund research</span><Link href={REGISTER} className="cta cta-outline btn-sm">Look through my funds <ArrowRight /></Link></div>
           <p className="flow-caption">Illustrative breakdowns below — not fetched SEC filings.</p>
           <div className="product-grid">
             <article className="product-item">
@@ -593,7 +604,7 @@ export default function LandingPage({
           <div className="metrics-strip">
             <div><strong>9</strong><span>Import sources</span></div>
             <div><strong>12+</strong><span>Risk signals</span></div>
-            <div><strong>500</strong><span>Monte Carlo paths</span></div>
+            <div><strong>500</strong><span><Tip tip="A simulation that runs your portfolio through 500 random future paths to show the range of outcomes, not just one guess.">Monte Carlo</Tip> paths</span></div>
             <div><strong>3</strong><span>Quant · AI · Research</span></div>
           </div>
         </div>

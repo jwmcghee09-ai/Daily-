@@ -486,4 +486,34 @@ export const SPECTRE_TEMPLATE_CSS = String.raw`
   .spectre-page .laptop-reveal { height: auto; }
   .spectre-page .lr-sticky { position: static; height: auto; min-height: 0; padding: 48px 16px 52px; gap: 18px; }
 }
+
+/* ============================================================================
+ * Intuitiveness layer: a sticky translucent nav, hover-lift on cards, and
+ * inline glossary tooltips that explain finance/AI jargon on hover or focus.
+ * ========================================================================== */
+
+/* Sticky, frosted nav so navigation is always a click away. */
+.nav-wrap { position: sticky; top: 0; z-index: 40; background: color-mix(in oklab, var(--background) 85%, transparent); -webkit-backdrop-filter: saturate(150%) blur(12px); backdrop-filter: saturate(150%) blur(12px); border-bottom: 1px solid var(--border); }
+.nav-wrap .spectre-nav { border-bottom: 0; }
+
+/* A gentle lift tells people a card is a real, tappable surface. */
+.spectre-page .product-item, .spectre-page .why-item, .spectre-page .hcard, .spectre-page .compare > div, .spectre-page .feature-list article { transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+.spectre-page .product-item:hover, .spectre-page .why-item:hover, .spectre-page .hcard:hover, .spectre-page .compare > div:hover { transform: translateY(-3px); box-shadow: 0 24px 50px -28px color-mix(in oklab, var(--primary) 42%, rgba(20,20,30,.4)); border-color: color-mix(in oklab, var(--primary) 32%, var(--border)); }
+
+/* Inline glossary tooltips. A dashed crimson underline signals "hover me"; the
+ * card shows on hover and keyboard focus and is dark for contrast on white. */
+.spectre-page .tip { position: relative; border-bottom: 1px dashed color-mix(in oklab, var(--primary) 50%, var(--border)); cursor: help; color: inherit; }
+.spectre-page .tip:focus-visible { outline: none; }
+.spectre-page .tip::after { content: attr(data-tip); position: absolute; left: 50%; bottom: calc(100% + 11px); transform: translate(-50%, 4px); width: max-content; max-width: min(260px, 72vw); background: var(--foreground); color: var(--background); font: 400 12px/1.5 'DM Sans', sans-serif; letter-spacing: 0; text-transform: none; text-align: left; padding: 9px 12px; border-radius: 9px; box-shadow: 0 16px 36px -10px rgba(20,20,30,.4); opacity: 0; pointer-events: none; transition: opacity .16s ease, transform .16s ease; z-index: 60; }
+.spectre-page .tip::before { content: ""; position: absolute; left: 50%; bottom: calc(100% + 5px); transform: translateX(-50%); border: 6px solid transparent; border-top-color: var(--foreground); opacity: 0; transition: opacity .16s ease; z-index: 60; }
+.spectre-page .tip:hover::after, .spectre-page .tip:focus-visible::after { opacity: 1; transform: translate(-50%, 0); }
+.spectre-page .tip:hover::before, .spectre-page .tip:focus-visible::before { opacity: 1; }
+.spectre-page .tip.tip-left::after { left: 0; transform: translate(0, 4px); }
+.spectre-page .tip.tip-left::before { left: 16px; }
+.spectre-page .tip.tip-left:hover::after, .spectre-page .tip.tip-left:focus-visible::after { transform: translate(0, 0); }
+/* Open downward for terms near the top of the page, so the card clears the
+ * sticky nav instead of tucking behind it. */
+.spectre-page .tip.tip-down::after { bottom: auto; top: calc(100% + 11px); transform: translate(-50%, -4px); }
+.spectre-page .tip.tip-down::before { bottom: auto; top: calc(100% + 5px); border-top-color: transparent; border-bottom-color: var(--foreground); }
+.spectre-page .tip.tip-down:hover::after, .spectre-page .tip.tip-down:focus-visible::after { transform: translate(-50%, 0); }
 `;
