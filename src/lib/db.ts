@@ -2081,7 +2081,7 @@ export function saveImport(userId: string, source: DataSource, holdings: Portfol
         holding.units,
         holding.price,
         sanitizeNumber(holding.prevClose, holding.price),
-        sanitizeNumber(holding.sessionOpen, holding.price),
+        sanitizeNumber(holding.sessionOpen, 0),
         sessionDate,
         holding.value,
         holding.costBase,
@@ -2174,7 +2174,7 @@ export function saveImportMulti(userId: string, holdings: PortfolioHolding[]): P
         holding.units,
         holding.price,
         sanitizeNumber(holding.prevClose, holding.price),
-        sanitizeNumber(holding.sessionOpen, holding.price),
+        sanitizeNumber(holding.sessionOpen, 0),
         sessionDate,
         holding.value,
         holding.costBase,
@@ -2481,8 +2481,26 @@ export async function refreshAsxPrices(userId: string): Promise<PriceRefreshResu
       WHERE id = ? AND source = 'gold'
     `);
 
+    // US holdings are converted USD->AUD on refresh. A session_open captured in
+    // USD (at import, before conversion) would read as a ~+51% "move" — the
+    // exchange rate, not a real gain. Force it to the converted market open so
+    // Session Movers compares like with like, repairing any stale USD value.
+    const usUpdateStmt = db.prepare(`
+      UPDATE holdings
+      SET
+        prev_close = ?,
+        price = ?,
+        value = CASE WHEN units > 0 THEN units * ? ELSE value END,
+        session_open = CASE WHEN ? > 0 THEN ? ELSE session_open END
+      WHERE source = 'us' AND ticker = ? AND id LIKE ?
+    `);
+
     for (const quote of quoteUpdates) {
-      updateStmt.run(quote.prevClose, quote.price, quote.price, quote.openPrice, quote.source, quote.ticker, scopedPattern);
+      if (quote.source === "us") {
+        usUpdateStmt.run(quote.prevClose, quote.price, quote.price, quote.openPrice, quote.openPrice, quote.ticker, scopedPattern);
+      } else {
+        updateStmt.run(quote.prevClose, quote.price, quote.price, quote.openPrice, quote.source, quote.ticker, scopedPattern);
+      }
     }
 
     for (const quote of bullionUpdates) {
