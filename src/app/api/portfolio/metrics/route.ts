@@ -197,11 +197,12 @@ export async function GET(request: NextRequest) {
           top3ConcentrationPct: lookThrough.positions
             .slice(0, 3)
             .reduce((sum, p) => sum + p.weightPct, 0),
-          topPositions: lookThrough.positions.slice(0, 25).map((p) => ({
+          topPositions: lookThrough.positions.slice(0, 60).map((p) => ({
             name: p.name,
             ticker: p.ticker ?? null,
             value: p.value,
             weightPct: p.weightPct,
+            sector: p.sector ?? null,
             heldDirectly: p.direct,
             via: p.via.map((v) => v.fundTicker),
           })),

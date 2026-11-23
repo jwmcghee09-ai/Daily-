@@ -647,6 +647,20 @@ canvas{width:100%!important;height:220px;display:block}
 .signal-card::before{content:'';position:absolute;inset:0 0 auto;height:1px;background:linear-gradient(90deg,rgba(245, 32, 20, .6),rgba(245, 101, 20, .4),transparent 80%)}
 .signal-card-head{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:1.2rem}
 .signal-card-title{font-family:var(--sans);font-size:.95rem;font-weight:700;color:var(--text)}
+#universe-wrap{position:relative;width:100%;height:540px;border:1px solid var(--border);border-radius:16px;overflow:hidden;background:radial-gradient(ellipse 60% 55% at 50% 42%, rgba(245,57,20,.07), transparent 72%), #09090c;touch-action:none}
+#universe-canvas{display:block;width:100%;height:100%;cursor:grab}
+#universe-tip{position:absolute;pointer-events:none;opacity:0;transition:opacity .1s;background:rgba(10,10,12,.94);border:1px solid var(--border);border-radius:9px;padding:.5rem .65rem;font-size:.75rem;color:var(--text);z-index:5;max-width:200px;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+#universe-tip .tip-t{font-weight:700;font-family:var(--mono);letter-spacing:.02em}
+#universe-tip .tip-v{color:var(--text);margin-top:.1rem}
+#universe-tip .tip-s{color:var(--muted);font-size:.66rem;margin-top:.15rem}
+#universe-legend{position:absolute;left:14px;bottom:12px;display:none;flex-wrap:wrap;gap:.3rem .8rem;max-width:72%;z-index:4}
+#universe-legend.show{display:flex}
+#universe-legend .lg{display:flex;align-items:center;gap:.32rem;font-size:.62rem;color:var(--muted);font-family:var(--mono)}
+#universe-legend .lg i{width:8px;height:8px;border-radius:50%;display:inline-block;flex:none}
+#universe-launch{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:linear-gradient(135deg,#ee2d1b,#f55314);color:#fff;border:0;border-radius:11px;padding:.75rem 1.5rem;font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700;cursor:pointer;z-index:6;box-shadow:0 14px 40px -10px rgba(245,57,20,.6)}
+#universe-launch:hover{opacity:.92;transform:translate(-50%,-50%) scale(1.03)}
+#universe-empty{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:var(--muted);font-size:.8rem;display:none;z-index:6}
+@media(max-width:700px){#universe-wrap{height:400px}#universe-legend{max-width:90%}}
 .signal-badge{display:inline-flex;align-items:center;justify-content:center;padding:.22rem .62rem;border-radius:999px;background:rgba(245, 32, 20, .14);color:var(--purple-hi);font-family:var(--mono);font-size:.52rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}
 .signal-badge.orange{background:rgba(245, 101, 20, .12);color:var(--orange)}
 .signal-list{display:grid;gap:.95rem}
@@ -2065,6 +2079,27 @@ tbody tr:hover{ background:rgba(245, 32, 20, .04) !important }
     </p>
     <div class="fund-list" id="fund-list"></div>
     <div class="fund-note" id="funds-missing"></div>
+  </section>
+</div>
+
+<!-- PORTFOLIO UNIVERSE (3D) -->
+<div class="wrap" data-page="quant">
+  <section class="sec" id="universe-sec">
+    <div class="sec-head">
+      <h2 class="sec-title">Portfolio Universe</h2>
+      <div class="sec-line"></div>
+      <span class="sec-label">3D &middot; interactive</span>
+    </div>
+    <p class="settings-note" style="margin:.2rem 0 .9rem;font-size:.78rem;color:var(--muted);line-height:1.7">
+      Every holding as a world &mdash; clustered and coloured by sector, sized by what it&rsquo;s worth. When your funds are looked through, these are the real companies inside them. Drag to orbit, scroll to zoom, hover for the detail.
+    </p>
+    <div id="universe-wrap">
+      <canvas id="universe-canvas"></canvas>
+      <div id="universe-tip"></div>
+      <div id="universe-legend"></div>
+      <button id="universe-launch" type="button">◆ Launch 3D view</button>
+      <div id="universe-empty">Add some holdings to see your universe.</div>
+    </div>
   </section>
 </div>
 
@@ -7378,6 +7413,171 @@ async function startStripeCheckout(plan, triggerEl) {
         out.innerHTML='<div style="font-family:var(--mono);font-size:.68rem;color:#f31616;padding:1rem 0">Network error: '+esc(String(e&&e.message||e))+'</div>';
       });
   };
+})();
+</script>
+<script>
+/* Portfolio Universe — a 3D, interactive map of every holding, clustered and
+ * coloured by sector and sized by value. Three.js is self-hosted (CSP: 'self')
+ * and loaded lazily only when the view is launched. */
+(function universeModule(){
+  "use strict";
+  var THREE_SRC = "/vendor/three-r128.min.js";
+  var PALETTE = ["#f5513e","#f59b14","#ffd23f","#63d471","#2dd4bf","#38bdf8","#818cf8","#c084fc","#f472b6","#fb7185","#a3e635","#e879f9","#f97316","#22d3ee"];
+  var colorCache = {};
+  var started = false, loading = false, animId = null, scene, camera, renderer, raycaster, mouse, meshes = [];
+
+  function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); }
+  function money(v){ try { return "A$"+Number(v).toLocaleString("en-AU",{maximumFractionDigits:0}); } catch(e){ return "A$"+Math.round(v||0); } }
+  function sectorColor(s){
+    var k = String(s||"Other"); if (colorCache[k]) return colorCache[k];
+    var h=0; for (var i=0;i<k.length;i++) h=(h*31+k.charCodeAt(i))>>>0;
+    return (colorCache[k] = PALETTE[h % PALETTE.length]);
+  }
+  function fib(i, n, radius){
+    var phi = Math.acos(1 - 2*(i+0.5)/Math.max(n,1));
+    var theta = Math.PI*(1+Math.sqrt(5))*(i+0.5);
+    return new window.THREE.Vector3(radius*Math.cos(theta)*Math.sin(phi), radius*Math.sin(theta)*Math.sin(phi), radius*Math.cos(phi));
+  }
+  function label(text, color){
+    var T = window.THREE, c = document.createElement("canvas"); c.width = 256; c.height = 64;
+    var ctx = c.getContext("2d");
+    ctx.font = "bold 30px ui-monospace, monospace"; ctx.fillStyle = color; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText(String(text).slice(0,16).toUpperCase(), 128, 34);
+    var sp = new T.Sprite(new T.SpriteMaterial({ map: new T.CanvasTexture(c), transparent: true, depthWrite: false }));
+    sp.scale.set(26, 6.5, 1); return sp;
+  }
+
+  function dataPoints(){
+    var st = window.state || {};
+    var lt = st.lookThrough;
+    if (lt && Array.isArray(lt.topPositions) && lt.topPositions.length) {
+      return lt.topPositions
+        .map(function(p){ return { label: p.ticker || p.name, name: p.name || p.ticker, value: Math.max(0, Number(p.value)||0), sector: p.sector || "Other", via: (p.via && p.via.length) ? p.via.join(", ") : "" }; })
+        .filter(function(p){ return p.value > 0; });
+    }
+    var hs = (st.portfolio && st.portfolio.holdings) || [];
+    return hs.map(function(h){ return { label: h.ticker || h.name, name: h.name || h.ticker, value: Math.max(0, Number(h.value)||0), sector: h.sector || "Other", via: "" }; })
+      .filter(function(p){ return p.value > 0; });
+  }
+
+  function build(){
+    var wrap = document.getElementById("universe-wrap"), canvas = document.getElementById("universe-canvas");
+    if (!wrap || !canvas || !window.THREE) return;
+    var T = window.THREE, pts = dataPoints();
+    if (!pts.length){ document.getElementById("universe-empty").style.display = "block"; return; }
+
+    var W = wrap.clientWidth, H = wrap.clientHeight;
+    scene = new T.Scene();
+    camera = new T.PerspectiveCamera(55, W/H, 0.1, 3000); camera.position.set(0,0,150);
+    renderer = new T.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2)); renderer.setSize(W, H, false);
+    scene.add(new T.AmbientLight(0xffffff, 0.8));
+    var l1 = new T.PointLight(0xffffff, 0.85); l1.position.set(90,130,120); scene.add(l1);
+    var l2 = new T.PointLight(0xff5a3c, 0.45); l2.position.set(-130,-70,50); scene.add(l2);
+
+    var bySector = {}; pts.forEach(function(p){ (bySector[p.sector] = bySector[p.sector] || []).push(p); });
+    var sectors = Object.keys(bySector).sort(function(a,b){
+      return bySector[b].reduce(function(s,x){return s+x.value;},0) - bySector[a].reduce(function(s,x){return s+x.value;},0);
+    });
+    var maxVal = Math.max.apply(null, pts.map(function(p){return p.value;}).concat([1]));
+    var spread = 46 + sectors.length * 2.6;
+
+    var group = new T.Group(); meshes = [];
+    sectors.forEach(function(sector, si){
+      var center = fib(si, sectors.length, spread), col = sectorColor(sector);
+      var members = bySector[sector];
+      var lbl = label(sector, col); lbl.position.copy(center).multiplyScalar(1.28); group.add(lbl);
+      var clusterR = 9 + Math.sqrt(members.length) * 3.2;
+      members.forEach(function(p, pi){
+        var r = 2.0 + 10 * Math.cbrt(p.value / maxVal);
+        var geo = new T.SphereGeometry(r, 22, 22);
+        var mat = new T.MeshStandardMaterial({ color: col, roughness: 0.45, metalness: 0.25, emissive: new T.Color(col).multiplyScalar(0.14) });
+        var m = new T.Mesh(geo, mat);
+        m.position.copy(center).add(fib(pi, Math.max(members.length,1), clusterR));
+        m.userData = p; m.scale.setScalar(0.001); m._t = pi * 0.03;
+        group.add(m); meshes.push(m);
+      });
+    });
+    scene.add(group);
+
+    raycaster = new T.Raycaster(); mouse = new T.Vector2();
+    var rot = { x: 0.25, y: 0.3 }, dist = Math.round(spread * 2.7), drag = false, lx = 0, ly = 0, auto = true, hovered = null, grown = 0;
+    var minD = spread * 1.1, maxD = spread * 5;
+
+    canvas.addEventListener("pointerdown", function(e){ drag = true; auto = false; lx = e.clientX; ly = e.clientY; canvas.style.cursor = "grabbing"; });
+    window.addEventListener("pointerup", function(){ drag = false; canvas.style.cursor = "grab"; });
+    window.addEventListener("pointermove", function(e){
+      if (drag){ rot.y += (e.clientX-lx)*0.006; rot.x += (e.clientY-ly)*0.006; rot.x = Math.max(-1.35, Math.min(1.35, rot.x)); lx = e.clientX; ly = e.clientY; }
+      hover(e);
+    });
+    canvas.addEventListener("wheel", function(e){ e.preventDefault(); dist = Math.max(minD, Math.min(maxD, dist + e.deltaY * (dist/1600))); }, { passive: false });
+
+    function hover(e){
+      if (!renderer) return;
+      var rect = canvas.getBoundingClientRect();
+      mouse.x = ((e.clientX-rect.left)/rect.width)*2-1; mouse.y = -((e.clientY-rect.top)/rect.height)*2+1;
+      raycaster.setFromCamera(mouse, camera);
+      var hit = raycaster.intersectObjects(meshes)[0], tip = document.getElementById("universe-tip");
+      if (hovered && (!hit || hit.object !== hovered)) { hovered.material.emissiveIntensity = 1; hovered = null; }
+      if (hit){
+        hovered = hit.object; var d = hit.object.userData;
+        tip.innerHTML = '<div class="tip-t">'+esc(d.label)+'</div><div class="tip-v">'+money(d.value)+'</div><div class="tip-s">'+esc(d.sector)+(d.via?' &middot; via '+esc(d.via):'')+'</div>';
+        tip.style.opacity = 1;
+        var tx = e.clientX-rect.left+14, ty = e.clientY-rect.top+14;
+        tip.style.left = Math.min(tx, rect.width-180)+"px"; tip.style.top = Math.min(ty, rect.height-70)+"px";
+        canvas.style.cursor = "pointer";
+      } else { tip.style.opacity = 0; if (!drag) canvas.style.cursor = "grab"; }
+    }
+
+    function frame(){
+      animId = requestAnimationFrame(frame);
+      if (grown < 1){ grown = Math.min(1, grown + 0.02); meshes.forEach(function(m){ var s = Math.max(0, Math.min(1, grown - m._t)); m.scale.setScalar(s < 0 ? 0.001 : s); }); }
+      if (auto) rot.y += 0.0016;
+      camera.position.set(Math.sin(rot.y)*Math.cos(rot.x)*dist, Math.sin(rot.x)*dist, Math.cos(rot.y)*Math.cos(rot.x)*dist);
+      camera.lookAt(0,0,0);
+      renderer.render(scene, camera);
+    }
+    frame();
+
+    var leg = document.getElementById("universe-legend");
+    if (leg){ leg.innerHTML = sectors.map(function(s){ return '<span class="lg"><i style="background:'+sectorColor(s)+'"></i>'+esc(s)+'</span>'; }).join(""); leg.classList.add("show"); }
+
+    window.addEventListener("resize", function(){
+      if (!renderer) return; var w = wrap.clientWidth, h = wrap.clientHeight;
+      camera.aspect = w/h; camera.updateProjectionMatrix(); renderer.setSize(w, h, false);
+    });
+  }
+
+  function loadThree(cb){
+    if (window.THREE) return cb();
+    if (loading) return; loading = true;
+    var s = document.createElement("script"); s.src = THREE_SRC;
+    s.onload = function(){ cb(); };
+    s.onerror = function(){ loading = false; var b = document.getElementById("universe-launch"); if (b){ b.textContent = "Couldn't load 3D"; } };
+    document.head.appendChild(s);
+  }
+
+  function launch(){
+    if (started) return; started = true;
+    var btn = document.getElementById("universe-launch");
+    if (btn) btn.textContent = "Loading…";
+    loadThree(function(){ if (btn) btn.style.display = "none"; build(); });
+  }
+
+  function init(){
+    var btn = document.getElementById("universe-launch");
+    if (!btn) return;
+    btn.addEventListener("click", launch);
+    // Auto-launch when the panel scrolls into view (once), so it feels alive.
+    if ("IntersectionObserver" in window) {
+      var io = new IntersectionObserver(function(entries){
+        entries.forEach(function(en){ if (en.isIntersecting){ io.disconnect(); launch(); } });
+      }, { threshold: 0.25 });
+      io.observe(document.getElementById("universe-sec"));
+    }
+  }
+  if (document.readyState === "complete" || document.readyState === "interactive") setTimeout(init, 0);
+  else window.addEventListener("DOMContentLoaded", init);
 })();
 </script>
 </body>
