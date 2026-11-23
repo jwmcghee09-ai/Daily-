@@ -5472,8 +5472,9 @@ export function listFundCompositions(userId = ""): Array<{
  *   4 — + IHVV, and IEM pointed at the right US fund
  *   5 — 13F restricted to filers whose business is holding securities
  *   6 — + FMP structured holdings fallback, and IOO added to the feeder map
+ *   7 — + AI estimate fallback for funds with no structured source
  */
-export const FUND_RESOLVER_VERSION = 6;
+export const FUND_RESOLVER_VERSION = 7;
 
 /** True when this ticker was recently checked, by this resolver, and missed. */
 export function isRecentResolutionMiss(ticker: string): boolean {
