@@ -142,15 +142,19 @@ export async function lookThroughPortfolio(
           coverageNote: resolved.coverageNote,
         });
       } else {
-        // No structured source could answer. For a genuine fund holding, fall
-        // back to an AI estimate from the fund's name so "see inside your funds"
-        // still shows a breakdown (labelled as an estimate, route "ai"). For a
-        // plain share, record the miss as before — we never AI-guess a stock's
-        // "holdings".
-        // A genuine fund by category, or a cross-listed ETF (e.g. IHVV -> IVV)
-        // that may have been labelled as a plain ASX listing. Never a bare share.
-        const fundLike = holding.source === "fund" || holding.source === "index" || holding.source === "super"
-          || Boolean(ASX_TO_US_FUND[symbol]);
+        // No structured source could answer. Fall back to an AI estimate for any
+        // holding that is a FUND — classified as a fund/ETF, imported as a fund/
+        // index/super line, or a cross-listed ETF — so "see inside your funds"
+        // works for every fund, not a hand-picked few. Never for a plain company:
+        // we don't guess a business's "holdings".
+        const identity = await import("@/lib/instrument-kind")
+          .then((m) => m.classifyInstrument(holding.ticker, { market: australian ? "asx" : undefined, source: holding.source }))
+          .catch(() => null);
+        const fundLike = identity?.kind !== "company" && (
+          identity?.kind === "fund"
+          || holding.source === "fund" || holding.source === "index" || holding.source === "super"
+          || Boolean(ASX_TO_US_FUND[symbol])
+        );
         const aiComp = fundLike
           ? await fetchAiComposition(holding.ticker, holding.name).catch(() => null)
           : null;

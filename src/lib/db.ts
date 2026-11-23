@@ -5493,8 +5493,10 @@ export function listFundCompositions(userId = ""): Array<{
  *   7 — + AI estimate fallback for funds with no structured source
  *   8 — AI fallback recognises well-known ETF tickers (IHVV, VAS, …) and runs
  *       for cross-listed ETFs; retry funds the bare-ticker AI had missed
+ *   9 — AI fallback runs for any holding classified as a fund/ETF (not just by
+ *       source), so every fund is looked through, never a plain company
  */
-export const FUND_RESOLVER_VERSION = 8;
+export const FUND_RESOLVER_VERSION = 9;
 
 /** True when this ticker was recently checked, by this resolver, and missed. */
 export function isRecentResolutionMiss(ticker: string): boolean {
