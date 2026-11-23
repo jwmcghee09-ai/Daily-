@@ -25,6 +25,8 @@ interface AuthSessionPayload {
   user?: SessionUser;
   verificationRequired?: boolean;
   message?: string;
+  totpRequired?: boolean;
+  challengeToken?: string;
 }
 
 interface ApiError {
@@ -81,6 +83,10 @@ export default function SignInPage({
   const [banner, setBanner] = useState<{ tone: "success" | "info" | "error"; message: string } | null>(null);
   const [sessionUser, setSessionUser] = useState<SessionUser | null>(null);
   const [showVerificationLinks, setShowVerificationLinks] = useState(false);
+  // Two-factor sign-in: when the password is right but 2FA is on, the server
+  // returns a short-lived challenge token and we collect a 6-digit code.
+  const [totpChallenge, setTotpChallenge] = useState<string | null>(null);
+  const [totpCode, setTotpCode] = useState("");
   const activeSessionHasPaidAccess = sessionUser ? userHasPaidAccess(sessionUser) : false;
 
   useEffect(() => {
@@ -151,6 +157,68 @@ export default function SignInPage({
     setBanner(null);
   }
 
+  // Shared success path for both a plain login and a completed 2FA challenge.
+  async function finishLogin(payload: AuthSessionPayload) {
+    if (!payload.authenticated || !payload.user) {
+      throw new Error("Authentication failed.");
+    }
+
+    const normalizedUser = normalizeSessionUser(payload.user);
+    setSessionUser(normalizedUser);
+    setPassword("");
+    setAcceptTerms(false);
+    setTotpChallenge(null);
+    setTotpCode("");
+    setBanner({ tone: "success", message: `Welcome, ${normalizedUser.displayName}.` });
+
+    if (nextPath) {
+      // A full navigation, not a client-side push: the destination may be a
+      // route handler rather than a page.
+      window.location.assign(nextPath);
+      return;
+    }
+
+    if (selectedPlan === "free") {
+      router.push("/dashboard?mode=account");
+      router.refresh();
+      return;
+    }
+
+    if (authMode === "register" || hasRequestedCheckout || !userHasPaidAccess(normalizedUser)) {
+      await startCheckout(selectedPlan, normalizedUser.email);
+      return;
+    }
+
+    router.push("/dashboard?mode=account");
+    router.refresh();
+  }
+
+  async function submitTotp(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!totpChallenge) return;
+
+    setWorking(true);
+    setAuthError("");
+
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ challengeToken: totpChallenge, totpCode: totpCode.trim() }),
+      });
+
+      if (!response.ok) {
+        throw new Error(await parseApiError(response, "Verification failed."));
+      }
+
+      await finishLogin((await response.json()) as AuthSessionPayload);
+    } catch (error) {
+      setAuthError(error instanceof Error ? error.message : "Verification failed.");
+    } finally {
+      setWorking(false);
+    }
+  }
+
   async function submitAuth(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -192,36 +260,16 @@ export default function SignInPage({
         return;
       }
 
-      if (!payload.authenticated || !payload.user) {
-        throw new Error("Authentication failed.");
-      }
-
-      const normalizedUser = normalizeSessionUser(payload.user);
-      setSessionUser(normalizedUser);
-      setPassword("");
-      setAcceptTerms(false);
-      setBanner({ tone: "success", message: `Welcome, ${normalizedUser.displayName}.` });
-
-      if (nextPath) {
-        // A full navigation, not a client-side push: the destination may be a
-        // route handler rather than a page.
-        window.location.assign(nextPath);
+      // Password accepted but 2FA is on: switch to the code-entry step.
+      if (payload.totpRequired && payload.challengeToken) {
+        setTotpChallenge(payload.challengeToken);
+        setTotpCode("");
+        setAuthError("");
+        setWorking(false);
         return;
       }
 
-      if (selectedPlan === "free") {
-        router.push("/dashboard?mode=account");
-        router.refresh();
-        return;
-      }
-
-      if (authMode === "register" || hasRequestedCheckout || !userHasPaidAccess(normalizedUser)) {
-        await startCheckout(selectedPlan, normalizedUser.email);
-        return;
-      }
-
-      router.push("/dashboard?mode=account");
-      router.refresh();
+      await finishLogin(payload);
     } catch (error) {
       setAuthError(error instanceof Error ? error.message : "Authentication failed.");
     } finally {
@@ -583,7 +631,37 @@ export default function SignInPage({
                   ) : null}
                   {authError ? <div className={`${styles.banner} ${styles.bannerError}`}>{authError}</div> : null}
 
-                  {!sessionUser ? (
+                  {totpChallenge ? (
+                    <form className={styles.formGrid} onSubmit={submitTotp}>
+                      <p style={{ fontSize: 13, lineHeight: 1.6, color: "var(--muted-foreground, #6b7280)", margin: 0 }}>
+                        Enter the 6-digit code from your authenticator app. You can also use one of your one-time recovery codes.
+                      </p>
+                      <label>
+                        <span>Verification code</span>
+                        <input
+                          type="text"
+                          value={totpCode}
+                          onChange={(e) => setTotpCode(e.target.value)}
+                          placeholder="123456"
+                          inputMode="numeric"
+                          autoComplete="one-time-code"
+                          autoFocus
+                          maxLength={14}
+                          required
+                        />
+                      </label>
+                      <button type="submit" className={`${styles.button} ${styles.primaryButton} ${styles.fullButton}`} disabled={working}>
+                        {working ? "Verifying..." : "Verify & Sign In"}
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.toggleButton}
+                        onClick={() => { setTotpChallenge(null); setTotpCode(""); setAuthError(""); }}
+                      >
+                        Back to sign in
+                      </button>
+                    </form>
+                  ) : !sessionUser ? (
                     <form className={styles.formGrid} onSubmit={submitAuth}>
                       <label>
                         <span>Email</span>

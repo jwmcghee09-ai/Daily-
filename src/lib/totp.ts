@@ -1,13 +1,16 @@
 import { TOTP, Secret } from "otpauth";
 import crypto from "node:crypto";
 
-const TOTP_ENCRYPTION_KEY = (() => {
+// Resolved lazily (not at module load) so importing this file never crashes a
+// build or an unrelated route; the production-key requirement is enforced only
+// when a secret is actually encrypted or decrypted.
+function totpEncryptionKey(): string {
   const key = process.env.TOTP_ENCRYPTION_KEY;
   if (!key && process.env.NODE_ENV === "production") {
     throw new Error("TOTP_ENCRYPTION_KEY environment variable must be set in production");
   }
   return key || "default-dev-key-change-in-prod-32ch";
-})();
+}
 
 export function generateTotpSecret(): { secret: string; uri: string } {
   const totp = new TOTP({
@@ -35,7 +38,7 @@ export function verifyTotpCode(secret: string, code: string): boolean {
 }
 
 export function encryptSecret(plaintext: string): string {
-  const key = crypto.scryptSync(TOTP_ENCRYPTION_KEY, "spectre-totp-salt", 32);
+  const key = crypto.scryptSync(totpEncryptionKey(), "spectre-totp-salt", 32);
   const iv = crypto.randomBytes(16);
   const cipher = crypto.createCipheriv("aes-256-cbc", key, iv);
   let encrypted = cipher.update(plaintext, "utf8", "hex");
@@ -45,7 +48,7 @@ export function encryptSecret(plaintext: string): string {
 
 export function decryptSecret(ciphertext: string): string {
   const [ivHex, encrypted] = ciphertext.split(":");
-  const key = crypto.scryptSync(TOTP_ENCRYPTION_KEY, "spectre-totp-salt", 32);
+  const key = crypto.scryptSync(totpEncryptionKey(), "spectre-totp-salt", 32);
   const iv = Buffer.from(ivHex, "hex");
   const decipher = crypto.createDecipheriv("aes-256-cbc", key, iv);
   let decrypted = decipher.update(encrypted, "hex", "utf8");

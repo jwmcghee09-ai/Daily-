@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
 import {
+  consumeTotpChallenge,
+  createTotpChallenge,
   findAuthUserByEmail,
+  findAuthUserById,
+  getTotpRecord,
+  isUserTotpEnabled,
   readUserEntitlements,
+  saveRecoveryCodes,
 } from "@/lib/db";
 import {
   applySessionCookie,
@@ -13,6 +19,7 @@ import {
   verifyPassword,
 } from "@/lib/auth";
 import { consumeRateLimit } from "@/lib/rate-limit";
+import { decryptSecret, hashRecoveryCode, verifyTotpCode } from "@/lib/totp";
 
 export const runtime = "nodejs";
 
@@ -23,6 +30,8 @@ const LOGIN_WINDOW_MS = 15 * 60 * 1000;
 interface LoginPayload {
   email?: string;
   password?: string;
+  challengeToken?: string;
+  totpCode?: string;
 }
 
 function buildAuthenticatedResponse(userId: string, email: string, displayName: string) {
@@ -67,6 +76,55 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid request." }, { status: 400 });
     }
 
+    /* ---------------------------------------------------------------- */
+    /*  TOTP challenge verification flow                                 */
+    /*  Reached only after a correct password issued a challenge token.  */
+    /* ---------------------------------------------------------------- */
+    if (payload.challengeToken && payload.totpCode) {
+      const challengeToken = payload.challengeToken.trim();
+      const totpCode = payload.totpCode.trim();
+
+      if (!challengeToken || !totpCode) {
+        return NextResponse.json({ error: "Invalid verification request." }, { status: 400 });
+      }
+
+      const challenge = consumeTotpChallenge(challengeToken);
+      if (!challenge) {
+        return NextResponse.json({ error: "Verification expired. Please sign in again." }, { status: 401 });
+      }
+
+      const totpRecord = getTotpRecord(challenge.userId);
+      if (!totpRecord || !totpRecord.enabled) {
+        return NextResponse.json({ error: "Two-factor authentication is not enabled." }, { status: 400 });
+      }
+
+      const secret = decryptSecret(totpRecord.encryptedSecret);
+      let valid = verifyTotpCode(secret, totpCode);
+
+      // If the authenticator code doesn't match, accept a one-time recovery code.
+      if (!valid && totpRecord.recoveryCodes) {
+        const hashedInput = hashRecoveryCode(totpCode);
+        const storedHashes: string[] = JSON.parse(totpRecord.recoveryCodes);
+        const matchIndex = storedHashes.indexOf(hashedInput);
+        if (matchIndex !== -1) {
+          valid = true;
+          storedHashes.splice(matchIndex, 1);
+          saveRecoveryCodes(challenge.userId, JSON.stringify(storedHashes));
+        }
+      }
+
+      if (!valid) {
+        return NextResponse.json({ error: "Invalid verification code." }, { status: 401 });
+      }
+
+      const userById = findAuthUserById(challenge.userId);
+      if (!userById) {
+        return NextResponse.json({ error: "User not found." }, { status: 401 });
+      }
+
+      return buildAuthenticatedResponse(userById.id, userById.email, userById.displayName);
+    }
+
     const email = normalizeEmail(payload.email || "");
     const password = payload.password || "";
 
@@ -87,6 +145,13 @@ export async function POST(request: Request) {
     const hashToVerify = user?.passwordHash ?? "spectre_sentinel:0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
     if (!user || !verifyPassword(password, hashToVerify)) {
       return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
+    }
+
+    // Password is correct. If 2FA is on, issue a short-lived challenge instead
+    // of a session; the client then posts the challenge token + a TOTP code.
+    if (isUserTotpEnabled(user.id)) {
+      const challengeToken = createTotpChallenge(user.id);
+      return NextResponse.json({ totpRequired: true, challengeToken });
     }
 
     return buildAuthenticatedResponse(user.id, user.email, user.displayName);
